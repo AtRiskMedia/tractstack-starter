@@ -1,0 +1,39 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Header from "@components/Header.astro";
+import Footer from "@components/Footer.astro";
+import Hr from "@components/Hr.astro";
+---
+
+<Layout>
+  <Header />
+  <main id="main-content">
+    <section id="hero">
+      <h1>helloworld</h1>
+      <p>Astro wrapper</p>
+    </section>
+
+    <Hr />
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* ===== Hero Section ===== */
+  #hero {
+    @apply pb-6 pt-8;
+  }
+  #hero h1 {
+    @apply my-4 inline-block text-3xl font-bold xs:my-8 xs:text-5xl;
+  }
+  #hero .rss-link {
+    @apply mb-6;
+  }
+  #hero .rss-icon {
+    @apply mb-2 h-6 w-6 scale-110 fill-skin-accent xs:mb-3 xs:scale-125;
+  }
+  #hero p {
+    @apply my-2;
+  }
+</style>
