@@ -3,7 +3,7 @@ import { LOGO_IMAGE, SITE } from "@config";
 import Hr from "./Hr.astro";
 
 export interface Props {
-  activeNav?: "about";
+  activeNav?: "about" | "none";
 }
 
 const { activeNav } = Astro.props;
@@ -57,6 +57,11 @@ const { activeNav } = Astro.props;
           <li>
             <a href="/about/" class={activeNav === "about" ? "active" : ""}>
               About
+            </a>
+          </li>
+          <li>
+            <a href="/none/" class={activeNav === "none" ? "active" : ""}>
+              None
             </a>
           </li>
         </ul>

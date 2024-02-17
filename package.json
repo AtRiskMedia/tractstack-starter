@@ -16,9 +16,13 @@
   },
   "dependencies": {
     "@astrojs/check": "^0.5.4",
+    "@astrojs/node": "^8.2.0",
+    "@kavach/cookie": "^1.0.0-next.22",
     "@resvg/resvg-js": "^2.6.0",
     "astro": "^4.2.1",
+    "astro-htmx": "^1.0.5",
     "github-slugger": "^2.0.0",
+    "htmx.org": "^1.9.10",
     "remark-collapse": "^0.1.2",
     "remark-toc": "^9.0.0",
     "satori": "^0.10.11",

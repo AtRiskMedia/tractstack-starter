@@ -3,17 +3,29 @@ import Layout from "@layouts/Layout.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import Hr from "@components/Hr.astro";
+
+const data = Astro.locals;
+
+let isSubmitted = false;
+if (Astro.request.method === "POST") {
+  isSubmitted = true;
+}
 ---
 
 <Layout>
   <Header />
   <main id="main-content">
     <section id="hero">
-      <h1>helloworld</h1>
+      <h1>{data.title}</h1>
       <p>Astro wrapper</p>
     </section>
 
     <Hr />
+
+    <form hx-post="" hx-swap="innerHTML" hx-select="form">
+      {isSubmitted && <p>Submitted</p>}
+      <button type="submit">Submit</button>
+    </form>
   </main>
 
   <Footer />
@@ -35,5 +47,9 @@ import Hr from "@components/Hr.astro";
   }
   #hero p {
     @apply my-2;
+  }
+
+  button {
+    @apply my-2 underline font-bold hover:text-blue-500;
   }
 </style>
