@@ -1,7 +1,0 @@
----
-layout: ../layouts/PageLayout.astro
-id: "about"
-title: "About"
----
-
-This is an outer shell for Tract Stack

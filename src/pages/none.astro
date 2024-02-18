@@ -6,9 +6,9 @@ import Hr from "@components/Hr.astro";
 
 import { events, lastRun, contentMap } from "../store/events.ts";
 
-const id = `home-uuid-here`;
-const title = `home`;
-const slug = `home`;
+const id = `none-uuid-here`;
+const title = `none`;
+const slug = `none`;
 const parentId = `parent-uuid-here`;
 const parentSlug = `parent`;
 const parentTitle = `parent-slug`;
@@ -51,19 +51,13 @@ contentMap.setKey(parentId, {
     </section>
 
     <Hr />
-
-    <section id="demo">
-      <form hx-post="" hx-swap="innerHTML" hx-select="form">
-        {isSubmitted && <p>Submitted</p>}
-        <button type="submit">Submit</button>
-      </form>
-    </section>
   </main>
 
   <Footer />
 </Layout>
 
 <style>
+  /* ===== Hero Section ===== */
   #hero {
     @apply pb-6 pt-8;
   }
@@ -72,12 +66,5 @@ contentMap.setKey(parentId, {
   }
   #hero p {
     @apply my-2;
-  }
-
-  #demo {
-    @apply pb-6 pt-8;
-  }
-  #demo button {
-    @apply my-2 underline font-bold hover:text-blue-500;
   }
 </style>
