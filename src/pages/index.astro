@@ -4,42 +4,12 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import Hr from "@components/Hr.astro";
 
-import { events, lastRun, contentMap } from "../store/events.ts";
-
-const id = `home-uuid-here`;
 const title = `home`;
-const slug = `home`;
-const parentId = `parent-uuid-here`;
-const parentSlug = `parent`;
-const parentTitle = `parent-slug`;
 
 let isSubmitted = false;
 if (Astro.request.method === "POST") {
   isSubmitted = true;
 }
-
-const lastRunValue = lastRun.get(`lastRun`);
-if (lastRunValue === 0) {
-  const enterEvent = {
-    id: id,
-    parentId: parentId,
-    type: `StoryFragment`,
-    verb: `ENTERED`,
-  };
-  events.set([...events.get(), enterEvent]);
-  lastRun.set(1);
-}
-
-contentMap.setKey(id, {
-  type: `StoryFragment`,
-  title,
-  slug,
-});
-contentMap.setKey(parentId, {
-  type: `TractStack`,
-  title: parentTitle,
-  slug: parentSlug,
-});
 ---
 
 <Layout>
@@ -51,7 +21,6 @@ contentMap.setKey(parentId, {
     </section>
 
     <Hr />
-
     <section id="demo">
       <form hx-post="" hx-swap="innerHTML" hx-select="form">
         {isSubmitted && <p>Submitted</p>}
@@ -81,3 +50,55 @@ contentMap.setKey(parentId, {
     @apply my-2 underline font-bold hover:text-blue-500;
   }
 </style>
+
+<script>
+  import { conciergeSync } from "../utils/conciergeSync.ts";
+  import { CONCIERGE_SYNC_INTERVAL } from "../constant";
+  import { events, lastRun, contentMap } from "../store/events.ts";
+  import { processEvents } from "../utils/processEvents.ts";
+
+  const sync = await conciergeSync();
+  console.log(sync);
+  const lastRunValue = parseInt(lastRun.get());
+  const eventStream = events.get();
+
+  const id = `home-uuid-here`;
+  const title = `home`;
+  const slug = `home`;
+  const parentId = `parent-uuid-here`;
+  const parentSlug = `parent`;
+  const parentTitle = `parent-slug`;
+
+  if (lastRunValue === 0) {
+    console.log(`entered`);
+    const enterEvent = {
+      id: id,
+      parentId: parentId,
+      type: `StoryFragment`,
+      verb: `ENTERED`,
+    };
+    events.set([...events.get(), enterEvent]);
+    lastRun.set(`1`);
+  }
+  if (
+    eventStream.length &&
+    Date.now() > lastRunValue + CONCIERGE_SYNC_INTERVAL
+  ) {
+    const result = processEvents(eventStream);
+    console.log(`events processed`, result);
+    lastRun.set(Date.now().toString());
+    events.set([]);
+  }
+
+  contentMap.setKey(id, {
+    type: `StoryFragment`,
+    title,
+    slug,
+  });
+  contentMap.setKey(parentId, {
+    type: `TractStack`,
+    title: parentTitle,
+    slug: parentSlug,
+  });
+  console.log(contentMap.get());
+</script>

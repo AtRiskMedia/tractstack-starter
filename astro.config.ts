@@ -5,6 +5,7 @@ import react from "@astrojs/react";
 import htmx from "astro-htmx";
 import sitemap from "@astrojs/sitemap";
 import { SITE } from "./src/config";
+//import basicSsl from "@vitejs/plugin-basic-ssl";
 
 export default defineConfig({
   output: "server",
@@ -21,6 +22,10 @@ export default defineConfig({
     sitemap(),
   ],
   vite: {
+    //plugins: [basicSsl()],
+    //server: {
+    //  https: true,
+    //},
     optimizeDeps: {
       exclude: ["@resvg/resvg-js"],
     },
