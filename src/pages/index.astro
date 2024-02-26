@@ -10,6 +10,22 @@ let isSubmitted = false;
 if (Astro.request.method === "POST") {
   isSubmitted = true;
 }
+const arr = [
+  `1`,
+  `2`,
+  `3`,
+  `4`,
+  `5`,
+  `6`,
+  `7`,
+  `8`,
+  `9`,
+  `10`,
+  `11`,
+  `12`,
+  `13`,
+  `14`,
+];
 ---
 
 <Layout>
@@ -27,6 +43,25 @@ if (Astro.request.method === "POST") {
         <button type="submit">Submit</button>
       </form>
     </section>
+    <ul>
+      {
+        arr.map((item, idx) => {
+          if (idx === 9)
+            return (
+              <li>
+                <div>jail-break htmx</div>
+              </li>
+            );
+          return (
+            <li
+              hx-get="/partials/pane"
+              hx-trigger={idx < 2 ? `load` : `revealed`}
+              hx-swap="outerHTML"
+            />
+          );
+        })
+      }
+    </ul>
   </main>
 
   <Footer />
