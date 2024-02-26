@@ -48,7 +48,7 @@ const arr = [
         arr.map((item, idx) => {
           if (idx === 9)
             return (
-              <li>
+              <li class="css-selector">
                 <div>jail-break htmx</div>
               </li>
             );
@@ -87,13 +87,14 @@ const arr = [
 </style>
 
 <script>
-  import { conciergeSync } from "../utils/conciergeSync.ts";
+  import InView from "@opuu/inview";
+  //import { conciergeSync } from "../utils/conciergeSync.ts";
   import { CONCIERGE_SYNC_INTERVAL } from "../constant";
   import { events, lastRun, contentMap } from "../store/events.ts";
   import { processEvents } from "../utils/processEvents.ts";
 
-  const sync = await conciergeSync();
-  console.log(sync);
+  //const sync = await conciergeSync();
+  //console.log(sync);
   const lastRunValue = parseInt(lastRun.get());
   const eventStream = events.get();
 
@@ -136,4 +137,14 @@ const arr = [
     slug: parentSlug,
   });
   console.log(contentMap.get());
+
+  const elements = new InView(".css-selector");
+
+  elements.on("enter", event => {
+    console.log(`enter`, event);
+  });
+
+  elements.on("exit", event => {
+    console.log(`exit`, event);
+  });
 </script>

@@ -20,6 +20,7 @@
     "@kavach/cookie": "^1.0.0-next.22",
     "@nanostores/persistent": "^0.9.1",
     "@nanostores/react": "^0.7.1",
+    "@opuu/inview": "^2.0.1",
     "@resvg/resvg-js": "^2.6.0",
     "astro": "^4.2.1",
     "astro-htmx": "^1.0.5",

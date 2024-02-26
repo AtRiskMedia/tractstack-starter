@@ -862,6 +862,11 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
+"@opuu/inview@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@opuu/inview/-/inview-2.0.1.tgz#ecd42d1a370baab013c1fa4099639ece0c90eab1"
+  integrity sha512-QBb2lstx8atGvXfsKUpzUqa3ZPdo1LKeEcKJE9fZqUgrRZkZMUwEuZ1MJSlBeyQ5rdbctSIA0Ahq1hfW/HHyhg==
+
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
