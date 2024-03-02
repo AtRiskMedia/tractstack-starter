@@ -2,6 +2,7 @@
 import Layout from "@layouts/Layout.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
+import FeedbackForm from "../components/FeedbackForm";
 import Hr from "@components/Hr.astro";
 
 const title = `home`;
@@ -63,6 +64,7 @@ const arr = [
       }
     </ul>
   </main>
+  <FeedbackForm client:load />
 
   <Footer />
 </Layout>
@@ -96,6 +98,7 @@ const arr = [
   //const sync = await conciergeSync();
   //console.log(sync);
   const lastRunValue = parseInt(lastRun.get());
+  console.log(`Lr`, lastRun.get());
   const eventStream = events.get();
 
   const id = `home-uuid-here`;

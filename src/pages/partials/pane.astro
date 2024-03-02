@@ -3,4 +3,10 @@ import ReactP from "../../components/ReactP";
 export const partial = true;
 ---
 
-<li><ReactP client:only="react" /></li>
+<li><ReactP client:load="react" /></li>
+
+<script>
+  import { lastRun } from "../store/events.ts";
+  const lastRunValue = parseInt(lastRun.get());
+  console.log(`pane`, lastRunValue);
+</script>
