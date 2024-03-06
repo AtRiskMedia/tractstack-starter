@@ -4,7 +4,7 @@ import { contentMap } from "../store/events.ts";
 
 export default function Form() {
   const [responseMessage, setResponseMessage] = useState("");
-  console.log(`FF`, contentMap.get());
+  console.log(`feedback form`, contentMap.get());
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -16,6 +16,7 @@ export default function Form() {
     const data = await response.json();
     if (data.message) {
       setResponseMessage(data.message);
+      console.log(`runs on client`);
     }
   }
 

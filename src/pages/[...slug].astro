@@ -1,0 +1,36 @@
+---
+import { getFiles } from "../api/drupal";
+
+export async function getStaticPaths() {
+  const files: any = await getFiles();
+  console.log(files.length);
+  const nodes = [
+    {
+      title: `title2`,
+      slug: `love`,
+    },
+    {
+      title: `title`,
+      slug: `slug`,
+    },
+  ];
+
+  const pathsPromises: Promise<{
+    params: { slug: string };
+    props: { title: string };
+  }>[] = nodes.map(async tag => {
+    return {
+      params: { slug: tag.slug },
+      props: { title: tag.title },
+    };
+  });
+  return Promise.all(pathsPromises);
+}
+const { title }: any = Astro.props;
+const { slug }: any = Astro.params;
+
+export const prerender = true;
+---
+
+<p>{title}</p>
+<p>{slug}</p>
