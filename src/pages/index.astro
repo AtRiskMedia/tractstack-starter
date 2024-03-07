@@ -38,8 +38,8 @@ const arr = [
     </section>
 
     <Hr />
-    <section id="demo">
-      <form hx-post="" hx-swap="innerHTML" hx-select="form">
+    <section>
+      <form id="demo" hx-post="" hx-swap="outerHTML" hx-select="#demo">
         {isSubmitted && <p>Submitted</p>}
         <button type="submit">Submit</button>
       </form>
