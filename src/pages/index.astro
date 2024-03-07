@@ -4,14 +4,8 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import FeedbackForm from "../components/FeedbackForm";
 import Hr from "@components/Hr.astro";
-import { TOKEN, REFRESHTOKEN } from "../constant";
 
 const title = `home`;
-const sync = Astro.locals.sync;
-console.log(1, sync);
-if (Astro.cookies.get(REFRESHTOKEN))
-  console.log(Astro.cookies.get(REFRESHTOKEN));
-if (Astro.cookies.get(TOKEN)) console.log(Astro.cookies.get(TOKEN));
 
 let isSubmitted = false;
 if (Astro.request.method === "POST") {
@@ -40,7 +34,6 @@ const arr = [
   <main id="main-content">
     <section id="hero">
       <h1>{title}</h1>
-      <p>{sync}</p>
       <p>Astro wrapper</p>
     </section>
 

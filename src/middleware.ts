@@ -3,12 +3,11 @@ import { parse } from "@kavach/cookie";
 import { TOKEN, REFRESHTOKEN, CONCIERGE_AUTH } from "./constant";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  context.locals.sync = `yup`;
   const opts = { path: `/` };
   if (!context.cookies.get(REFRESHTOKEN) && !context.cookies.get(TOKEN)) {
     const res = await fetch(CONCIERGE_AUTH);
     const data = await res.json();
-    console.log(`data:`, data);
+    console.log(`middleware auth:`, data);
     const rawCookie = res.headers.get("set-cookie");
     if (typeof rawCookie === `string`) {
       const cookie: any = parse(rawCookie);

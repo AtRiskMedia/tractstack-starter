@@ -34,3 +34,13 @@ export const prerender = true;
 
 <p>{title}</p>
 <p>{slug}</p>
+
+<script>
+  import { hasAuth, fingerprint } from "../store/auth";
+  import { initSession } from "../utils/concierge";
+  if (!hasAuth.get()) {
+    const initSessionResponse = await initSession(fingerprint.get());
+    console.log(`initSession`, initSessionResponse);
+  }
+  // this could return the fingerprint; gets stored in nanostore
+</script>
