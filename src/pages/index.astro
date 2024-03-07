@@ -6,6 +6,8 @@ import FeedbackForm from "../components/FeedbackForm";
 import Hr from "@components/Hr.astro";
 
 const title = `home`;
+const sync = Astro.locals.sync;
+console.log(1, sync);
 
 let isSubmitted = false;
 if (Astro.request.method === "POST") {
@@ -34,6 +36,7 @@ const arr = [
   <main id="main-content">
     <section id="hero">
       <h1>{title}</h1>
+      <p>{sync}</p>
       <p>Astro wrapper</p>
     </section>
 
@@ -98,7 +101,7 @@ const arr = [
   //const sync = await conciergeSync();
   //console.log(sync);
   const lastRunValue = parseInt(lastRun.get());
-  console.log(`Lr`, lastRun.get());
+  console.log(`last run`, lastRun.get());
   const eventStream = events.get();
 
   const id = `home-uuid-here`;
