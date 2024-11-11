@@ -1,10 +1,10 @@
 # build output
-dist/
+**/dist/
 # generated types
-.astro/
+**/.astro/
 
 # dependencies
-node_modules/
+**/node_modules/
 
 # logs
 npm-debug.log*

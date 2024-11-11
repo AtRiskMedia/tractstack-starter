@@ -26,17 +26,17 @@ const {
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
     ? import.meta.env.PUBLIC_FAVICON
-    : `favicon.ico`;
+    : `/favicon.ico`;
 const defaultSocialImageURL =
   typeof ogImage === `string` && ogImage
     ? ogImage
     : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
       ? import.meta.env.PUBLIC_OG
-      : `og.png`;
+      : `/og.png`;
 const defaultSocialLogoURL =
   typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
     ? import.meta.env.PUBLIC_OGLOGO
-    : `oglogo.png`;
+    : `/oglogo.png`;
 const defaultSocialTitle =
   typeof title === `string` && title
     ? title
