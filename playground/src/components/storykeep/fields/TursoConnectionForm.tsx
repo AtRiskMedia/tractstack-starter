@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
+import { useStore } from "@nanostores/react";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
+import { previewMode } from "../../../store/storykeep";
 import type { ChangeEvent } from "react";
 
 interface TursoConnectionFormProps {
@@ -19,6 +21,7 @@ const TursoConnectionForm = ({ setGotTurso }: TursoConnectionFormProps) => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const $previewMode = useStore(previewMode);
 
   async function fetchSettings() {
     try {
@@ -39,7 +42,7 @@ const TursoConnectionForm = ({ setGotTurso }: TursoConnectionFormProps) => {
   }
 
   useEffect(() => {
-    fetchSettings();
+    if (!$previewMode) fetchSettings();
   }, []);
 
   const validateUrl = (url: string) => {
@@ -102,6 +105,8 @@ const TursoConnectionForm = ({ setGotTurso }: TursoConnectionFormProps) => {
 
   const commonInputClass =
     "block w-full rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-md xs:leading-6";
+
+  if ($previewMode) return <div>Let's create a local database ... (insert turso replica)</div>;
 
   if (!isLoaded) return <div>Loading...</div>;
 

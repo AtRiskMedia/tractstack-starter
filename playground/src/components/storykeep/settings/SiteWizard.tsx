@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
+import { previewMode } from "../../../store/storykeep";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
 import ChevronUpIcon from "@heroicons/react/24/outline/ChevronUpIcon";
@@ -10,18 +12,27 @@ import EnvironmentSettings from "../fields/EnvironmentSettings";
 import type { ReactNode } from "react";
 import type { FullContentMap } from "../../../types";
 
-const NeedsConcierge = () => (
-  <div className="space-y-4 text-xl md:text-2xl text-mydarkgrey">
-    <p>Set up your Story Keep installation to start building your digital story.</p>
+const NeedsConcierge = ({ onClick }: { onClick: () => void }) => (
+  <div className="space-y-8 text-xl md:text-2xl text-mydarkgrey">
     <p>
-      Please visit{" "}
+      For a production install, please see{` `}
       <a
         className="text-myblue font-bold underline hover:text-myorange"
         href="https://tractstack.org"
       >
         our docs
-      </a>{" "}
-      for install recipies.
+      </a>
+      {` `}
+      for install recipes
+    </p>
+    <p>
+      Continue without install:{" "}
+      <button
+        className="px-4 py-2 text-white bg-black rounded hover:bg-myblue disabled:bg-mydarkgrey disabled:cursor-not-allowed"
+        onClick={onClick}
+      >
+        Try Tract Stack
+      </button>
     </p>
   </div>
 );
@@ -93,11 +104,12 @@ export default function SiteWizard({
   const [gotTurso, setGotTurso] = useState(false);
   const [gotIntegrations, setGotIntegrations] = useState(false);
   const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({});
+  const $previewMode = useStore(previewMode);
 
   const getStepStatus = (index: number): StepStatus => {
     const completionStates = [
-      hasConcierge,
-      hasAuth,
+      hasConcierge || $previewMode,
+      hasAuth || $previewMode,
       hasTurso || gotTurso,
       gotIntegrations || hasBranding,
       hasBranding,
@@ -112,17 +124,21 @@ export default function SiteWizard({
     return "current";
   };
 
+  const handleInitOpenDemo = () => {
+    previewMode.set(true);
+  };
+
   const setupSteps: SetupStep[] = [
     {
       title: "Install the Story Keep",
-      description: !hasConcierge ? <NeedsConcierge /> : <Completed />,
-      isComplete: hasConcierge,
+      description: !hasConcierge ? <NeedsConcierge onClick={handleInitOpenDemo} /> : <Completed />,
+      isComplete: hasConcierge || $previewMode,
       status: getStepStatus(0),
     },
     {
       title: "Login",
       description: !hasAuth ? <Login /> : <Completed />,
-      isComplete: hasAuth,
+      isComplete: hasAuth || $previewMode,
       status: getStepStatus(1),
     },
     {
@@ -164,8 +180,8 @@ export default function SiteWizard({
 
   useEffect(() => {
     const completionStates = [
-      hasConcierge,
-      hasAuth,
+      hasConcierge || $previewMode,
+      hasAuth || $previewMode,
       hasTurso || gotTurso,
       gotIntegrations || hasBranding,
       hasBranding,
@@ -195,6 +211,7 @@ export default function SiteWizard({
     hasBranding,
     hasTursoReady,
     hasContent && hasContentReady,
+    $previewMode,
   ]);
 
   const getStepIcon = (step: SetupStep): ReactNode => {
