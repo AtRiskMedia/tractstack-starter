@@ -143,7 +143,13 @@ export default function SiteWizard({
     },
     {
       title: "Connect your Turso database",
-      description: !hasTurso ? <TursoConnectionForm setGotTurso={setGotTurso} /> : <Completed />,
+      description: $previewMode ? (
+        <DatabaseBootstrap />
+      ) : !hasTurso ? (
+        <TursoConnectionForm setGotTurso={setGotTurso} />
+      ) : (
+        <Completed />
+      ),
       isComplete: hasTurso || gotTurso,
       status: getStepStatus(2),
     },

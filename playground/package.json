@@ -8,6 +8,7 @@
     "start": "astro dev",
     "build": "astro check && astro build && jampack ./dist",
     "preview": "astro preview",
+    "prepare": "husky && chmod +x prepare-template.sh",
     "sync": "astro sync",
     "astro": "astro",
     "format:check": "prettier --check . --plugin=prettier-plugin-astro",
