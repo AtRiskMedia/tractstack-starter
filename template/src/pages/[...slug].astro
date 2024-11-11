@@ -8,6 +8,7 @@ import Footer from "../components/Footer.astro";
 import { getSetupChecks } from "../utils/setupChecks";
 import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
 import { ENABLE_HEADER_WIDGET } from "../constants";
+import { isValidContentPath } from "../utils/routeValidation";
 import type { AuthStatus, Current, StylesVersion } from "../types";
 
 // user authenticated?
@@ -17,6 +18,16 @@ const user = Astro.locals.user as AuthStatus;
 const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
 const hasTursoReady = hasTurso ? await isTursoReady() : false;
 const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (
+  !hasConcierge ||
+  !hasTurso ||
+  !hasTursoReady ||
+  !hasBranding ||
+  !hasContent ||
+  !hasContentReady
+) {
+  return Astro.redirect("/storykeep");
+}
 
 // get styles offset
 const stylesVerUrl =
@@ -32,8 +43,16 @@ const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v
 // which storyfragment?
 const { slug } = Astro.params;
 const lookup = slug || import.meta.env.PUBLIC_HOME;
+
+// Validate the route parameter
 if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
 if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 
 // get storyfragment datum
 const storyfragment = await getStoryFragmentBySlug(lookup);
@@ -52,18 +71,7 @@ const current: Current = storyfragment
 ---
 
 {
-  !storyfragment ||
-  !hasConcierge ||
-  !hasTurso ||
-  !hasTursoReady ||
-  !hasBranding ||
-  !hasContent ||
-  !hasContentReady ? (
-    <div>
-      {slug}
-      Your StoryKeep is bare. Please visit: <a href="/storykeep">Site Wizard</a>
-    </div>
-  ) : (
+  storyfragment ? (
     <Layout
       title={storyfragment.title}
       pubDatetime={storyfragment.created}
@@ -111,5 +119,5 @@ const current: Current = storyfragment
         isContext={false}
       />
     </Layout>
-  )
+  ) : null
 }

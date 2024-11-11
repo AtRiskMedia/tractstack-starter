@@ -6,6 +6,7 @@ import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import { getSetupChecks } from "../../utils/setupChecks";
 import { getContextPaneBySlug, isContentReady } from "../../api/turso";
+import { isValidContentPath } from "../../utils/routeValidation";
 import type { StylesVersion, Current, AuthStatus } from "../../types";
 
 // user authenticated?
@@ -30,6 +31,15 @@ const stylesVer: StylesVersion =
 const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 
 const { slug } = Astro.params;
+
+// Validate the route parameter
+if (!isValidContentPath(slug)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
 const pane = slug ? await getContextPaneBySlug(slug) : null;
 
 // id for this context pane
@@ -43,18 +53,7 @@ const current: Current = pane
 ---
 
 {
-  !slug ||
-  !pane ||
-  !pane.panePayload ||
-  !hasConcierge ||
-  !hasTurso ||
-  !hasBranding ||
-  !hasContent ||
-  !hasContentReady ? (
-    <div>
-      Your StoryKeep is bare. Please visit: <a href="/storykeep">Site Wizard</a>
-    </div>
-  ) : (
+  pane && pane?.panePayload ? (
     <Layout
       title={pane.title}
       pubDatetime={pane.created}
@@ -87,5 +86,5 @@ const current: Current = pane
       ) : null}
       <Footer created={pane.created} slug={pane.slug} isContext={true} />
     </Layout>
-  )
+  ) : null
 }
