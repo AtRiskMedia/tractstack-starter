@@ -1,0 +1,91 @@
+---
+import ContextPaneWrapper from "../../components/ContextPaneWrapper.astro";
+import ImpressionWrapper from "../../components/ImpressionWrapper";
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { getSetupChecks } from "../../utils/setupChecks";
+import { getContextPaneBySlug, isContentReady } from "../../api/turso";
+import type { StylesVersion, Current, AuthStatus } from "../../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasConcierge || !hasTurso || !hasBranding || !hasContent || !hasContentReady) {
+  return Astro.redirect("/storykeep");
+}
+
+// get styles offset
+const stylesVerUrl =
+  typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
+  import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
+    ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
+    : null;
+const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
+const stylesVer: StylesVersion =
+  !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
+const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+
+const { slug } = Astro.params;
+const pane = slug ? await getContextPaneBySlug(slug) : null;
+
+// id for this context pane
+const current: Current = pane
+  ? {
+      id: pane.id,
+      slug: pane.slug,
+      title: pane.title,
+    }
+  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+---
+
+{
+  !slug ||
+  !pane ||
+  !pane.panePayload ||
+  !hasConcierge ||
+  !hasTurso ||
+  !hasBranding ||
+  !hasContent ||
+  !hasContentReady ? (
+    <div>
+      Your StoryKeep is bare. Please visit: <a href="/storykeep">Site Wizard</a>
+    </div>
+  ) : (
+    <Layout
+      title={pane.title}
+      pubDatetime={pane.created}
+      modDatetime={pane.changed}
+      stylesUrl={stylesUrl}
+    >
+      <Header
+        title={pane.title}
+        slug={pane.slug}
+        isContext={true}
+        isEditable={true}
+        impressions={pane.impressions}
+        user={user}
+      />
+      <main id="main-content" class="min-h-screen">
+        <ContextPaneWrapper
+          pane={pane.panePayload}
+          resources={pane.resourcesPayload}
+          codeHookOptions={pane.codeHookOptions}
+          current={current}
+        />
+      </main>
+      {pane.impressions?.length ? (
+        <ImpressionWrapper
+          payload={pane.impressions}
+          slug={pane.slug}
+          isContext={true}
+          client:load
+        />
+      ) : null}
+      <Footer created={pane.created} slug={pane.slug} isContext={true} />
+    </Layout>
+  )
+}

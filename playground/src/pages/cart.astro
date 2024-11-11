@@ -1,0 +1,47 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import ShoppingCart from "../components/ShoppingCart";
+import { getSetupChecks } from "../utils/setupChecks";
+import { isTursoReady } from "../api/turso";
+import type { StylesVersion, AuthStatus } from "../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+  return Astro.redirect("/storykeep");
+}
+
+const stylesVerUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`;
+const requestStyles: Response = await fetch(stylesVerUrl);
+const stylesVer: StylesVersion = requestStyles.status === 404 ? 0 : await requestStyles.json();
+const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+
+export const prerender = false;
+---
+
+<Layout
+  title="Shopping Cart"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  stylesUrl={stylesUrl}
+>
+  <Header title="Shopping Cart" slug="cart" isContext={false} user={user} />
+  <main id="main-content">
+    <ShoppingCart client:load />
+    <div class="text-center pb-16 text-2xl md:text-3xl">
+      <a
+        href="/"
+        class="px-3.5 py-2.5 bg-myblack text-white rounded-lg hover:rotate-1 hover:bg-myorange"
+      >
+        Close
+      </a>
+    </div>
+  </main>
+  <Footer created={new Date()} slug="cart" isContext={false} />
+</Layout>

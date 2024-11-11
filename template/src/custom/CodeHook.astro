@@ -1,0 +1,20 @@
+---
+import type { ResourceDatum } from "@/types";
+
+export interface Props {
+  target: string;
+  resources?: ResourceDatum[] | null;
+  options?: string | null;
+}
+
+const { target, resources, options } = Astro.props;
+
+// Add index signature to allow string indexing
+const components: { [key: string]: any } = {
+  "custom-hero": (await import("./CustomHero.astro")).default,
+};
+
+const Component = components[target];
+---
+
+{Component ? <Component resources={resources} options={options} /> : <div>Code hook not found</div>}

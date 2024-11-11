@@ -1,0 +1,67 @@
+---
+import StoryKeep from "../../../layouts/StoryKeep.astro";
+import Header from "../../../components/Header.astro";
+import Footer from "../../../components/Footer.astro";
+import ImagesTable from "../../../components/storykeep/components/ImagesTable";
+import { getSetupChecks } from "../../../utils/setupChecks";
+import { getAllFileDatum, isTursoReady } from "../../../api/turso";
+import { cleanTursoFileDatum } from "../../../utils/compositor/tursoFileDatum";
+import type { AuthStatus, MenuDatum } from "../../../types";
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+  return Astro.redirect("/storykeep");
+}
+
+const user = Astro.locals.user as AuthStatus;
+const canonicalURL = new URL(`/storykeep/manage/image`, Astro.url).href;
+
+const imagesRaw = await getAllFileDatum();
+const images = cleanTursoFileDatum(imagesRaw);
+
+const menuPayload: MenuDatum = {
+  id: `storykeep`,
+  title: "Story Keep Menu",
+  theme: "default",
+  optionsPayload: [
+    {
+      name: "Dashboard",
+      description: "Your Story Keep Dashboard",
+      featured: true,
+      actionLisp: "(goto (storykeep dashboard))",
+      to: "/storykeep",
+      internal: true,
+    },
+    {
+      name: "Logout",
+      description: "Close this session",
+      featured: true,
+      actionLisp: "(goto (storykeep logout))",
+      to: "/storykeep/logout",
+      internal: true,
+    },
+  ],
+};
+---
+
+<StoryKeep title="Manage Images" canonicalURL={canonicalURL}>
+  <Header
+    title="Manage Images"
+    menu={menuPayload}
+    slug="storykeep-manage-images"
+    isContext={false}
+    user={user}
+    isStoryKeep={true}
+    isEditable={false}
+  />
+  <main id="main-content" class="min-h-screen">
+    <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
+      <div class="py-1.5 bg-white px-3.5">
+        <ImagesTable images={images} client:load />
+      </div>
+    </div>
+  </main>
+  <Footer menu={menuPayload} backToTop={true} slug={`storykeep-manage-images`} isContext={false} />
+</StoryKeep>

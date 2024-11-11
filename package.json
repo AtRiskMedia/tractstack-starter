@@ -1,0 +1,45 @@
+{
+  "name": "tractstack-root",
+  "description": "no-code website builder and content marketing platform",
+  "author": "At Risk Media",
+  "private": true,
+  "license": "FSL-1.1-MIT",
+  "scripts": {
+    "dev": "pnpm --filter playground dev",
+    "build": "pnpm -r build",
+    "playground:dev": "pnpm --filter playground dev",
+    "playground:build": "pnpm --filter playground build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "tsc": "pnpm -r tsc",
+    "tsc:check": "pnpm -r tsc --noEmit --pretty",
+    "postinstall": "husky"
+  },
+  "devDependencies": {
+    "eslint": "8.56.0",
+    "eslint-config-prettier": "9.1.0",
+    "husky": "9.1.6",
+    "lint-staged": "15.2.10",
+    "prettier": "3.3.3",
+    "prettier-plugin-astro": "0.14.1",
+    "prettier-plugin-tailwindcss": "0.6.8",
+    "typescript": "5.6.3"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.12.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "react@<18.0.0": "18.3.1",
+      "react-dom@<18.0.0": "18.3.1"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,md,json}": "prettier --write",
+    "*.{js,jsx,ts,tsx}": "eslint --fix"
+  }
+}

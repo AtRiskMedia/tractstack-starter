@@ -1,0 +1,57 @@
+---
+import { preParseAction } from "../utils/concierge/preParseAction";
+import { lispLexer } from "../utils/concierge/lispLexer";
+import type { MenuDatum, MenuLink } from "../types";
+
+interface Props {
+  payload: MenuDatum;
+  slug: string;
+  isContext: boolean;
+}
+
+const { payload, slug, isContext } = Astro.props;
+const thisPayload = payload.optionsPayload;
+const additionalLinks = thisPayload
+  .filter((e: MenuLink) => !e.featured)
+  .map((e: MenuLink) => {
+    const item = { ...e };
+    const thisPayload = lispLexer(e.actionLisp);
+    const to = preParseAction(thisPayload, slug, isContext);
+    if (typeof to === `string`) {
+      item.to = to;
+      item.internal = true;
+    } else if (typeof to === `object`) item.to = to[0];
+    return item;
+  });
+const featuredLinks = thisPayload
+  .filter((e: MenuLink) => e.featured)
+  .map((e: MenuLink) => {
+    const item = { ...e };
+    const thisPayload = lispLexer(e.actionLisp);
+    const to = preParseAction(thisPayload, slug, isContext);
+    if (typeof to === `string`) {
+      item.to = to;
+      item.internal = true;
+    } else if (typeof to === `object`) item.to = to[0];
+    return item;
+  });
+const allLinks = additionalLinks.concat(featuredLinks);
+---
+
+<div class="mx-auto max-w-sm py-12">
+  <nav class="flex flex-wrap justify-evenly">
+    {
+      allLinks.map((item: MenuLink) => (
+        <span class="py-1.5">
+          <a
+            href={item.to}
+            class="text-xl md:text-2xl font-action leading-loose text-mydarkgrey hover:text-black"
+            title={item.description}
+          >
+            {item.name}
+          </a>
+        </span>
+      ))
+    }
+  </nav>
+</div>

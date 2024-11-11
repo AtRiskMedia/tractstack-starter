@@ -1,0 +1,89 @@
+---
+import { getContentMap, getAllFileDatum, getContextPaneBySlug } from "../../../api/turso";
+import { cleanTursoFileDatum } from "../../../utils/compositor/tursoFileDatum";
+import StoryKeep from "../../../layouts/StoryKeep.astro";
+import { EditModal } from "../../../components/storykeep/EditModal";
+import { ContextPane } from "../../../components/storykeep/ContextPane";
+import { StoryKeepContextStore } from "../../../components/storykeep/StoryKeepContextStore";
+import { StoryKeepHeader } from "../../../components/storykeep/StoryKeepHeader";
+import { getSetupChecks } from "../../../utils/setupChecks";
+import { isContentReady } from "../../../api/turso";
+import type { AuthStatus, ContentMap } from "../../../types";
+
+const user = Astro.locals.user as AuthStatus;
+
+const { slug } = Astro.params;
+
+if (!slug) return Astro.redirect("/404");
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasConcierge || !hasTurso || !hasBranding || !hasContent || !hasContentReady) {
+  return Astro.redirect("/storykeep");
+}
+
+const baseUrl = new URL(Astro.url.pathname, Astro.url);
+const canonicalURL = new URL(`/context/${slug}`, baseUrl).href;
+
+const filesRaw = await getAllFileDatum();
+const files = cleanTursoFileDatum(filesRaw);
+
+const contextPane = await getContextPaneBySlug(slug);
+if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astro.redirect("/404");
+
+const contentMap: ContentMap[] = await getContentMap();
+---
+
+<StoryKeep
+  title={contextPane?.title}
+  pubDatetime={contextPane?.created}
+  modDatetime={contextPane?.changed}
+  canonicalURL={canonicalURL}
+>
+  <div
+    id="storykeep-content"
+    class="m-0 p-0 flex flex-col bg-myblack w-full"
+    style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+    ,
+  >
+    {contextPane && <StoryKeepContextStore client:only="react" pane={contextPane} />}
+    <header
+      class="z-[8999] sticky top-0 z-10 bg-mywhite flex justify-between items-center w-full"
+      id="main-header"
+    >
+      <StoryKeepHeader
+        client:only="react"
+        id={slug === "create" ? `create` : contextPane?.id ? contextPane.id : `error`}
+        slug={slug}
+        isContext={true}
+        contentMap={contentMap}
+        user={user}
+        originalData={contextPane}
+        hasContentReady={true}
+      />
+    </header>
+
+    <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
+      <main id="website-content" class="overflow-auto w-full">
+        <ContextPane
+          id={slug === "create" ? null : contextPane?.id ? contextPane.id : `error`}
+          slug={slug}
+          client:only="react"
+        />
+        <div
+          class="h-96 m-0 p-0 flex flex-col bg-mydarkgrey w-full"
+          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+        >
+        </div>
+      </main>
+
+      <EditModal
+        client:only="react"
+        id={slug === "create" ? `create` : contextPane?.id ? contextPane.id : `error`}
+        files={files}
+        contentMap={contentMap}
+      />
+    </div>
+  </div>
+</StoryKeep>

@@ -1,0 +1,59 @@
+---
+import Pane from "./Pane.astro";
+import CodeHook from "../custom/CodeHook.astro";
+import { Close } from "./other/Close";
+import type { ResourceDatum, Current, PaneDatum } from "../types";
+
+export interface Props {
+  pane: PaneDatum;
+  current: Current;
+  resources: ResourceDatum[] | null;
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  codeHookOptions: any | null;
+}
+const { pane, current, resources, codeHookOptions } = Astro.props;
+---
+
+<astro-context-pane-wrapper data-id={JSON.stringify(current)}>
+  <div class="py-16">
+    <div id={`pane-${pane.id}`} class="pane" data-hidden="false">
+      {
+        pane.optionsPayload?.codeHook ? (
+          <div id={pane.slug}>
+            <CodeHook
+              target={pane.optionsPayload.codeHook.target}
+              resources={resources}
+              options={codeHookOptions}
+            />
+          </div>
+        ) : (
+          <Pane payload={pane} slug={current.slug} isContext={true} />
+        )
+      }
+    </div>
+    <Close client:load />
+  </div>
+</astro-context-pane-wrapper>
+
+<script>
+  import { storySteps, current } from "../store/events";
+
+  class ContextPaneWrap extends HTMLElement {
+    constructor() {
+      super();
+      const id = this.dataset.id;
+      const thisId = id ? JSON.parse(id) : null;
+      if (thisId) {
+        current.set(thisId);
+        const storyStep = {
+          id: thisId.id,
+          slug: thisId.slug,
+          title: thisId.title,
+          type: `ContextPane`,
+        };
+        storySteps.set([...storySteps.get(), storyStep]);
+      }
+    }
+  }
+  customElements.define("astro-context-pane-wrapper", ContextPaneWrap);
+</script>

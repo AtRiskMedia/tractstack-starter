@@ -1,0 +1,123 @@
+---
+import StoryFragmentWrapper from "../components/StoryFragmentWrapper.astro";
+import ImpressionWrapper from "../components/ImpressionWrapper";
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import HeaderWidget from "../custom/HeaderWidget.astro";
+import Footer from "../components/Footer.astro";
+import { getSetupChecks } from "../utils/setupChecks";
+import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
+import { ENABLE_HEADER_WIDGET } from "../constants";
+import { isValidContentPath } from "../utils/routeValidation";
+import type { AuthStatus, Current, StylesVersion } from "../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (
+  !hasConcierge ||
+  !hasTurso ||
+  !hasTursoReady ||
+  !hasBranding ||
+  !hasContent ||
+  !hasContentReady
+) {
+  return Astro.redirect("/storykeep");
+}
+
+// get styles offset
+const stylesVerUrl =
+  typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
+  import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
+    ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
+    : null;
+const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
+const stylesVer: StylesVersion =
+  !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
+const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+
+// which storyfragment?
+const { slug } = Astro.params;
+const lookup = slug || import.meta.env.PUBLIC_HOME;
+
+// Validate the route parameter
+if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// get storyfragment datum
+const storyfragment = await getStoryFragmentBySlug(lookup);
+
+// id for this storyfragment
+const current: Current = storyfragment
+  ? {
+      id: storyfragment.id,
+      slug: storyfragment.slug,
+      title: storyfragment.title,
+      parentId: storyfragment.tractStackId,
+      parentSlug: storyfragment.tractStackSlug,
+      parentTitle: storyfragment.tractStackTitle,
+    }
+  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+---
+
+{
+  storyfragment ? (
+    <Layout
+      title={storyfragment.title}
+      pubDatetime={storyfragment.created}
+      modDatetime={storyfragment.changed}
+      ogImage={
+        typeof storyfragment?.socialImagePath === `string`
+          ? storyfragment.socialImagePath
+          : undefined
+      }
+      stylesUrl={stylesUrl}
+    >
+      {ENABLE_HEADER_WIDGET ? (
+        <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
+      ) : null}
+      <Header
+        title={storyfragment.title}
+        menu={storyfragment.menuPayload}
+        slug={lookup}
+        isContext={false}
+        isEditable={true}
+        impressions={storyfragment.impressions}
+        user={user}
+      />
+      <main id="main-content" class="min-h-screen">
+        <StoryFragmentWrapper
+          tailwindBgColour={storyfragment.tailwindBgColour}
+          panesPayload={storyfragment.panesPayload}
+          current={current}
+          resourcesPayload={storyfragment.resourcesPayload}
+        />
+      </main>
+      {storyfragment.impressions?.length ? (
+        <ImpressionWrapper
+          slug={storyfragment.slug}
+          isContext={true}
+          payload={storyfragment.impressions}
+          client:idle
+        />
+      ) : null}
+      <Footer
+        created={storyfragment.created}
+        menu={storyfragment.menuPayload}
+        backToTop={true}
+        slug={lookup}
+        isContext={false}
+      />
+    </Layout>
+  ) : null
+}

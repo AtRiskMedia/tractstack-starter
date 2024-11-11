@@ -1,0 +1,31 @@
+---
+import { ulid } from "ulid";
+import StoryKeep from "../../../../layouts/StoryKeep.astro";
+import CreateNewAiPage from "../../../../components/storykeep/components/CreateNewAiPage";
+import { isTursoReady } from "../../../../api/turso";
+import { getSetupChecks } from "../../../../utils/setupChecks";
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+  return Astro.redirect("/storykeep");
+}
+
+const slug = `create`;
+const newId = ulid();
+
+const baseUrl = new URL(Astro.url.pathname, Astro.url);
+const canonicalURL = new URL(`/context/${slug}`, baseUrl).href;
+---
+
+<StoryKeep
+  title="Create New Context Page"
+  pubDatetime={new Date()}
+  modDatetime={null}
+  canonicalURL={canonicalURL}
+>
+  <div id="storykeep-content">
+    <CreateNewAiPage mode="context" newId={newId} tractStackId={``} client:load />
+  </div>
+</StoryKeep>

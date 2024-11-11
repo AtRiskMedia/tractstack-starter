@@ -1,0 +1,47 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import FastTravel from "../../components/FastTravel";
+import { getSetupChecks } from "../../utils/setupChecks";
+import { getContentMap, isTursoReady } from "../../api/turso";
+import type { AuthStatus, ContentMap, StylesVersion } from "../../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+  return Astro.redirect("/storykeep");
+}
+
+const stylesVerUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`;
+const requestStyles: Response = await fetch(stylesVerUrl);
+const stylesVer: StylesVersion = requestStyles.status === 404 ? 0 : await requestStyles.json();
+const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+
+const contentMap: ContentMap[] = await getContentMap();
+---
+
+<Layout title="Fast Travel" pubDatetime={new Date()} modDatetime={new Date()} stylesUrl={stylesUrl}>
+  <Header title="Fast Travel" slug="graph" isContext={false} user={user} />
+  <main id="main-content">
+    <div class="px-12 md:px-24 font-main text-xl py-24">
+      <div class="max-w-5xl mx-auto">
+        <FastTravel contentMap={contentMap} client:load />
+      </div>
+      <div class="text-center pt-16
+      text-2xl md:text-3xl">
+        <a
+          href="/"
+          class="px-3.5 py-2.5 bg-myblack text-white rounded-lg hover:rotate-1 hover:bg-myorange"
+        >
+          Close
+        </a>
+      </div>
+    </div>
+  </main>
+  <Footer created={new Date()} slug="graph" isContext={false} />
+</Layout>

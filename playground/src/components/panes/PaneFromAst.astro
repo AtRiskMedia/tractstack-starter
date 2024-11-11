@@ -1,0 +1,216 @@
+---
+import { YouTubeWrapper } from "../../components/other/YouTubeWrapper";
+import BunnyVideo from "../../components/other/BunnyVideo.astro";
+import { Belief } from "../../components/widgets/Belief";
+import { IdentifyAs } from "../../components/widgets/IdentifyAs";
+import { ToggleBelief } from "../../components/widgets/ToggleBelief";
+import { AstToButton } from "../../components/panes/AstToButton";
+import { lispLexer } from "../../utils/concierge/lispLexer";
+import { preParseAction } from "../../utils/concierge/preParseAction";
+import { getGlobalNth } from "../../utils/compositor/markdownUtils";
+import type { ButtonData, FileNode, MarkdownLookup } from "../../types";
+
+interface Props {
+  payload: {
+    ast: any[];
+    imageData: FileNode[];
+    buttonData: { [key: string]: ButtonData };
+  };
+  thisClassNames: { [key: string]: string | string[] };
+  paneId: string;
+  slug: string;
+  isContext: boolean;
+  idx: number | null;
+  outerIdx: number;
+  markdownLookup: MarkdownLookup;
+}
+
+const {
+  payload,
+  thisClassNames,
+  paneId,
+  slug,
+  isContext,
+  idx = null,
+  outerIdx,
+  markdownLookup,
+} = Astro.props;
+
+const thisAst = payload.ast.at(0);
+const Tag = thisAst?.tagName || thisAst?.type;
+const globalNth = getGlobalNth(Tag, idx, outerIdx, markdownLookup);
+const outerGlobalNth =
+  [`p`, `ul`, `ol`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`].includes(Tag) &&
+  markdownLookup?.nthTagLookup[Tag] &&
+  markdownLookup.nthTagLookup[Tag][outerIdx] &&
+  markdownLookup.nthTagLookup[Tag][outerIdx].nth;
+
+const injectClassNames =
+  typeof thisAst?.tagName === `undefined`
+    ? ``
+    : typeof thisClassNames[Tag] === `string`
+      ? (thisClassNames[Tag] as string)
+      : typeof thisClassNames[Tag] === `object` &&
+          typeof outerGlobalNth === `number` &&
+          thisClassNames[Tag].length >= outerGlobalNth + 1
+        ? (thisClassNames[Tag][outerGlobalNth] as string)
+        : typeof thisClassNames[Tag] === `object` &&
+            typeof globalNth === `number` &&
+            !outerGlobalNth &&
+            thisClassNames[Tag].length >= globalNth + 1
+          ? (thisClassNames[Tag][globalNth] as string)
+          : typeof thisClassNames[Tag] === `object`
+            ? (thisClassNames[Tag][0] as string)
+            : ``;
+
+// applies only when Tag === `a`
+// Tag === `a` and has buttonPayload is rendered in an island
+const buttonPayload =
+  typeof thisAst.properties?.href === `string` &&
+  thisAst.children[0]?.type === `text` &&
+  typeof thisAst.children[0]?.value === `string` &&
+  typeof payload?.buttonData === `object` &&
+  Object.keys(payload?.buttonData).length &&
+  thisAst.properties?.href &&
+  typeof payload?.buttonData[thisAst.properties.href] !== `undefined`
+    ? payload.buttonData[thisAst.properties.href]
+    : undefined;
+const callbackPayload = buttonPayload?.callbackPayload && lispLexer(buttonPayload?.callbackPayload);
+const targetUrl = callbackPayload && preParseAction(callbackPayload, slug, isContext);
+const isExternalUrl =
+  (typeof targetUrl === `string` && targetUrl.substring(0, 8) === `https://`) ||
+  (typeof thisAst.properties?.href === `string` &&
+    thisAst.properties.href.substring(0, 8) === `https://`);
+
+// applies only when Tag === `img`
+const thisImage = payload?.imageData?.filter(
+  (image: any) => image.filename === thisAst.properties?.src
+)[0];
+const altText =
+  thisAst.properties?.alt ||
+  thisImage?.altDescription ||
+  `This should be descriptive text of an image | We apologize the alt text is missing.`;
+const imageSrc = thisImage?.optimizedSrc || thisImage?.src || null;
+const imageSrcSet = thisImage?.srcSet ? thisImage.optimizedSrc : null;
+
+// applies only when Tag === `code`
+// currently supported: YouTube, Bunny, toggle, belief, *resource not implemented
+const regexpHook = /(identifyAs|youtube|bunny|toggle|resource|belief)\((.*?)\)/;
+const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
+const thisHookRaw = thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
+const hook = thisHookRaw && typeof thisHookRaw[1] === `string` ? thisHookRaw[1] : null;
+const thisHookPayload = thisHookRaw && typeof thisHookRaw[2] === `string` ? thisHookRaw[2] : null;
+const thisHookValuesRaw = thisHookPayload && thisHookPayload.match(regexpValues);
+const value1 = thisHookValuesRaw && thisHookValuesRaw.length ? thisHookValuesRaw[0] : null;
+const value2 = thisHookValuesRaw && thisHookValuesRaw.length > 1 ? thisHookValuesRaw[1] : null;
+const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValuesRaw[2] : ``;
+---
+
+{Tag === `text` ? thisAst.value : null}
+{Tag === `br` ? <br /> : null}
+{
+  [`p`, `em`, `strong`, `ol`, `ul`, `li`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`].includes(Tag) ? (
+    <Tag class={injectClassNames}>
+      {thisAst?.children?.map((p: any, childIdx: number) => (
+        <Astro.self
+          payload={{ ...payload, ast: [p] }}
+          thisClassNames={thisClassNames}
+          paneId={paneId}
+          slug={slug}
+          isContext={isContext}
+          idx={!idx ? childIdx : idx}
+          outerIdx={outerIdx}
+          markdownLookup={markdownLookup}
+        />
+      ))}
+    </Tag>
+  ) : null
+}
+{
+  Tag === `a` && isExternalUrl ? (
+    <a
+      target="_blank"
+      rel="noreferrer"
+      class={`whitespace-nowrap truncate ${buttonPayload?.className || injectClassNames}`}
+      href={targetUrl || thisAst.properties.href}
+    >
+      {thisAst.children[0].value}
+      <span
+        class="ml-0.5"
+        style="display: inline-block; vertical-align: middle; width: 1em; height: 1em;"
+      >
+        <svg viewBox="0 0 16 16" style="width: 1em; height: 1em;">
+          <title>External Link</title>
+          <path
+            d="M12 0H4C2.9 0 2 .9 2 2v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V2c0-1.1-.9-2-2-2zm0 14H4V2h8v12zm-1.5-2.5L6 8l4.5-4.5L8 3l-6 6 6 6 1.5-1.5z"
+            fill="currentColor"
+          />
+        </svg>
+      </span>
+    </a>
+  ) : null
+}
+{
+  Tag === `a` &&
+  !isExternalUrl &&
+  buttonPayload &&
+  thisAst.children[0].type === `text` &&
+  thisAst.children[0].value ? (
+    <AstToButton
+      client:visible
+      className={`whitespace-nowrap truncate ${buttonPayload.className || ``}`}
+      callbackPayload={callbackPayload}
+      targetUrl={targetUrl}
+      slug={slug}
+      paneId={paneId}
+      text={thisAst.children[0].value}
+    />
+  ) : null
+}
+{
+  Tag === `img` && imageSrc && imageSrcSet ? (
+    <img
+      class={injectClassNames}
+      src={imageSrcSet.split(" ")[0]}
+      srcset={imageSrcSet}
+      alt={altText}
+    />
+  ) : Tag === `img` && imageSrc ? (
+    <img class={injectClassNames} src={imageSrc} alt={altText} />
+  ) : null
+}
+{
+  Tag === `code` && hook === `youtube` && value1 && value2 ? (
+    <div class={injectClassNames}>
+      <YouTubeWrapper client:visible embedCode={value1} title={value2} />
+    </div>
+  ) : null
+}
+{
+  Tag === `code` && hook === `bunny` && value1 && value2 ? (
+    <div class={injectClassNames}>
+      <BunnyVideo videoUrl={value1} title={value2} />
+    </div>
+  ) : null
+}
+{
+  Tag === `code` && hook === `belief` && value1 && value2 ? (
+    <div class={injectClassNames}>
+      <Belief client:visible value={{ slug: value1, scale: value2, extra: value3 }} />
+    </div>
+  ) : null
+}
+{
+  Tag === `code` && hook === `identifyAs` && value1 && value2 ? (
+    <div class={injectClassNames}>
+      <IdentifyAs client:visible value={{ slug: value1, target: value2, extra: value3 }} />
+    </div>
+  ) : null
+}
+{
+  Tag === `code` && hook === `toggle` && value1 && value2 ? (
+    <div class={injectClassNames}>
+      <ToggleBelief client:visible belief={value1} prompt={value2} />
+    </div>
+  ) : null
+}

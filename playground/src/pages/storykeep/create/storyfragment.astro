@@ -1,0 +1,38 @@
+---
+import { ulid } from "ulid";
+import StoryKeep from "../../../layouts/StoryKeep.astro";
+import { getSetupChecks } from "../../../utils/setupChecks";
+import { getTractStackIdBySlug } from "../../../api/turso";
+import { isTursoReady } from "../../../api/turso";
+import CreateNewPage from "../../../components/storykeep/components/CreateNewPage";
+
+// confirm set-up
+const { hasConcierge, hasTurso, hasBranding } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding) {
+  return Astro.redirect("/storykeep");
+}
+
+const slug = `create`;
+const newId = ulid();
+
+const baseUrl = new URL(Astro.url.pathname, Astro.url);
+const canonicalURL = new URL(`/${slug}`, baseUrl).href;
+
+const TRACTSTACK_SLUG = import.meta.env.PUBLIC_TRACTSTACK;
+const tractStackId = await getTractStackIdBySlug(TRACTSTACK_SLUG);
+if (!tractStackId) {
+  return Astro.redirect("/404");
+}
+---
+
+<StoryKeep
+  title="Create New Page"
+  pubDatetime={new Date()}
+  modDatetime={null}
+  canonicalURL={canonicalURL}
+>
+  <div id="storykeep-content">
+    <CreateNewPage mode="storyfragment" newId={newId} tractStackId={tractStackId} client:load />
+  </div>
+</StoryKeep>

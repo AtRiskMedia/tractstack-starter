@@ -1,0 +1,168 @@
+---
+import { Home } from "./icons/Home";
+import Menu from "./Menu";
+import { StorySteps } from "./other/StorySteps";
+import { RememberMe } from "./other/RememberMe";
+import { OpenStoryKeep } from "./other/OpenStoryKeep";
+import { ConfigureStoryKeep } from "./other/ConfigureStoryKeep";
+import ImpressionWrapper from "../components/ImpressionWrapper";
+import { CartIcon } from "./other/CartIcon";
+import { WORDMARK_MODE } from "../constants";
+import { getSetupChecks } from "../utils/setupChecks";
+import { isTursoReady } from "../api/turso";
+import type { AuthStatus, MenuDatum, ImpressionDatum } from "../types";
+
+export interface Props {
+  title: string;
+  slug: string;
+  user: AuthStatus;
+  menu?: MenuDatum | null;
+  impressions?: ImpressionDatum[];
+  isContext: boolean;
+  isStoryKeep?: boolean;
+  isEditable?: boolean;
+}
+
+const {
+  title,
+  slug,
+  user,
+  isContext,
+  menu,
+  impressions,
+  isStoryKeep = false,
+  isEditable = false,
+} = Astro.props;
+const isHome = slug === import.meta.env.PUBLIC_HOME;
+const disableFastTravel = import.meta.env.PUBLIC_DISABLE_FAST_TRAVEL;
+const { hasTurso, hasBranding, hasContent } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+const logo =
+  typeof import.meta.env.PUBLIC_LOGO === `string` && import.meta.env.PUBLIC_LOGO
+    ? import.meta.env.PUBLIC_LOGO
+    : `/logo.svg`;
+const logoIsSvg = logo.includes(`svg`);
+const wordmark =
+  typeof import.meta.env.PUBLIC_WORDMARK === `string` && import.meta.env.PUBLIC_WORDMARK
+    ? import.meta.env.PUBLIC_WORDMARK
+    : `/wordmark.svg`;
+const wordmarkIsSvg = wordmark.includes(`svg`);
+---
+
+<header class="relative bg-white shadow-inner">
+  <div class="flex flex-row flex-nowrap items-center justify-between py-3 px-4 md:px-8">
+    <a href="/" title="Home page">
+      <div class="flex flex-row flex-nowrap items-center h-auto">
+        {
+          [`default`, `logo`].includes(WORDMARK_MODE) ? (
+            <>
+              {logoIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={logo}
+                  class="h-8 w-auto pointer-events-none"
+                  aria-label="Logo"
+                >
+                  Logo
+                </object>
+              ) : (
+                <img src={logo} class="h-8 w-auto pointer-events-none" alt="Logo" />
+              )}
+              <span class="w-2" />
+            </>
+          ) : null
+        }
+        {
+          [`default`, `wordmark`].includes(WORDMARK_MODE) ? (
+            wordmarkIsSvg ? (
+              <object
+                type="image/svg+xml"
+                data={wordmark}
+                aria-label="Wordmark"
+                class="h-14 w-auto max-w-48 md:max-w-72 pointer-events-none"
+              >
+                Wordmark
+              </object>
+            ) : (
+              <img
+                src={wordmark}
+                alt="Wordmark"
+                class="h-14 w-auto max-w-48 md:max-w-72 pointer-events-none"
+              />
+            )
+          ) : null
+        }
+      </div>
+    </a>
+    {!!menu ? <Menu payload={menu} slug={slug} isContext={isContext} client:load /> : null}
+  </div>
+  <div
+    class="flex flex-row flex-nowrap justify-between pt-4 pb-3
+px-4 md:px-8 bg-mywhite shadow-inner"
+  >
+    <h1 class="text-mydarkgrey truncate text-xl" title={title}>{title}</h1>
+    <div class="flex flex-row flex-nowrap gap-x-2">
+      {
+        hasTurso && hasTursoReady && hasBranding && hasContent && !isHome && !isStoryKeep ? (
+          <a
+            href="/"
+            class="text-myblue/80 hover:text-myblue hover:rotate-6"
+            title="Go to home page"
+          >
+            <Home classes="w-6 h-6" />
+          </a>
+        ) : hasTurso && hasTursoReady && hasBranding && hasContent && !isHome && isStoryKeep ? (
+          <a
+            data-astro-reload
+            href="/"
+            class="text-myblue/80 hover:text-myblue hover:rotate-6"
+            title="Go to home page"
+          >
+            <Home classes="w-6 h-6" />
+          </a>
+        ) : null
+      }
+      {
+        hasTurso && hasTursoReady && hasBranding && hasContent && !disableFastTravel && (
+          <StorySteps client:load />
+        )
+      }
+      {
+        hasTurso &&
+        hasTursoReady &&
+        hasBranding &&
+        hasContent &&
+        slug !== `storykeep` &&
+        (user?.isAuthenticated || user?.isOpenDemo) ? (
+          <OpenStoryKeep
+            slug={slug}
+            isContext={isContext}
+            isStoryKeep={isStoryKeep}
+            isEditable={isEditable}
+            client:load
+          />
+        ) : hasTurso &&
+          hasTursoReady &&
+          hasBranding &&
+          hasContent &&
+          slug === `storykeep` &&
+          user?.isAuthenticated ? (
+          <ConfigureStoryKeep client:load />
+        ) : null
+      }
+      <RememberMe client:load />
+      <CartIcon client:load />
+      {
+        hasTurso && hasBranding && hasContent && impressions?.length ? (
+          <ImpressionWrapper
+            payload={impressions}
+            icon={true}
+            isContext={isContext}
+            slug={slug}
+            client:load
+          />
+        ) : null
+      }
+    </div>
+  </div>
+</header>
