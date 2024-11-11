@@ -50,6 +50,7 @@ export const creationStateStore = atom<CreationState>({
 // all look-ups by ulid
 //
 
+export const previewMode = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
 export const storedDashboardAnalytics = map<DashboardAnalytics>();
