@@ -22,3 +22,6 @@ pnpm-debug.log*
 
 # other
 .jampack*
+
+# the local turso replicas
+playground/.tractstack/

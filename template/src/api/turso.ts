@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from "@libsql/client/web";
+import { createClient } from "@libsql/client";
+import path from "path";
 import { cleanTursoResource } from "../utils/compositor/tursoResource";
 import { cleanTursoPayload } from "../utils/compositor/tursoPayload";
 import { cleanTursoContentMap } from "../utils/compositor/tursoContentMap";
@@ -24,26 +25,40 @@ import type {
   FileDatum,
   TursoQuery,
 } from "../types.ts";
-import type { ResultSet } from "@libsql/client";
+import type { ResultSet, Client } from "@libsql/client";
 
-let tursoClient: ReturnType<typeof createClient> | null = null;
+let tursoClient: Client | null = null;
+
+const DB_FILE_NAME = "tractstack.db";
+
+function getDbPath(): string {
+  return path.join(process.cwd(), ".tractstack", DB_FILE_NAME);
+}
 
 function getTursoClient() {
+  if (tursoClient) return tursoClient;
+
+  // For preview mode or development without credentials
   if (!import.meta.env.TURSO_DATABASE_URL?.trim() || !import.meta.env.TURSO_AUTH_TOKEN?.trim()) {
-    console.log("Turso credentials not configured");
-    return null;
+    tursoClient = createClient({
+      url: `file:${getDbPath()}`,
+    });
+    return tursoClient;
   }
+
+  // Validate URL format for production mode
   try {
     new URL(import.meta.env.TURSO_DATABASE_URL);
   } catch (e) {
     throw new Error("Invalid Turso database URL format");
   }
-  if (!tursoClient) {
-    tursoClient = createClient({
-      url: import.meta.env.TURSO_DATABASE_URL,
-      authToken: import.meta.env.TURSO_AUTH_TOKEN,
-    });
-  }
+
+  // Production mode with credentials
+  tursoClient = createClient({
+    url: import.meta.env.TURSO_DATABASE_URL,
+    authToken: import.meta.env.TURSO_AUTH_TOKEN,
+  });
+
   return tursoClient;
 }
 
@@ -717,4 +732,32 @@ export async function executeQueries(
   }
 
   return { success: true, results };
+}
+
+export async function checkTursoStatus(): Promise<boolean> {
+  try {
+    const turso = getTursoClient();
+    if (!turso) return false;
+    const { rows } = await turso.execute(`
+      SELECT COUNT(*) as table_count 
+      FROM sqlite_master 
+      WHERE type='table' 
+      AND name IN (
+        'tractstack',
+        'menu',
+        'resource',
+        'file',
+        'markdown',
+        'storyfragment',
+        'pane',
+        'storyfragment_pane',
+        'file_pane',
+        'file_markdown'
+      )
+    `);
+    return rows[0].table_count === 10;
+  } catch (error) {
+    console.error("Error checking database readiness:", error);
+    return false;
+  }
 }

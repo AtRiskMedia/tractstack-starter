@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
-import { previewMode } from "../../../store/storykeep";
 import type { ChangeEvent } from "react";
 
 interface TursoConnectionFormProps {

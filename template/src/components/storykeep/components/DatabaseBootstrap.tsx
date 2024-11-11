@@ -1,42 +1,77 @@
 import { useState } from "react";
-import { navigate } from "astro:transitions/client";
-import { initializeBrowserSchema } from "../../../db/schema";
 import { useStore } from "@nanostores/react";
-import { previewMode } from "../../../store/storykeep";
-import type { ReactElement } from "react";
+import { previewMode, previewDbInitialized, getPreviewModeValue } from "../../../store/storykeep";
 
-const DatabaseBootstrap = (): ReactElement => {
+const DatabaseBootstrap = () => {
   const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState<{ current: number; total: number }>({
-    current: 0,
-    total: 1,
-  });
   const [error, setError] = useState<string | null>(null);
-  const $previewMode = useStore(previewMode);
+  const $previewMode = getPreviewModeValue(useStore(previewMode));
 
   const initializeDatabase = async () => {
     setIsInitializing(true);
     setError(null);
 
     try {
-      await initializeBrowserSchema({
-        onProgress: (current, total) => {
-          setProgress({ current, total });
+      // Initialize database
+      const initResponse = await fetch("/api/turso/init", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
       });
 
-      setTimeout(() => {
-        navigate("/storykeep");
-      }, 1000);
+      if (!initResponse.ok) {
+        throw new Error(await initResponse.text());
+      }
+
+      const initData = await initResponse.json();
+
+      if (!initData.success) {
+        throw new Error(initData.error || "Failed to initialize database");
+      }
+
+      // Wait a moment for the database to be ready
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Verify database status
+      let retries = 3;
+      let isReady = false;
+
+      while (retries > 0 && !isReady) {
+        const statusResponse = await fetch("/api/turso/status", {
+          method: "POST",
+        });
+
+        if (!statusResponse.ok) {
+          throw new Error("Failed to verify database status");
+        }
+
+        const statusData = await statusResponse.json();
+
+        if (statusData.isReady) {
+          isReady = true;
+          if ($previewMode) {
+            previewDbInitialized.set("true");
+          }
+          setIsInitializing(false);
+          break;
+        } else {
+          retries--;
+          if (retries > 0) {
+            // Wait before retry
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      }
+
+      if (!isReady) {
+        throw new Error("Database initialization timed out after multiple attempts");
+      }
     } catch (err) {
       console.error("Database initialization error:", err);
       setError(err instanceof Error ? err.message : "Failed to initialize database");
       setIsInitializing(false);
     }
-  };
-
-  const getProgressPercentage = () => {
-    return (progress.current / progress.total) * 100;
   };
 
   return (
@@ -46,18 +81,14 @@ const DatabaseBootstrap = (): ReactElement => {
           onClick={initializeDatabase}
           className="px-4 py-2 text-white bg-myorange rounded hover:bg-myblue"
         >
-          {$previewMode ? "Initialize Preview Database" : "Initialize Database Tables"}
+          Initialize Database Tables
         </button>
       ) : (
         <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
           <div>
             <div className="mt-3 text-center sm:mt-5">
               <h3 className="text-lg font-bold leading-6 text-mydarkgrey">
-                {error
-                  ? "Initialization Error"
-                  : $previewMode
-                    ? "Setting Up Preview..."
-                    : "Initializing Database..."}
+                {error ? "Initialization Error" : "Initializing Database..."}
               </h3>
 
               {!error && (
@@ -65,7 +96,7 @@ const DatabaseBootstrap = (): ReactElement => {
                   <div className="h-2 w-full bg-mylightgrey/20 rounded-full">
                     <div
                       className="h-full rounded-full transition-all duration-500 bg-myorange"
-                      style={{ width: `${getProgressPercentage()}%` }}
+                      style={{ width: "100%" }}
                     />
                   </div>
                 </div>

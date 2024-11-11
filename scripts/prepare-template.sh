@@ -1,7 +1,10 @@
 #!/bin/bash
 
+if [ "$(pwd)" = "$(cd "$(dirname "$0")" && pwd)" ]; then
+  cd ..
+fi
+
 # Create/clean template directory
-cd ..
 rm -rf template
 mkdir -p template
 

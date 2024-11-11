@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { previewMode } from "../../../store/storykeep";
+import { previewMode, previewDbInitialized, getPreviewModeValue } from "../../../store/storykeep";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
 import ChevronUpIcon from "@heroicons/react/24/outline/ChevronUpIcon";
@@ -104,20 +104,42 @@ export default function SiteWizard({
   const [gotTurso, setGotTurso] = useState(false);
   const [gotIntegrations, setGotIntegrations] = useState(false);
   const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({});
-  const $previewMode = useStore(previewMode);
+  const $previewMode = getPreviewModeValue(useStore(previewMode));
+  const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
 
   const getStepStatus = (index: number): StepStatus => {
+    const previewCompleted = $previewMode && $previewDbInitialized;
     const completionStates = [
       hasConcierge || $previewMode,
       hasAuth || $previewMode,
-      hasTurso || gotTurso,
-      gotIntegrations || hasBranding,
-      hasBranding,
-      hasTursoReady,
-      hasContentReady,
+      hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
+      gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
+      hasBranding || ($previewMode && $previewDbInitialized),
+      hasTursoReady || ($previewMode && $previewDbInitialized),
+      hasContentReady || ($previewMode && $previewDbInitialized),
     ];
+
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
+
+    console.log("Step status check:", {
+      index,
+      step: [
+        "Install",
+        "Login",
+        "Connect Turso",
+        "Add Integrations",
+        "Make it your own",
+        "Bootstrap DB",
+        "Publish page",
+      ][index],
+      isCompleted,
+      allPreviousCompleted,
+      previewMode: $previewMode,
+      previewDbInitialized: $previewDbInitialized,
+      previewCompleted,
+      completionStates,
+    });
 
     if (!allPreviousCompleted) return "locked";
     if (isCompleted) return "completed";
@@ -125,7 +147,13 @@ export default function SiteWizard({
   };
 
   const handleInitOpenDemo = () => {
-    previewMode.set(true);
+    console.log("Initializing preview mode", {
+      before: {
+        previewMode: $previewMode,
+        previewDbInitialized: $previewDbInitialized,
+      },
+    });
+    previewMode.set("true");
   };
 
   const setupSteps: SetupStep[] = [
@@ -150,7 +178,7 @@ export default function SiteWizard({
       ) : (
         <Completed />
       ),
-      isComplete: hasTurso || gotTurso,
+      isComplete: hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       status: getStepStatus(2),
     },
     {
@@ -188,12 +216,18 @@ export default function SiteWizard({
     const completionStates = [
       hasConcierge || $previewMode,
       hasAuth || $previewMode,
-      hasTurso || gotTurso,
-      gotIntegrations || hasBranding,
-      hasBranding,
-      hasTursoReady,
-      hasContent && hasContentReady,
+      hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
+      gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
+      hasBranding || ($previewMode && $previewDbInitialized),
+      hasTursoReady || ($previewMode && $previewDbInitialized),
+      hasContentReady || ($previewMode && $previewDbInitialized),
     ];
+
+    console.log("Effect updating open steps:", {
+      previewMode: $previewMode,
+      previewDbInitialized: $previewDbInitialized,
+      completionStates,
+    });
 
     const newOpenSteps: Record<number, boolean> = {};
     let foundCurrent = false;
@@ -218,6 +252,7 @@ export default function SiteWizard({
     hasTursoReady,
     hasContent && hasContentReady,
     $previewMode,
+    $previewDbInitialized,
   ]);
 
   const getStepIcon = (step: SetupStep): ReactNode => {
@@ -236,6 +271,18 @@ export default function SiteWizard({
       [index]: !prev[index],
     }));
   };
+
+  console.log("Step completion checks:", {
+    hasConcierge,
+    previewMode: $previewMode,
+    hasAuth,
+    hasTurso,
+    gotTurso,
+    gotIntegrations,
+    hasBranding,
+    hasTursoReady,
+    hasContentReady,
+  });
 
   return (
     <div

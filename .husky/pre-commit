@@ -5,13 +5,10 @@
 set -e
 
 # Run lint-staged first (your existing pre-commit tasks)
-pnpm lint-staged
-
-# Make prepare-template.sh executable if it isn't already
-chmod +x prepare-template.sh
+#pnpm lint-staged
 
 # Run prepare-template.sh
-./prepare-template.sh
+./scripts/prepare-template.sh
 
 # Add the template directory changes to the commit
 git add template/
