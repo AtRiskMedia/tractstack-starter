@@ -7,7 +7,7 @@ import Footer from "../../components/Footer.astro";
 import { getSetupChecks } from "../../utils/setupChecks";
 import { getContextPaneBySlug, isTursoReady, isContentReady } from "../../api/turso";
 import { isValidContentPath } from "../../utils/routeValidation";
-import type { StylesVersion, Current, AuthStatus } from "../../types";
+import type { Current, AuthStatus } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
@@ -19,17 +19,6 @@ const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
-
-// get styles offset
-const stylesVerUrl =
-  typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
-  import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
-    ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
-    : null;
-const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
-const stylesVer: StylesVersion =
-  !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
-const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 
 const { slug } = Astro.params;
 
@@ -55,12 +44,7 @@ const current: Current = pane
 
 {
   pane && pane?.panePayload ? (
-    <Layout
-      title={pane.title}
-      pubDatetime={pane.created}
-      modDatetime={pane.changed}
-      stylesUrl={stylesUrl}
-    >
+    <Layout title={pane.title} pubDatetime={pane.created} modDatetime={pane.changed}>
       <Header
         title={pane.title}
         slug={pane.slug}

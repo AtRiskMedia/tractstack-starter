@@ -8,7 +8,7 @@ import { AddToCartForm } from "../../components/other/AddToCartForm";
 import { getProductByHandle } from "../../utils/shopify/shopify";
 import { setCache } from "../../utils/shopify/cache";
 import { getSetupChecks } from "../../utils/setupChecks";
-import type { StylesVersion, AuthStatus } from "../../types";
+import type { AuthStatus } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
@@ -18,11 +18,6 @@ const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
 if (!hasConcierge || !hasTurso || !hasBranding || !hasContent) {
   return Astro.redirect("/storykeep");
 }
-
-const stylesVerUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`;
-const requestStyles: Response = await fetch(stylesVerUrl);
-const stylesVer: StylesVersion = requestStyles.status === 404 ? 0 : await requestStyles.json();
-const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 
 const { handle } = Astro.params;
 //const headers = Astro.request.headers;
@@ -38,12 +33,7 @@ if (!product) {
 setCache.short(Astro);
 ---
 
-<Layout
-  title={product?.title || `404`}
-  pubDatetime={new Date()}
-  modDatetime={new Date()}
-  stylesUrl={stylesUrl}
->
+<Layout title={product?.title || `404`} pubDatetime={new Date()} modDatetime={new Date()}>
   <Header title={product?.title || `404`} slug={handle || `404`} isContext={false} user={user} />
   <main id="main-content">
     <div class="pt-6 pb-16 md:pb-24">

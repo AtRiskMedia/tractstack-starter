@@ -3,14 +3,13 @@ import { ViewTransitions } from "astro:transitions";
 import SetContentMap from "../components/SetContentMap";
 import { getContentMap, isTursoReady } from "../api/turso";
 import { getSetupChecks } from "../utils/setupChecks";
-import type { ContentMap } from "../types";
+import type { ContentMap, StylesVersion } from "../types";
 
 export interface Props {
   title?: string;
   canonicalURL?: string;
   pubDatetime?: Date;
   modDatetime?: Date | null;
-  stylesUrl?: string;
   ogImage?: string;
 }
 
@@ -20,8 +19,23 @@ const {
   canonicalURL = new URL(Astro.url.pathname, Astro.url).href,
   pubDatetime,
   modDatetime,
-  stylesUrl = ``,
 } = Astro.props;
+
+const { hasTurso } = getSetupChecks();
+const hasTursoReady = hasTurso ? await isTursoReady() : false;
+
+let stylesUrl = "/styles/storykeep.css";
+if (hasTursoReady) {
+  const stylesVerUrl =
+    typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
+    import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
+      ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
+      : null;
+  const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
+  const stylesVer: StylesVersion =
+    !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
+  stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+}
 
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
@@ -58,8 +72,6 @@ const gtagUrl =
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
-const { hasTurso } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
 const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap() : [];
 ---
 

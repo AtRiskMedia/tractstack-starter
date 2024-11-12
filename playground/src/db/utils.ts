@@ -68,7 +68,7 @@ export async function createTursoClient(config?: {
     try {
       if (tursoClient && currentMode !== targetMode) {
         console.log("Closing existing client due to mode change");
-        await tursoClient.close();
+        tursoClient.close();
         tursoClient = null;
       }
 
