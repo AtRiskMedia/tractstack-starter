@@ -38,6 +38,7 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
         break;
 
       case "execute":
+        console.log(`%%%% execute`);
         const execBody = await request.json();
         if (!Array.isArray(execBody.queries)) {
           throw new Error("Invalid or missing queries array");

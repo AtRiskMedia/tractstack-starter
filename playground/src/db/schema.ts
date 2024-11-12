@@ -1,3 +1,4 @@
+import { ulid } from "ulid";
 import type { Client } from "@libsql/client";
 
 const TABLE_STATEMENTS = {
@@ -119,6 +120,12 @@ export async function initializeSchema({ client }: InitOptions): Promise<void> {
     for (const indexStatement of INDEX_STATEMENTS) {
       await client.execute(indexStatement);
     }
+
+    // Create first tract stack
+    await client.execute({
+      sql: "INSERT INTO tractstack (id, title, slug, social_image_path) VALUES (?, ?, ?, ?)",
+      args: [`${ulid()}`, "Tract Stack", "HELLO", ""],
+    });
   } catch (error) {
     console.error("Schema initialization error:", error);
     throw error;

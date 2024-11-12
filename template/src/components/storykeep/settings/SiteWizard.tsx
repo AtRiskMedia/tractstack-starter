@@ -106,7 +106,6 @@ export default function SiteWizard({
   const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({});
   const $previewMode = getPreviewModeValue(useStore(previewMode));
   const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
-
   const getStepStatus = (index: number): StepStatus => {
     const completionStates = [
       hasConcierge || $previewMode,
@@ -114,13 +113,11 @@ export default function SiteWizard({
       hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       hasBranding || ($previewMode && $previewDbInitialized),
-      hasTursoReady || ($previewMode && $previewDbInitialized),
-      hasContentReady || ($previewMode && $previewDbInitialized),
+      hasTursoReady,
+      hasContentReady,
     ];
-
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
-
     if (!allPreviousCompleted) return "locked";
     if (isCompleted) return "completed";
     return "current";
@@ -163,13 +160,13 @@ export default function SiteWizard({
         ) : (
           <Completed />
         ),
-      isComplete: gotIntegrations || hasBranding,
+      isComplete: gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       status: getStepStatus(3),
     },
     {
       title: "Make it your own",
       description: <EnvironmentSettings contentMap={contentMap} showOnlyGroup="Brand" />,
-      isComplete: hasBranding,
+      isComplete: hasBranding || ($previewMode && $previewDbInitialized),
       status: getStepStatus(4),
     },
     {
@@ -193,8 +190,8 @@ export default function SiteWizard({
       hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       hasBranding || ($previewMode && $previewDbInitialized),
-      hasTursoReady || ($previewMode && $previewDbInitialized),
-      hasContentReady || ($previewMode && $previewDbInitialized),
+      hasTursoReady,
+      hasContentReady,
     ];
 
     const newOpenSteps: Record<number, boolean> = {};
