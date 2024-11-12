@@ -7,6 +7,13 @@ export interface SetupChecks {
 }
 
 export function getSetupChecks(): SetupChecks {
+  const hasTurso = [import.meta.env.TURSO_DATABASE_URL, import.meta.env.TURSO_AUTH_TOKEN].every(
+    (x) =>
+      typeof x === "string" &&
+      x.trim().length > 0 &&
+      (x.startsWith("libsql://") || x.startsWith("ey"))
+  );
+
   const hasConcierge = [
     import.meta.env.PUBLIC_CONCIERGE_STYLES_URL,
     import.meta.env.PRIVATE_CONCIERGE_BASE_URL,
@@ -14,13 +21,6 @@ export function getSetupChecks(): SetupChecks {
     import.meta.env.PRIVATE_CONCIERGE_SECRET,
     import.meta.env.PRIVATE_AUTH_SECRET,
   ].every((x) => typeof x === "string" && x.trim().length > 0);
-
-  const hasTurso = [import.meta.env.TURSO_DATABASE_URL, import.meta.env.TURSO_AUTH_TOKEN].every(
-    (x) =>
-      typeof x === "string" &&
-      x.trim().length > 0 &&
-      (x.startsWith("libsql://") || x.startsWith("ey"))
-  );
 
   const hasBranding = [
     import.meta.env.PUBLIC_THEME,

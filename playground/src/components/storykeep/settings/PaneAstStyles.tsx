@@ -376,7 +376,7 @@ export const PaneAstStyles = (props: {
     }
   };
 
-  const removeOverride = () => {
+  const toggleOverride = () => {
     const thisTag = activeTagData?.tag;
     const thisClass = activeTagData?.class ?? "";
     const thisGlobalNth = activeTagData?.globalNth ?? 0;
@@ -1368,7 +1368,7 @@ export const PaneAstStyles = (props: {
               <div className="flex items-center mt-4">
                 <Switch
                   checked={activeTagData?.hasOverride}
-                  onChange={removeOverride}
+                  onChange={toggleOverride}
                   className={`${
                     activeTagData?.hasOverride ? "bg-myorange" : "bg-mydarkgrey"
                   } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`}

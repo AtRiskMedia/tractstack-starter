@@ -107,17 +107,10 @@ interface InitOptions {
 }
 
 export async function initializeSchema({ client }: InitOptions): Promise<void> {
+  console.log(`attempt to initializeSchema on`, client);
   try {
-    // Disable foreign keys before operations
-    await client.execute(`PRAGMA foreign_keys = OFF;`);
-
-    // Drop existing tables in reverse dependency order
-    const tablesToDrop = Object.keys(TABLE_STATEMENTS).reverse();
-    for (const table of tablesToDrop) {
-      await client.execute(`DROP TABLE IF EXISTS ${table};`);
-    }
-
-    // Create tables
+    // For safety, always create tables/indexes without dropping in production replicas
+    // Create tables if they don't exist (safe for both demo and replicas)
     for (const [, statement] of Object.entries(TABLE_STATEMENTS)) {
       await client.execute(statement);
     }
@@ -126,15 +119,8 @@ export async function initializeSchema({ client }: InitOptions): Promise<void> {
     for (const indexStatement of INDEX_STATEMENTS) {
       await client.execute(indexStatement);
     }
-
-    // Re-enable foreign keys
-    await client.execute(`PRAGMA foreign_keys = ON;`);
   } catch (error) {
     console.error("Schema initialization error:", error);
     throw error;
   }
 }
-
-export default {
-  initializeSchema,
-};

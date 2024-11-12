@@ -11,7 +11,7 @@ export function generateMarkdownLookup(htmlAst: Root): MarkdownLookup {
     codeItemsLookup: {},
     listItemsLookup: {},
     linksLookup: {},
-    linksByTarget: {}, // New property for storing link information by target
+    linksByTarget: {},
     nthTag: {},
     nthTagLookup: {},
   };

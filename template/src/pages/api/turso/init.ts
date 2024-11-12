@@ -1,21 +1,28 @@
-import { createTursoClient } from "../../../db/utils";
-import { initializeSchema } from "../../..//db/schema";
+import { createTursoClient, getCurrentMode, getWriteClient } from "../../../db/utils";
+import { initializeSchema } from "../../../db/schema";
 import { TursoOperationError } from "../../../types";
 import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async () => {
   try {
-    const client = createTursoClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+    await createTursoClient();
+    const writeClient = getWriteClient();
+
+    // Initialize schema on the appropriate database
+    await initializeSchema({
+      client: writeClient,
     });
 
-    await initializeSchema({ client });
-
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        mode: getCurrentMode(),
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
     console.error("Database initialization error:", error);
     const isOperationError = error instanceof TursoOperationError;
@@ -23,6 +30,7 @@ export const POST: APIRoute = async () => {
     return new Response(
       JSON.stringify({
         success: false,
+        mode: getCurrentMode(),
         error: isOperationError ? error.message : "Failed to initialize database",
       }),
       {

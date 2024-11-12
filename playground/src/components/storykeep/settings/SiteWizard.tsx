@@ -108,7 +108,6 @@ export default function SiteWizard({
   const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
 
   const getStepStatus = (index: number): StepStatus => {
-    const previewCompleted = $previewMode && $previewDbInitialized;
     const completionStates = [
       hasConcierge || $previewMode,
       hasAuth || $previewMode,
@@ -122,37 +121,12 @@ export default function SiteWizard({
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
 
-    console.log("Step status check:", {
-      index,
-      step: [
-        "Install",
-        "Login",
-        "Connect Turso",
-        "Add Integrations",
-        "Make it your own",
-        "Bootstrap DB",
-        "Publish page",
-      ][index],
-      isCompleted,
-      allPreviousCompleted,
-      previewMode: $previewMode,
-      previewDbInitialized: $previewDbInitialized,
-      previewCompleted,
-      completionStates,
-    });
-
     if (!allPreviousCompleted) return "locked";
     if (isCompleted) return "completed";
     return "current";
   };
 
   const handleInitOpenDemo = () => {
-    console.log("Initializing preview mode", {
-      before: {
-        previewMode: $previewMode,
-        previewDbInitialized: $previewDbInitialized,
-      },
-    });
     previewMode.set("true");
   };
 
@@ -223,12 +197,6 @@ export default function SiteWizard({
       hasContentReady || ($previewMode && $previewDbInitialized),
     ];
 
-    console.log("Effect updating open steps:", {
-      previewMode: $previewMode,
-      previewDbInitialized: $previewDbInitialized,
-      completionStates,
-    });
-
     const newOpenSteps: Record<number, boolean> = {};
     let foundCurrent = false;
 
@@ -271,18 +239,6 @@ export default function SiteWizard({
       [index]: !prev[index],
     }));
   };
-
-  console.log("Step completion checks:", {
-    hasConcierge,
-    previewMode: $previewMode,
-    hasAuth,
-    hasTurso,
-    gotTurso,
-    gotIntegrations,
-    hasBranding,
-    hasTursoReady,
-    hasContentReady,
-  });
 
   return (
     <div
