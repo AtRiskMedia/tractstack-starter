@@ -19,7 +19,6 @@ const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
 const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
 if (!hasTursoReady || !hasContentReady) {
-  console.log(`redirect to storykeep`);
   return Astro.redirect("/storykeep");
 }
 

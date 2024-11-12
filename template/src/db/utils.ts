@@ -2,7 +2,7 @@ import { createClient } from "@libsql/client";
 import path from "path";
 import fs from "fs";
 import { initializeSchema } from "./schema";
-import { DB_DIR, DEMO_DB, PROD_DB } from "../constants";
+import { DB_DIR, DEMO_DB } from "../constants";
 import type { Client } from "@libsql/client";
 
 let tursoClient: Client | null = null;
@@ -10,14 +10,13 @@ let currentMode: "demo" | "prod" = "demo";
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
 
-function getDbPath(type: "demo" | "prod"): string {
+function getDbPath(): string {
   const dbDir = path.join(process.cwd(), DB_DIR);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const dbFile = type === "demo" ? DEMO_DB : PROD_DB;
-  const dbPath = path.join(dbDir, dbFile);
+  const dbPath = path.join(dbDir, DEMO_DB);
 
   // Only create empty file if it doesn't exist
   if (!fs.existsSync(dbPath)) {
@@ -28,7 +27,6 @@ function getDbPath(type: "demo" | "prod"): string {
 
 function validateTursoCredentials(url?: string, authToken?: string): boolean {
   if (!url || !authToken) return false;
-  // Validate URL format
   try {
     const parsedUrl = new URL(url);
     return parsedUrl.protocol === "libsql:" && authToken.startsWith("ey") && authToken.length > 32;
@@ -66,59 +64,40 @@ export async function createTursoClient(config?: {
     hasExistingClient: !!tursoClient,
   });
 
-  // Start initialization
   initPromise = (async () => {
     try {
-      // Close existing clients if mode is changing
       if (tursoClient && currentMode !== targetMode) {
-        console.log("Closing existing clients due to mode change");
-        await Promise.all([tursoClient.close()]);
+        console.log("Closing existing client due to mode change");
+        await tursoClient.close();
         tursoClient = null;
       }
 
       if (!tursoClient) {
         if (hasValidCredentials && url && authToken) {
-          console.log("Connecting to production Turso (no replica yet)");
-          //console.log("Creating production Turso client with local replica");
-          // Production mode: Turso primary with local replica
-          //const primary = createClient({
-          //  url: `file:${getDbPath("prod")}`,
-          //  syncUrl: url,
-          //  authToken: authToken,
-          //});
-          const primary = createClient({
+          console.log("Creating production Turso client");
+          tursoClient = createClient({
             url: url,
             authToken: authToken,
           });
-
-          //try {
-          //  await primary.sync();
-          //  console.log("Sync completed successfully");
-          //} catch (error) {
-          //  console.error("Sync error:", error);
-          //}
-
-          // Initialize schema for local replica
-          //await initializeSchema({ client: primary });
-
-          tursoClient = primary;
           currentMode = "prod";
         } else {
           console.log("Creating local demo database client");
-          // Demo mode: Single local database
           const demoClient = createClient({
-            url: `file:${getDbPath("demo")}`,
+            url: `file:${getDbPath()}`,
           });
-          console.log(`attempting to initialize on demoClient`, demoClient);
-          // Initialize schema for demo database
           await initializeSchema({ client: demoClient });
-          (tursoClient = demoClient), (currentMode = "demo");
+          tursoClient = demoClient;
+          currentMode = "demo";
         }
+
+        // Test the connection
+        await tursoClient.execute("SELECT 1");
+        console.log(`${currentMode.toUpperCase()} connection successful`);
       }
 
       isInitialized = true;
     } catch (error) {
-      console.error("Error initializing Turso clients:", error);
+      console.error("Error initializing Turso client:", error);
       throw error;
     } finally {
       initPromise = null;
@@ -131,13 +110,14 @@ export async function createTursoClient(config?: {
 
 export function getReadClient(): Client {
   if (!tursoClient) {
-    throw new Error("Turso clients not initialized. Call createTursoClient first.");
+    throw new Error("Turso client not initialized. Call createTursoClient first.");
   }
   return tursoClient;
 }
+
 export function getWriteClient(): Client {
   if (!tursoClient) {
-    throw new Error("Turso clients not initialized. Call createTursoClient first.");
+    throw new Error("Turso client not initialized. Call createTursoClient first.");
   }
   return tursoClient;
 }
