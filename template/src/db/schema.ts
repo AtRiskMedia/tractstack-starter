@@ -108,7 +108,6 @@ interface InitOptions {
 }
 
 export async function initializeSchema({ client }: InitOptions): Promise<void> {
-  console.log(`attempt to initializeSchema on`, client);
   try {
     // For safety, always create tables/indexes without dropping in production replicas
     // Create tables if they don't exist (safe for both demo and replicas)
@@ -120,14 +119,20 @@ export async function initializeSchema({ client }: InitOptions): Promise<void> {
     for (const indexStatement of INDEX_STATEMENTS) {
       await client.execute(indexStatement);
     }
+  } catch (error) {
+    console.error("Schema initialization error:", error);
+    throw error;
+  }
+}
 
-    // Create first tract stack
+export async function initializeContent({ client }: InitOptions): Promise<void> {
+  try {
     await client.execute({
       sql: "INSERT INTO tractstack (id, title, slug, social_image_path) VALUES (?, ?, ?, ?)",
       args: [`${ulid()}`, "Tract Stack", "HELLO", ""],
     });
   } catch (error) {
-    console.error("Schema initialization error:", error);
+    console.error("Content initialization error:", error);
     throw error;
   }
 }

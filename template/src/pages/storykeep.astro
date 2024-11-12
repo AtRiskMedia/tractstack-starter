@@ -9,7 +9,7 @@ import SiteWizard from "../components/storykeep/settings/SiteWizard";
 import DashboardActivity from "../components/storykeep/nivo/DashboardActivity";
 import WhatsHot from "../components/storykeep/components/WhatsHot";
 import StoryKeepDashboardStore from "../components/storykeep/StoryKeepDashboardStore";
-import { getFullContentMap, isTursoReady, isContentReady } from "../api/turso";
+import { getFullContentMap, isContentPrimed, isTursoReady, isContentReady } from "../api/turso";
 import { getSetupChecks } from "../utils/setupChecks";
 import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../types";
 
@@ -18,8 +18,9 @@ const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
 const { hasConcierge, hasTurso, hasBranding, hasContent, hasAssemblyAI } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+const hasTursoReady = await isTursoReady();
+const hasContentPrimed = await isContentPrimed();
+const hasContentReady = hasTurso && hasContentPrimed && hasContent ? await isContentReady() : false;
 
 // set the canonicalUrl to the actual storyfragment
 const baseUrl = new URL(Astro.url.pathname, Astro.url);
@@ -274,6 +275,7 @@ const impressions =
         hasBranding={hasBranding}
         hasContent={hasContent}
         hasContentReady={hasContentReady}
+        hasContentPrimed={hasContentPrimed}
         hasAssemblyAI={hasAssemblyAI}
         hasAuth={hasAuth}
         contentMap={payload}

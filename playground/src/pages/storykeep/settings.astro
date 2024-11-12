@@ -13,17 +13,10 @@ import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
+const { hasTurso, hasContent } = getSetupChecks();
+const hasTursoReady = await isTursoReady();
 const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (
-  !hasConcierge ||
-  !hasTurso ||
-  !hasTursoReady ||
-  !hasBranding ||
-  !hasContent ||
-  !hasContentReady
-) {
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

@@ -3,13 +3,14 @@ import { ulid } from "ulid";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import { getTractStackIdBySlug } from "../../../../api/turso";
 import { getSetupChecks } from "../../../../utils/setupChecks";
-import { isTursoReady } from "../../../../api/turso";
+import { isTursoReady, isContentReady } from "../../../../api/turso";
 import CreateNewAiPage from "../../../../components/storykeep/components/CreateNewAiPage";
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding) {
+const { hasTurso, hasContent } = getSetupChecks();
+const hasTursoReady = await isTursoReady();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

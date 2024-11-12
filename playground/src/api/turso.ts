@@ -379,7 +379,21 @@ export async function isContentReady(): Promise<boolean> {
       `,
       args: [import.meta.env.PUBLIC_HOME, import.meta.env.PUBLIC_TRACTSTACK],
     });
+    return rows[0]?.content_exists === 1;
+  } catch (error) {
+    console.error("Error checking content readiness:", error);
+    return false;
+  }
+}
 
+export async function isContentPrimed(): Promise<boolean> {
+  try {
+    const client = getReadClient();
+    if (!client) return false;
+    const { rows } = await client.execute({
+      sql: `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists;`,
+      args: [import.meta.env.PUBLIC_HOME, import.meta.env.PUBLIC_TRACTSTACK],
+    });
     return rows[0]?.content_exists === 1;
   } catch (error) {
     console.error("Error checking content readiness:", error);
@@ -440,12 +454,6 @@ export async function checkTursoStatus(): Promise<boolean> {
         'file_markdown'
       )
     `);
-
-    console.log("Database status check:", {
-      tableCount: rows[0].table_count,
-      isReady: rows[0].table_count === 10,
-    });
-
     return rows[0].table_count === 10;
   } catch (error) {
     console.error("Error checking database readiness:", error);

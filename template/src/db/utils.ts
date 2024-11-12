@@ -32,7 +32,6 @@ function getDbPath(type: "demo" | "prod"): string {
 }
 
 function validateTursoCredentials(url?: string, authToken?: string): boolean {
-  console.log(`validateTursoCredentials`);
   if (!url || !authToken) return false;
   // Validate URL format
   try {
@@ -47,14 +46,11 @@ export async function createTursoClient(config?: {
   url?: string;
   authToken?: string;
 }): Promise<TursoClients> {
-  console.log(`createTursoClient`);
   // If initialization is in progress, wait for it
   if (initPromise) {
     await initPromise;
-    console.log(`clients are ready`);
     if (tursoClients) return tursoClients;
   }
-  console.log(`...proceed to init`);
   const url = config?.url || import.meta.env.TURSO_DATABASE_URL;
   const authToken = config?.authToken || import.meta.env.TURSO_AUTH_TOKEN;
 

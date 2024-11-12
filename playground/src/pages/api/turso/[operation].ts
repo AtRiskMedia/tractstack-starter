@@ -4,6 +4,8 @@ import {
   executeQueries,
   getUniqueTailwindClasses,
   checkTursoStatus,
+  isContentReady,
+  isContentPrimed,
 } from "../../../api/turso";
 
 export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
@@ -28,6 +30,11 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
         result = { success: true, isReady };
         break;
 
+      case "contentPrimed":
+        const isContentPrimedResponse = await isContentPrimed();
+        result = { success: true, isContentPrimed: isContentPrimedResponse };
+        break;
+
       case "paneDesigns":
         result = await getPaneDesigns();
         break;
@@ -38,7 +45,6 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
         break;
 
       case "execute":
-        console.log(`%%%% execute`);
         const execBody = await request.json();
         if (!Array.isArray(execBody.queries)) {
           throw new Error("Invalid or missing queries array");

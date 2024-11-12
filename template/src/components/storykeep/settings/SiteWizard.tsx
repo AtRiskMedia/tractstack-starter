@@ -8,6 +8,7 @@ import LockClosedIcon from "@heroicons/react/24/outline/LockClosedIcon";
 import TursoConnectionForm from "../fields/TursoConnectionForm";
 import IntegrationsConnectionForm from "../fields/IntegrationsConnectionForm";
 import DatabaseBootstrap from "../components/DatabaseBootstrap";
+import DatabaseContentBootstrap from "../components/DatabaseContentBootstrap";
 import EnvironmentSettings from "../fields/EnvironmentSettings";
 import type { ReactNode } from "react";
 import type { FullContentMap } from "../../../types";
@@ -76,6 +77,7 @@ interface SiteWizardProps {
   hasBranding: boolean;
   hasContent: boolean;
   hasContentReady: boolean;
+  hasContentPrimed: boolean;
   hasAssemblyAI: boolean;
   hasAuth: boolean;
   contentMap: FullContentMap[];
@@ -97,6 +99,7 @@ export default function SiteWizard({
   hasBranding,
   hasContent,
   hasContentReady,
+  hasContentPrimed,
   hasAuth,
   hasAssemblyAI,
   contentMap,
@@ -113,7 +116,7 @@ export default function SiteWizard({
       hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       hasBranding || ($previewMode && $previewDbInitialized),
-      hasTursoReady,
+      hasTursoReady && hasContentPrimed,
       hasContentReady,
     ];
     const isCompleted = completionStates[index];
@@ -171,8 +174,9 @@ export default function SiteWizard({
     },
     {
       title: "Bootstrap your database",
-      description: !hasTursoReady ? <DatabaseBootstrap /> : <Completed />,
-      isComplete: hasTursoReady,
+      description:
+        !hasTursoReady || !hasContentPrimed ? <DatabaseContentBootstrap /> : <Completed />,
+      isComplete: hasTursoReady && hasContentPrimed,
       status: getStepStatus(5),
     },
     {
@@ -182,7 +186,7 @@ export default function SiteWizard({
       status: getStepStatus(6),
     },
   ];
-
+  console.log(hasTursoReady, hasContentPrimed);
   useEffect(() => {
     const completionStates = [
       hasConcierge || $previewMode,
@@ -190,7 +194,7 @@ export default function SiteWizard({
       hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       hasBranding || ($previewMode && $previewDbInitialized),
-      hasTursoReady,
+      hasTursoReady && hasContentPrimed,
       hasContentReady,
     ];
 
@@ -215,7 +219,9 @@ export default function SiteWizard({
     gotIntegrations,
     hasBranding,
     hasTursoReady,
-    hasContent && hasContentReady,
+    hasContent,
+    hasContentReady,
+    hasContentPrimed,
     $previewMode,
     $previewDbInitialized,
   ]);
