@@ -6,8 +6,7 @@ import { EditModal } from "../../components/storykeep/EditModal";
 import { StoryFragment } from "../../components/storykeep/StoryFragment";
 import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
-import { getSetupChecks } from "../../utils/setupChecks";
-import { isTursoReady, isContentReady } from "../../api/turso";
+import { isTursoReady, isContentPrimed, isContentReady } from "../../api/turso";
 import type { AuthStatus, ContentMap } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
@@ -17,11 +16,10 @@ const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 // confirm set-up
-const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  console.log(`redirect to storykeep`);
+const hasContentPrimed = await isContentPrimed();
+const hasContentReady = await isContentReady();
+if (!hasTursoReady || !hasContentPrimed) {
   return Astro.redirect("/storykeep");
 }
 

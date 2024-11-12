@@ -5,12 +5,7 @@ import { initializeSchema } from "./schema";
 import { DB_DIR, DEMO_DB, PROD_DB } from "../constants";
 import type { Client } from "@libsql/client";
 
-interface TursoClients {
-  primary: Client;
-  replicas: Client[];
-}
-
-let tursoClients: TursoClients | null = null;
+let tursoClient: Client | null = null;
 let currentMode: "demo" | "prod" = "demo";
 let isInitialized = false;
 let initPromise: Promise<void> | null = null;
@@ -45,11 +40,11 @@ function validateTursoCredentials(url?: string, authToken?: string): boolean {
 export async function createTursoClient(config?: {
   url?: string;
   authToken?: string;
-}): Promise<TursoClients> {
+}): Promise<Client> {
   // If initialization is in progress, wait for it
   if (initPromise) {
     await initPromise;
-    if (tursoClients) return tursoClients;
+    if (tursoClient) return tursoClient;
   }
   const url = config?.url || import.meta.env.TURSO_DATABASE_URL;
   const authToken = config?.authToken || import.meta.env.TURSO_AUTH_TOKEN;
@@ -68,52 +63,45 @@ export async function createTursoClient(config?: {
   console.log("[DEBUG] Validation results:", {
     hasValidCredentials,
     targetMode,
-    hasExistingClients: !!tursoClients,
+    hasExistingClient: !!tursoClient,
   });
 
   // Start initialization
   initPromise = (async () => {
     try {
       // Close existing clients if mode is changing
-      if (tursoClients && currentMode !== targetMode) {
+      if (tursoClient && currentMode !== targetMode) {
         console.log("Closing existing clients due to mode change");
-        await Promise.all([
-          tursoClients.primary.close(),
-          ...tursoClients.replicas.map((r) => r.close()),
-        ]);
-        tursoClients = null;
+        await Promise.all([tursoClient.close()]);
+        tursoClient = null;
       }
 
-      if (!tursoClients) {
+      if (!tursoClient) {
         if (hasValidCredentials && url && authToken) {
-          console.log("Creating production Turso client with local replica");
+          console.log("Connecting to production Turso (no replica yet)");
+          //console.log("Creating production Turso client with local replica");
           // Production mode: Turso primary with local replica
+          //const primary = createClient({
+          //  url: `file:${getDbPath("prod")}`,
+          //  syncUrl: url,
+          //  authToken: authToken,
+          //});
           const primary = createClient({
             url: url,
             authToken: authToken,
           });
 
-          // Create local replica for read operations
-          const localReplica = createClient({
-            url: `file:${getDbPath("prod")}`,
-            //syncUrl: url,
-            //authToken: authToken,
-          });
-
           //try {
-          //  await localReplica.sync();
+          //  await primary.sync();
           //  console.log("Sync completed successfully");
           //} catch (error) {
           //  console.error("Sync error:", error);
           //}
 
           // Initialize schema for local replica
-          await initializeSchema({ client: localReplica });
+          //await initializeSchema({ client: primary });
 
-          tursoClients = {
-            primary,
-            replicas: [localReplica],
-          };
+          tursoClient = primary;
           currentMode = "prod";
         } else {
           console.log("Creating local demo database client");
@@ -122,15 +110,9 @@ export async function createTursoClient(config?: {
             url: `file:${getDbPath("demo")}`,
           });
           console.log(`attempting to initialize on demoClient`, demoClient);
-
           // Initialize schema for demo database
           await initializeSchema({ client: demoClient });
-
-          tursoClients = {
-            primary: demoClient,
-            replicas: [demoClient],
-          };
-          currentMode = "demo";
+          (tursoClient = demoClient), (currentMode = "demo");
         }
       }
 
@@ -144,22 +126,20 @@ export async function createTursoClient(config?: {
   })();
 
   await initPromise;
-  return tursoClients!;
+  return tursoClient!;
 }
 
 export function getReadClient(): Client {
-  if (!tursoClients) {
+  if (!tursoClient) {
     throw new Error("Turso clients not initialized. Call createTursoClient first.");
   }
-  // In demo mode or when reading from replica
-  return tursoClients.replicas[0];
+  return tursoClient;
 }
-
 export function getWriteClient(): Client {
-  if (!tursoClients) {
+  if (!tursoClient) {
     throw new Error("Turso clients not initialized. Call createTursoClient first.");
   }
-  return tursoClients.primary;
+  return tursoClient;
 }
 
 export function getCurrentMode(): "demo" | "prod" {
@@ -173,12 +153,10 @@ export function hasTursoCredentials(): boolean {
   );
 }
 
-// Helper to reset the client state (useful for testing)
 export function resetTursoClient(): void {
-  if (tursoClients) {
-    tursoClients.primary.close();
-    tursoClients.replicas.forEach((r) => r.close());
-    tursoClients = null;
+  if (tursoClient) {
+    tursoClient.close();
+    tursoClient = null;
   }
   isInitialized = false;
   currentMode = "demo";

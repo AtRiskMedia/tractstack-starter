@@ -121,7 +121,7 @@ export default function SiteWizard({
     ];
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
-    if (!allPreviousCompleted) return "locked";
+    if (!allPreviousCompleted || ($previewMode && index > 2 && index < 5)) return "locked";
     if (isCompleted) return "completed";
     return "current";
   };
@@ -186,7 +186,7 @@ export default function SiteWizard({
       status: getStepStatus(6),
     },
   ];
-  console.log(hasTursoReady, hasContentPrimed);
+
   useEffect(() => {
     const completionStates = [
       hasConcierge || $previewMode,

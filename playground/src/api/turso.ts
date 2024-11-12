@@ -390,10 +390,9 @@ export async function isContentPrimed(): Promise<boolean> {
   try {
     const client = getReadClient();
     if (!client) return false;
-    const { rows } = await client.execute({
-      sql: `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists;`,
-      args: [import.meta.env.PUBLIC_HOME, import.meta.env.PUBLIC_TRACTSTACK],
-    });
+    const { rows } = await client.execute(
+      `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists;`
+    );
     return rows[0]?.content_exists === 1;
   } catch (error) {
     console.error("Error checking content readiness:", error);
