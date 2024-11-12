@@ -100,7 +100,16 @@ export async function createTursoClient(config?: {
           // Create local replica for read operations
           const localReplica = createClient({
             url: `file:${getDbPath("prod")}`,
+            //syncUrl: url,
+            //authToken: authToken,
           });
+
+          //try {
+          //  await localReplica.sync();
+          //  console.log("Sync completed successfully");
+          //} catch (error) {
+          //  console.error("Sync error:", error);
+          //}
 
           // Initialize schema for local replica
           await initializeSchema({ client: localReplica });
