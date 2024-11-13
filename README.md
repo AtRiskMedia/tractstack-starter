@@ -18,6 +18,7 @@ For production deployment you'll need to prepare your server.
 ## Building + serving
 
 `docker build --network=host -t tractstack .`
+
 `docker run --net=host -d --restart unless-stopped tractstack`
 
 ## Queries?
