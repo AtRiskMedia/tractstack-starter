@@ -367,18 +367,16 @@ export async function isContentReady(): Promise<boolean> {
   try {
     const client = getReadClient();
     if (!client) return false;
-    const { rows } = await client.execute({
-      sql: `
+    const { rows } = await client.execute(
+      `
         SELECT 
           EXISTS (
             SELECT 1 
             FROM storyfragment sf
             JOIN tractstack ts ON sf.tractstack_id = ts.id
-            WHERE sf.slug = ? AND ts.slug = ?
           ) as content_exists
-      `,
-      args: [import.meta.env.PUBLIC_HOME, import.meta.env.PUBLIC_TRACTSTACK],
-    });
+      `
+    );
     return rows[0]?.content_exists === 1;
   } catch (error) {
     console.error("Error checking content readiness:", error);

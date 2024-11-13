@@ -47,7 +47,7 @@ const storykeepCss = `/styles/storykeep.css`;
 
 const { hasTurso } = getSetupChecks();
 const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap() : [];
+const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>

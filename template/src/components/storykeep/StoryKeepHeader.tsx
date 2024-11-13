@@ -34,6 +34,9 @@ import {
   storedAnalytics,
   analyticsDuration,
   creationStateStore,
+  previewMode,
+  previewDbInitialized,
+  getPreviewModeValue,
 } from "../../store/storykeep";
 import { classNames, cleanString } from "../../utils/helpers";
 import { useStoryKeepUtils } from "../../utils/storykeep";
@@ -93,6 +96,8 @@ export const StoryKeepHeader = memo(
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
+    const $previewMode = getPreviewModeValue(useStore(previewMode));
+    const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
     const [isSaving, setIsSaving] = useState(false);
     const thisId = slug !== `create` ? id : $creationState.id ? $creationState.id : `error`;
     const $showAnalytics = useStore(showAnalytics);
@@ -394,7 +399,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo ? (
+              {user.isOpenDemo && !($previewMode && $previewDbInitialized) ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"

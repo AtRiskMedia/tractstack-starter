@@ -4,7 +4,6 @@ import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import Header from "../../../../components/Header.astro";
 import Footer from "../../../../components/Footer.astro";
 import MenuEditor from "../../../../components/storykeep/components/MenuEditor";
-import { getSetupChecks } from "../../../../utils/setupChecks";
 import { getMenuById, isTursoReady, isContentReady } from "../../../../api/turso";
 import type { AuthStatus, MenuDatum } from "../../../../types";
 
@@ -12,9 +11,8 @@ const { id } = Astro.params;
 const create = id === "create";
 
 // confirm set-up
-const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+const hasContentReady = await isContentReady();
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }

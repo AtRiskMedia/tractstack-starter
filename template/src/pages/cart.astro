@@ -3,7 +3,6 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import ShoppingCart from "../components/ShoppingCart";
-import { getSetupChecks } from "../utils/setupChecks";
 import { isTursoReady, isContentReady } from "../api/turso";
 import type { AuthStatus } from "../types";
 
@@ -11,9 +10,8 @@ import type { AuthStatus } from "../types";
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+const hasContentReady = await isContentReady();
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }

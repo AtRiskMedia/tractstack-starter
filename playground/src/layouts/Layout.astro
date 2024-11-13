@@ -72,7 +72,7 @@ const gtagUrl =
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
-const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap() : [];
+const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>

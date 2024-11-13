@@ -2,14 +2,11 @@
 import { ulid } from "ulid";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 import CreateNewPage from "../../../components/storykeep/components/CreateNewPage";
-import { isTursoReady, isContentReady } from "../../../api/turso";
-import { getSetupChecks } from "../../../utils/setupChecks";
+import { isTursoReady } from "../../../api/turso";
 
 // confirm set-up
-const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
+if (!hasTursoReady) {
   return Astro.redirect("/storykeep");
 }
 
