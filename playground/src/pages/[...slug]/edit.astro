@@ -1,5 +1,5 @@
 ---
-import { getContentMap, getAllFileDatum, getStoryFragmentBySlug } from "../../api/turso";
+import { getAllFileDatum, getStoryFragmentBySlug } from "../../api/turso";
 import { cleanTursoFileDatum } from "../../utils/compositor/tursoFileDatum";
 import StoryKeep from "../../layouts/StoryKeep.astro";
 import { EditModal } from "../../components/storykeep/EditModal";
@@ -7,7 +7,7 @@ import { StoryFragment } from "../../components/storykeep/StoryFragment";
 import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
 import { isTursoReady, isContentPrimed, isContentReady } from "../../api/turso";
-import type { AuthStatus, ContentMap } from "../../types";
+import type { AuthStatus } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
 
@@ -33,8 +33,6 @@ const storyfragment = await getStoryFragmentBySlug(slug);
 if (!storyfragment && slug !== `create`) {
   return Astro.redirect("/404");
 }
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <StoryKeep
@@ -62,7 +60,6 @@ const contentMap: ContentMap[] = await getContentMap();
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         slug={slug}
         isContext={false}
-        contentMap={contentMap}
         user={user}
         originalData={storyfragment}
         hasContentReady={hasContentReady}
@@ -76,7 +73,6 @@ const contentMap: ContentMap[] = await getContentMap();
           id={slug === "create" ? null : (storyfragment?.id ?? `error`)}
           slug={slug}
           isContext={false}
-          contentMap={contentMap}
         />
         <div
           class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
@@ -89,7 +85,6 @@ const contentMap: ContentMap[] = await getContentMap();
         client:only="react"
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         files={files}
-        contentMap={contentMap}
       />
     </div>
   </div>

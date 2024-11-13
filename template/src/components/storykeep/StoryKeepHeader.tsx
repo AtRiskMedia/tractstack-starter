@@ -38,12 +38,12 @@ import {
   previewDbInitialized,
   getPreviewModeValue,
 } from "../../store/storykeep";
+import { contentMap } from "../../store/events";
 import { classNames, cleanString } from "../../utils/helpers";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import type {
   AuthStatus,
   StoreKey,
-  ContentMap,
   ToolMode,
   ToolAddMode,
   Analytics,
@@ -80,7 +80,6 @@ export const StoryKeepHeader = memo(
   ({
     id,
     slug,
-    contentMap,
     user,
     isContext,
     originalData,
@@ -88,7 +87,6 @@ export const StoryKeepHeader = memo(
   }: {
     id: string;
     slug: string;
-    contentMap: ContentMap[];
     user: AuthStatus;
     isContext: boolean;
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
@@ -131,8 +129,9 @@ export const StoryKeepHeader = memo(
     const $storyFragmentSlug = useStore(storyFragmentSlug, { keys: [thisId] });
     const [isClient, setIsClient] = useState(false);
     const headerRef = useRef<HTMLDivElement>(null);
+    const $contentMap = useStore(contentMap);
     const usedSlugs = [
-      ...contentMap.filter((item) => item.slug !== slug).map((item) => item.slug),
+      ...$contentMap.filter((item) => item.slug !== slug).map((item) => item.slug),
       ...Object.keys($paneSlug).map((s) => $paneSlug[s].current),
       ...Object.keys($storyFragmentSlug).map((s) => $storyFragmentSlug[s].current),
     ];

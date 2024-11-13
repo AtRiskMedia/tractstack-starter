@@ -1,8 +1,7 @@
 ---
 import { ViewTransitions } from "astro:transitions";
 import SetContentMap from "../components/SetContentMap";
-import { getContentMap, isTursoReady } from "../api/turso";
-import { getSetupChecks } from "../utils/setupChecks";
+import { getContentMap } from "../api/turso";
 import type { ContentMap } from "../types";
 
 export interface Props {
@@ -45,8 +44,6 @@ const defaultSocialDesc =
     : `The best is yet to come!`;
 const storykeepCss = `/styles/storykeep.css`;
 
-const { hasTurso } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
 const contentMap: ContentMap[] = await getContentMap();
 ---
 

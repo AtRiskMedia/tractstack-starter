@@ -3,8 +3,8 @@ import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import FastTravel from "../../components/FastTravel";
-import { getContentMap, isTursoReady, isContentReady } from "../../api/turso";
-import type { AuthStatus, ContentMap } from "../../types";
+import { isTursoReady, isContentReady } from "../../api/turso";
+import type { AuthStatus } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
@@ -15,8 +15,6 @@ const hasContentReady = await isContentReady();
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <Layout title="Fast Travel" pubDatetime={new Date()} modDatetime={new Date()}>
@@ -24,7 +22,7 @@ const contentMap: ContentMap[] = await getContentMap();
   <main id="main-content">
     <div class="px-12 md:px-24 font-main text-xl py-24">
       <div class="max-w-5xl mx-auto">
-        <FastTravel contentMap={contentMap} client:load />
+        <FastTravel client:load />
       </div>
       <div class="text-center pt-16
       text-2xl md:text-3xl">
