@@ -8,14 +8,17 @@ import { AddToCartForm } from "../../components/other/AddToCartForm";
 import { getProductByHandle } from "../../utils/shopify/shopify";
 import { setCache } from "../../utils/shopify/cache";
 import { getSetupChecks } from "../../utils/setupChecks";
+import { isTursoReady, isContentReady } from "../../api/turso";
 import type { AuthStatus } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-if (!hasConcierge || !hasTurso || !hasBranding || !hasContent) {
+const { hasTurso, hasContent } = getSetupChecks();
+const hasTursoReady = await isTursoReady();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

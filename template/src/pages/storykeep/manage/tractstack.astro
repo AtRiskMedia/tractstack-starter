@@ -4,13 +4,14 @@ import Header from "../../../components/Header.astro";
 import Footer from "../../../components/Footer.astro";
 import TractStackTable from "../../../components/storykeep/components/TractStackTable";
 import { getSetupChecks } from "../../../utils/setupChecks";
-import { getAllTractStack, isTursoReady } from "../../../api/turso";
+import { getAllTractStack, isTursoReady, isContentReady } from "../../../api/turso";
 import type { AuthStatus, MenuDatum } from "../../../types";
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasTurso, hasContent } = getSetupChecks();
+const hasTursoReady = await isTursoReady();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

@@ -10,7 +10,7 @@ import CreateNewPage from "../../../components/storykeep/components/CreateNewPag
 const { hasTurso, hasContent } = getSetupChecks();
 const hasTursoReady = await isTursoReady();
 const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (!hasTursoReady && !hasContentReady) {
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

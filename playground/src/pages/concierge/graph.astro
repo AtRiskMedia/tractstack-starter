@@ -4,16 +4,17 @@ import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
 import FastTravel from "../../components/FastTravel";
 import { getSetupChecks } from "../../utils/setupChecks";
-import { getContentMap, isTursoReady } from "../../api/turso";
+import { getContentMap, isTursoReady, isContentReady } from "../../api/turso";
 import type { AuthStatus, ContentMap } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasTurso, hasContent } = getSetupChecks();
+const hasTursoReady = await isTursoReady();
+const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 
