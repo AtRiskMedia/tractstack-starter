@@ -7,6 +7,7 @@ import HeaderWidget from "../custom/HeaderWidget.astro";
 import Footer from "../components/Footer.astro";
 import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
 import { ENABLE_HEADER_WIDGET } from "../constants";
+import { getSetupChecks } from "../utils/setupChecks";
 import { isValidContentPath } from "../utils/routeValidation";
 import type { AuthStatus, Current } from "../types";
 
@@ -14,8 +15,10 @@ import type { AuthStatus, Current } from "../types";
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const hasTursoReady = await isTursoReady();
-const hasContentReady = await isContentReady();
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }

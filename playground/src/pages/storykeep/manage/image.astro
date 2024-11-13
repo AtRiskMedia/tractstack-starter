@@ -5,11 +5,14 @@ import Footer from "../../../components/Footer.astro";
 import ImagesTable from "../../../components/storykeep/components/ImagesTable";
 import { getAllFileDatum, isTursoReady, isContentReady } from "../../../api/turso";
 import { cleanTursoFileDatum } from "../../../utils/compositor/tursoFileDatum";
+import { getSetupChecks } from "../../../utils/setupChecks";
 import type { AuthStatus, MenuDatum } from "../../../types";
 
 // confirm set-up
-const hasTursoReady = await isTursoReady();
-const hasContentReady = await isContentReady();
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }

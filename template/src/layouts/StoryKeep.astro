@@ -2,6 +2,7 @@
 import { ViewTransitions } from "astro:transitions";
 import SetContentMap from "../components/SetContentMap";
 import { getContentMap } from "../api/turso";
+import { getSetupChecks } from "../utils/setupChecks";
 import type { ContentMap } from "../types";
 
 export interface Props {
@@ -13,6 +14,9 @@ export interface Props {
 }
 
 const { title, ogImage, canonicalURL, pubDatetime, modDatetime } = Astro.props;
+
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
 
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
@@ -44,7 +48,7 @@ const defaultSocialDesc =
     : `The best is yet to come!`;
 const storykeepCss = `/styles/storykeep.css`;
 
-const contentMap: ContentMap[] = await getContentMap();
+const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
 ---
 
 <!doctype html>

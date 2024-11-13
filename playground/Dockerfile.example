@@ -1,0 +1,51 @@
+# Stage 1: Build stage
+FROM node:20-slim AS build
+WORKDIR /app
+
+# Install necessary dependencies for building the application
+RUN apt-get update && \
+    apt-get install -y openssl python3 make g++ && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install pnpm globally
+RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy the rest of the application files
+COPY . .
+
+# Generate SSL certificates
+RUN openssl genrsa -des3 -passout pass:x -out server.pass.key 2048 && \
+    openssl rsa -passin pass:x -in server.pass.key -out server.key && \
+    rm server.pass.key && \
+    openssl req -new -key server.key -out server.csr \
+        -subj "/C=UK/ST=Ontario/L=Toronto/O=AtRiskMedia/OU=TractStack/CN=tractstack.com" && \
+    openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+# Build the application
+RUN pnpm build
+
+# Stage 2: Runtime stage
+FROM node:20-slim AS runtime
+WORKDIR /app
+
+# Copy the build artifacts from the build stage
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/server.key ./server.key
+COPY --from=build /app/server.crt ./server.crt
+
+# Copy only the production dependencies
+COPY --from=build /app/node_modules ./node_modules
+
+# Set environment variables and expose port
+ENV HOST=0.0.0.0
+ENV PORT=4321
+EXPOSE 4321
+
+# Command to run the application
+CMD ["node", "./dist/server/entry.mjs"]

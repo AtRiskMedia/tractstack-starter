@@ -6,14 +6,17 @@ import Footer from "../../components/Footer.astro";
 import ImpressionWrapper from "../../components/ImpressionWrapper";
 import EnvironmentSettings from "../../components/storykeep/fields/EnvironmentSettings";
 import { isTursoReady, isContentReady } from "../../api/turso";
+import { getSetupChecks } from "../../utils/setupChecks";
 import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const hasTursoReady = await isTursoReady();
-const hasContentReady = await isContentReady();
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }

@@ -18,16 +18,20 @@ const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
 const { hasConcierge, hasTurso, hasBranding, hasContent, hasAssemblyAI } = getSetupChecks();
-const hasTursoReady = await isTursoReady();
-const hasContentPrimed = await isContentPrimed();
-const hasContentReady = hasTurso && hasContentPrimed && hasContent ? await isContentReady() : false;
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
+const hasContentReady =
+  !notPreviewNotReady && hasTurso && hasContentPrimed && hasContent
+    ? await isContentReady()
+    : false;
 
 // set the canonicalUrl to the actual storyfragment
 const baseUrl = new URL(Astro.url.pathname, Astro.url);
 const canonicalURL = new URL(`/storykeep`, baseUrl).href;
 
 // get storykeep datum
-const payload = await getFullContentMap();
+const payload = !notPreviewNotReady ? await getFullContentMap() : [];
 const filterPayload = hasTurso
   ? payload.filter(
       (e: FullContentMap) => e.type === `StoryFragment` || (e.type === `Pane` && e.isContext)
@@ -71,7 +75,7 @@ const menuPayload = {
 
 // impression
 const impressions =
-  hasTurso && hasTursoReady && user.isOpenDemo
+  !notPreviewNotReady && hasTurso && hasTursoReady && user.isOpenDemo
     ? [
         {
           id: `storykeep`,
@@ -88,7 +92,13 @@ const impressions =
 
 <StoryKeep title="Welcome to your Story Keep" canonicalURL={canonicalURL}>
   {
-    hasTurso && hasTursoReady && hasBranding && hasContent && hasContentReady && user.isOpenDemo ? (
+    !notPreviewNotReady &&
+    hasTurso &&
+    hasTursoReady &&
+    hasBranding &&
+    hasContent &&
+    hasContentReady &&
+    user.isOpenDemo ? (
       <div class="my-1 pt-2 shadow-inner px-1">
         <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
           <span class="font-bold">You are in Demo Mode:</span> &nbsp; Reload to reset and start
@@ -107,12 +117,24 @@ const impressions =
     isStoryKeep={true}
   />
   {
-    hasConcierge && hasTurso && hasTursoReady && hasContent && hasContentReady && hasBranding ? (
+    !notPreviewNotReady &&
+    hasConcierge &&
+    hasTurso &&
+    hasTursoReady &&
+    hasContent &&
+    hasContentReady &&
+    hasBranding ? (
       <StoryKeepDashboardStore client:only="react" />
     ) : null
   }
   {
-    hasConcierge && hasTurso && hasTursoReady && hasContent && hasContentReady && hasBranding ? (
+    !notPreviewNotReady &&
+    hasConcierge &&
+    hasTurso &&
+    hasTursoReady &&
+    hasContent &&
+    hasContentReady &&
+    hasBranding ? (
       <main id="main-content" class="min-h-screen">
         <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
           <div class="py-1.5 bg-white px-3.5 flex gap-y-12 flex-col">

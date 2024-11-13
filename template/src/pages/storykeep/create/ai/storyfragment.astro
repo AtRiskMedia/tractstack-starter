@@ -2,11 +2,14 @@
 import { ulid } from "ulid";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import { getTractStackIdBySlug } from "../../../../api/turso";
+import { getSetupChecks } from "../../../../utils/setupChecks";
 import { isTursoReady } from "../../../../api/turso";
 import CreateNewAiPage from "../../../../components/storykeep/components/CreateNewAiPage";
 
 // confirm set-up
-const hasTursoReady = await isTursoReady();
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
 if (!hasTursoReady) {
   return Astro.redirect("/storykeep");
 }

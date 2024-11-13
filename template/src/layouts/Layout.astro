@@ -21,8 +21,9 @@ const {
   modDatetime,
 } = Astro.props;
 
-const { hasTurso } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady && hasTurso ? await isTursoReady() : false;
 
 let stylesUrl = "/styles/storykeep.css";
 if (hasTursoReady) {
@@ -72,7 +73,7 @@ const gtagUrl =
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
-const contentMap: ContentMap[] = await getContentMap();
+const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
 ---
 
 <!doctype html>
