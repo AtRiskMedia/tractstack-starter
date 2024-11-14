@@ -25,3 +25,7 @@ pnpm-debug.log*
 
 # the local turso replicas
 **/.tractstack/
+
+# fonts
+**/fonts/*
+!**/fonts/Inter*
