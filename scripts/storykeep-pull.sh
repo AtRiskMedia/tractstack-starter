@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Get script directory and move up one level to root
+# Get script directory and resolve paths cleanly
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 PROJECT_ROOT=$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )
 STORYKEEP_PATH=${STORYKEEP_PATH:-"$( cd "$PROJECT_ROOT/../tractstack-storykeep" &> /dev/null && pwd )"}
-TEMPLATE_DIR="$PROJECT_ROOT/template"
+TEMPLATE_DIR="./template"  # Changed to be relative to where we run prepare-template.sh
 
 # ANSI color codes
 blue='\033[0;34m'
@@ -55,7 +55,6 @@ trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Run prepare-template script to generate fresh template
 echo -e "${blue}Generating fresh template...${reset}"
-cd "$PROJECT_ROOT"
 ./scripts/prepare-template.sh
 if [ $? -ne 0 ]; then
     echo -e "${red}Error: Failed to generate template${reset}"
@@ -116,18 +115,25 @@ cp -f "$TEMPLATE_DIR"/.prettierrc* "$STORYKEEP_PATH/"
 # Update package.json while preserving local dependencies
 if [ -f "$STORYKEEP_PATH/package.json" ]; then
     echo -e "${blue}Updating package.json...${reset}"
-    if [ ! -f "$TEMPLATE_DIR/package.json" ]; then
-        echo -e "${yellow}Warning: Template package.json not found, skipping package.json update${reset}"
-    else
-        if jq -s '.[0] * .[1] | del(.scripts.prepare) | del(.devDependencies.husky)' \
-            "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" > "$TEMP_DIR/package.json"; then
-            mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
-            echo -e "${green}Successfully updated package.json${reset}"
+    # Try to merge only if both files exist and are valid JSON
+    if [ -f "$TEMPLATE_DIR/package.json" ] && [ -f "$STORYKEEP_PATH/package.json" ]; then
+        if jq '.' "$TEMPLATE_DIR/package.json" > /dev/null 2>&1 && \
+           jq '.' "$STORYKEEP_PATH/package.json" > /dev/null 2>&1; then
+            echo -e "\n${blue}Attempting to merge package.json files...${reset}"
+            if jq -s '.[0] * .[1] | del(.scripts.prepare) | del(.devDependencies.husky)' \
+                "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" > "$TEMP_DIR/package.json"; then
+                mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
+                echo -e "${green}Successfully updated package.json${reset}"
+            else
+                echo -e "${red}Error: Failed to merge package.json files${reset}"
+            fi
         else
-            echo -e "${red}Error: Failed to update package.json${reset}"
+            echo -e "${red}Error: One or both package.json files contain invalid JSON${reset}"
         fi
+    else
+        echo -e "${yellow}Warning: One or both package.json files not found, skipping update${reset}"
     fi
 fi
 
 echo -e "${green}Story Keep update complete!${reset}"
-echo -e "${blue}Please review changes and run 'pnpm install' to update dependencies${reset}"
+echo -e "${blue}Please review changes and run ~/scripts/build.sh to update${reset}"
