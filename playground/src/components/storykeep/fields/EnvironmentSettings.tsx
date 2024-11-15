@@ -655,6 +655,7 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
             onChange={(newValue) => {
               handleSettingChange(index, "value", newValue);
             }}
+            brandString={localSettings.find((s) => s.name === "PUBLIC_BRAND")?.value}
           />
         </div>
       );

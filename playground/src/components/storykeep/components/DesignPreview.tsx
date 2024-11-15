@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
-import DesignSnapshot from "./DesignSnapshot";
-import { classNames } from "../../../utils/helpers";
-import type { PageDesign, Theme } from "../../../types";
+import { useState, useEffect } from 'react';
+import DesignSnapshot from './DesignSnapshot';
+import { getEnvValue } from '../../../utils/preview-brand';
+import { getPreviewModeValue } from '../../../store/storykeep';
+import { classNames } from '../../../utils/helpers';
+import type { PageDesign, Theme } from '../../../types';
 
 interface DesignPreviewProps {
   design: PageDesign;
@@ -10,18 +12,23 @@ interface DesignPreviewProps {
   theme: Theme;
 }
 
-const DesignPreview = ({ design, isSelected, onClick, theme }: DesignPreviewProps) => {
+export default function DesignPreview({ design, isSelected, onClick, theme }: DesignPreviewProps) {
   const [snapshotImage, setSnapshotImage] = useState<string>("");
   const [brandColors, setBrandColors] = useState<string[]>([]);
+  const [lastTheme, setLastTheme] = useState<Theme>(theme);
+
+  // Force regeneration when theme changes
+  useEffect(() => {
+    if (theme !== lastTheme) {
+      setSnapshotImage("");
+      setLastTheme(theme);
+    }
+  }, [theme, lastTheme]);
 
   useEffect(() => {
-    const colors: string[] = [];
-    for (let i = 1; i <= 8; i++) {
-      const color = getComputedStyle(document.documentElement)
-        .getPropertyValue(`--brand-${i}`)
-        .trim();
-      if (color) colors.push(color);
-    }
+    const isPreviewMode = getPreviewModeValue(localStorage.getItem('preview-mode') || 'false');
+    const brandString = isPreviewMode ? getEnvValue("PUBLIC_BRAND") : import.meta.env.PUBLIC_BRAND;
+    const colors = brandString.split(",").map((color: string) => `#${color.trim()}`);
     setBrandColors(colors);
   }, []);
 
@@ -41,7 +48,7 @@ const DesignPreview = ({ design, isSelected, onClick, theme }: DesignPreviewProp
       type="button"
     >
       <div className="relative aspect-[4/3] w-full">
-        {!snapshotImage || brandColors.length === 0 ? (
+        {!snapshotImage || !brandColors.length ? (
           <div className="absolute inset-0">
             <DesignSnapshot
               design={design}
@@ -63,6 +70,4 @@ const DesignPreview = ({ design, isSelected, onClick, theme }: DesignPreviewProp
       </div>
     </button>
   );
-};
-
-export default DesignPreview;
+}
