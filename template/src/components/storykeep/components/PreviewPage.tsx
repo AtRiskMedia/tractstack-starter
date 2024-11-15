@@ -13,15 +13,17 @@ const PreviewPage = ({ design, viewportKey, slug, isContext }: PreviewPageProps)
     console.error("Invalid or empty page design received in PreviewPage:", design);
     return <div>Error: Invalid or empty page design</div>;
   }
-
+  const tailwindBgColour = design.tailwindBgColour || `white`;
   return design.paneDesigns.map((paneDesign, index) => (
     <div key={paneDesign.id || index} className="overflow-hidden">
-      <PreviewPane
-        design={paneDesign}
-        viewportKey={viewportKey}
-        slug={slug}
-        isContext={isContext}
-      />
+      <div className={`bg-${tailwindBgColour}`}>
+        <PreviewPane
+          design={paneDesign}
+          viewportKey={viewportKey}
+          slug={slug}
+          isContext={isContext}
+        />
+      </div>
     </div>
   ));
 };

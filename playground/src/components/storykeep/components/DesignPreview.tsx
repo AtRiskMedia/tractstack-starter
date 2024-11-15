@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import DesignSnapshot from './DesignSnapshot';
-import { getEnvValue } from '../../../utils/preview-brand';
-import { getPreviewModeValue } from '../../../store/storykeep';
-import { classNames } from '../../../utils/helpers';
-import type { PageDesign, Theme } from '../../../types';
+import { useState, useEffect } from "react";
+import DesignSnapshot from "./DesignSnapshot";
+import { getEnvValue } from "../../../utils/preview-brand";
+import { getPreviewModeValue } from "../../../store/storykeep";
+import { classNames } from "../../../utils/helpers";
+import type { PageDesign, Theme } from "../../../types";
 
 interface DesignPreviewProps {
   design: PageDesign;
@@ -26,7 +26,7 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
   }, [theme, lastTheme]);
 
   useEffect(() => {
-    const isPreviewMode = getPreviewModeValue(localStorage.getItem('preview-mode') || 'false');
+    const isPreviewMode = getPreviewModeValue(localStorage.getItem("preview-mode") || "false");
     const brandString = isPreviewMode ? getEnvValue("PUBLIC_BRAND") : import.meta.env.PUBLIC_BRAND;
     const colors = brandString.split(",").map((color: string) => `#${color.trim()}`);
     setBrandColors(colors);
@@ -47,7 +47,7 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
       name="design-selection"
       type="button"
     >
-      <div className="relative aspect-[4/3] w-full">
+      <div className="relative aspect-square w-full">
         {!snapshotImage || !brandColors.length ? (
           <div className="absolute inset-0">
             <DesignSnapshot
@@ -61,11 +61,11 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
           <img
             src={snapshotImage}
             alt={`${design.name} design preview`}
-            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+            className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
           />
         )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 p-2 bg-black/50 text-white rounded-b-lg text-center">
+      <div className="absolute inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">
         {design.name}
       </div>
     </button>

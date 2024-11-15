@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { defineMiddleware } from "astro:middleware";
 import { isAuthenticated, isOpenDemoMode } from "./utils/session";
 import type { AuthStatus } from "./types";

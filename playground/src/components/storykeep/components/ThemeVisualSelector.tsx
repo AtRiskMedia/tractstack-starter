@@ -82,7 +82,7 @@ export default function ThemeVisualSelector({
                 <img
                   src={snapshots[theme]}
                   alt={`${themeNames[theme]} theme preview`}
-                  className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
                 />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center bg-mylightgrey/10">
@@ -90,7 +90,7 @@ export default function ThemeVisualSelector({
                 </div>
               )}
             </div>
-            <div className="absolute inset-x-0 bottom-0 p-2 bg-black/50 text-white rounded-b-lg text-center">
+            <div className="absolute inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">
               {themeNames[theme]}
             </div>
           </button>

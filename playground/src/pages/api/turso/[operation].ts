@@ -24,32 +24,36 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
         result = JSON.stringify({ success: true });
         break;
 
-      case "status":
+      case "status": {
         const isReady = await checkTursoStatus();
         result = { success: true, isReady };
         break;
+      }
 
-      case "contentPrimed":
+      case "contentPrimed": {
         const isContentPrimedResponse = await isContentPrimed();
         result = { success: true, isContentPrimed: isContentPrimedResponse };
         break;
+      }
 
       case "paneDesigns":
         result = await getPaneDesigns();
         break;
 
-      case "uniqueTailwindClasses":
+      case "uniqueTailwindClasses": {
         const body = await request.json();
         result = await getUniqueTailwindClasses(body.id);
         break;
+      }
 
-      case "execute":
+      case "execute": {
         const execBody = await request.json();
         if (!Array.isArray(execBody.queries)) {
           throw new Error("Invalid or missing queries array");
         }
         result = await executeQueries(execBody.queries);
         break;
+      }
 
       default:
         throw new Error(`Unknown operation: ${operation}`);

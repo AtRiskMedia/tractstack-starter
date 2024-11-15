@@ -211,6 +211,9 @@ importers:
       eslint-plugin-react:
         specifier: 7.37.1
         version: 7.37.1(eslint@8.56.0)
+      eslint-plugin-react-hooks:
+        specifier: ^5.0.0
+        version: 5.0.0(eslint@8.56.0)
       husky:
         specifier: 9.1.6
         version: 9.1.6
@@ -343,9 +346,6 @@ importers:
       react-lite-youtube-embed:
         specifier: 2.4.0
         version: 2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sharp:
-        specifier: 0.33.5
-        version: 0.33.5
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
@@ -368,6 +368,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@astrojs/prefetch':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@divriots/jampack':
         specifier: 0.23.4
         version: 0.23.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -410,9 +413,6 @@ importers:
       eslint-plugin-react:
         specifier: 7.37.1
         version: 7.37.1(eslint@8.56.0)
-      husky:
-        specifier: 9.1.6
-        version: 9.1.6
       lint-staged:
         specifier: 15.2.10
         version: 15.2.10
@@ -425,6 +425,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: 0.6.8
         version: 0.6.8(prettier-plugin-astro@0.14.1)(prettier@3.3.3)
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       tailwindcss:
         specifier: 3.4.13
         version: 3.4.13
@@ -2419,6 +2422,12 @@ packages:
     engines: {node: '>=4.0'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9
+
+  eslint-plugin-react-hooks@5.0.0:
+    resolution: {integrity: sha512-hIOwI+5hYGpJEc4uPRmz2ulCjAGD/N13Lukkh8cLV0i2IRk/bdZDYjgLVHj+U9Z704kLIdIO6iueGvxNur0sgw==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0
 
   eslint-plugin-react@7.37.1:
     resolution: {integrity: sha512-xwTnwDqzbDRA8uJ7BMxPs/EXRB3i8ZfnOIp8BsxEQkT0nHPp+WWceqGgo6rKb9ctNi8GJLDT4Go5HAWELa/WMg==}
@@ -7055,6 +7064,10 @@ snapshots:
       object.fromentries: 2.0.8
       safe-regex-test: 1.0.3
       string.prototype.includes: 2.0.1
+
+  eslint-plugin-react-hooks@5.0.0(eslint@8.56.0):
+    dependencies:
+      eslint: 8.56.0
 
   eslint-plugin-react@7.37.1(eslint@8.56.0):
     dependencies:

@@ -11,14 +11,13 @@ import type { Theme } from "../../../types";
 const PreviewBrandSettings = () => {
   const $previewMode = useStore(previewMode);
   const $theme = useStore(themeStore);
-  const $previewBrandConfigured = useStore(previewBrandConfigured);
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
   const [customColors, setCustomColors] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [currentBrandString, setCurrentBrandString] = useState(getEnvValue("PUBLIC_BRAND"));
 
   useEffect(() => {
     const value = getEnvValue("PUBLIC_BRAND");
-    // Check if value matches any preset
     const matchingPreset = Object.entries(knownBrand).find(
       ([, presetValue]) => presetValue === value
     )?.[0];
@@ -29,6 +28,7 @@ const PreviewBrandSettings = () => {
       setSelectedBrandPreset("custom");
       setCustomColors(value);
     }
+    setCurrentBrandString(value);
   }, [$previewMode]);
 
   const handleBrandPresetChange = (preset: string) => {
@@ -37,6 +37,7 @@ const PreviewBrandSettings = () => {
       const colorsToUse = customColors || getEnvValue("PUBLIC_BRAND");
       setEnvValue(colorsToUse);
       setSelectedBrandPreset("custom");
+      setCurrentBrandString(colorsToUse);
       return;
     }
 
@@ -50,6 +51,7 @@ const PreviewBrandSettings = () => {
     const presetColors = knownBrand[preset];
     setEnvValue(presetColors);
     setSelectedBrandPreset(preset);
+    setCurrentBrandString(presetColors);
 
     // Update CSS variables
     const brandColors = presetColors.split(",").map((color) => `#${color.trim()}`);
@@ -63,12 +65,46 @@ const PreviewBrandSettings = () => {
     themeStore.set(newTheme);
   };
 
-  const handleContinue = () => {
+  const handleColorPickerChange = (newValue: string) => {
+    setHasChanges(true);
+    setEnvValue(newValue);
+    setCurrentBrandString(newValue);
+
+    // Update CSS variables
+    const brandColors = newValue.split(",").map((color) => `#${color.trim()}`);
+    brandColors.forEach((color, index) => {
+      document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
+    });
+
+    // Check if matches any preset
+    const matchingPreset = Object.entries(knownBrand).find(
+      ([, presetValue]) => presetValue === newValue
+    )?.[0];
+    setSelectedBrandPreset(matchingPreset || "custom");
+  };
+
+  const handleUseColors = () => {
     previewBrandConfigured.set("true");
   };
 
+  const Prompt = () => (
+    <div className="bg-myblue/5 p-4 rounded-md mb-4 space-y-4">
+      <p className="text-myblue font-bold">Brand changes require your confirmation.</p>
+      <div className="flex justify-end space-x-2 mt-6">
+        <button
+          onClick={handleUseColors}
+          className="px-4 py-2 text-black bg-myorange/50 rounded hover:bg-myblue hover:text-white"
+        >
+          Use this Theme / Colours
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-8">
+      {hasChanges && <Prompt />}
+
       <div className="rounded-lg bg-mywhite shadow-inner">
         <div className="px-3.5 py-3">
           <div className="space-y-16">
@@ -89,47 +125,24 @@ const PreviewBrandSettings = () => {
 
               <BrandColorPicker
                 value={getEnvValue("PUBLIC_BRAND")}
-                onChange={(newValue) => {
-                  setHasChanges(true);
-                  setEnvValue(newValue);
-                  // Update CSS variables
-                  const brandColors = newValue.split(",").map((color) => `#${color.trim()}`);
-                  brandColors.forEach((color, index) => {
-                    document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
-                  });
-                  // Check if matches any preset
-                  const matchingPreset = Object.entries(knownBrand).find(
-                    ([, presetValue]) => presetValue === newValue
-                  )?.[0];
-                  setSelectedBrandPreset(matchingPreset || "custom");
-                }}
+                onChange={handleColorPickerChange}
               />
               <div className="space-y-4">
                 <label className="block text-md text-mydarkgrey mt-12">
                   Select a default visual style
                 </label>
-                <ThemeVisualSelector value={$theme} onChange={handleThemeChange} />
+                <ThemeVisualSelector
+                  value={$theme}
+                  onChange={handleThemeChange}
+                  brandString={currentBrandString}
+                />
               </div>
             </div>
           </div>
-
-          {!$previewBrandConfigured && hasChanges && (
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={handleContinue}
-                className="px-4 py-2 text-black bg-myorange/50 rounded hover:bg-myblue hover:text-white"
-              >
-                Continue with these brand settings
-              </button>
-            </div>
-          )}
-          {$previewBrandConfigured && (
-            <div className="bg-mygreen/10 p-4 rounded-md mt-6">
-              <p className="text-black font-bold">Brand settings configured successfully!</p>
-            </div>
-          )}
         </div>
       </div>
+
+      {hasChanges && <Prompt />}
     </div>
   );
 };
