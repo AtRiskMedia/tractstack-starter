@@ -1,3 +1,5 @@
+import { getEnvValue } from "../utils/preview-brand.ts";
+
 type TailwindColorPalette = {
   [colorName: string]: string[];
 };
@@ -14,17 +16,17 @@ const defaultColors = [
 ];
 const envBrand = import.meta.env.PUBLIC_BRAND;
 const brandColours: string[] = (() => {
-  if (envBrand && typeof envBrand === "string") {
+  const PREVIEW_BRAND = getEnvValue(`PUBLIC_BRAND`);
+  const thisBrand = PREVIEW_BRAND || envBrand;
+  if (thisBrand && typeof thisBrand === "string") {
     const hexColorRegex = /^([A-Fa-f0-9]{6}(?:,[A-Fa-f0-9]{6})*)$/;
-    if (hexColorRegex.test(envBrand)) {
-      return envBrand.split(",");
+    if (hexColorRegex.test(thisBrand)) {
+      return thisBrand.split(",");
     } else {
       console.error(
-        "PUBLIC_BRAND does not match the expected format of hexadecimal colors separated by commas."
+        "Does not match the expected format of hexadecimal colors separated by commas."
       );
     }
-  } else {
-    console.warn("PUBLIC_BRAND is not defined or not a string, using default colors.");
   }
   return defaultColors;
 })();

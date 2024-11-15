@@ -5,6 +5,7 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { Combobox } from "@headlessui/react";
+import DesignPreview from "./DesignPreview";
 import { initializeStores } from "../../../utils/compositor/initStore";
 import { themeStore, creationStateStore } from "../../../store/storykeep";
 import { classNames } from "../../../utils/helpers";
@@ -330,43 +331,19 @@ const CreateNewPage = ({ newId, tractStackId, mode }: CreateNewPageProps) => {
               <div className="pb-12">
                 <ThemeSelector value={$theme} onChange={handleThemeChange} />
               </div>
+
               <div
                 className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-12"
                 role="radiogroup"
               >
                 {pageDesignList.map((design) => (
-                  <button
+                  <DesignPreview
                     key={design.name}
+                    design={design}
+                    isSelected={selectedDesign?.name === design.name}
                     onClick={() => setSelectedDesign(design)}
-                    className={classNames(
-                      "relative rounded-t-lg transition-all h-fit",
-                      "flex flex-col items-start",
-                      selectedDesign && selectedDesign.name === design.name
-                        ? "ring-2 ring-myorange ring-offset-2"
-                        : "hover:ring-2 hover:ring-myorange hover:ring-offset-2"
-                    )}
-                    role="radio"
-                    aria-checked={
-                      selectedDesign && selectedDesign.name === design.name ? "true" : "false"
-                    }
-                    aria-label={`Select ${design.name}`}
-                    name="design-selection"
-                    type="button"
-                  >
-                    <div className="flex flex-col items-start w-full shadow-lg">
-                      {design.paneDesigns.map((pane, i) => (
-                        <img
-                          key={pane.img}
-                          src={`${import.meta.env.PUBLIC_IMAGE_URL}/api/images/paneDesigns/${pane.img}`}
-                          alt={`${pane.img}`}
-                          className={classNames(
-                            "w-full h-auto object-contain",
-                            i === 0 ? `rounded-t-2xl` : ``
-                          )}
-                        />
-                      ))}
-                    </div>
-                  </button>
+                    theme={$theme}
+                  />
                 ))}
               </div>
             </fieldset>

@@ -128,9 +128,25 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     }
 
     <!-- Google Analytics -->
-    {gtagUrl && <script async is:inline src={gtagUrl} />}
-    <script>
-      import "../utils/gtag";
+    {gtagUrl && <script async src={gtagUrl} is:inline />}
+    <script is:inline define:vars={{ googleSiteVerification }}>
+      // Define gtag function type
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+
+      document.addEventListener("astro:page-load", () => {
+        if (window.gtag) {
+          gtag("js", new Date());
+          gtag("config", googleSiteVerification, {
+            page_title: document.title,
+            page_path: window.location.pathname,
+            page_location: window.location.href,
+          });
+        }
+      });
     </script>
 
     <!-- Tract Stack Concierge -->

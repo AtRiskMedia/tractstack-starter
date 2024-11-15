@@ -11,8 +11,6 @@ interface DesignSnapshotProps {
   onComplete?: (imageData: string) => void;
 }
 
-// ... [previous compress function remains the same]
-
 export default function DesignSnapshot({
   design,
   theme,

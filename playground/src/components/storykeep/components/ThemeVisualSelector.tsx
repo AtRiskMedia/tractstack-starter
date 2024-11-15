@@ -42,7 +42,7 @@ export default function ThemeVisualSelector({ value, onChange }: ThemeVisualSele
     }
     setBrandColors(colors);
   }, []);
-
+  console.log(snapshots);
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
       {themes.map((theme) => {
