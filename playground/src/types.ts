@@ -291,6 +291,7 @@ export type PaneAstTargetId = {
     | "code"
     | "img"
     | "yt"
+    | "signup"
     | "bunny"
     | "belief"
     | "toggle"

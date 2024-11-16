@@ -112,6 +112,7 @@ export function allowTagInsert(
       }
     }
     case `yt`:
+    case `signup`:
     case `bunny`:
     case `belief`:
     case `identify`:

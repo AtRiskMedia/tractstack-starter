@@ -51,6 +51,7 @@ export const toolAddModes = [
   "h3",
   "h4",
   "img",
+  "signup",
   "yt",
   "bunny",
   "belief",
@@ -65,6 +66,7 @@ export const toolAddModeTitles: Record<ToolAddMode, string> = {
   h3: "Heading 3",
   h4: "Heading 4",
   img: "Image",
+  signup: "Email Sign-up Widget",
   yt: "YouTube Video",
   bunny: "Bunny Video",
   belief: "Belief Select",
@@ -79,6 +81,7 @@ export const toolAddModeInsertDefault: Record<ToolAddMode, string> = {
   h3: "### subtitle",
   h4: "#### section title",
   img: "![Descriptive title](filename)", // on initial insert must wrap in ul
+  signup: `signup(Major Updates Only|Keep in touch!)`,
   yt: "* `youtube(tag|title)`",
   bunny: "* `bunny(id|title)`",
   belief: "* `belief(BeliefTag|likert|prompt)`",
@@ -174,6 +177,13 @@ export const widgetMeta: WidgetMeta = {
     valueDefaults: ["?", "?"],
     multi: [false, false],
     isScale: [false, false],
+  },
+  signup: {
+    title: `Email Sign Up Widget`,
+    valueLabels: ["Contact Persona", "Prompt Text", "Clarify Consent"],
+    valueDefaults: ["Major Updates Only", "Keep in touch!", "false"],
+    multi: [false, false, false],
+    isScale: [false, false, false],
   },
 };
 

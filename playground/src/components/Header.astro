@@ -103,7 +103,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
     <h1 class="text-mydarkgrey truncate text-xl" title={title}>{title}</h1>
     <div class="flex flex-row flex-nowrap gap-x-2">
       {
-        hasTurso && hasTursoReady && hasBranding && hasContent && !isHome && !isStoryKeep ? (
+        hasContent && !isHome && !isStoryKeep ? (
           <a
             href="/"
             class="text-myblue/80 hover:text-myblue hover:rotate-6"
@@ -111,7 +111,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
           >
             <Home classes="w-6 h-6" />
           </a>
-        ) : hasTurso && hasTursoReady && hasBranding && hasContent && !isHome && isStoryKeep ? (
+        ) : hasContent && !isHome && isStoryKeep ? (
           <a
             data-astro-reload
             href="/"
@@ -128,12 +128,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
         )
       }
       {
-        hasTurso &&
-        hasTursoReady &&
-        hasBranding &&
-        hasContent &&
-        slug !== `storykeep` &&
-        (user?.isAuthenticated || user?.isOpenDemo) ? (
+        hasContent && slug !== `storykeep` && (user?.isAuthenticated || user?.isOpenDemo) ? (
           <OpenStoryKeep
             slug={slug}
             isContext={isContext}
@@ -153,7 +148,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
       <RememberMe client:load />
       <CartIcon client:load />
       {
-        hasTurso && hasBranding && hasContent && impressions?.length ? (
+        hasContent && impressions?.length ? (
           <ImpressionWrapper
             payload={impressions}
             icon={true}
