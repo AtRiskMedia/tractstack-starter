@@ -32,7 +32,7 @@ const canonicalURL = new URL(`/storykeep`, baseUrl).href;
 
 // get storykeep datum
 const payload = !notPreviewNotReady ? await getFullContentMap() : [];
-const filterPayload = hasTurso
+const filterPayload = hasContent
   ? payload.filter(
       (e: FullContentMap) => e.type === `StoryFragment` || (e.type === `Pane` && e.isContext)
     )
@@ -92,17 +92,43 @@ const impressions =
 
 <StoryKeep title="Welcome to your Story Keep" canonicalURL={canonicalURL}>
   {
-    !notPreviewNotReady &&
+    //!notPreviewNotReady &&
     hasTurso &&
-    hasTursoReady &&
-    hasBranding &&
+    //hasTursoReady &&
+    //hasBranding &&
     hasContent &&
-    hasContentReady &&
+    //hasContentReady &&
     user.isOpenDemo ? (
       <div class="my-1 pt-2 shadow-inner px-1">
         <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
           <span class="font-bold">You are in Demo Mode:</span> &nbsp; Reload to reset and start
           over. Have fun, and seriously... try to break things!
+        </span>
+      </div>
+    ) : !hasTurso && hasContent ? (
+      <div class="my-1 pt-2 shadow-inner px-1">
+        <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
+          <div>
+            <span class="font-bold">You are in Preview Mode:</span>
+            For a production install of Tract Stack please see{" "}
+            <a
+              class="underline hover:text-black"
+              href="https://tractstack.org/start/license"
+              title="Tract Stack Source Available License"
+              target="_blank"
+            >
+              our docs
+            </a>
+            . For easy and professional managed hosting please visit{" "}
+            <a
+              class="underline hover:text-black"
+              href="https://tractstack.com/#pricing"
+              title="Tract Stack Pricing"
+              target="_blank"
+            >
+              Tract Stack Pricing
+            </a>
+          </div>
         </span>
       </div>
     ) : null
@@ -117,24 +143,24 @@ const impressions =
     isStoryKeep={true}
   />
   {
-    !notPreviewNotReady &&
-    hasConcierge &&
-    hasTurso &&
-    hasTursoReady &&
-    hasContent &&
-    hasContentReady &&
-    hasBranding ? (
+    //!notPreviewNotReady &&
+    //hasConcierge &&
+    //hasTurso &&
+    //hasTursoReady &&
+    hasContent ? ( // &&
+      //hasContentReady &&
+      //hasBranding
       <StoryKeepDashboardStore client:only="react" />
     ) : null
   }
   {
-    !notPreviewNotReady &&
-    hasConcierge &&
-    hasTurso &&
-    hasTursoReady &&
-    hasContent &&
-    hasContentReady &&
-    hasBranding ? (
+    //!notPreviewNotReady &&
+    //hasConcierge &&
+    //hasTurso &&
+    //hasTursoReady &&
+    hasContent ? ( //&&
+      //hasContentReady &&
+      //hasBranding
       <main id="main-content" class="min-h-screen">
         <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
           <div class="py-1.5 bg-white px-3.5 flex gap-y-12 flex-col">
@@ -283,8 +309,12 @@ const impressions =
                 </div>
               )}
             </div>
-            <DashboardActivity client:only="react" />
-            <WhatsHot contentMap={payload} client:only="react" />
+            {hasTurso && (
+              <>
+                <DashboardActivity client:only="react" />
+                <WhatsHot contentMap={payload} client:only="react" />
+              </>
+            )}
           </div>
         </div>
       </main>

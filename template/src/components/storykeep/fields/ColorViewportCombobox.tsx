@@ -55,7 +55,7 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
         {selectedColor && !query && (
           <div
             className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
-            style={{ backgroundColor: tailwindToHex(`bg-${selectedColor}`) }}
+            style={{ backgroundColor: getColorValue(selectedColor) }}
           />
         )}
         <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">

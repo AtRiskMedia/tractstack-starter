@@ -37,6 +37,33 @@ export function getBrandColor(colorVar: string): string | null {
   return index >= 0 && index < brandColours.length ? brandColours[index] : null;
 }
 
+export const COLOR_STYLES = [
+  "textCOLOR",
+  "bgCOLOR",
+  "textDECORATIONCOLOR",
+  "accentCOLOR",
+  "borderCOLOR",
+  "divideCOLOR",
+  "outlineCOLOR",
+  "ringCOLOR",
+  "ringOffsetCOLOR",
+  "fill",
+  "strokeCOLOR",
+  "placeholderCOLOR",
+  "boxShadowCOLOR",
+  "bgColour",
+  "textDECORATIONCOLOUR",
+  "borderCOLOUR",
+  "divideCOLOUR",
+  "outlineCOLOUR",
+  "ringCOLOUR",
+  "ringOffsetCOLOUR",
+  "placeholderCOLOUR",
+  "boxShadowCOLOUR",
+] as const;
+
+export type ColorStyle = (typeof COLOR_STYLES)[number];
+
 export const customColors = {
   mywhite: "#fcfcfc",
   myoffwhite: "#e3e3e3",

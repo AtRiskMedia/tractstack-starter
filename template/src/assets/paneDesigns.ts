@@ -208,7 +208,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -228,7 +228,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -534,7 +534,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -554,7 +554,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -886,7 +886,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -906,7 +906,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1225,7 +1225,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1246,7 +1246,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1388,7 +1388,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1408,7 +1408,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1789,7 +1789,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -1809,7 +1809,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2161,7 +2161,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2181,7 +2181,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2547,7 +2547,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2568,7 +2568,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2878,7 +2878,7 @@ export const paneDesigns = (
             },
             h2: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -2899,7 +2899,7 @@ export const paneDesigns = (
             },
             h3: {
               classes: {
-                fontSTYLE: ["bold"],
+                fontWEIGHT: ["bold"],
                 textCOLOR: [
                   getComputedColor(
                     {
@@ -3001,7 +3001,7 @@ export const paneDesigns = (
   //          },
   //          h2: {
   //            classes: {
-  //              fontSTYLE: ["bold"],
+  //              fontWEIGHT: ["bold"],
   //              textCOLOR: [
   //                getComputedColor(
   //                  {
@@ -3022,7 +3022,7 @@ export const paneDesigns = (
   //          },
   //          h3: {
   //            classes: {
-  //              fontSTYLE: ["bold"],
+  //              fontWEIGHT: ["bold"],
   //              textCOLOR: ["myblue"],
   //              textSIZE: ["xl", "3xl"],
   //              my: [8, 12],
