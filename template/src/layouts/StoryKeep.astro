@@ -111,6 +111,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         scrollToTop,
         debounce,
       } from "../utils/helpers";
+      import { initializeBrandColors } from "../utils/brand-init";
       import { init } from "../utils/init";
 
       function setupEventHandlers() {
@@ -129,6 +130,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         setupEventHandlers();
         handleScroll();
         init();
+        initializeBrandColors();
         scrollToTop();
         document.addEventListener("scroll", debouncedHandleScroll);
       });

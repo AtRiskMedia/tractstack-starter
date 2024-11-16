@@ -26,6 +26,8 @@ import {
   paneImpression,
   paneHeldBeliefs,
   paneWithheldBeliefs,
+  previewMode,
+  getPreviewModeValue,
 } from "../../store/storykeep";
 import type {
   StoryFragmentDatum,
@@ -631,6 +633,7 @@ function reconcileFiles(
 ) {
   const currentFiles = currentPane.files || [];
   const originalFiles = originalPane?.files || [];
+  const isPreview = getPreviewModeValue(previewMode.get());
 
   const currentFileIds = new Set(currentFiles.map((f) => f.id));
   const originalFileIds = new Set(originalFiles.map((f) => f.id));
@@ -654,7 +657,9 @@ function reconcileFiles(
         foundFileIds.add(file.id);
         if (!originalFileIds.has(file.id) || isImageDataUrl(file.src)) {
           const currentDate = new Date();
-          const url = `/api/images/${formatDateForUrl(currentDate)}/${file.filename}`;
+          const url = isPreview
+            ? file.src // base64 data
+            : `/api/images/${formatDateForUrl(currentDate)}/${file.filename}`;
 
           queries.files.push({
             sql: `INSERT INTO file (id, filename, url, alt_description, src_set) 
@@ -662,8 +667,15 @@ function reconcileFiles(
                 ON CONFLICT (id) DO UPDATE SET 
                 filename = excluded.filename, 
                 url = excluded.url, 
-                alt_description = excluded.alt_description`,
-            args: [file.id, file.filename, url, altText || file.altDescription || null, true],
+                alt_description = excluded.alt_description,
+                src_set = excluded.src_set`,
+            args: [
+              file.id,
+              file.filename,
+              url,
+              altText || file.altDescription || null,
+              isPreview ? false : true, // Set src_set to false for preview mode base64 images
+            ],
           });
 
           queries.file_markdown.push({

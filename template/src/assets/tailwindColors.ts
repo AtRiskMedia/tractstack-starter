@@ -82,7 +82,7 @@ export const tailwindToHex = (tailwindColor: string): string => {
   if (tailwindColor.startsWith("brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor})`);
     if (brandColor) {
-      return brandColor;
+      return `#${brandColor}`;
     }
   }
   if (tailwindColor in customColors) {
@@ -90,7 +90,7 @@ export const tailwindToHex = (tailwindColor: string): string => {
     if (color.startsWith("var(--")) {
       const brandColor = getBrandColor(color);
       if (brandColor) {
-        return brandColor;
+        return `#${brandColor}`;
       }
     }
     return color;

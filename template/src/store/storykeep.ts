@@ -27,7 +27,7 @@ import type {
 } from "../types";
 import { knownEnvSettings, toolAddModes, PUBLIC_THEME } from "../constants";
 
-export const themeStore = atom<Theme>(PUBLIC_THEME as Theme);
+export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
 
 export const lastInteractedPaneStore = atom<string | null>(null);
 export const visiblePanesStore = map<Record<string, boolean>>({});
