@@ -235,8 +235,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -255,8 +255,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -561,8 +561,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-8",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -580,8 +580,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -913,8 +913,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-8",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -932,8 +932,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -1270,11 +1270,11 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
-                      "dark-bw": "brand-2",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -1416,7 +1416,7 @@ export const paneDesigns = (
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
-                      "dark-bw": "brand-2",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -1436,7 +1436,7 @@ export const paneDesigns = (
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
-                      "dark-bw": "brand-2",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -1813,11 +1813,11 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -1836,8 +1836,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -2185,11 +2185,11 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -2208,8 +2208,8 @@ export const paneDesigns = (
                       light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
-                      dark: "brand-3",
-                      "dark-bw": "brand-2",
+                      dark: "brand-4",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -2572,7 +2572,7 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
@@ -2592,11 +2592,11 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
-                      "dark-bw": "brand-2",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
@@ -2903,7 +2903,7 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
@@ -2923,11 +2923,11 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
-                      "dark-bw": "brand-2",
+                      "dark-bw": "white",
                       "dark-bold": "brand-3",
                     },
                     theme
