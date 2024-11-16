@@ -17,11 +17,11 @@ const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 // confirm set-up
-const { hasConcierge, hasTurso } = getSetupChecks();
+const { hasTurso, hasConcierge } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
 const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
 if (!hasTursoReady || !hasContentPrimed) {
   return Astro.redirect("/storykeep");
 }

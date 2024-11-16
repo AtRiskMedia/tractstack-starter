@@ -34,12 +34,10 @@ import {
   storedAnalytics,
   analyticsDuration,
   creationStateStore,
-  previewMode,
-  previewDbInitialized,
-  getPreviewModeValue,
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
 import { classNames, cleanString } from "../../utils/helpers";
+import { getSetupChecks } from "../../utils/setupChecks";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import type {
   AuthStatus,
@@ -92,10 +90,9 @@ export const StoryKeepHeader = memo(
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
     hasContentReady: boolean;
   }) => {
+    const { hasTurso } = getSetupChecks();
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
-    const $previewMode = getPreviewModeValue(useStore(previewMode));
-    const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
     const [isSaving, setIsSaving] = useState(false);
     const thisId = slug !== `create` ? id : $creationState.id ? $creationState.id : `error`;
     const $showAnalytics = useStore(showAnalytics);
@@ -398,7 +395,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo && !($previewMode && $previewDbInitialized) ? (
+              {user.isOpenDemo && hasTurso ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"

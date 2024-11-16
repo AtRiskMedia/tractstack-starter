@@ -17,6 +17,7 @@ import { classNames } from "../../../utils/helpers";
 import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
+import { SignUp } from "../../../components/widgets/SignUp";
 import type { MouseEvent, ReactNode } from "react";
 import type {
   ButtonData,
@@ -554,6 +555,18 @@ const PaneFromAst = ({
           <div>
             <strong>YouTube Video Embed Code:</strong> {value1} ({value2})
           </div>
+        </div>
+      );
+    }
+
+    if (hook === "signup" && value1) {
+      return (
+        <div className={injectClassNames}>
+          <SignUp
+            persona={value1 ?? "Major Updates Only"}
+            prompt={value2 ?? "Keep in touch!"}
+            clarifyConsent={value3 === "true"}
+          />
         </div>
       );
     }
