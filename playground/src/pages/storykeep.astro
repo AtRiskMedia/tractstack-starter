@@ -20,11 +20,8 @@ const user = Astro.locals.user as AuthStatus;
 const { hasConcierge, hasTurso, hasBranding, hasContent, hasAssemblyAI } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
-const hasContentReady =
-  !notPreviewNotReady && hasTurso && hasContentPrimed && hasContent
-    ? await isContentReady()
-    : false;
 
 // set the canonicalUrl to the actual storyfragment
 const baseUrl = new URL(Astro.url.pathname, Astro.url);
@@ -42,7 +39,6 @@ if (!payload) {
 }
 const hasAuth = user?.isAuthenticated ?? false;
 
-// menu
 const links = [];
 if (hasTurso && !user?.isAuthenticated) {
   links.unshift({
@@ -92,13 +88,7 @@ const impressions =
 
 <StoryKeep title="Welcome to your Story Keep" canonicalURL={canonicalURL}>
   {
-    //!notPreviewNotReady &&
-    hasTurso &&
-    //hasTursoReady &&
-    //hasBranding &&
-    hasContent &&
-    //hasContentReady &&
-    user.isOpenDemo ? (
+    hasTurso && hasContent && user.isOpenDemo ? (
       <div class="my-1 pt-2 shadow-inner px-1">
         <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
           <span class="font-bold">You are in Demo Mode:</span> &nbsp; Reload to reset and start
@@ -142,25 +132,9 @@ const impressions =
     user={user}
     isStoryKeep={true}
   />
+  {hasContentReady ? <StoryKeepDashboardStore client:only="react" /> : null}
   {
-    //!notPreviewNotReady &&
-    //hasConcierge &&
-    //hasTurso &&
-    //hasTursoReady &&
-    hasContent ? ( // &&
-      //hasContentReady &&
-      //hasBranding
-      <StoryKeepDashboardStore client:only="react" />
-    ) : null
-  }
-  {
-    //!notPreviewNotReady &&
-    //hasConcierge &&
-    //hasTurso &&
-    //hasTursoReady &&
-    hasContent ? ( //&&
-      //hasContentReady &&
-      //hasBranding
+    hasContentReady ? (
       <main id="main-content" class="min-h-screen">
         <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
           <div class="py-1.5 bg-white px-3.5 flex gap-y-12 flex-col">
