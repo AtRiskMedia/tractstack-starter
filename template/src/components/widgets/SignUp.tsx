@@ -3,23 +3,15 @@ import { useStore } from "@nanostores/react";
 import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { classNames } from "../../utils/helpers";
-import { auth, loading, error, success, profile } from "../../store/auth"; // Import the actual stores
+import { auth, loading, error, success, profile } from "../../store/auth";
 import { contactPersona } from "../../assets/contactPersona";
+import type { SignupProps } from "../../types";
 
-interface SignUpProps {
-  persona?: string;
-  prompt?: string;
-  clarifyConsent: boolean;
-}
-
-export const SignUp = ({
-  persona = "Major Updates Only",
-  prompt = "Keep in touch!",
-  clarifyConsent,
-}: SignUpProps) => {
+export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState("");
   const [firstname, setFirstname] = useState("");
+  const [codeword, setCodeword] = useState("");
   const [badSave, setBadSave] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(
     contactPersona.find((p) => p.id === persona) ||
@@ -40,14 +32,14 @@ export const SignUp = ({
     e.preventDefault();
     setSubmitted(true);
 
-    if (!firstname || !email) return;
+    if (!firstname || !email || !codeword) return;
 
     try {
       loading.set(true);
       const payload = {
         firstname,
         email,
-        codeword: "",
+        codeword,
         bio: "",
         persona: clarifyConsent ? personaSelected.id : "Major Updates Only",
         init: true,
@@ -66,6 +58,8 @@ export const SignUp = ({
       if (data.success) {
         auth.setKey("hasProfile", "1");
         auth.setKey("consent", "1");
+        auth.setKey("encryptedEmail", data.encryptedEmail);
+        auth.setKey("encryptedCode", data.encryptedCode);
         profile.set({
           firstname: payload.firstname,
           contactPersona: payload.persona,
@@ -90,6 +84,8 @@ export const SignUp = ({
         shortBio: undefined,
       });
       auth.setKey("hasProfile", undefined);
+      auth.setKey("encryptedEmail", undefined);
+      auth.setKey("encryptedCode", undefined);
     }
   }
 
@@ -101,7 +97,7 @@ export const SignUp = ({
           <a href="/concierge/profile" className="text-myblue hover:text-black underline">
             Complete your profile
           </a>{" "}
-          to customize your preferences.
+          to customize your preferences. Remember your code word to manage your preferences later.
         </p>
       </div>
     );
@@ -144,6 +140,26 @@ export const SignUp = ({
           {submitted && !email && (
             <p className="text-red-500 text-xs mt-1">Please enter your email</p>
           )}
+        </div>
+
+        <div>
+          <input
+            type="password"
+            name="codeword"
+            placeholder="Choose a code word to manage your preferences"
+            value={codeword}
+            onChange={(e) => setCodeword(e.target.value)}
+            className={classNames(
+              "w-full px-3 py-2 border rounded-md shadow-sm placeholder-mydarkgrey/50 focus:border-myorange focus:ring-myorange",
+              submitted && !codeword ? "border-red-500" : "border-mydarkgrey"
+            )}
+          />
+          {submitted && !codeword && (
+            <p className="text-red-500 text-xs mt-1">Please choose a code word</p>
+          )}
+          <p className="text-xs text-mydarkgrey mt-1">
+            Remember this code word - you'll need it to update your preferences later
+          </p>
         </div>
 
         {clarifyConsent && (
@@ -217,7 +233,7 @@ export const SignUp = ({
 
         {badSave && (
           <p className="text-red-500 text-sm text-center">
-            Sorry, we couldn't sign you up. Please try again.
+            Sorry, we couldn't sign you up. Please try again or use a different email address.
           </p>
         )}
 
@@ -231,3 +247,5 @@ export const SignUp = ({
     </div>
   );
 };
+
+export default SignUp;

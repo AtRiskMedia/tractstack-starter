@@ -96,7 +96,7 @@ const imageSrcSet = thisImage?.srcSet ? thisImage.optimizedSrc : null;
 
 // applies only when Tag === `code`
 // currently supported: YouTube, Bunny, toggle, belief, *resource not implemented
-const regexpHook = /(identifyAs|youtube|bunny|toggle|resource|belief)\((.*?)\)/;
+const regexpHook = /(identifyAs|signup|youtube|bunny|toggle|resource|belief)\((.*?)\)/;
 const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
 const thisHookRaw = thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
 const hook = thisHookRaw && typeof thisHookRaw[1] === `string` ? thisHookRaw[1] : null;
@@ -198,7 +198,7 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
   Tag === `code` && hook === `signup` && value1 ? (
     <div class={injectClassNames}>
       <SignUp
-        client:visible
+        client:load
         persona={value1 ?? "Major Updates Only"}
         prompt={value2 ?? "Keep in touch!"}
         clarifyConsent={value3 === "true"}

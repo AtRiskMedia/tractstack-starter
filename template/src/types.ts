@@ -301,6 +301,12 @@ export type PaneAstTargetId = {
   mustConfig?: boolean;
 };
 
+export interface SignupProps {
+  persona: string;
+  prompt: string;
+  clarifyConsent: boolean;
+}
+
 export type EditModeValue = {
   id: string;
   mode: string;

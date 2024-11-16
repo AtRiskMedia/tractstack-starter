@@ -560,7 +560,7 @@ const PaneFromAst = ({
     }
 
     if (hook === "signup" && value1) {
-      return (
+      widgetContent = (
         <div className={injectClassNames}>
           <SignUp
             persona={value1 ?? "Major Updates Only"}
