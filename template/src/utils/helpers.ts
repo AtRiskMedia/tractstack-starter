@@ -1,5 +1,6 @@
 //import { storySteps } from "../store/events";
 import { getImage } from "astro:assets";
+import { getSetupChecks } from "./setupChecks";
 import type {
   GraphNodes,
   GraphNode,
@@ -9,6 +10,12 @@ import type {
   TursoFileNode,
   FileNode,
 } from "../types";
+
+export function shouldRunInit() {
+  const setupChecks = getSetupChecks();
+  if (!setupChecks.hasConcierge || !import.meta.env.PROD) return false;
+  return true;
+}
 
 export const getComputedColor = (color: string): string => {
   if (color.startsWith("#var(--")) {

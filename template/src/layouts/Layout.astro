@@ -158,6 +158,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         startLoadingAnimation,
         stopLoadingAnimation,
         debounce,
+        shouldRunInit,
       } from "../utils/helpers";
       import { initializeBrandColors } from "../utils/brand-init";
       import { eventStream } from "../utils/events/eventStream";
@@ -184,7 +185,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
       setupEventHandlers();
 
       document.addEventListener("astro:page-load", () => {
-        init();
+        if (shouldRunInit()) init();
         initializeBrandColors();
         handleScroll();
         handleResize();
