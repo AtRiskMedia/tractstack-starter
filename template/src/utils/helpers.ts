@@ -18,6 +18,7 @@ export function shouldRunInit() {
 }
 
 export const getComputedColor = (color: string): string => {
+  if (color === `#` || typeof color === `undefined`) return `#ffffff`;
   if (color.startsWith("#var(--")) {
     color = color.slice(1);
   }
