@@ -1,11 +1,15 @@
 import type { AstroGlobal } from "astro";
 
 export async function isAuthenticated(Astro: AstroGlobal): Promise<boolean> {
+  const pwd = import.meta.env.PRIVATE_AUTH_SECRET;
+  if (typeof pwd === `string` && pwd.trim().length === 0) return true;
   const token = Astro.cookies.get("storykeep_auth_token")?.value;
   return token === "authenticated";
 }
 
 export async function isOpenDemoMode(Astro: AstroGlobal): Promise<boolean> {
+  const pwd = import.meta.env.PRIVATE_AUTH_SECRET;
+  if (typeof pwd === `string` && pwd.trim().length === 0) return true;
   const token = Astro.cookies.get("storykeep_auth_token")?.value;
   return token === "open_demo";
 }

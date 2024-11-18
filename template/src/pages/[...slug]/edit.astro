@@ -1,14 +1,15 @@
 ---
-import { getContentMap, getAllFileDatum, getStoryFragmentBySlug } from "../../api/turso";
+import { getAllFileDatum, getStoryFragmentBySlug } from "../../api/turso";
 import { cleanTursoFileDatum } from "../../utils/compositor/tursoFileDatum";
 import StoryKeep from "../../layouts/StoryKeep.astro";
 import { EditModal } from "../../components/storykeep/EditModal";
 import { StoryFragment } from "../../components/storykeep/StoryFragment";
 import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
+import { isTursoReady, isContentPrimed, isContentReady } from "../../api/turso";
 import { getSetupChecks } from "../../utils/setupChecks";
-import { isTursoReady, isContentReady } from "../../api/turso";
-import type { AuthStatus, ContentMap } from "../../types";
+import { components } from "../../custom/CodeHook.astro";
+import type { AuthStatus } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
 
@@ -17,10 +18,12 @@ const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
+if (!hasTursoReady || !hasContentPrimed) {
   return Astro.redirect("/storykeep");
 }
 
@@ -34,8 +37,6 @@ const storyfragment = await getStoryFragmentBySlug(slug);
 if (!storyfragment && slug !== `create`) {
   return Astro.redirect("/404");
 }
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <StoryKeep
@@ -63,7 +64,6 @@ const contentMap: ContentMap[] = await getContentMap();
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         slug={slug}
         isContext={false}
-        contentMap={contentMap}
         user={user}
         originalData={storyfragment}
         hasContentReady={hasContentReady}
@@ -77,7 +77,7 @@ const contentMap: ContentMap[] = await getContentMap();
           id={slug === "create" ? null : (storyfragment?.id ?? `error`)}
           slug={slug}
           isContext={false}
-          contentMap={contentMap}
+          knownCodeHooks={components ? Object.keys(components) : []}
         />
         <div
           class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
@@ -90,7 +90,6 @@ const contentMap: ContentMap[] = await getContentMap();
         client:only="react"
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         files={files}
-        contentMap={contentMap}
       />
     </div>
   </div>

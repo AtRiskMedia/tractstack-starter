@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import PaneFromAst from "./PaneFromAst";
 import { classNames } from "../../../utils/helpers";
 import { reduceClassNamesPayload } from "../../../utils/compositor/reduceClassNamesPayload";
@@ -13,6 +13,9 @@ import type {
   ToolAddMode,
 } from "../../../types";
 import type { Nodes } from "hast";
+import { useStore } from "@nanostores/react";
+import { dragHandleStore, recordExitPane } from "../../../store/storykeep.ts";
+import { isNonZeroMagnitude, isPosInsideRect } from "@utils/math.ts";
 
 interface Props {
   readonly: boolean;
@@ -47,6 +50,18 @@ const MarkdownPane = ({
   viewportKey,
   queueUpdate,
 }: Props) => {
+  const dragState = useStore(dragHandleStore);
+  const self = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if(self.current && !dragState.hoverElement && !dragState.dropState && isNonZeroMagnitude(dragState.pos)) {
+      const rect = self.current.getBoundingClientRect();
+      if (!isPosInsideRect(rect, dragState.pos)) {
+        recordExitPane(paneId);
+      }
+    }
+  }, [dragState]);
+
   const hasHidden =
     payload.hiddenViewports.includes(`desktop`) ||
     payload.hiddenViewports.includes(`tablet`) ||
@@ -56,8 +71,12 @@ const MarkdownPane = ({
       ? `${payload.hiddenViewports.includes(viewportKey) && viewportKey === `desktop` ? `hidden` : `grid`}`
       : hasHidden
         ? ``.concat(
-            payload.hiddenViewports.includes(`desktop`) ? `xl:hidden` : `xl:grid`,
-            payload.hiddenViewports.includes(`tablet`) ? `md:hidden` : `md:grid`,
+            payload.hiddenViewports.includes(`desktop`)
+              ? `xl:hidden`
+              : `xl:grid`,
+            payload.hiddenViewports.includes(`tablet`)
+              ? `md:hidden`
+              : `md:grid`,
             payload.hiddenViewports.includes(`mobile`) ? `hidden` : `grid`
           )
         : ``;
@@ -71,13 +90,14 @@ const MarkdownPane = ({
     () => optionsPayload && reduceClassNamesPayload(optionsPayload),
     [optionsPayload]
   );
-  const injectClassNames: { [key: string]: string | string[] } = ((viewportKey &&
-    optionsPayloadDatum?.classNames &&
-    optionsPayloadDatum?.classNames[viewportKey]) ||
-    optionsPayloadDatum?.classNames?.all ||
-    optionsPayload?.classNames?.all || { all: `` }) as {
-    [key: string]: string | string[];
-  };
+  const injectClassNames: { [key: string]: string | string[] } =
+    ((viewportKey &&
+      optionsPayloadDatum?.classNames &&
+      optionsPayloadDatum?.classNames[viewportKey]) ||
+      optionsPayloadDatum?.classNames?.all ||
+      optionsPayload?.classNames?.all || { all: `` }) as {
+      [key: string]: string | string[];
+    };
   const classNamesParentRaw =
     (viewportKey &&
       optionsPayloadDatum?.classNamesParent &&
@@ -86,8 +106,12 @@ const MarkdownPane = ({
     optionsPayload?.classNamesParent?.all ||
     ``;
   const classNamesParent =
-    typeof classNamesParentRaw === `string` ? [classNamesParentRaw] : classNamesParentRaw;
-  const parentClasses = Array.isArray(classNamesParent) ? classNamesParent : [classNamesParent];
+    typeof classNamesParentRaw === `string`
+      ? [classNamesParentRaw]
+      : classNamesParentRaw;
+  const parentClasses = Array.isArray(classNamesParent)
+    ? classNamesParent
+    : [classNamesParent];
   const content = astPayload.ast
     .filter((e: Nodes) => !(e?.type === `text` && e?.value === `\n`))
     .map((thisAstPayload: Nodes, idx: number) => (
@@ -115,7 +139,7 @@ const MarkdownPane = ({
     ));
 
   return (
-    <>
+    <div ref={self}>
       {(parentClasses as string[])
         .slice()
         .reverse()
@@ -125,7 +149,7 @@ const MarkdownPane = ({
           ),
           <>{content}</>
         )}
-    </>
+    </div>
   );
 };
 

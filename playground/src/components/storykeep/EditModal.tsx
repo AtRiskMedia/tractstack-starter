@@ -14,15 +14,14 @@ import { PaneInsert } from "./settings/PaneInsert";
 import { PaneAstStyles } from "./settings/PaneAstStyles";
 import { useEditModalDimensions } from "../../hooks/useEditModalDimensions";
 import { classNames } from "../../utils/helpers";
-import type { ContentMap, FileDatum } from "../../types";
+import type { FileDatum } from "../../types";
 
 interface EditModalProps {
   id: string;
-  contentMap: ContentMap[];
   files: FileDatum[];
 }
 
-export const EditModal = ({ id, contentMap, files }: EditModalProps) => {
+export const EditModal = ({ id, files }: EditModalProps) => {
   const $creationState = useStore(creationStateStore);
   const thisId = id !== `create` ? id : ($creationState.id ?? `error`);
   const [isClient, setIsClient] = useState(false);
@@ -152,13 +151,12 @@ export const EditModal = ({ id, contentMap, files }: EditModalProps) => {
                 payload={$editMode.payload}
                 toggleOff={toggleOffEditModal}
                 doInsert={$editMode?.payload?.doInsert}
-                contentMap={contentMap}
                 reuse={
                   $editMode.payload.selectedDesign.id !== $editMode.payload.selectedDesign.slug
                 }
               />
             ) : $editMode?.type === `pane` && $editMode?.mode === `settings` ? (
-              <PaneSettings id={$editMode.id} storyFragmentId={thisId} contentMap={contentMap} />
+              <PaneSettings id={$editMode.id} storyFragmentId={thisId} />
             ) : $editMode?.type === `pane` &&
               $editMode?.mode === `styles` &&
               typeof $editMode.targetId !== `undefined` ? (

@@ -1,5 +1,11 @@
 import type { APIRoute } from "astro";
-import { getPaneDesigns, executeQueries, getUniqueTailwindClasses } from "../../../api/turso";
+import {
+  getPaneDesigns,
+  executeQueries,
+  getUniqueTailwindClasses,
+  checkTursoStatus,
+  isContentPrimed,
+} from "../../../api/turso";
 
 export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
   //if (!(locals.user?.isAuthenticated || locals.user?.isOpenDemo)) {
@@ -10,7 +16,6 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
   //}
 
   const { operation } = params;
-  const body = await request.json();
 
   try {
     let result;
@@ -19,27 +24,37 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
         result = JSON.stringify({ success: true });
         break;
 
+      case "status": {
+        const isReady = await checkTursoStatus();
+        result = { success: true, isReady };
+        break;
+      }
+
+      case "contentPrimed": {
+        const isContentPrimedResponse = await isContentPrimed();
+        result = { success: true, isContentPrimed: isContentPrimedResponse };
+        break;
+      }
+
       case "paneDesigns":
         result = await getPaneDesigns();
         break;
 
-      case "uniqueTailwindClasses":
+      case "uniqueTailwindClasses": {
+        const body = await request.json();
         result = await getUniqueTailwindClasses(body.id);
         break;
+      }
 
-      case "execute":
-        if (!Array.isArray(body.queries)) {
+      case "execute": {
+        const execBody = await request.json();
+        if (!Array.isArray(execBody.queries)) {
           throw new Error("Invalid or missing queries array");
         }
-        result = await executeQueries(body.queries);
+        result = await executeQueries(execBody.queries);
         break;
+      }
 
-      //case "getResourcesBySlug":
-      //  if (!Array.isArray(body.slugs)) {
-      //    throw new Error("Invalid or missing slugs array");
-      //  }
-      //  result = await turso.getResourcesBySlug(body.slugs);
-      //  break;
       default:
         throw new Error(`Unknown operation: ${operation}`);
     }

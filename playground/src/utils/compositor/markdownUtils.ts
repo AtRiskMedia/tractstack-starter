@@ -130,6 +130,7 @@ export function allowTagInsert(
       }
     }
     case `yt`:
+    case `signup`:
     case `bunny`:
     case `belief`:
     case `identify`:
@@ -802,10 +803,8 @@ function processClassValues(
           : Array.isArray(classes) && classes.length > 2 && classes[2] !== ``
             ? String(classes[2])
             : tabletVal;
-  const mobileValNegative =
-    mobileVal && mobileVal[0] === "!" ? mobileVal.substring(1) : mobileVal;
-  const tabletValNegative =
-    tabletVal && tabletVal[0] === "!" ? tabletVal.substring(1) : tabletVal;
+  const mobileValNegative = mobileVal && mobileVal[0] === "!" ? mobileVal.substring(1) : mobileVal;
+  const tabletValNegative = tabletVal && tabletVal[0] === "!" ? tabletVal.substring(1) : tabletVal;
   const desktopValNegative =
     desktopVal && desktopVal[0] === "!" ? desktopVal.substring(1) : desktopVal;
   return [

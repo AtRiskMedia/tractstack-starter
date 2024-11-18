@@ -1,13 +1,26 @@
-import type { APIRoute } from "astro";
+import { getSetupChecks } from "../../../../utils/setupChecks";
 import { proxyRequestToConcierge } from "../../../../api/authService";
+import type { APIRoute } from "astro";
 
 const BACKEND_URL = import.meta.env.PRIVATE_CONCIERGE_BASE_URL;
 
 export const GET: APIRoute = async (context) => {
+  const { hasConcierge } = getSetupChecks();
+  if (!hasConcierge)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "No concierge found.",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
   const id = context.url.searchParams.get("id");
   const type = context.url.searchParams.get("type");
   const duration = context.url.searchParams.get("duration");
-
   if (!id || !type || !duration)
     return new Response(
       JSON.stringify({

@@ -102,6 +102,9 @@ importers:
       component-emitter:
         specifier: 1.3.1
         version: 1.3.1
+      delta-e:
+        specifier: ^0.0.8
+        version: 0.0.8
       hast-util-from-html:
         specifier: ^2.0.1
         version: 2.0.3
@@ -144,9 +147,6 @@ importers:
       react-lite-youtube-embed:
         specifier: 2.4.0
         version: 2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sharp:
-        specifier: 0.33.5
-        version: 0.33.5
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
@@ -169,6 +169,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@astrojs/prefetch':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@divriots/jampack':
         specifier: 0.23.4
         version: 0.23.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -226,6 +229,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: 0.6.8
         version: 0.6.8(prettier-plugin-astro@0.14.1)(prettier@3.3.3)
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       tailwindcss:
         specifier: 3.4.13
         version: 3.4.13
@@ -340,9 +346,6 @@ importers:
       react-lite-youtube-embed:
         specifier: 2.4.0
         version: 2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sharp:
-        specifier: 0.33.5
-        version: 0.33.5
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
@@ -365,6 +368,9 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
+      '@astrojs/prefetch':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@divriots/jampack':
         specifier: 0.23.4
         version: 0.23.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -407,9 +413,6 @@ importers:
       eslint-plugin-react:
         specifier: 7.37.1
         version: 7.37.1(eslint@8.56.0)
-      husky:
-        specifier: 9.1.6
-        version: 9.1.6
       lint-staged:
         specifier: 15.2.10
         version: 15.2.10
@@ -422,6 +425,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: 0.6.8
         version: 0.6.8(prettier-plugin-astro@0.14.1)(prettier@3.3.3)
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       tailwindcss:
         specifier: 3.4.13
         version: 3.4.13
@@ -470,6 +476,10 @@ packages:
     resolution: {integrity: sha512-xzQs39goN7xh9np9rypGmbgZj3AmmjNxEMj9ZWz5aBERlqqFF3n8A/w/uaJeZ/bkHS60l1BXVS0tgsQt9MFqBA==}
     peerDependencies:
       astro: ^4.2.0
+
+  '@astrojs/prefetch@0.4.1':
+    resolution: {integrity: sha512-bpC875BqeIuWVgqhi4X814ftzzbKocaLkiZczaj8k5J2SRpueIGkww3XmD+yY/Ekkm9j30aS3neVO6wSm4IJNA==}
+    deprecated: '@astrojs/prefetch is deprecated in favor of the builtin prefetch option. Please see the migration guide for more information: https://docs.astro.build/en/guides/prefetch/#migrating-from-astrojsprefetch'
 
   '@astrojs/prism@3.1.0':
     resolution: {integrity: sha512-Z9IYjuXSArkAUx3N6xj6+Bnvx8OdUSHA8YoOgyepp3+zJmtVYJIl/I18GozdJVW1p5u/CNpl3Km7/gwTJK85cw==}
@@ -2214,6 +2224,9 @@ packages:
   delaunator@5.0.1:
     resolution: {integrity: sha512-8nvh+XBe96aCESrGOqMp/84b13H9cdKbG5P2ejQCh4d4sK9RL4371qou9drQjMhvnPmhWl5hnmqbEE0fXr9Xnw==}
 
+  delta-e@0.0.8:
+    resolution: {integrity: sha512-xIggbz7AoZLjwyV+BatfsKhWB1ejeh6vabM4KTJ2e7/d+TS0f7s87aUfkJ7B+MfniM6DD5VOWWlqcKXksp5mIg==}
+
   depd@2.0.0:
     resolution: {integrity: sha512-g7nH6P6dyDioJogAAGprGpCtVImJhpPk/roCzdb3fIh61/s/nPsfR6onyMwkCAR/OlC3yBC0lESvUoQEAssIrw==}
     engines: {node: '>= 0.8'}
@@ -3084,6 +3097,7 @@ packages:
 
   libsql@0.3.19:
     resolution: {integrity: sha512-Aj5cQ5uk/6fHdmeW0TiXK42FqUlwx7ytmMLPSaUQPin5HKKKuUPD62MAbN4OEweGBBI7q1BekoEN4gPUEL6MZA==}
+    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   lightningcss-darwin-arm64@1.28.1:
@@ -4815,6 +4829,10 @@ snapshots:
       server-destroy: 1.0.1
     transitivePeerDependencies:
       - supports-color
+
+  '@astrojs/prefetch@0.4.1':
+    dependencies:
+      throttles: 1.0.1
 
   '@astrojs/prism@3.1.0':
     dependencies:
@@ -6740,6 +6758,8 @@ snapshots:
   delaunator@5.0.1:
     dependencies:
       robust-predicates: 3.0.2
+
+  delta-e@0.0.8: {}
 
   depd@2.0.0: {}
 

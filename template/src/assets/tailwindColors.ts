@@ -1,3 +1,5 @@
+import { getEnvValue } from "../utils/preview-brand.ts";
+
 type TailwindColorPalette = {
   [colorName: string]: string[];
 };
@@ -14,17 +16,17 @@ const defaultColors = [
 ];
 const envBrand = import.meta.env.PUBLIC_BRAND;
 const brandColours: string[] = (() => {
-  if (envBrand && typeof envBrand === "string") {
+  const PREVIEW_BRAND = getEnvValue(`PUBLIC_BRAND`);
+  const thisBrand = PREVIEW_BRAND || envBrand;
+  if (thisBrand && typeof thisBrand === "string") {
     const hexColorRegex = /^([A-Fa-f0-9]{6}(?:,[A-Fa-f0-9]{6})*)$/;
-    if (hexColorRegex.test(envBrand)) {
-      return envBrand.split(",");
+    if (hexColorRegex.test(thisBrand)) {
+      return thisBrand.split(",");
     } else {
       console.error(
-        "PUBLIC_BRAND does not match the expected format of hexadecimal colors separated by commas."
+        "Does not match the expected format of hexadecimal colors separated by commas."
       );
     }
-  } else {
-    console.warn("PUBLIC_BRAND is not defined or not a string, using default colors.");
   }
   return defaultColors;
 })();
@@ -34,6 +36,33 @@ export function getBrandColor(colorVar: string): string | null {
   const index = parseInt(colorName) - 1;
   return index >= 0 && index < brandColours.length ? brandColours[index] : null;
 }
+
+export const COLOR_STYLES = [
+  "textCOLOR",
+  "bgCOLOR",
+  "textDECORATIONCOLOR",
+  "accentCOLOR",
+  "borderCOLOR",
+  "divideCOLOR",
+  "outlineCOLOR",
+  "ringCOLOR",
+  "ringOffsetCOLOR",
+  "fill",
+  "strokeCOLOR",
+  "placeholderCOLOR",
+  "boxShadowCOLOR",
+  "bgColour",
+  "textDECORATIONCOLOUR",
+  "borderCOLOUR",
+  "divideCOLOUR",
+  "outlineCOLOUR",
+  "ringCOLOUR",
+  "ringOffsetCOLOUR",
+  "placeholderCOLOUR",
+  "boxShadowCOLOUR",
+] as const;
+
+export type ColorStyle = (typeof COLOR_STYLES)[number];
 
 export const customColors = {
   mywhite: "#fcfcfc",
@@ -80,7 +109,7 @@ export const tailwindToHex = (tailwindColor: string): string => {
   if (tailwindColor.startsWith("brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor})`);
     if (brandColor) {
-      return brandColor;
+      return `#${brandColor}`;
     }
   }
   if (tailwindColor in customColors) {
@@ -88,7 +117,7 @@ export const tailwindToHex = (tailwindColor: string): string => {
     if (color.startsWith("var(--")) {
       const brandColor = getBrandColor(color);
       if (brandColor) {
-        return brandColor;
+        return `#${brandColor}`;
       }
     }
     return color;

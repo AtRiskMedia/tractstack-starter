@@ -1,20 +1,22 @@
+import { ulid } from "ulid";
 import type { Client } from "@libsql/client";
-import { hasDbInit } from "./utils";
 
-const createTableStatements = [
-  `CREATE TABLE IF NOT EXISTS tractstack (
+const TABLE_STATEMENTS = {
+  tractstack: `CREATE TABLE IF NOT EXISTS tractstack (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     social_image_path TEXT
   )`,
-  `CREATE TABLE IF NOT EXISTS menu (
+
+  menu: `CREATE TABLE IF NOT EXISTS menu (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     theme TEXT NOT NULL,
     options_payload TEXT NOT NULL
   )`,
-  `CREATE TABLE IF NOT EXISTS resource (
+
+  resource: `CREATE TABLE IF NOT EXISTS resource (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -23,18 +25,21 @@ const createTableStatements = [
     options_payload TEXT NOT NULL,
     action_lisp TEXT
   )`,
-  `CREATE TABLE IF NOT EXISTS file (
+
+  file: `CREATE TABLE IF NOT EXISTS file (
     id TEXT PRIMARY KEY,
     filename TEXT NOT NULL,
     alt_description TEXT NOT NULL,
     url TEXT NOT NULL,
     src_set BOOLEAN DEFAULT false
   )`,
-  `CREATE TABLE IF NOT EXISTS markdown (
+
+  markdown: `CREATE TABLE IF NOT EXISTS markdown (
     id TEXT PRIMARY KEY,
     body TEXT NOT NULL
   )`,
-  `CREATE TABLE IF NOT EXISTS storyfragment (
+
+  storyfragment: `CREATE TABLE IF NOT EXISTS storyfragment (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -45,7 +50,8 @@ const createTableStatements = [
     menu_id TEXT REFERENCES menu(id),
     tractstack_id TEXT NOT NULL REFERENCES tractstack(id)
   )`,
-  `CREATE TABLE IF NOT EXISTS pane (
+
+  pane: `CREATE TABLE IF NOT EXISTS pane (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
@@ -61,76 +67,72 @@ const createTableStatements = [
     height_ratio_mobile TEXT,
     height_ratio_tablet TEXT
   )`,
-  `CREATE TABLE IF NOT EXISTS storyfragment_pane (
+
+  storyfragment_pane: `CREATE TABLE IF NOT EXISTS storyfragment_pane (
     id TEXT PRIMARY KEY,
     storyfragment_id TEXT NOT NULL REFERENCES storyfragment(id),
     pane_id TEXT NOT NULL REFERENCES pane(id),
     weight INTEGER NOT NULL,
     UNIQUE(storyfragment_id, pane_id)
   )`,
-  `CREATE TABLE IF NOT EXISTS file_pane (
+
+  file_pane: `CREATE TABLE IF NOT EXISTS file_pane (
     id TEXT PRIMARY KEY,
     file_id TEXT NOT NULL REFERENCES file(id),
     pane_id TEXT NOT NULL REFERENCES pane(id),
     UNIQUE(file_id, pane_id)
   )`,
-  `CREATE TABLE IF NOT EXISTS file_markdown (
+
+  file_markdown: `CREATE TABLE IF NOT EXISTS file_markdown (
     id TEXT PRIMARY KEY,
     file_id TEXT NOT NULL REFERENCES file(id),
     markdown_id TEXT NOT NULL REFERENCES markdown(id),
     UNIQUE(file_id, markdown_id)
   )`,
+};
+
+const INDEX_STATEMENTS = [
+  "CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragment(tractstack_id)",
+  "CREATE INDEX IF NOT EXISTS idx_storyfragment_menu_id ON storyfragment(menu_id)",
+  "CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_storyfragment_id ON storyfragment_pane(storyfragment_id)",
+  "CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_pane_id ON storyfragment_pane(pane_id)",
+  "CREATE INDEX IF NOT EXISTS idx_file_pane_file_id ON file_pane(file_id)",
+  "CREATE INDEX IF NOT EXISTS idx_file_pane_pane_id ON file_pane(pane_id)",
+  "CREATE INDEX IF NOT EXISTS idx_file_markdown_file_id ON file_markdown(file_id)",
+  "CREATE INDEX IF NOT EXISTS idx_file_markdown_markdown_id ON file_markdown(markdown_id)",
+  "CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON pane(markdown_id)",
 ];
 
-const initializeSchema = async (client: Client): Promise<void> => {
-  console.log("Checking database initialization status...");
+interface InitOptions {
+  client: Client;
+}
 
-  const isInitialized = await hasDbInit(client);
-
-  if (isInitialized) {
-    console.log("Database already initialized, skipping schema creation");
-    return;
-  }
-
-  console.log("Starting schema initialization for new database...");
-
+export async function initializeSchema({ client }: InitOptions): Promise<void> {
   try {
-    // Foreign keys off before creating tables
-    console.log("Disabling foreign keys...");
-    await client.execute(`PRAGMA foreign_keys = OFF;`);
-
-    // Create tables
-    console.log("Creating tables...");
-    for (const statement of createTableStatements) {
-      console.log("Executing:", statement.substring(0, 50) + "...");
+    // For safety, always create tables/indexes without dropping in production replicas
+    // Create tables if they don't exist (safe for both demo and replicas)
+    for (const [, statement] of Object.entries(TABLE_STATEMENTS)) {
       await client.execute(statement);
     }
 
     // Create indexes
-    const createIndexStatements = [
-      `CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragment(tractstack_id)`,
-      // ... other index statements ...
-    ];
-
-    console.log("Creating indexes...");
-    for (const statement of createIndexStatements) {
-      console.log("Executing:", statement.substring(0, 50) + "...");
-      await client.execute(statement);
+    for (const indexStatement of INDEX_STATEMENTS) {
+      await client.execute(indexStatement);
     }
-
-    // Foreign keys back on
-    console.log("Enabling foreign keys...");
-    await client.execute(`PRAGMA foreign_keys = ON;`);
-
-    console.log("Schema initialization completed successfully");
   } catch (error) {
-    console.error("Schema initialization failed:", error);
+    console.error("Schema initialization error:", error);
     throw error;
   }
-};
+}
 
-export { initializeSchema };
-
-export default {
-  initializeSchema,
-};
+export async function initializeContent({ client }: InitOptions): Promise<void> {
+  try {
+    await client.execute({
+      sql: "INSERT INTO tractstack (id, title, slug, social_image_path) VALUES (?, ?, ?, ?)",
+      args: [`${ulid()}`, "Tract Stack", "HELLO", ""],
+    });
+  } catch (error) {
+    console.error("Content initialization error:", error);
+    throw error;
+  }
+}

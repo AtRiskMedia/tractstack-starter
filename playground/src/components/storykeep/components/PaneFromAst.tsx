@@ -25,10 +25,19 @@ import EraserWrapper from "./EraserWrapper";
 import InsertWrapper from "./InsertWrapper";
 import { wrapWithStylesIndicator } from "./StylesWrapper";
 import { classNames } from "../../../utils/helpers";
-import { Belief } from "@components/widgets/Belief";
-import { IdentifyAs } from "@components/widgets/IdentifyAs";
-import { ToggleBelief } from "@components/widgets/ToggleBelief";
-import type { ButtonData, FileNode, MarkdownDatum, MarkdownLookup, ToolAddMode, ToolMode } from "../../../types";
+import { Belief } from "../../../components/widgets/Belief";
+import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
+import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
+import { SignUp } from "../../../components/widgets/SignUp";
+import type { MouseEvent, ReactNode } from "react";
+import type {
+  ButtonData,
+  FileNode,
+  MarkdownLookup,
+  MarkdownDatum,
+  ToolAddMode,
+  ToolMode,
+} from "../../../types";
 import type { Element as HastElement } from "hast";
 import { useStore } from "@nanostores/react";
 import Draggable, { type ControlPosition } from "react-draggable";
@@ -856,6 +865,18 @@ function buildComponentFromAst(
           <div>
             <strong>YouTube Video Embed Code:</strong> {value1} ({value2})
           </div>
+        </div>
+      );
+    }
+
+    if (hook === "signup" && value1) {
+      widgetContent = (
+        <div className={injectClassNames}>
+          <SignUp
+            persona={value1 ?? "Major Updates Only"}
+            prompt={value2 ?? "Keep in touch!"}
+            clarifyConsent={value3 === "true"}
+          />
         </div>
       );
     }

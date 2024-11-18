@@ -5,34 +5,26 @@ import Footer from "../../components/Footer.astro";
 import { InformationCircle } from "../../components/icons/InformationCircle";
 import { RememberMeToggle } from "../../components/other/RememberMeToggle";
 import { ProfileSwitch } from "../../components/other/ProfileSwitch";
+import { isTursoReady, isContentReady } from "../../api/turso";
 import { getSetupChecks } from "../../utils/setupChecks";
-import { isTursoReady } from "../../api/turso";
-import type { AuthStatus, StylesVersion } from "../../types";
+import type { AuthStatus } from "../../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasConcierge, hasTurso } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
-
-const stylesVerUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`;
-const requestStyles: Response = await fetch(stylesVerUrl);
-const stylesVer: StylesVersion = requestStyles.status === 404 ? 0 : await requestStyles.json();
-const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 ---
 
-<Layout
-  title="Configure your Session"
-  pubDatetime={new Date()}
-  modDatetime={new Date()}
-  stylesUrl={stylesUrl}
->
+<Layout title="Configure your Session" pubDatetime={new Date()} modDatetime={new Date()}>
   <Header title="Configure your Session" slug="profile" isContext={false} user={user} />
   <main id="main-content">
     <div class="px-6 font-main text-xl py-24">

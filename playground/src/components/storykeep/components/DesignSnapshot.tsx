@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toPng } from "html-to-image";
+import imageCompression from "browser-image-compression";
 import PreviewPage from "./PreviewPage";
 import type { PageDesign, Theme } from "../../../types";
 
@@ -9,9 +10,16 @@ interface DesignSnapshotProps {
   brandColors: string[];
   onStart?: () => void;
   onComplete?: (imageData: string) => void;
+  forceRegenerate?: boolean;
 }
 
-// ... [previous compress function remains the same]
+const blobToBase64 = (blob: File) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.readAsDataURL(blob);
+  });
+};
 
 export default function DesignSnapshot({
   design,
@@ -19,80 +27,118 @@ export default function DesignSnapshot({
   brandColors,
   onStart,
   onComplete,
+  forceRegenerate,
 }: DesignSnapshotProps) {
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
-    if (!previewRef.current || !contentRef.current || isCapturing || brandColors.length === 0)
-      return;
+    if (!contentRef.current || !brandColors.length) return;
+    if (!isGenerating && !forceRegenerate) return;
 
-    const capturePreview = async () => {
+    const generateSnapshot = async () => {
       try {
-        setIsCapturing(true);
         onStart?.();
 
-        // Apply brand colors to the preview container
-        const previewRoot = previewRef.current;
         const styleSheet = document.createElement("style");
         styleSheet.textContent = brandColors
           .map((color, i) => `--brand-${i + 1}: ${color};`)
           .join("\n");
-        previewRoot?.appendChild(styleSheet);
+        document.head.appendChild(styleSheet);
 
-        // Let component render
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 250));
 
-        if (!previewRef.current || !contentRef.current) return;
+        if (!contentRef.current) return;
 
-        // Get actual content height
-        const contentHeight = contentRef.current.offsetHeight;
-        const containerWidth = 500;
-        const containerHeight = contentHeight;
-
-        const pngImage = await toPng(previewRef.current, {
-          cacheBust: true,
-          width: containerWidth,
-          height: containerHeight,
-          backgroundColor: "#FFFFFF",
+        const pngImage = await toPng(contentRef.current, {
+          width: 1500,
+          height: contentRef.current.offsetHeight,
           style: {
             transform: "scale(1)",
             transformOrigin: "top left",
-            width: `${containerWidth}px`,
-            height: `${containerHeight}px`,
           },
+          pixelRatio: 1,
+          backgroundColor: "#ffffff",
+          quality: 1,
+          canvasWidth: 1500,
+          canvasHeight: contentRef.current.offsetHeight,
         });
 
-        if (onComplete) {
-          onComplete(pngImage);
+        const img = new Image();
+        img.src = pngImage;
+        await new Promise((resolve) => (img.onload = resolve));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+
+        const webpBlob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
+        });
+
+        const compressedFile = await imageCompression(
+          new File([webpBlob], "image.webp", { type: "image/webp" }),
+          {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          }
+        );
+
+        const compressedBase64 = await blobToBase64(compressedFile);
+
+        if (onComplete && typeof compressedBase64 === "string") {
+          onComplete(compressedBase64);
         }
 
         styleSheet.remove();
       } catch (error) {
-        console.error("Error capturing preview:", error);
-        setIsCapturing(false);
+        console.error("Error generating snapshot:", error);
+      } finally {
+        setIsGenerating(false);
       }
     };
 
-    capturePreview();
-  }, [design, theme, brandColors, onComplete, isCapturing, onStart]);
+    generateSnapshot();
 
-  // Return a fixed size container with isolated CSS scope
+    return () => {
+      const styles = document.querySelectorAll("style");
+      styles.forEach((style) => {
+        if (style.textContent?.includes("--brand-")) {
+          style.remove();
+        }
+      });
+    };
+  }, [design, theme, brandColors, onComplete, onStart, isGenerating, forceRegenerate]);
+
   return (
-    <div
-      ref={previewRef}
-      style={{
-        width: "1200px",
-        height: "900px",
-        backgroundColor: "#FFFFFF",
-        overflow: "hidden",
-        transform: "scale(0.25)",
-        transformOrigin: "top left",
-        isolation: "isolate", // Create new stacking context
-      }}
-    >
-      <PreviewPage design={design} viewportKey="desktop" slug="preview" isContext={false} />
-    </div>
+    <>
+      {(isGenerating || forceRegenerate) && (
+        <div className="absolute inset-0 flex items-center justify-center bg-mylightgrey/10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-myorange mx-auto"></div>
+            <p className="mt-2 text-sm text-mydarkgrey">Generating preview...</p>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="absolute left-[-9999px] top-[-9999px] opacity-0 pointer-events-none"
+        aria-hidden="true"
+      >
+        <div
+          ref={contentRef}
+          className="w-[1500px]"
+          style={{
+            backgroundColor: "#FFFFFF",
+            isolation: "isolate",
+          }}
+        >
+          <PreviewPage design={design} viewportKey="desktop" slug="preview" isContext={false} />
+        </div>
+      </div>
+    </>
   );
 }

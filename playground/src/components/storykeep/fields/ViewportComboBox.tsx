@@ -1,13 +1,16 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { classNames } from "../../../utils/helpers";
 import DevicePhoneMobileIcon from "@heroicons/react/24/outline/DevicePhoneMobileIcon";
 import DeviceTabletIcon from "@heroicons/react/24/outline/DeviceTabletIcon";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
 import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
+import { tailwindToHex } from "../../../assets/tailwindColors";
 import type { ChangeEvent } from "react";
+
+const SPECIAL_VALUES = ["current", "inherit", "transparent"];
 
 interface ViewportComboBoxProps {
   value: string;
@@ -33,6 +36,7 @@ const ViewportComboBox = ({
   isInferred = false,
 }: ViewportComboBoxProps) => {
   const [internalValue, setInternalValue] = useState(value);
+  const [query, setQuery] = useState("");
   const [isNowNegative, setIsNowNegative] = useState(isNegative);
   const [filteredValues, setFilteredValues] = useState(values);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,30 +50,24 @@ const ViewportComboBox = ({
         ? DeviceTabletIcon
         : ComputerDesktopIcon;
 
-  //useEffect(() => {
-  //  const checkMobile = () => {
-  //    setIsMobile(window.innerWidth < 768);
-  //  };
-  //  const debouncedCheckMobile = debounce(checkMobile, 250);
-  //  checkMobile();
-  //  window.addEventListener("resize", debouncedCheckMobile);
-  //  return () => {
-  //    window.removeEventListener("resize", debouncedCheckMobile);
-  //  };
-  //}, []);
-
   useEffect(() => {
     if (value !== internalValue) {
       setInternalValue(value);
+      setQuery("");
     }
     if (isNegative !== isNowNegative) {
       setIsNowNegative(isNegative);
     }
   }, [value, isNegative]);
 
+  // Filter values based on query
   useEffect(() => {
-    setFilteredValues(values);
-  }, [internalValue, values]);
+    const filtered =
+      query === ""
+        ? values
+        : values.filter((item) => item.toLowerCase().includes(query.toLowerCase()));
+    setFilteredValues(filtered);
+  }, [query, values]);
 
   const handleNegativeChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
@@ -81,19 +79,27 @@ const ViewportComboBox = ({
 
   const handleChange = useCallback((newValue: string) => {
     setInternalValue(newValue);
+    setQuery(newValue);
   }, []);
 
   const handleSelect = useCallback(
     (selectedValue: string) => {
       setInternalValue(selectedValue);
+      setQuery("");
       onFinalChange(selectedValue, viewport, isNowNegative);
     },
     [onFinalChange, viewport, isNowNegative]
   );
 
   const handleBlur = useCallback(() => {
-    onFinalChange(internalValue, viewport, isNowNegative);
-  }, [internalValue, onFinalChange, viewport, isNowNegative]);
+    // Only update if the value is valid
+    if (values.includes(internalValue)) {
+      onFinalChange(internalValue, viewport, isNowNegative);
+    } else {
+      setInternalValue(value); // Reset to last valid value
+    }
+    setQuery(""); // Clear query on blur
+  }, [internalValue, value, values, onFinalChange, viewport, isNowNegative]);
 
   return (
     <div className="flex flex-nowrap items-center" title={`Value on ${viewport} Screens`}>
@@ -131,13 +137,19 @@ const ViewportComboBox = ({
                     key={item}
                     value={item}
                     className={({ active }) =>
-                      `relative cursor-default select-none py-2 pl-3 pr-9 ${
+                      `relative cursor-default select-none py-2 pl-12 pr-9 ${
                         active ? "bg-myorange text-white" : "text-black"
                       }`
                     }
                   >
                     {({ selected, active }) => (
                       <>
+                        {!SPECIAL_VALUES.includes(item) && (
+                          <div
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
+                            style={{ backgroundColor: tailwindToHex(item) }}
+                          />
+                        )}
                         <span
                           className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                         >

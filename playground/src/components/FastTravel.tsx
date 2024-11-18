@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { sync } from "../store/auth";
+import { contentMap } from "../store/events";
 import { processGraphPayload } from "../utils/helpers";
 import { fetchWithAuth } from "../api/fetchClient";
 import VisNetwork from "./other/VisNetwork";
 import { classNames } from "../utils/helpers";
-import type { ContentMap, GraphRelationshipDatum, GraphNodeDatum } from "../types";
+import type { GraphRelationshipDatum, GraphNodeDatum } from "../types";
 
 async function goGetGraph() {
   try {
@@ -26,13 +27,14 @@ async function goGetGraph() {
   }
 }
 
-const FastTravel = ({ contentMap }: { contentMap: ContentMap[] }) => {
+const FastTravel = () => {
   const [graphEdges, setGraphEdges] = useState<GraphRelationshipDatum[]>([]);
   const [graphNodes, setGraphNodes] = useState<GraphNodeDatum[]>([]);
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [show, setShow] = useState(false);
   const $sync = useStore(sync);
+  const $contentMap = useStore(contentMap);
 
   useEffect(() => {
     if (import.meta.env.PROD && $sync && !loading && !loaded) {
@@ -76,7 +78,7 @@ const FastTravel = ({ contentMap }: { contentMap: ContentMap[] }) => {
             </div>
           </div>
         ) : (
-          <VisNetwork nodes={graphNodes} edges={graphEdges} contentMap={contentMap} />
+          <VisNetwork nodes={graphNodes} edges={graphEdges} contentMap={$contentMap} />
         )}
       </div>
     </section>

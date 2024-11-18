@@ -203,7 +203,7 @@ export interface PaneDesign {
   variants: string[];
   img: string;
   priority: number;
-  type: `starter` | `break` | `reuse`;
+  type: `starter` | `break` | `reuse` | `codehook`;
   panePayload: {
     heightOffsetDesktop: number;
     heightOffsetTablet: number;
@@ -291,6 +291,7 @@ export type PaneAstTargetId = {
     | "code"
     | "img"
     | "yt"
+    | "signup"
     | "bunny"
     | "belief"
     | "toggle"
@@ -299,6 +300,12 @@ export type PaneAstTargetId = {
   buttonTarget?: string;
   mustConfig?: boolean;
 };
+
+export interface SignupProps {
+  persona: string;
+  prompt: string;
+  clarifyConsent: boolean;
+}
 
 export type EditModeValue = {
   id: string;
@@ -1019,7 +1026,7 @@ export interface StylesVersion {
 export interface CodeHookDatum {
   target: string;
   url?: string | undefined;
-  options: string | undefined;
+  options?: string | undefined;
   height?: string | undefined;
   width?: string | undefined;
 }

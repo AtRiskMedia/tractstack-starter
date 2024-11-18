@@ -13,17 +13,11 @@ import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (
-  !hasConcierge ||
-  !hasTurso ||
-  !hasTursoReady ||
-  !hasBranding ||
-  !hasContent ||
-  !hasContentReady
-) {
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 
@@ -66,7 +60,7 @@ const impressions = user.isOpenDemo
     ]
   : ([] as ImpressionDatum[]);
 
-const contentMap: FullContentMap[] = hasTurso && hasTursoReady ? await getFullContentMap() : [];
+const contentMap: FullContentMap[] = await getFullContentMap();
 ---
 
 <StoryKeep title="Advanced Settings" canonicalURL={canonicalURL}>

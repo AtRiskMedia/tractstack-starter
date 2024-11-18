@@ -4,6 +4,7 @@ import BunnyVideo from "../../components/other/BunnyVideo.astro";
 import { Belief } from "../../components/widgets/Belief";
 import { IdentifyAs } from "../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../components/widgets/ToggleBelief";
+import { SignUp } from "../../components/widgets/SignUp";
 import { AstToButton } from "../../components/panes/AstToButton";
 import { lispLexer } from "../../utils/concierge/lispLexer";
 import { preParseAction } from "../../utils/concierge/preParseAction";
@@ -95,7 +96,7 @@ const imageSrcSet = thisImage?.srcSet ? thisImage.optimizedSrc : null;
 
 // applies only when Tag === `code`
 // currently supported: YouTube, Bunny, toggle, belief, *resource not implemented
-const regexpHook = /(identifyAs|youtube|bunny|toggle|resource|belief)\((.*?)\)/;
+const regexpHook = /(identifyAs|signup|youtube|bunny|toggle|resource|belief)\((.*?)\)/;
 const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
 const thisHookRaw = thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
 const hook = thisHookRaw && typeof thisHookRaw[1] === `string` ? thisHookRaw[1] : null;
@@ -190,6 +191,18 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
   Tag === `code` && hook === `bunny` && value1 && value2 ? (
     <div class={injectClassNames}>
       <BunnyVideo videoUrl={value1} title={value2} />
+    </div>
+  ) : null
+}
+{
+  Tag === `code` && hook === `signup` && value1 ? (
+    <div class={injectClassNames}>
+      <SignUp
+        client:load
+        persona={value1 ?? "Major Updates Only"}
+        prompt={value2 ?? "Keep in touch!"}
+        clarifyConsent={value3 === "true"}
+      />
     </div>
   ) : null
 }

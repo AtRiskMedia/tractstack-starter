@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createClient } from "@libsql/client/web";
 import { cleanTursoResource } from "../utils/compositor/tursoResource";
 import { cleanTursoPayload } from "../utils/compositor/tursoPayload";
 import { cleanTursoContentMap } from "../utils/compositor/tursoContentMap";
@@ -10,6 +9,7 @@ import { cleanTursoMenu } from "../utils/compositor/tursoMenu";
 import { cleanTursoTractStack } from "../utils/compositor/tursoTractStack";
 import { cleanPaneDesigns } from "../utils/compositor/paneDesigns";
 import { getTailwindWhitelist } from "../utils/compositor/tursoTailwindWhitelist";
+import { getReadClient, getWriteClient, createTursoClient } from "../db/utils";
 import type {
   ResourceDatum,
   TractStackDatum,
@@ -26,32 +26,11 @@ import type {
 } from "../types.ts";
 import type { ResultSet } from "@libsql/client";
 
-let tursoClient: ReturnType<typeof createClient> | null = null;
-
-function getTursoClient() {
-  if (!import.meta.env.TURSO_DATABASE_URL?.trim() || !import.meta.env.TURSO_AUTH_TOKEN?.trim()) {
-    console.log("Turso credentials not configured");
-    return null;
-  }
-  try {
-    new URL(import.meta.env.TURSO_DATABASE_URL);
-  } catch (e) {
-    throw new Error("Invalid Turso database URL format");
-  }
-  if (!tursoClient) {
-    tursoClient = createClient({
-      url: import.meta.env.TURSO_DATABASE_URL,
-      authToken: import.meta.env.TURSO_AUTH_TOKEN,
-    });
-  }
-  return tursoClient;
-}
-
 export async function getUniqueTailwindClasses(id: string) {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute({
       sql: `SELECT id, options_payload FROM pane WHERE id != ?`,
       args: [id],
     });
@@ -64,9 +43,9 @@ export async function getUniqueTailwindClasses(id: string) {
 
 export async function getAllResources(): Promise<ResourceDatum[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
       SELECT * FROM resource
       ORDER BY title ASC
     `);
@@ -79,9 +58,9 @@ export async function getAllResources(): Promise<ResourceDatum[]> {
 
 export async function getAllMenus(): Promise<MenuDatum[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
       SELECT id, title, theme, options_payload
       FROM menu
       ORDER BY title
@@ -95,9 +74,9 @@ export async function getAllMenus(): Promise<MenuDatum[]> {
 
 export async function getMenuById(id: string): Promise<MenuDatum | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return null;
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
       sql: `SELECT id, title, theme, options_payload
             FROM menu
             WHERE id = ?`,
@@ -113,15 +92,15 @@ export async function getMenuById(id: string): Promise<MenuDatum | null> {
 
 export async function getDatumPayload(): Promise<DatumPayload> {
   try {
-    const turso = getTursoClient();
-    if (!turso)
+    const client = getReadClient();
+    if (!client)
       return {
         files: [],
         menus: [],
         tractstack: [],
         resources: [],
       };
-    const { rows } = await turso.execute(
+    const { rows } = await client.execute(
       `WITH dummy AS (SELECT 1),
 resource_data AS (
   SELECT json_group_array(json_object(
@@ -197,9 +176,9 @@ LIMIT 1;`
 export async function getResourcesBySlug(slugs: string[]): Promise<ResourceDatum[]> {
   const placeholders = slugs.map(() => "?").join(",");
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute({
       sql: `SELECT * FROM resource WHERE slug IN (${placeholders})`,
       args: slugs,
     });
@@ -214,9 +193,9 @@ export async function getResourcesBySlug(slugs: string[]): Promise<ResourceDatum
 export async function getResourcesByCategorySlug(slugs: string[]): Promise<ResourceDatum[]> {
   const placeholders = slugs.map(() => "?").join(",");
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute({
       sql: `SELECT * FROM resource WHERE category_slug IN (${placeholders})`,
       args: slugs,
     });
@@ -230,9 +209,9 @@ export async function getResourcesByCategorySlug(slugs: string[]): Promise<Resou
 
 export async function getAllTractStack(): Promise<TractStackDatum[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
 SELECT id, title, slug, social_image_path FROM tractstack
     `);
     return cleanTursoTractStack(rows);
@@ -244,9 +223,9 @@ SELECT id, title, slug, social_image_path FROM tractstack
 
 export async function getTractStackBySlug(slug: string): Promise<TractStackDatum[] | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute({
       sql: `SELECT id, title, slug, social_image_path FROM tractstack WHERE slug = ?`,
       args: [slug],
     });
@@ -259,9 +238,9 @@ export async function getTractStackBySlug(slug: string): Promise<TractStackDatum
 
 export async function getTractStackIdBySlug(slug: string): Promise<string | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return null;
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
       sql: `SELECT id FROM tractstack WHERE slug = ?`,
       args: [slug],
     });
@@ -279,9 +258,9 @@ export async function getTractStackIdBySlug(slug: string): Promise<string | null
 
 export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmentDatum | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return null;
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
       sql: `SELECT 
                      sf.id AS id,
                      sf.title AS title,
@@ -363,11 +342,132 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
   }
 }
 
+export async function executeQueries(
+  queries: TursoQuery[]
+): Promise<{ success: boolean; results: ResultSet[] }> {
+  const results: ResultSet[] = [];
+
+  for (const query of queries) {
+    try {
+      const isRead = query.sql.trim().toLowerCase().startsWith("select");
+      const client = isRead ? getReadClient() : getWriteClient();
+      if (!client) return { success: false, results: [] };
+      const result = await client.execute(query);
+      results.push(result);
+    } catch (error) {
+      console.error("Error executing query:", query, error);
+      throw error;
+    }
+  }
+
+  return { success: true, results };
+}
+
+export async function isContentReady(): Promise<boolean> {
+  try {
+    const client = getReadClient();
+    if (!client) return false;
+    const { rows } = await client.execute(
+      `
+        SELECT 
+          EXISTS (
+            SELECT 1 
+            FROM storyfragment sf
+            JOIN tractstack ts ON sf.tractstack_id = ts.id
+          ) as content_exists
+      `
+    );
+    return rows[0]?.content_exists === 1;
+  } catch (error) {
+    console.error("Error checking content readiness:", error);
+    return false;
+  }
+}
+
+export async function isContentPrimed(): Promise<boolean> {
+  try {
+    const client = getReadClient();
+    if (!client) return false;
+    const { rows } = await client.execute(
+      `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists;`
+    );
+    return rows[0]?.content_exists === 1;
+  } catch (error) {
+    console.error("Error checking content readiness:", error);
+    return false;
+  }
+}
+
+export async function isTursoReady(): Promise<boolean> {
+  try {
+    await createTursoClient();
+    const client = getReadClient();
+    const { rows } = await client.execute(`
+      SELECT COUNT(*) as table_count 
+      FROM sqlite_master 
+      WHERE type='table' 
+      AND name IN (
+        'tractstack',
+        'menu',
+        'resource',
+        'file',
+        'markdown',
+        'storyfragment',
+        'pane',
+        'storyfragment_pane',
+        'file_pane',
+        'file_markdown'
+      )
+    `);
+    return rows[0].table_count === 10;
+  } catch (error) {
+    console.error("Error checking database readiness:", error);
+    return false;
+  }
+}
+
+export async function checkTursoStatus(): Promise<boolean> {
+  try {
+    const client = getReadClient();
+    if (!client) {
+      console.log("No Turso client available");
+      return false;
+    }
+
+    const { rows } = await client.execute(`
+      SELECT COUNT(*) as table_count 
+      FROM sqlite_master 
+      WHERE type='table' 
+      AND name IN (
+        'tractstack',
+        'menu',
+        'resource',
+        'file',
+        'markdown',
+        'storyfragment',
+        'pane',
+        'storyfragment_pane',
+        'file_pane',
+        'file_markdown'
+      )
+    `);
+    return rows[0].table_count === 10;
+  } catch (error) {
+    console.error("Error checking database readiness:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+    }
+    return false;
+  }
+}
+
+// ... continuing from previous part 2 ...
+
 export async function getContextPaneBySlug(slug: string): Promise<ContextPaneDatum | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return null;
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
       sql: `SELECT 
                    p.id, 
                    p.title, 
@@ -427,9 +527,9 @@ export async function getContextPaneBySlug(slug: string): Promise<ContextPaneDat
 
 export async function getContentMap(): Promise<ContentMap[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows: storyfragments } = await turso.execute(
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows: storyfragments } = await client.execute(
       `SELECT 
               sf.id AS id,
               sf.title AS title,
@@ -449,7 +549,7 @@ export async function getContentMap(): Promise<ContentMap[]> {
               GROUP BY 
                   sf.id, sf.title, sf.slug, ts.id, ts.title, ts.slug`
     );
-    const { rows: panes } = await turso.execute(
+    const { rows: panes } = await client.execute(
       `SELECT id, slug, title, is_context_pane, changed, created FROM pane`
     );
     return cleanTursoContentMap(storyfragments, panes);
@@ -461,9 +561,9 @@ export async function getContentMap(): Promise<ContentMap[]> {
 
 export async function getPaneDesigns(): Promise<PaneDesign[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
      WITH file_data AS (
        SELECT 
          combined_files.pane_id,
@@ -526,9 +626,9 @@ export async function getPaneDesigns(): Promise<PaneDesign[]> {
 
 export async function getFileById(id: string): Promise<FileDatum | null> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return null;
-    const { rows } = await turso.execute({
+    const client = getReadClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
       sql: `SELECT id, filename, alt_description, url, src_set
             FROM file
             WHERE id = ?`,
@@ -566,9 +666,9 @@ export async function getFileById(id: string): Promise<FileDatum | null> {
 
 export async function getAllFileDatum(): Promise<TursoFileNode[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
       SELECT id, filename, alt_description, url, src_set
       FROM file
     `);
@@ -579,63 +679,11 @@ export async function getAllFileDatum(): Promise<TursoFileNode[]> {
   }
 }
 
-export async function isContentReady(): Promise<boolean> {
-  try {
-    const turso = getTursoClient();
-    if (!turso) return false;
-    const { rows } = await turso.execute({
-      sql: `
-        SELECT 
-          EXISTS (
-            SELECT 1 
-            FROM storyfragment sf
-            JOIN tractstack ts ON sf.tractstack_id = ts.id
-            WHERE sf.slug = ? AND ts.slug = ?
-          ) as content_exists
-      `,
-      args: [import.meta.env.PUBLIC_HOME, import.meta.env.PUBLIC_TRACTSTACK],
-    });
-
-    return rows[0]?.content_exists === 1;
-  } catch (error) {
-    console.error("Error checking content readiness:", error);
-    return false;
-  }
-}
-
-export async function isTursoReady(): Promise<boolean> {
-  try {
-    const turso = getTursoClient();
-    if (!turso) return false;
-    const { rows } = await turso.execute(`
-      SELECT COUNT(*) as table_count 
-      FROM sqlite_master 
-      WHERE type='table' 
-      AND name IN (
-        'tractstack',
-        'menu',
-        'resource',
-        'file',
-        'markdown',
-        'storyfragment',
-        'pane',
-        'storyfragment_pane',
-        'file_pane',
-        'file_markdown'
-      )
-    `);
-    return rows[0].table_count === 10;
-  } catch (error) {
-    console.error("Error checking database readiness:", error);
-    return false;
-  }
-}
-
 export async function getFullContentMap(): Promise<FullContentMap[]> {
   try {
-    const turso = getTursoClient();
-    if (!turso) return [];
-    const { rows } = await turso.execute(`
+    const client = getReadClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
       SELECT id, id as slug, title, 'Menu' as type
       FROM menu
       UNION ALL
@@ -697,24 +745,4 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     console.error("Error fetching full content map:", error);
     throw error;
   }
-}
-
-export async function executeQueries(
-  queries: TursoQuery[]
-): Promise<{ success: boolean; results: ResultSet[] }> {
-  const results: ResultSet[] = [];
-
-  for (const query of queries) {
-    try {
-      const turso = getTursoClient();
-      if (!turso) return { success: false, results: [] };
-      const result = await turso.execute(query);
-      results.push(result);
-    } catch (error) {
-      console.error("Error executing query:", query, error);
-      throw error;
-    }
-  }
-
-  return { success: true, results };
 }

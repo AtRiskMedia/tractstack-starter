@@ -3,7 +3,11 @@ import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { getTailwindColorOptions } from "../../../assets/tailwindColors";
+import {
+  getTailwindColorOptions,
+  tailwindToHex,
+  getBrandColor,
+} from "../../../assets/tailwindColors";
 import { classNames } from "../../../utils/helpers";
 
 interface TailwindColorComboboxProps {
@@ -24,6 +28,14 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
   const comboboxRef = useRef<HTMLDivElement>(null);
   const { openAbove, maxHeight } = useDropdownDirection(comboboxRef);
 
+  const getColorValue = (color: string) => {
+    if (color.startsWith("brand-")) {
+      const brandColor = getBrandColor(`var(--${color})`);
+      return brandColor ? `#${brandColor}` : tailwindToHex(`bg-${color}`);
+    }
+    return tailwindToHex(`bg-${color}`);
+  };
+
   return (
     <Combobox
       as="div"
@@ -34,12 +46,18 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
     >
       <div className="relative">
         <Combobox.Input
-          className="w-full rounded-md border-0 px-2.5 py-1.5 pr-10 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-sm xs:leading-6"
+          className="w-full rounded-md border-0 px-2.5 py-1.5 pl-12 pr-10 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-sm xs:leading-6"
           onChange={(event) => setQuery(event.target.value)}
           displayValue={(color: string) => color}
           placeholder="Select a Tailwind color"
           autoComplete="off"
         />
+        {selectedColor && !query && (
+          <div
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
+            style={{ backgroundColor: tailwindToHex(`bg-${selectedColor}`) }}
+          />
+        )}
         <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
           <ChevronUpDownIcon className="h-5 w-5 text-myblue" aria-hidden="true" />
         </Combobox.Button>
@@ -56,13 +74,17 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
             value={color}
             className={({ active }) =>
               classNames(
-                "relative cursor-default select-none py-2 pl-10 pr-4",
+                "relative cursor-default select-none py-2 pl-12 pr-4",
                 active ? "bg-myorange text-white" : "text-myblack"
               )
             }
           >
             {({ selected, active }) => (
               <>
+                <div
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
+                  style={{ backgroundColor: getColorValue(color) }}
+                />
                 <span
                   className={classNames("block truncate", selected ? "font-bold" : "font-normal")}
                 >

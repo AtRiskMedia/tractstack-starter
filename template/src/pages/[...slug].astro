@@ -5,35 +5,37 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import HeaderWidget from "../custom/HeaderWidget.astro";
 import Footer from "../components/Footer.astro";
-import { getSetupChecks } from "../utils/setupChecks";
 import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
 import { ENABLE_HEADER_WIDGET } from "../constants";
-import type { AuthStatus, Current, StylesVersion } from "../types";
+import { getSetupChecks } from "../utils/setupChecks";
+import { isValidContentPath } from "../utils/routeValidation";
+import type { AuthStatus, Current } from "../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-
-// get styles offset
-const stylesVerUrl =
-  typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
-  import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
-    ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
-    : null;
-const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
-const stylesVer: StylesVersion =
-  !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
-const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
+  return Astro.redirect("/storykeep");
+}
 
 // which storyfragment?
 const { slug } = Astro.params;
 const lookup = slug || import.meta.env.PUBLIC_HOME;
+
+// Validate the route parameter
 if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
 if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 
 // get storyfragment datum
 const storyfragment = await getStoryFragmentBySlug(lookup);
@@ -52,18 +54,7 @@ const current: Current = storyfragment
 ---
 
 {
-  !storyfragment ||
-  !hasConcierge ||
-  !hasTurso ||
-  !hasTursoReady ||
-  !hasBranding ||
-  !hasContent ||
-  !hasContentReady ? (
-    <div>
-      {slug}
-      Your StoryKeep is bare. Please visit: <a href="/storykeep">Site Wizard</a>
-    </div>
-  ) : (
+  storyfragment ? (
     <Layout
       title={storyfragment.title}
       pubDatetime={storyfragment.created}
@@ -73,7 +64,6 @@ const current: Current = storyfragment
           ? storyfragment.socialImagePath
           : undefined
       }
-      stylesUrl={stylesUrl}
     >
       {ENABLE_HEADER_WIDGET ? (
         <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
@@ -111,5 +101,5 @@ const current: Current = storyfragment
         isContext={false}
       />
     </Layout>
-  )
+  ) : null
 }

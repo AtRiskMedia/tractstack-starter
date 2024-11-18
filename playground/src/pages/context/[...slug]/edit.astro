@@ -1,5 +1,5 @@
 ---
-import { getContentMap, getAllFileDatum, getContextPaneBySlug } from "../../../api/turso";
+import { getAllFileDatum, getContextPaneBySlug } from "../../../api/turso";
 import { cleanTursoFileDatum } from "../../../utils/compositor/tursoFileDatum";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 import { EditModal } from "../../../components/storykeep/EditModal";
@@ -7,8 +7,8 @@ import { ContextPane } from "../../../components/storykeep/ContextPane";
 import { StoryKeepContextStore } from "../../../components/storykeep/StoryKeepContextStore";
 import { StoryKeepHeader } from "../../../components/storykeep/StoryKeepHeader";
 import { getSetupChecks } from "../../../utils/setupChecks";
-import { isContentReady } from "../../../api/turso";
-import type { AuthStatus, ContentMap } from "../../../types";
+import { isTursoReady, isContentReady } from "../../../api/turso";
+import type { AuthStatus } from "../../../types";
 
 const user = Astro.locals.user as AuthStatus;
 
@@ -17,9 +17,11 @@ const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasContentReady = hasTurso && hasContent ? await isContentReady() : false;
-if (!hasConcierge || !hasTurso || !hasBranding || !hasContent || !hasContentReady) {
+const { hasConcierge, hasTurso } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 
@@ -31,8 +33,6 @@ const files = cleanTursoFileDatum(filesRaw);
 
 const contextPane = await getContextPaneBySlug(slug);
 if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astro.redirect("/404");
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <StoryKeep
@@ -57,7 +57,6 @@ const contentMap: ContentMap[] = await getContentMap();
         id={slug === "create" ? `create` : contextPane?.id ? contextPane.id : `error`}
         slug={slug}
         isContext={true}
-        contentMap={contentMap}
         user={user}
         originalData={contextPane}
         hasContentReady={true}
@@ -82,7 +81,6 @@ const contentMap: ContentMap[] = await getContentMap();
         client:only="react"
         id={slug === "create" ? `create` : contextPane?.id ? contextPane.id : `error`}
         files={files}
-        contentMap={contentMap}
       />
     </div>
   </div>

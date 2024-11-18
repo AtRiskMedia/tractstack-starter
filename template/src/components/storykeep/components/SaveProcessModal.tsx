@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
 import { classNames } from "../../../utils/helpers";
 import { tursoClient } from "../../../api/tursoClient";
 import { reconcileData, resetUnsavedChanges } from "../../../utils/compositor/reconcileData";
+import { previewMode, getPreviewModeValue } from "../../../store/storykeep";
 import { getTailwindWhitelist } from "../../../utils/compositor/tursoTailwindWhitelist";
 import type {
   ReconciledData,
@@ -40,6 +42,8 @@ export const SaveProcessModal = ({
   const [whitelist, setWhitelist] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [slug, setSlug] = useState("");
+  const $previewMode = useStore(previewMode);
+  const isPreview = getPreviewModeValue($previewMode);
 
   useEffect(() => {
     async function runFetch() {
@@ -144,6 +148,9 @@ export const SaveProcessModal = ({
   };
 
   const uploadFiles = async (files: FileDatum[]): Promise<boolean> => {
+    if (isPreview) {
+      return true;
+    }
     try {
       const response = await fetch(`/api/concierge/storykeep/files`, {
         method: "POST",

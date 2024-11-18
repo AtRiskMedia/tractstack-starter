@@ -173,10 +173,18 @@ export const PaneBreakSettings = ({ id }: PaneBreakSettingsProps) => {
 
   useEffect(() => {
     const fragmentIds = $paneFragmentIds[id]?.current;
-    if (fragmentIds && fragmentIds.length > 0) {
-      setFragmentId(fragmentIds[0]);
+    if (fragmentIds) {
+      // Find the bgPane fragment by checking each fragment's type
+      const bgPaneId = fragmentIds.find((fragId) => {
+        const fragment = $paneFragmentBgPane[fragId]?.current;
+        return fragment?.type === "bgPane";
+      });
+
+      if (bgPaneId) {
+        setFragmentId(bgPaneId);
+      }
     }
-  }, [$paneFragmentIds, id]);
+  }, [$paneFragmentIds, id, $paneFragmentBgPane]);
 
   useEffect(() => {
     if (fragmentId && $paneFragmentBgPane[fragmentId]?.current) {

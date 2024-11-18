@@ -14,6 +14,12 @@ import type {
   ToolAddMode,
 } from "./types";
 
+export const DB_DIR = ".tractstack";
+export const DEMO_DB = "demo.db";
+export const PROD_DB = "prod.db";
+export const REPLICA_PREFIX = "replica-";
+export const REPLICA_COUNT = 3;
+
 export const genAiPrompt = `You are writing copy for a high traffic internet website. Write for an audience who is reading this website copy and is very interested in what it has to offer. Create a markdown summary of the given text following this structure: Start with a # Heading 1 web page title that's appropriate for SEO. Next a ## Heading 2 containing a catchy, concise title that encapsulates the main theme. Follow with a single paragraph that provides an overall short description, setting the context for the entire piece. Create 3-5 ### Heading 3 sections, each focusing on a key aspect or subtopic of the main theme. Each heading should be followed by one or two paragraphs expanding on that subtopic. Optionally, include a #### Heading 4 subsection under one or more of the ### Heading 3 sections if there's a need to dive deeper into a specific point. This should also be followed by one or two paragraphs. Ensure all content is in pure markdown format, without any HTML tags or special formatting. Adjust the number of sections and subsections based on the length and complexity of the original text: For shorter texts (under 500 words), use fewer sections. For longer texts (over 2000 words), use more sections and subsections. Keep the overall structure and flow coherent, ensuring each section logically leads to the next. Use paragraphs instead of bullet points or lists for the main content under each heading. Maintain a consistent tone and style throughout the summary, matching the original text's voice where appropriate. Aim for a comprehensive yet concise summary that captures the essence of the original text while adhering to this structured format.`;
 
 export const PUBLIC_THEME = import.meta.env.PUBLIC_THEME || `light`;
@@ -55,6 +61,7 @@ export const toolAddModes = [
   "h3",
   "h4",
   "img",
+  "signup",
   "yt",
   "bunny",
   "belief",
@@ -83,6 +90,7 @@ export const toolAddModeTitles: Record<ToolAddMode, string> = {
   h3: "Heading 3",
   h4: "Heading 4",
   img: "Image",
+  signup: "Email Sign-up Widget",
   yt: "YouTube Video",
   bunny: "Bunny Video",
   belief: "Belief Select",
@@ -97,6 +105,7 @@ export const toolAddModeInsertDefault: Record<ToolAddMode, string> = {
   h3: "### subtitle",
   h4: "#### section title",
   img: "![Descriptive title](filename)", // on initial insert must wrap in ul
+  signup: "* `signup(Major Updates Only|Keep in touch!|false)`",
   yt: "* `youtube(tag|title)`",
   bunny: "* `bunny(id|title)`",
   belief: "* `belief(BeliefTag|likert|prompt)`",
@@ -199,6 +208,13 @@ export const widgetMeta: WidgetMeta = {
     valueDefaults: ["?", "?"],
     multi: [false, false],
     isScale: [false, false],
+  },
+  signup: {
+    title: `Email Sign Up Widget`,
+    valueLabels: ["Contact Persona", "Prompt Text", "Clarify Consent"],
+    valueDefaults: ["Major Updates Only", "Keep in touch!", "false"],
+    multi: [false, false, false],
+    isScale: [false, false, false],
   },
 };
 

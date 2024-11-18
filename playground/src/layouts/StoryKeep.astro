@@ -1,7 +1,7 @@
 ---
 import { ViewTransitions } from "astro:transitions";
 import SetContentMap from "../components/SetContentMap";
-import { getContentMap, isTursoReady } from "../api/turso";
+import { getContentMap } from "../api/turso";
 import { getSetupChecks } from "../utils/setupChecks";
 import type { ContentMap } from "../types";
 
@@ -15,20 +15,23 @@ export interface Props {
 
 const { title, ogImage, canonicalURL, pubDatetime, modDatetime } = Astro.props;
 
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
     ? import.meta.env.PUBLIC_FAVICON
-    : `favicon.ico`;
+    : `/favicon.ico`;
 const defaultSocialImageURL =
   typeof ogImage === `string` && ogImage
     ? ogImage
     : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
       ? import.meta.env.PUBLIC_OG
-      : `og.png`;
+      : `/og.png`;
 const defaultSocialLogoURL =
   typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
     ? import.meta.env.PUBLIC_OGLOGO
-    : `oglogo.png`;
+    : `/oglogo.png`;
 const defaultSocialTitle =
   typeof title === `string` && title
     ? title
@@ -45,9 +48,7 @@ const defaultSocialDesc =
     : `The best is yet to come!`;
 const storykeepCss = `/styles/storykeep.css`;
 
-const { hasTurso } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap() : [];
+const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
 ---
 
 <!doctype html>
@@ -109,7 +110,9 @@ const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap
         handleScroll,
         scrollToTop,
         debounce,
+        shouldRunInit,
       } from "../utils/helpers";
+      import { initializeBrandColors } from "../utils/brand-init";
       import { init } from "../utils/init";
 
       function setupEventHandlers() {
@@ -125,9 +128,10 @@ const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap
       const debouncedHandleScroll = debounce(handleScroll, 50);
 
       document.addEventListener("astro:page-load", () => {
+        if (shouldRunInit()) init();
         setupEventHandlers();
         handleScroll();
-        init();
+        initializeBrandColors();
         scrollToTop();
         document.addEventListener("scroll", debouncedHandleScroll);
       });

@@ -8,7 +8,6 @@ import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTria
 import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
 import { envSettings } from "../../../store/storykeep";
 import ContentEditableField from "../components/ContentEditableField";
-import { DesignSnapshotModal } from "../components/DesignSnapshotModal";
 import RebuildProgressModal from "../components/RebuildProgressModal";
 import BrandColorPicker from "./BrandColorPicker";
 import BrandImageUpload from "../components/BrandImageUpload";
@@ -112,32 +111,6 @@ async function saveEnvSettings(
   }
 }
 
-const saveBrandImages = async (brandImages: Record<string, string>): Promise<boolean> => {
-  if (Object.keys(brandImages).length === 0) return true;
-  try {
-    const brandFiles = Object.entries(brandImages).map(([name, src]) => ({
-      filename: name.replace("PUBLIC_", "").toLowerCase(),
-      src,
-    }));
-    const uploadResponse = await fetch(`/api/concierge/storykeep/frontendFiles`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ files: brandFiles }),
-    });
-    const uploadData = await uploadResponse.json();
-    if (!uploadData.success) {
-      throw new Error(uploadData.error || "Failed to upload brand images");
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error saving brand images:", error);
-    return false;
-  }
-};
-
 const groupOrder = ["Brand", "Home", "Core", "Options", "Integrations", "Backend"];
 const wordmarkModeOptions = ["default", "logo", "wordmark"];
 const showHelpInfo = [
@@ -152,9 +125,7 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
   const [brandImages, setBrandImages] = useState<Record<string, string>>({});
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
   const [customColors, setCustomColors] = useState<string | null>(null);
-  const [isGeneratingSnapshotsThenPublish, setIsGeneratingSnapshotsThenPublish] = useState(false);
   const [updateColours, setUpdateColours] = useState(false);
-  const [isGeneratingSnapshots, setIsGeneratingSnapshots] = useState(false);
   const [showRebuildModal, setShowRebuildModal] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [localSettings, setLocalSettings] = useState<EnvSettingDatum[]>([]);
@@ -247,7 +218,7 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
     fetchEnv();
   }, []);
 
-  const hasBrandColorChanges = useMemo(() => {
+  const hasThemeChanges = useMemo(() => {
     return originalSettings.some(
       (setting) =>
         setting.name === "PUBLIC_BRAND" &&
@@ -430,14 +401,6 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
 
   const handleSave = useCallback(async () => {
     try {
-      if (Object.keys(brandImages).length > 0) {
-        const imageSuccess = await saveBrandImages(brandImages);
-        if (!imageSuccess) {
-          throw new Error("Failed to save brand images");
-        }
-        setBrandImages({}); // Clear images after successful upload
-      }
-
       const success = await saveEnvSettings(localSettings, originalSettings);
       if (success) {
         envSettings.set({
@@ -459,14 +422,6 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
 
   const handleSavePublish = useCallback(async () => {
     try {
-      if (Object.keys(brandImages).length > 0) {
-        const imageSuccess = await saveBrandImages(brandImages);
-        if (!imageSuccess) {
-          throw new Error("Failed to save brand images");
-        }
-        setBrandImages({}); // Clear images after successful upload
-      }
-
       const success = await saveEnvSettings(localSettings, originalSettings);
       if (!success) {
         throw new Error("Failed to save environment settings");
@@ -498,10 +453,8 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
           brandColors.forEach((color, index) => {
             document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
           });
-        setIsGeneratingSnapshotsThenPublish(true);
-      } else {
-        setShowRebuildModal(true);
       }
+      setShowRebuildModal(true);
 
       setTimeout(() => {
         setSaveSuccess(false);
@@ -655,6 +608,7 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
             onChange={(newValue) => {
               handleSettingChange(index, "value", newValue);
             }}
+            brandString={localSettings.find((s) => s.name === "PUBLIC_BRAND")?.value}
           />
         </div>
       );
@@ -1029,26 +983,24 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
   const MustSaveContainer = () => (
     <div className="bg-myblue/5 p-4 rounded-md mb-4 space-y-4">
       <p className="text-myblue font-bold">
-        {hasBrandColorChanges
-          ? "Brand colors have changed. This requires regenerating design previews."
+        {hasThemeChanges
+          ? "Theme/Colours have changed. This requires regenerating design previews."
           : "UNSAVED CHANGES! Be very careful adjusting any technical settings. When ready hit publish to push these changes to your site."}
       </p>
-      {!hasBrandColorChanges && (
-        <p className="text-mydarkgrey">
-          Note: this triggers a 0-2 second "reload" of your website. Active users are unlikely to be
-          impacted.
-        </p>
-      )}
+      <p className="text-mydarkgrey">
+        Note: a rebuild will trigger a 0-2 second "reload" of your website. Active users are
+        unlikely to be impacted.
+      </p>
       <div className="flex justify-end space-x-2 mt-6">
         <a className="px-4 py-2 text-white bg-mydarkgrey rounded hover:bg-myblue" href="/storykeep">
           Cancel
         </a>
-        {hasBrandColorChanges ? (
+        {hasThemeChanges ? (
           <button
             onClick={handleSavePublish}
             className="px-4 py-2 text-black bg-myorange/50 rounded hover:bg-myblue hover:text-white"
           >
-            Save and Rebuild Design Previews
+            Save and Rebuild To Apply Theme/Colours
           </button>
         ) : (
           <>
@@ -1136,17 +1088,6 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
             </button>
           </div>
         </div>
-      )}
-      {isGeneratingSnapshots && (
-        <DesignSnapshotModal onClose={() => setIsGeneratingSnapshots(false)} />
-      )}
-      {isGeneratingSnapshotsThenPublish && (
-        <DesignSnapshotModal
-          onClose={() => {
-            setIsGeneratingSnapshotsThenPublish(false);
-            setShowRebuildModal(true);
-          }}
-        />
       )}
     </div>
   );

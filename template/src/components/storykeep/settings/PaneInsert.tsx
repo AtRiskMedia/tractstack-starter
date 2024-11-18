@@ -31,6 +31,7 @@ import {
   paneImpression,
   paneCodeHook,
 } from "../../../store/storykeep";
+import { contentMap } from "../../../store/events";
 import { cleanString } from "../../../utils/helpers";
 import { createFieldWithHistory, useStoryKeepUtils } from "../../../utils/storykeep";
 import { cloneDeep } from "../../../utils/helpers";
@@ -42,7 +43,6 @@ import type {
   MarkdownPaneDatum,
   PaneDesignMarkdown,
   BgColourDatum,
-  ContentMap,
   StoreKey,
   BeliefDatum,
   PaneDesign,
@@ -54,11 +54,10 @@ export const PaneInsert = (props: {
   /* eslint-disable @typescript-eslint/no-explicit-any */
   payload: any;
   reuse: boolean;
-  contentMap: ContentMap[];
   toggleOff: () => void;
   doInsert: (newPaneIds: string[], newPaneId: string) => void | null;
 }) => {
-  const { reuse, doInsert, contentMap, storyFragmentId, paneId, payload, toggleOff } = props;
+  const { reuse, doInsert, storyFragmentId, paneId, payload, toggleOff } = props;
   const [isClient, setIsClient] = useState(false);
   const $uncleanData = useStore(uncleanDataStore, { keys: [paneId] });
   const $storyFragmentPaneIds = useStore(storyFragmentPaneIds, {
@@ -71,8 +70,9 @@ export const PaneInsert = (props: {
   const $paneTitle = useStore(paneTitle);
   const $paneSlug = useStore(paneSlug);
   const $paneFragmentBgColour = useStore(paneFragmentBgColour);
+  const $contentMap = useStore(contentMap);
   const usedSlugs = [
-    ...contentMap.map((item) => item.slug),
+    ...$contentMap.map((item) => item.slug),
     ...Object.keys($paneSlug).map((s) => $paneSlug[s].current),
     ...Object.keys($storyFragmentSlug).map((s) => $storyFragmentSlug[s].current),
   ];
@@ -238,6 +238,7 @@ export const PaneInsert = (props: {
       return;
     }
     const paneData = preparePreviewPane(modifyPaneDesign(payload.selectedDesign));
+    console.log(paneData);
     const newPaneIds = [...$storyFragmentPaneIds[storyFragmentId].current];
     newPaneIds.splice(payload.index, 0, paneId);
     const paneStores = [
@@ -284,7 +285,7 @@ export const PaneInsert = (props: {
       },
       {
         store: paneCodeHook,
-        value: false,
+        value: paneData.optionsPayload.codeHook || false,
       },
       {
         store: paneImpression,

@@ -3,17 +3,19 @@ import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import Header from "../../../../components/Header.astro";
 import Footer from "../../../../components/Footer.astro";
 import ImageEditor from "../../../../components/storykeep/components/ImageEditor";
+import { getFileById, isTursoReady, isContentReady } from "../../../../api/turso";
 import { getSetupChecks } from "../../../../utils/setupChecks";
-import { getFileById, isTursoReady } from "../../../../api/turso";
 import type { AuthStatus, MenuDatum } from "../../../../types";
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect("/404");
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 

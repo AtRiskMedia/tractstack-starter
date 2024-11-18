@@ -25,23 +25,21 @@ import {
   storyFragmentPaneIds,
   editModeStore,
 } from "../../../store/storykeep";
+import { contentMap } from "../../../store/events";
 import { cleanString, classNames } from "../../../utils/helpers";
-import type { ContentMap, StoreKey } from "../../../types";
+import type { StoreKey } from "../../../types";
 
-export const PaneSettings = (props: {
-  id: string;
-  storyFragmentId: string;
-  contentMap: ContentMap[];
-}) => {
-  const { id, storyFragmentId, contentMap } = props;
+export const PaneSettings = (props: { id: string; storyFragmentId: string }) => {
+  const { id, storyFragmentId } = props;
   const [confirmRemoval, setConfirmRemoval] = useState(false);
+  const $contentMap = useStore(contentMap);
   const $storyFragmentSlug = useStore(storyFragmentSlug, {
     keys: [storyFragmentId],
   });
   const $paneTitle = useStore(paneTitle, { keys: [id] });
   const $paneSlug = useStore(paneSlug, { keys: [id] });
   const usedSlugs = [
-    ...contentMap.map((item) => item.slug),
+    ...$contentMap.map((item) => item.slug),
     ...Object.keys($paneSlug).map((s) => $paneSlug[s].current),
     ...Object.keys($storyFragmentSlug).map((s) => $storyFragmentSlug[s].current),
   ];

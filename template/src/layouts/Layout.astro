@@ -3,14 +3,13 @@ import { ViewTransitions } from "astro:transitions";
 import SetContentMap from "../components/SetContentMap";
 import { getContentMap, isTursoReady } from "../api/turso";
 import { getSetupChecks } from "../utils/setupChecks";
-import type { ContentMap } from "../types";
+import type { ContentMap, StylesVersion } from "../types";
 
 export interface Props {
   title?: string;
   canonicalURL?: string;
   pubDatetime?: Date;
   modDatetime?: Date | null;
-  stylesUrl?: string;
   ogImage?: string;
 }
 
@@ -20,23 +19,39 @@ const {
   canonicalURL = new URL(Astro.url.pathname, Astro.url).href,
   pubDatetime,
   modDatetime,
-  stylesUrl = ``,
 } = Astro.props;
+
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady && hasTurso ? await isTursoReady() : false;
+
+let stylesUrl = "/styles/storykeep.css";
+if (hasTursoReady) {
+  const stylesVerUrl =
+    typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
+    import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
+      ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
+      : null;
+  const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
+  const stylesVer: StylesVersion =
+    !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
+  stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+}
 
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
     ? import.meta.env.PUBLIC_FAVICON
-    : `favicon.ico`;
+    : `/favicon.ico`;
 const defaultSocialImageURL =
   typeof ogImage === `string` && ogImage
     ? ogImage
     : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
       ? import.meta.env.PUBLIC_OG
-      : `og.png`;
+      : `/og.png`;
 const defaultSocialLogoURL =
   typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
     ? import.meta.env.PUBLIC_OGLOGO
-    : `oglogo.png`;
+    : `/oglogo.png`;
 const defaultSocialTitle =
   typeof title === `string` && title
     ? title
@@ -58,9 +73,7 @@ const gtagUrl =
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
-const { hasTurso } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap() : [];
+const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
 ---
 
 <!doctype html>
@@ -115,9 +128,25 @@ const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap
     }
 
     <!-- Google Analytics -->
-    {gtagUrl && <script async is:inline src={gtagUrl} />}
-    <script>
-      import "../utils/gtag";
+    {gtagUrl && <script async src={gtagUrl} is:inline />}
+    <script is:inline define:vars={{ googleSiteVerification }}>
+      // Define gtag function type
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+
+      document.addEventListener("astro:page-load", () => {
+        if (window.gtag) {
+          gtag("js", new Date());
+          gtag("config", googleSiteVerification, {
+            page_title: document.title,
+            page_path: window.location.pathname,
+            page_location: window.location.href,
+          });
+        }
+      });
     </script>
 
     <!-- Tract Stack Concierge -->
@@ -129,7 +158,9 @@ const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap
         startLoadingAnimation,
         stopLoadingAnimation,
         debounce,
+        shouldRunInit,
       } from "../utils/helpers";
+      import { initializeBrandColors } from "../utils/brand-init";
       import { eventStream } from "../utils/events/eventStream";
       import { inView } from "../utils/events/inView";
       import { eventProcessQueue } from "../utils/events/eventProcessQueue";
@@ -154,7 +185,8 @@ const contentMap: ContentMap[] = hasTurso && hasTursoReady ? await getContentMap
       setupEventHandlers();
 
       document.addEventListener("astro:page-load", () => {
-        init();
+        if (shouldRunInit()) init();
+        initializeBrandColors();
         handleScroll();
         handleResize();
         inView();

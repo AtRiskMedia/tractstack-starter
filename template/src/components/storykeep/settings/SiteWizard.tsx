@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
+import { previewMode, previewDbInitialized, getPreviewModeValue } from "../../../store/storykeep";
+import { previewBrandConfigured } from "../../../utils/preview-brand";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
 import ChevronUpIcon from "@heroicons/react/24/outline/ChevronUpIcon";
@@ -6,22 +9,33 @@ import LockClosedIcon from "@heroicons/react/24/outline/LockClosedIcon";
 import TursoConnectionForm from "../fields/TursoConnectionForm";
 import IntegrationsConnectionForm from "../fields/IntegrationsConnectionForm";
 import DatabaseBootstrap from "../components/DatabaseBootstrap";
+import DatabaseContentBootstrap from "../components/DatabaseContentBootstrap";
 import EnvironmentSettings from "../fields/EnvironmentSettings";
+import PreviewBrandSettings from "../fields/PreviewBrandSettings";
 import type { ReactNode } from "react";
 import type { FullContentMap } from "../../../types";
 
-const NeedsConcierge = () => (
-  <div className="space-y-4 text-xl md:text-2xl text-mydarkgrey">
-    <p>Set up your Story Keep installation to start building your digital story.</p>
+const NeedsConcierge = ({ onClick }: { onClick: () => void }) => (
+  <div className="space-y-8 text-xl md:text-2xl text-mydarkgrey">
     <p>
-      Please visit{" "}
+      For a production install, please see{` `}
       <a
         className="text-myblue font-bold underline hover:text-myorange"
         href="https://tractstack.org"
       >
         our docs
-      </a>{" "}
-      for install recipies.
+      </a>
+      {` `}
+      for install recipes
+    </p>
+    <p>
+      Continue without install:{" "}
+      <button
+        className="px-4 py-2 text-white bg-black rounded hover:bg-myblue disabled:bg-mydarkgrey disabled:cursor-not-allowed"
+        onClick={onClick}
+      >
+        Try Tract Stack
+      </button>
     </p>
   </div>
 );
@@ -63,8 +77,8 @@ interface SiteWizardProps {
   hasTurso: boolean;
   hasTursoReady: boolean;
   hasBranding: boolean;
-  hasContent: boolean;
   hasContentReady: boolean;
+  hasContentPrimed: boolean;
   hasAssemblyAI: boolean;
   hasAuth: boolean;
   contentMap: FullContentMap[];
@@ -84,51 +98,103 @@ export default function SiteWizard({
   hasTurso,
   hasTursoReady,
   hasBranding,
-  hasContent,
   hasContentReady,
+  hasContentPrimed,
   hasAuth,
   hasAssemblyAI,
   contentMap,
 }: SiteWizardProps) {
+  // State hooks
   const [gotTurso, setGotTurso] = useState(false);
   const [gotIntegrations, setGotIntegrations] = useState(false);
   const [openSteps, setOpenSteps] = useState<Record<number, boolean>>({});
 
-  const getStepStatus = (index: number): StepStatus => {
-    const completionStates = [
-      hasConcierge,
-      hasAuth,
-      hasTurso || gotTurso,
-      gotIntegrations || hasBranding,
-      hasBranding,
-      hasTursoReady,
+  // Store hooks
+  const $previewMode = getPreviewModeValue(useStore(previewMode));
+  const $previewDbInitialized = getPreviewModeValue(useStore(previewDbInitialized));
+  const $previewBrandConfigured = getPreviewModeValue(useStore(previewBrandConfigured));
+
+  // Derived state
+  const completionStates = useMemo(
+    () => [
+      hasConcierge || $previewMode,
+      hasAuth || $previewMode,
+      hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
+      gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
+      hasBranding || ($previewMode && $previewBrandConfigured),
+      hasTursoReady && hasContentPrimed,
       hasContentReady,
-    ];
+    ],
+    [
+      hasConcierge,
+      $previewMode,
+      hasAuth,
+      hasTurso,
+      gotTurso,
+      $previewDbInitialized,
+      gotIntegrations,
+      hasBranding,
+      $previewBrandConfigured,
+      hasTursoReady,
+      hasContentPrimed,
+      hasContentReady,
+    ]
+  );
+
+  // Utility functions
+  const getStepStatus = (index: number): StepStatus => {
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
-
-    if (!allPreviousCompleted) return "locked";
+    if (!allPreviousCompleted || ($previewMode && index > 2 && index < 4)) return "locked";
     if (isCompleted) return "completed";
     return "current";
   };
 
+  const handleInitOpenDemo = () => {
+    previewMode.set("true");
+  };
+
+  const toggleStep = (index: number) => {
+    setOpenSteps((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }));
+  };
+
+  const getStepIcon = (step: SetupStep): ReactNode => {
+    if (step.status === "locked") {
+      return <LockClosedIcon className="h-6 w-6 text-mydarkgrey/30" />;
+    }
+    if (step.isComplete) {
+      return <CheckCircleIcon className="h-6 w-6 text-mygreen" />;
+    }
+    return <InformationCircleIcon className="h-6 w-6 text-myorange" />;
+  };
+
+  // Setup steps definition
   const setupSteps: SetupStep[] = [
     {
       title: "Install the Story Keep",
-      description: !hasConcierge ? <NeedsConcierge /> : <Completed />,
-      isComplete: hasConcierge,
+      description: !hasConcierge ? <NeedsConcierge onClick={handleInitOpenDemo} /> : <Completed />,
+      isComplete: hasConcierge || $previewMode,
       status: getStepStatus(0),
     },
     {
       title: "Login",
       description: !hasAuth ? <Login /> : <Completed />,
-      isComplete: hasAuth,
+      isComplete: hasAuth || $previewMode,
       status: getStepStatus(1),
     },
     {
       title: "Connect your Turso database",
-      description: !hasTurso ? <TursoConnectionForm setGotTurso={setGotTurso} /> : <Completed />,
-      isComplete: hasTurso || gotTurso,
+      description: $previewMode ? (
+        <DatabaseBootstrap />
+      ) : !hasTurso ? (
+        <TursoConnectionForm setGotTurso={setGotTurso} />
+      ) : (
+        <Completed />
+      ),
+      isComplete: hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       status: getStepStatus(2),
     },
     {
@@ -139,19 +205,24 @@ export default function SiteWizard({
         ) : (
           <Completed />
         ),
-      isComplete: gotIntegrations || hasBranding,
+      isComplete: gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
       status: getStepStatus(3),
     },
     {
       title: "Make it your own",
-      description: <EnvironmentSettings contentMap={contentMap} showOnlyGroup="Brand" />,
-      isComplete: hasBranding,
+      description: $previewMode ? (
+        <PreviewBrandSettings />
+      ) : (
+        <EnvironmentSettings contentMap={contentMap} showOnlyGroup="Brand" />
+      ),
+      isComplete: hasBranding || ($previewMode && $previewBrandConfigured),
       status: getStepStatus(4),
     },
     {
       title: "Bootstrap your database",
-      description: !hasTursoReady ? <DatabaseBootstrap /> : <Completed />,
-      isComplete: hasTursoReady,
+      description:
+        !hasTursoReady || !hasContentPrimed ? <DatabaseContentBootstrap /> : <Completed />,
+      isComplete: hasTursoReady && hasContentPrimed,
       status: getStepStatus(5),
     },
     {
@@ -162,17 +233,8 @@ export default function SiteWizard({
     },
   ];
 
+  // Effects
   useEffect(() => {
-    const completionStates = [
-      hasConcierge,
-      hasAuth,
-      hasTurso || gotTurso,
-      gotIntegrations || hasBranding,
-      hasBranding,
-      hasTursoReady,
-      hasContent && hasContentReady,
-    ];
-
     const newOpenSteps: Record<number, boolean> = {};
     let foundCurrent = false;
 
@@ -186,33 +248,7 @@ export default function SiteWizard({
     });
 
     setOpenSteps(newOpenSteps);
-  }, [
-    hasConcierge,
-    hasAuth,
-    hasTurso,
-    gotTurso,
-    gotIntegrations,
-    hasBranding,
-    hasTursoReady,
-    hasContent && hasContentReady,
-  ]);
-
-  const getStepIcon = (step: SetupStep): ReactNode => {
-    if (step.status === "locked") {
-      return <LockClosedIcon className="h-6 w-6 text-mydarkgrey/30" />;
-    }
-    if (step.isComplete) {
-      return <CheckCircleIcon className="h-6 w-6 text-mygreen" />;
-    }
-    return <InformationCircleIcon className="h-6 w-6 text-myorange" />;
-  };
-
-  const toggleStep = (index: number) => {
-    setOpenSteps((prev) => ({
-      ...prev,
-      [index]: !prev[index],
-    }));
-  };
+  }, [completionStates]);
 
   return (
     <div

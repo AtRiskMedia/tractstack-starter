@@ -3,34 +3,26 @@ import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import ShoppingCart from "../components/ShoppingCart";
+import { isTursoReady, isContentReady } from "../api/turso";
 import { getSetupChecks } from "../utils/setupChecks";
-import { isTursoReady } from "../api/turso";
-import type { StylesVersion, AuthStatus } from "../types";
+import type { AuthStatus } from "../types";
 
 // user authenticated?
 const user = Astro.locals.user as AuthStatus;
 
 // confirm set-up
-const { hasConcierge, hasTurso, hasBranding, hasContent } = getSetupChecks();
-const hasTursoReady = hasTurso ? await isTursoReady() : false;
-if (!hasConcierge || !hasTurso || !hasTursoReady || !hasBranding || !hasContent) {
+const { hasConcierge, hasTurso } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
-
-const stylesVerUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`;
-const requestStyles: Response = await fetch(stylesVerUrl);
-const stylesVer: StylesVersion = requestStyles.status === 404 ? 0 : await requestStyles.json();
-const stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 
 export const prerender = false;
 ---
 
-<Layout
-  title="Shopping Cart"
-  pubDatetime={new Date()}
-  modDatetime={new Date()}
-  stylesUrl={stylesUrl}
->
+<Layout title="Shopping Cart" pubDatetime={new Date()} modDatetime={new Date()}>
   <Header title="Shopping Cart" slug="cart" isContext={false} user={user} />
   <main id="main-content">
     <ShoppingCart client:load />

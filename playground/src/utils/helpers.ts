@@ -1,5 +1,6 @@
 //import { storySteps } from "../store/events";
 import { getImage } from "astro:assets";
+import { getSetupChecks } from "./setupChecks";
 import type {
   ClassNamesPayloadValue,
   FileNode,
@@ -13,7 +14,14 @@ import type { DragNode } from "../store/storykeep.ts";
 import { toHast } from "mdast-util-to-hast";
 import type { Element, RootContent, Root as HastRoot } from "hast";
 
+export function shouldRunInit() {
+  const setupChecks = getSetupChecks();
+  if (!setupChecks.hasConcierge || !import.meta.env.PROD) return false;
+  return true;
+}
+
 export const getComputedColor = (color: string): string => {
+  if (color === `#` || typeof color === `undefined`) return `#ffffff`;
   if (color.startsWith("#var(--")) {
     color = color.slice(1);
   }

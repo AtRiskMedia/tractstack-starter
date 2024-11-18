@@ -16,6 +16,7 @@ import {
 import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
 import { useStoryKeepUtils } from "../../../utils/storykeep";
 import ViewportComboBox from "../fields/ViewportComboBox";
+import ColorPickerWrapper from "../components/ColorPickerWrapper";
 import {
   paneMarkdownFragmentId,
   paneFragmentMarkdown,
@@ -23,12 +24,10 @@ import {
   lastInteractedPaneStore,
   editModeStore,
 } from "../../../store/storykeep";
-import { classNames, cloneDeep } from "../../../utils/helpers";
+import { classNames, cloneDeep, getComputedColor } from "../../../utils/helpers";
 import { tailwindClasses } from "../../../assets/tailwindClasses";
-import {
-  buttonStyleOptions,
-  buttonStyleClasses,
-} from "../../../assets/paneDesigns";
+import { COLOR_STYLES, hexToTailwind, tailwindToHex } from "../../../assets/tailwindColors";
+import { buttonStyleOptions, buttonStyleClasses } from "../../../assets/paneDesigns";
 import { tagTitles } from "../../../constants";
 import Widget from "../fields/Widget";
 import ImageMeta from "../fields/ImageMeta";
@@ -46,6 +45,7 @@ import type {
   ButtonStyleClass,
   FileDatum,
 } from "../../../types";
+import type { ColorStyle } from "../../../assets/tailwindColors";
 
 interface StyleTab {
   name: string;
@@ -1445,32 +1445,105 @@ export const PaneAstStyles = (props: {
               {isLink ? null : !activeTagData?.hasOverride ? `s` : null}
             </h4>
             <div className="flex flex-col gap-y-2.5 my-3 text-mydarkgrey text-xl">
-              <ViewportComboBox
-                value={mobileValue}
-                onFinalChange={handleFinalChangeIntercept}
-                values={activeTagData?.values ?? []}
-                viewport="mobile"
-                allowNegative={activeTagData?.allowNegative ?? false}
-                isNegative={activeTagData?.mobileIsNegative ?? false}
-              />
-              <ViewportComboBox
-                value={tabletValue}
-                onFinalChange={handleFinalChangeIntercept}
-                values={activeTagData?.values ?? []}
-                viewport="tablet"
-                allowNegative={activeTagData?.allowNegative}
-                isNegative={activeTagData?.tabletIsNegative ?? false}
-                isInferred={tabletValue === mobileValue}
-              />
-              <ViewportComboBox
-                value={desktopValue}
-                onFinalChange={handleFinalChangeIntercept}
-                values={activeTagData?.values ?? []}
-                viewport="desktop"
-                allowNegative={activeTagData?.allowNegative ?? false}
-                isNegative={activeTagData?.desktopIsNegative ?? false}
-                isInferred={desktopValue === tabletValue}
-              />
+              {COLOR_STYLES.includes(selectedStyle as ColorStyle) ? (
+                <>
+                  <div className="flex items-center">
+                    <div className="flex-grow">
+                      <ViewportComboBox
+                        value={mobileValue}
+                        onFinalChange={handleFinalChangeIntercept}
+                        values={activeTagData?.values ?? []}
+                        viewport="mobile"
+                        allowNegative={activeTagData?.allowNegative ?? false}
+                        isNegative={activeTagData?.mobileIsNegative ?? false}
+                      />
+                    </div>
+                    <div className="ml-2">
+                      <ColorPickerWrapper
+                        id="mobile-color"
+                        defaultColor={getComputedColor(tailwindToHex(mobileValue))}
+                        onColorChange={(color) =>
+                          handleFinalChangeIntercept(hexToTailwind(color) || color, "mobile")
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="flex-grow">
+                      <ViewportComboBox
+                        value={tabletValue}
+                        onFinalChange={handleFinalChangeIntercept}
+                        values={activeTagData?.values ?? []}
+                        viewport="tablet"
+                        allowNegative={activeTagData?.allowNegative}
+                        isNegative={activeTagData?.tabletIsNegative ?? false}
+                        isInferred={tabletValue === mobileValue}
+                      />
+                    </div>
+                    <div className="ml-2">
+                      <ColorPickerWrapper
+                        id="tablet-color"
+                        defaultColor={getComputedColor(tailwindToHex(tabletValue))}
+                        onColorChange={(color) =>
+                          handleFinalChangeIntercept(hexToTailwind(color) || color, "tablet")
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="flex-grow">
+                      <ViewportComboBox
+                        value={desktopValue}
+                        onFinalChange={handleFinalChangeIntercept}
+                        values={activeTagData?.values ?? []}
+                        viewport="desktop"
+                        allowNegative={activeTagData?.allowNegative ?? false}
+                        isNegative={activeTagData?.desktopIsNegative ?? false}
+                        isInferred={desktopValue === tabletValue}
+                      />
+                    </div>
+                    <div className="ml-2">
+                      <ColorPickerWrapper
+                        id="desktop-color"
+                        defaultColor={getComputedColor(tailwindToHex(desktopValue))}
+                        onColorChange={(color) =>
+                          handleFinalChangeIntercept(hexToTailwind(color) || color, "desktop")
+                        }
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                // Original version without color picker
+                <>
+                  <ViewportComboBox
+                    value={mobileValue}
+                    onFinalChange={handleFinalChangeIntercept}
+                    values={activeTagData?.values ?? []}
+                    viewport="mobile"
+                    allowNegative={activeTagData?.allowNegative ?? false}
+                    isNegative={activeTagData?.mobileIsNegative ?? false}
+                  />
+                  <ViewportComboBox
+                    value={tabletValue}
+                    onFinalChange={handleFinalChangeIntercept}
+                    values={activeTagData?.values ?? []}
+                    viewport="tablet"
+                    allowNegative={activeTagData?.allowNegative}
+                    isNegative={activeTagData?.tabletIsNegative ?? false}
+                    isInferred={tabletValue === mobileValue}
+                  />
+                  <ViewportComboBox
+                    value={desktopValue}
+                    onFinalChange={handleFinalChangeIntercept}
+                    values={activeTagData?.values ?? []}
+                    viewport="desktop"
+                    allowNegative={activeTagData?.allowNegative ?? false}
+                    isNegative={activeTagData?.desktopIsNegative ?? false}
+                    isInferred={desktopValue === tabletValue}
+                  />
+                </>
+              )}
             </div>
 
             {!isLink &&

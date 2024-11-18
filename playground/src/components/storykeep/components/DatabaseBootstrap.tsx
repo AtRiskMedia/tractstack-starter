@@ -1,245 +1,76 @@
 import { useState } from "react";
-import { ulid } from "ulid";
-import { navigate } from "astro:transitions/client";
-import { tursoClient } from "../../../api/tursoClient";
+import { useStore } from "@nanostores/react";
+import { previewMode, previewDbInitialized, getPreviewModeValue } from "../../../store/storykeep";
 
 const DatabaseBootstrap = () => {
   const [isInitializing, setIsInitializing] = useState(false);
-  const [progress, setProgress] = useState(1);
   const [error, setError] = useState<string | null>(null);
+  const $previewMode = getPreviewModeValue(useStore(previewMode));
 
   const initializeDatabase = async () => {
     setIsInitializing(true);
-    setProgress(1);
+    setError(null);
 
     try {
-      // Disable foreign keys and drop existing tables
-      setProgress(2);
-      await tursoClient.execute([
-        {
-          sql: "PRAGMA foreign_keys = OFF;",
-          args: [],
+      // Initialize database
+      const initResponse = await fetch("/api/turso/init", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ]);
+      });
 
-      const tablesToDrop = [
-        "storyfragment_pane",
-        "file_pane",
-        "file_markdown",
-        "pane",
-        "storyfragment",
-        "markdown",
-        "file",
-        "resource",
-        "menu",
-        "tractstack",
-      ];
-
-      for (const table of tablesToDrop) {
-        await tursoClient.execute([
-          {
-            sql: `DROP TABLE IF EXISTS ${table};`,
-            args: [],
-          },
-        ]);
+      if (!initResponse.ok) {
+        throw new Error(await initResponse.text());
       }
 
-      setProgress(3);
-      await tursoClient.execute([
-        {
-          sql: "PRAGMA foreign_keys = ON;",
-          args: [],
-        },
-      ]);
+      const initData = await initResponse.json();
 
-      // Create tables
-      setProgress(4);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS tractstack (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          slug TEXT NOT NULL UNIQUE,
-          social_image_path TEXT
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(5);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS menu (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          theme TEXT NOT NULL,
-          options_payload TEXT NOT NULL
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(6);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS resource (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          slug TEXT NOT NULL UNIQUE,
-          category_slug TEXT,
-          oneliner TEXT NOT NULL,
-          options_payload TEXT NOT NULL,
-          action_lisp TEXT
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(7);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS file (
-          id TEXT PRIMARY KEY,
-          filename TEXT NOT NULL,
-          alt_description TEXT NOT NULL,
-          url TEXT NOT NULL,
-          src_set BOOLEAN DEFAULT false
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(8);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS markdown (
-          id TEXT PRIMARY KEY,
-          body TEXT NOT NULL
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(9);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS storyfragment (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          slug TEXT NOT NULL UNIQUE,
-          social_image_path TEXT,
-          tailwind_background_colour TEXT,
-          created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          changed TIMESTAMP,
-          menu_id TEXT REFERENCES menu(id),
-          tractstack_id TEXT NOT NULL REFERENCES tractstack(id)
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(10);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS pane (
-          id TEXT PRIMARY KEY,
-          title TEXT NOT NULL,
-          slug TEXT NOT NULL UNIQUE,
-          created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-          changed TIMESTAMP,
-          markdown_id TEXT REFERENCES markdown(id),
-          options_payload TEXT NOT NULL,
-          is_context_pane BOOLEAN DEFAULT 0,
-          height_offset_desktop INTEGER,
-          height_offset_mobile INTEGER,
-          height_offset_tablet INTEGER,
-          height_ratio_desktop TEXT,
-          height_ratio_mobile TEXT,
-          height_ratio_tablet TEXT
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(11);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS storyfragment_pane (
-          id TEXT PRIMARY KEY,
-          storyfragment_id TEXT NOT NULL REFERENCES storyfragment(id),
-          pane_id TEXT NOT NULL REFERENCES pane(id),
-          weight INTEGER NOT NULL,
-          UNIQUE(storyfragment_id, pane_id)
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(12);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS file_pane (
-          id TEXT PRIMARY KEY,
-          file_id TEXT NOT NULL REFERENCES file(id),
-          pane_id TEXT NOT NULL REFERENCES pane(id),
-          UNIQUE(file_id, pane_id)
-        )`,
-          args: [],
-        },
-      ]);
-
-      setProgress(13);
-      await tursoClient.execute([
-        {
-          sql: `CREATE TABLE IF NOT EXISTS file_markdown (
-          id TEXT PRIMARY KEY,
-          file_id TEXT NOT NULL REFERENCES file(id),
-          markdown_id TEXT NOT NULL REFERENCES markdown(id),
-          UNIQUE(file_id, markdown_id)
-        )`,
-          args: [],
-        },
-      ]);
-
-      // Create indexes
-      setProgress(14);
-      const indexes = [
-        "CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragment(tractstack_id)",
-        "CREATE INDEX IF NOT EXISTS idx_storyfragment_menu_id ON storyfragment(menu_id)",
-        "CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_storyfragment_id ON storyfragment_pane(storyfragment_id)",
-        "CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_pane_id ON storyfragment_pane(pane_id)",
-        "CREATE INDEX IF NOT EXISTS idx_file_pane_file_id ON file_pane(file_id)",
-        "CREATE INDEX IF NOT EXISTS idx_file_pane_pane_id ON file_pane(pane_id)",
-        "CREATE INDEX IF NOT EXISTS idx_file_markdown_file_id ON file_markdown(file_id)",
-        "CREATE INDEX IF NOT EXISTS idx_file_markdown_markdown_id ON file_markdown(markdown_id)",
-        "CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON pane(markdown_id)",
-      ];
-
-      for (const index of indexes) {
-        await tursoClient.execute([
-          {
-            sql: index,
-            args: [],
-          },
-        ]);
+      if (!initData.success) {
+        throw new Error(initData.error || "Failed to initialize database");
       }
 
-      // first Tract Stack
-      setProgress(15);
-      await tursoClient.execute([
-        {
-          sql: "INSERT INTO tractstack (id, title, slug, social_image_path) VALUES (?, ?, ?, ?)",
-          args: [ulid(), "Tract Stack", "HELLO", ""],
-        },
-      ]);
+      // Wait a moment for the database to be ready
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      setProgress(16);
-      setTimeout(() => {
-        navigate("/storykeep");
-      }, 1000);
+      // Verify database status
+      let retries = 3;
+      let isReady = false;
+
+      while (retries > 0 && !isReady) {
+        const statusResponse = await fetch("/api/turso/status", {
+          method: "POST",
+        });
+
+        if (!statusResponse.ok) {
+          throw new Error("Failed to verify database status");
+        }
+
+        const statusData = await statusResponse.json();
+
+        if (statusData.isReady) {
+          isReady = true;
+          if ($previewMode) {
+            previewDbInitialized.set("true");
+          }
+          setIsInitializing(false);
+          break;
+        } else {
+          retries--;
+          if (retries > 0) {
+            // Wait before retry
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+      }
+
+      if (!isReady) {
+        throw new Error("Database initialization timed out after multiple attempts");
+      }
     } catch (err) {
       console.error("Database initialization error:", err);
       setError(err instanceof Error ? err.message : "Failed to initialize database");
+      setIsInitializing(false);
     }
   };
 
@@ -265,7 +96,7 @@ const DatabaseBootstrap = () => {
                   <div className="h-2 w-full bg-mylightgrey/20 rounded-full">
                     <div
                       className="h-full rounded-full transition-all duration-500 bg-myorange"
-                      style={{ width: `${(progress / 15) * 100}%` }}
+                      style={{ width: "100%" }}
                     />
                   </div>
                 </div>

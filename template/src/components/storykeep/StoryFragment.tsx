@@ -22,12 +22,13 @@ import {
   storedAnalytics,
   creationStateStore,
 } from "../../store/storykeep";
+import { contentMap } from "../../store/events";
 import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import PaneWrapper from "./PaneWrapper";
 import DesignNewPane from "./components/DesignNewPane";
 import { classNames, handleEditorResize, debounce } from "../../utils/helpers";
-import type { ViewportKey, ContentMap } from "../../types";
+import type { ViewportKey } from "../../types";
 
 function getSubstring(str: string) {
   const dashIndex = str.indexOf("-");
@@ -49,9 +50,9 @@ export const StoryFragment = (props: {
   id: string | null;
   slug: string;
   isContext: boolean;
-  contentMap: ContentMap[];
+  knownCodeHooks: string[];
 }) => {
-  const { id, slug, isContext, contentMap } = props;
+  const { id, slug, isContext, knownCodeHooks } = props;
   const [isClient, setIsClient] = useState(false);
   const $creationState = useStore(creationStateStore);
   const thisId = id ?? $creationState.id ?? `error`;
@@ -85,8 +86,9 @@ export const StoryFragment = (props: {
   const toolMode = $toolMode.value || ``;
   const $toolAddMode = useStore(toolAddModeStore);
   const toolAddMode = $toolAddMode.value || ``;
+  const $contentMap = useStore(contentMap);
   const usedSlugs = [
-    ...contentMap.filter((item) => item.slug !== slug).map((item) => item.slug),
+    ...$contentMap.filter((item) => item.slug !== slug).map((item) => item.slug),
     ...Object.keys($paneSlug).map((s) => $paneSlug[s].current),
     ...Object.keys($storyFragmentSlug).map((s) => $storyFragmentSlug[s].current),
   ];
@@ -326,6 +328,7 @@ export const StoryFragment = (props: {
                 paneIds={paneIds}
                 slug={slug}
                 isContext={isContext}
+                knownCodeHooks={knownCodeHooks}
               />
             </div>
           ) : isDesigningNew && paneId !== `insert` ? null : (

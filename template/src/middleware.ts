@@ -3,11 +3,6 @@ import { defineMiddleware } from "astro:middleware";
 import { isAuthenticated, isOpenDemoMode } from "./utils/session";
 import type { AuthStatus } from "./types";
 
-/*
- * Middleware is not for protecting frontend proxy to concierge
- * it's meant for protecting the storykeep (and enabling the open demo)
- */
-
 export const onRequest = defineMiddleware(async (context, next) => {
   const auth = await isAuthenticated(context as any);
   const isOpenDemo = await isOpenDemoMode(context as any);

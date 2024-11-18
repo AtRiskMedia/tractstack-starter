@@ -1,9 +1,22 @@
-import type { APIRoute } from "astro";
+import { getSetupChecks } from "../../../../utils/setupChecks";
 import { proxyRequestToConcierge } from "../../../../api/authService";
+import type { APIRoute } from "astro";
 
 const BACKEND_URL = import.meta.env.PRIVATE_CONCIERGE_BASE_URL;
 
 export const GET: APIRoute = async () => {
+  const { hasConcierge } = getSetupChecks();
+  if (!hasConcierge)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "No concierge found.",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   try {
     const { response } = await proxyRequestToConcierge(`${BACKEND_URL}/storykeep/env`, {
       method: "GET",
@@ -36,7 +49,19 @@ export const GET: APIRoute = async () => {
 };
 
 export const POST: APIRoute = async (context) => {
-  console.log(`POST`, `${BACKEND_URL}/storykeep/env`);
+  const { hasConcierge } = getSetupChecks();
+  if (!hasConcierge)
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: "No concierge found.",
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
   try {
     const body = await context.request.json();
 
