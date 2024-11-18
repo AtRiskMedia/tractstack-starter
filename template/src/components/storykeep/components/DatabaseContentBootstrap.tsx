@@ -10,7 +10,23 @@ const DatabaseContentBootstrap = () => {
     setError(null);
 
     try {
-      // Initialize database
+      // First check database status
+      const statusResponse = await fetch("/api/turso/status", {
+        method: "POST",
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error("Failed to check database status");
+      }
+
+      const statusData = await statusResponse.json();
+      if (!statusData.success || !statusData.isReady) {
+        throw new Error(
+          "Database tables not initialized. Please initialize database tables first."
+        );
+      }
+
+      // Then initialize content
       const initResponse = await fetch("/api/turso/initContent", {
         method: "POST",
         headers: {
@@ -19,53 +35,34 @@ const DatabaseContentBootstrap = () => {
       });
 
       if (!initResponse.ok) {
-        throw new Error(await initResponse.text());
+        const errorData = await initResponse.json();
+        throw new Error(errorData.error || "Failed to initialize content");
       }
 
       const initData = await initResponse.json();
-
       if (!initData.success) {
-        throw new Error(initData.error || "Failed to initialize database");
+        throw new Error(initData.error || "Failed to initialize content");
       }
 
-      // Wait a moment for the database to be ready
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Verify content was created
+      const verifyResponse = await fetch("/api/turso/contentPrimed", {
+        method: "POST",
+      });
 
-      // Verify database status
-      let retries = 3;
-      let isReady = false;
-
-      while (retries > 0 && !isReady) {
-        const statusResponse = await fetch("/api/turso/contentPrimed", {
-          method: "POST",
-        });
-
-        if (!statusResponse.ok) {
-          throw new Error("Failed to verify database records");
-        }
-
-        const statusData = await statusResponse.json();
-
-        if (statusData.isContentPrimed) {
-          isReady = true;
-          setIsInitializing(false);
-          navigate(`/storykeep`);
-          break;
-        } else {
-          retries--;
-          if (retries > 0) {
-            // Wait before retry
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        }
+      if (!verifyResponse.ok) {
+        throw new Error("Failed to verify content creation");
       }
 
-      if (!isReady) {
-        throw new Error("Database content initialization timed out after multiple attempts");
+      const verifyData = await verifyResponse.json();
+      if (verifyData.isContentPrimed) {
+        setIsInitializing(false);
+        navigate(`/storykeep`);
+      } else {
+        throw new Error("Content verification failed");
       }
     } catch (err) {
-      console.error("Database content initialization error:", err);
-      setError(err instanceof Error ? err.message : "Failed to initialize content in database");
+      console.error("Content initialization error:", err);
+      setError(err instanceof Error ? err.message : "Failed to initialize content");
       setIsInitializing(false);
     }
   };

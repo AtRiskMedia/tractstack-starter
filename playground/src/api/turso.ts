@@ -451,7 +451,10 @@ export async function checkTursoStatus(): Promise<boolean> {
       console.log("No Turso client available");
       return false;
     }
+    // Test basic connectivity
+    await client.execute("SELECT 1");
 
+    // Check for required tables
     const { rows } = await client.execute(`
       SELECT COUNT(*) as table_count 
       FROM sqlite_master 
@@ -469,9 +472,10 @@ export async function checkTursoStatus(): Promise<boolean> {
         'file_markdown'
       )
     `);
-    return rows[0].table_count === 10;
+    const tableCount = rows[0]?.table_count as number;
+    return tableCount === 10;
   } catch (error) {
-    console.log("Database status check failed:", error);
+    console.error("Database status check failed:", error);
     return false;
   }
 }

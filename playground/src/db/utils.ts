@@ -1,7 +1,6 @@
 import { createClient } from "@libsql/client";
 import path from "path";
 import fs from "fs";
-import { initializeSchema } from "./schema";
 import { DB_DIR, DEMO_DB } from "../constants";
 import type { Client } from "@libsql/client";
 
@@ -39,7 +38,6 @@ export async function createTursoClient(config?: {
   url?: string;
   authToken?: string;
 }): Promise<Client> {
-  // If initialization is in progress, wait for it
   if (initPromise) {
     await initPromise;
     if (tursoClient) return tursoClient;
@@ -85,7 +83,6 @@ export async function createTursoClient(config?: {
           const demoClient = createClient({
             url: `file:${getDbPath()}`,
           });
-          await initializeSchema({ client: demoClient });
           tursoClient = demoClient;
           currentMode = "demo";
         }

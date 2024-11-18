@@ -6,25 +6,34 @@ import {
   checkTursoStatus,
   isContentPrimed,
 } from "../../../api/turso";
+import { createTursoClient, getWriteClient } from "../../../db/utils";
+import { initializeSchema, initializeContent } from "../../../db/schema";
 
-export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
-  //if (!(locals.user?.isAuthenticated || locals.user?.isOpenDemo)) {
-  //  return new Response(JSON.stringify({ error: "Unauthorized" }), {
-  //    status: 401,
-  //    headers: { "Content-Type": "application/json" },
-  //  });
-  //}
-
+export const POST: APIRoute = async ({ request, params }) => {
   const { operation } = params;
 
   try {
     let result;
     switch (operation) {
-      case "test":
+      case "test": {
+        await createTursoClient();
         result = JSON.stringify({ success: true });
         break;
+      }
 
       case "status": {
+        await createTursoClient();
+        const writeClient = getWriteClient();
+        await writeClient.execute("SELECT 1");
+        const isReady = await checkTursoStatus();
+        result = { success: true, isReady };
+        break;
+      }
+
+      case "init": {
+        await createTursoClient();
+        const writeClient = getWriteClient();
+        await initializeSchema({ client: writeClient });
         const isReady = await checkTursoStatus();
         result = { success: true, isReady };
         break;
@@ -33,6 +42,19 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
       case "contentPrimed": {
         const isContentPrimedResponse = await isContentPrimed();
         result = { success: true, isContentPrimed: isContentPrimedResponse };
+        break;
+      }
+
+      case "initContent": {
+        const isReady = await checkTursoStatus();
+        if (!isReady) {
+          throw new Error(
+            "Database tables not initialized correctly. Please reinitialize database tables."
+          );
+        }
+        const writeClient = getWriteClient();
+        await initializeContent({ client: writeClient });
+        result = { success: true };
         break;
       }
 
@@ -76,55 +98,3 @@ export const POST: APIRoute = async ({ request, params /*, locals */ }) => {
     );
   }
 };
-
-//// React component example
-//
-//import { useState, useEffect } from 'react';
-//import { tursoClient } from '../api/tursoClient';
-//import type { DatumPayload } from '../types';
-//
-//function DatumPayloadComponent() {
-//  const [datumPayload, setDatumPayload] = useState<DatumPayload | null>(null);
-//  const [isLoading, setIsLoading] = useState(true);
-//  const [error, setError] = useState<string | null>(null);
-//
-//  useEffect(() => {
-//    async function fetchDatumPayload() {
-//      try {
-//        setIsLoading(true);
-//        const payload = await tursoClient.getDatumPayload();
-//        setDatumPayload(payload);
-//        setError(null);
-//      } catch (err) {
-//        console.error('Error fetching datum payload:', err);
-//        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-//        setDatumPayload(null);
-//      } finally {
-//        setIsLoading(false);
-//      }
-//    }
-//
-//    fetchDatumPayload();
-//  }, []);
-//
-//  if (isLoading) {
-//    return <div>Loading...</div>;
-//  }
-//
-//  if (error) {
-//    return <div>Error: {error}</div>;
-//  }
-//
-//  if (!datumPayload) {
-//    return <div>No data available</div>;
-//  }
-//
-//  return (
-//    <div>
-//      <h2>Datum Payload</h2>
-//      <pre>{JSON.stringify(datumPayload, null, 2)}</pre>
-//    </div>
-//  );
-//}
-//
-//export default DatumPayloadComponent;
