@@ -15,34 +15,35 @@ import type {
 const preparePreviewPane = (design: PaneDesign) => {
   const paneId = ulid();
   let markdown: MarkdownDatum | undefined;
-  const paneFragments = design.fragments
-    .map((f): BgColourDatum | BgPaneDatum | MarkdownPaneDatum => {
-      if (f.type === "markdown" && "markdownBody" in f) {
-        markdown = {
-          body: f.markdownBody,
-          id: ulid(),
-          slug: `new-markdown`,
-          title: `Copy for new pane`,
-          htmlAst: cleanHtmlAst(toHast(fromMarkdown(f.markdownBody)) as Root) as Root,
-        };
-        return {
-          ...f,
-          id: ulid(), // Generate a new ID for MarkdownPaneDatum
-        } as MarkdownPaneDatum;
-      } else if (f.type === "bgPane") {
-        return {
-          ...f,
-          id: ulid(), // Generate a new ID for BgPaneDatum
-        } as BgPaneDatum;
-      } else if (f.type === "bgColour") {
-        return f as BgColourDatum;
-      }
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      throw new Error(`Unexpected fragment type: ${(f as any).type}`);
-    })
-    .filter((f): f is BgColourDatum | BgPaneDatum | MarkdownPaneDatum => f !== null);
+  const paneFragments =
+    design?.fragments
+      ?.map((f): BgColourDatum | BgPaneDatum | MarkdownPaneDatum => {
+        if (f.type === "markdown" && "markdownBody" in f) {
+          markdown = {
+            body: f.markdownBody,
+            id: ulid(),
+            slug: `new-markdown`,
+            title: `Copy for new pane`,
+            htmlAst: cleanHtmlAst(toHast(fromMarkdown(f.markdownBody)) as Root) as Root,
+          };
+          return {
+            ...f,
+            id: ulid(), // Generate a new ID for MarkdownPaneDatum
+          } as MarkdownPaneDatum;
+        } else if (f.type === "bgPane") {
+          return {
+            ...f,
+            id: ulid(), // Generate a new ID for BgPaneDatum
+          } as BgPaneDatum;
+        } else if (f.type === "bgColour") {
+          return f as BgColourDatum;
+        }
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        throw new Error(`Unexpected fragment type: ${(f as any).type}`);
+      })
+      .filter((f): f is BgColourDatum | BgPaneDatum | MarkdownPaneDatum => f !== null) || [];
 
-  if (design.panePayload.bgColour) {
+  if (design?.panePayload?.bgColour) {
     // if from paneDesigns assets, process as paneFragment
     const bgColourFragment: BgColourDatum = {
       id: ulid(),
@@ -62,14 +63,19 @@ const preparePreviewPane = (design: PaneDesign) => {
     markdown: markdown || false,
     optionsPayload: {
       paneFragmentsPayload: paneFragments,
+      ...(design?.panePayload?.codeHook
+        ? {
+            codeHook: { target: design.panePayload.codeHook },
+          }
+        : {}),
     },
     isContextPane: false,
-    heightOffsetDesktop: design.panePayload.heightOffsetDesktop,
-    heightOffsetMobile: design.panePayload.heightOffsetMobile,
-    heightOffsetTablet: design.panePayload.heightOffsetTablet,
-    heightRatioDesktop: design.panePayload.heightRatioDesktop,
-    heightRatioMobile: design.panePayload.heightRatioMobile,
-    heightRatioTablet: design.panePayload.heightRatioTablet,
+    heightOffsetDesktop: design.panePayload.heightOffsetDesktop || 0,
+    heightOffsetMobile: design.panePayload.heightOffsetMobile || 0,
+    heightOffsetTablet: design.panePayload.heightOffsetTablet || 0,
+    heightRatioDesktop: design.panePayload.heightRatioDesktop || "0",
+    heightRatioMobile: design.panePayload.heightRatioMobile || "0",
+    heightRatioTablet: design.panePayload.heightRatioTablet || "0",
     files: design?.files || [],
   };
   return paneData;

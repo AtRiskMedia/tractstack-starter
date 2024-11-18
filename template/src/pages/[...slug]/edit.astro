@@ -8,6 +8,7 @@ import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
 import { isTursoReady, isContentPrimed, isContentReady } from "../../api/turso";
 import { getSetupChecks } from "../../utils/setupChecks";
+import { components } from "../../custom/CodeHook.astro";
 import type { AuthStatus } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
@@ -76,6 +77,7 @@ if (!storyfragment && slug !== `create`) {
           id={slug === "create" ? null : (storyfragment?.id ?? `error`)}
           slug={slug}
           isContext={false}
+          knownCodeHooks={components ? Object.keys(components) : []}
         />
         <div
           class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"

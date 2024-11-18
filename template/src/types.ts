@@ -203,7 +203,7 @@ export interface PaneDesign {
   variants: string[];
   img: string;
   priority: number;
-  type: `starter` | `break` | `reuse`;
+  type: `starter` | `break` | `reuse` | `codehook`;
   panePayload: {
     heightOffsetDesktop: number;
     heightOffsetTablet: number;
@@ -1026,7 +1026,7 @@ export interface StylesVersion {
 export interface CodeHookDatum {
   target: string;
   url?: string | undefined;
-  options: string | undefined;
+  options?: string | undefined;
   height?: string | undefined;
   width?: string | undefined;
 }

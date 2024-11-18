@@ -46,8 +46,13 @@ function findUniqueSuffix(str: string, arr: string[]): string {
   return `${str}-${suffix}`;
 }
 
-export const StoryFragment = (props: { id: string | null; slug: string; isContext: boolean }) => {
-  const { id, slug, isContext } = props;
+export const StoryFragment = (props: {
+  id: string | null;
+  slug: string;
+  isContext: boolean;
+  knownCodeHooks: string[];
+}) => {
+  const { id, slug, isContext, knownCodeHooks } = props;
   const [isClient, setIsClient] = useState(false);
   const $creationState = useStore(creationStateStore);
   const thisId = id ?? $creationState.id ?? `error`;
@@ -323,6 +328,7 @@ export const StoryFragment = (props: { id: string | null; slug: string; isContex
                 paneIds={paneIds}
                 slug={slug}
                 isContext={isContext}
+                knownCodeHooks={knownCodeHooks}
               />
             </div>
           ) : isDesigningNew && paneId !== `insert` ? null : (

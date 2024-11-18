@@ -10,7 +10,7 @@ export interface Props {
 const { target, resources, options } = Astro.props;
 
 // Add index signature to allow string indexing
-const components: { [key: string]: any } = {
+export const components: { [key: string]: any } = {
   "custom-hero": (await import("./CustomHero.astro")).default,
 };
 
