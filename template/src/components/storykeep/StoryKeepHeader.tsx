@@ -3,6 +3,10 @@ import { navigate } from "astro:transitions/client";
 import { useStore } from "@nanostores/react";
 import RectangleGroupIcon from "@heroicons/react/24/outline/RectangleGroupIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
+import AdjustmentsVerticalIcon from "@heroicons/react/24/outline/AdjustmentsVerticalIcon";
+import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRippleIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { SaveProcessModal } from "./components/SaveProcessModal";
 import ViewportSelector from "./components/ViewportSelector";
 import ToolModeSelector from "./components/ToolModeSelector";
@@ -343,8 +347,9 @@ export const StoryKeepHeader = memo(
                   type="button"
                   className="my-1 rounded bg-myblue px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
                   onClick={handleEditModeToggle}
+                  title="Page Settings"
                 >
-                  Settings
+                  <AdjustmentsVerticalIcon className="h-6 w-6" />
                 </button>
               ) : null}
 
@@ -367,8 +372,9 @@ export const StoryKeepHeader = memo(
                   data-astro-reload
                   href={!isContext ? `/${slug}` : `/context/${slug}`}
                   className="inline-block my-1 rounded bg-mydarkgrey px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
+                  title="Visit Page"
                 >
-                  View Page
+                  <CursorArrowRippleIcon className="h-6 w-6" />
                 </a>
               ) : null}
 
@@ -410,15 +416,17 @@ export const StoryKeepHeader = memo(
                   onClick={handleSave}
                   className="my-1 rounded bg-myorange px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myblack disabled:hidden"
                   disabled={Object.values($uncleanData[thisId] || {}).some(Boolean)}
+                  title="Save Changes"
                 >
-                  Save
+                  <CheckIcon className="h-6 w-6" />
                 </button>
               ) : null}
               <a
                 href="/storykeep"
                 className="my-1 rounded bg-mydarkgrey px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myblack disabled:hidden"
+                title="Cancel and Close Page"
               >
-                Cancel
+                <XMarkIcon className="h-6 w-6" />
               </a>
               {isSaving && (
                 <SaveProcessModal
