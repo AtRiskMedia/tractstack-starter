@@ -367,19 +367,26 @@ export async function isContentReady(): Promise<boolean> {
   try {
     const client = getReadClient();
     if (!client) return false;
+
+    // First check if tables exist
+    const { rows: tableCheck } = await client.execute(
+      `SELECT name FROM sqlite_master 
+       WHERE type='table' AND name IN ('storyfragment', 'tractstack')`
+    );
+
+    if (tableCheck.length < 2) return false;
+
+    // Then check for content
     const { rows } = await client.execute(
-      `
-        SELECT 
-          EXISTS (
-            SELECT 1 
-            FROM storyfragment sf
-            JOIN tractstack ts ON sf.tractstack_id = ts.id
-          ) as content_exists
-      `
+      `SELECT EXISTS (
+         SELECT 1 
+         FROM storyfragment sf
+         JOIN tractstack ts ON sf.tractstack_id = ts.id
+       ) as content_exists`
     );
     return rows[0]?.content_exists === 1;
   } catch (error) {
-    console.error("Error checking content readiness:", error);
+    console.log("Database not ready for content check:", error);
     return false;
   }
 }
@@ -388,12 +395,21 @@ export async function isContentPrimed(): Promise<boolean> {
   try {
     const client = getReadClient();
     if (!client) return false;
+
+    // Check if tractstack table exists first
+    const { rows: tableCheck } = await client.execute(
+      `SELECT name FROM sqlite_master 
+       WHERE type='table' AND name='tractstack'`
+    );
+
+    if (tableCheck.length === 0) return false;
+
     const { rows } = await client.execute(
-      `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists;`
+      `SELECT EXISTS (SELECT 1 FROM tractstack LIMIT 1) as content_exists`
     );
     return rows[0]?.content_exists === 1;
   } catch (error) {
-    console.error("Error checking content readiness:", error);
+    console.log("Database not ready for content prime check:", error);
     return false;
   }
 }
@@ -402,6 +418,8 @@ export async function isTursoReady(): Promise<boolean> {
   try {
     await createTursoClient();
     const client = getReadClient();
+    if (!client) return false;
+
     const { rows } = await client.execute(`
       SELECT COUNT(*) as table_count 
       FROM sqlite_master 
@@ -421,7 +439,7 @@ export async function isTursoReady(): Promise<boolean> {
     `);
     return rows[0].table_count === 10;
   } catch (error) {
-    console.error("Error checking database readiness:", error);
+    console.log("Database not ready:", error);
     return false;
   }
 }
@@ -453,15 +471,10 @@ export async function checkTursoStatus(): Promise<boolean> {
     `);
     return rows[0].table_count === 10;
   } catch (error) {
-    console.error("Error checking database readiness:", error);
-    if (error instanceof Error) {
-      console.error("Error details:", error.message);
-    }
+    console.log("Database status check failed:", error);
     return false;
   }
 }
-
-// ... continuing from previous part 2 ...
 
 export async function getContextPaneBySlug(slug: string): Promise<ContextPaneDatum | null> {
   try {
@@ -529,33 +542,53 @@ export async function getContentMap(): Promise<ContentMap[]> {
   try {
     const client = getReadClient();
     if (!client) return [];
-    const { rows: storyfragments } = await client.execute(
-      `SELECT 
-              sf.id AS id,
-              sf.title AS title,
-              sf.slug AS slug,
-              sf.created AS created,
-              sf.changed AS changed,
-              ts.id AS tractstack_id,
-              ts.title AS tractstack_title,
-              ts.slug AS tractstack_slug,
-              GROUP_CONCAT(sp.pane_id) AS pane_ids
-              FROM 
-                  storyfragment sf
-              JOIN 
-                  tractstack ts ON sf.tractstack_id = ts.id
-              LEFT JOIN 
-                  storyfragment_pane sp ON sf.id = sp.storyfragment_id
-              GROUP BY 
-                  sf.id, sf.title, sf.slug, ts.id, ts.title, ts.slug`
+
+    // Check if required tables exist
+    const { rows: tableCheck } = await client.execute(
+      `SELECT name FROM sqlite_master 
+       WHERE type='table' AND name IN ('storyfragment', 'tractstack', 'pane', 'storyfragment_pane')`
     );
-    const { rows: panes } = await client.execute(
-      `SELECT id, slug, title, is_context_pane, changed, created FROM pane`
-    );
-    return cleanTursoContentMap(storyfragments, panes);
+
+    const existingTables = new Set(tableCheck.map((row) => row.name as string));
+
+    // Return empty array if any required table is missing
+    if (
+      !existingTables.has("storyfragment") ||
+      !existingTables.has("tractstack") ||
+      !existingTables.has("pane") ||
+      !existingTables.has("storyfragment_pane")
+    ) {
+      return [];
+    }
+
+    const [storyfragments, panes] = await Promise.all([
+      client.execute(
+        `SELECT 
+          sf.id AS id,
+          sf.title AS title,
+          sf.slug AS slug,
+          sf.created AS created,
+          sf.changed AS changed,
+          ts.id AS tractstack_id,
+          ts.title AS tractstack_title,
+          ts.slug AS tractstack_slug,
+          GROUP_CONCAT(sp.pane_id) AS pane_ids
+          FROM 
+            storyfragment sf
+          JOIN 
+            tractstack ts ON sf.tractstack_id = ts.id
+          LEFT JOIN 
+            storyfragment_pane sp ON sf.id = sp.storyfragment_id
+          GROUP BY 
+            sf.id, sf.title, sf.slug, ts.id, ts.title, ts.slug`
+      ),
+      client.execute(`SELECT id, slug, title, is_context_pane, changed, created FROM pane`),
+    ]);
+
+    return cleanTursoContentMap(storyfragments.rows, panes.rows);
   } catch (error) {
-    console.error("Error fetching ContentMap:", error);
-    throw error;
+    console.log("Unable to fetch content map:", error);
+    return [];
   }
 }
 
@@ -683,23 +716,48 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
   try {
     const client = getReadClient();
     if (!client) return [];
-    const { rows } = await client.execute(`
-      SELECT id, id as slug, title, 'Menu' as type
-      FROM menu
-      UNION ALL
-      SELECT id, slug, title, 'Pane' as type
-      FROM pane
-      UNION ALL
-      SELECT id, slug, title, 'Resource' as type
-      FROM resource
-      UNION ALL
-      SELECT id, slug, title, 'StoryFragment' as type
-      FROM storyfragment
-      UNION ALL
-      SELECT id, slug, title, 'TractStack' as type
-      FROM tractstack
-      ORDER BY title
-    `);
+
+    // First check which tables exist
+    const { rows: tableCheck } = await client.execute(
+      `SELECT name FROM sqlite_master 
+       WHERE type='table' AND name IN ('menu', 'pane', 'resource', 'storyfragment', 'tractstack')`
+    );
+
+    const existingTables = tableCheck.map((row) => row.name as string);
+
+    // Build dynamic query based on existing tables
+    const queryParts = [];
+
+    if (existingTables.includes("menu")) {
+      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme 
+                      FROM menu`);
+    }
+
+    if (existingTables.includes("pane")) {
+      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane 
+                      FROM pane`);
+    }
+
+    if (existingTables.includes("resource")) {
+      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug 
+                      FROM resource`);
+    }
+
+    if (existingTables.includes("storyfragment")) {
+      queryParts.push(`SELECT id, slug, title, 'StoryFragment' as type, NULL as extra 
+                      FROM storyfragment`);
+    }
+
+    if (existingTables.includes("tractstack")) {
+      queryParts.push(`SELECT id, slug, title, 'TractStack' as type, NULL as extra 
+                      FROM tractstack`);
+    }
+
+    // If no tables exist, return empty array
+    if (queryParts.length === 0) return [];
+
+    // Execute combined query
+    const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
 
     return rows.map((row) => {
       const base = {
@@ -742,7 +800,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
       }
     });
   } catch (error) {
-    console.error("Error fetching full content map:", error);
-    throw error;
+    console.log("Unable to fetch content map:", error);
+    return [];
   }
 }
