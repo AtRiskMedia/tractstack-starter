@@ -1,18 +1,7 @@
-import { useStore } from "@nanostores/react";
-import {
-  paneFragmentMarkdown,
-  unsavedChangesStore,
-  lastInteractedTypeStore,
-  lastInteractedPaneStore,
-} from "../../../store/storykeep";
-import {
-  removeElementFromMarkdown,
-  updateHistory,
-  allowTagErase,
-} from "../../../utils/compositor/markdownUtils";
-import { cloneDeep, isDeepEqual } from "../../../utils/helpers";
+import { allowTagErase } from "../../../utils/compositor/markdownUtils";
 import type { ReactNode } from "react";
 import type { MarkdownLookup } from "../../../types";
+import { eraseElement } from "@utils/storykeep.ts";
 
 interface Props {
   fragmentId: string;
@@ -33,36 +22,12 @@ const EraserWrapper = ({
   children,
   markdownLookup,
 }: Props) => {
-  const $paneFragmentMarkdown = useStore(paneFragmentMarkdown, {
-    keys: [fragmentId],
-  });
-  const $unsavedChanges = useStore(unsavedChangesStore, { keys: [paneId] });
   const contentId = `${outerIdx}${typeof idx === "number" ? `-${idx}` : ""}-${fragmentId}`;
   const allowTag = allowTagErase(outerIdx, idx, markdownLookup);
 
   const handleErase = () => {
     queueUpdate(contentId, () => {
-      lastInteractedTypeStore.set(`markdown`);
-      lastInteractedPaneStore.set(paneId);
-      const currentField = cloneDeep($paneFragmentMarkdown[fragmentId]);
-      const now = Date.now();
-      const newHistory = updateHistory(currentField, now);
-      const newValue = removeElementFromMarkdown(
-        currentField.current,
-        outerIdx,
-        idx,
-        markdownLookup
-      );
-      paneFragmentMarkdown.setKey(fragmentId, {
-        ...currentField,
-        current: newValue,
-        history: newHistory,
-      });
-      const isUnsaved = !isDeepEqual(newValue, currentField.original);
-      unsavedChangesStore.setKey(paneId, {
-        ...$unsavedChanges[paneId],
-        paneFragmentMarkdown: isUnsaved,
-      });
+      eraseElement(paneId, fragmentId, outerIdx, idx, markdownLookup);
     });
   };
 
@@ -73,9 +38,9 @@ const EraserWrapper = ({
       <div
         onClick={handleErase}
         title="Delete this!"
-        className="absolute inset-0 w-full h-full z-101 hover:bg-myorange hover:bg-opacity-20 hover:outline-white/20
-                   outline-2 outline-dashed outline-myorange/50 outline-offset-[-2px]
-                   mix-blend-exclusion cursor-pointer"
+        className="absolute inset-0 z-101 h-full w-full cursor-pointer mix-blend-exclusion outline-dashed
+                   outline-2 outline-offset-[-2px] outline-myorange/50 hover:bg-myorange
+                   hover:bg-opacity-20 hover:outline-white/20"
       />
     </div>
   );

@@ -1,14 +1,17 @@
 //import { storySteps } from "../store/events";
 import { getImage } from "astro:assets";
 import type {
-  GraphNodes,
+  ClassNamesPayloadValue,
+  FileNode,
   GraphNode,
   GraphNodeDatum,
+  GraphNodes,
   GraphRelationshipDatum,
-  ClassNamesPayloadValue,
   TursoFileNode,
-  FileNode,
 } from "../types";
+import type { DragNode } from "../store/storykeep.ts";
+import { toHast } from "mdast-util-to-hast";
+import type { Element, RootContent, Root as HastRoot } from "hast";
 
 export const getComputedColor = (color: string): string => {
   if (color.startsWith("#var(--")) {
@@ -26,7 +29,9 @@ export function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(` `);
 }
 
-export function getClassNames(input: string | { classes: ClassNamesPayloadValue }): string[] {
+export function getClassNames(
+  input: string | { classes: ClassNamesPayloadValue }
+): string[] {
   if (!input) {
     return [];
   }
@@ -81,12 +86,15 @@ export function handleEditorResize() {
 
   const resizeObserver = new ResizeObserver(() => {
     // Calculate scrollbar width
-    const scrollBarOffset = window.innerWidth - document.documentElement.clientWidth;
+    const scrollBarOffset =
+      window.innerWidth - document.documentElement.clientWidth;
     // Get the actual width of the preview element
     const previewWidth = previewElement.clientWidth;
     // Adjust the width to account for the scrollbar
     const adjustedWidth =
-      previewWidth + scrollBarOffset * (window.innerWidth > previewWidth + scrollBarOffset ? 0 : 1);
+      previewWidth +
+      scrollBarOffset *
+        (window.innerWidth > previewWidth + scrollBarOffset ? 0 : 1);
     let baseWidth;
     // Use adjustedWidth for breakpoint checks
     if (adjustedWidth <= 800) {
@@ -249,26 +257,28 @@ export const processGraphPayload = (rows: GraphNodes[]) => {
         color: color,
       });
   });
-  const edges: GraphRelationshipDatum[] = graphRelationships.map((e: GraphNode) => {
-    const label =
-      typeof e?.properties?.object === `string`
-        ? e.properties.object
-        : typeof e?.type === `string`
-          ? e.type
-          : `unknown`;
-    return {
-      from: e.startNodeId,
-      to: e.endNodeId,
-      label: label,
-      font: { align: `top`, size: `8` },
-      arrows: {
-        to: {
-          enabled: true,
-          type: `triangle`,
+  const edges: GraphRelationshipDatum[] = graphRelationships.map(
+    (e: GraphNode) => {
+      const label =
+        typeof e?.properties?.object === `string`
+          ? e.properties.object
+          : typeof e?.type === `string`
+            ? e.type
+            : `unknown`;
+      return {
+        from: e.startNodeId,
+        to: e.endNodeId,
+        label: label,
+        font: { align: `top`, size: `8` },
+        arrows: {
+          to: {
+            enabled: true,
+            type: `triangle`,
+          },
         },
-      },
-    };
-  });
+      };
+    }
+  );
 
   return { nodes, edges };
 };
@@ -288,7 +298,9 @@ export function dateToUnixTimestamp(date: Date): number {
 let progressInterval: NodeJS.Timeout | null = null;
 
 export function startLoadingAnimation() {
-  const loadingIndicator = document.getElementById("loading-indicator") as HTMLElement;
+  const loadingIndicator = document.getElementById(
+    "loading-indicator"
+  ) as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
 
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
@@ -310,7 +322,9 @@ export function startLoadingAnimation() {
 }
 
 export function stopLoadingAnimation() {
-  const loadingIndicator = document.getElementById("loading-indicator") as HTMLElement;
+  const loadingIndicator = document.getElementById(
+    "loading-indicator"
+  ) as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
 
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
@@ -351,14 +365,20 @@ export function cloneDeep<T>(obj: T): T {
 
 export function isDeepEqual(obj1: any, obj2: any): boolean {
   if (obj1 === obj2) return true;
-  if (typeof obj1 !== "object" || obj1 === null || typeof obj2 !== "object" || obj2 === null) {
+  if (
+    typeof obj1 !== "object" ||
+    obj1 === null ||
+    typeof obj2 !== "object" ||
+    obj2 === null
+  ) {
     return obj1 === obj2;
   }
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
   if (keys1.length !== keys2.length) return false;
   for (const key of keys1) {
-    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key])) return false;
+    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key]))
+      return false;
   }
   return true;
 }
@@ -487,7 +507,7 @@ export function cleanString(s: string): string {
   s = s.replace(/\s+/g, "-");
   const words = s.split(/[-_]/);
   if (words.length > 1) {
-    s = words.filter((word) => !stopWords.has(word)).join("-");
+    s = words.filter(word => !stopWords.has(word)).join("-");
   }
   s = s.replace(/^[^a-z]+/, "");
   s = s.replace(/[-_]{2,}/g, "-");
@@ -511,7 +531,9 @@ export function cleanStringUpper(s: string): string {
 export function sortULIDs(ulids: string[]) {
   return ulids.sort((a, b) => {
     const toBinary = (ulid: string) => {
-      return Array.from(ulid, (char) => char.charCodeAt(0).toString(2).padStart(8, "0")).join("");
+      return Array.from(ulid, char =>
+        char.charCodeAt(0).toString(2).padStart(8, "0")
+      ).join("");
     };
 
     const binaryA = toBinary(a);
@@ -537,7 +559,7 @@ export async function getOptimizedImage(src: string) {
 async function getOptimizedImageSet(baseUrl: string): Promise<string[]> {
   const sizes = [600, 1080, 1920];
   const optimizedUrls = await Promise.all(
-    sizes.map(async (size) => {
+    sizes.map(async size => {
       const sizeUrl = baseUrl.replace(/(\.[^.]+)$/, `_${size}px$1`);
       const optimizedSrc = await getOptimizedImage(sizeUrl);
       return optimizedSrc ? `${optimizedSrc} ${size}w` : "";
@@ -582,4 +604,121 @@ export async function getOptimizedImages(
   );
 
   return optimizedImages;
+}
+
+export const createNodeId = (node: DragNode): string => {
+  if (!node) return "";
+  return node.fragmentId + node.paneId + node.outerIdx + (node.idx || 0);
+};
+
+export function swapObjectValues(obj: any, key1: string, key2: string): any {
+  if (!(key1 in obj) || !(key2 in obj)) {
+    return undefined;
+  }
+
+  const temp = obj[key1];
+  obj[key1] = obj[key2];
+  obj[key2] = temp;
+  return obj;
+}
+
+export const getHtmlTagFromMdast = (mdastNode: any): string | null => {
+  // Convert MDAST node to HAST
+  const hastNode = toHast(mdastNode);
+  // Check if we have a valid HAST node and return its tagName
+  if (hastNode && "tagName" in hastNode) {
+    return hastNode.tagName ? hastNode.tagName : null;
+  }
+  return null;
+};
+
+export function findIndicesFromLookup(
+  values: string[], // string numeric keys, like: [1, 3, 5]
+  startIdx: number,
+  targetIdx: number
+) {
+  const sortedValues = values.map(Number).sort((a, b) => a - b);
+  const findFloorIndex = (arr: number[], target: number): number => {
+    let left = 0;
+    let right = arr.length - 1;
+    let result = -1;
+
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      if (arr[mid] <= target) {
+        result = mid;
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+    return result;
+  };
+
+  const localStart = findFloorIndex(sortedValues, startIdx);
+  const localEnd = findFloorIndex(sortedValues, targetIdx);
+  return { localStart, localEnd };
+}
+
+export function extractEntriesAtIndex(
+  obj: { [key: string]: any[] },
+  index: number
+): { [key: string]: any } | null {
+  if (!obj) return null;
+
+  const result: { [key: string]: any } = {};
+
+  for (const key in obj) {
+    if (Array.isArray(obj[key])) {
+      result[key] = obj[key][index] !== undefined ? obj[key][index] : null;
+    } else {
+      result[key] = null;
+    }
+  }
+
+  return result;
+}
+
+declare global {
+  interface Array<T> {
+    setAt(index: number, value: T): void;
+  }
+}
+
+Array.prototype.setAt = function <T>(index: number, value: T): void {
+  if (index >= this.length) {
+    this.length = index + 1; // Extend the array length
+  }
+  this[index] = value;
+};
+
+export function removeAt<T>(arr: T[], index: number): T | undefined {
+  if (index < 0 || index >= arr.length) {
+    return undefined; // Return undefined if the index is out of bounds
+  }
+  return arr.splice(index, 1)[0]; // Remove and return the element at the index
+}
+
+export function getNthFromAstUsingElement(ast: HastRoot, el: RootContent) {
+  if ("tagName" in el) {
+    // @ts-expect-error tagName exists..
+    const matchingTagElements = ast.children.filter((x) => x.tagName === el.tagName);
+    const idx = matchingTagElements.findIndex((x) => x === el);
+    return idx;
+  }
+  return -1;
+}
+
+export function mergeObjectKeys(...objects: Record<string, any>[]): string[] {
+  const keysSet = new Set<string>();
+
+  for (const obj of objects) {
+    for (const key in obj) {
+      if(key) {
+        keysSet.add(key);
+      }
+    }
+  }
+
+  return Array.from(keysSet);
 }

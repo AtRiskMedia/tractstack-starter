@@ -6,7 +6,11 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import { MS_BETWEEN_UNDO, MAX_HISTORY_LENGTH } from "../../constants";
 import { cloneDeep } from "../../utils/helpers";
 import { tailwindClasses } from "../../assets/tailwindClasses";
-import type { Root as HastRoot, Element as HastElement, Text as HastText } from "hast";
+import type {
+  Root as HastRoot,
+  Element as HastElement,
+  Text as HastText,
+} from "hast";
 import type { Root as MdastRoot, List, ListItem } from "mdast";
 import type {
   Tag,
@@ -72,20 +76,32 @@ export function allowTagInsert(
     case `h3`:
     case `h4`: {
       if (typeof idx !== `number`) return { before: true, after: true };
-      const siblings = Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
+      const siblings =
+        Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
       return { before: idx === 0, after: idx === siblings };
     }
     case `img`: {
       const parentTag = markdownLookup.nthTag[outerIdx];
-      const hasWidget = typeof markdownLookup.codeItemsLookup[outerIdx] !== `undefined`;
-      const hasLinks = typeof markdownLookup.linksLookup[outerIdx] !== `undefined`;
+      const hasWidget =
+        typeof markdownLookup.codeItemsLookup[outerIdx] !== `undefined`;
+      const hasLinks =
+        typeof markdownLookup.linksLookup[outerIdx] !== `undefined`;
 
       // is this already ul > with links or widgets ?
-      if (typeof idx === `number` && parentTag === `ul` && (hasLinks || hasWidget))
+      if (
+        typeof idx === `number` &&
+        parentTag === `ul` &&
+        (hasLinks || hasWidget)
+      )
         return { before: false, after: false };
 
       // is this already ul > img ?
-      if (typeof idx === `number` && parentTag === `ul` && !hasLinks && !hasWidget)
+      if (
+        typeof idx === `number` &&
+        parentTag === `ul` &&
+        !hasLinks &&
+        !hasWidget
+      )
         return { before: true, after: true };
 
       // check for adjascent ul
@@ -99,9 +115,11 @@ export function allowTagInsert(
         return { before: parentBeforeTag, after: parentAfterTag };
       } else {
         // nested ul > li, allow insert before and after
-        const siblings = Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
+        const siblings =
+          Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
         const parentBeforeTag =
-          outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
+          outerIdx === 0 ||
+          (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
         const parentAfterTag =
           outerIdx < Object.keys(markdownLookup.nthTag).length &&
           markdownLookup.nthTag[outerIdx + 1] !== `ul`;
@@ -120,7 +138,8 @@ export function allowTagInsert(
         if (typeof idx !== `number`) {
           // only allow if no adjascent ul
           const parentBeforeTag =
-            outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
+            outerIdx === 0 ||
+            (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
           const parentAfterTag =
             outerIdx < Object.keys(markdownLookup.nthTag).length &&
             markdownLookup.nthTag[outerIdx + 1] !== `ul`;
@@ -131,20 +150,24 @@ export function allowTagInsert(
     case `aside`: {
       const parentTag = markdownLookup.nthTag[outerIdx];
       // is this already ol ?
-      if (typeof idx === `number` && parentTag === `ol`) return { before: true, after: true };
+      if (typeof idx === `number` && parentTag === `ol`)
+        return { before: true, after: true };
       if (typeof idx !== `number`) {
         // check for adjascent ol
         const parentBeforeTag =
-          outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
+          outerIdx === 0 ||
+          (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
         const parentAfterTag =
           outerIdx < Object.keys(markdownLookup.nthTag).length &&
           markdownLookup.nthTag[outerIdx + 1] !== `ol`;
         return { before: parentBeforeTag, after: parentAfterTag };
       } else {
         // nested ul > li, allow insert before and after
-        const siblings = Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
+        const siblings =
+          Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
         const parentBeforeTag =
-          outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
+          outerIdx === 0 ||
+          (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
         const parentAfterTag =
           outerIdx < Object.keys(markdownLookup.nthTag).length &&
           markdownLookup.nthTag[outerIdx + 1] !== `ol`;
@@ -231,7 +254,11 @@ function processMarkdownElement(
         }
       }
       currentOuterIdx++;
-    } else if (/^\d+\.\s/.test(line) || /^\*\s/.test(line) || /^-\s/.test(line)) {
+    } else if (
+      /^\d+\.\s/.test(line) ||
+      /^\*\s/.test(line) ||
+      /^-\s/.test(line)
+    ) {
       // List item handling
       if (!inList) {
         inList = true;
@@ -242,7 +269,9 @@ function processMarkdownElement(
           if (action === "extract") {
             return line.replace(/^(\d+\.|-)\s*/, "");
           } else if (action === "update" && newContent) {
-            const prefix = /^\d+\.\s/.test(line) ? (line.match(/^\d+\./)?.at(0) ?? "1.") : line[0];
+            const prefix = /^\d+\.\s/.test(line)
+              ? (line.match(/^\d+\./)?.at(0) ?? "1.")
+              : line[0];
             lines[i] = `${prefix} ${newContent}`;
             return lines.join("\n");
           }
@@ -289,7 +318,14 @@ export function updateMarkdownElement(
   idx: number | null = null
 ): string {
   const lines = fullMarkdown.split("\n");
-  const result = processMarkdownElement(lines, outerIdx, idx, tag, "update", newContent);
+  const result = processMarkdownElement(
+    lines,
+    outerIdx,
+    idx,
+    tag,
+    "update",
+    newContent
+  );
   return result || fullMarkdown;
 }
 
@@ -301,13 +337,21 @@ export function getGlobalNth(
 ): number | null {
   switch (Tag) {
     case "li":
-      return idx !== null ? (markdownLookup?.listItemsLookup?.[outerIdx]?.[idx] ?? null) : null;
+      return idx !== null
+        ? (markdownLookup?.listItemsLookup?.[outerIdx]?.[idx] ?? null)
+        : null;
     case "img":
-      return idx !== null ? (markdownLookup?.imagesLookup?.[outerIdx]?.[idx] ?? null) : null;
+      return idx !== null
+        ? (markdownLookup?.imagesLookup?.[outerIdx]?.[idx] ?? null)
+        : null;
     case "code":
-      return idx !== null ? (markdownLookup?.codeItemsLookup?.[outerIdx]?.[idx] ?? null) : null;
+      return idx !== null
+        ? (markdownLookup?.codeItemsLookup?.[outerIdx]?.[idx] ?? null)
+        : null;
     case "a":
-      return idx !== null ? (markdownLookup?.linksLookup?.[outerIdx]?.[idx] ?? null) : null;
+      return idx !== null
+        ? (markdownLookup?.linksLookup?.[outerIdx]?.[idx] ?? null)
+        : null;
     default:
       return markdownLookup?.nthTagLookup?.[Tag]?.[outerIdx]?.nth ?? null;
   }
@@ -320,9 +364,15 @@ function getNthOfHighestLessThan(
 ) {
   const filtered =
     position === `before`
-      ? Object.fromEntries(Object.entries(lookupObj).filter(([key]) => parseInt(key) < affectedNth))
+      ? Object.fromEntries(
+          Object.entries(lookupObj).filter(
+            ([key]) => parseInt(key) < affectedNth
+          )
+        )
       : Object.fromEntries(
-          Object.entries(lookupObj).filter(([key]) => parseInt(key) <= affectedNth)
+          Object.entries(lookupObj).filter(
+            ([key]) => parseInt(key) <= affectedNth
+          )
         );
   if (filtered) {
     const lastKey = Object.keys(filtered).pop();
@@ -344,7 +394,9 @@ export function reconcileOptionsPayload(
   toolAddMode: ToolAddMode,
   position: "before" | "after"
 ): OptionsPayloadDatum {
-  const newOptionsPayload: OptionsPayloadDatum = JSON.parse(JSON.stringify(optionsPayload));
+  const newOptionsPayload: OptionsPayloadDatum = JSON.parse(
+    JSON.stringify(optionsPayload)
+  );
   const getLiNth = (outerIdx: number, idx?: number) => {
     if (outerIdx === 0 && typeof idx !== `number`) return 0;
     const adjustedIdx =
@@ -416,13 +468,21 @@ export function reconcileOptionsPayload(
     const tagLookup = markdownLookup.nthTagLookup[tag];
     const outerTag = markdownLookup.nthTag[outerIdx];
     if (!tagLookup) return 0;
-    const highestSibling = getNthOfHighestLessThan(tagLookup, outerIdx, position);
+    const highestSibling = getNthOfHighestLessThan(
+      tagLookup,
+      outerIdx,
+      position
+    );
     if (position === `after` || outerTag !== tag) return highestSibling + 1;
     return highestSibling;
   };
 
   // modifies classNamePayload to retain integrity on insert/removal
-  const processTag = (tag: string, nthToAffect: number, isIncrement: boolean) => {
+  const processTag = (
+    tag: string,
+    nthToAffect: number,
+    isIncrement: boolean
+  ) => {
     if (!newOptionsPayload.classNamesPayload[tag]) {
       newOptionsPayload.classNamesPayload[tag] = { classes: {} };
     }
@@ -436,7 +496,10 @@ export function reconcileOptionsPayload(
         Object.entries(overrides).forEach(([nth, value]) => {
           const nthNum = parseInt(nth);
           if (isIncrement) {
-            if ((position === `before` && nthNum >= nthToAffect) || nthNum > nthToAffect) {
+            if (
+              (position === `before` && nthNum >= nthToAffect) ||
+              nthNum > nthToAffect
+            ) {
               newOverrides[nthNum + 1] = value as Tuple;
             } else {
               newOverrides[nthNum] = value as Tuple;
@@ -519,8 +582,16 @@ export function reconcileOptionsPayload(
     const parentTag = markdownLookup.nthTag[outerIdx];
     if (parentTag === "ul" || parentTag === "ol") {
       const parentPayload = newOptionsPayload.classNamesPayload[parentTag];
-      if (parentPayload && typeof parentPayload.count === "number" && siblingsCount === 1) {
-        processTag(parentTag, markdownLookup.nthTagLookup[parentTag][outerIdx].nth, false);
+      if (
+        parentPayload &&
+        typeof parentPayload.count === "number" &&
+        siblingsCount === 1
+      ) {
+        processTag(
+          parentTag,
+          markdownLookup.nthTagLookup[parentTag][outerIdx].nth,
+          false
+        );
       }
     }
     const imgGlobalNth = getGlobalNth("img", idx, outerIdx, markdownLookup);
@@ -536,7 +607,9 @@ export function reconcileOptionsPayload(
     // remove block element
     const affectedTag = markdownLookup.nthTag[outerIdx];
     const affectedNth =
-      idx === null ? markdownLookup.nthTagLookup[affectedTag]?.[outerIdx]?.nth || 0 : idx;
+      idx === null
+        ? markdownLookup.nthTagLookup[affectedTag]?.[outerIdx]?.nth || 0
+        : idx;
     processTag(affectedTag, affectedNth, false);
   }
   return newOptionsPayload;
@@ -561,7 +634,8 @@ export function insertElementIntoMarkdown(
   if (
     typeof idx !== `number` ||
     ([`ol`].includes(parentTag) && toolAddMode === `img`) ||
-    ([`ol`, `ul`].includes(parentTag) && [`p`, `h2`, `h3`, `h4`].includes(toolAddMode))
+    ([`ol`, `ul`].includes(parentTag) &&
+      [`p`, `h2`, `h3`, `h4`].includes(toolAddMode))
   ) {
     // Insert new block
     const newNode = fromMarkdown(newContent).children[0];
@@ -590,7 +664,9 @@ export function insertElementIntoMarkdown(
   }
 
   newMarkdown.markdown.body = toMarkdown(mdast);
-  newMarkdown.markdown.htmlAst = cleanHtmlAst(toHast(mdast) as HastRoot) as HastRoot;
+  newMarkdown.markdown.htmlAst = cleanHtmlAst(
+    toHast(mdast) as HastRoot
+  ) as HastRoot;
   newMarkdown.payload.optionsPayload = reconcileOptionsPayload(
     newMarkdown.payload.optionsPayload,
     outerIdx,
@@ -621,7 +697,7 @@ export function removeElementFromMarkdown(
 
   // Filter out text nodes and get only block-level elements
   const blockElements = mdast.children.filter(
-    (node) => node.type !== "text" && node.type !== "html"
+    node => node.type !== "text" && node.type !== "html"
   );
 
   if (outerIdx >= 0 && outerIdx < blockElements.length) {
@@ -629,7 +705,7 @@ export function removeElementFromMarkdown(
 
     if (idx === null) {
       // Remove the entire block
-      mdast.children = mdast.children.filter((node) => node !== elementToRemove);
+      mdast.children = mdast.children.filter(node => node !== elementToRemove);
     } else if (
       elementToRemove.type === "list" &&
       Array.isArray((elementToRemove as List).children)
@@ -639,7 +715,9 @@ export function removeElementFromMarkdown(
         (elementToRemove as List).children.splice(idx, 1);
         if ((elementToRemove as List).children.length === 0) {
           // If the list is now empty, remove the entire list
-          mdast.children = mdast.children.filter((node) => node !== elementToRemove);
+          mdast.children = mdast.children.filter(
+            node => node !== elementToRemove
+          );
         }
       }
     }
@@ -688,7 +766,7 @@ export function cleanHtmlAst(
   } else if (node.type === "element" || node.type === "root") {
     if ("children" in node) {
       node.children = node.children
-        .map((child) => cleanHtmlAst(child as HastElement | HastText))
+        .map(child => cleanHtmlAst(child as HastElement | HastText))
         .filter((child): child is HastElement | HastText => child !== null);
     }
     return node;
@@ -709,17 +787,25 @@ function processClassValues(
   const tabletVal =
     overrideClasses && overrideClasses.length > 1
       ? String(overrideClasses[1])
-      : Array.isArray(classes) && classes.length > 1 && classes[1] !== ``
-        ? String(classes[1])
-        : mobileVal;
+      : overrideClasses && overrideClasses.length
+        ? String(overrideClasses[0])
+        : Array.isArray(classes) && classes.length > 1 && classes[1] !== ``
+          ? String(classes[1])
+          : mobileVal;
   const desktopVal =
     overrideClasses && overrideClasses.length > 2
       ? String(overrideClasses[2])
-      : Array.isArray(classes) && classes.length > 2 && classes[2] !== ``
-        ? String(classes[2])
-        : tabletVal;
-  const mobileValNegative = mobileVal && mobileVal[0] === "!" ? mobileVal.substring(1) : mobileVal;
-  const tabletValNegative = tabletVal && tabletVal[0] === "!" ? tabletVal.substring(1) : tabletVal;
+      : overrideClasses && overrideClasses.length > 1
+        ? String(overrideClasses[1])
+        : overrideClasses && overrideClasses.length
+          ? String(overrideClasses[0])
+          : Array.isArray(classes) && classes.length > 2 && classes[2] !== ``
+            ? String(classes[2])
+            : tabletVal;
+  const mobileValNegative =
+    mobileVal && mobileVal[0] === "!" ? mobileVal.substring(1) : mobileVal;
+  const tabletValNegative =
+    tabletVal && tabletVal[0] === "!" ? tabletVal.substring(1) : tabletVal;
   const desktopValNegative =
     desktopVal && desktopVal[0] === "!" ? desktopVal.substring(1) : desktopVal;
   return [
@@ -761,14 +847,24 @@ export function findImageNode(
   return null;
 }
 
-export const findCodeNode = (ast: HastRoot, targetIdx: number): string | null => {
+export const findCodeNode = (
+  ast: HastRoot,
+  targetIdx: number
+): string | null => {
   const targetAst = ast.children[targetIdx];
 
   const traverse = (node: HastRoot | HastElement | HastText): string | null => {
-    if (node.type === "element" && ["ul", "li", "code"].includes(node.tagName)) {
+    if (
+      node.type === "element" &&
+      ["ul", "li", "code"].includes(node.tagName)
+    ) {
       if (node.children) {
         for (const child of node.children) {
-          if (node.tagName === "ul" && child.type === "element" && child.tagName === "li") {
+          if (
+            node.tagName === "ul" &&
+            child.type === "element" &&
+            child.tagName === "li"
+          ) {
             return traverse(child);
           } else if (
             node.tagName === "li" &&
@@ -826,7 +922,9 @@ export function getActiveTagData(
         classNamesPayload?.classes &&
         typeof selectedStyle === "string" &&
         selectedStyle in classNamesPayload.classes
-          ? (classNamesPayload.classes as Record<string, unknown[]>)[selectedStyle]
+          ? (classNamesPayload.classes as Record<string, unknown[]>)[
+              selectedStyle
+            ]
           : null;
       const [
         mobileVal,
@@ -855,7 +953,8 @@ export function getActiveTagData(
       if (
         typeof targetId.idx === `number` &&
         markdownLookup.imagesLookup[targetId.outerIdx] &&
-        typeof markdownLookup.imagesLookup[targetId.outerIdx][targetId.idx] !== `number`
+        typeof markdownLookup.imagesLookup[targetId.outerIdx][targetId.idx] !==
+          `number`
       )
         return null;
       const globalNth =
@@ -871,7 +970,9 @@ export function getActiveTagData(
         classNamesPayload?.classes &&
         typeof selectedStyle === "string" &&
         selectedStyle in classNamesPayload.classes
-          ? (classNamesPayload.classes as Record<string, unknown[]>)[selectedStyle]
+          ? (classNamesPayload.classes as Record<string, unknown[]>)[
+              selectedStyle
+            ]
           : null;
       const [
         mobileVal,
@@ -900,7 +1001,9 @@ export function getActiveTagData(
       if (
         typeof targetId.idx === `number` &&
         markdownLookup.listItemsLookup[targetId.outerIdx] &&
-        typeof markdownLookup.listItemsLookup[targetId.outerIdx][targetId.idx] !== `number`
+        typeof markdownLookup.listItemsLookup[targetId.outerIdx][
+          targetId.idx
+        ] !== `number`
       )
         return null;
       const globalNth =
@@ -916,7 +1019,9 @@ export function getActiveTagData(
         classNamesPayload?.classes &&
         typeof selectedStyle === "string" &&
         selectedStyle in classNamesPayload.classes
-          ? (classNamesPayload.classes as Record<string, unknown[]>)[selectedStyle]
+          ? (classNamesPayload.classes as Record<string, unknown[]>)[
+              selectedStyle
+            ]
           : null;
       const [
         mobileVal,
@@ -945,7 +1050,9 @@ export function getActiveTagData(
       if (
         typeof targetId.idx === `number` &&
         markdownLookup.codeItemsLookup[targetId.outerIdx] &&
-        typeof markdownLookup.codeItemsLookup[targetId.outerIdx][targetId.idx] !== `number`
+        typeof markdownLookup.codeItemsLookup[targetId.outerIdx][
+          targetId.idx
+        ] !== `number`
       )
         return null;
       const globalNth =
@@ -961,7 +1068,9 @@ export function getActiveTagData(
         classNamesPayload?.classes &&
         typeof selectedStyle === "string" &&
         selectedStyle in classNamesPayload.classes
-          ? (classNamesPayload.classes as Record<string, unknown[]>)[selectedStyle]
+          ? (classNamesPayload.classes as Record<string, unknown[]>)[
+              selectedStyle
+            ]
           : null;
       const [
         mobileVal,
@@ -991,7 +1100,9 @@ export function getActiveTagData(
         modalClassNamesPayload?.classes &&
         typeof selectedStyle === "string" &&
         selectedStyle in modalClassNamesPayload.classes
-          ? (modalClassNamesPayload.classes as Record<string, unknown>)[selectedStyle]
+          ? (modalClassNamesPayload.classes as Record<string, unknown>)[
+              selectedStyle
+            ]
           : null;
       const classesArray = Array.isArray(classes) ? classes : null;
       const [
@@ -1023,9 +1134,12 @@ export function getActiveTagData(
         Array.isArray(parentClassNamesPayload.classes) &&
         parentClassNamesPayload.classes[parentLayer] &&
         selectedStyle in parentClassNamesPayload.classes[parentLayer]
-          ? (parentClassNamesPayload.classes[parentLayer] as Record<string, unknown[]>)[
-              selectedStyle
-            ]
+          ? (
+              parentClassNamesPayload.classes[parentLayer] as Record<
+                string,
+                unknown[]
+              >
+            )[selectedStyle]
           : null;
       const [
         mobileVal,
@@ -1094,10 +1208,15 @@ export function convertMarkdownToHtml(markdown: string): string {
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.*?)\*/g, "<em>$1</em>")
     .replace(/\[\[(.*?)(?:\]\(([^)]+)\))?\]\]/g, (_, linkText, url) => {
-      const href = url || `generated-link-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+      const href =
+        url ||
+        `generated-link-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       return `<a data-href="${href}" class="pointer-events-none">${linkText}</a>`;
     })
-    .replace(/\[(.*?)\]\((.*?)\)/g, '<a data-href="$2" class="pointer-events-none">$1</a>');
+    .replace(
+      /\[(.*?)\]\((.*?)\)/g,
+      '<a data-href="$2" class="pointer-events-none">$1</a>'
+    );
 }
 
 export const htmlToMarkdown = (html: string): string => {
@@ -1106,7 +1225,7 @@ export const htmlToMarkdown = (html: string): string => {
 
   // Handle space spans
   const spaceSpans = tempDiv.querySelectorAll("span[data-space]");
-  spaceSpans.forEach((span) => {
+  spaceSpans.forEach(span => {
     const needNbspLeft = span.textContent !== span.textContent?.trimStart();
     const needNbspRight = span.textContent !== span.textContent?.trimEnd();
     const spanContent = span.innerHTML;
@@ -1183,7 +1302,7 @@ export function parseMarkdownSections(markdown: string): GeneratedCopy {
   }
 
   // Process H2 section and its paragraphs
-  const h2StartIndex = sections.findIndex((section) => section.startsWith("## "));
+  const h2StartIndex = sections.findIndex(section => section.startsWith("## "));
   if (h2StartIndex !== -1) {
     // Collect all content from H2 until the first H3
     const h3StartIndex = sections.findIndex(
@@ -1193,7 +1312,8 @@ export function parseMarkdownSections(markdown: string): GeneratedCopy {
     const h2EndIndex = h3StartIndex === -1 ? sections.length : h3StartIndex;
 
     // Join H2 section with its paragraphs
-    result.title = sections.slice(h2StartIndex, h2EndIndex).join("\n\n").trim() + "\n\n";
+    result.title =
+      sections.slice(h2StartIndex, h2EndIndex).join("\n\n").trim() + "\n\n";
 
     currentIndex = h3StartIndex;
   }
@@ -1206,7 +1326,8 @@ export function parseMarkdownSections(markdown: string): GeneratedCopy {
 
     // Get content from current H3 to next H3 or end
     const sectionEnd = nextH3Index === -1 ? sections.length : nextH3Index;
-    const sectionContent = sections.slice(currentIndex, sectionEnd).join("\n\n").trim() + "\n\n";
+    const sectionContent =
+      sections.slice(currentIndex, sectionEnd).join("\n\n").trim() + "\n\n";
 
     result.paragraphs.push(sectionContent);
 
