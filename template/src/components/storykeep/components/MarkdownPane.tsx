@@ -15,7 +15,7 @@ import type {
 import type { Nodes } from "hast";
 import { useStore } from "@nanostores/react";
 import { dragHandleStore, recordExitPane } from "../../../store/storykeep.ts";
-import { isNonZeroMagnitude, isPosInsideRect } from "@utils/math.ts";
+import { isNonZeroMagnitude, isPosInsideRect } from "@/utils/math.ts";
 
 interface Props {
   readonly: boolean;

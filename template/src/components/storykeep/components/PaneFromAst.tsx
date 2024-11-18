@@ -29,7 +29,6 @@ import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
 import { SignUp } from "../../../components/widgets/SignUp";
-import type { MouseEvent, ReactNode } from "react";
 import type {
   ButtonData,
   FileNode,
@@ -41,8 +40,8 @@ import type {
 import type { Element as HastElement } from "hast";
 import { useStore } from "@nanostores/react";
 import Draggable, { type ControlPosition } from "react-draggable";
-import { isPosInsideRect } from "@utils/math.ts";
-import { moveElements } from "@utils/storykeep.ts";
+import { isPosInsideRect } from "@/utils/math.ts";
+import { moveElements } from "@/utils/storykeep.ts";
 
 interface PaneFromAstProps {
   readonly: boolean;

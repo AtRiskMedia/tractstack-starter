@@ -15,8 +15,8 @@ import { allowTagInsert } from "../../../utils/compositor/markdownUtils";
 import { toolAddModeTitles } from "../../../constants";
 import { classNames } from "../../../utils/helpers";
 import type { MarkdownLookup, ToolAddMode } from "../../../types";
-import { isPosInsideRect } from "@utils/math.ts";
-import { insertElement } from "@utils/storykeep.ts";
+import { isPosInsideRect } from "@/utils/math.ts";
+import { insertElement } from "@/utils/storykeep.ts";
 
 interface InsertWrapperProps {
   fragmentId: string;

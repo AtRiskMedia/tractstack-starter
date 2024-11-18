@@ -63,8 +63,8 @@ import {
   insertElementIntoMarkdown,
   removeElementFromMarkdown,
   updateHistory,
-} from "@utils/compositor/markdownUtils.ts";
-import { generateMarkdownLookup } from "@utils/compositor/generateMarkdownLookup.ts";
+} from "@/utils/compositor/markdownUtils.ts";
+import { generateMarkdownLookup } from "@/utils/compositor/generateMarkdownLookup.ts";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { toHast } from "mdast-util-to-hast";
 import type { Root, Root as HastRoot, RootContent } from "hast";

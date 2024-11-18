@@ -27,8 +27,8 @@ import type {
 } from "../types";
 import { knownEnvSettings, PUBLIC_THEME, toolAddModes } from "../constants";
 import type { ControlPosition } from "react-draggable";
-import { createNodeId } from "@utils/helpers.ts";
 import type { Root } from "hast";
+import { createNodeId } from "@/utils/helpers.ts";
 
 export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
 
