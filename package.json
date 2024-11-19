@@ -15,8 +15,8 @@
     "test": "pnpm -r test",
     "tsc": "pnpm -r tsc",
     "tsc:check": "pnpm -r tsc --noEmit --pretty",
-      "postinstall": "husky",
-     "prepare:template": "tsx scripts/prepare-template.ts"
+    "postinstall": "husky",
+    "prepare:template": "tsx scripts/prepare-template.ts"
   },
   "devDependencies": {
     "eslint": "8.56.0",
@@ -28,8 +28,8 @@
     "prettier-plugin-tailwindcss": "0.6.8",
     "typescript": "5.6.3",
     "fs-extra": "^11.2.0",
-   "@types/fs-extra": "^11.0.4",
-   "tsx": "^4.7.1"
+    "@types/fs-extra": "^11.0.4",
+    "tsx": "^4.7.1"
   },
   "packageManager": "pnpm@9.12.3",
   "engines": {
