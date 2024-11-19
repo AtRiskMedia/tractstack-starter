@@ -78,10 +78,11 @@ export const toolAddModesIcons: Record<ToolAddMode, string> = {
   img: "image.svg",
   yt: "yt.svg",
   bunny: "bunny.svg",
-  identify: "signup.svg",
+  signup: "signup.svg",
+  identify: "",
   toggle: "",
   aside: "aside.svg",
-  belief: "belief.svg"
+  belief: ""
 }
 
 export const toolAddModeTitles: Record<ToolAddMode, string> = {

@@ -10,7 +10,6 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { SaveProcessModal } from "./components/SaveProcessModal";
 import ViewportSelector from "./components/ViewportSelector";
 import ToolModeSelector from "./components/ToolModeSelector";
-import ToolAddModeSelector from "./components/ToolAddModeSelector";
 import PaneTitle from "./fields/PaneTitle";
 import PaneSlug from "./fields/PaneSlug";
 import StoryFragmentTitle from "./fields/StoryFragmentTitle";
@@ -56,6 +55,7 @@ import type {
   StoryFragmentDatum,
   ContextPaneDatum,
 } from "../../types";
+import { AddElementsPanel } from "@/components/storykeep/components/AddElementsPanel.tsx";
 
 const processedAnalytics = (data: RawAnalytics): Analytics => {
   const result: Analytics = {};
@@ -122,7 +122,6 @@ export const StoryKeepHeader = memo(
     const viewport = $viewport.value;
     const viewportKey = $viewportKey.value;
     const { value: toolMode } = useStore(toolModeStore);
-    const { value: toolAddMode } = useStore(toolAddModeStore);
     const toolAddModeRef = useRef<HTMLSelectElement>(null);
     const $uncleanData = useStore(uncleanDataStore, { keys: [thisId] });
     const $paneInit = useStore(paneInit, { keys: [thisId] });
@@ -324,15 +323,15 @@ export const StoryKeepHeader = memo(
                 setToolMode={setToolMode}
                 isContext={isContext}
               />
-              {toolMode === `insert` ? (
-                <div className="ml-4">
-                  <ToolAddModeSelector
-                    ref={toolAddModeRef}
-                    toolAddMode={toolAddMode}
-                    setToolAddMode={setToolAddMode}
-                  />
-                </div>
-              ) : null}
+              {/*{toolMode === `insert` ? (*/}
+              {/*  <div className="ml-4">*/}
+              {/*    <ToolAddModeSelector*/}
+              {/*      ref={toolAddModeRef}*/}
+              {/*      toolAddMode={toolAddMode}*/}
+              {/*      setToolAddMode={setToolAddMode}*/}
+              {/*    />*/}
+              {/*  </div>*/}
+              {/*) : null}*/}
             </div>
             <ViewportSelector
               viewport={viewport}
@@ -496,6 +495,10 @@ export const StoryKeepHeader = memo(
                 </button>
               </>
             )}
+            {(toolMode === "styles" || toolMode === "insert") &&
+              <AddElementsPanel setToolAddMode={setToolAddMode}
+                                setToolMode={setToolMode}/>
+            }
           </div>
         </div>
       </div>
