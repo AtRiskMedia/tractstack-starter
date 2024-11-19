@@ -495,10 +495,7 @@ export const StoryKeepHeader = memo(
                 </button>
               </>
             )}
-            {(toolMode === "styles" || toolMode === "insert") &&
-              <AddElementsPanel setToolAddMode={setToolAddMode}
-                                setToolMode={setToolMode}/>
-            }
+            <AddElementsPanel setToolAddMode={setToolAddMode} setToolMode={setToolMode} />
           </div>
         </div>
       </div>
