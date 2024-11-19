@@ -69,7 +69,7 @@ const defaultSocialDesc =
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const gtagUrl =
-  typeof googleSiteVerification === `string`
+  typeof googleSiteVerification === `string` && googleSiteVerification.length > 1
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
