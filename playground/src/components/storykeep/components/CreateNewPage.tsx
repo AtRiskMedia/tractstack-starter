@@ -19,9 +19,10 @@ interface CreateNewPageProps {
   mode: "storyfragment" | "context";
   newId: string;
   tractStackId: string;
+  contentMapSlugs: string[];
 }
 
-const CreateNewPage = ({ newId, tractStackId, mode }: CreateNewPageProps) => {
+const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNewPageProps) => {
   const [selectedDesign, setSelectedDesign] = useState<PageDesign | null>(null);
   const [query, setQuery] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -101,7 +102,7 @@ const CreateNewPage = ({ newId, tractStackId, mode }: CreateNewPageProps) => {
 
   const handleEditThis = () => {
     if (selectedDesign) {
-      const success = initializeStores(newId, tractStackId, selectedDesign, mode);
+      const success = initializeStores(newId, tractStackId, selectedDesign, mode, contentMapSlugs);
       if (success) {
         creationStateStore.set({ id: newId, isInitialized: true });
         if (mode === "context") {

@@ -141,7 +141,7 @@ export const StoryFragment = (props: {
       ![`create`, ``].includes($storyFragmentSlug[thisId]?.current)
     ) {
       paneIds.forEach((paneId: string) => {
-        const newTitle = `${$storyFragmentTitle[thisId].current.substring(0.2)} - ${getSubstring($paneSlug[paneId].current)}`;
+        const newTitle = `${$storyFragmentTitle[thisId].current.substring(0, 20)} - ${getSubstring($paneSlug[paneId].current)}`;
         const newSlug = findUniqueSuffix(
           `${$storyFragmentSlug[thisId].current.substring(0, 20)}-${getSubstring($paneSlug[paneId].current)}`,
           usedSlugs

@@ -488,6 +488,19 @@ const stopWords = new Set([
   "once",
 ]);
 
+export function findUniqueSlug(slug: string, existingSlugs: string[]): string {
+  if (!existingSlugs.includes(slug)) {
+    return slug;
+  }
+  let counter = 1;
+  let newSlug = `${slug}-${counter}`;
+  while (existingSlugs.includes(newSlug)) {
+    counter++;
+    newSlug = `${slug}-${counter}`;
+  }
+  return newSlug;
+}
+
 export function cleanString(s: string): string {
   if (!s) return s;
   s = s.toLowerCase();
