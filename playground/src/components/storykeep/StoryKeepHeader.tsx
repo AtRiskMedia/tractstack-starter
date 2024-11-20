@@ -408,7 +408,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo && hasTurso ? (
+              {user.isOpenDemo ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"
