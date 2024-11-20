@@ -7,8 +7,8 @@ import { ContextPane } from "../../../components/storykeep/ContextPane";
 import { StoryKeepContextStore } from "../../../components/storykeep/StoryKeepContextStore";
 import { StoryKeepHeader } from "../../../components/storykeep/StoryKeepHeader";
 import { getSetupChecks } from "../../../utils/setupChecks";
-import { isTursoReady, isContentReady } from "../../../api/turso";
-import type { AuthStatus } from "../../../types";
+import { isTursoReady, isContentReady, getContentMap } from "../../../api/turso";
+import type { AuthStatus, ContentMap } from "../../../types";
 
 const user = Astro.locals.user as AuthStatus;
 
@@ -33,6 +33,9 @@ const files = cleanTursoFileDatum(filesRaw);
 
 const contextPane = await getContextPaneBySlug(slug);
 if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astro.redirect("/404");
+
+const contentMap: ContentMap[] = await getContentMap();
+const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 ---
 
 <StoryKeep
@@ -60,6 +63,7 @@ if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astr
         user={user}
         originalData={contextPane}
         hasContentReady={true}
+        contentMapSlugs={contentMapSlugs}
       />
     </header>
 

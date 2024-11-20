@@ -20,6 +20,7 @@ interface CreateNewPageProps {
   mode: "storyfragment" | "context";
   newId: string;
   tractStackId: string;
+  contentMapSlugs: string[];
 }
 
 const pageTypes = [
@@ -33,7 +34,7 @@ interface PageType {
   name: string;
 }
 
-const CreateNewPage = ({ newId, tractStackId, mode }: CreateNewPageProps) => {
+const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNewPageProps) => {
   const [stage, setStage] = useState<GenerateStage>("GENERATING_COPY");
   const $theme = useStore(themeStore);
   const [missionInput, setMissionInput] = useState("");
@@ -186,7 +187,7 @@ const CreateNewPage = ({ newId, tractStackId, mode }: CreateNewPageProps) => {
   const handleLoadDesign = useCallback(
     async (userDesign: PageDesign): Promise<boolean> => {
       if (!userDesign) return false;
-      const success = initializeStores(newId, tractStackId, userDesign, mode);
+      const success = initializeStores(newId, tractStackId, userDesign, mode, contentMapSlugs);
       if (success) creationStateStore.set({ id: newId, isInitialized: true });
       return success;
     },
