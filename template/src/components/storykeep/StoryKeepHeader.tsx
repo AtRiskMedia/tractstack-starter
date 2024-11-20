@@ -41,7 +41,6 @@ import {
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
 import { classNames, cleanString, findUniqueSlug } from "../../utils/helpers";
-import { getSetupChecks } from "../../utils/setupChecks";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import type {
   AuthStatus,
@@ -96,7 +95,6 @@ export const StoryKeepHeader = memo(
     hasContentReady: boolean;
     contentMapSlugs: string[];
   }) => {
-    const { hasTurso } = getSetupChecks();
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
     const [isSaving, setIsSaving] = useState(false);
