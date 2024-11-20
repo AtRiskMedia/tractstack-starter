@@ -16,7 +16,8 @@
     "tsc": "pnpm -r tsc",
     "tsc:check": "pnpm -r tsc --noEmit --pretty",
     "postinstall": "husky",
-    "prepare:template": "tsx scripts/prepare-template.ts"
+    "prepare:template": "tsx scripts/prepare-template.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
     "eslint": "8.56.0",
