@@ -110,7 +110,6 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         handleScroll,
         scrollToTop,
         debounce,
-        shouldRunInit,
       } from "../utils/helpers";
       import { initializeBrandColors } from "../utils/brand-init";
       import { init } from "../utils/init";
@@ -128,7 +127,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
       const debouncedHandleScroll = debounce(handleScroll, 50);
 
       document.addEventListener("astro:page-load", () => {
-        if (shouldRunInit()) init();
+        init();
         setupEventHandlers();
         handleScroll();
         initializeBrandColors();
