@@ -150,16 +150,22 @@ const EMPTY_DRAG_HANDLE: DragHandle = {
   dragShape: null,
 };
 
-export const resetDragStore = () => dragHandleStore.set(EMPTY_DRAG_HANDLE);
+export const resetDragStore = () => {
+  console.log("reset drag store");
+  dragHandleStore.set(EMPTY_DRAG_HANDLE);
+}
 
 export const setDragShape = (shape: DragShape|null) => {
   dragHandleStore.set({
     ...dragHandleStore.get(),
     dragShape: shape
   });
+  console.log("drag shape: " + JSON.stringify(shape));
 }
 
 export const dropDraggingElement = () => {
+  console.log("drop shape.");
+
   const existingEl = dragHandleStore.get()?.hoverElement || null;
   dragHandleStore.set({
     ...dragHandleStore.get(),
@@ -170,6 +176,8 @@ export const dropDraggingElement = () => {
 
 export const recordExitPane = (paneId: string) => {
   if (!dragHandleStore.get().affectedPanes.has(paneId)) return;
+
+  console.log("exit pane.");
 
   const panes = new Set<string>(dragHandleStore.get().affectedPanes);
   panes.delete(paneId);

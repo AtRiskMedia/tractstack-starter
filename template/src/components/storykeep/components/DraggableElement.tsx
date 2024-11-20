@@ -11,7 +11,7 @@ import type { ToolAddMode } from "@/types.ts";
 
 export type DraggableElementProps = {
   children?: React.ReactElement;
-  el: ToolAddMode;
+  el?: ToolAddMode;
   onClicked?: (mode: ToolAddMode) => void;
 };
 
@@ -20,7 +20,7 @@ export const DraggableElement = memo((props: DraggableElementProps) => {
   const dragging = useRef<boolean>(false);
 
   const handleClick = () => {
-    if (props.onClicked) {
+    if (props.onClicked && props.el) {
       props.onClicked(props.el);
     }
   };
