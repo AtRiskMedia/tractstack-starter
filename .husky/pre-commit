@@ -1,1 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged first (from your package.json)
+pnpm lint-staged
+
+# Run template preparation script
 pnpm prepare:template
