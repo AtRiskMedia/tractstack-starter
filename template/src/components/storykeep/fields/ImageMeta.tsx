@@ -197,9 +197,9 @@ const ImageMeta = (props: {
   const processImage = async (file: File) => {
     setIsProcessing(true);
     try {
-      if (file.type === 'image/svg+xml') {
-      return file;
-    }
+      if (file.type === "image/svg+xml") {
+        return file;
+      }
       setProcessingStep("Upscaling image...");
       const upscaledFile = await upscaleImage(file);
 
