@@ -1502,7 +1502,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
@@ -1903,7 +1903,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
@@ -2275,7 +2275,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
