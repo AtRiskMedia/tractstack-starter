@@ -1137,7 +1137,7 @@ export function moveElements(
       );
     }
   } else {
-    if (isElementInList(curFieldMdast, el1OuterIdx, el1Idx)) {
+    if (isElementInList(curFieldMdast, el1OuterIdx, el1Idx) && isElementInList(curFieldMdast, el2OuterIdx, el2Idx)) {
       handleListElementMovementWithinTheSamePanel(
         curFieldMdast,
         el1OuterIdx,
