@@ -174,7 +174,10 @@ function initializePaneStores(
     paneId,
     createFieldWithHistory(paneDesign.panePayload.heightRatioTablet)
   );
-  paneIsHiddenPane.setKey(paneId, createFieldWithHistory(paneDesign?.panePayload?.isHiddenPane ?? false));
+  paneIsHiddenPane.setKey(
+    paneId,
+    createFieldWithHistory(paneDesign?.panePayload?.hiddenPane || false)
+  );
   paneHasOverflowHidden.setKey(paneId, createFieldWithHistory(false));
   paneHasMaxHScreen.setKey(paneId, createFieldWithHistory(false));
 

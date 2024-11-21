@@ -62,6 +62,7 @@ const preparePreviewPane = (design: PaneDesign) => {
     changed: null,
     markdown: markdown || false,
     optionsPayload: {
+      hiddenPane: design.panePayload.hiddenPane || false,
       paneFragmentsPayload: paneFragments,
       ...(design?.panePayload?.codeHook
         ? {
@@ -70,7 +71,6 @@ const preparePreviewPane = (design: PaneDesign) => {
         : {}),
     },
     isContextPane: false,
-    isHiddenPane: design.panePayload.isHiddenPane || false,
     heightOffsetDesktop: design.panePayload.heightOffsetDesktop || 0,
     heightOffsetMobile: design.panePayload.heightOffsetMobile || 0,
     heightOffsetTablet: design.panePayload.heightOffsetTablet || 0,

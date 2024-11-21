@@ -213,6 +213,7 @@ export interface PaneDesign {
     heightRatioMobile: string;
     bgColour: string | boolean;
     codeHook: string | null;
+    hiddenPane?: boolean;
   };
   files: FileDatum[];
   fragments: (PaneDesignBgPane | PaneDesignMarkdown | BgColourDatum)[];
