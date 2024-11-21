@@ -272,15 +272,15 @@ export const PaneInsert = (props: {
       },
       {
         store: paneIsHiddenPane,
-        value: false,
+        value: paneData.isHiddenPane,
       },
       {
         store: paneHasOverflowHidden,
-        value: false,
+        value: paneData.hasOverflowHidden,
       },
       {
         store: paneHasMaxHScreen,
-        value: false,
+        value: paneData.hasMaxHScreen,
       },
       {
         store: paneCodeHook,

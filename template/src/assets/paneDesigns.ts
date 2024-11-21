@@ -3114,6 +3114,7 @@ export const paneDesigns = (
     orientation: `above`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3221,6 +3222,7 @@ export const paneDesigns = (
     orientation: `below`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3328,6 +3330,7 @@ export const paneDesigns = (
     orientation: `below`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3435,6 +3438,7 @@ export const paneDesigns = (
     orientation: `below`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3542,6 +3546,7 @@ export const paneDesigns = (
     orientation: `below`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3649,6 +3654,7 @@ export const paneDesigns = (
     orientation: `above`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3756,6 +3762,7 @@ export const paneDesigns = (
     orientation: `above`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3863,6 +3870,7 @@ export const paneDesigns = (
     orientation: `above`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
@@ -3970,6 +3978,7 @@ export const paneDesigns = (
     orientation: `above`,
     type: `break`,
     panePayload: {
+      isHiddenPane: true,
       heightOffsetDesktop: 0,
       heightOffsetTablet: 0,
       heightOffsetMobile: 0,
