@@ -13,7 +13,7 @@ import {
 } from "../../../store/storykeep";
 import { allowTagInsert } from "../../../utils/compositor/markdownUtils";
 import { toolAddModeTitles } from "../../../constants";
-import { classNames } from "../../../utils/helpers";
+import { classNames, getFinalLocation } from "../../../utils/helpers";
 import type { MarkdownLookup, ToolAddMode } from "../../../types";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { insertElement } from "@/utils/storykeep.ts";
@@ -72,7 +72,7 @@ const InsertWrapper = ({
           setDragHoverInfo({
             ...getNodeData(),
             markdownLookup,
-            location: loc === Location.AFTER ? "after" : "before",
+            location: getFinalLocation(loc, allowTag),
           });
         }
       }
@@ -86,7 +86,9 @@ const InsertWrapper = ({
         console.log(
           `Drop active element: ${JSON.stringify(dragState.dropState)}`
         );
-        handleInsert(dragState.dropState.location);
+        if(dragState.dropState.location !== "none") {
+          handleInsert(dragState.dropState.location as "before"|"after");
+        }
       }
     }
   }, [dragState]);

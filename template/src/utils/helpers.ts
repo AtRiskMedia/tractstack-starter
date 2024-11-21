@@ -8,9 +8,10 @@ import type {
   GraphRelationshipDatum, MarkdownLookup,
   TursoFileNode,
 } from "../types";
-import type { DragNode } from "../store/storykeep.ts";
+import { type DragNode, Location } from "../store/storykeep.ts";
 import { toHast } from "mdast-util-to-hast";
 import type { Element, RootContent, Root as HastRoot } from "hast";
+import { boolean } from "zod";
 
 export const getComputedColor = (color: string): string => {
   if (color === `#` || typeof color === `undefined`) return `#ffffff`;
@@ -734,4 +735,13 @@ export function mergeObjectKeys(...objects: Record<string, any>[]): string[] {
   }
 
   return Array.from(keysSet);
+}
+
+export const getFinalLocation = (loc: Location, allowTag: {before: boolean, after: boolean}): "before"|"after"|"none" => {
+  if(loc === Location.BEFORE && allowTag.before) {
+    return "before";
+  } else if(loc === Location.AFTER && allowTag.after) {
+    return "after";
+  }
+  return "none";
 }

@@ -12,6 +12,8 @@ import { moveElements } from "@/utils/storykeep.ts";
 import type { MarkdownLookup } from "@/types.ts";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { useStore } from "@nanostores/react";
+import { getFinalLocation } from "@/utils/helpers.ts";
+import { allowTagInsert } from "@/utils/compositor/markdownUtils.ts";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;
@@ -32,6 +34,16 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const dragState = useStore(dragHandleStore);
   const { fragmentId, paneId, idx, outerIdx, markdownLookup } = props;
 
+  const field = paneFragmentMarkdown.get()[fragmentId].current;
+  const outerChildlren = field.markdown.htmlAst.children[outerIdx];
+  // @ts-expect-error has children
+  let tagName = outerChildlren.tagName;
+  if(idx !== null) {
+    // @ts-expect-error has children
+    tagName = outerChildlren.children[idx].tagName;
+  }
+  const allowTag = {before: true, after: true}; //allowTagInsert(tagName, outerIdx, idx, markdownLookup);
+
   const getNodeData = (): DragNode => {
     return {fragmentId, paneId, idx, outerIdx} as DragNode;
   };
@@ -49,7 +61,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           setDragHoverInfo({
             ...getNodeData(),
             markdownLookup,
-            location: loc === Location.AFTER ? "after" : "before",
+            location: getFinalLocation(loc, allowTag),
           });
         }
       }

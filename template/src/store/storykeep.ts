@@ -120,7 +120,7 @@ export interface DragNode {
 }
 
 export interface DragState extends DragNode {
-  location: "before" | "after";
+  location: "before" | "after" | "none";
   markdownLookup: MarkdownLookup;
 }
 
