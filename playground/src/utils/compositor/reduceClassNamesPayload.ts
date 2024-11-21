@@ -1,4 +1,4 @@
-import { tailwindClasses } from "../../assets/tailwindClasses";
+import { tailwindClasses, tailwindCoreLayoutClasses } from "../../assets/tailwindClasses";
 import type {
   TupleValue,
   ClassNamesPayloadDatum,
@@ -8,6 +8,7 @@ import type {
 } from "../../types";
 
 const tailwindModifier = [``, `md:`, `xl:`];
+const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];
 
 const processParentClasses = (
   parentClasses: ClassNamesPayloadDatum["parent"]["classes"]
@@ -32,20 +33,28 @@ const processParentClasses = (
   return [all, mobile, tablet, desktop];
 };
 
-const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number): string => {
+const reduceClassName = (
+  selector: string,
+  v: TupleValue,
+  viewportIndex: number,
+  isResponsive: boolean = true
+): string => {
   if (!selector) return "";
-
-  const modifier = viewportIndex === -1 ? "" : tailwindModifier[viewportIndex];
+  const modifier =
+    viewportIndex === -1
+      ? isResponsive && tailwindCoreLayoutClasses.includes(selector)
+        ? tailwindCoreModifier[0]
+        : ""
+      : tailwindModifier[viewportIndex];
   const { className, prefix, useKeyAsClass } = getTailwindClassInfo(selector);
   const thisSelector = useKeyAsClass ? selector : className;
-
   const applyPrefix = (value: string) => {
     // If the value already starts with the prefix, don't add it again
     return value.startsWith(prefix) ? value : `${prefix}${value}`;
   };
 
   if (typeof v === "boolean")
-    console.log(`DOES THIS ACTUALLY EXIST NOW?`, selector, v, viewportIndex);
+    console.log(`DEPRECATED STYLE FOUND in classNamesPayload`, selector, v, viewportIndex);
   if (v === false || v === null || v === undefined) return "";
   if (typeof v === "boolean") return `${modifier}${applyPrefix(v ? thisSelector : "")}`;
   if (v === "true") return `${modifier}${applyPrefix(thisSelector)}`;
@@ -87,7 +96,7 @@ const processClassesForViewports = (
             const value = overrideTuple
               ? processTupleForViewport(overrideTuple, viewportIndex)
               : processTupleForViewport(tuple, viewportIndex);
-            return reduceClassName(selector, value, -1); // Change viewportIndex to -1
+            return reduceClassName(selector, value, -1, viewportIndex === -1); // isResponsive is true only when building combined classes
           })
           .filter(Boolean)
           .join(" ")

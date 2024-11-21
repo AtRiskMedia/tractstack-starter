@@ -29,6 +29,8 @@ import type {
 } from "../../../types";
 import type { Element as HastElement } from "hast";
 
+// const whitelist_please = `xs:flex-nowrap xl:flex-wrap`
+
 interface PaneFromAstProps {
   readonly: boolean;
   payload: {
