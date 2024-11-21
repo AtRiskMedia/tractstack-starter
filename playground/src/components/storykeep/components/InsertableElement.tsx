@@ -1,13 +1,13 @@
 import { memo } from "react";
 import {
-  DraggableElement,
+  InsertDraggableElement,
   type DraggableElementProps,
-} from "@/components/storykeep/components/DraggableElement.tsx";
+} from "@/components/storykeep/components/InsertDraggableElement.tsx";
 import { toolAddModesIcons } from "@/constants.ts";
 
 export const InsertableElement = memo((props: DraggableElementProps) => {
   return (
-    <DraggableElement el={props.el} onClicked={props.onClicked}>
+    <InsertDraggableElement el={props.el} onClicked={props.onClicked}>
       <button className="mx-1">
         <img
           draggable={false}
@@ -16,6 +16,6 @@ export const InsertableElement = memo((props: DraggableElementProps) => {
           src={`/editor/icons/${toolAddModesIcons[props.el]}`}
         />
       </button>
-    </DraggableElement>
+    </InsertDraggableElement>
   );
 });

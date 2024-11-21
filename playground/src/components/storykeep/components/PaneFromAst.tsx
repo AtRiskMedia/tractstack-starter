@@ -1,5 +1,4 @@
-import type { MouseEvent, ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import {
   dragHandleStore,
   type DragNode,
@@ -7,10 +6,12 @@ import {
   editModeStore,
   lastInteractedPaneStore,
   lastInteractedTypeStore,
-  Location, paneFragmentMarkdown,
+  Location,
+  paneFragmentMarkdown,
   resetDragStore,
   setDragHoverInfo,
-  setDragPosition, setDragShape,
+  setDragPosition,
+  setDragShape,
   setGhostSize,
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
@@ -18,9 +19,7 @@ import { preParseAction } from "../../../utils/concierge/preParseAction";
 import { AstToButton } from "../../../components/panes/AstToButton";
 import EditableContent from "./EditableContent";
 import { toHtml } from "hast-util-to-html";
-import {
-  getGlobalNth,
-} from "../../../utils/compositor/markdownUtils";
+import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
 import EraserWrapper from "./EraserWrapper";
 import InsertWrapper from "./InsertWrapper";
 import { wrapWithStylesIndicator } from "./StylesWrapper";
@@ -29,19 +28,13 @@ import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
 import { SignUp } from "../../../components/widgets/SignUp";
-import type {
-  ButtonData,
-  FileNode,
-  MarkdownLookup,
-  MarkdownDatum,
-  ToolAddMode,
-  ToolMode,
-} from "../../../types";
+import type { ButtonData, FileNode, MarkdownDatum, MarkdownLookup, ToolAddMode, ToolMode } from "../../../types";
 import type { Element as HastElement } from "hast";
 import { useStore } from "@nanostores/react";
 import Draggable, { type ControlPosition } from "react-draggable";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { moveElements } from "@/utils/storykeep.ts";
+import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
 
 interface PaneFromAstProps {
   readonly: boolean;
@@ -129,8 +122,6 @@ const EditableOuterWrapper = ({
       }
     }
   }, [dragState]);
-
-  console.log(dragHandleStore.get());
 
   useEffect(() => {
     const handleMouseMove: EventListener = (event) => {
@@ -588,28 +579,6 @@ function buildComponentFromAst(
       ? thisHookValuesRaw[2]
       : "";
 
-  const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
-  const dragging = useRef<boolean>(false);
-
-  useEffect(() => {
-    const handleMouseMove: EventListener = (event) => {
-      const mouseEvent = event as unknown as MouseEvent; // Type assertion to MouseEvent
-      const x = mouseEvent.clientX + window.scrollX;
-      const y = mouseEvent.clientY + window.scrollY;
-      if (dragging.current) {
-        setDragPosition({ x, y });
-      }
-    };
-
-    if(!skipDragNDrop) {
-      document.addEventListener("mousemove", handleMouseMove);
-    }
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
-
-
   // if editable as text
   const renderContent = useCallback(() => {
     const processNode = (node: HastElement): HastElement => {
@@ -683,54 +652,29 @@ function buildComponentFromAst(
             toolMode={toolMode}
             toolAddMode={toolAddMode}
             queueUpdate={queueUpdate}
-            skipDragNDrop={true}
+            skipDragNDrop={isWidget}
           />
         ))}
       </TagComponent>
     );
 
     if (noOverlay || [`ol`, `ul`, `strong`, `em`].includes(Tag)) {
-      return (
-        <Draggable
-          defaultPosition={{ x: dragPos.x, y: dragPos.y }}
-          position={dragPos}
-          onStart={() => {
-            dragging.current = true;
-            resetDragStore();
-            const root = paneFragmentMarkdown.get()[markdownFragmentId].current.markdown.htmlAst;
-            setDragShape({ root, fragmentId: markdownFragmentId, paneId, idx, outerIdx });
-            setGhostSize(100, 50);
-          }}
-          onStop={() => {
-            dragging.current = false;
-            if (dragHandleStore.get().affectedFragments.size > 0) {
-              const dragEl = dragHandleStore.get().dragShape;
-              if (dragEl) {
-                const hoverEl = dragHandleStore.get().hoverElement;
-                if (hoverEl) {
-                  moveElements(
-                    markdownLookup,
-                    hoverEl.markdownLookup,
-                    dragEl.fragmentId,
-                    dragEl.outerIdx,
-                    dragEl.paneId,
-                    dragEl.idx,
-                    hoverEl.fragmentId,
-                    hoverEl.outerIdx,
-                    hoverEl.paneId,
-                    hoverEl.idx
-                  );
-                }
-              }
-              dropDraggingElement();
-            }
-            setDragPos({ x: 0, y: 0 });
-            resetDragStore();
-          }}
-        >
-          {child}
-        </Draggable>
-      );
+      if (isWidget) {
+        return (
+          <MoveDraggableElement
+            skipDragNDrop={skipDragNDrop}
+            fragmentId={markdownFragmentId}
+            paneId={paneId}
+            idx={idx}
+            outerIdx={outerIdx}
+            markdownLookup={markdownLookup}
+          >
+            {child}
+          </MoveDraggableElement>
+        );
+      } else {
+        return child;
+      }
     }
     if (showOverlay && [`li`].includes(Tag)) {
       // is this a blockquote (not currently implemented)

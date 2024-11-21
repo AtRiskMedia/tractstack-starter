@@ -7,7 +7,7 @@ import type {
   GraphNode,
   GraphNodeDatum,
   GraphNodes,
-  GraphRelationshipDatum,
+  GraphRelationshipDatum, MarkdownLookup,
   TursoFileNode,
 } from "../types";
 import type { DragNode } from "../store/storykeep.ts";

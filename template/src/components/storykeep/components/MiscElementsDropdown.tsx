@@ -3,7 +3,7 @@ import type { ToolAddMode } from "@/types.ts";
 import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants.ts";
 import { Menu, Transition } from "@headlessui/react";
 import ChevronDownIcon from "@heroicons/react/20/solid/ChevronDownIcon";
-import { DraggableElement } from "@/components/storykeep/components/DraggableElement.tsx";
+import { InsertDraggableElement } from "@/components/storykeep/components/InsertDraggableElement.tsx";
 
 export type MiscElementsDropdownProps = {
   onClickedOption: (mode: ToolAddMode) => void;
@@ -44,9 +44,9 @@ export const MiscElementsDropdown = memo((props: MiscElementsDropdownProps) => {
                     active ? "bg-violet-500 text-white" : "text-gray-900"
                   } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
                 >
-                  <DraggableElement el={mode} onClicked={props.onClickedOption}>
+                  <InsertDraggableElement el={mode} onClicked={props.onClickedOption}>
                     <span className="w-full">{toolAddModeTitles[mode]}</span>
-                  </DraggableElement>
+                  </InsertDraggableElement>
                 </button>
               )}
             </Menu.Item>

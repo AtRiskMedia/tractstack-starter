@@ -15,7 +15,7 @@ export type DraggableElementProps = {
   onClicked?: (mode: ToolAddMode) => void;
 };
 
-export const DraggableElement = memo((props: DraggableElementProps) => {
+export const InsertDraggableElement = memo((props: DraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
   const dragging = useRef<boolean>(false);
 
