@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, memo } from "react";
+import { useState, useEffect, useCallback, useRef, memo, type ReactElement } from "react";
 import { useStore } from "@nanostores/react";
 import { convertMarkdownToHtml, htmlToMarkdown } from "../../../utils/compositor/markdownUtils";
 import {
@@ -14,9 +14,10 @@ import {
 } from "../../../utils/compositor/markdownUtils";
 import { useStoryKeepUtils } from "../../../utils/storykeep";
 import { generateMarkdownLookup } from "../../../utils/compositor/generateMarkdownLookup";
-import type { ButtonData, ClassNamesPayloadDatumValue } from "../../../types";
+import type { ButtonData, ClassNamesPayloadDatumValue, MarkdownLookup } from "../../../types";
 import type { KeyboardEvent, ClipboardEvent } from "react";
 import type { Root } from "hast";
+import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
 
 interface EditableContentProps {
   content: string;
@@ -27,6 +28,9 @@ interface EditableContentProps {
   outerIdx: number;
   idx: number | null;
   queueUpdate: (id: string, updateFn: () => void) => void;
+  markdownLookup: MarkdownLookup;
+  skipDragNDrop: boolean;
+  id: string;
 }
 
 const EditableContent = ({
@@ -38,6 +42,9 @@ const EditableContent = ({
   outerIdx,
   idx,
   queueUpdate,
+  markdownLookup,
+  skipDragNDrop,
+  id,
 }: EditableContentProps) => {
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const [internalContent, setInternalContent] = useState(content);
@@ -236,7 +243,7 @@ const EditableContent = ({
     setInternalContent(processContent(content));
   }, [content, processContent]);
 
-  return (
+  const drawContent = (): ReactElement => (
     <div
       ref={contentEditableRef}
       contentEditable={true}
@@ -250,6 +257,22 @@ const EditableContent = ({
       aria-multiline="true"
       aria-label={`Editable ${tag} content`}
     />
+  );
+
+  return (skipDragNDrop ?
+    drawContent() :
+    <MoveDraggableElement
+      skipDragNDrop={skipDragNDrop}
+      fragmentId={markdownFragmentId}
+      paneId={paneId}
+      idx={idx}
+      id={id}
+      outerIdx={outerIdx}
+      markdownLookup={markdownLookup}
+      self={contentEditableRef}
+    >
+      {drawContent()}
+    </MoveDraggableElement>
   );
 };
 

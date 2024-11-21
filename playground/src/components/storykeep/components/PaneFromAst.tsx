@@ -4,7 +4,6 @@ import {
   editModeStore,
   lastInteractedPaneStore,
   lastInteractedTypeStore,
-  Location,
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
@@ -435,16 +434,19 @@ function buildComponentFromAst(
     const content = renderContent();
 
     return (
-      <EditableContent
-        content={content}
-        tag={Tag}
-        paneId={paneId}
-        markdownFragmentId={markdownFragmentId}
-        classes={injectClassNames}
-        outerIdx={outerIdx}
-        idx={idx}
-        queueUpdate={queueUpdate}
-      />
+        <EditableContent
+          content={content}
+          tag={Tag}
+          paneId={paneId}
+          markdownFragmentId={markdownFragmentId}
+          classes={injectClassNames}
+          outerIdx={outerIdx}
+          idx={idx}
+          queueUpdate={queueUpdate}
+          markdownLookup={markdownLookup}
+          skipDragNDrop={skipDragNDrop}
+          id={thisId}
+        />
     );
   }
 
