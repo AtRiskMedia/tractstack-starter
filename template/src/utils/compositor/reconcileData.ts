@@ -44,7 +44,7 @@ import type {
   MarkdownPaneDatum,
 } from "../../types";
 
-const isImageDataUrl = (str: string) => /^data:image\/(jpeg|jpg|png|gif|webp);base64,/.test(str);
+const isImageDataUrl = (str: string) => /^data:image\/(jpeg|jpg|png|gif|webp|svg);base64,/.test(str);
 
 function formatDateForUrl(date: Date): string {
   const year = date.getFullYear();
@@ -674,7 +674,8 @@ function reconcileFiles(
               file.filename,
               url,
               altText || file.altDescription || null,
-              isPreview ? false : true, // Set src_set to false for preview mode base64 images
+              // Set src_set to false for preview mode base64 images
+              isPreview ? false : !file.filename.endsWith('.svg'),
             ],
           });
 

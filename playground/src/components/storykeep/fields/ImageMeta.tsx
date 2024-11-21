@@ -197,6 +197,9 @@ const ImageMeta = (props: {
   const processImage = async (file: File) => {
     setIsProcessing(true);
     try {
+      if (file.type === 'image/svg+xml') {
+      return file;
+    }
       setProcessingStep("Upscaling image...");
       const upscaledFile = await upscaleImage(file);
 
@@ -235,7 +238,7 @@ const ImageMeta = (props: {
           altDescription: "Please provide a description of this image",
           src: base64,
           optimizedSrc: base64,
-          srcSet: true,
+          srcSet: fileExtension !== `svg`,
           paneId,
           markdown: true,
         };
@@ -313,7 +316,7 @@ const ImageMeta = (props: {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept=".jpg, .jpeg, .png, .webp"
+        accept=".jpg, .jpeg, .png, .webp, .svg"
         style={{ display: "none" }}
       />
 
