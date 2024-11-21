@@ -86,6 +86,7 @@ export const StoryKeepHeader = memo(
     originalData,
     hasContentReady,
     contentMapSlugs,
+    hasTurso,
   }: {
     id: string;
     slug: string;
@@ -94,6 +95,7 @@ export const StoryKeepHeader = memo(
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
     hasContentReady: boolean;
     contentMapSlugs: string[];
+    hasTurso: boolean;
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
@@ -406,7 +408,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo ? (
+              {user.isOpenDemo || !hasTurso ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"

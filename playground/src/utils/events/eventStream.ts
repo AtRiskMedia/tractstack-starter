@@ -27,7 +27,7 @@ export function eventStream() {
 
   if (!timeoutId && hasConcierge) {
     timeoutId = setTimeout(init, CONCIERGE_SYNC_INTERVAL);
-  } else console.log(`skipping events; not concierge installation found`);
+  } else console.log(`skipping events; concierge installation not found`);
 
   return {
     stop: () => {

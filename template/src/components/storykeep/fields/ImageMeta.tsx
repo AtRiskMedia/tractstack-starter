@@ -168,7 +168,7 @@ const ImageMeta = (props: {
             resolve(new File([blob], file.name, { type: file.type }));
           },
           file.type,
-          0.7 // Quality parameter for JPEG compression
+          0.7
         );
       };
       img.onerror = () => reject(new Error("Failed to load image"));
@@ -217,6 +217,7 @@ const ImageMeta = (props: {
     const file = event.target.files?.[0];
     if (file) {
       setProcessingStep("Starting image processing...");
+
       const processedFile = await processImage(file);
       const reader = new FileReader();
       reader.onload = (e) => {
