@@ -29,7 +29,7 @@ interface EditableContentProps {
   idx: number | null;
   queueUpdate: (id: string, updateFn: () => void) => void;
   markdownLookup: MarkdownLookup;
-  skipDragNDrop: boolean;
+  ignoreDragNDrop: boolean;
   id: string;
 }
 
@@ -43,7 +43,7 @@ const EditableContent = ({
   idx,
   queueUpdate,
   markdownLookup,
-  skipDragNDrop,
+  ignoreDragNDrop,
   id,
 }: EditableContentProps) => {
   const contentEditableRef = useRef<HTMLDivElement>(null);
@@ -259,10 +259,10 @@ const EditableContent = ({
     />
   );
 
-  return (skipDragNDrop ?
+  return (ignoreDragNDrop ?
     drawContent() :
     <MoveDraggableElement
-      skipDragNDrop={skipDragNDrop}
+      ignoreDragNDrop={ignoreDragNDrop}
       fragmentId={markdownFragmentId}
       paneId={paneId}
       idx={idx}

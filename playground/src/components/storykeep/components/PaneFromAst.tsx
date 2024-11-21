@@ -45,7 +45,7 @@ interface PaneFromAstProps {
   queueUpdate: (id: string, updateFn: () => void) => void;
   toolMode: ToolMode;
   toolAddMode: ToolAddMode;
-  skipDragNDrop?: boolean;
+  ignoreDragNDrop?: boolean;
 }
 
 const EditableOuterWrapper = ({
@@ -58,7 +58,7 @@ const EditableOuterWrapper = ({
   idx,
   outerIdx,
   markdownLookup,
-  skipDragNDrop,
+  ignoreDragNDrop,
 }: {
   tooltip: string;
   onClick: (event: MouseEvent<HTMLDivElement>) => void;
@@ -69,7 +69,7 @@ const EditableOuterWrapper = ({
   idx: number | null;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
-  skipDragNDrop: boolean;
+  ignoreDragNDrop: boolean;
 }) => {
   const self = useRef<HTMLDivElement>(null);
 
@@ -85,11 +85,11 @@ const EditableOuterWrapper = ({
     </div>
   );
 
-  return skipDragNDrop ? (
+  return ignoreDragNDrop ? (
     drawContent()
   ) : (
     <MoveDraggableElement
-      skipDragNDrop={skipDragNDrop}
+      ignoreDragNDrop={ignoreDragNDrop}
       fragmentId={fragmentId}
       paneId={paneId}
       idx={idx}
@@ -135,7 +135,7 @@ const EditableInnerElementWrapper = ({
   idx,
   outerIdx,
   markdownLookup,
-  skipDragNDrop,
+  ignoreDragNDrop,
 }: {
   tooltip: string;
   onClick: (event: MouseEvent<HTMLDivElement>) => void;
@@ -146,7 +146,7 @@ const EditableInnerElementWrapper = ({
   idx: number | null;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
-  skipDragNDrop: boolean;
+  ignoreDragNDrop: boolean;
 }) => {
   const self = useRef<HTMLDivElement>(null);
 
@@ -162,11 +162,11 @@ const EditableInnerElementWrapper = ({
     </div>
   );
 
-  return skipDragNDrop ?
+  return ignoreDragNDrop ?
     drawContent()
     : (
       <MoveDraggableElement
-        skipDragNDrop={skipDragNDrop}
+        ignoreDragNDrop={ignoreDragNDrop}
         fragmentId={fragmentId}
         paneId={paneId}
         idx={idx}
@@ -191,7 +191,7 @@ const ImageWrapper = ({
   idx,
   outerIdx,
   markdownLookup,
-  skipDragNDrop,
+  ignoreDragNDrop,
 }: {
   children: ReactNode;
   showOverlay: boolean;
@@ -203,7 +203,7 @@ const ImageWrapper = ({
   idx: number | null;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
-  skipDragNDrop: boolean;
+  ignoreDragNDrop: boolean;
 }) => {
   if (!showOverlay) return children;
   if (toolMode === "eraser") return children;
@@ -218,7 +218,7 @@ const ImageWrapper = ({
         outerIdx={outerIdx}
         idx={idx}
         markdownLookup={markdownLookup}
-        skipDragNDrop={skipDragNDrop}
+        ignoreDragNDrop={ignoreDragNDrop}
       >
         {children}
       </EditableInnerElementWrapper>
@@ -249,7 +249,7 @@ function buildComponentFromAst(
   queueUpdate: (id: string, updateFn: () => void) => void,
   paneFragmentIds: string[],
   toolAddMode: ToolAddMode,
-  skipDragNDrop: boolean,
+  ignoreDragNDrop: boolean,
 ) {
   const thisAst = payload.ast[0];
   const Tag = thisAst?.tagName || thisAst?.type;
@@ -444,7 +444,7 @@ function buildComponentFromAst(
           idx={idx}
           queueUpdate={queueUpdate}
           markdownLookup={markdownLookup}
-          skipDragNDrop={skipDragNDrop}
+          ignoreDragNDrop={ignoreDragNDrop}
           id={thisId}
         />
     );
@@ -476,7 +476,7 @@ function buildComponentFromAst(
             toolMode={toolMode}
             toolAddMode={toolAddMode}
             queueUpdate={queueUpdate}
-            skipDragNDrop={isWidget}
+            ignoreDragNDrop={isWidget}
           />
         ))}
       </TagComponent>
@@ -486,7 +486,7 @@ function buildComponentFromAst(
       if (isWidget) {
         return (
           <MoveDraggableElement
-            skipDragNDrop={skipDragNDrop}
+            ignoreDragNDrop={ignoreDragNDrop}
             fragmentId={markdownFragmentId}
             paneId={paneId}
             idx={idx}
@@ -535,7 +535,7 @@ function buildComponentFromAst(
             idx={idx}
             outerIdx={outerIdx}
             markdownLookup={markdownLookup}
-            skipDragNDrop={skipDragNDrop}
+            ignoreDragNDrop={ignoreDragNDrop}
           >
             {child}
           </EditableInnerElementWrapper>
@@ -569,7 +569,7 @@ function buildComponentFromAst(
             idx={idx}
             onClick={handleToolModeClick}
             markdownLookup={markdownLookup}
-            skipDragNDrop={skipDragNDrop}
+            ignoreDragNDrop={ignoreDragNDrop}
           >
             {child}
           </EditableOuterWrapper>,
@@ -674,7 +674,7 @@ function buildComponentFromAst(
         idx={idx}
         outerIdx={outerIdx}
         markdownLookup={markdownLookup}
-        skipDragNDrop={skipDragNDrop}
+        ignoreDragNDrop={ignoreDragNDrop}
       >
         <img
           className={injectClassNames}
@@ -696,7 +696,7 @@ function buildComponentFromAst(
         idx={idx}
         outerIdx={outerIdx}
         markdownLookup={markdownLookup}
-        skipDragNDrop={skipDragNDrop}
+        ignoreDragNDrop={ignoreDragNDrop}
       >
         <img className={injectClassNames} src={imageSrc} alt={altText} />
       </ImageWrapper>
@@ -806,7 +806,7 @@ function buildComponentFromAst(
             idx={idx}
             outerIdx={outerIdx}
             markdownLookup={markdownLookup}
-            skipDragNDrop={skipDragNDrop}
+            ignoreDragNDrop={ignoreDragNDrop}
           >
             {widgetContent}
           </EditableInnerElementWrapper>,
@@ -836,7 +836,7 @@ const PaneFromAst = ({
   toolMode,
   toolAddMode,
   queueUpdate,
-  skipDragNDrop,
+  ignoreDragNDrop,
 }: PaneFromAstProps) => {
   const dragState = useStore(dragHandleStore);
 
@@ -856,12 +856,12 @@ const PaneFromAst = ({
     queueUpdate,
     paneFragmentIds,
     toolAddMode,
-    skipDragNDrop || false,
+    ignoreDragNDrop || false,
   );
 
   const canDrawGhostBlock = (): boolean => {
     const el = dragState.hoverElement;
-    if(!el) return false;
+    if(!el || ignoreDragNDrop) return false;
 
     return el.fragmentId === markdownFragmentId
       && el.paneId === paneId

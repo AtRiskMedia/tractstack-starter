@@ -17,7 +17,7 @@ import { allowTagInsert } from "@/utils/compositor/markdownUtils.ts";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;
-  skipDragNDrop: boolean;
+  ignoreDragNDrop: boolean;
   fragmentId : string;
   paneId: string;
   idx: number|null;
@@ -49,7 +49,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   };
 
   useEffect(() => {
-    if (dragging.current || props.skipDragNDrop) return;
+    if (dragging.current || props.ignoreDragNDrop) return;
 
     if (!dragState.dropState) {
       if (props.self?.current) {
@@ -87,7 +87,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       }
     };
 
-    if(!props.skipDragNDrop) {
+    if(!props.ignoreDragNDrop) {
       document.addEventListener("mousemove", handleMouseMove);
     }
     return () => {
@@ -112,7 +112,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           const dragEl = dragHandleStore.get().dragShape;
           if (dragEl) {
             const hoverEl = dragHandleStore.get().hoverElement;
-            if (hoverEl) {
+            if (hoverEl && hoverEl.location !== "none") {
               moveElements(
                 props.markdownLookup,
                 hoverEl.markdownLookup,
