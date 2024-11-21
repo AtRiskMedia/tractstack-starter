@@ -1,18 +1,10 @@
-import { type MouseEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { type MouseEvent, type ReactNode, useCallback, useRef } from "react";
 import {
   dragHandleStore,
-  type DragNode,
-  dropDraggingElement,
   editModeStore,
   lastInteractedPaneStore,
   lastInteractedTypeStore,
   Location,
-  paneFragmentMarkdown,
-  resetDragStore,
-  setDragHoverInfo,
-  setDragPosition,
-  setDragShape,
-  setGhostSize,
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
@@ -31,9 +23,6 @@ import { SignUp } from "../../../components/widgets/SignUp";
 import type { ButtonData, FileNode, MarkdownDatum, MarkdownLookup, ToolAddMode, ToolMode } from "../../../types";
 import type { Element as HastElement } from "hast";
 import { useStore } from "@nanostores/react";
-import Draggable, { type ControlPosition } from "react-draggable";
-import { isPosInsideRect } from "@/utils/math.ts";
-import { moveElements } from "@/utils/storykeep.ts";
 import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
 
 interface PaneFromAstProps {
@@ -83,63 +72,7 @@ const EditableOuterWrapper = ({
   markdownLookup: MarkdownLookup;
   skipDragNDrop: boolean;
 }) => {
-  const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
-  const dragging = useRef<boolean>(false);
-  const dragState = useStore(dragHandleStore);
-
   const self = useRef<HTMLDivElement>(null);
-  const activeHoverArea = useRef<Location>(Location.NOWHERE);
-
-  const getNodeData = (): DragNode => {
-    return { fragmentId, paneId, idx, outerIdx } as DragNode;
-  };
-
-  useEffect(() => {
-    if (dragging.current || skipDragNDrop) return;
-
-    if (!dragState.dropState) {
-      if (self.current) {
-        const rect = self.current.getBoundingClientRect();
-        if (isPosInsideRect(rect, dragState.pos)) {
-          const loc = dragState.pos.y > rect.y + rect.height / 2 ? Location.AFTER : Location.BEFORE;
-          activeHoverArea.current = loc;
-          console.log(`inside afterArea: ${id} | location: ${loc}`);
-          setDragHoverInfo({
-            ...getNodeData(),
-            markdownLookup,
-            location: loc === Location.AFTER ? "after" : "before",
-          });
-        }
-      }
-    } else if (dragState.affectedFragments.size > 0) {
-      if (
-        dragState.dropState.fragmentId === fragmentId &&
-        dragState.dropState.paneId === paneId &&
-        dragState.dropState.idx === idx &&
-        dragState.dropState.outerIdx === outerIdx
-      ) {
-        console.log(`Drop active element: ${JSON.stringify(dragState.dropState)}`);
-      }
-    }
-  }, [dragState]);
-
-  useEffect(() => {
-    const handleMouseMove: EventListener = (event) => {
-      const mouseEvent = event as unknown as MouseEvent; // Type assertion to MouseEvent
-      const x = mouseEvent.clientX + window.scrollX;
-      const y = mouseEvent.clientY + window.scrollY;
-      if (dragging.current) {
-        setDragPosition({ x, y });
-      }
-    };
-
-    if(!skipDragNDrop) {
-      document.addEventListener("mousemove", handleMouseMove);
-    }
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
 
   const drawContent = () => (
     <div ref={self} id={id} className="pointer-events-auto relative cursor-pointer" title={tooltip}>
@@ -153,49 +86,21 @@ const EditableOuterWrapper = ({
     </div>
   );
 
-  return skipDragNDrop ?
+  return skipDragNDrop ? (
     drawContent()
-    :
-    (
-    <Draggable
-      defaultPosition={{ x: dragPos.x, y: dragPos.y }}
-      position={dragPos}
-      onStart={() => {
-        dragging.current = true;
-        resetDragStore();
-        const root = paneFragmentMarkdown.get()[fragmentId].current.markdown.htmlAst;
-        setDragShape({ root, fragmentId, paneId, idx, outerIdx });
-        setGhostSize(100, 50);
-      }}
-      onStop={() => {
-        dragging.current = false;
-        if (dragHandleStore.get().affectedFragments.size > 0) {
-          const dragEl = dragHandleStore.get().dragShape;
-          if (dragEl) {
-            const hoverEl = dragHandleStore.get().hoverElement;
-            if (hoverEl) {
-              moveElements(
-                markdownLookup,
-                hoverEl.markdownLookup,
-                dragEl.fragmentId,
-                dragEl.outerIdx,
-                dragEl.paneId,
-                dragEl.idx,
-                hoverEl.fragmentId,
-                hoverEl.outerIdx,
-                hoverEl.paneId,
-                hoverEl.idx
-              );
-            }
-          }
-          dropDraggingElement();
-        }
-        setDragPos({ x: 0, y: 0 });
-        resetDragStore();
-      }}
+  ) : (
+    <MoveDraggableElement
+      skipDragNDrop={skipDragNDrop}
+      fragmentId={fragmentId}
+      paneId={paneId}
+      idx={idx}
+      outerIdx={outerIdx}
+      markdownLookup={markdownLookup}
+      id={id}
+      self={self}
     >
       {drawContent()}
-    </Draggable>
+    </MoveDraggableElement>
   );
 };
 const EditableInnerWrapper = ({
@@ -244,63 +149,7 @@ const EditableInnerElementWrapper = ({
   markdownLookup: MarkdownLookup;
   skipDragNDrop: boolean;
 }) => {
-  const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
-  const dragging = useRef<boolean>(false);
-  const dragState = useStore(dragHandleStore);
-
   const self = useRef<HTMLDivElement>(null);
-  const activeHoverArea = useRef<Location>(Location.NOWHERE);
-
-  const getNodeData = (): DragNode => {
-    return { fragmentId, paneId, idx, outerIdx } as DragNode;
-  };
-
-  useEffect(() => {
-    if (dragging.current || skipDragNDrop) return;
-
-    if (!dragState.dropState) {
-      if (self.current) {
-        const rect = self.current.getBoundingClientRect();
-        if (isPosInsideRect(rect, dragState.pos)) {
-          const loc = dragState.pos.y > rect.y + rect.height / 2 ? Location.AFTER : Location.BEFORE;
-          activeHoverArea.current = loc;
-          console.log(`inside afterArea: ${id} | location: ${loc}`);
-          setDragHoverInfo({
-            ...getNodeData(),
-            markdownLookup,
-            location: loc === Location.AFTER ? "after" : "before",
-          });
-        }
-      }
-    } else if (dragState.affectedFragments.size > 0) {
-      if (
-        dragState.dropState.fragmentId === fragmentId &&
-        dragState.dropState.paneId === paneId &&
-        dragState.dropState.idx === idx &&
-        dragState.dropState.outerIdx === outerIdx
-      ) {
-        //console.log(`Drop active element: ${JSON.stringify(dragState.dropState)}`);
-      }
-    }
-  }, [dragState]);
-
-  useEffect(() => {
-    const handleMouseMove: EventListener = (event) => {
-      const mouseEvent = event as unknown as MouseEvent; // Type assertion to MouseEvent
-      const x = mouseEvent.clientX + window.scrollX;
-      const y = mouseEvent.clientY + window.scrollY;
-      if (dragging.current) {
-        setDragPosition({ x, y });
-      }
-    };
-
-    if (!skipDragNDrop) {
-      document.addEventListener("mousemove", handleMouseMove);
-    }
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
-  }, []);
 
   const drawContent = () => (
     <div id={id} className="relative" title={tooltip} ref={self}>
@@ -317,45 +166,18 @@ const EditableInnerElementWrapper = ({
   return skipDragNDrop ?
     drawContent()
     : (
-    <Draggable
-      defaultPosition={{ x: dragPos.x, y: dragPos.y }}
-      position={dragPos}
-      onStart={() => {
-        dragging.current = true;
-        resetDragStore();
-        const root = paneFragmentMarkdown.get()[fragmentId].current.markdown.htmlAst;
-        setDragShape({ root, fragmentId, paneId, idx, outerIdx });
-        setGhostSize(100, 50);
-      }}
-      onStop={() => {
-        dragging.current = false;
-        if (dragHandleStore.get().affectedFragments.size > 0) {
-          const dragEl = dragHandleStore.get().dragShape;
-          if (dragEl) {
-            const hoverEl = dragHandleStore.get().hoverElement;
-            if (hoverEl) {
-              moveElements(
-                markdownLookup,
-                hoverEl.markdownLookup,
-                dragEl.fragmentId,
-                dragEl.outerIdx,
-                dragEl.paneId,
-                dragEl.idx,
-                hoverEl.fragmentId,
-                hoverEl.outerIdx,
-                hoverEl.paneId,
-                hoverEl.idx
-              );
-            }
-          }
-          dropDraggingElement();
-        }
-        setDragPos({ x: 0, y: 0 });
-        resetDragStore();
-      }}
-    >
+      <MoveDraggableElement
+        skipDragNDrop={skipDragNDrop}
+        fragmentId={fragmentId}
+        paneId={paneId}
+        idx={idx}
+        outerIdx={outerIdx}
+        markdownLookup={markdownLookup}
+        id={id}
+        self={self}
+      >
       {drawContent()}
-    </Draggable>
+    </MoveDraggableElement>
   );
 };
 
@@ -668,6 +490,8 @@ function buildComponentFromAst(
             idx={idx}
             outerIdx={outerIdx}
             markdownLookup={markdownLookup}
+            id={thisId}
+            self={null}
           >
             {child}
           </MoveDraggableElement>
