@@ -7,10 +7,8 @@ import DevicePhoneMobileIcon from "@heroicons/react/24/outline/DevicePhoneMobile
 import DeviceTabletIcon from "@heroicons/react/24/outline/DeviceTabletIcon";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
 import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
-import { tailwindToHex } from "../../../assets/tailwindColors";
+import { tailwindToHex, colorValues } from "../../../assets/tailwindColors";
 import type { ChangeEvent } from "react";
-
-const SPECIAL_VALUES = ["current", "inherit", "transparent"];
 
 interface ViewportComboBoxProps {
   value: string;
@@ -137,14 +135,14 @@ const ViewportComboBox = ({
                     key={item}
                     value={item}
                     className={({ active }) =>
-                      `relative cursor-default select-none py-2 pl-12 pr-9 ${
+                      `relative cursor-default select-none py-2 ${colorValues.includes(item) ? `pl-12` : `pl-6`} pr-9 ${
                         active ? "bg-myorange text-white" : "text-black"
                       }`
                     }
                   >
                     {({ selected, active }) => (
                       <>
-                        {!SPECIAL_VALUES.includes(item) && (
+                        {colorValues.includes(item) && (
                           <div
                             className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
                             style={{ backgroundColor: tailwindToHex(item) }}

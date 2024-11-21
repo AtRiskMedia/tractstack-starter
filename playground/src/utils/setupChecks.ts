@@ -14,12 +14,13 @@ export function getSetupChecks(): SetupChecks {
       (x.startsWith("libsql://") || x.startsWith("ey"))
   );
 
+  // PRIVATE_ not available on client and we need to run this check on client
   const hasConcierge = [
     import.meta.env.PUBLIC_CONCIERGE_STYLES_URL,
-    import.meta.env.PRIVATE_CONCIERGE_BASE_URL,
+    //import.meta.env.PRIVATE_CONCIERGE_BASE_URL,
     import.meta.env.PUBLIC_IMAGE_URL,
-    import.meta.env.PRIVATE_CONCIERGE_SECRET,
-    import.meta.env.PRIVATE_AUTH_SECRET,
+    //import.meta.env.PRIVATE_CONCIERGE_SECRET,
+    //import.meta.env.PRIVATE_AUTH_SECRET,
   ].every((x) => typeof x === "string" && x.trim().length > 0);
 
   const hasBranding = [

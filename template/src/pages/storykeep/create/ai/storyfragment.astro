@@ -3,8 +3,9 @@ import { ulid } from "ulid";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import { getTractStackIdBySlug } from "../../../../api/turso";
 import { getSetupChecks } from "../../../../utils/setupChecks";
-import { isTursoReady } from "../../../../api/turso";
+import { isTursoReady, getContentMap } from "../../../../api/turso";
 import CreateNewAiPage from "../../../../components/storykeep/components/CreateNewAiPage";
+import type { ContentMap } from "../../../../types";
 
 // confirm set-up
 const { hasTurso, hasConcierge } = getSetupChecks();
@@ -25,6 +26,9 @@ const tractStackId = await getTractStackIdBySlug(TRACTSTACK_SLUG);
 if (!tractStackId) {
   return Astro.redirect("/404");
 }
+
+const contentMap: ContentMap[] = await getContentMap();
+const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 ---
 
 <StoryKeep
@@ -34,6 +38,12 @@ if (!tractStackId) {
   canonicalURL={canonicalURL}
 >
   <div id="storykeep-content">
-    <CreateNewAiPage mode="storyfragment" newId={newId} tractStackId={tractStackId} client:load />
+    <CreateNewAiPage
+      mode="storyfragment"
+      contentMapSlugs={contentMapSlugs}
+      newId={newId}
+      tractStackId={tractStackId}
+      client:load
+    />
   </div>
 </StoryKeep>

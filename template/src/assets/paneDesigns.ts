@@ -223,6 +223,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["5xl", "6xl", "7xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -243,6 +244,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 my: [8, 12],
                 fontFACE: ["action"],
               },
@@ -263,6 +265,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 my: [8, 12],
                 fontFACE: ["action"],
               },
@@ -400,6 +403,19 @@ export const paneDesigns = (
                 },
                 hover: {
                   classes: {
+                    textCOLOR: [
+                      getComputedColor(
+                        {
+                          light: "neutral-200",
+                          "light-bw": "brand-8",
+                          "light-bold": "neutral-200",
+                          dark: "neutral-800",
+                          "dark-bw": "gray-800",
+                          "dark-bold": "neutral-800",
+                        },
+                        theme
+                      ),
+                    ],
                     bgCOLOR: [
                       getComputedColor(
                         {
@@ -549,6 +565,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["4xl", "5xl", "6xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -569,6 +586,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -588,6 +606,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -607,7 +626,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["snug"],
+                lineHEIGHT: ["normal"],
                 mt: ["2.5", "3.5"],
               },
               count: 2,
@@ -901,6 +920,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["4xl", "5xl", "6xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -921,6 +941,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -940,6 +961,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -959,7 +981,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["snug"],
+                lineHEIGHT: ["normal"],
                 mt: ["2.5", "3.5"],
               },
               count: 2,
@@ -1240,6 +1262,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["4xl", "5xl", "6xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
               },
@@ -1261,6 +1284,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["2xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
               },
@@ -1281,6 +1305,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
               },
@@ -1403,6 +1428,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["5xl", "6xl", "7xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
             },
@@ -1423,6 +1449,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 my: [8, 12],
                 fontFACE: ["action"],
               },
@@ -1443,6 +1470,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 my: [8, 12],
                 fontFACE: ["action"],
               },
@@ -1474,7 +1502,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
@@ -1875,7 +1903,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
@@ -2247,7 +2275,7 @@ export const paneDesigns = (
                 objectFIT: ["cover"],
                 rounded: ["lg", "xl"],
                 minW: ["[50%]"],
-                aspect: [
+                aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
@@ -2360,6 +2388,19 @@ export const paneDesigns = (
                 },
                 hover: {
                   classes: {
+                    textCOLOR: [
+                      getComputedColor(
+                        {
+                          light: "brand-7",
+                          "light-bw": "black",
+                          "light-bold": "brand-3",
+                          dark: "slate-200",
+                          "dark-bw": "white",
+                          "dark-bold": "brand-3",
+                        },
+                        theme
+                      ),
+                    ],
                     bgCOLOR: [
                       getComputedColor(
                         {
@@ -2397,7 +2438,7 @@ export const paneDesigns = (
                         {
                           light: "neutral-200",
                           "light-bw": "brand-8",
-                          "light-bold": "neutral-200",
+                          "light-bold": "white",
                           dark: "neutral-800",
                           "dark-bw": "gray-800",
                           "dark-bold": "neutral-800",
@@ -2426,6 +2467,19 @@ export const paneDesigns = (
                 },
                 hover: {
                   classes: {
+                    textCOLOR: [
+                      getComputedColor(
+                        {
+                          light: "brand-2",
+                          "light-bw": "white",
+                          "light-bold": "brand-2",
+                          dark: "brand-1",
+                          "dark-bw": "black",
+                          "dark-bold": "brand-1",
+                        },
+                        theme
+                      ),
+                    ],
                     bgCOLOR: [
                       getComputedColor(
                         {

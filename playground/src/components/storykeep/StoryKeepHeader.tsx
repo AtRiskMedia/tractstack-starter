@@ -39,8 +39,7 @@ import {
   creationStateStore,
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
-import { classNames, cleanString } from "../../utils/helpers";
-import { getSetupChecks } from "../../utils/setupChecks";
+import { classNames, cleanString, findUniqueSlug } from "../../utils/helpers";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import type {
   AuthStatus,
@@ -86,6 +85,8 @@ export const StoryKeepHeader = memo(
     isContext,
     originalData,
     hasContentReady,
+    contentMapSlugs,
+    hasTurso,
   }: {
     id: string;
     slug: string;
@@ -93,8 +94,9 @@ export const StoryKeepHeader = memo(
     isContext: boolean;
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
     hasContentReady: boolean;
+    contentMapSlugs: string[];
+    hasTurso: boolean;
   }) => {
-    const { hasTurso } = getSetupChecks();
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
     const [isSaving, setIsSaving] = useState(false);
@@ -247,22 +249,25 @@ export const StoryKeepHeader = memo(
         [``, `create`].includes($storyFragmentSlug[thisId].current)
       ) {
         const clean = hasContentReady
-          ? cleanString($storyFragmentTitle[thisId].current).substring(0, 20)
+          ? findUniqueSlug(
+              cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
+              contentMapSlugs
+            )
           : `hello`;
-        const newVal = !usedSlugs.includes(clean) ? clean : ``;
         temporaryErrorsStore.setKey(thisId, {
           ...(temporaryErrorsStore.get()[thisId] || {}),
-          [`storyFragmentTitle`]: newVal.length === 0,
-          [`storyFragmentSlug`]: newVal.length === 0,
+          [`storyFragmentTitle`]: false,
+          [`storyFragmentSlug`]: false,
         });
         uncleanDataStore.setKey(thisId, {
           ...(uncleanDataStore.get()[thisId] || {}),
-          [`storyFragmentTitle`]: newVal.length === 0,
-          [`storyFragmentSlug`]: newVal.length === 0,
+          [`storyFragmentTitle`]: false,
+          [`storyFragmentSlug`]: false,
         });
+
         storyFragmentSlug.setKey(thisId, {
-          current: newVal,
-          original: newVal,
+          current: clean,
+          original: clean,
           history: [],
         });
       } else if (
@@ -270,21 +275,23 @@ export const StoryKeepHeader = memo(
         [`paneTitle`, `paneSlug`].includes(storeKey) &&
         [``, `create`].includes($paneSlug[thisId].current)
       ) {
-        const clean = cleanString($paneTitle[thisId].current).substring(0, 20);
-        const newVal = !usedSlugs.includes(clean) ? clean : ``;
+        const clean = findUniqueSlug(
+          cleanString($paneTitle[thisId].current).substring(0, 20),
+          contentMapSlugs
+        );
         temporaryErrorsStore.setKey(thisId, {
           ...(temporaryErrorsStore.get()[thisId] || {}),
-          [`paneTitle`]: newVal.length === 0,
-          [`paneSlug`]: newVal.length === 0,
+          [`paneTitle`]: false,
+          [`paneSlug`]: false,
         });
         uncleanDataStore.setKey(thisId, {
           ...(uncleanDataStore.get()[thisId] || {}),
-          [`paneTitle`]: newVal.length === 0,
-          [`paneSlug`]: newVal.length === 0,
+          [`paneTitle`]: false,
+          [`paneSlug`]: false,
         });
         paneSlug.setKey(thisId, {
-          current: newVal,
-          original: newVal,
+          current: clean,
+          original: clean,
           history: [],
         });
       }
@@ -400,7 +407,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo && hasTurso ? (
+              {user.isOpenDemo || !hasTurso ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"

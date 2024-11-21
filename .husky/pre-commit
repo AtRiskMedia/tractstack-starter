@@ -1,14 +1,8 @@
-#!/bin/bash
-# .husky/pre-commit
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Exit on error
-set -e
+# Run template preparation script
+pnpm prepare:template
 
-# Run lint-staged first (your existing pre-commit tasks)
-#pnpm lint-staged
-
-# Run prepare-template.sh
-./scripts/prepare-template.sh
-
-# Add the template directory changes to the commit
+# add to repo
 git add template/

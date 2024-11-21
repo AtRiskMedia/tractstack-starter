@@ -39,7 +39,6 @@ const DesignNewPane = ({
   isContext: boolean;
   knownCodeHooks: string[];
 }) => {
-  console.log(knownCodeHooks);
   const [mode, setMode] = useState<ModeType>(`design`);
   const [query, setQuery] = useState("");
   const [saving, setSaving] = useState(false);

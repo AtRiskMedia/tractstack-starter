@@ -69,7 +69,7 @@ const defaultSocialDesc =
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const gtagUrl =
-  typeof googleSiteVerification === `string`
+  typeof googleSiteVerification === `string` && googleSiteVerification.length > 1
     ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
     : null;
 
@@ -158,7 +158,6 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         startLoadingAnimation,
         stopLoadingAnimation,
         debounce,
-        shouldRunInit,
       } from "../utils/helpers";
       import { initializeBrandColors } from "../utils/brand-init";
       import { eventStream } from "../utils/events/eventStream";
@@ -185,7 +184,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
       setupEventHandlers();
 
       document.addEventListener("astro:page-load", () => {
-        if (shouldRunInit()) init();
+        init();
         initializeBrandColors();
         handleScroll();
         handleResize();

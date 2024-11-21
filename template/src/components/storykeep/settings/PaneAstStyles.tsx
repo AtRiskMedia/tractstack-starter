@@ -1753,7 +1753,7 @@ export const PaneAstStyles = (props: {
           )}
         </div>
       ),
-    [linkTargetKey, linkMode, targetId.paneId, setLinkTargetKey]
+    [linkTargetKey, linkMode, targetId.paneId, setLinkTargetKey, confirm]
   );
 
   const memoizedAddClass = useMemo(

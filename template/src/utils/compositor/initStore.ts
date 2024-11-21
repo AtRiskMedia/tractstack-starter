@@ -38,7 +38,7 @@ import {
 } from "../../store/storykeep";
 import { createFieldWithHistory } from "../storykeep";
 import { markdownToHtmlAst } from "./markdownUtils";
-import { cleanString } from "../helpers";
+import { cleanString, findUniqueSlug } from "../helpers";
 import type {
   StoreKey,
   PageDesign,
@@ -55,7 +55,8 @@ export function initializeStores(
   newId: string,
   tractStackId: string,
   design: PageDesign,
-  mode: "storyfragment" | "context"
+  mode: "storyfragment" | "context",
+  contentMapSlugs: string[]
 ): boolean {
   if (!newId) {
     console.error("No newId found in creationStateStore");
@@ -65,12 +66,18 @@ export function initializeStores(
   try {
     if (mode === "storyfragment") {
       const paneIds = design.paneDesigns.map(() => ulid());
-      initializeStoryFragmentStores(newId, tractStackId, design, paneIds);
+      initializeStoryFragmentStores(newId, tractStackId, design, paneIds, contentMapSlugs);
       design.paneDesigns.forEach((paneDesign, index) => {
-        initializePaneStores(paneIds[index], paneDesign, false);
+        initializePaneStores(paneIds[index], paneDesign, false, contentMapSlugs);
       });
     } else {
-      initializePaneStores(newId, design.paneDesigns[0], true, design.pageTitle ?? "");
+      initializePaneStores(
+        newId,
+        design.paneDesigns[0],
+        true,
+        contentMapSlugs,
+        design.pageTitle ?? ""
+      );
     }
     creationStateStore.set({ id: newId, isInitialized: true });
     return true;
@@ -84,12 +91,16 @@ function initializeStoryFragmentStores(
   newId: string,
   tractStackId: string,
   design: PageDesign,
-  paneIds: string[]
+  paneIds: string[],
+  contentMapSlugs: string[]
 ) {
   const storyFragmentStores = {
     init: { init: true },
     title: design.pageTitle ?? "",
-    slug: cleanString(design.pageTitle ?? ``).substring(0.2) ?? "create",
+    slug: findUniqueSlug(
+      cleanString(design.pageTitle ?? ``).substring(0, 20) ?? "create",
+      contentMapSlugs
+    ),
     tractStackId: tractStackId,
     menuId: "",
     paneIds: paneIds,
@@ -120,6 +131,7 @@ function initializePaneStores(
   paneId: string,
   paneDesign: PaneDesign,
   isContext: boolean,
+  contentMapSlugs: string[],
   title?: string
 ) {
   paneInit.setKey(paneId, { init: true });
@@ -127,11 +139,14 @@ function initializePaneStores(
   paneSlug.setKey(
     paneId,
     createFieldWithHistory(
-      isContext && !title
-        ? "create"
-        : isContext
-          ? cleanString(title ?? ``).substring(0.2)
-          : paneDesign.slug
+      findUniqueSlug(
+        isContext && !title
+          ? "create"
+          : isContext
+            ? cleanString(title ?? ``).substring(0, 20)
+            : paneDesign.slug,
+        contentMapSlugs
+      )
     )
   );
   paneIsContextPane.setKey(paneId, createFieldWithHistory(isContext));

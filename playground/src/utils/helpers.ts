@@ -1,6 +1,4 @@
-//import { storySteps } from "../store/events";
 import { getImage } from "astro:assets";
-import { getSetupChecks } from "./setupChecks";
 import type {
   ClassNamesPayloadValue,
   FileNode,
@@ -13,12 +11,6 @@ import type {
 import type { DragNode } from "../store/storykeep.ts";
 import { toHast } from "mdast-util-to-hast";
 import type { Element, RootContent, Root as HastRoot } from "hast";
-
-export function shouldRunInit() {
-  const setupChecks = getSetupChecks();
-  if (!setupChecks.hasConcierge || !import.meta.env.PROD) return false;
-  return true;
-}
 
 export const getComputedColor = (color: string): string => {
   if (color === `#` || typeof color === `undefined`) return `#ffffff`;
@@ -507,6 +499,19 @@ const stopWords = new Set([
   "then",
   "once",
 ]);
+
+export function findUniqueSlug(slug: string, existingSlugs: string[]): string {
+  if (!existingSlugs.includes(slug)) {
+    return slug;
+  }
+  let counter = 1;
+  let newSlug = `${slug}-${counter}`;
+  while (existingSlugs.includes(newSlug)) {
+    counter++;
+    newSlug = `${slug}-${counter}`;
+  }
+  return newSlug;
+}
 
 export function cleanString(s: string): string {
   if (!s) return s;

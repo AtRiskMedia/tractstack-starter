@@ -218,6 +218,35 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
     fetchEnv();
   }, []);
 
+  const saveBrandImages = async (brandImages: Record<string, string>): Promise<boolean> => {
+    if (Object.keys(brandImages).length === 0) return true;
+    try {
+      // Transform the images into the format the PHP expects
+      const brandFiles = Object.entries(brandImages).map(([name, src]) => ({
+        filename: name.replace("PUBLIC_", "").toLowerCase(), // e.g., "logo", "wordmark", etc.
+        src, // Keep the full data URL as the PHP expects it (e.g., "data:image/png;base64,...")
+      }));
+
+      const uploadResponse = await fetch(`/api/concierge/storykeep/frontendFiles`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ files: brandFiles }),
+      });
+
+      const uploadData = await uploadResponse.json();
+      if (!uploadData.success) {
+        throw new Error(uploadData.error || "Failed to upload brand images");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error saving brand images:", error);
+      return false;
+    }
+  };
+
   const hasThemeChanges = useMemo(() => {
     return originalSettings.some(
       (setting) =>
@@ -399,29 +428,47 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
     }
   );
 
-  const handleSave = useCallback(async () => {
-    try {
-      const success = await saveEnvSettings(localSettings, originalSettings);
-      if (success) {
-        envSettings.set({
-          current: localSettings,
-          original: localSettings,
-          history: [],
-        });
-        setOriginalSettings(localSettings);
-        setHasUnsavedChanges(false);
-        setSaveSuccess(true);
-        setTimeout(() => {
-          setSaveSuccess(false);
-        }, 7000);
-      }
-    } catch (error) {
-      console.error("Error in handleSave:", error);
-    }
-  }, [localSettings, originalSettings, brandImages]);
+  //const handleSave = useCallback(async () => {
+  //  try {
+  //    // First handle any brand image uploads
+  //    if (Object.keys(brandImages).length > 0) {
+  //      const imageSuccess = await saveBrandImages(brandImages);
+  //      if (!imageSuccess) {
+  //        throw new Error("Failed to save brand images");
+  //      }
+  //      setBrandImages({}); // Clear images after successful upload
+  //    }
+
+  //    const success = await saveEnvSettings(localSettings, originalSettings);
+  //    if (success) {
+  //      envSettings.set({
+  //        current: localSettings,
+  //        original: localSettings,
+  //        history: [],
+  //      });
+  //      setOriginalSettings(localSettings);
+  //      setHasUnsavedChanges(false);
+  //      setSaveSuccess(true);
+  //      setTimeout(() => {
+  //        setSaveSuccess(false);
+  //      }, 7000);
+  //    }
+  //  } catch (error) {
+  //    console.error("Error in handleSave:", error);
+  //  }
+  //}, [localSettings, originalSettings, brandImages]);
 
   const handleSavePublish = useCallback(async () => {
     try {
+      // First handle any brand image uploads
+      if (Object.keys(brandImages).length > 0) {
+        const imageSuccess = await saveBrandImages(brandImages);
+        if (!imageSuccess) {
+          throw new Error("Failed to save brand images");
+        }
+        setBrandImages({}); // Clear images after successful upload
+      }
+
       const success = await saveEnvSettings(localSettings, originalSettings);
       if (!success) {
         throw new Error("Failed to save environment settings");
@@ -453,8 +500,9 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
           brandColors.forEach((color, index) => {
             document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
           });
+      } else {
+        setShowRebuildModal(true);
       }
-      setShowRebuildModal(true);
 
       setTimeout(() => {
         setSaveSuccess(false);
@@ -1003,21 +1051,12 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
             Save and Rebuild To Apply Theme/Colours
           </button>
         ) : (
-          <>
-            <button
-              onClick={handleSave}
-              className="px-4 py-2 text-white bg-myorange rounded hover:bg-myblue disabled:bg-mydarkgrey disabled:cursor-not-allowed"
-              disabled={hasUncleanData}
-            >
-              Save Changes Only
-            </button>
-            <button
-              onClick={handleSavePublish}
-              className="px-4 py-2 text-black bg-myorange/50 rounded hover:bg-myblue hover:text-white"
-            >
-              Save and Re-Publish Website
-            </button>
-          </>
+          <button
+            onClick={handleSavePublish}
+            className="px-4 py-2 text-black bg-myorange/50 rounded hover:bg-myblue hover:text-white"
+          >
+            Save and Re-Publish Website
+          </button>
         )}
       </div>
     </div>

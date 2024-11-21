@@ -238,7 +238,6 @@ export const PaneInsert = (props: {
       return;
     }
     const paneData = preparePreviewPane(modifyPaneDesign(payload.selectedDesign));
-    console.log(paneData);
     const newPaneIds = [...$storyFragmentPaneIds[storyFragmentId].current];
     newPaneIds.splice(payload.index, 0, paneId);
     const paneStores = [

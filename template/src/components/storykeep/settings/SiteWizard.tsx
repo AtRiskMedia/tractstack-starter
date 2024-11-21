@@ -119,9 +119,10 @@ export default function SiteWizard({
     () => [
       hasConcierge || $previewMode,
       hasAuth || $previewMode,
-      hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
-      gotIntegrations || hasBranding || ($previewMode && $previewDbInitialized),
+      hasTurso || gotTurso || $previewMode,
+      gotIntegrations || hasBranding || $previewMode,
       hasBranding || ($previewMode && $previewBrandConfigured),
+      hasTursoReady || $previewDbInitialized,
       hasTursoReady && hasContentPrimed,
       hasContentReady,
     ],
@@ -145,7 +146,7 @@ export default function SiteWizard({
   const getStepStatus = (index: number): StepStatus => {
     const isCompleted = completionStates[index];
     const allPreviousCompleted = completionStates.slice(0, index).every((state) => state);
-    if (!allPreviousCompleted || ($previewMode && index > 2 && index < 4)) return "locked";
+    if (!allPreviousCompleted || ($previewMode && index > 1 && index < 4)) return "locked";
     if (isCompleted) return "completed";
     return "current";
   };
@@ -187,13 +188,7 @@ export default function SiteWizard({
     },
     {
       title: "Connect your Turso database",
-      description: $previewMode ? (
-        <DatabaseBootstrap />
-      ) : !hasTurso ? (
-        <TursoConnectionForm setGotTurso={setGotTurso} />
-      ) : (
-        <Completed />
-      ),
+      description: !hasTurso ? <TursoConnectionForm setGotTurso={setGotTurso} /> : <Completed />,
       isComplete: hasTurso || gotTurso || ($previewMode && $previewDbInitialized),
       status: getStepStatus(2),
     },
@@ -219,25 +214,29 @@ export default function SiteWizard({
       status: getStepStatus(4),
     },
     {
+      title: "Initialize your database tables",
+      description: !hasTursoReady ? <DatabaseBootstrap /> : <Completed />,
+      isComplete: hasTursoReady || $previewDbInitialized,
+      status: getStepStatus(5),
+    },
+    {
       title: "Bootstrap your database",
       description:
         !hasTursoReady || !hasContentPrimed ? <DatabaseContentBootstrap /> : <Completed />,
       isComplete: hasTursoReady && hasContentPrimed,
-      status: getStepStatus(5),
+      status: getStepStatus(6),
     },
     {
       title: "Publish your first page!",
       description: <NeedsContent hasAssemblyAI={hasAssemblyAI} />,
       isComplete: hasContentReady,
-      status: getStepStatus(6),
+      status: getStepStatus(7),
     },
   ];
 
-  // Effects
   useEffect(() => {
     const newOpenSteps: Record<number, boolean> = {};
     let foundCurrent = false;
-
     completionStates.forEach((isComplete, index) => {
       if (!isComplete && !foundCurrent) {
         newOpenSteps[index] = true;

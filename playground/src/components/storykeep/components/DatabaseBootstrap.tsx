@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useStore } from "@nanostores/react";
+import { navigate } from "astro:transitions/client";
 import { previewMode, previewDbInitialized, getPreviewModeValue } from "../../../store/storykeep";
 
 const DatabaseBootstrap = () => {
@@ -12,12 +13,9 @@ const DatabaseBootstrap = () => {
     setError(null);
 
     try {
-      // Initialize database
       const initResponse = await fetch("/api/turso/init", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
 
       if (!initResponse.ok) {
@@ -25,51 +23,18 @@ const DatabaseBootstrap = () => {
       }
 
       const initData = await initResponse.json();
-
       if (!initData.success) {
-        throw new Error(initData.error || "Failed to initialize database");
+        throw new Error(initData.error || "Failed to initialize schema");
       }
 
-      // Wait a moment for the database to be ready
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Verify database status
-      let retries = 3;
-      let isReady = false;
-
-      while (retries > 0 && !isReady) {
-        const statusResponse = await fetch("/api/turso/status", {
-          method: "POST",
-        });
-
-        if (!statusResponse.ok) {
-          throw new Error("Failed to verify database status");
-        }
-
-        const statusData = await statusResponse.json();
-
-        if (statusData.isReady) {
-          isReady = true;
-          if ($previewMode) {
-            previewDbInitialized.set("true");
-          }
-          setIsInitializing(false);
-          break;
-        } else {
-          retries--;
-          if (retries > 0) {
-            // Wait before retry
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        }
+      if ($previewMode) {
+        previewDbInitialized.set("true");
       }
-
-      if (!isReady) {
-        throw new Error("Database initialization timed out after multiple attempts");
-      }
+      setIsInitializing(false);
+      navigate(`/storykeep`);
     } catch (err) {
-      console.error("Database initialization error:", err);
-      setError(err instanceof Error ? err.message : "Failed to initialize database");
+      console.error("Schema initialization error:", err);
+      setError(err instanceof Error ? err.message : "Failed to initialize schema");
       setIsInitializing(false);
     }
   };
