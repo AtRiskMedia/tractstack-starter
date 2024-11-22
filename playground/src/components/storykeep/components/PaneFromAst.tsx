@@ -607,12 +607,11 @@ const PaneFromAst = ({
 
     if (hook === "identifyAs" && value1 && value2) {
       widgetContent = (
-        <div className={injectClassNames}>
-          <IdentifyAs
-            value={{ slug: value1, target: value2, extra: value3 || `` }}
-            readonly={true}
-          />
-        </div>
+        <IdentifyAs
+          classNames={injectClassNames}
+          value={{ slug: value1, target: value2, extra: value3 || `` }}
+          readonly={true}
+        />
       );
     }
 

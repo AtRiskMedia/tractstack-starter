@@ -6,16 +6,17 @@ import { heldBeliefs } from "../../store/beliefs";
 import { events } from "../../store/events";
 import type { BeliefDatum, EventStream } from "../../types";
 
-export const IdentifyAs = ({
+const SingleIdentifyAs = ({
   value,
+  target,
   readonly = false,
 }: {
   value: { slug: string; target: string; extra: string };
+  target: string;
   readonly?: boolean;
 }) => {
   const $heldBeliefsAll = useStore(heldBeliefs);
-  const thisTitle = `Tell me more!`;
-  const extra = value && typeof value.extra === `string` ? value.extra : null;
+  const thisTitle = value.target;
   const thisScale = heldBeliefsScales.agreement;
   const start = { id: 0, slug: `0`, name: `0`, color: `` };
   const [selected, setSelected] = useState(start);
@@ -25,7 +26,7 @@ export const IdentifyAs = ({
       const hasMatchingBelief = $heldBeliefsAll
         .filter((e: BeliefDatum) => e.slug === value.slug)
         .at(0);
-      if (hasMatchingBelief && hasMatchingBelief.object === value.target) setSelected(thisScale[0]);
+      if (hasMatchingBelief && hasMatchingBelief.object === target) setSelected(thisScale[0]);
       else setSelected(start);
     }
   }, [$heldBeliefsAll, readonly]);
@@ -39,14 +40,14 @@ export const IdentifyAs = ({
       const event = {
         id: value.slug,
         verb: `IDENTIFY_AS`,
-        object: value.target.toUpperCase(),
+        object: target.toUpperCase(),
         type: `Belief`,
       };
       const belief = {
         id: value.slug,
         verb: `IDENTIFY_AS`,
         slug: value.slug,
-        object: value.target.toUpperCase(),
+        object: target.toUpperCase(),
       };
       const prevBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug !== value.slug);
       heldBeliefs.set([...prevBeliefs, belief]);
@@ -60,7 +61,6 @@ export const IdentifyAs = ({
       setSelected(start);
       const event = {
         id: value.slug,
-        // this removes the identifyAs from the db and graph
         verb: `UNSET`,
         object: true,
         type: `Belief`,
@@ -75,31 +75,57 @@ export const IdentifyAs = ({
   };
 
   return (
+    <div className="block mt-3 w-fit">
+      <button
+        type="button"
+        onClick={handleClick}
+        className={classNames(
+          selected.id === 0
+            ? `bg-white hover:bg-myorange/5 ring-myorange/50`
+            : `bg-white hover:bg-myorange/5 ring-mygreen/5`,
+          `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
+        )}
+      >
+        <div className="flex items-center">
+          <span
+            aria-label="Color swatch for belief"
+            className={classNames(
+              `motion-safe:animate-pulse`,
+              selected.color || `bg-myorange`,
+              `inline-block h-2 w-2 flex-shrink-0 rounded-full`
+            )}
+          />
+          <span className="ml-3 block truncate">{thisTitle}</span>
+        </div>
+      </button>
+    </div>
+  );
+};
+
+export const IdentifyAs = ({
+  value,
+  classNames = "",
+  readonly = false,
+}: {
+  value: { slug: string; target: string; extra: string };
+  classNames: string;
+  readonly?: boolean;
+}) => {
+  const targets = value.target.split(",").map((t) => t.trim());
+  const extra = value && typeof value.extra === `string` ? value.extra : null;
+
+  return (
     <>
-      {extra ? <span className="mr-2">{extra}</span> : null}
-      <div className="block mt-3 w-fit">
-        <button
-          type="button"
-          onClick={handleClick}
-          className={classNames(
-            selected.id === 0
-              ? `bg-white hover:bg-myorange/5 ring-myorange/50`
-              : `bg-white hover:bg-myorange/5 ring-mygreen/5`,
-            `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
-          )}
-        >
-          <div className="flex items-center">
-            <span
-              aria-label="Color swatch for belief"
-              className={classNames(
-                `motion-safe:animate-pulse`,
-                selected.color || `bg-myorange`,
-                `inline-block h-2 w-2 flex-shrink-0 rounded-full`
-              )}
-            />
-            <span className="ml-3 block truncate">{thisTitle}</span>
-          </div>
-        </button>
+      {extra ? <span className={classNames}>{extra}</span> : null}
+      <div className="flex flex-wrap gap-2">
+        {targets.map((target, index) => (
+          <SingleIdentifyAs
+            key={`${value.slug}-${index}`}
+            value={{ ...value, target }}
+            target={target}
+            readonly={readonly}
+          />
+        ))}
       </div>
     </>
   );

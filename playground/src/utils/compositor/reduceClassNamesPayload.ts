@@ -10,6 +10,15 @@ import type {
 const tailwindModifier = [``, `md:`, `xl:`];
 const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];
 
+const stripViewportPrefixes = (classes: string[]): string[] => {
+  return classes.map((classStr) =>
+    classStr
+      .split(" ")
+      .map((cls) => cls.replace(/^(xs:|md:|xl:)/, ""))
+      .join(" ")
+  );
+};
+
 const processParentClasses = (
   parentClasses: ClassNamesPayloadDatum["parent"]["classes"]
 ): [string[], string[], string[], string[]] => {
@@ -33,16 +42,11 @@ const processParentClasses = (
   return [all, mobile, tablet, desktop];
 };
 
-const reduceClassName = (
-  selector: string,
-  v: TupleValue,
-  viewportIndex: number,
-  isResponsive: boolean = true
-): string => {
+const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number): string => {
   if (!selector) return "";
   const modifier =
     viewportIndex === -1
-      ? isResponsive && tailwindCoreLayoutClasses.includes(selector)
+      ? tailwindCoreLayoutClasses.includes(selector)
         ? tailwindCoreModifier[0]
         : ""
       : tailwindModifier[viewportIndex];
@@ -96,17 +100,15 @@ const processClassesForViewports = (
             const value = overrideTuple
               ? processTupleForViewport(overrideTuple, viewportIndex)
               : processTupleForViewport(tuple, viewportIndex);
-            return reduceClassName(selector, value, -1, viewportIndex === -1); // isResponsive is true only when building combined classes
+            return reduceClassName(selector, value, -1);
           })
           .filter(Boolean)
           .join(" ")
       );
   };
-
   const mobile = processForViewport(0);
   const tablet = processForViewport(1);
   const desktop = processForViewport(2);
-
   const all = mobile.map((_, index) => {
     const mobileClasses = mobile[index].split(" ");
     const tabletClasses = tablet[index].split(" ");
@@ -126,8 +128,12 @@ const processClassesForViewports = (
 
     return Array.from(combinedClasses).join(" ");
   });
-
-  return [all, mobile, tablet, desktop];
+  return [
+    all,
+    stripViewportPrefixes(mobile),
+    stripViewportPrefixes(tablet),
+    stripViewportPrefixes(desktop),
+  ];
 };
 
 export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => {
