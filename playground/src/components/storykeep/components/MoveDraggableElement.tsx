@@ -1,8 +1,8 @@
 import { memo, type MouseEvent, type RefObject, useEffect, useRef, useState } from "react";
 import Draggable, { type ControlPosition } from "react-draggable";
 import {
-  dragHandleStore, type DragNode,
-  dropDraggingElement, Location,
+  dragHandleStore, type DragNode, dragStartTime,
+  dropDraggingElement, lastDragTime, Location,
   paneFragmentMarkdown,
   resetDragStore, setDragHoverInfo, setDragPosition,
   setDragShape,
@@ -95,45 +95,69 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
     };
   }, []);
 
+  const drawGhostBlock = () => {
+    return (<div className={`w-full bg-blue-200 h-20`}/>);
+  }
+
+  const canDrawGhostBlock = (): boolean => {
+    if(lastDragTime.get() === dragStartTime.get())
+      return false;
+
+    const el = dragState.hoverElement;
+    if(!el || props.ignoreDragNDrop) {
+      return false;
+    }
+
+    return el.fragmentId === fragmentId
+      && el.paneId === paneId
+      && el.idx === idx
+      && el.outerIdx === outerIdx;
+  };
+
   return (
-    <Draggable
-      defaultPosition={{ x: dragPos.x, y: dragPos.y }}
-      position={dragPos}
-      onStart={() => {
-        dragging.current = true;
-        resetDragStore();
-        const root = paneFragmentMarkdown.get()[props.fragmentId].current.markdown.htmlAst;
-        setDragShape({ root, fragmentId, paneId, idx, outerIdx });
-        setGhostSize(100, 50);
-      }}
-      onStop={() => {
-        dragging.current = false;
-        if (dragHandleStore.get().affectedFragments.size > 0) {
-          const dragEl = dragHandleStore.get().dragShape;
-          if (dragEl) {
-            const hoverEl = dragHandleStore.get().hoverElement;
-            if (hoverEl && hoverEl.location !== "none") {
-              moveElements(
-                props.markdownLookup,
-                hoverEl.markdownLookup,
-                dragEl.fragmentId,
-                dragEl.outerIdx,
-                dragEl.paneId,
-                dragEl.idx,
-                hoverEl.fragmentId,
-                hoverEl.outerIdx,
-                hoverEl.paneId,
-                hoverEl.idx,
-              );
+    <div className="inline">
+      {(canDrawGhostBlock() && dragState.hoverElement?.location === "before") && drawGhostBlock()}
+      <Draggable
+        defaultPosition={{ x: dragPos.x, y: dragPos.y }}
+        position={dragPos}
+        onStart={() => {
+          dragging.current = true;
+          resetDragStore();
+          const root = paneFragmentMarkdown.get()[props.fragmentId].current.markdown.htmlAst;
+          setDragShape({ root, fragmentId, paneId, idx, outerIdx });
+          setGhostSize(100, 50);
+        }}
+        onStop={() => {
+          dragging.current = false;
+          if (dragHandleStore.get().affectedFragments.size > 0) {
+            const dragEl = dragHandleStore.get().dragShape;
+            if (dragEl) {
+              const hoverEl = dragHandleStore.get().hoverElement;
+              if (hoverEl && hoverEl.location !== "none") {
+                moveElements(
+                  props.markdownLookup,
+                  hoverEl.markdownLookup,
+                  dragEl.fragmentId,
+                  dragEl.outerIdx,
+                  dragEl.paneId,
+                  dragEl.idx,
+                  hoverEl.fragmentId,
+                  hoverEl.outerIdx,
+                  hoverEl.paneId,
+                  hoverEl.idx,
+                );
+              }
             }
+            dropDraggingElement();
           }
-          dropDraggingElement();
-        }
-        setDragPos({ x: 0, y: 0 });
-        resetDragStore();
-      }}
-    >
-      {props.children}
-    </Draggable>
-  );
+          setDragPos({ x: 0, y: 0 });
+          resetDragStore();
+        }}
+      >
+        {props.children}
+      </Draggable>
+      {(canDrawGhostBlock() && dragState.hoverElement?.location === "after") && drawGhostBlock()}
+    </div>
+)
+  ;
 });

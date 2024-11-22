@@ -1,9 +1,8 @@
 import { type MouseEvent, type ReactNode, useCallback, useRef } from "react";
 import {
-  dragHandleStore,
   editModeStore,
   lastInteractedPaneStore,
-  lastInteractedTypeStore, lastDragTime, dragStartTime,
+  lastInteractedTypeStore,
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
@@ -14,14 +13,20 @@ import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
 import EraserWrapper from "./EraserWrapper";
 import InsertWrapper from "./InsertWrapper";
 import { wrapWithStylesIndicator } from "./StylesWrapper";
-import { classNames, createNodeId } from "../../../utils/helpers";
+import { classNames } from "../../../utils/helpers";
 import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
 import { SignUp } from "../../../components/widgets/SignUp";
-import type { ButtonData, FileNode, MarkdownDatum, MarkdownLookup, ToolAddMode, ToolMode } from "../../../types";
+import type {
+  ButtonData,
+  FileNode,
+  MarkdownDatum,
+  MarkdownLookup,
+  ToolAddMode,
+  ToolMode,
+} from "../../../types";
 import type { Element as HastElement } from "hast";
-import { useStore } from "@nanostores/react";
 import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
 
 interface PaneFromAstProps {
@@ -162,19 +167,19 @@ const EditableInnerElementWrapper = ({
     </div>
   );
 
-  return ignoreDragNDrop ?
+  return ignoreDragNDrop ? (
     drawContent()
-    : (
-      <MoveDraggableElement
-        ignoreDragNDrop={ignoreDragNDrop}
-        fragmentId={fragmentId}
-        paneId={paneId}
-        idx={idx}
-        outerIdx={outerIdx}
-        markdownLookup={markdownLookup}
-        id={id}
-        self={self}
-      >
+  ) : (
+    <MoveDraggableElement
+      ignoreDragNDrop={ignoreDragNDrop}
+      fragmentId={fragmentId}
+      paneId={paneId}
+      idx={idx}
+      outerIdx={outerIdx}
+      markdownLookup={markdownLookup}
+      id={id}
+      self={self}
+    >
       {drawContent()}
     </MoveDraggableElement>
   );
@@ -249,7 +254,7 @@ function buildComponentFromAst(
   queueUpdate: (id: string, updateFn: () => void) => void,
   paneFragmentIds: string[],
   toolAddMode: ToolAddMode,
-  ignoreDragNDrop: boolean,
+  ignoreDragNDrop: boolean
 ) {
   const thisAst = payload.ast[0];
   const Tag = thisAst?.tagName || thisAst?.type;
@@ -259,25 +264,20 @@ function buildComponentFromAst(
     markdownLookup.nthTagLookup[Tag][outerIdx] &&
     markdownLookup.nthTagLookup[Tag][outerIdx].nth;
   const isTextContainerItem =
-    Tag === `li` &&
-    markdownLookup?.nthTag[outerIdx] &&
-    markdownLookup.nthTag[outerIdx] === `ol`;
-  const showOverlay =
-    [`text`, `styles`, `eraser`].includes(toolMode) && !readonly;
+    Tag === `li` && markdownLookup?.nthTag[outerIdx] && markdownLookup.nthTag[outerIdx] === `ol`;
+  const showOverlay = [`text`, `styles`, `eraser`].includes(toolMode) && !readonly;
   const showInsertOverlay = [`insert`].includes(toolMode) && !readonly;
   const noOverlay = readonly || (!showOverlay && !showInsertOverlay);
   const globalNth = getGlobalNth(Tag, idx, outerIdx, markdownLookup);
   const thisId = `${paneId}-${Tag}-${outerIdx}${typeof idx === `number` ? `-${idx}` : ``}`;
   // is this an image?
   const isImage =
-    typeof idx === `number` &&
-    typeof markdownLookup.imagesLookup[outerIdx] !== `undefined`
+    typeof idx === `number` && typeof markdownLookup.imagesLookup[outerIdx] !== `undefined`
       ? typeof markdownLookup.imagesLookup[outerIdx][idx] === `number`
       : false;
   // is this an inline code?
   const isWidget =
-    typeof idx === `number` &&
-    typeof markdownLookup.codeItemsLookup[outerIdx] !== `undefined`
+    typeof idx === `number` && typeof markdownLookup.codeItemsLookup[outerIdx] !== `undefined`
       ? typeof markdownLookup.codeItemsLookup[outerIdx][idx] === `number`
       : false;
   const wrapContent = (content: ReactNode, span: boolean = false) =>
@@ -358,11 +358,9 @@ function buildComponentFromAst(
   const buttonTarget = buttonPayload && thisAst.properties.href;
   const callbackPayload =
     buttonPayload?.callbackPayload && lispLexer(buttonPayload?.callbackPayload);
-  const targetUrl =
-    callbackPayload && preParseAction(callbackPayload, slug, isContext);
+  const targetUrl = callbackPayload && preParseAction(callbackPayload, slug, isContext);
   const isExternalUrl =
-    (typeof targetUrl === "string" &&
-      targetUrl.substring(0, 8) === "https://") ||
+    (typeof targetUrl === "string" && targetUrl.substring(0, 8) === "https://") ||
     (typeof thisAst.properties?.href === "string" &&
       thisAst.properties.href.substring(0, 8) === "https://");
 
@@ -378,27 +376,15 @@ function buildComponentFromAst(
   const imageSrcSet = thisImage?.srcSet ? thisImage.optimizedSrc : null;
 
   // Handle code hooks
-  const regexpHook =
-    /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief)\((.*?)\)/;
+  const regexpHook = /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief)\((.*?)\)/;
   const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
-  const thisHookRaw =
-    thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
-  const hook =
-    thisHookRaw && typeof thisHookRaw[1] === "string" ? thisHookRaw[1] : null;
-  const thisHookPayload =
-    thisHookRaw && typeof thisHookRaw[2] === "string" ? thisHookRaw[2] : null;
-  const thisHookValuesRaw =
-    thisHookPayload && thisHookPayload.match(regexpValues);
-  const value1 =
-    thisHookValuesRaw && thisHookValuesRaw.length ? thisHookValuesRaw[0] : null;
-  const value2 =
-    thisHookValuesRaw && thisHookValuesRaw.length > 1
-      ? thisHookValuesRaw[1]
-      : null;
-  const value3 =
-    thisHookValuesRaw && thisHookValuesRaw.length > 2
-      ? thisHookValuesRaw[2]
-      : "";
+  const thisHookRaw = thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
+  const hook = thisHookRaw && typeof thisHookRaw[1] === "string" ? thisHookRaw[1] : null;
+  const thisHookPayload = thisHookRaw && typeof thisHookRaw[2] === "string" ? thisHookRaw[2] : null;
+  const thisHookValuesRaw = thisHookPayload && thisHookPayload.match(regexpValues);
+  const value1 = thisHookValuesRaw && thisHookValuesRaw.length ? thisHookValuesRaw[0] : null;
+  const value2 = thisHookValuesRaw && thisHookValuesRaw.length > 1 ? thisHookValuesRaw[1] : null;
+  const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValuesRaw[2] : "";
 
   // if editable as text
   const renderContent = useCallback(() => {
@@ -413,7 +399,7 @@ function buildComponentFromAst(
         };
       }
       if (node.children) {
-        node.children = node.children.map(child =>
+        node.children = node.children.map((child) =>
           "tagName" in child ? processNode(child as HastElement) : child
         );
       }
@@ -428,34 +414,31 @@ function buildComponentFromAst(
     !readonly &&
     markdown &&
     toolMode === `text` &&
-    ([`p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`].includes(Tag) ||
-      isTextContainerItem)
+    ([`p`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`].includes(Tag) || isTextContainerItem)
   ) {
     const content = renderContent();
 
     return (
-        <EditableContent
-          content={content}
-          tag={Tag}
-          paneId={paneId}
-          markdownFragmentId={markdownFragmentId}
-          classes={injectClassNames}
-          outerIdx={outerIdx}
-          idx={idx}
-          queueUpdate={queueUpdate}
-          markdownLookup={markdownLookup}
-          ignoreDragNDrop={ignoreDragNDrop}
-          id={thisId}
-        />
+      <EditableContent
+        content={content}
+        tag={Tag}
+        paneId={paneId}
+        markdownFragmentId={markdownFragmentId}
+        classes={injectClassNames}
+        outerIdx={outerIdx}
+        idx={idx}
+        queueUpdate={queueUpdate}
+        markdownLookup={markdownLookup}
+        ignoreDragNDrop={ignoreDragNDrop}
+        id={thisId}
+      />
     );
   }
 
   // if set-up for recursive handling
   if (["p", "em", "strong", "ol", "ul", "li", "h2", "h3", "h4"].includes(Tag)) {
     const TagComponent =
-      Tag !== `p`
-        ? (Tag as keyof JSX.IntrinsicElements)
-        : (`div` as keyof JSX.IntrinsicElements);
+      Tag !== `p` ? (Tag as keyof JSX.IntrinsicElements) : (`div` as keyof JSX.IntrinsicElements);
     const child = (
       <TagComponent className={injectClassNames}>
         {thisAst?.children?.map((p: any, childIdx: number) => (
@@ -604,10 +587,7 @@ function buildComponentFromAst(
       <a
         target="_blank"
         rel="noreferrer"
-        className={classNames(
-          `pointer-events-none`,
-          buttonPayload?.className || injectClassNames
-        )}
+        className={classNames(`pointer-events-none`, buttonPayload?.className || injectClassNames)}
         href={targetUrl || thisAst.properties.href}
       >
         {thisAst.children[0].value}
@@ -636,10 +616,7 @@ function buildComponentFromAst(
   ) {
     const child = (
       <AstToButton
-        className={classNames(
-          `pointer-events-none`,
-          buttonPayload.className || ""
-        )}
+        className={classNames(`pointer-events-none`, buttonPayload.className || "")}
         callbackPayload={callbackPayload}
         targetUrl={targetUrl}
         slug={slug}
@@ -709,8 +686,7 @@ function buildComponentFromAst(
       widgetContent = (
         <div className={injectClassNames}>
           <div>
-            <strong>Resource Template (not yet implemented):</strong> {value1},{" "}
-            {value2}
+            <strong>Resource Template (not yet implemented):</strong> {value1}, {value2}
           </div>
         </div>
       );
@@ -752,8 +728,7 @@ function buildComponentFromAst(
       widgetContent = (
         <div className={injectClassNames}>
           <div>
-            <strong>Bunny Video Embed Code on Context Page:</strong> {value1} (
-            {value2})
+            <strong>Bunny Video Embed Code on Context Page:</strong> {value1} ({value2})
           </div>
         </div>
       );
@@ -793,8 +768,7 @@ function buildComponentFromAst(
     if (widgetContent) {
       const isInlineWidget = false;
       if (!showOverlay) return wrapContent(widgetContent, isInlineWidget);
-      if (toolMode === `eraser`)
-        return wrapContent(widgetContent, isInlineWidget);
+      if (toolMode === `eraser`) return wrapContent(widgetContent, isInlineWidget);
       if (toolMode === `styles`)
         return wrapContent(
           <EditableInnerElementWrapper
@@ -838,9 +812,7 @@ const PaneFromAst = ({
   queueUpdate,
   ignoreDragNDrop,
 }: PaneFromAstProps) => {
-  const dragState = useStore(dragHandleStore);
-
-  const component = buildComponentFromAst(
+  return buildComponentFromAst(
     payload,
     markdownLookup,
     outerIdx,
@@ -856,43 +828,8 @@ const PaneFromAst = ({
     queueUpdate,
     paneFragmentIds,
     toolAddMode,
-    ignoreDragNDrop || false,
+    ignoreDragNDrop || false
   );
-
-  const nodeId = createNodeId({paneId, outerIdx, idx, fragmentId: markdownFragmentId});
-
-  const canDrawGhostBlock = (): boolean => {
-    if(lastDragTime.get() === dragStartTime.get())
-      return false;
-
-    const el = dragState.hoverElement;
-    if(!el || ignoreDragNDrop) {
-      return false;
-    }
-
-    return el.fragmentId === markdownFragmentId
-      && el.paneId === paneId
-      && el.idx === idx
-      && el.outerIdx === outerIdx;
-  };
-
-  const drawGhostBlock = () => {
-    return (<div className={`w-full bg-blue-200 h-20`}/>);
-  }
-
-  if(canDrawGhostBlock()) {
-    lastDragTime.set(dragStartTime.get());
-    console.log("draw ghost for: " + nodeId);
-    return (
-      <div>
-        {dragState.hoverElement?.location === "before" && drawGhostBlock()}
-        {component}
-        {dragState.hoverElement?.location === "after" && drawGhostBlock()}
-      </div>
-    );
-  } else {
-    return component;
-  }
 };
 
 export default PaneFromAst;
