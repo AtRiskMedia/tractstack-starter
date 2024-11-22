@@ -476,7 +476,7 @@ function buildComponentFromAst(
             toolMode={toolMode}
             toolAddMode={toolAddMode}
             queueUpdate={queueUpdate}
-            ignoreDragNDrop={isWidget}
+            ignoreDragNDrop={isWidget || !!buttonPayload}
           />
         ))}
       </TagComponent>
@@ -859,7 +859,7 @@ const PaneFromAst = ({
     ignoreDragNDrop || false,
   );
 
-  const nodeId = createNodeId({paneId, outerIdx, idx: 0, fragmentId: markdownFragmentId});
+  const nodeId = createNodeId({paneId, outerIdx, idx, fragmentId: markdownFragmentId});
 
   const canDrawGhostBlock = (): boolean => {
     if(lastDragTime.get() === dragStartTime.get())

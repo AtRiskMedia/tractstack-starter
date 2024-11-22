@@ -1005,13 +1005,13 @@ function swapPayloadClasses(
     el1OuterIdx,
     markdownLookup
   );
-  swapClassNames_All(
-    optionsPayload,
-    el1Info.tagName,
-    el1Info.nth,
-    el2Info.nth,
-    field
-  );
+  // swapClassNames_All(
+  //   optionsPayload,
+  //   el1Info.tagName,
+  //   el1Info.nth,
+  //   el2Info.nth,
+  //   field
+  // );
   swapClassNamesPayload_Override(
     optionsPayload,
     el1Info.tagName,
