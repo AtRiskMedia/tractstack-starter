@@ -106,6 +106,15 @@ export const editModeStore = atom<EditModeValue | null>(null);
 // ==========================
 // Drag n Drop
 // ==========================
+
+export const lastDragTime = atom<number>(-1);
+export const dragStartTime = atom<number>(-1);
+
+export const updateDragStartTime = () => {
+  console.log("update drag start time");
+  dragStartTime.set(new Date().getTime());
+}
+
 export enum Location {
   NOWHERE = -1,
   BEFORE = 0,
@@ -160,7 +169,7 @@ export const setDragShape = (shape: DragShape|null) => {
     ...dragHandleStore.get(),
     dragShape: shape
   });
-  console.log("drag shape: " + JSON.stringify(shape));
+  //console.log("drag shape: " + JSON.stringify(shape));
 }
 
 export const dropDraggingElement = () => {
@@ -219,6 +228,7 @@ export const setDragHoverInfo = (el: DragState | null) => {
 };
 
 export const setDragPosition = (pos: ControlPosition) => {
+  updateDragStartTime();
   dragHandleStore.set({
     ...dragHandleStore.get(),
     pos,

@@ -3,7 +3,7 @@ import {
   dragHandleStore,
   editModeStore,
   lastInteractedPaneStore,
-  lastInteractedTypeStore,
+  lastInteractedTypeStore, lastDragTime, dragStartTime,
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
@@ -14,7 +14,7 @@ import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
 import EraserWrapper from "./EraserWrapper";
 import InsertWrapper from "./InsertWrapper";
 import { wrapWithStylesIndicator } from "./StylesWrapper";
-import { classNames } from "../../../utils/helpers";
+import { classNames, createNodeId } from "../../../utils/helpers";
 import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
@@ -859,9 +859,16 @@ const PaneFromAst = ({
     ignoreDragNDrop || false,
   );
 
+  const nodeId = createNodeId({paneId, outerIdx, idx: 0, fragmentId: markdownFragmentId});
+
   const canDrawGhostBlock = (): boolean => {
+    if(lastDragTime.get() === dragStartTime.get())
+      return false;
+
     const el = dragState.hoverElement;
-    if(!el || ignoreDragNDrop) return false;
+    if(!el || ignoreDragNDrop) {
+      return false;
+    }
 
     return el.fragmentId === markdownFragmentId
       && el.paneId === paneId
@@ -874,6 +881,8 @@ const PaneFromAst = ({
   }
 
   if(canDrawGhostBlock()) {
+    lastDragTime.set(dragStartTime.get());
+    console.log("draw ghost for: " + nodeId);
     return (
       <div>
         {dragState.hoverElement?.location === "before" && drawGhostBlock()}
