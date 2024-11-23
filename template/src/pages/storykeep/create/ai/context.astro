@@ -7,7 +7,7 @@ import { isTursoReady, getContentMap } from "../../../../api/turso";
 import type { ContentMap } from "../../../../types";
 
 // confirm set-up
-const { hasTurso, hasConcierge, hasAssemblyAi } = getSetupChecks();
+const { hasTurso, hasConcierge, hasAssemblyAI } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
 if (!hasTursoReady) {
@@ -32,7 +32,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 >
   <div id="storykeep-content">
     {
-      hasAssemblyAi ? (
+      hasAssemblyAI ? (
         <CreateNewAiPage
           mode="context"
           contentMapSlugs={contentMapSlugs}
