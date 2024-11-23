@@ -196,7 +196,7 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
 {
   Tag === `code` && hook === `youtube` && value1 && value2 ? (
     <div class={injectClassNames}>
-      <YouTubeWrapper client:visible embedCode={value1} title={value2} />
+      <YouTubeWrapper client:only embedCode={value1} title={value2} />
     </div>
   ) : null
 }
