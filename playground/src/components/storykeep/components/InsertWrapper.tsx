@@ -18,7 +18,7 @@ import type { MarkdownLookup, ToolAddMode } from "../../../types";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { insertElement } from "@/utils/storykeep.ts";
 import { GhostBlock } from "@/components/other/GhostBlock.tsx";
-import { canDrawGhostBlock } from "@/utils/dragNDropUtils.ts";
+import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 
 interface InsertWrapperProps {
   fragmentId: string;
@@ -65,17 +65,16 @@ const InsertWrapper = ({
       if (self.current) {
         const rect = self.current.getBoundingClientRect();
         if (isPosInsideRect(rect, dragState.pos)) {
-          const loc =
-            dragState.pos.y > rect.y + rect.height / 2
-              ? Location.AFTER
-              : Location.BEFORE;
+          const loc = getRelativeYLocationToElement(dragState.pos.y, rect);
           activeHoverArea.current = loc;
           console.log(`inside afterArea: ${fragmentId} | location: ${loc}`);
-          setDragHoverInfo({
-            ...getNodeData(),
-            markdownLookup,
-            location: getFinalLocation(loc, allowTag),
-          });
+          setTimeout(() => {
+            setDragHoverInfo({
+              ...getNodeData(),
+              markdownLookup,
+              location: getFinalLocation(loc, allowTag),
+            });
+          }, 0);
         }
       }
     } else if (dragState.affectedFragments.size > 0) {

@@ -1,4 +1,4 @@
-import { dragHandleStore, dragStartTime, lastDragTime } from "@/store/storykeep.ts";
+import { dragHandleStore, dragStartTime, lastDragTime, Location } from "@/store/storykeep.ts";
 
 export function canDrawGhostBlock(
   fragmentId: string,
@@ -21,4 +21,9 @@ export function canDrawGhostBlock(
     el.idx === idx &&
     el.outerIdx === outerIdx
   );
+}
+
+export function getRelativeYLocationToElement(dragPosY: number, elRect: DOMRect) {
+  const loc = dragPosY > elRect.y + window.scrollY + elRect.height / 2 ? Location.AFTER : Location.BEFORE;
+  return loc;
 }

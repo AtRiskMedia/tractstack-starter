@@ -17,7 +17,7 @@ import type { MarkdownLookup } from "@/types.ts";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { useStore } from "@nanostores/react";
 import { getFinalLocation } from "@/utils/helpers.ts";
-import { canDrawGhostBlock } from "@/utils/dragNDropUtils.ts";
+import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 import { GhostBlock } from "@/components/other/GhostBlock.tsx";
 
 export type MoveDraggableElementProps = {
@@ -61,9 +61,9 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       if (props.self?.current) {
         const rect = props.self?.current.getBoundingClientRect();
         if (isPosInsideRect(rect, dragState.pos)) {
-          const loc = dragState.pos.y > rect.y + rect.height / 2 ? Location.AFTER : Location.BEFORE;
+          const loc = getRelativeYLocationToElement(dragState.pos.y, rect);
           activeHoverArea.current = loc;
-          console.log(`inside afterArea: ${props.id} | location: ${loc}`);
+          console.log(`inside afterArea: ${props.id} | location: ${loc} | ${dragState.pos.y} | ${rect.y} h: ${rect.height}`);
           setDragHoverInfo({
             ...getNodeData(),
             markdownLookup,
