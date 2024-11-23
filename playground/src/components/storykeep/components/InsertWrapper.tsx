@@ -17,6 +17,8 @@ import { classNames, getFinalLocation } from "../../../utils/helpers";
 import type { MarkdownLookup, ToolAddMode } from "../../../types";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { insertElement } from "@/utils/storykeep.ts";
+import { GhostBlock } from "@/components/other/GhostBlock.tsx";
+import { canDrawGhostBlock } from "@/utils/dragNDropUtils.ts";
 
 interface InsertWrapperProps {
   fragmentId: string;
@@ -144,9 +146,12 @@ const InsertWrapper = ({
     );
   }
 
+  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, false);
   return (
     <div className="relative" ref={self}>
+      {(canDrawGhost && dragState.hoverElement?.location === "before") && <GhostBlock/>}
       {children}
+      {(canDrawGhost && dragState.hoverElement?.location === "after") && <GhostBlock/>}
       <div
         className={classNames(
           "z-100 group/top group absolute inset-x-0 top-0 h-1/2 ",

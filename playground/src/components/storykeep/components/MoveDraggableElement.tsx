@@ -1,10 +1,14 @@
 import { memo, type MouseEvent, type RefObject, useEffect, useRef, useState } from "react";
 import Draggable, { type ControlPosition } from "react-draggable";
 import {
-  dragHandleStore, type DragNode, dragStartTime,
-  dropDraggingElement, lastDragTime, Location,
+  dragHandleStore,
+  type DragNode,
+  dropDraggingElement,
+  Location,
   paneFragmentMarkdown,
-  resetDragStore, setDragHoverInfo, setDragPosition,
+  resetDragStore,
+  setDragHoverInfo,
+  setDragPosition,
   setDragShape,
   setGhostSize,
 } from "@/store/storykeep.ts";
@@ -13,19 +17,21 @@ import type { MarkdownLookup } from "@/types.ts";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { useStore } from "@nanostores/react";
 import { getFinalLocation } from "@/utils/helpers.ts";
-import { allowTagInsert } from "@/utils/compositor/markdownUtils.ts";
+import { canDrawGhostBlock } from "@/utils/dragNDropUtils.ts";
+import { GhostBlock } from "@/components/other/GhostBlock.tsx";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;
   ignoreDragNDrop: boolean;
-  fragmentId : string;
+  fragmentId: string;
   paneId: string;
-  idx: number|null;
+  idx: number | null;
   id: string;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
-  self?: RefObject<HTMLDivElement>|null;
-}
+  self?: RefObject<HTMLDivElement> | null;
+};
+
 
 export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
@@ -38,14 +44,14 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const outerChildlren = field.markdown.htmlAst.children[outerIdx];
   // @ts-expect-error has children
   let tagName = outerChildlren.tagName;
-  if(idx !== null) {
+  if (idx !== null) {
     // @ts-expect-error has children
     tagName = outerChildlren.children[idx].tagName;
   }
-  const allowTag = {before: true, after: true}; //allowTagInsert(tagName, outerIdx, idx, markdownLookup);
+  const allowTag = { before: true, after: true }; //allowTagInsert(tagName, outerIdx, idx, markdownLookup);
 
   const getNodeData = (): DragNode => {
-    return {fragmentId, paneId, idx, outerIdx} as DragNode;
+    return { fragmentId, paneId, idx, outerIdx } as DragNode;
   };
 
   useEffect(() => {
@@ -83,11 +89,12 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       const x = mouseEvent.clientX + window.scrollX;
       const y = mouseEvent.clientY + window.scrollY;
       if (dragging.current) {
-        setDragPosition({ x, y });
+        // set timeout 0ms pushes this to the next event frame process
+        setTimeout(() => setDragPosition({x,y}), 0);
       }
     };
 
-    if(!props.ignoreDragNDrop) {
+    if (!props.ignoreDragNDrop) {
       document.addEventListener("mousemove", handleMouseMove);
     }
     return () => {
@@ -95,28 +102,11 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
     };
   }, []);
 
-  const drawGhostBlock = () => {
-    return (<div className={`w-full bg-blue-200 h-20`}/>);
-  }
-
-  const canDrawGhostBlock = (): boolean => {
-    if(lastDragTime.get() === dragStartTime.get())
-      return false;
-
-    const el = dragState.hoverElement;
-    if(!el || props.ignoreDragNDrop) {
-      return false;
-    }
-
-    return el.fragmentId === fragmentId
-      && el.paneId === paneId
-      && el.idx === idx
-      && el.outerIdx === outerIdx;
-  };
+  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, props.ignoreDragNDrop);
 
   return (
     <div className="inline">
-      {(canDrawGhostBlock() && dragState.hoverElement?.location === "before") && drawGhostBlock()}
+      {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock/>}
       <Draggable
         defaultPosition={{ x: dragPos.x, y: dragPos.y }}
         position={dragPos}
@@ -144,7 +134,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
                   hoverEl.fragmentId,
                   hoverEl.outerIdx,
                   hoverEl.paneId,
-                  hoverEl.idx,
+                  hoverEl.idx
                 );
               }
             }
@@ -156,8 +146,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       >
         {props.children}
       </Draggable>
-      {(canDrawGhostBlock() && dragState.hoverElement?.location === "after") && drawGhostBlock()}
+      {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock/>}
     </div>
-)
-  ;
+  );
 });
