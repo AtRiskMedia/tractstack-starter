@@ -744,17 +744,17 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     const queryParts = [];
 
     if (existingTables.includes("menu")) {
-      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme 
+      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme as extra 
                       FROM menu`);
     }
 
     if (existingTables.includes("pane")) {
-      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane 
+      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
                       FROM pane`);
     }
 
     if (existingTables.includes("resource")) {
-      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug 
+      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug as extra 
                       FROM resource`);
     }
 
@@ -786,19 +786,19 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           return {
             ...base,
             type: "Menu",
-            theme: row.theme as string,
+            theme: row.extra as string,
           };
         case "Resource":
           return {
             ...base,
             type: "Resource",
-            categorySlug: row.category_slug as string | null,
+            categorySlug: row.extra as string | null,
           };
         case "Pane":
           return {
             ...base,
             type: "Pane",
-            isContext: Boolean(row.is_context_pane),
+            isContext: Boolean(row.extra),
           };
         case "StoryFragment":
           return {

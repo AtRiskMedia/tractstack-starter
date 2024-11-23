@@ -222,7 +222,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["5xl", "6xl", "7xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
@@ -564,7 +564,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["4xl", "5xl", "6xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
@@ -919,7 +919,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["4xl", "5xl", "6xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
@@ -1261,7 +1261,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["4xl", "5xl", "6xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
@@ -1427,7 +1427,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["5xl", "6xl", "7xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
               },
@@ -1831,7 +1831,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["5xl", "6xl", "7xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 fontFACE: ["action"],
               },
             },
@@ -2203,7 +2203,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["5xl", "6xl", "7xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 fontFACE: ["action"],
               },
             },
@@ -2615,7 +2615,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["4xl", "5xl", "6xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
               },
@@ -2946,7 +2946,7 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["4xl", "5xl", "6xl"],
+                textSIZE: ["3xl", "5xl", "6xl"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
               },

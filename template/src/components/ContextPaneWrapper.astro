@@ -15,7 +15,7 @@ const { pane, current, resources, codeHookOptions } = Astro.props;
 ---
 
 <astro-context-pane-wrapper data-id={JSON.stringify(current)}>
-  <div class="py-16">
+  <div class="pb-16">
     <div id={`pane-${pane.id}`} class="pane" data-hidden="false">
       {
         pane.optionsPayload?.codeHook ? (
