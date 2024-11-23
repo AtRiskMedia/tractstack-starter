@@ -37,8 +37,14 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
-// get storyfragment datum
+// get and validate storyfragment datum
 const storyfragment = await getStoryFragmentBySlug(lookup);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 
 // id for this storyfragment
 const current: Current = storyfragment
