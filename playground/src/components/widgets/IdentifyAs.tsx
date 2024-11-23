@@ -122,7 +122,7 @@ export const IdentifyAs = ({
           <SingleIdentifyAs
             key={`${value.slug}-${index}`}
             value={{ ...value, target }}
-            target={target}
+            target={target.toUpperCase()}
             readonly={readonly}
           />
         ))}
