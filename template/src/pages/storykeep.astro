@@ -143,31 +143,38 @@ const impressions =
             <div class="flex flex-col md:flex-row gap-6">
               <div class="rounded-md bg-mywhite shadow-inner w-full md:w-1/2 py-7">
                 <div class="px-3.5 py-1.5 space-y-6">
-                  <h2 id="create-new-page-heading-ai" class="block text-xl leading-6 text-black">
-                    Create new page * AI powered
-                  </h2>
-                  <div
-                    class="mt-1 flex flex-col gap-4"
-                    role="group"
-                    aria-labelledby="create-new-page-heading-ai"
-                  >
-                    <a
-                      href="/storykeep/create/ai/storyfragment"
-                      class="flex items-center justify-center px-6 py-3 rounded-md text-lg bg-white text-mydarkgrey border border-mydarkgrey hover:bg-myorange/50"
-                      role="button"
-                      title="Add an interactive page to your website"
-                    >
-                      Web Page
-                    </a>
-                    <a
-                      href="/storykeep/create/ai/context"
-                      class="flex items-center justify-center px-6 py-3 rounded-md text-lg bg-white text-mydarkgrey border border-mydarkgrey hover:bg-myorange/50"
-                      role="button"
-                      title="Add a short 'for-further-reading' page"
-                    >
-                      Short Context Page
-                    </a>
-                  </div>
+                  {hasAssemblyAI ? (
+                    <>
+                      <h2
+                        id="create-new-page-heading-ai"
+                        class="block text-xl leading-6 text-black"
+                      >
+                        Create new page * AI powered
+                      </h2>
+                      <div
+                        class="mt-1 flex flex-col gap-4"
+                        role="group"
+                        aria-labelledby="create-new-page-heading-ai"
+                      >
+                        <a
+                          href="/storykeep/create/ai/storyfragment"
+                          class="flex items-center justify-center px-6 py-3 rounded-md text-lg bg-white text-mydarkgrey border border-mydarkgrey hover:bg-myorange/50"
+                          role="button"
+                          title="Add an interactive page to your website"
+                        >
+                          Web Page
+                        </a>
+                        <a
+                          href="/storykeep/create/ai/context"
+                          class="flex items-center justify-center px-6 py-3 rounded-md text-lg bg-white text-mydarkgrey border border-mydarkgrey hover:bg-myorange/50"
+                          role="button"
+                          title="Add a short 'for-further-reading' page"
+                        >
+                          Short Context Page
+                        </a>
+                      </div>
+                    </>
+                  ) : null}
                   <h2 id="create-new-page-heading" class="block text-xl leading-6 text-black mt-4">
                     Create new page (manual)
                   </h2>
