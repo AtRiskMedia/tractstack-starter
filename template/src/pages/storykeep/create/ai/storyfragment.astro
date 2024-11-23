@@ -8,7 +8,7 @@ import CreateNewAiPage from "../../../../components/storykeep/components/CreateN
 import type { ContentMap } from "../../../../types";
 
 // confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
+const { hasTurso, hasConcierge, hasAssemblyAi } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
 if (!hasTursoReady) {
@@ -38,12 +38,26 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
   canonicalURL={canonicalURL}
 >
   <div id="storykeep-content">
-    <CreateNewAiPage
-      mode="storyfragment"
-      contentMapSlugs={contentMapSlugs}
-      newId={newId}
-      tractStackId={tractStackId}
-      client:load
-    />
+    {
+      hasAssemblyAi ? (
+        <CreateNewAiPage
+          mode="storyfragment"
+          contentMapSlugs={contentMapSlugs}
+          newId={newId}
+          tractStackId={tractStackId}
+          client:load
+        />
+      ) : (
+        <>
+          <div>AssemblyAI API key not found</div>
+          <a
+            class="text-myblue underline hover:text-black hover:underline-offset-2"
+            href="/storykeep/settings"
+          >
+            Goto Settings
+          </a>
+        </>
+      )
+    }
   </div>
 </StoryKeep>
