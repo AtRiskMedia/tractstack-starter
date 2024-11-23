@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../store/beliefs";
 import type { BeliefStore, BeliefDatum } from "../types";
@@ -12,6 +12,7 @@ const Filter = (props: {
   const $heldBeliefsAll = useStore(heldBeliefs);
   const [reveal, setReveal] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     // must match for all heldBeliefs
@@ -81,24 +82,45 @@ const Filter = (props: {
     } else setOverrideWithhold(true);
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
-  // now handle state changes!
+  // handle state changes and scrolling
   useEffect(() => {
-    const thisPane = document.querySelector(`#pane-${id}`);
-    const add =
+    const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
+    if (!thisPane) {
+      console.log(`Pane ${id} not found`);
+      return;
+    }
+
+    const isVisible =
       (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
       (!heldBeliefsFilter && withheldBeliefsFilter && overrideWithhold) ||
       (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
-    const del = (heldBeliefsFilter || withheldBeliefsFilter) && !add;
-    if (add && thisPane) {
-      // reveal -- conditions met
-      thisPane.classList.remove(`invisible`);
-      thisPane.classList.remove(`h-0`);
-      thisPane.classList.add(`motion-safe:animate-fadeInUp`);
-    } else if (del && thisPane) {
+
+    if (isVisible) {
+      thisPane.classList.remove(`invisible`, `h-0`);
+
+      // Only animate and scroll if this isn't the first render
+      if (!isFirstRender.current) {
+        thisPane.classList.add(`motion-safe:animate-fadeInUp`);
+        void thisPane.offsetHeight;
+
+        const scrollToPane = () => {
+          window.scrollTo({
+            top: thisPane.offsetTop - window.innerHeight / 2 + thisPane.offsetHeight / 2,
+            behavior: "smooth",
+          });
+        };
+
+        requestAnimationFrame(() => {
+          setTimeout(scrollToPane, 50);
+        });
+      }
+    } else {
       thisPane.classList.remove(`motion-safe:animate-fadeInUp`);
-      thisPane.classList.add(`invisible`);
-      thisPane.classList.add(`h-0`);
+      thisPane.classList.add(`invisible`, `h-0`);
     }
+
+    // Mark first render complete
+    isFirstRender.current = false;
   }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold]);
 
   return null;
