@@ -134,7 +134,8 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
                   hoverEl.fragmentId,
                   hoverEl.outerIdx,
                   hoverEl.paneId,
-                  hoverEl.idx
+                  hoverEl.idx,
+                  hoverEl.location
                 );
               }
             }

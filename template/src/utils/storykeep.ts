@@ -732,29 +732,6 @@ function handleBlockMovementWithinTheSamePanel(
   }
 }
 
-function swapClassNames_All(
-  optionsPayload: OptionsPayloadDatum,
-  el1TagName: string,
-  el1Nth: number,
-  el2Nth: number,
-  field: FieldWithHistory<MarkdownEditDatum>
-) {
-  if (optionsPayload.classNames) {
-    let allCopy = { ...optionsPayload.classNames.all };
-    allCopy = swapObjectValues(
-      allCopy[el1TagName],
-      el1Nth.toString(10),
-      el2Nth.toString(10)
-    );
-    if (!allCopy) return;
-
-    field.current.payload.optionsPayload.classNames = {
-      ...field.current.payload.optionsPayload.classNames,
-      all: allCopy,
-    };
-  }
-}
-
 function swapClassNamesPayload_Override(
   optionsPayload: OptionsPayloadDatum,
   el1TagName: string,
@@ -1075,7 +1052,15 @@ function handleListElementMovementWithinTheSamePanel(
   } else {
     // swap elements bottom to top
     for (let i = el1Index; i > el2Index; i--) {
-      swapPayloadClasses(field.current.markdown.htmlAst.children[el1OuterIdx], i, i - 1, el1OuterIdx, markdownLookup, optionsPayload, field);
+      swapPayloadClasses(
+        field.current.markdown.htmlAst.children[el1OuterIdx],
+        i,
+        i - 1,
+        el1OuterIdx,
+        markdownLookup,
+        optionsPayload,
+        field
+      );
     }
   }
 
@@ -1088,6 +1073,49 @@ function handleListElementMovementWithinTheSamePanel(
   });
 }
 
+function getNextElement(fragmentId: string, paneId: string, outerIdx: number, idx: number|null, location: "before"|"after") {
+  const dir = location === "after" ? 1 : -1;
+  let adjustedOuterIdx = outerIdx;
+  let adjustedIdx = idx;
+  if(idx !== null) {
+    adjustedIdx = idx+dir;
+  } else {
+    adjustedOuterIdx = outerIdx+dir;
+  }
+
+  const pane = paneFragmentMarkdown.get()[fragmentId];
+  const children = pane.current.markdown.htmlAst.children[adjustedOuterIdx];
+
+  if (idx !== null) {
+    // @ts-expect-error children exist
+    if (children.children[idx]) {
+      return { fragmentId, paneId, adjustedOuterIdx, adjustedIdx };
+    } else {
+      adjustedOuterIdx = outerIdx+dir;
+    }
+  }
+
+  const adjustedChildren = pane.current.markdown.htmlAst.children[adjustedOuterIdx];
+  if (adjustedChildren) {
+    return { fragmentId, paneId, adjustedOuterIdx, adjustedIdx };
+  }
+  return undefined;
+}
+
+function isSameObject(el1fragmentId: string,
+                      el1OuterIdx: number,
+                      el1PaneId: string,
+                      el1Idx: number | null,
+                      el2FragmentId: string,
+                      el2OuterIdx: number,
+                      el2PaneId: string,
+                      el2Idx: number | null) {
+  return el1fragmentId === el2FragmentId 
+    && el1PaneId === el2PaneId 
+    && el1OuterIdx === el2OuterIdx 
+    && el1Idx === el2Idx;
+}
+
 export function moveElements(
   markdownLookup: MarkdownLookup,
   newMarkdownLookup: MarkdownLookup,
@@ -1098,11 +1126,29 @@ export function moveElements(
   el2FragmentId: string,
   el2OuterIdx: number,
   el2PaneId: string,
-  el2Idx: number | null
+  el2Idx: number | null,
+  location: "before"|"after",
 ) {
   const field = cloneDeep(paneFragmentMarkdown.get()[el1fragmentId]);
   const curFieldMdast = fromMarkdown(field.current.markdown.body);
   const newHistory = updateHistory(field, Date.now());
+
+  const nextEl = getNextElement(el2FragmentId, el2PaneId, el2OuterIdx, el2Idx, location);
+  if (
+    nextEl &&
+    isSameObject(
+      el1fragmentId,
+      el1OuterIdx,
+      el1PaneId,
+      el1Idx,
+      el2FragmentId,
+      nextEl.adjustedOuterIdx,
+      el2PaneId,
+      nextEl.adjustedIdx
+    )
+  ) {
+    return;
+  }
 
   if (el1PaneId !== el2PaneId) {
     if (isElementInList(curFieldMdast, el1OuterIdx, el1Idx)) {
