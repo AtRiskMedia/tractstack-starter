@@ -43,7 +43,7 @@ const PaneSlug = ({
             onEditingChange={(editing) => handleEditingChange("paneSlug", editing)}
             placeholder="Enter pane slug"
             className="block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-mygreen xs:text-sm xs:leading-6"
-            hyphenate={true}
+            mode="hyphenate"
           />
           {($uncleanData[id]?.paneSlug || $temporaryErrors[id]?.paneSlug) && (
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">

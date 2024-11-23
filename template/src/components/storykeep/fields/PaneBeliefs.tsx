@@ -19,6 +19,7 @@ const PaneBeliefs = ({ id }: PaneBeliefsProps) => {
 
   const [heldBeliefs, setHeldBeliefs] = useState<BeliefDatum>({});
   const [withheldBeliefs, setWithheldBeliefs] = useState<BeliefDatum>({});
+  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
 
   useEffect(() => {
     setHeldBeliefs($paneHeldBeliefs[id]?.current || {});
@@ -57,19 +58,21 @@ const PaneBeliefs = ({ id }: PaneBeliefsProps) => {
       const beliefs = isHeld ? heldBeliefs : withheldBeliefs;
       const updatedBeliefs = { ...beliefs };
 
+      // Get the edit value using a unique key for this field
+      const editKey = valueIndex !== null ? `${key}-${valueIndex}-value` : `${key}-key`;
+      const newValue = editingValues[editKey];
+
       if (valueIndex !== null) {
         if (Array.isArray(updatedBeliefs[key])) {
           updatedBeliefs[key] = [...(updatedBeliefs[key] as string[])];
-          (updatedBeliefs[key] as string[])[valueIndex] = (
-            (updatedBeliefs[key] as string[])[valueIndex] || ""
-          ).trim();
+          (updatedBeliefs[key] as string[])[valueIndex] = newValue?.trim() || "";
         }
       } else {
         const oldKey = Object.keys(beliefs).find((k) => k.toLowerCase() === key.toLowerCase());
-        if (oldKey && oldKey !== key) {
+        if (oldKey && newValue && oldKey !== newValue) {
           const values = updatedBeliefs[oldKey];
           delete updatedBeliefs[oldKey];
-          updatedBeliefs[key] = values;
+          updatedBeliefs[newValue] = values;
         }
       }
 
@@ -79,6 +82,13 @@ const PaneBeliefs = ({ id }: PaneBeliefsProps) => {
         setWithheldBeliefs(updatedBeliefs);
       }
       updateBeliefs(isHeld, updatedBeliefs);
+
+      // Clear the editing value
+      setEditingValues((prev) => {
+        const next = { ...prev };
+        delete next[editKey];
+        return next;
+      });
     }
   };
 
@@ -152,12 +162,16 @@ const PaneBeliefs = ({ id }: PaneBeliefsProps) => {
                 <ContentEditableField
                   id={`belief-key-${isHeld ? "held" : "withheld"}-${key}`}
                   value={key}
-                  onChange={() => {
+                  onChange={(newValue) => {
+                    setEditingValues((prev) => ({
+                      ...prev,
+                      [`${key}-key`]: newValue,
+                    }));
                     return true;
                   }}
                   onEditingChange={(editing) => handleEditingChange(isHeld, key, null, editing)}
                   placeholder="Enter belief slug"
-                  hyphenate={true}
+                  mode="belief"
                   className="block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-mygreen xs:text-sm xs:leading-6"
                 />
               </div>
@@ -170,14 +184,17 @@ const PaneBeliefs = ({ id }: PaneBeliefsProps) => {
                         <ContentEditableField
                           id={`belief-value-${isHeld ? "held" : "withheld"}-${key}-${valueIndex}`}
                           value={value}
-                          onChange={() => {
+                          onChange={(newValue) => {
+                            setEditingValues((prev) => ({
+                              ...prev,
+                              [`${key}-${valueIndex}-value`]: newValue.toUpperCase(),
+                            }));
                             return true;
                           }}
                           onEditingChange={(editing) =>
                             handleEditingChange(isHeld, key, valueIndex, editing)
                           }
                           placeholder="Value"
-                          hyphenate={true}
                           className="block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-mygreen xs:text-sm xs:leading-6"
                         />
                         <div className="flex">

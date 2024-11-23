@@ -10,7 +10,6 @@ const Filter = (props: {
 }) => {
   const { id, heldBeliefsFilter, withheldBeliefsFilter } = props;
   const $heldBeliefsAll = useStore(heldBeliefs);
-
   const [reveal, setReveal] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
 

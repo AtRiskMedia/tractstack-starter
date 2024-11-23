@@ -138,7 +138,7 @@ export const PaneSettings = (props: { id: string; storyFragmentId: string }) => 
                   : tab === `impression`
                     ? `Add Impression`
                     : tab === `beliefs`
-                      ? `Add Story Paths`
+                      ? `Add Magic Paths`
                       : tab === `codeHook`
                         ? `Manage Code Hook`
                         : tab === `buttons`

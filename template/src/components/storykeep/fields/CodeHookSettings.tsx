@@ -143,7 +143,7 @@ const CodeHookSettings = ({ id }: CodeHookProps) => {
           onEditingChange={handleTargetEditingChange}
           placeholder="Enter target"
           className={commonInputClass}
-          hyphenate={true}
+          mode="codehook"
         />
       </div>
 
@@ -158,7 +158,6 @@ const CodeHookSettings = ({ id }: CodeHookProps) => {
               onEditingChange={(editing) => handleOptionEditingChange(editing, key)}
               placeholder="Key"
               className={`w-1/3 ${commonInputClass}`}
-              hyphenate={true}
             />
             {value === "true" || value === "false" ? (
               <Switch

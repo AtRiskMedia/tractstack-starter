@@ -20,14 +20,21 @@ const SingleIdentifyAs = ({
   const thisScale = heldBeliefsScales.agreement;
   const start = { id: 0, slug: `0`, name: `0`, color: `` };
   const [selected, setSelected] = useState(start);
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
 
   useEffect(() => {
     if (!readonly) {
-      const hasMatchingBelief = $heldBeliefsAll
-        .filter((e: BeliefDatum) => e.slug === value.slug)
-        .at(0);
-      if (hasMatchingBelief && hasMatchingBelief.object === target) setSelected(thisScale[0]);
-      else setSelected(start);
+      const matchingBeliefs = $heldBeliefsAll.filter((e: BeliefDatum) => e.slug === value.slug);
+      const hasMatchingBelief = matchingBeliefs.find((belief) => belief.object === target);
+      const hasOtherSelected = matchingBeliefs.length > 0 && !hasMatchingBelief;
+
+      if (hasMatchingBelief && hasMatchingBelief.object === target) {
+        setSelected(thisScale[0]);
+        setIsOtherSelected(false);
+      } else {
+        setSelected(start);
+        setIsOtherSelected(hasOtherSelected);
+      }
     }
   }, [$heldBeliefsAll, readonly]);
 
@@ -81,8 +88,10 @@ const SingleIdentifyAs = ({
         onClick={handleClick}
         className={classNames(
           selected.id === 0
-            ? `bg-white hover:bg-myorange/5 ring-myorange/50`
-            : `bg-white hover:bg-myorange/5 ring-mygreen/5`,
+            ? isOtherSelected
+              ? `bg-white/25 hover:bg-gray-100 ring-gray-200` // Greyed but interactive
+              : `bg-white hover:bg-myorange/20 ring-myorange/50` // Original unselected state
+            : `bg-white hover:bg-mygreen/20 ring-mygreen/5`, // Selected state
           `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
         )}
       >
@@ -91,7 +100,7 @@ const SingleIdentifyAs = ({
             aria-label="Color swatch for belief"
             className={classNames(
               `motion-safe:animate-pulse`,
-              selected.color || `bg-myorange`,
+              selected.color || (isOtherSelected ? `bg-gray-300` : `bg-myorange`),
               `inline-block h-2 w-2 flex-shrink-0 rounded-full`
             )}
           />
