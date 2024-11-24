@@ -442,6 +442,8 @@ function handleBlockMovementBetweenPanels(
   //console.log(secondAst);
 
   const secondMdast = fromMarkdown(newField.current.markdown.body);
+  const markdown0 = toMarkdown(secondMdast);
+  console.log("MARKDOWN0: " + markdown0);
 
   let isListElement = false;
   let secondAstParent = secondAst.children;
@@ -469,18 +471,21 @@ function handleBlockMovementBetweenPanels(
     // @ts-expect-error children exists
     newTag = "li" || "";
     if ("tagName" in erasedEl) {
-      erasedEl.tagName = "li";
-      childMdast.type = "listItem";
+     erasedEl.tagName = "li";
+     childMdast.type = "listItem";
+     // @ts-expect-error spread exists
+      childMdast["spread"] = false;
+     // @ts-expect-error checked exists
+      childMdast["checked"] = null;
     }
   }
-
-  //if (isListElement) {
-  //  erasedEl.type = "listItem";
-  //}
 
   secondMdastParent.unshift(childMdast);
   secondAstParent.unshift(erasedEl);
   newMarkdownLookup = generateMarkdownLookup(newField.current.markdown.htmlAst);
+
+  const markdown1 = toMarkdown(secondMdast);
+  console.log("MARKDOWN1: " + markdown1);
 
   updateClassNames(
     curTag,
@@ -492,6 +497,9 @@ function handleBlockMovementBetweenPanels(
     newField,
     newMarkdownLookup
   );
+
+  const markdown2 = toMarkdown(secondMdast);
+  console.log("MARKDOWN2: " + markdown2);
 
   const payload = field.current.payload.optionsPayload.classNamesPayload[curTag]?.override;
   if(payload) {
@@ -506,6 +514,9 @@ function handleBlockMovementBetweenPanels(
     [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i],];
     [secondMdastParent[i], secondMdastParent[i + 1]] = [secondMdastParent[i + 1], secondMdastParent[i],];
   }
+
+  const markdown3 = toMarkdown(secondMdast);
+  console.log("MARKDOWN3: " + markdown3);
 
   newField.current.markdown.body = toMarkdown(secondMdast);
   newField.current.markdown.htmlAst = cleanHtmlAst(toHast(secondMdast) as HastRoot) as HastRoot;
@@ -644,7 +655,7 @@ type NodeToClassData = {
 }
 
 function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
-  //console.log(field.current);
+  console.log(field.current);
   const lookup = new Map<any, NodeToClassData>();
   const elementsCounter = new Map<string, number>();
 
@@ -666,7 +677,7 @@ function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
 
     elementsCounter.set(tagName, idx + 1);
   }
-  //console.log(Array.from(lookup));
+  console.log(Array.from(lookup));
   return lookup;
 }
 
@@ -1065,6 +1076,9 @@ function handleListElementMovementWithinTheSamePanel(
   }
 
   field.current.markdown.body = toMarkdown(mdast);
+  const markdown0 = toMarkdown(mdast);
+  console.log("MARKDOWN0: " + markdown0);
+
   field.current.markdown.htmlAst = cleanHtmlAst(toHast(mdast) as HastRoot) as HastRoot;
   paneFragmentMarkdown.setKey(el1fragmentId, {
     ...field,
