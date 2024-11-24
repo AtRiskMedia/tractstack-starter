@@ -32,7 +32,7 @@ import type { ViewportKey } from "../../types";
 
 function getSubstring(str: string) {
   const dashIndex = str.indexOf("-");
-  return dashIndex !== -1 ? str.substring(0, dashIndex) : null;
+  return dashIndex !== -1 ? str.substring(0, dashIndex) : str;
 }
 
 function findUniqueSuffix(str: string, arr: string[]): string {

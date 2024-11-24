@@ -201,7 +201,6 @@ export interface PaneDesign {
   slug: string;
   name: string;
   variants: string[];
-  img: string;
   priority: number;
   type: `starter` | `break` | `reuse` | `codehook`;
   panePayload: {
