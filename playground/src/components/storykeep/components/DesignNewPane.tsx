@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {ulid} from "ulid"
+import { ulid } from "ulid";
 import { useStore } from "@nanostores/react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";

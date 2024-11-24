@@ -76,12 +76,6 @@ copy_directory() {
         continue
       fi
 
-      # Skip CodeHook.astro file
-      if [ "$base_name" = "CodeHook.astro" ]; then
-        echo -e "${yellow}Preserving CodeHook.astro${reset}"
-        continue
-      fi
-
       if [ -d "$item" ]; then
         # Recursively copy directory
         copy_directory "$item" "$dest/$base_name" "${preserve[@]}"
@@ -96,7 +90,7 @@ copy_directory() {
 
 # Copy src directory
 echo -e "${blue}Updating src directory...${reset}"
-copy_directory "$TEMPLATE_DIR/src" "$STORYKEEP_PATH/src" ""
+copy_directory "$TEMPLATE_DIR/src" "$STORYKEEP_PATH/src" "custom"
 
 # Copy public directory (preserving custom and styles)
 echo -e "${blue}Updating public directory...${reset}"
