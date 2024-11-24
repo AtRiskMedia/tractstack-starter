@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import {ulid} from "ulid"
 import { useStore } from "@nanostores/react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
@@ -82,7 +83,7 @@ const DesignNewPane = ({
           storyFragment: id,
           index,
           selectedDesign: {
-            id: `codehook`,
+            id: ulid(),
             name: selectedCodehook,
             slug: selectedCodehook.toLowerCase(),
             type: "codehook",
