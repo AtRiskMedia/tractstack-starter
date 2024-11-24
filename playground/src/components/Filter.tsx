@@ -105,7 +105,7 @@ const Filter = (props: {
 
         const scrollToPane = () => {
           window.scrollTo({
-            top: thisPane.offsetTop - window.innerHeight / 2 + thisPane.offsetHeight / 2,
+            top: thisPane.offsetTop - 20,
             behavior: "smooth",
           });
         };
