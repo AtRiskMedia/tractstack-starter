@@ -76,6 +76,12 @@ copy_directory() {
         continue
       fi
 
+      # Skip CodeHook.astro file
+      if [ "$base_name" = "CodeHook.astro" ]; then
+        echo -e "${yellow}Preserving CodeHook.astro${reset}"
+        continue
+      fi
+
       if [ -d "$item" ]; then
         # Recursively copy directory
         copy_directory "$item" "$dest/$base_name" "${preserve[@]}"
