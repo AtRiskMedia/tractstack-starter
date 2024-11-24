@@ -6,7 +6,13 @@ import { EditModal } from "../../components/storykeep/EditModal";
 import { StoryFragment } from "../../components/storykeep/StoryFragment";
 import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
-import { isTursoReady, isContentPrimed, isContentReady, getContentMap } from "../../api/turso";
+import {
+  getAllMenus,
+  isTursoReady,
+  isContentPrimed,
+  isContentReady,
+  getContentMap,
+} from "../../api/turso";
 import { getSetupChecks } from "../../utils/setupChecks";
 import { components } from "../../custom/CodeHook.astro";
 import type { AuthStatus, ContentMap } from "../../types";
@@ -38,6 +44,7 @@ if (!storyfragment && slug !== `create`) {
   return Astro.redirect("/404");
 }
 
+const menus = await getAllMenus();
 const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 ---
@@ -72,6 +79,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
         hasContentReady={hasContentReady}
         contentMapSlugs={contentMapSlugs}
         hasTurso={hasTurso}
+        menus={menus}
       />
     </header>
 
