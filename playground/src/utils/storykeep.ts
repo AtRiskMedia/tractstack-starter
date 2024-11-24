@@ -425,7 +425,7 @@ function handleBlockMovementBetweenPanels(
   //eraseElement(el1PaneId, el1fragmentId, el1OuterIdx, el1Idx, markdownLookup);
 
   const fieldMdastCopy = cloneDeep(curFieldMdast);
-  fieldMdastCopy.children.splice(el1OuterIdx, 1);
+  const erasedElMdast = fieldMdastCopy.children.splice(el1OuterIdx, 1)[0];
 
   const newField = cloneDeep(paneFragmentMarkdown.get()[el2fragmentId]);
   copyMarkdownIfFound(erasedEl, field, newField);
@@ -460,25 +460,18 @@ function handleBlockMovementBetweenPanels(
     }
   }
 
-  const childMdast = curFieldMdast.children[el1OuterIdx];
-
   // @ts-expect-error tagName exists
   const curTag = erasedEl.tagName || "";
   let newTag = curTag;
+  let newMdastEl = erasedElMdast;
   if (isListElement) {
     // @ts-expect-error children exists
     newTag = "li" || "";
-    if ("tagName" in erasedEl) {
-     erasedEl.tagName = "li";
-     childMdast.type = "listItem";
-     // @ts-expect-error spread exists
-      childMdast["spread"] = false;
-     // @ts-expect-error checked exists
-      childMdast["checked"] = null;
-    }
+    // @ts-expect-error all good
+    newMdastEl = {type: "listItem", children: [erasedElMdast], checked: null, spread: false};
   }
 
-  secondMdastParent.unshift(childMdast);
+  secondMdastParent.unshift(newMdastEl);
   secondAstParent.unshift(erasedEl);
   newMarkdownLookup = generateMarkdownLookup(newField.current.markdown.htmlAst);
 

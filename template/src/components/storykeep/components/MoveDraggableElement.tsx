@@ -64,11 +64,13 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           const loc = getRelativeYLocationToElement(dragState.pos.y, rect);
           activeHoverArea.current = loc;
           console.log(`inside afterArea: ${props.id} | location: ${loc} | ${dragState.pos.y} | ${rect.y} h: ${rect.height}`);
-          setDragHoverInfo({
-            ...getNodeData(),
-            markdownLookup,
-            location: getFinalLocation(loc, allowTag),
-          });
+          setTimeout(() => {
+            setDragHoverInfo({
+              ...getNodeData(),
+              markdownLookup,
+              location: getFinalLocation(loc, allowTag),
+            });
+          }, 0);
         }
       }
     } else if (dragState.affectedFragments.size > 0) {
