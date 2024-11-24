@@ -879,6 +879,9 @@ export interface MenuLink {
   description: string;
   featured: boolean;
   actionLisp: string;
+}
+
+export interface MenuLinkDatum extends MenuLink {
   to: string;
   internal: boolean;
 }

@@ -76,8 +76,6 @@ export default function MenuEditor({ menu, create }: MenuEditorProps) {
           description: "",
           featured: false,
           actionLisp: "",
-          to: "",
-          internal: true,
         },
       ],
     }));

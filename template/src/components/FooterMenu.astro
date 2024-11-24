@@ -1,7 +1,7 @@
 ---
 import { preParseAction } from "../utils/concierge/preParseAction";
 import { lispLexer } from "../utils/concierge/lispLexer";
-import type { MenuDatum, MenuLink } from "../types";
+import type { MenuDatum, MenuLink,MenuLinkDatum } from "../types";
 
 interface Props {
   payload: MenuDatum;
@@ -14,7 +14,7 @@ const thisPayload = payload.optionsPayload;
 const additionalLinks = thisPayload
   .filter((e: MenuLink) => !e.featured)
   .map((e: MenuLink) => {
-    const item = { ...e };
+    const item = { ...e } as MenuLinkDatum;
     const thisPayload = lispLexer(e.actionLisp);
     const to = preParseAction(thisPayload, slug, isContext);
     if (typeof to === `string`) {
@@ -26,7 +26,7 @@ const additionalLinks = thisPayload
 const featuredLinks = thisPayload
   .filter((e: MenuLink) => e.featured)
   .map((e: MenuLink) => {
-    const item = { ...e };
+    const item = { ...e } as MenuLinkDatum;
     const thisPayload = lispLexer(e.actionLisp);
     const to = preParseAction(thisPayload, slug, isContext);
     if (typeof to === `string`) {
@@ -41,7 +41,7 @@ const allLinks = additionalLinks.concat(featuredLinks);
 <div class="mx-auto max-w-sm py-12">
   <nav class="flex flex-wrap justify-evenly">
     {
-      allLinks.map((item: MenuLink) => (
+      allLinks.map((item: MenuLinkDatum) => (
         <span class="py-1.5">
           <a
             href={item.to}
