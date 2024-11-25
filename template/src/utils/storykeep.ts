@@ -467,10 +467,21 @@ function handleBlockMovementBetweenPanels(
   let newTag = curTag;
   let newMdastEl = erasedElMdast;
   if (isListElement) {
+    newTag = "li";
     // @ts-expect-error children exists
-    newTag = "li" || "";
-    // @ts-expect-error all good
-    newMdastEl = {type: "listItem", children: [erasedElMdast], checked: null, spread: false};
+    if(erasedEl.children.length === 1) {
+      if ("tagName" in erasedEl) {
+        erasedEl.tagName = "li";
+        newMdastEl.type = "listItem";
+        // @ts-expect-error spread exists
+        newMdastEl["spread"] = false;
+        // @ts-expect-error checked exists
+        newMdastEl["checked"] = null;
+      }
+    } else {
+      // @ts-expect-error all good
+      newMdastEl = { type: "listItem", children: [erasedElMdast], checked: null, spread: false };
+    }
   }
 
   secondMdastParent.unshift(newMdastEl);
