@@ -542,7 +542,7 @@ function handleListElementsMovementBetweenPanels(
   // use children here because actual elements are wrapped in the listelement
   const erasedEl = parent.children.splice(el1Idx, 1)[0];
   // @ts-expect-error has children
-  fieldMdastCopy.children[el1OuterIdx].children.splice(el1Idx, 1);
+  const erasedElMdast = fieldMdastCopy.children[el1OuterIdx].children.splice(el1Idx, 1)[0];
 
   const newField = cloneDeep(paneFragmentMarkdown.get()[el2FragmentId]);
   // grab original child because mdast loses some properties when it runs "toMarkdown"
@@ -576,29 +576,27 @@ function handleListElementsMovementBetweenPanels(
     }
   }
 
+  // @ts-expect-error children exists
+  const mdastChild = mdast.children[el1OuterIdx].children[el1Idx].children[0];
+
   // @ts-expect-error tagName exists
   const curTag = erasedEl.tagName || "";
   let newTag = curTag;
+  let newMdastEl = mdastChild;
 
   if (isSourceElementAListItem && !isTargetElementAListItem) {
     // use original mdast to figure out expected field type because we can't extract type from the AST
     // @ts-expect-error children tagName exists
     newTag = getHtmlTagFromMdast(mdast.children[el1OuterIdx].children[el1Idx].children[0]) || "";
   } else if(isTargetElementAListItem) {
-    newTag = "li";
+    // @ts-expect-error children exists
+    newTag = "li" || "";
+    newMdastEl = erasedElMdast;
   }
 
-  // @ts-expect-error children exists
-  const mdastChild = mdast.children[el1OuterIdx].children[el1Idx].children[0];
   const hastEl = toHast(mdastChild);
 
-  if(newTag === "li") {
-    // @ts-expect-error tagName exists
-    hastEl.tagName = "li";
-    mdastChild.type = "listItem";
-  }
-
-  secondMdastParent.unshift(mdastChild)
+  secondMdastParent.unshift(newMdastEl)
 
   // @ts-expect-error children exists but need to set up definitions
   secondAstParent.unshift(hastEl);
