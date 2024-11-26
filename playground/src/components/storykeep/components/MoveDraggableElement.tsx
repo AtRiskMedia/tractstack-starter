@@ -35,6 +35,7 @@ export type MoveDraggableElementProps = {
 
 export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
+  const domRef = useRef(null);
   const dragging = useRef<boolean>(false);
   const activeHoverArea = useRef<Location>(Location.NOWHERE);
   const dragState = useStore(dragHandleStore);
@@ -110,6 +111,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
     <div className="inline">
       {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock/>}
       <Draggable
+        nodeRef={domRef}
         defaultPosition={{ x: dragPos.x, y: dragPos.y }}
         position={dragPos}
         onStart={() => {
@@ -147,7 +149,9 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           resetDragStore();
         }}
       >
-        {props.children}
+        <div ref={domRef}>
+          {props.children}
+        </div>
       </Draggable>
       {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock/>}
     </div>

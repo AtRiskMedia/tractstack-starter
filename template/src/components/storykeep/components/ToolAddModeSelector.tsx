@@ -21,6 +21,8 @@ const ToolAddModeSelector = forwardRef<
 >(({ toolAddMode, setToolAddMode }, ref) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({x: 0, y: 0})
   const dragging = useRef<boolean>(false);
+  const domRef = useRef(null);
+
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setToolAddMode(event.target.value as ToolAddMode);
   };
@@ -65,24 +67,6 @@ const ToolAddModeSelector = forwardRef<
           </option>
         ))}
       </select>
-      <Draggable defaultPosition={{x: dragPos.x, y: dragPos.y}}
-                 position={dragPos}
-                 onStart={() => {
-                   dragging.current = true;
-                   resetDragStore();
-                   setGhostSize(100, 50);
-                 }}
-                 onStop={() => {
-                   dragging.current = false;
-                   if(dragHandleStore.get().affectedFragments.size === 0) {
-                     resetDragStore();
-                   } else {
-                     dropDraggingElement();
-                   }
-                   setDragPos({x: 0, y: 0});
-                 }}>
-        <button className="border-2 ml-4 bg-amber-500">DRAG</button>
-      </Draggable>
     </div>
   );
 });

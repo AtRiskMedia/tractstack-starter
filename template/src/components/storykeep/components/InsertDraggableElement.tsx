@@ -18,6 +18,7 @@ export type DraggableElementProps = {
 export const InsertDraggableElement = memo((props: DraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
   const dragging = useRef<boolean>(false);
+  const domRef = useRef(null);
 
   const handleClick = () => {
     if (props.onClicked && props.el) {
@@ -45,6 +46,7 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
 
   return (
     <Draggable
+      nodeRef={domRef}
       defaultPosition={{ x: dragPos.x, y: dragPos.y }}
       position={dragPos}
       onMouseDown={handleClick}
@@ -63,7 +65,9 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
         setDragPos({ x: 0, y: 0 });
       }}
     >
-      {props.children}
+      <div ref={domRef}>
+        {props.children}
+      </div>
     </Draggable>
   );
 });
