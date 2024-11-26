@@ -88,7 +88,11 @@ const InsertWrapper = ({
           `Drop active element: ${JSON.stringify(dragState.dropState)}`
         );
         if(dragState.dropState.location !== "none") {
-          handleInsert(dragState.dropState.location as "before"|"after");
+          let location = dragState.dropState.location as "before"|"after";
+          if(isEmpty) {
+            location = "before";
+          }
+          handleInsert(location);
         }
       }
     }
@@ -125,9 +129,12 @@ const InsertWrapper = ({
     ]
   );
 
+  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, false);
+
   if (isEmpty) {
     return (
-      <div className="relative min-h-[200px] w-full">
+      <div className="relative min-h-[200px] w-full" ref={self}>
+        {(canDrawGhost && dragState.hoverElement?.location === "before") && <GhostBlock/>}
         <button
           className="pointer-events-auto relative z-103 h-full min-h-[200px] w-full bg-mygreen/20 hover:bg-mygreen/50"
           title={`Add ${toolAddModeTitles[toolAddMode]}`}
@@ -141,11 +148,11 @@ const InsertWrapper = ({
             Add {toolAddModeTitles[toolAddMode]}
           </div>
         </button>
+        {(canDrawGhost && dragState.hoverElement?.location === "after") && <GhostBlock/>}
       </div>
     );
   }
 
-  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, false);
   return (
     <div className="relative" ref={self}>
       {(canDrawGhost && dragState.hoverElement?.location === "before") && <GhostBlock/>}
