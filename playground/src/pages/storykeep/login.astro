@@ -1,9 +1,7 @@
 ---
-import {
-  setAuthenticated,
-  isAuthenticated,
-  //  isOpenDemoMode,
-} from "../../utils/session";
+import { setAuthenticated, isAuthenticated } from "../../utils/session";
+import { WORDMARK_MODE } from "../../constants";
+import { getSetupChecks } from "../../utils/setupChecks";
 
 let loginError = false;
 let redirectPath = "/";
@@ -14,6 +12,7 @@ const forceLogin = url.searchParams.get("force") === "true";
 
 const authenticated = await isAuthenticated(Astro);
 const isOpenDemo = import.meta.env.PRIVATE_OPEN_DEMO === "true";
+const { hasTurso } = getSetupChecks();
 
 if (authenticated && !forceLogin) {
   return Astro.redirect(redirectPath);
@@ -36,34 +35,181 @@ if (Astro.request.method === "POST") {
 }
 
 const showLoginForm = forceLogin || !isOpenDemo;
+
+// Logo and branding configuration
+const logo =
+  typeof import.meta.env.PUBLIC_LOGO === `string` && import.meta.env.PUBLIC_LOGO
+    ? import.meta.env.PUBLIC_LOGO
+    : `/logo.svg`;
+const logoIsSvg = logo.includes(`svg`);
+const wordmark =
+  typeof import.meta.env.PUBLIC_WORDMARK === `string` && import.meta.env.PUBLIC_WORDMARK
+    ? import.meta.env.PUBLIC_WORDMARK
+    : `/wordmark.svg`;
+const wordmarkIsSvg = wordmark.includes(`svg`);
 ---
 
-<html lang="en">
+<!doctype html>
+<html lang="en" class="h-full bg-mywhite">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Login | Story Keep</title>
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href="/styles/storykeep.css" />
   </head>
-  <body>
-    <h1>Login</h1>
-    {loginError && <p style="color: red;">Invalid password. Please try again.</p>}
-    {
-      showLoginForm ? (
-        <form method="POST">
-          <label for="password">Password:</label>
-          <input type="password" id="password" name="password" required />
-          <input type="hidden" name="redirect" value={redirectPath} />
-          <button type="submit">Submit</button>
-        </form>
-      ) : (
-        <p>
-          Open demo mode is active.{" "}
-          <a href={`/storykeep/login?redirect=${redirectPath}&force=true`}>
-            Click here to log in for full access
-          </a>
-          .
-        </p>
-      )
-    }
+  <body class="h-full">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <!-- Logo and Wordmark -->
+        <div class="flex flex-col items-center justify-center gap-4">
+          {
+            [`default`, `logo`].includes(WORDMARK_MODE) && (
+              <div class="h-16 w-auto">
+                {logoIsSvg ? (
+                  <object
+                    type="image/svg+xml"
+                    data={logo}
+                    class="h-full w-auto pointer-events-none"
+                    aria-label="Logo"
+                  >
+                    Logo
+                  </object>
+                ) : (
+                  <img src={logo} class="h-full w-auto pointer-events-none" alt="Logo" />
+                )}
+              </div>
+            )
+          }
+          {
+            [`default`, `wordmark`].includes(WORDMARK_MODE) && (
+              <div class="h-16 w-auto">
+                {wordmarkIsSvg ? (
+                  <object
+                    type="image/svg+xml"
+                    data={wordmark}
+                    class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                    aria-label="Wordmark"
+                  >
+                    Wordmark
+                  </object>
+                ) : (
+                  <img
+                    src={wordmark}
+                    class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                    alt="Wordmark"
+                  />
+                )}
+              </div>
+            )
+          }
+        </div>
+
+        {
+          showLoginForm ? (
+            <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
+              Sign in to your Story Keep
+            </h2>
+          ) : (
+            <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
+              Welcome to Demo Mode
+            </h2>
+          )
+        }
+      </div>
+
+      <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+        <div class="bg-white px-6 py-12 shadow-lg sm:rounded-lg sm:px-12">
+          {
+            loginError && (
+              <div class="mb-6 rounded-md bg-myred/10 p-4">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg
+                      class="h-5 w-5 text-myred"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <h3 class="text-sm font-medium text-myred">Invalid password</h3>
+                    <div class="mt-2 text-sm text-myred/90">
+                      <p>Please check your password and try again.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          }
+
+          {
+            showLoginForm ? (
+              <form class="space-y-6" method="POST">
+                <div>
+                  <label for="password" class="block text-sm font-medium leading-6 text-mydarkgrey">
+                    Password
+                  </label>
+                  <div class="mt-2">
+                    <input
+                      id="password"
+                      name="password"
+                      type="password"
+                      required
+                      class="block w-full rounded-md border-0 py-1.5 text-mydarkgrey shadow-sm ring-1 ring-inset ring-mylightgrey placeholder:text-mylightgrey focus:ring-2 focus:ring-inset focus:ring-myorange sm:text-sm sm:leading-6"
+                    />
+                  </div>
+                </div>
+
+                <input type="hidden" name="redirect" value={redirectPath} />
+
+                <div>
+                  <button
+                    type="submit"
+                    class="flex w-full justify-center rounded-md bg-myblue px-3 py-1.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-myorange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
+                  >
+                    Sign in
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div class="text-center">
+                <p class="text-base text-mydarkgrey">
+                  Open demo mode is active. Have fun exploring!
+                </p>
+                <div class="mt-6">
+                  <a
+                    href={`/storykeep/login?redirect=${redirectPath}&force=true`}
+                    class="text-sm font-bold text-myblue hover:text-myorange"
+                  >
+                    Need full access? Click here to log in
+                  </a>
+                </div>
+              </div>
+            )
+          }
+        </div>
+
+        {
+          hasTurso && (
+            <p class="mt-10 text-center text-sm text-mydarkgrey">
+              Need help? Visit our{" "}
+              <a
+                href="https://discord.gg/DxUUMZP7u5"
+                class="font-bold leading-6 text-myblue hover:text-myorange"
+              >
+                Discord
+              </a>
+            </p>
+          )
+        }
+      </div>
+    </div>
   </body>
 </html>
