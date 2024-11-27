@@ -924,6 +924,9 @@ export const PaneAstStyles = (props: {
             delete payloadForTag.override;
           }
         }
+        else if( payloadForTag?.classes) {
+          delete payloadForTag.classes
+        }
         payloadForTag.classes = {
           ...payloadForTag.classes,
           ...pastedPayload,

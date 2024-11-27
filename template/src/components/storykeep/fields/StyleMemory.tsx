@@ -14,23 +14,19 @@ interface StyleMemoryProps {
 
 const StyleMemory = ({ currentKey, classNamesPayload, onPaste }: StyleMemoryProps) => {
   const $stylesMemory = useStore(stylesMemoryStore);
-
   const handleCopy = () => {
     stylesMemoryStore.set({
       ...$stylesMemory,
       [currentKey]: classNamesPayload,
     });
   };
-
   const handlePaste = () => {
     const storedValue = $stylesMemory[currentKey];
     if (storedValue) {
       onPaste(storedValue);
     }
   };
-
   const isDisabled = !$stylesMemory[currentKey];
-
   return (
     <div className="flex space-x-2">
       <button
