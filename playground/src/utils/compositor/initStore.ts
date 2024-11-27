@@ -62,6 +62,7 @@ export function initializeStores(
     console.error("No newId found in creationStateStore");
     return false;
   }
+  console.log(design);
 
   try {
     if (mode === "storyfragment") {
