@@ -1,7 +1,10 @@
 import { useEffect, useState, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../store/beliefs";
+import { pageLoadTime } from "../store/events";
 import type { BeliefStore, BeliefDatum } from "../types";
+
+const SCROLL_PREVENTION_PERIOD = 5000;
 
 const Filter = (props: {
   id: string;
@@ -10,6 +13,7 @@ const Filter = (props: {
 }) => {
   const { id, heldBeliefsFilter, withheldBeliefsFilter } = props;
   const $heldBeliefsAll = useStore(heldBeliefs);
+  const $pageLoadTime = useStore(pageLoadTime);
   const [reveal, setReveal] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
   const isFirstRender = useRef(true);
@@ -82,7 +86,6 @@ const Filter = (props: {
     } else setOverrideWithhold(true);
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
-  // handle state changes and scrolling
   useEffect(() => {
     const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
     if (!thisPane) {
@@ -98,8 +101,13 @@ const Filter = (props: {
     if (isVisible) {
       thisPane.classList.remove(`invisible`, `h-0`);
 
-      // Only animate and scroll if this isn't the first render
-      if (!isFirstRender.current) {
+      // Only animate and scroll if:
+      // 1. This isn't the first render
+      // 2. We're outside the scroll prevention period
+      const shouldScroll =
+        !isFirstRender.current && Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD;
+
+      if (shouldScroll) {
         thisPane.classList.add(`motion-safe:animate-fadeInUp`);
         void thisPane.offsetHeight;
 
@@ -118,10 +126,8 @@ const Filter = (props: {
       thisPane.classList.remove(`motion-safe:animate-fadeInUp`);
       thisPane.classList.add(`invisible`, `h-0`);
     }
-
-    // Mark first render complete
     isFirstRender.current = false;
-  }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold]);
+  }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold, $pageLoadTime]);
 
   return null;
 };
