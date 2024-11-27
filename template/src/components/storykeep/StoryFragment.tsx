@@ -79,6 +79,7 @@ export const StoryFragment = (props: {
   const $visiblePanes = useStore(visiblePanesStore);
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
+  const viewport = $viewport.value;
   const viewportKey = $viewportKey.value;
   const $viewportSet = useStore(viewportSetStore);
   const $editMode = useStore(editModeStore);
@@ -195,7 +196,7 @@ export const StoryFragment = (props: {
         } else {
           newViewportKey = `desktop`;
         }
-        viewportKeyStore.set({ value: newViewportKey });
+        if (viewport === `auto`) viewportKeyStore.set({ value: newViewportKey });
       }
     }, 100);
     window.addEventListener("resize", handleResize);
@@ -219,8 +220,7 @@ export const StoryFragment = (props: {
     } else {
       newViewportKey = `desktop`;
     }
-    viewportKeyStore.set({ value: newViewportKey });
-
+    if (viewport === `auto`) viewportKeyStore.set({ value: newViewportKey });
     const timerId = setTimeout(() => {
       const cleanup = handleEditorResize();
       return () => {
