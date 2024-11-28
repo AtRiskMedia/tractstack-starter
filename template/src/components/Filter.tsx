@@ -86,6 +86,7 @@ const Filter = (props: {
     } else setOverrideWithhold(true);
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
+  // Filter.tsx - just the key scroll handling part
   useEffect(() => {
     const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
     if (!thisPane) {
@@ -101,26 +102,31 @@ const Filter = (props: {
     if (isVisible) {
       thisPane.classList.remove(`invisible`, `h-0`);
 
-      // Only animate and scroll if:
+      // Only scroll if:
       // 1. This isn't the first render
       // 2. We're outside the scroll prevention period
+      // 3. The pane is adjacent to the user's viewport
       const shouldScroll =
         !isFirstRender.current && Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD;
 
       if (shouldScroll) {
-        thisPane.classList.add(`motion-safe:animate-fadeInUp`);
-        void thisPane.offsetHeight;
+        // Get viewport bounds
+        const viewportHeight = window.innerHeight;
+        const viewportTop = window.scrollY;
+        const viewportBottom = viewportTop + viewportHeight;
+        const paneTop = thisPane.offsetTop;
 
-        const scrollToPane = () => {
+        // Only scroll if this pane is near the viewport
+        const PROXIMITY_THRESHOLD = viewportHeight * 1.5; // Adjust as needed
+        if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
+          thisPane.classList.add(`motion-safe:animate-fadeInUp`);
+          void thisPane.offsetHeight;
+
           window.scrollTo({
-            top: thisPane.offsetTop - 20,
+            top: paneTop - 20,
             behavior: "smooth",
           });
-        };
-
-        requestAnimationFrame(() => {
-          setTimeout(scrollToPane, 50);
-        });
+        }
       }
     } else {
       thisPane.classList.remove(`motion-safe:animate-fadeInUp`);
