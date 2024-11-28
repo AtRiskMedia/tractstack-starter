@@ -34,7 +34,7 @@ const maxHScreen: { [key: string]: boolean } = panesPayload.reduce(function (acc
 ---
 
 <astro-storyfragment data-id={JSON.stringify(current)}>
-  <div class={classNames(tailwindBgColour ? tailwindBgColour : ``, `overflow-hidden`)}>
+  <div class={tailwindBgColour ? tailwindBgColour : ``}>
     {
       panesPayload.map((pane: PaneDatum, idx: number) => (
         <div
