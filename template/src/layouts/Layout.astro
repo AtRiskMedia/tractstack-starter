@@ -38,6 +38,7 @@ if (hasTursoReady) {
   stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
 }
 
+const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const defaultFavIcon =
   typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
     ? import.meta.env.PUBLIC_FAVICON
@@ -66,6 +67,8 @@ const defaultSocialDesc =
   typeof import.meta.env.PUBLIC_OGDESC === `string` && import.meta.env.PUBLIC_OGDESC
     ? import.meta.env.PUBLIC_OGDESC
     : `The best is yet to come!`;
+const socialImageWithVersion = `${defaultSocialImageURL}?v=${Date.now()}`;
+const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${Date.now()}`;
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const gtagUrl =
@@ -101,8 +104,8 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:image" content={defaultSocialImageURL} />
-    <meta property="og:logo" content={defaultSocialLogoURL} />
+    <meta property="og:image" content={socialImageWithVersion} />
+    <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
