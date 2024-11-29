@@ -17,6 +17,7 @@ const Filter = (props: {
   const [reveal, setReveal] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
   const isFirstRender = useRef(true);
+  const paneRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     // must match for all heldBeliefs
@@ -86,13 +87,14 @@ const Filter = (props: {
     } else setOverrideWithhold(true);
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
-  // Filter.tsx - just the key scroll handling part
+  // Handle visibility and scrolling with SEO-friendly hiding
   useEffect(() => {
     const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
     if (!thisPane) {
-      console.log(`Pane ${id} not found`);
+      console.error(`Pane ${id} not found`);
       return;
     }
+    paneRef.current = thisPane;
 
     const isVisible =
       (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
@@ -100,39 +102,58 @@ const Filter = (props: {
       (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
 
     if (isVisible) {
-      thisPane.classList.remove(`invisible`, `h-0`);
+      // Restore visibility while maintaining SEO friendliness
+      thisPane.classList.remove("invisible");
+      thisPane.style.opacity = "1";
+      thisPane.style.height = "auto";
+      thisPane.style.overflow = "visible";
+      thisPane.style.clipPath = "none";
+      thisPane.style.margin = "";
 
-      // Only scroll if:
-      // 1. This isn't the first render
-      // 2. We're outside the scroll prevention period
-      // 3. The pane is adjacent to the user's viewport
       const shouldScroll =
         !isFirstRender.current && Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD;
 
       if (shouldScroll) {
-        // Get viewport bounds
         const viewportHeight = window.innerHeight;
         const viewportTop = window.scrollY;
         const viewportBottom = viewportTop + viewportHeight;
         const paneTop = thisPane.offsetTop;
 
-        // Only scroll if this pane is near the viewport
-        const PROXIMITY_THRESHOLD = viewportHeight * 1.5; // Adjust as needed
+        const PROXIMITY_THRESHOLD = viewportHeight;
         if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
-          thisPane.classList.add(`motion-safe:animate-fadeInUp`);
-          void thisPane.offsetHeight;
+          thisPane.classList.add("motion-safe:animate-fadeInUp");
 
-          window.scrollTo({
-            top: paneTop - 20,
-            behavior: "smooth",
+          requestAnimationFrame(() => {
+            window.scrollTo({
+              top: paneTop - 20,
+              behavior: "smooth",
+            });
           });
         }
       }
     } else {
-      thisPane.classList.remove(`motion-safe:animate-fadeInUp`);
-      thisPane.classList.add(`invisible`, `h-0`);
+      // Hide content while keeping it accessible to search engines
+      thisPane.classList.add("invisible");
+      thisPane.style.opacity = "0";
+      thisPane.style.height = "0";
+      thisPane.style.overflow = "hidden";
+      thisPane.style.clipPath = "inset(50%)"; // Modern way to visually hide
+      thisPane.style.margin = "0";
+      thisPane.classList.remove("motion-safe:animate-fadeInUp");
     }
+
     isFirstRender.current = false;
+
+    // Cleanup function
+    return () => {
+      if (paneRef.current) {
+        paneRef.current.style.opacity = "";
+        paneRef.current.style.height = "";
+        paneRef.current.style.overflow = "";
+        paneRef.current.style.clipPath = "";
+        paneRef.current.style.margin = "";
+      }
+    };
   }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold, $pageLoadTime]);
 
   return null;
