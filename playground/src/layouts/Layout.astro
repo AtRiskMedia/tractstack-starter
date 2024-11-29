@@ -229,13 +229,13 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
 
     <ViewTransitions />
   </head>
-  <body>
+  <body class="w-full overflow-hidden">
     <div
       id="loading-indicator"
       class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
     >
     </div>
-    <SetContentMap payload={contentMap} client:load />
+    <SetContentMap payload={contentMap} client:only="react" />
     <div id="content" class="transition-opacity duration-300">
       <slot />
     </div>
