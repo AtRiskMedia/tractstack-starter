@@ -92,7 +92,7 @@ export const Belief = ({
         <Listbox value={selected} onChange={handleClick}>
           {({ open }) => (
             <>
-              <div className="z-90 relative mt-1">
+              <div className="z-99 relative mt-1">
                 <Listbox.Button
                   className={classNames(
                     selected?.color ? `border-${selected.color.substring(3)}` : `bg-slate-200`,

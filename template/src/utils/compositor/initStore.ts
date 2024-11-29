@@ -62,7 +62,6 @@ export function initializeStores(
     console.error("No newId found in creationStateStore");
     return false;
   }
-
   try {
     if (mode === "storyfragment") {
       const paneIds = design.paneDesigns.map(() => ulid());
@@ -174,7 +173,10 @@ function initializePaneStores(
     paneId,
     createFieldWithHistory(paneDesign.panePayload.heightRatioTablet)
   );
-  paneIsHiddenPane.setKey(paneId, createFieldWithHistory(false));
+  paneIsHiddenPane.setKey(
+    paneId,
+    createFieldWithHistory(paneDesign?.panePayload?.hiddenPane || false)
+  );
   paneHasOverflowHidden.setKey(paneId, createFieldWithHistory(false));
   paneHasMaxHScreen.setKey(paneId, createFieldWithHistory(false));
 

@@ -3,7 +3,7 @@ import { Popover, Transition } from "@headlessui/react";
 import ChevronDownIcon from "@heroicons/react/20/solid/ChevronDownIcon";
 import { preParseAction } from "../utils/concierge/preParseAction";
 import { lispLexer } from "../utils/concierge/lispLexer";
-import type { MenuDatum, MenuLink } from "../types";
+import type { MenuDatum, MenuLink, MenuLinkDatum } from "../types";
 
 const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) => {
   const { payload, slug, isContext } = props;
@@ -11,7 +11,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
   const additionalLinks = thisPayload
     .filter((e: MenuLink) => !e.featured)
     .map((e: MenuLink) => {
-      const item = { ...e };
+      const item = { ...e } as MenuLinkDatum;
       const thisPayload = lispLexer(e.actionLisp);
       const to = preParseAction(thisPayload, slug, isContext);
       if (typeof to === `string`) {
@@ -23,7 +23,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
   const featuredLinks = thisPayload
     .filter((e: MenuLink) => e.featured)
     .map((e: MenuLink) => {
-      const item = { ...e };
+      const item = { ...e } as MenuLinkDatum;
       const thisPayload = lispLexer(e.actionLisp);
       const to = preParseAction(thisPayload, slug, isContext);
       if (typeof to === `string`) {
@@ -36,7 +36,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
   return (
     <>
       <nav className="hidden md:flex flex-wrap items-center space-x-3 md:space-x-6 justify-end ml-6">
-        {featuredLinks.map((item: MenuLink) => (
+        {featuredLinks.map((item: MenuLinkDatum) => (
           <div key={item.name} className="relative py-1.5">
             <a
               href={item.to}
@@ -68,7 +68,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
               <div className="w-screen">
                 <div className="p-4 flex-auto overflow-hidden rounded-3xl bg-white text-md leading-6 shadow-lg ring-1 ring-mydarkgrey/5">
                   <div className="px-8">
-                    {featuredLinks.map((item: MenuLink) => (
+                    {featuredLinks.map((item: MenuLinkDatum) => (
                       <div
                         key={item.name}
                         className="group relative flex gap-x-6 rounded-lg p-4 hover:bg-mygreen/20"
@@ -89,7 +89,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
                         <h3 className="mt-4 text-sm leading-6 text-myblue">Additional Links</h3>
                       </div>
                       <ul role="list" className="mt-6 space-y-6">
-                        {additionalLinks.map((item: MenuLink) => (
+                        {additionalLinks.map((item: MenuLinkDatum) => (
                           <li key={item.name} className="relative">
                             <a
                               href={item.to}

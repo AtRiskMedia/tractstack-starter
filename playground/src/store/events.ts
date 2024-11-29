@@ -12,3 +12,4 @@ export const storySteps = atom<StoryStep[]>([]);
 export const loaded = atom<boolean>(false);
 export const showImpressions = atom<boolean>(false);
 export const panesVisible = map<PanesVisible>({});
+export const pageLoadTime = atom<number>(Date.now());

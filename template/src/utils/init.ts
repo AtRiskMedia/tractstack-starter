@@ -1,5 +1,5 @@
 import { getTokens } from "../api/fetchClient";
-import { events, current } from "../store/events";
+import { events, current, pageLoadTime } from "../store/events";
 import {
   auth,
   profile,
@@ -14,6 +14,7 @@ import {
 import { JWT_LIFETIME } from "../constants";
 
 export async function init() {
+  pageLoadTime.set(Date.now());
   if (!import.meta.env.PROD || locked.get()) {
     return null;
   }

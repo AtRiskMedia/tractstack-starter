@@ -277,21 +277,34 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
                      ts.title AS tractstack_title,
                      ts.slug AS tractstack_slug,
                      (
-                         SELECT json_group_array(json_object(
-                             'id', p.id,
-                             'title', p.title,
-                             'slug', p.slug,
-                             'created', p.created,
-                             'changed', p.changed,
-                             'height_offset_desktop', p.height_offset_desktop,
-                             'height_offset_mobile', p.height_offset_mobile,
-                             'height_offset_tablet', p.height_offset_tablet,
-                             'height_ratio_desktop', p.height_ratio_desktop,
-                             'height_ratio_mobile', p.height_ratio_mobile,
-                             'height_ratio_tablet', p.height_ratio_tablet,
-                             'options_payload', p.options_payload,
-                             'markdown_body', md.body,
-                             'markdown_id', md.id,
+                         WITH RECURSIVE numbered_rows AS (
+                           SELECT 
+                             p.*,
+                             md.body AS markdown_body,
+                             md.id AS markdown_id,
+                             sp.weight,
+                             ROW_NUMBER() OVER (ORDER BY sp.weight ASC) AS row_num
+                           FROM storyfragment_pane sp
+                           JOIN pane p ON sp.pane_id = p.id
+                           LEFT JOIN markdown md ON p.markdown_id = md.id
+                           WHERE sp.storyfragment_id = sf.id
+                         )
+                         SELECT json_group_array(
+                           json_object(
+                             'id', id,
+                             'title', title,
+                             'slug', slug,
+                             'created', created,
+                             'changed', changed,
+                             'height_offset_desktop', height_offset_desktop,
+                             'height_offset_mobile', height_offset_mobile,
+                             'height_offset_tablet', height_offset_tablet,
+                             'height_ratio_desktop', height_ratio_desktop,
+                             'height_ratio_mobile', height_ratio_mobile,
+                             'height_ratio_tablet', height_ratio_tablet,
+                             'options_payload', options_payload,
+                             'markdown_body', markdown_body,
+                             'markdown_id', markdown_id,
                              'files', (
                                 SELECT json_group_array(
                                    json_object(
@@ -300,9 +313,9 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
                                        'alt_description', f.alt_description,
                                        'url', f.url,
                                        'src_set', f.src_set,
-                                       'paneId', p.id,
+                                       'paneId', nr.id,
                                        'markdown', CASE 
-                                           WHEN md.id IS NOT NULL THEN json('true')
+                                           WHEN nr.markdown_id IS NOT NULL THEN json('true')
                                            ELSE json('false')
                                        END
                                    )
@@ -310,21 +323,18 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
                                FROM (
                                    SELECT fp.file_id
                                    FROM file_pane fp
-                                   WHERE fp.pane_id = p.id
+                                   WHERE fp.pane_id = nr.id
                                    UNION
                                    SELECT fm.file_id
                                    FROM file_markdown fm
-                                   WHERE fm.markdown_id = p.markdown_id
+                                   WHERE fm.markdown_id = nr.markdown_id
                                ) AS combined_files
                                JOIN file f ON combined_files.file_id = f.id
-                               LEFT JOIN file_markdown fm ON fm.file_id = f.id AND fm.markdown_id = p.markdown_id 
                              )
-                         ))
-                         FROM storyfragment_pane sp
-                         JOIN pane p ON sp.pane_id = p.id
-                         LEFT JOIN markdown md ON p.markdown_id = md.id
-                         WHERE sp.storyfragment_id = sf.id
-                         ORDER BY sp.weight ASC
+                           )
+                         )
+                         FROM numbered_rows nr
+                         ORDER BY nr.row_num ASC
                      ) AS panes
                  FROM storyfragment sf
                  LEFT JOIN menu m ON sf.menu_id = m.id
@@ -332,6 +342,7 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
                  WHERE sf.slug = ?`,
       args: [slug],
     });
+
     const storyfragments = await cleanTursoStoryFragment(rows);
     const storyfragment = storyfragments?.at(0);
     if (storyfragment) return storyfragment;
@@ -733,17 +744,17 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     const queryParts = [];
 
     if (existingTables.includes("menu")) {
-      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme 
+      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme as extra 
                       FROM menu`);
     }
 
     if (existingTables.includes("pane")) {
-      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane 
+      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
                       FROM pane`);
     }
 
     if (existingTables.includes("resource")) {
-      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug 
+      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug as extra 
                       FROM resource`);
     }
 
@@ -775,19 +786,19 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           return {
             ...base,
             type: "Menu",
-            theme: row.theme as string,
+            theme: row.extra as string,
           };
         case "Resource":
           return {
             ...base,
             type: "Resource",
-            categorySlug: row.category_slug as string | null,
+            categorySlug: row.extra as string | null,
           };
         case "Pane":
           return {
             ...base,
             type: "Pane",
-            isContext: Boolean(row.is_context_pane),
+            isContext: Boolean(row.extra),
           };
         case "StoryFragment":
           return {

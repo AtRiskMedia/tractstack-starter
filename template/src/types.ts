@@ -201,7 +201,6 @@ export interface PaneDesign {
   slug: string;
   name: string;
   variants: string[];
-  img: string;
   priority: number;
   type: `starter` | `break` | `reuse` | `codehook`;
   panePayload: {
@@ -213,6 +212,7 @@ export interface PaneDesign {
     heightRatioMobile: string;
     bgColour: string | boolean;
     codeHook: string | null;
+    hiddenPane?: boolean;
   };
   files: FileDatum[];
   fragments: (PaneDesignBgPane | PaneDesignMarkdown | BgColourDatum)[];
@@ -879,6 +879,9 @@ export interface MenuLink {
   description: string;
   featured: boolean;
   actionLisp: string;
+}
+
+export interface MenuLinkDatum extends MenuLink {
   to: string;
   internal: boolean;
 }

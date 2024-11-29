@@ -1,7 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../store/beliefs";
+import { pageLoadTime } from "../store/events";
 import type { BeliefStore, BeliefDatum } from "../types";
+
+const SCROLL_PREVENTION_PERIOD = 5000;
 
 const Filter = (props: {
   id: string;
@@ -10,9 +13,11 @@ const Filter = (props: {
 }) => {
   const { id, heldBeliefsFilter, withheldBeliefsFilter } = props;
   const $heldBeliefsAll = useStore(heldBeliefs);
-
+  const $pageLoadTime = useStore(pageLoadTime);
   const [reveal, setReveal] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
+  const isFirstRender = useRef(true);
+  const paneRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     // must match for all heldBeliefs
@@ -82,25 +87,74 @@ const Filter = (props: {
     } else setOverrideWithhold(true);
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
-  // now handle state changes!
+  // Handle visibility and scrolling with SEO-friendly hiding
   useEffect(() => {
-    const thisPane = document.querySelector(`#pane-${id}`);
-    const add =
+    const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
+    if (!thisPane) {
+      console.error(`Pane ${id} not found`);
+      return;
+    }
+    paneRef.current = thisPane;
+
+    const isVisible =
       (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
       (!heldBeliefsFilter && withheldBeliefsFilter && overrideWithhold) ||
       (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
-    const del = (heldBeliefsFilter || withheldBeliefsFilter) && !add;
-    if (add && thisPane) {
-      // reveal -- conditions met
-      thisPane.classList.remove(`invisible`);
-      thisPane.classList.remove(`h-0`);
-      thisPane.classList.add(`motion-safe:animate-fadeInUp`);
-    } else if (del && thisPane) {
-      thisPane.classList.remove(`motion-safe:animate-fadeInUp`);
-      thisPane.classList.add(`invisible`);
-      thisPane.classList.add(`h-0`);
+
+    if (isVisible) {
+      // Restore visibility while maintaining SEO friendliness
+      thisPane.classList.remove("invisible");
+      thisPane.style.opacity = "1";
+      thisPane.style.height = "auto";
+      thisPane.style.overflow = "visible";
+      thisPane.style.clipPath = "none";
+      thisPane.style.margin = "";
+
+      const shouldScroll =
+        !isFirstRender.current && Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD;
+
+      if (shouldScroll) {
+        const viewportHeight = window.innerHeight;
+        const viewportTop = window.scrollY;
+        const viewportBottom = viewportTop + viewportHeight;
+        const paneTop = thisPane.offsetTop;
+
+        const PROXIMITY_THRESHOLD = viewportHeight;
+        if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
+          thisPane.classList.add("motion-safe:animate-fadeInUp");
+
+          requestAnimationFrame(() => {
+            window.scrollTo({
+              top: paneTop - 20,
+              behavior: "smooth",
+            });
+          });
+        }
+      }
+    } else {
+      // Hide content while keeping it accessible to search engines
+      thisPane.classList.add("invisible");
+      thisPane.style.opacity = "0";
+      thisPane.style.height = "0";
+      thisPane.style.overflow = "hidden";
+      thisPane.style.clipPath = "inset(50%)"; // Modern way to visually hide
+      thisPane.style.margin = "0";
+      thisPane.classList.remove("motion-safe:animate-fadeInUp");
     }
-  }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold]);
+
+    isFirstRender.current = false;
+
+    // Cleanup function
+    return () => {
+      if (paneRef.current) {
+        paneRef.current.style.opacity = "";
+        paneRef.current.style.height = "";
+        paneRef.current.style.overflow = "";
+        paneRef.current.style.clipPath = "";
+        paneRef.current.style.margin = "";
+      }
+    };
+  }, [id, heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold, $pageLoadTime]);
 
   return null;
 };

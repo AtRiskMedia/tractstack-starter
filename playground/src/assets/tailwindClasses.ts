@@ -15,6 +15,16 @@ type TailwindClasses = {
   [key: string]: TailwindClassDefinition;
 };
 
+export const tailwindCoreLayoutClasses = [
+  "display",
+  "position",
+  "flexDIRECTION",
+  "flexWRAP",
+  "gridAUTOFLOW",
+  "gridCOLSPAN",
+  "gridROWSPAN",
+];
+
 const spacing = [
   "0",
   "1",

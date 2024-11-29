@@ -1018,7 +1018,6 @@ export const PaneAstStyles = (props: {
           }
         }
         payloadForTag.classes = {
-          ...payloadForTag.classes,
           ...pastedPayload,
         };
         updateStoreField("paneFragmentMarkdown", {

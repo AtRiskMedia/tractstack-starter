@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { preParseClicked } from "../../utils/concierge/preParseClicked";
 import { preParseBunny } from "../../utils/concierge/preParseBunny";
 import { events } from "../../store/events";
+import type { MouseEvent } from "react";
 
 export const PlayButton = ({ className = "" }) => {
   return (
@@ -21,7 +23,6 @@ export const PlayButton = ({ className = "" }) => {
   );
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export function AstToButton({
   text,
   className,
@@ -39,6 +40,7 @@ export function AstToButton({
 }) {
   const bunny = preParseBunny(callbackPayload);
   const event = preParseClicked(paneId, callbackPayload);
+
   const pushEvent = function (): void {
     if (bunny) {
       const videoContainer = document.getElementById("video-container");
@@ -53,7 +55,44 @@ export function AstToButton({
       if (event) events.set([...events.get(), event]);
     }
   };
-  // if this is a bunny video event, check if same page
+
+  const handleScroll = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    pushEvent();
+
+    if (targetUrl.startsWith("#") || targetUrl.includes("#")) {
+      const id = targetUrl.split("#")[1];
+      const element = document.getElementById(id);
+
+      if (element) {
+        // Calculate the target position
+        const elementRect = element.getBoundingClientRect();
+        const targetPosition = elementRect.top + window.scrollY;
+
+        // Perform smooth scroll
+        window.scrollTo({
+          top: targetPosition,
+          behavior: "smooth",
+        });
+
+        // After scrolling, ensure the page layout is preserved
+        const checkScrollEnd = setInterval(() => {
+          if (window.scrollY === targetPosition || Math.abs(window.scrollY - targetPosition) < 2) {
+            clearInterval(checkScrollEnd);
+            // Force a reflow to maintain correct document height
+            document.body.style.minHeight = `${Math.max(
+              document.body.scrollHeight,
+              document.documentElement.scrollHeight
+            )}px`;
+          }
+        }, 100);
+      }
+    } else {
+      window.location.href = targetUrl;
+    }
+  };
+
+  // If this is a bunny video event, check if same page
   if (bunny && bunny.slug === slug) {
     return (
       <button className={className} onClick={() => pushEvent()} title={targetUrl}>
@@ -65,11 +104,12 @@ export function AstToButton({
       </button>
     );
   }
+
   return (
     <a
       type="button"
       className={className}
-      onClick={() => pushEvent()}
+      onClick={handleScroll}
       href={targetUrl}
       title={targetUrl}
     >

@@ -41,11 +41,13 @@ function processEnvSettingValue(setting: EnvSettingDatum): string | null {
       return isNaN(num) ? "0" : num.toString();
     }
     case "string[]":
-      return setting.value
+      const result = setting.value
         .split(",")
         .map((v) => v.trim())
         .filter(Boolean)
         .join(",");
+      console.log(`Processing ${setting.name}:`, { input: setting.value, output: result });
+      return result;
     case "string":
       return setting.value || (setting.required ? "" : null);
     default:
@@ -65,6 +67,7 @@ async function saveEnvSettings(
       },
       {} as Record<string, string | null>
     );
+    console.log("Original values:", originalValues);
     const processedSettings = currentSettings
       .map((setting) => {
         const processedValue = processEnvSettingValue(setting);
@@ -81,6 +84,7 @@ async function saveEnvSettings(
         return null;
       })
       .filter((s): s is NonNullable<typeof s> => s !== null);
+    console.log("Now values:", processedSettings);
     if (processedSettings.length === 0) {
       return true; // No changes needed
     }
@@ -186,7 +190,6 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
             if (setting.type === "boolean") {
               value = value === "1" || value === true ? "true" : "false";
             }
-
             // Special handling for PUBLIC_BRAND
             if (setting.name === "PUBLIC_BRAND") {
               const matchingPreset = Object.entries(knownBrand).find(
@@ -200,14 +203,13 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
                 setCustomColors(value);
               }
             }
-
             return {
               ...setting,
               value,
             };
           });
           setLocalSettings(initialSettings);
-          setOriginalSettings(initialSettings);
+          setOriginalSettings(JSON.parse(JSON.stringify(initialSettings)));
           setHasUnsavedChanges(false);
           setIsLoaded(true);
         }
@@ -500,9 +502,9 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
           brandColors.forEach((color, index) => {
             document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
           });
-      } else {
-        setShowRebuildModal(true);
       }
+
+      //setShowRebuildModal(true);
 
       setTimeout(() => {
         setSaveSuccess(false);

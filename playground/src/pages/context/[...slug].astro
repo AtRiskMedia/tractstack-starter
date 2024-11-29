@@ -32,6 +32,12 @@ if (!isValidContentPath(slug)) {
 }
 
 const pane = slug ? await getContextPaneBySlug(slug) : null;
+if (!pane) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 
 // id for this context pane
 const current: Current = pane

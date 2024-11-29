@@ -62,6 +62,7 @@ const preparePreviewPane = (design: PaneDesign) => {
     changed: null,
     markdown: markdown || false,
     optionsPayload: {
+      hiddenPane: design.panePayload.hiddenPane || false,
       paneFragmentsPayload: paneFragments,
       ...(design?.panePayload?.codeHook
         ? {

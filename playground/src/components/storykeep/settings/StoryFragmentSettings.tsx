@@ -3,9 +3,10 @@ import { useStoryKeepUtils } from "../../../utils/storykeep";
 
 import StoryFragmentSocialImagePath from "../fields/StoryFragmentSocialImagePath";
 import StoryFragmentMenu from "../fields/StoryFragmentMenu";
+import type { MenuDatum } from "../../../types";
 
-export const StoryFragmentSettings = (props: { id: string }) => {
-  const { id } = props;
+export const StoryFragmentSettings = (props: { id: string; menus: MenuDatum[] }) => {
+  const { id, menus } = props;
 
   // helpers
   const { isEditing, updateStoreField, handleEditingChange, handleUndo } = useStoryKeepUtils(id);
@@ -23,7 +24,7 @@ export const StoryFragmentSettings = (props: { id: string }) => {
         handleEditingChange={handleEditingChange}
         updateStoreField={updateStoreField}
         handleUndo={handleUndo}
-        payload={[]}
+        menus={menus}
       />
 
       <StoryFragmentSocialImagePath

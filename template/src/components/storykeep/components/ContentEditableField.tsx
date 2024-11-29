@@ -11,6 +11,7 @@ interface ContentEditableFieldProps {
   placeholder?: string;
   style?: CSSProperties;
   hyphenate?: boolean;
+  mode?: "hyphenate" | "codehook" | "belief" | null;
 }
 
 const ContentEditableField = ({
@@ -22,7 +23,7 @@ const ContentEditableField = ({
   className,
   placeholder = "",
   style = {},
-  hyphenate = false,
+  mode = null,
 }: ContentEditableFieldProps) => {
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const cursorPositionRef = useRef<number>(0);
@@ -47,34 +48,74 @@ const ContentEditableField = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
+      // Handle custom keyDown handler if provided
       if (onKeyDown) {
         const shouldContinue = onKeyDown(event);
         if (!shouldContinue) {
           event.preventDefault();
-        }
-      } else if (event.key === "Enter") {
-        event.preventDefault();
-        return false;
-      }
-      if (hyphenate) {
-        if (event.key === " ") {
-          const selection = window.getSelection();
-          if (selection && selection.rangeCount > 0) {
-            const range = selection.getRangeAt(0);
-            if (range.startOffset > 0) {
-              event.preventDefault();
-              insertTextAtCursor("-");
-              return false;
-            }
-          }
-        } else if (event.key.length === 1 && event.key >= "A" && event.key <= "Z") {
-          event.preventDefault();
-          insertTextAtCursor(event.key.toLowerCase());
           return false;
         }
       }
+
+      // Default Enter prevention
+      if (event.key === "Enter") {
+        event.preventDefault();
+        return false;
+      }
+
+      if (!mode) return;
+
+      const selection = window.getSelection();
+      if (!selection || !selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+      const currentOffset = range.startOffset;
+
+      switch (mode) {
+        case "hyphenate":
+          if (event.key === " ") {
+            event.preventDefault();
+            if (currentOffset > 0) {
+              insertTextAtCursor("-");
+              return false;
+            }
+          } else if (event.key.length === 1 && event.key >= "A" && event.key <= "Z") {
+            event.preventDefault();
+            insertTextAtCursor(event.key.toLowerCase());
+            return false;
+          }
+          break;
+
+        case "codehook":
+        case "belief":
+          if (event.key === " " || event.key === "-" || event.key === "_") {
+            event.preventDefault();
+            return false;
+          }
+
+          // First character must be A-Z, force uppercase if a-z
+          if (currentOffset === 0 && event.key.length === 1) {
+            if (event.key >= "A" && event.key <= "Z") {
+              return true;
+            }
+            if (event.key >= "a" && event.key <= "z") {
+              event.preventDefault();
+              insertTextAtCursor(event.key.toUpperCase());
+              return false;
+            }
+            event.preventDefault();
+            return false;
+          }
+
+          // After first char, allow a-z A-Z and numbers (for codehook only)
+          if (event.key >= "0" && event.key <= "9") {
+            return mode === "codehook";
+          }
+
+          break;
+      }
     },
-    [onKeyDown]
+    [mode, onKeyDown, insertTextAtCursor]
   );
 
   const setCursorPosition = useCallback((element: HTMLElement, position: number) => {

@@ -42,6 +42,7 @@ import { contentMap } from "../../store/events";
 import { classNames, cleanString, findUniqueSlug } from "../../utils/helpers";
 import { useStoryKeepUtils } from "../../utils/storykeep";
 import type {
+  MenuDatum,
   AuthStatus,
   StoreKey,
   ToolMode,
@@ -87,6 +88,7 @@ export const StoryKeepHeader = memo(
     hasContentReady,
     contentMapSlugs,
     hasTurso,
+    menus,
   }: {
     id: string;
     slug: string;
@@ -96,6 +98,7 @@ export const StoryKeepHeader = memo(
     hasContentReady: boolean;
     contentMapSlugs: string[];
     hasTurso: boolean;
+    menus: MenuDatum[];
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
@@ -492,7 +495,7 @@ export const StoryKeepHeader = memo(
             ) : null}
             {$editMode?.type === `storyfragment` && $editMode?.mode === `settings` && (
               <>
-                <StoryFragmentSettings id={$editMode.id} />
+                <StoryFragmentSettings id={$editMode.id} menus={menus} />
                 <button
                   type="button"
                   className="my-1 rounded bg-myblue px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"

@@ -47,7 +47,11 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean) =
               return `/${parameterTwo}#${parameterThree}`;
             return `/#${parameterThree}`;
           }
-          console.log(`LispActionPayload preParse misfire on goto`, payload);
+          console.log(
+            `LispActionPayload preParse misfire on goto storyFragmentPane`,
+            parameterTwo,
+            parameterThree
+          );
           break;
         case `bunny`:
           if (parameterTwo && parameterThree) {

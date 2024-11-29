@@ -14,7 +14,7 @@ interface StoryFragmentMenuIdProps {
   handleEditingChange: (storeKey: StoreKey, editing: boolean) => void;
   updateStoreField: (storeKey: StoreKey, newValue: string) => boolean;
   handleUndo: (storeKey: StoreKey, id: string) => void;
-  payload: MenuDatum[];
+  menus: MenuDatum[];
 }
 
 const StoryFragmentMenuId = ({
@@ -22,9 +22,8 @@ const StoryFragmentMenuId = ({
   handleEditingChange,
   updateStoreField,
   handleUndo,
-  payload,
+  menus,
 }: StoryFragmentMenuIdProps) => {
-  const menus = payload;
   const $storyFragmentMenuId = useStore(storyFragmentMenuId, { keys: [id] });
   const comboboxRef = useRef<HTMLDivElement>(null);
   const { openAbove, maxHeight } = useDropdownDirection(comboboxRef);
@@ -32,7 +31,7 @@ const StoryFragmentMenuId = ({
   const [query, setQuery] = useState("");
 
   const currentMenuId = $storyFragmentMenuId[id]?.current;
-  const selectedMenu = menus.find((menu) => menu.id === currentMenuId) || null;
+  const selectedMenu = menus?.find((menu) => menu.id === currentMenuId) || null;
 
   const filteredMenus =
     query === ""

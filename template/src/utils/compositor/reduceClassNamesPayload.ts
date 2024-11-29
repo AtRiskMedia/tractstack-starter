@@ -1,4 +1,4 @@
-import { tailwindClasses } from "../../assets/tailwindClasses";
+import { tailwindClasses, tailwindCoreLayoutClasses } from "../../assets/tailwindClasses";
 import type {
   TupleValue,
   ClassNamesPayloadDatum,
@@ -8,6 +8,16 @@ import type {
 } from "../../types";
 
 const tailwindModifier = [``, `md:`, `xl:`];
+const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];
+
+const stripViewportPrefixes = (classes: string[]): string[] => {
+  return classes.map((classStr) =>
+    classStr
+      .split(" ")
+      .map((cls) => cls.replace(/^(xs:|md:|xl:)/, ""))
+      .join(" ")
+  );
+};
 
 const processParentClasses = (
   parentClasses: ClassNamesPayloadDatum["parent"]["classes"]
@@ -34,18 +44,21 @@ const processParentClasses = (
 
 const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number): string => {
   if (!selector) return "";
-
-  const modifier = viewportIndex === -1 ? "" : tailwindModifier[viewportIndex];
+  const modifier =
+    viewportIndex === -1
+      ? tailwindCoreLayoutClasses.includes(selector)
+        ? tailwindCoreModifier[0]
+        : ""
+      : tailwindModifier[viewportIndex];
   const { className, prefix, useKeyAsClass } = getTailwindClassInfo(selector);
   const thisSelector = useKeyAsClass ? selector : className;
-
   const applyPrefix = (value: string) => {
     // If the value already starts with the prefix, don't add it again
     return value.startsWith(prefix) ? value : `${prefix}${value}`;
   };
 
   if (typeof v === "boolean")
-    console.log(`DOES THIS ACTUALLY EXIST NOW?`, selector, v, viewportIndex);
+    console.log(`DEPRECATED STYLE FOUND in classNamesPayload`, selector, v, viewportIndex);
   if (v === false || v === null || v === undefined) return "";
   if (typeof v === "boolean") return `${modifier}${applyPrefix(v ? thisSelector : "")}`;
   if (v === "true") return `${modifier}${applyPrefix(thisSelector)}`;
@@ -87,17 +100,15 @@ const processClassesForViewports = (
             const value = overrideTuple
               ? processTupleForViewport(overrideTuple, viewportIndex)
               : processTupleForViewport(tuple, viewportIndex);
-            return reduceClassName(selector, value, -1); // Change viewportIndex to -1
+            return reduceClassName(selector, value, -1);
           })
           .filter(Boolean)
           .join(" ")
       );
   };
-
   const mobile = processForViewport(0);
   const tablet = processForViewport(1);
   const desktop = processForViewport(2);
-
   const all = mobile.map((_, index) => {
     const mobileClasses = mobile[index].split(" ");
     const tabletClasses = tablet[index].split(" ");
@@ -117,8 +128,12 @@ const processClassesForViewports = (
 
     return Array.from(combinedClasses).join(" ");
   });
-
-  return [all, mobile, tablet, desktop];
+  return [
+    all,
+    stripViewportPrefixes(mobile),
+    stripViewportPrefixes(tablet),
+    stripViewportPrefixes(desktop),
+  ];
 };
 
 export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => {

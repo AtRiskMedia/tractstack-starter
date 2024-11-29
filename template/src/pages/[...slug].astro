@@ -37,8 +37,14 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
-// get storyfragment datum
+// get and validate storyfragment datum
 const storyfragment = await getStoryFragmentBySlug(lookup);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 
 // id for this storyfragment
 const current: Current = storyfragment
@@ -77,7 +83,7 @@ const current: Current = storyfragment
         impressions={storyfragment.impressions}
         user={user}
       />
-      <main id="main-content" class="min-h-screen">
+      <main id="main-content" class="w-full overflow-hidden">
         <StoryFragmentWrapper
           tailwindBgColour={storyfragment.tailwindBgColour}
           panesPayload={storyfragment.panesPayload}

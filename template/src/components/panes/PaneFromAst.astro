@@ -196,7 +196,7 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
 {
   Tag === `code` && hook === `youtube` && value1 && value2 ? (
     <div class={injectClassNames}>
-      <YouTubeWrapper client:visible embedCode={value1} title={value2} />
+      <YouTubeWrapper client:only="react" embedCode={value1} title={value2} />
     </div>
   ) : null
 }
@@ -228,9 +228,11 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
 }
 {
   Tag === `code` && hook === `identifyAs` && value1 && value2 ? (
-    <div class={injectClassNames}>
-      <IdentifyAs client:visible value={{ slug: value1, target: value2, extra: value3 }} />
-    </div>
+    <IdentifyAs
+      client:visible
+      value={{ slug: value1, target: value2, extra: value3 }}
+      classNames={injectClassNames}
+    />
   ) : null
 }
 {

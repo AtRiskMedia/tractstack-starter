@@ -66,6 +66,9 @@ const defaultSocialDesc =
   typeof import.meta.env.PUBLIC_OGDESC === `string` && import.meta.env.PUBLIC_OGDESC
     ? import.meta.env.PUBLIC_OGDESC
     : `The best is yet to come!`;
+const buildVersion = import.meta.env.BUILD_TIME || Date.now();
+const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
+const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 
 const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
 const gtagUrl =
@@ -101,8 +104,8 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:image" content={defaultSocialImageURL} />
-    <meta property="og:logo" content={defaultSocialLogoURL} />
+    <meta property="og:image" content={socialImageWithVersion} />
+    <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
@@ -226,13 +229,13 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
 
     <ViewTransitions />
   </head>
-  <body>
+  <body class="w-full"> 
     <div
       id="loading-indicator"
       class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
     >
     </div>
-    <SetContentMap payload={contentMap} client:load />
+    <SetContentMap payload={contentMap} client:only="react" />
     <div id="content" class="transition-opacity duration-300">
       <slot />
     </div>
