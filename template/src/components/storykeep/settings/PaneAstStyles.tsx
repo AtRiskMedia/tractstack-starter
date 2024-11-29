@@ -393,7 +393,7 @@ export const PaneAstStyles = (props: {
   }, [markdownDatum, targetId, $editMode]);
 
   // naz debug - pane classes here
-  console.log($paneFragmentMarkdown[markdownFragmentId].current);
+  //console.log($paneFragmentMarkdown[markdownFragmentId].current.payload.optionsPayload);
 
   const handleAddLayer = (start: boolean) => {
     const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);

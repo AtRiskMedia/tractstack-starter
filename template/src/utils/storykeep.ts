@@ -422,7 +422,6 @@ function handleBlockMovementBetweenPanels(
 
   const originalNth = getNthFromAstUsingElement(field.current.markdown.htmlAst, elToErase);
   const erasedEl = field.current.markdown.htmlAst.children.splice(el1OuterIdx, 1)[0];
-  //eraseElement(el1PaneId, el1fragmentId, el1OuterIdx, el1Idx, markdownLookup);
 
   const fieldMdastCopy = cloneDeep(curFieldMdast);
   const erasedElMdast = fieldMdastCopy.children.splice(el1OuterIdx, 1)[0];
@@ -442,10 +441,8 @@ function handleBlockMovementBetweenPanels(
   //console.log(secondAst);
 
   const secondMdast = fromMarkdown(newField.current.markdown.body);
-  const markdown0 = toMarkdown(secondMdast);
-  console.log("MARKDOWN0: " + markdown0);
 
-  let isListElement = false;
+  let isTargetPaneAList = false;
   let secondAstParent = secondAst.children;
   let secondMdastParent = secondMdast.children;
 
@@ -454,7 +451,7 @@ function handleBlockMovementBetweenPanels(
     const innerMdastChildren = secondMdast.children[el2OuterIdx];
 
     if ("children" in innerChildren) {
-      isListElement = true;
+      isTargetPaneAList = true;
       secondAstParent = innerChildren.children;
     }
     if("children" in innerMdastChildren) {
@@ -466,7 +463,7 @@ function handleBlockMovementBetweenPanels(
   const curTag = erasedEl.tagName || "";
   let newTag = curTag;
   let newMdastEl = erasedElMdast;
-  if (isListElement) {
+  if (isTargetPaneAList) {
     newTag = "li";
     // @ts-expect-error children exists
     if(erasedEl.children.length === 1) {
@@ -499,9 +496,6 @@ function handleBlockMovementBetweenPanels(
     newMarkdownLookup
   );
 
-  const markdown2 = toMarkdown(secondMdast);
-  console.log("MARKDOWN2: " + markdown2);
-
   const payload = field.current.payload.optionsPayload.classNamesPayload[curTag]?.override;
   if(payload) {
     Object.keys(payload).forEach((key) => {
@@ -515,9 +509,6 @@ function handleBlockMovementBetweenPanels(
     [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i],];
     [secondMdastParent[i], secondMdastParent[i + 1]] = [secondMdastParent[i + 1], secondMdastParent[i],];
   }
-
-  const markdown3 = toMarkdown(secondMdast);
-  console.log("MARKDOWN3: " + markdown3);
 
   newField.current.markdown.body = toMarkdown(secondMdast);
   newField.current.markdown.htmlAst = cleanHtmlAst(toHast(secondMdast) as HastRoot) as HastRoot;
@@ -654,7 +645,7 @@ type NodeToClassData = {
 }
 
 function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
-  console.log(field.current);
+  //console.log(field.current);
   const lookup = new Map<any, NodeToClassData>();
   const elementsCounter = new Map<string, number>();
 
@@ -676,7 +667,7 @@ function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
 
     elementsCounter.set(tagName, idx + 1);
   }
-  console.log(Array.from(lookup));
+  //console.log(Array.from(lookup));
   return lookup;
 }
 
@@ -811,6 +802,7 @@ function fixPayloadOverrides(
   el1OuterIdx: number,
   markdownLookup: MarkdownLookup
 ) {
+  const originalClasses = curField.current.payload.optionsPayload.classNamesPayload[el1TagName].classes || {};
   const originalOverrides =
     curField.current.payload.optionsPayload.classNamesPayload[el1TagName]
       ?.override || {};
@@ -820,7 +812,7 @@ function fixPayloadOverrides(
         .override || {}),
     };
 
-    const allKeys: string[] = mergeObjectKeys(overrideCopy, originalOverrides);
+    const allKeys: string[] = mergeObjectKeys(overrideCopy, originalOverrides, originalClasses);
     let tagsAmount = 0;
     let ast = curField.current.markdown.htmlAst;
     let originalEl = ast.children[el1Idx];
@@ -831,35 +823,30 @@ function fixPayloadOverrides(
       originalEl = ast.children[el1Idx];
     }
     const nth = getNthFromAstUsingElement(ast, originalEl);
+    let isTargetListElement = false;
     // if list element, grab list elements from markdown lookup
     if (el2TagName === "li") {
       tagsAmount = Object.values(markdownLookup?.listItems).length;
+      isTargetListElement = true;
     } else {
-      tagsAmount =
-        Object.values(markdownLookup?.nthTagLookup?.[el2TagName]).length ?? 0;
+      tagsAmount = Object.values(markdownLookup?.nthTagLookup?.[el2TagName]).length ?? 0;
     }
-    console.log(
-      `add class names payload overrides, [${el2TagName}] tags : ${tagsAmount}`
-    );
+    console.log(`add class names payload overrides, [${el2TagName}] tags : ${tagsAmount}`);
     // set new field payloads, they should be at index 0 as later on they will be swapped
-    allKeys.forEach(key => {
-      // this class is not overriden in source element (the one we move to another pane)
-      // but it should occupy the array slot so styles don't break since they bind by index
-      if (!originalOverrides[key] && overrideCopy[key]) {
-        // @ts-expect-error idk why nulls are not allowed but I see them *shrug*
-        overrideCopy[key].unshift(null);
-        return;
-      }
+    allKeys.forEach((key) => {
+      // Ensure overrideCopy[key] is initialized
       if (!overrideCopy[key]) {
-        overrideCopy[key] = [];
-        // add extra tag because we've added this element
-        for (let i = 0; i < tagsAmount - 1; ++i) {
-          // @ts-expect-error idk why nulls are not allowed but I see them *shrug*
-          overrideCopy[key].push(null);
-        }
+        overrideCopy[key] = new Array(tagsAmount - 1).fill(null);
       }
-      overrideCopy[key].unshift(originalOverrides[key][nth]);
-      // more keys than expected, pop last, likely just a hanging reference that wasn't removed
+
+      // Determine the value to unshift
+      const valueToUnshift =
+        originalOverrides[key]?.[nth] || // Use the override if it exists
+        // @ts-expect-error can be addressed by string
+        (isTargetListElement ? originalClasses[key] : null); // Otherwise, use the class or null
+
+      overrideCopy[key].unshift(valueToUnshift);
+      // Trim the array to maintain the correct size
       while (overrideCopy[key].length > tagsAmount) {
         overrideCopy[key].pop();
       }
@@ -906,7 +893,6 @@ function fixStyleClasses(
   }
 }
 
-// todo add merge of the style overrides that don't exist in target pane
 function updateClassNames(
   el1TagName: string,
   el1Idx: number | null,
@@ -1075,9 +1061,6 @@ function handleListElementMovementWithinTheSamePanel(
   }
 
   field.current.markdown.body = toMarkdown(mdast);
-  const markdown0 = toMarkdown(mdast);
-  console.log("MARKDOWN0: " + markdown0);
-
   field.current.markdown.htmlAst = cleanHtmlAst(toHast(mdast) as HastRoot) as HastRoot;
   paneFragmentMarkdown.setKey(el1fragmentId, {
     ...field,
