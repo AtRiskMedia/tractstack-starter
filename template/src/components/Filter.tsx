@@ -26,12 +26,12 @@ const Filter = (props: {
     if (heldBeliefsFilter && Object.keys(heldBeliefsFilter)?.length) {
       let match = false;
       let all = true;
-      
+
       Object.entries(heldBeliefsFilter).forEach(([key, value]) => {
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
           const thisMatchingBelief = $heldBeliefsAll.find(
             (m: BeliefStore) =>
-              m.slug === key && (m.verb === value || value === '*' || m?.object === value)
+              m.slug === key && (m.verb === value || value === "*" || m?.object === value)
           );
           if (thisMatchingBelief) match = true;
           else all = false;
@@ -41,14 +41,14 @@ const Filter = (props: {
               (m: BeliefStore) =>
                 (m.slug === key && m.verb === v) ||
                 (m.slug === key && m?.object === v) ||
-                (m.slug === key && v === '*')
+                (m.slug === key && v === "*")
             );
             if (thisMatchingBelief) match = true;
             else all = false;
           });
         }
       });
-      
+
       setReveal(match && all);
     } else {
       setReveal(true);
@@ -57,12 +57,12 @@ const Filter = (props: {
     // Evaluate withheld beliefs
     if (withheldBeliefsFilter && Object.keys(withheldBeliefsFilter)?.length) {
       let withhold = true;
-      
+
       Object.entries(withheldBeliefsFilter).forEach(([key, value]) => {
-        if (typeof value === 'string') {
+        if (typeof value === "string") {
           const thisMatchingBelief = $heldBeliefsAll.find(
             (m: BeliefStore) =>
-              m.slug === key && (m.verb === value || value === '*' || m?.object === value)
+              m.slug === key && (m.verb === value || value === "*" || m?.object === value)
           );
           if (thisMatchingBelief) withhold = false;
         } else {
@@ -71,13 +71,13 @@ const Filter = (props: {
               (m: BeliefStore) =>
                 (m.slug === key && m.verb === v) ||
                 (m.slug === key && m?.object === v) ||
-                (m.slug === key && v === '*')
+                (m.slug === key && v === "*")
             );
             if (thisMatchingBelief) withhold = false;
           });
         }
       });
-      
+
       setOverrideWithhold(!withhold);
     } else {
       setOverrideWithhold(true);
@@ -112,10 +112,10 @@ const Filter = (props: {
 
     if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
       thisPane.classList.add("motion-safe:animate-fadeInUp");
-      
+
       window.scrollTo({
         top: paneTop - 20,
-        behavior: "smooth"
+        behavior: "smooth",
       });
     }
   };
@@ -130,12 +130,13 @@ const Filter = (props: {
       console.error(`Pane ${id} not found`);
       return;
     }
-    
+
     paneRef.current = thisPane;
 
-    const isVisible = (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
-                     (!heldBeliefsFilter && withheldBeliefsFilter && overrideWithhold) ||
-                     (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
+    const isVisible =
+      (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
+      (!heldBeliefsFilter && withheldBeliefsFilter && overrideWithhold) ||
+      (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
 
     // Clear any pending scroll timeout
     if (scrollTimeoutRef.current) {
@@ -146,7 +147,11 @@ const Filter = (props: {
     updatePaneVisibility(thisPane, isVisible);
 
     // Handle scrolling with delay
-    if (isVisible && !isFirstRender.current && Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD) {
+    if (
+      isVisible &&
+      !isFirstRender.current &&
+      Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD
+    ) {
       scrollTimeoutRef.current = setTimeout(() => {
         handleScroll(thisPane);
       }, DOM_UPDATE_DELAY);

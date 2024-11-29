@@ -17,4 +17,10 @@ export const components: { [key: string]: any } = {
 const Component = components[target];
 ---
 
-{Component ? <Component resources={resources} options={options} /> : <div>Code hook not found</div>}
+{
+  Component ? (
+    <Component resources={resources} options={options} client:load />
+  ) : (
+    <div>Code hook not found</div>
+  )
+}
