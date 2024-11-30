@@ -1,5 +1,6 @@
 ---
 import type { ResourceDatum } from "@/types";
+import CustomHero from "./CustomHero.astro";
 
 export interface Props {
   target: string;
@@ -7,20 +8,15 @@ export interface Props {
   options?: string | null;
 }
 
-const { target, resources, options } = Astro.props;
+const { target /* resources, options */ } = Astro.props;
 
-// Add index signature to allow string indexing
-export const components: { [key: string]: any } = {
-  "custom-hero": (await import("./CustomHero.astro")).default,
+export const components = {
+  "custom-hero": true,
 };
 
-const Component = components[target];
+// if passing props:
+//) : target === "Pricing" ? (
+//  <Pricing client:load resources={resources} options={options} />
 ---
 
-{
-  Component ? (
-    <Component resources={resources} options={options} client:load />
-  ) : (
-    <div>Code hook not found</div>
-  )
-}
+{target === "custom-hero" ? <CustomHero /> : <div>Code hook not found</div>}
