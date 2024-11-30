@@ -19,6 +19,7 @@ import { useStore } from "@nanostores/react";
 import { getFinalLocation } from "@/utils/helpers.ts";
 import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 import { GhostBlock } from "@/components/other/GhostBlock.tsx";
+import { allowTagInsert, allowWidgetInsert } from "@/utils/compositor/markdownUtils.ts";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;
@@ -41,15 +42,28 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const dragState = useStore(dragHandleStore);
   const { fragmentId, paneId, idx, outerIdx, markdownLookup } = props;
 
-  const field = paneFragmentMarkdown.get()[fragmentId].current;
-  const outerChildlren = field.markdown.htmlAst.children[outerIdx];
-  // @ts-expect-error has children
-  let tagName = outerChildlren.tagName;
-  if (idx !== null) {
+  let allowTag = { before: true, after: true };
+  if(dragState.dragShape) {
+    const dragShape = dragState.dragShape;
+    const field = paneFragmentMarkdown.get()[dragShape.fragmentId].current;
+    const outerChildlren = field.markdown.htmlAst.children[dragShape.outerIdx];
     // @ts-expect-error has children
-    tagName = outerChildlren.children[idx].tagName;
+    let tagName = outerChildlren.tagName;
+    const isWidget =
+      typeof dragShape.idx === `number` && typeof dragShape.markdownLookup.codeItemsLookup[dragShape.outerIdx] !== `undefined`
+        ? typeof dragShape.markdownLookup.codeItemsLookup[dragShape.outerIdx][dragShape.idx] === `number`
+        : false;
+
+    if (dragShape.idx !== null && !isWidget) {
+      // @ts-expect-error has children
+      tagName = outerChildlren.children[dragShape.idx].tagName;
+    }
+    if(isWidget) {
+      allowTag = allowWidgetInsert(outerIdx, idx, markdownLookup);
+    } else if(idx === null) { // skip inner list elements check for now
+      allowTag = allowTagInsert(tagName, outerIdx, idx, markdownLookup);
+    }
   }
-  const allowTag = { before: true, after: true }; //allowTagInsert(tagName, outerIdx, idx, markdownLookup);
 
   const getNodeData = (): DragNode => {
     return { fragmentId, paneId, idx, outerIdx } as DragNode;
@@ -118,7 +132,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           dragging.current = true;
           resetDragStore();
           const root = paneFragmentMarkdown.get()[props.fragmentId].current.markdown.htmlAst;
-          setDragShape({ root, fragmentId, paneId, idx, outerIdx });
+          setDragShape({ markdownLookup, root, fragmentId, paneId, idx, outerIdx });
           setGhostSize(100, 50);
         }}
         onStop={() => {

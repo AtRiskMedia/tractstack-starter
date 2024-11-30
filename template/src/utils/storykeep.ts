@@ -802,10 +802,11 @@ function fixPayloadOverrides(
   el1OuterIdx: number,
   markdownLookup: MarkdownLookup
 ) {
-  const originalClasses = curField.current.payload.optionsPayload.classNamesPayload[el1TagName].classes || {};
-  const originalOverrides =
-    curField.current.payload.optionsPayload.classNamesPayload[el1TagName]
-      ?.override || {};
+  const classesPayload = curField.current.payload.optionsPayload.classNamesPayload[el1TagName];
+  if(!classesPayload) return;
+
+  const originalClasses = classesPayload?.classes || {};
+  const originalOverrides = classesPayload?.override || {};
   if (originalOverrides) {
     const overrideCopy = {
       ...(newField.current.payload.optionsPayload.classNamesPayload[el2TagName]

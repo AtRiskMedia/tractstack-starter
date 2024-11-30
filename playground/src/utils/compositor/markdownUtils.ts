@@ -64,11 +64,29 @@ export function allowTagErase(
   return false;
 }
 
+export function allowWidgetInsert(
+  outerIdx: number,
+  idx: number | null,
+  markdownLookup: MarkdownLookup,
+) {
+  if (typeof idx !== `number`) {
+    // only allow if no adjascent ul
+    const parentBeforeTag =
+      outerIdx === 0 ||
+      (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
+    const parentAfterTag =
+      outerIdx < Object.keys(markdownLookup.nthTag).length &&
+      markdownLookup.nthTag[outerIdx + 1] !== `ul`;
+    return { before: parentBeforeTag, after: parentAfterTag };
+  }
+  return { before: false, after: false };
+}
+
 export function allowTagInsert(
   toolAddMode: ToolAddMode,
   outerIdx: number,
   idx: number | null,
-  markdownLookup: MarkdownLookup
+  markdownLookup: MarkdownLookup,
 ) {
   switch (toolAddMode) {
     case `p`:
@@ -136,16 +154,7 @@ export function allowTagInsert(
     case `identify`:
     case `toggle`:
       {
-        if (typeof idx !== `number`) {
-          // only allow if no adjascent ul
-          const parentBeforeTag =
-            outerIdx === 0 ||
-            (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ul`);
-          const parentAfterTag =
-            outerIdx < Object.keys(markdownLookup.nthTag).length &&
-            markdownLookup.nthTag[outerIdx + 1] !== `ul`;
-          return { before: parentBeforeTag, after: parentAfterTag };
-        }
+        return allowWidgetInsert(outerIdx, idx, markdownLookup);
       }
       break;
     case `aside`: {

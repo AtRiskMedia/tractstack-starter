@@ -135,6 +135,7 @@ export interface DragState extends DragNode {
 
 export interface DragShape extends DragNode {
   root: Root;
+  markdownLookup: MarkdownLookup;
 }
 
 export type DragHandle = {
