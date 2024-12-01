@@ -1113,6 +1113,26 @@ function isSameObject(el1fragmentId: string,
     && el1Idx === el2Idx;
 }
 
+function canApplyAdjustedIndices(
+  el1Idx: number | null,
+  el2Idx: number | null,
+  el1OuterIdx: number,
+  el2OuterIdx: number,
+  location: "before" | "after"
+) {
+  const absoluteIdx1 = el1Idx || -1;
+  const absoluteIdx2 = el2Idx || -1;
+  // only apply adjusted outer index for the matching direction of our swap action
+  // otherwise they will overshoot by 1 as adjusted
+  if (
+    ((el1OuterIdx > el2OuterIdx || absoluteIdx1 > absoluteIdx2) && location === "after") ||
+    ((el1OuterIdx < el2OuterIdx || absoluteIdx1 < absoluteIdx2) && location === "before")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function moveElements(
   markdownLookup: MarkdownLookup,
   newMarkdownLookup: MarkdownLookup,
@@ -1131,9 +1151,8 @@ export function moveElements(
   const newHistory = updateHistory(field, Date.now());
 
   const nextEl = getNextElement(el2FragmentId, el2PaneId, el2OuterIdx, el2Idx, location);
-  if (
-    nextEl &&
-    isSameObject(
+  if (nextEl) {
+    if(isSameObject(
       el1fragmentId,
       el1OuterIdx,
       el1PaneId,
@@ -1141,10 +1160,13 @@ export function moveElements(
       el2FragmentId,
       nextEl.adjustedOuterIdx,
       el2PaneId,
-      nextEl.adjustedIdx
-    )
-  ) {
-    return;
+      nextEl.adjustedIdx)) {
+      return;
+    }
+    if(canApplyAdjustedIndices(el1Idx, el2Idx, el1OuterIdx, el2OuterIdx, location)) {
+      el2Idx = nextEl.adjustedIdx;
+      el2OuterIdx = nextEl.adjustedOuterIdx;
+    }
   }
 
   if (el1PaneId !== el2PaneId) {
