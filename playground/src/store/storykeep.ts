@@ -162,6 +162,7 @@ const EMPTY_DRAG_HANDLE: DragHandle = {
 
 export const resetDragStore = () => {
   console.log("reset drag store");
+  dragHoverStatesBuffer.length = 0;
   dragHandleStore.set(EMPTY_DRAG_HANDLE);
 }
 
@@ -199,6 +200,8 @@ export const recordExitPane = (paneId: string) => {
   }
 };
 
+const dragHoverStatesBuffer: string[] = [];
+
 export const setDragHoverInfo = (el: DragState | null) => {
   const existingEl = dragHandleStore.get().hoverElement;
   if (existingEl) {
@@ -214,7 +217,17 @@ export const setDragHoverInfo = (el: DragState | null) => {
 
   const nodes = new Set<string>(dragHandleStore.get().affectedFragments);
   if (el) {
-    nodes.add(createNodeId(el));
+    const elId = createNodeId(el);
+    const elIdWithDir = elId + "-" + el.location;
+    dragHoverStatesBuffer.push(elIdWithDir);
+
+    if(dragHoverStatesBuffer.length >= 3 && dragHoverStatesBuffer.shift() === elIdWithDir) {
+      console.log("already contains: " + elIdWithDir);
+      return;
+    }
+    // trim buffer so it's never over size
+    while (dragHoverStatesBuffer.length > 3) {dragHoverStatesBuffer.shift();}
+    nodes.add(elId);
   }
   const panes = new Set<string>(dragHandleStore.get().affectedPanes);
   if (el) {

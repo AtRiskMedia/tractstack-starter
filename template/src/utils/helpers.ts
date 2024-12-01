@@ -622,7 +622,7 @@ export async function getOptimizedImages(
 
 export const createNodeId = (node: DragNode): string => {
   if (!node) return "";
-  return node.fragmentId + node.paneId + node.outerIdx + (node.idx || 0);
+  return `${node.fragmentId}-${node.paneId}-${node.outerIdx}-${(node.idx || 0)}`;
 };
 
 export function swapObjectValues(obj: any, key1: string, key2: string): any {
