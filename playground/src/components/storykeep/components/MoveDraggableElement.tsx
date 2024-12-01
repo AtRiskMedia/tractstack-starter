@@ -56,7 +56,9 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
 
     if (dragShape.idx !== null && !isWidget) {
       // @ts-expect-error has children
-      tagName = outerChildlren.children[dragShape.idx].tagName;
+      if(outerChildlren.children[dragShape.idx].children[0].type === "text") {
+        tagName = "p"; // disguise as p for now if that's an inner text element in list
+      }
     }
     if(isWidget) {
       allowTag = allowWidgetInsert(outerIdx, idx, markdownLookup);
