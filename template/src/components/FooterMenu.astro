@@ -38,19 +38,28 @@ const featuredLinks = thisPayload
 const allLinks = additionalLinks.concat(featuredLinks);
 ---
 
-<div class="mx-auto max-w-sm py-12">
-  <nav class="flex flex-wrap justify-evenly">
+<div class="mx-auto max-w-4xl py-12 px-4">
+  <nav class="flex flex-wrap justify-center gap-4">
     {
       allLinks.map((item: MenuLinkDatum) => (
-        <span class="py-1.5">
-          <a
-            href={item.to}
-            class="text-xl md:text-2xl font-action leading-loose text-mydarkgrey hover:text-black"
-            title={item.description}
-          >
-            {item.name}
-          </a>
-        </span>
+        <a
+          href={item.to}
+          class:list={[
+            "relative px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200",
+            "hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange",
+            item.featured
+              ? "bg-myorange text-white hover:bg-myblue"
+              : "bg-white text-mydarkgrey hover:bg-myorange/20 hover:text-black border border-mydarkgrey/20",
+          ]}
+          title={item.description}
+        >
+          <span class="font-medium">{item.name}</span>
+          {item.description && (
+            <span class="absolute -bottom-6 left-0 w-full text-xs text-center text-mydarkgrey opacity-0 transition-opacity duration-200 hover:opacity-100">
+              {item.description}
+            </span>
+          )}
+        </a>
       ))
     }
   </nav>
