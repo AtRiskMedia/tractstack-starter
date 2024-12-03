@@ -1066,34 +1066,44 @@ export function updateViewportTuple(
   viewport: ViewportAuto,
   newValue: TupleValue
 ): Tuple {
-  const result: TupleValue[] = [...tuple];
+  const cleanTuple = Array.from(tuple).filter((val) => val !== "");
+  if (
+    cleanTuple.length === 0 ||
+    (cleanTuple.length > 1 && cleanTuple.every((val) => val === cleanTuple[0]))
+  ) {
+    return [newValue];
+  }
+  if (cleanTuple.length === 1) {
+    const existingValue = cleanTuple[0];
+    switch (viewport) {
+      case "mobile":
+        return [newValue];
+      case "tablet":
+        return [existingValue, newValue];
+      case "desktop":
+        return [existingValue, existingValue, newValue];
+    }
+  }
+  if (cleanTuple.length === 2) {
+    const [mobileValue, tabletValue] = cleanTuple;
+    switch (viewport) {
+      case "mobile":
+        return [newValue, tabletValue];
+      case "tablet":
+        return [mobileValue, newValue];
+      case "desktop":
+        return [mobileValue, tabletValue, newValue];
+    }
+  }
+  const [mobileValue, tabletValue, desktopValue] = cleanTuple;
   switch (viewport) {
     case "mobile":
-      result[0] = newValue;
-      break;
+      return [newValue, tabletValue, desktopValue];
     case "tablet":
-      if (tuple.length > 0) {
-        if (result[0] === ``) result[0] = newValue;
-        else result[1] = newValue !== tuple[0] ? newValue : tuple[0];
-      } else {
-        result[0] = newValue;
-        result[1] = newValue;
-      }
-      break;
+      return [mobileValue, newValue, desktopValue];
     case "desktop":
-      if (tuple.length === 1) {
-        if (result[0] === ``) result[0] = newValue;
-        else result[2] = newValue !== tuple[0] ? newValue : tuple[0];
-      } else if (tuple.length === 2) {
-        result[2] = newValue !== tuple[1] ? newValue : tuple[1];
-      } else {
-        result[0] = newValue;
-        result[1] = newValue;
-        result[2] = newValue;
-      }
-      break;
+      return [mobileValue, tabletValue, newValue];
   }
-  return result as Tuple;
 }
 
 export function convertMarkdownToHtml(markdown: string): string {
