@@ -19,6 +19,7 @@ import { isFullScreenEditModal } from "../../utils/storykeep";
 import { classNames } from "../../utils/helpers";
 import type { ReactNode } from "react";
 import type { ViewportAuto, ToolMode, ToolAddMode } from "../../types";
+import ChangeLayoutModal from "@/components/storykeep/components/ChangeLayoutModal.tsx";
 
 const InsertAboveBelowWrapper = ({
   children,
@@ -91,6 +92,8 @@ const PaneWrapper = (props: {
   const $editMode = useStore(editModeStore);
   const isCodeHook = $paneCodeHook?.[id]?.current;
   const [paneElement, setPaneElement] = useState<HTMLDivElement | null>(null);
+  const [changingLayout, setChangingLayout] = useState<boolean>(false);
+
   const paneRef = useCallback(
     (node: HTMLDivElement) => {
       if (node !== null) {
@@ -201,6 +204,10 @@ const PaneWrapper = (props: {
     );
   }, [id, isCodeHook, toolMode, toolAddMode, viewportKey]);
 
+  const onChangeLayoutClicked = () => {
+    setChangingLayout(true);
+  }
+
   if (!isClient) return null;
 
   return (
@@ -219,6 +226,17 @@ const PaneWrapper = (props: {
         ) : (
           Content
         )}
+        {toolMode === "styles" && (
+          <div className="absolute inset-0 flex justify-end w-full h-fit">
+            <div className="relative">
+                <button className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
+                        onClick={onChangeLayoutClicked}>
+                  Change Layout
+                </button>
+            </div>
+          </div>
+        )}
+        {changingLayout && <ChangeLayoutModal onClose={() => setChangingLayout(false)}/> }
         {toolMode === "settings" && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
             <div className="relative">

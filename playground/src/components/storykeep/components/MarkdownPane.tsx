@@ -147,7 +147,7 @@ const MarkdownPane = ({
           (accContent: JSX.Element, cssClass: string) => (
             <div className={classNames(hidden, cssClass)}>{accContent}</div>
           ),
-          <>{content}</>
+          <div>{content}</div>
         )}
     </div>
   );
