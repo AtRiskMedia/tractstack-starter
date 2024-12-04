@@ -200,6 +200,7 @@ export interface PaneDesign {
   id: string;
   slug: string;
   name: string;
+  designType: DesignType;
   variants: string[];
   priority: number;
   type: `starter` | `break` | `reuse` | `codehook`;
@@ -223,7 +224,6 @@ export interface PageDesign {
   isContext: boolean;
   tailwindBgColour: string | null;
   paneDesigns: PaneDesign[];
-  paneDesignsMap: string[];
   paneDesignsOdd?: { [key: string]: PaneDesign };
   pageTitle?: string;
 }
@@ -241,7 +241,17 @@ export type GenerateStage =
   | "COMPLETED"
   | "ERROR";
 
-export type Variant = `default` | `center` | `onecolumn` | `square` | `16x9`;
+export type Variant =
+  | `default`
+  | `center`
+  | `onecolumn`
+  | `square`
+  | `16x9`
+  | `defaultEmpty`
+  | `centerEmpty`
+  | `onecolumnEmpty`
+  | `squareBordered`
+  | `16x9Bordered`;
 
 export type ReconciledData = {
   storyFragment?: {
@@ -515,7 +525,7 @@ export interface ClassNamesPayloadInnerDatum {
   classes: ClassNamesPayloadDatumValue | ClassNamesPayloadDatumValue[];
   count?: number;
   override?: {
-    [key: string]: Tuple[];
+    [key: string]: (Tuple | null)[];
   };
 }
 export interface ClassNamesPayloadDatum {
@@ -580,7 +590,7 @@ export interface MarkdownPaneDatum extends PaneFragmentDatum {
   //markdownBody: string;
   //markdownId: string;
 }
-
+export type DesignType = `hero` | `hero-image` | `section` | `copy` | `decorative` | `unknown`;
 export interface PaneOptionsPayload {
   paneFragmentsPayload?: (BgPaneDatum | BgColourDatum | MarkdownPaneDatum)[];
   impressions?: ImpressionDatum[];
@@ -590,6 +600,7 @@ export interface PaneOptionsPayload {
   maxHScreen?: boolean;
   heldBeliefs?: BeliefDatum;
   withheldBeliefs?: BeliefDatum;
+  designType?: DesignType;
 }
 export interface PaneDesignOptionsPayload extends PaneOptionsPayload {
   bgColour: string | null;

@@ -114,28 +114,31 @@ const DesignNewPane = ({
 
   const changeMode = (newMode: ModeType) => {
     setMode(newMode as ModeType);
-    if (newMode === `design`) {
-      setActivePaneDesigns(
-        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)
-      );
-      setSelectedDesign(
-        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)[0]
-      );
-    } else if (newMode === `break`) {
-      setActivePaneDesigns(
-        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)
-      );
-      setSelectedDesign(
-        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)[0]
-      );
-    } else if (newMode === `codehook`) {
-      // Just switch mode - codehook already selected
-      setSelectedDesign(null);
-      setActivePaneDesigns([]);
-    } else {
-      setActivePaneDesigns(reusePaneDesigns);
-      setSelectedDesign(reusePaneDesigns[0]);
-    }
+    //if (newMode === `design`) {
+    //  console.log(`available`,
+    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)
+    //  )
+    //  setActivePaneDesigns(
+    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)
+    //  );
+    //  setSelectedDesign(
+    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)[0]
+    //  );
+    //} else if (newMode === `break`) {
+    //  setActivePaneDesigns(
+    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)
+    //  );
+    //  setSelectedDesign(
+    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)[0]
+    //  );
+    //} else if (newMode === `codehook`) {
+    //  // Just switch mode - codehook already selected
+    //  setSelectedDesign(null);
+    //  setActivePaneDesigns([]);
+    //} else {
+    //  setActivePaneDesigns(reusePaneDesigns);
+    //  setSelectedDesign(reusePaneDesigns[0]);
+    //}
     setCurrentIndex(0);
     setQuery(``);
   };
@@ -155,10 +158,25 @@ const DesignNewPane = ({
           ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumn").filter(
             (p) => p.type === "starter" && p.name
           ),
+          ...paneDesigns($theme ?? PUBLIC_THEME, "defaultEmpty").filter(
+            (p) => p.type === "starter" && p.name
+          ),
+          ...paneDesigns($theme ?? PUBLIC_THEME, "centerEmpty").filter(
+            (p) => p.type === "starter" && p.name
+          ),
+          ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumnEmpty").filter(
+            (p) => p.type === "starter" && p.name
+          ),
           ...paneDesigns($theme ?? PUBLIC_THEME, "square").filter(
             (p) => p.type === "starter" && p.name
           ),
           ...paneDesigns($theme ?? PUBLIC_THEME, "16x9").filter(
+            (p) => p.type === "starter" && p.name
+          ),
+          ...paneDesigns($theme ?? PUBLIC_THEME, "squareBordered").filter(
+            (p) => p.type === "starter" && p.name
+          ),
+          ...paneDesigns($theme ?? PUBLIC_THEME, "16x9Bordered").filter(
             (p) => p.type === "starter" && p.name
           ),
         ];

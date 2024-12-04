@@ -842,7 +842,13 @@ export const PaneAstStyles = (props: {
     if (classNamesPayload.override) {
       Object.entries(classNamesPayload.override).forEach(([className, overrides]) => {
         if (globalNth in overrides) {
-          mergedClasses[className] = overrides[globalNth];
+          if (
+            globalNth in overrides &&
+            className in mergedClasses &&
+            mergedClasses[className] &&
+            overrides[globalNth]
+          )
+            mergedClasses[className] = overrides[globalNth];
         }
       });
     }

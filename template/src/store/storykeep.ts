@@ -24,6 +24,7 @@ import type {
   DashboardAnalytics,
   CreationState,
   Theme,
+  DesignType,
 } from "../types";
 import { knownEnvSettings, toolAddModes, PUBLIC_THEME } from "../constants";
 
@@ -120,6 +121,7 @@ export const paneTitle = map<Record<string, FieldWithHistory<string>>>();
 export const paneSlug = map<Record<string, FieldWithHistory<string>>>();
 export const paneMarkdownFragmentId = map<Record<string, FieldWithHistory<string>>>();
 export const paneIsContextPane = map<Record<string, FieldWithHistory<boolean>>>();
+export const paneDesignType = map<Record<string, DesignType>>();
 export const paneIsHiddenPane = map<Record<string, FieldWithHistory<boolean>>>();
 export const paneHasOverflowHidden = map<Record<string, FieldWithHistory<boolean>>>();
 export const paneHasMaxHScreen = map<Record<string, FieldWithHistory<boolean>>>();

@@ -32,13 +32,13 @@ export const buttonStyleClasses = [
   [
     {
       fontWEIGHT: ["bold"],
-      px: ["2"],
       textDECORATION: ["underline"],
-      rounded: ["lg"],
+      textUNDERLINEOFFSET: ["2"],
       textCOLOR: ["myblue"],
     },
     {
-      bgCOLOR: ["myorange"],
+      textUNDERLINEOFFSET: ["4"],
+      textCOLOR: ["black"],
     },
   ],
   [
@@ -80,6 +80,7 @@ export const paneDesigns = (
     id: `intro-${variant}`,
     slug: `intro-${variant}`,
     variants: [`default`, `center`, `onecolumn`],
+    designType: `hero`,
     name: getComputedValue(
       {
         default: "Intro section",
@@ -88,14 +89,7 @@ export const paneDesigns = (
       },
       variant
     ),
-    priority: getComputedNumber(
-      {
-        default: 3,
-        onecolumn: 4,
-        center: 5,
-      },
-      variant
-    ),
+    priority: 10,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -458,14 +452,8 @@ export const paneDesigns = (
       variant
     ),
     variants: [`default`, `center`, `onecolumn`],
-    priority: getComputedNumber(
-      {
-        default: 6,
-        onecolumn: 7,
-        center: 8,
-      },
-      variant
-    ),
+    designType: `hero`,
+    priority: 10,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -784,14 +772,8 @@ export const paneDesigns = (
       variant
     ),
     variants: [`default`, `center`, `onecolumn`],
-    priority: getComputedNumber(
-      {
-        default: 9,
-        onecolumn: 10,
-        center: 11,
-      },
-      variant
-    ),
+    designType: `hero`,
+    priority: 10,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -1127,392 +1109,20 @@ export const paneDesigns = (
     ],
   },
   {
-    id: `intro-image-${variant}`,
-    slug: `intro-image-${variant}`,
+    id: `hero-image-${variant}`,
+    slug: `hero-image-${variant}`,
     name: getComputedValue(
       {
-        square: "Intro section, square image on right",
-        "16x9": "Intro section, 16x9 image on right",
+        square: "Hero section, square image on right",
+        "16x9": "Hero section, 16x9 image on right",
+        squareBordered: "Hero section, square image on right, bordered",
+        "16x9Bordered": "Hero section, 16x9 image on right, bordered",
       },
       variant
     ),
-    variants: [`square`, `16x9`],
-    priority: 20,
-    type: `starter`,
-    panePayload: {
-      heightOffsetDesktop: 0,
-      heightOffsetTablet: 0,
-      heightOffsetMobile: 0,
-      heightRatioDesktop: `0.00`,
-      heightRatioTablet: `0.00`,
-      heightRatioMobile: `0.00`,
-      bgColour: tailwindToHex(
-        getComputedColor(
-          {
-            light: "white",
-            "light-bw": "brand-2",
-            "light-bold": "white",
-            dark: "brand-1",
-            "dark-bw": "black",
-            "dark-bold": "brand-1",
-          },
-          theme
-        )
-      ),
-      codeHook: null,
-    },
-    files: [],
-    fragments: [
-      {
-        type: "markdown",
-        markdownBody: `1. add a catchy title here\n2. your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n3. [Try it now!](try) &nbsp; [Learn more](learn)\n\n* ![Descriptive title](filename)\n`,
-        imageMaskShapeDesktop: "none",
-        imageMaskShapeTablet: "none",
-        imageMaskShapeMobile: "none",
-        textShapeOutsideDesktop: "none",
-        textShapeOutsideTablet: "none",
-        textShapeOutsideMobile: "none",
-        isModal: false,
-        hiddenViewports: "none",
-        optionsPayload: {
-          classNamesPayload: {
-            parent: {
-              classes: [
-                {
-                  mx: ["5", "10"],
-                  mt: ["16"],
-                  mb: ["16", "20"],
-                },
-                {
-                  mx: ["auto"],
-                },
-                {
-                  px: ["9", "14", "32"],
-                  py: ["20", "32"],
-                  textALIGN: ["left"],
-                  textWRAP: ["pretty"],
-                  display: ["flex"],
-                  flexWRAP: ["wrap", "wrap", "nowrap"],
-                  gapX: ["20"],
-                  gapY: ["4"],
-                  alignITEMS: ["center"],
-                  justifyCONTENT: ["between"],
-                },
-              ],
-            },
-            h2: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "brand-8",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["3xl", "5xl", "6xl"],
-                lineHEIGHT: ["snug"],
-                fontFACE: ["action"],
-              },
-            },
-            h3: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "3xl"],
-                lineHEIGHT: ["snug"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            h4: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "2xl"],
-                lineHEIGHT: ["snug"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            p: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-8",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["loose"],
-                mt: ["4", "5"],
-              },
-            },
-            img: {
-              classes: {
-                w: ["auto"],
-                h: ["auto"],
-                objectFIT: ["cover"],
-                rounded: ["lg", "xl"],
-                minW: ["[50%]"],
-                aspectRATIO: [
-                  getComputedValue(
-                    {
-                      square: "square",
-                      "16x9": "16x9",
-                    },
-                    variant
-                  ),
-                ],
-                mt: ["6", "6", "0"],
-              },
-            },
-            ol: {
-              classes: {
-                maxW: ["screen-md"],
-                minW: ["96"],
-              },
-            },
-            li: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-8",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["loose"],
-                fontWEIGHT: ["normal"],
-                mt: ["0"],
-                maxW: ["96"],
-                flex: ["none"],
-                w: ["fit-contents"],
-              },
-              count: 4,
-              override: {
-                mt: [["4", "5"], ["4", "5"], ["8", "10"], null],
-                maxW: [null, null, null, ["none"]],
-                flex: [null, null, null, ["1"]],
-                w: [null, null, null, ["full"]],
-                textSIZE: [["5xl", "6xl", "7xl"], null, null, null],
-                lineHEIGHT: [["tight"], null, null, null],
-                fontWEIGHT: [["bold"], null, null, null],
-                textCOLOR: [
-                  [
-                    getComputedColor(
-                      {
-                        light: "brand-5",
-                        "light-bw": "brand-1",
-                        "light-bold": "brand-5",
-                        dark: "brand-3",
-                        "dark-bw": "brand-8",
-                        "dark-bold": "brand-3",
-                      },
-                      theme
-                    ),
-                  ],
-                  null,
-                  null,
-                  null,
-                ],
-              },
-            },
-          },
-          buttons: {
-            try: {
-              callbackPayload: "(goto (home))",
-              urlTarget: "#",
-              classNamesPayload: {
-                button: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-7",
-                          "light-bw": "black",
-                          "light-bold": "brand-3",
-                          dark: "slate-200",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-3",
-                        },
-                        theme
-                      ),
-                    ],
-                    display: ["inline-block"],
-                    fontWEIGHT: ["bold"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-2",
-                          "light-bw": "white",
-                          "light-bold": "brand-2",
-                          dark: "black",
-                          "dark-bw": "black",
-                          "dark-bold": "brand-1",
-                        },
-                        theme
-                      ),
-                    ],
-                  },
-                },
-                hover: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
-                  },
-                },
-              },
-              className:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-            },
-            learn: {
-              callbackPayload: "(goto (home))",
-              urlTarget: "#",
-              classNamesPayload: {
-                button: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "neutral-200",
-                          "light-bw": "brand-8",
-                          "light-bold": "neutral-200",
-                          dark: "neutral-800",
-                          "dark-bw": "gray-800",
-                          "dark-bold": "neutral-800",
-                        },
-                        theme
-                      ),
-                    ],
-                    display: ["inline-block"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                  },
-                },
-                hover: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
-                  },
-                },
-              },
-              className:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-            },
-          },
-        } as OptionsPayloadDatum,
-      },
-    ],
-  },
-  {
-    id: `intro-image-bordered-${variant}`,
-    slug: `intro-image-bordered-${variant}`,
-    name: getComputedValue(
-      {
-        square: "Intro section, square image on right, bordered",
-        "16x9": "Intro section, 16x9 image on right, bordered",
-      },
-      variant
-    ),
-    variants: [`square`, `16x9`],
-    priority: 21,
+    variants: [`square`, `16x9`, `squareBordered`, `16x9Bordered`],
+    designType: `hero-image`,
+    priority: 25,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -1540,7 +1150,7 @@ export const paneDesigns = (
     fragments: [
       {
         type: "markdown",
-        markdownBody: `1. add a catchy title here\n2. your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n3. [Try it now!](try) &nbsp; [Learn more](learn)\n\n* ![Descriptive title](filename)\n`,
+        markdownBody: `1. add a catchy title here\n2. your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n3. [Try it now!](try)\n\n* ![Descriptive title](filename)\n`,
         imageMaskShapeDesktop: "none",
         imageMaskShapeTablet: "none",
         imageMaskShapeMobile: "none",
@@ -1555,13 +1165,23 @@ export const paneDesigns = (
               classes: [
                 {
                   mx: ["5", "10"],
-                  mt: ["16"],
-                  mb: ["16", "20"],
+                  my: ["8", "10"],
                 },
                 {
+                  maxW: ["none", "screen-lg", "screen-xl"],
                   mx: ["auto"],
-                  borderWIDTH: ["2"],
-                  rounded: ["md", "lg"],
+                  borderWIDTH: [
+                    getComputedValue(
+                      {
+                        square: "0",
+                        "16x9": "0",
+                        squareBordered: "2",
+                        "16x9Bordered": "2",
+                      },
+                      variant
+                    ),
+                  ],
+                  rounded: ["lg"],
                   bgCOLOR: [
                     getComputedColor(
                       {
@@ -1590,123 +1210,24 @@ export const paneDesigns = (
                   ],
                 },
                 {
-                  px: ["9", "14", "32"],
-                  py: ["20", "32"],
-                  textALIGN: ["left"],
-                  textWRAP: ["pretty"],
                   display: ["flex"],
-                  flexWRAP: ["wrap", "wrap", "nowrap"],
-                  gapX: ["20"],
-                  gapY: ["4"],
+                  flexDIRECTION: ["col", "col", "row"],
                   alignITEMS: ["center"],
-                  justifyCONTENT: ["between"],
+                  gap: ["8", "12"],
+                  p: ["12"],
+                  textALIGN: ["left"],
                 },
               ],
-            },
-            h2: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-5",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "brand-8",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["3xl", "5xl", "6xl"],
-                fontFACE: ["action"],
-              },
-            },
-            h3: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "3xl"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            h4: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "2xl"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            p: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-8",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["loose"],
-                mt: ["4", "5"],
-              },
-            },
-            img: {
-              classes: {
-                w: ["auto"],
-                h: ["auto"],
-                objectFIT: ["cover"],
-                rounded: ["lg", "xl"],
-                minW: ["[50%]"],
-                aspectRATIO: [
-                  getComputedValue(
-                    {
-                      square: "square",
-                      "16x9": "16x9",
-                    },
-                    variant
-                  ),
-                ],
-                mt: ["6", "6", "0"],
-              },
             },
             ol: {
               classes: {
                 maxW: ["screen-md"],
                 minW: ["96"],
+              },
+            },
+            ul: {
+              classes: {
+                w: ["full", "full", "1/2"],
               },
             },
             li: {
@@ -1724,21 +1245,21 @@ export const paneDesigns = (
                     theme
                   ),
                 ],
-                textSIZE: ["lg", "xl"],
+                textSIZE: ["xl"],
                 lineHEIGHT: ["loose"],
                 fontWEIGHT: ["normal"],
                 mt: ["0"],
-                maxW: ["96"],
+                maxW: ["none", "none", "xl"],
                 flex: ["none"],
                 w: ["fit-contents"],
               },
               count: 4,
               override: {
-                mt: [["4", "5"], ["4", "5"], ["8", "10"], null],
+                mt: [["5"], ["5"], ["10"], ["0"]],
                 maxW: [null, null, null, ["none"]],
                 flex: [null, null, null, ["1"]],
                 w: [null, null, null, ["full"]],
-                textSIZE: [["5xl", "6xl", "7xl"], null, null, null],
+                textSIZE: [["7xl"], null, null, null],
                 lineHEIGHT: [["tight"], null, null, null],
                 fontWEIGHT: [["bold"], null, null, null],
                 textCOLOR: [
@@ -1758,378 +1279,29 @@ export const paneDesigns = (
                   null,
                   null,
                   null,
+                  null,
                 ],
-              },
-            },
-          },
-          buttons: {
-            try: {
-              callbackPayload: "(goto (home))",
-              urlTarget: "#",
-              classNamesPayload: {
-                button: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-7",
-                          "light-bw": "black",
-                          "light-bold": "brand-3",
-                          dark: "slate-200",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-3",
-                        },
-                        theme
-                      ),
-                    ],
-                    display: ["inline-block"],
-                    fontWEIGHT: ["bold"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-2",
-                          "light-bw": "white",
-                          "light-bold": "brand-2",
-                          dark: "black",
-                          "dark-bw": "black",
-                          "dark-bold": "brand-1",
-                        },
-                        theme
-                      ),
-                    ],
-                  },
-                },
-                hover: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
-                  },
-                },
-              },
-              className:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-            },
-            learn: {
-              callbackPayload: "(goto (home))",
-              urlTarget: "#",
-              classNamesPayload: {
-                button: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "neutral-200",
-                          "light-bw": "brand-8",
-                          "light-bold": "neutral-200",
-                          dark: "neutral-800",
-                          "dark-bw": "gray-800",
-                          "dark-bold": "neutral-800",
-                        },
-                        theme
-                      ),
-                    ],
-                    display: ["inline-block"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                  },
-                },
-                hover: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
-                  },
-                },
-              },
-              className:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-            },
-          },
-        } as OptionsPayloadDatum,
-      },
-    ],
-  },
-  {
-    id: `intro-image-slim-${variant}`,
-    slug: `intro-image-slim-${variant}`,
-    name: getComputedValue(
-      {
-        square: "Intro section, slim, square image on right, bordered",
-        "16x9": "Intro section, slim, 16x9 image on right, bordered",
-      },
-      variant
-    ),
-    variants: [`square`, `16x9`],
-    priority: 22,
-    type: `starter`,
-    panePayload: {
-      heightOffsetDesktop: 0,
-      heightOffsetTablet: 0,
-      heightOffsetMobile: 0,
-      heightRatioDesktop: `0.00`,
-      heightRatioTablet: `0.00`,
-      heightRatioMobile: `0.00`,
-      bgColour: tailwindToHex(
-        getComputedColor(
-          {
-            light: "white",
-            "light-bw": "brand-2",
-            "light-bold": "brand-8",
-            dark: "brand-1",
-            "dark-bw": "brand-1",
-            "dark-bold": "black",
-          },
-          theme
-        )
-      ),
-      codeHook: null,
-    },
-    files: [],
-    fragments: [
-      {
-        type: "markdown",
-        markdownBody: `1. add a catchy title here\n2. your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n3. [Try it now!](try) &nbsp; [Learn more](learn)\n\n* ![Descriptive title](filename)\n`,
-        imageMaskShapeDesktop: "none",
-        imageMaskShapeTablet: "none",
-        imageMaskShapeMobile: "none",
-        textShapeOutsideDesktop: "none",
-        textShapeOutsideTablet: "none",
-        textShapeOutsideMobile: "none",
-        isModal: false,
-        hiddenViewports: "none",
-        optionsPayload: {
-          classNamesPayload: {
-            parent: {
-              classes: [
-                {
-                  mx: ["5", "10"],
-                  my: ["3.5", "8"],
-                },
-                {
-                  mx: ["auto"],
-                },
-                {
-                  px: ["9", "14", "32"],
-                  py: ["10"],
-                  textALIGN: ["left"],
-                  textWRAP: ["pretty"],
-                  display: ["flex"],
-                  flexWRAP: ["wrap", "wrap", "nowrap"],
-                  gapX: ["20"],
-                  gapY: ["4"],
-                  alignITEMS: ["center"],
-                  justifyCONTENT: ["between"],
-                },
-              ],
-            },
-            h2: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-5",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "brand-8",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["3xl", "5xl", "6xl"],
-                fontFACE: ["action"],
-              },
-            },
-            h3: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "3xl"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            h4: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "2xl"],
-                my: [8, 12],
-                fontFACE: ["action"],
-              },
-            },
-            p: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-8",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["loose"],
-                mt: ["4", "5"],
               },
             },
             img: {
               classes: {
-                w: ["auto"],
+                w: ["full"],
                 h: ["auto"],
                 objectFIT: ["cover"],
-                rounded: ["lg", "xl"],
+                rounded: ["lg"],
                 minW: ["[50%]"],
                 aspectRATIO: [
                   getComputedValue(
                     {
                       square: "square",
-                      "16x9": "16x9",
+                      "16x9": "video",
+                      squareBordered: "square",
+                      "16x9Bordered": "video",
                     },
                     variant
                   ),
                 ],
-                mt: ["6", "6", "0"],
-              },
-            },
-            ol: {
-              classes: {
-                maxW: ["screen-md"],
-                minW: ["96"],
-              },
-            },
-            li: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-8",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                lineHEIGHT: ["loose"],
-                fontWEIGHT: ["normal"],
-                mt: ["0"],
-                maxW: ["96"],
-                flex: ["none"],
-                w: ["fit-contents"],
-              },
-              count: 4,
-              override: {
-                mt: [["4", "5"], ["4", "5"], ["8", "10"], null],
-                maxW: [null, null, null, ["none"]],
-                flex: [null, null, null, ["1"]],
-                w: [null, null, null, ["full"]],
-                textSIZE: [["5xl", "6xl", "7xl"], null, null, null],
-                lineHEIGHT: [["tight"], null, null, null],
-                fontWEIGHT: [["bold"], null, null, null],
-                textCOLOR: [
-                  [
-                    getComputedColor(
-                      {
-                        light: "brand-5",
-                        "light-bw": "brand-1",
-                        "light-bold": "brand-5",
-                        dark: "brand-4",
-                        "dark-bw": "brand-8",
-                        "dark-bold": "brand-3",
-                      },
-                      theme
-                    ),
-                  ],
-                  null,
-                  null,
-                  null,
-                ],
+                mt: ["6", "0", "0"],
               },
             },
           },
@@ -2137,164 +1309,54 @@ export const paneDesigns = (
             try: {
               callbackPayload: "(goto (home))",
               urlTarget: "#",
+              className: "",
               classNamesPayload: {
                 button: {
                   classes: {
                     bgCOLOR: [
                       getComputedColor(
                         {
-                          light: "brand-7",
+                          light: "brand-3",
                           "light-bw": "black",
                           "light-bold": "brand-3",
-                          dark: "slate-200",
+                          dark: "brand-3",
                           "dark-bw": "white",
                           "dark-bold": "brand-3",
                         },
                         theme
                       ),
                     ],
-                    display: ["inline-block"],
+                    display: ["inline-flex"],
+                    alignITEMS: ["center"],
+                    px: ["6"],
+                    py: ["3"],
                     fontWEIGHT: ["bold"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-2",
-                          "light-bw": "white",
-                          "light-bold": "brand-2",
-                          dark: "black",
-                          "dark-bw": "black",
-                          "dark-bold": "brand-1",
-                        },
-                        theme
-                      ),
-                    ],
+                    textCOLOR: ["white"],
+                    rounded: ["lg"],
+                    transition: ["colors"],
                   },
                 },
                 hover: {
                   classes: {
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-7",
-                          "light-bw": "black",
-                          "light-bold": "brand-3",
-                          dark: "slate-200",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-3",
-                        },
-                        theme
-                      ),
-                    ],
                     bgCOLOR: [
                       getComputedColor(
                         {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
-                  },
-                },
-              },
-              className:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-mydarkgrey inline-block font-bold px-3.5 py-2.5 rounded-md text-mywhite hover:bg-myorange hover:rotate-2",
-            },
-            learn: {
-              callbackPayload: "(goto (home))",
-              urlTarget: "#",
-              classNamesPayload: {
-                button: {
-                  classes: {
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "neutral-200",
+                          light: "brand-4",
                           "light-bw": "brand-8",
-                          "light-bold": "white",
-                          dark: "neutral-800",
-                          "dark-bw": "gray-800",
-                          "dark-bold": "neutral-800",
+                          "light-bold": "brand-4",
+                          dark: "brand-4",
+                          "dark-bw": "brand-8",
+                          "dark-bold": "brand-4",
                         },
                         theme
                       ),
                     ],
-                    display: ["inline-block"],
-                    px: ["3.5"],
-                    py: ["2.5"],
-                    rounded: ["md"],
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                  },
-                },
-                hover: {
-                  classes: {
-                    textCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-2",
-                          "light-bw": "white",
-                          "light-bold": "brand-2",
-                          dark: "brand-1",
-                          "dark-bw": "black",
-                          "dark-bold": "brand-1",
-                        },
-                        theme
-                      ),
-                    ],
-                    bgCOLOR: [
-                      getComputedColor(
-                        {
-                          light: "brand-1",
-                          "light-bw": "black",
-                          "light-bold": "brand-1",
-                          dark: "brand-2",
-                          "dark-bw": "white",
-                          "dark-bold": "brand-2",
-                        },
-                        theme
-                      ),
-                    ],
-                    rotate: ["2"],
                   },
                 },
               },
-              className:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              mobileClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              tabletClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
-              desktopClassName:
-                "bg-slate-200 inline-block px-3.5 py-2.5 rounded-md text-black hover:bg-myorange hover:rotate-2",
             },
           },
-        } as OptionsPayloadDatum,
+        },
       },
     ],
   },
@@ -2306,18 +1368,15 @@ export const paneDesigns = (
         default: "Paragraph section",
         center: "Paragraph section - centered",
         onecolumn: "Paragraph section - one column",
+        defaultEmpty: "Quick text section",
+        centerEmpty: "Quick text section - centered",
+        onecolumnEmpty: "Quick text section - one column",
       },
       variant
     ),
-    variants: [`default`, `center`, `onecolumn`],
-    priority: getComputedNumber(
-      {
-        default: 0,
-        onecolumn: 1,
-        center: 2,
-      },
-      variant
-    ),
+    variants: [`default`, `center`, `onecolumn`, `defaultEmpty`, `centerEmpty`, `onecolumnEmpty`],
+    designType: `copy`,
+    priority: 1,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -2359,7 +1418,17 @@ export const paneDesigns = (
     fragments: [
       {
         type: "markdown",
-        markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+        markdownBody: getComputedValue(
+          {
+            default: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+            center: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+            onecolumn: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+            defaultEmpty: `...\n`,
+            centerEmpty: `...\n`,
+            onecolumnEmpty: `...\n`,
+          },
+          variant
+        ),
         imageMaskShapeDesktop: "none",
         imageMaskShapeTablet: "none",
         imageMaskShapeMobile: "none",
@@ -2386,7 +1455,14 @@ export const paneDesigns = (
                   pb: ["10"],
                   textALIGN: [
                     getComputedValue(
-                      { default: "left", center: "center", onecolumn: "left" },
+                      {
+                        default: "left",
+                        center: "center",
+                        onecolumn: "left",
+                        defaultEmpty: "left",
+                        centerEmpty: "center",
+                        onecolumnEmpty: "left",
+                      },
                       variant
                     ),
                   ],
@@ -2508,18 +1584,18 @@ export const paneDesigns = (
     ],
   },
   {
-    id: "text",
-    slug: "text",
-    name: "Quick text",
-    priority: getComputedNumber(
+    id: `paragraph-inset-${variant}`,
+    slug: `paragraph-inset-${variant}`,
+    name: getComputedValue(
       {
-        default: 50,
-        onecolumn: 51,
-        center: 52,
+        default: "Inset text",
+        center: "Inset text - centered",
       },
       variant
     ),
-    variants: [`default`, `center`, `onecolumn`],
+    variants: [`default`, `center`],
+    designType: `copy`,
+    priority: 5,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -2561,7 +1637,13 @@ export const paneDesigns = (
     fragments: [
       {
         type: "markdown",
-        markdownBody: `Your story begins here!\n`,
+        markdownBody: getComputedValue(
+          {
+            default: `...\n`,
+            center: `...\n`,
+          },
+          variant
+        ),
         imageMaskShapeDesktop: "none",
         imageMaskShapeTablet: "none",
         imageMaskShapeMobile: "none",
@@ -2573,27 +1655,72 @@ export const paneDesigns = (
         optionsPayload: {
           classNamesPayload: {
             parent: {
-              classes: [{ my: [12, 16] }, { maxW: ["2xl", "3xl"], mx: ["auto"], px: [8] }],
-            },
-            p: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-6",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                pt: [3, 4],
-                pb: ["2.5", "3.5"],
-              },
+              classes: [
+                { my: [12, 16], px: [12] },
+                {
+                  bgCOLOR: [
+                    getComputedColor(
+                      {
+                        light: "brand-2",
+                        "light-bw": "white",
+                        "light-bold": "white",
+                        dark: "brand-1",
+                        "dark-bw": "black",
+                        "dark-bold": "brand-1",
+                      },
+                      theme
+                    ),
+                  ],
+                  borderCOLOR: [
+                    getComputedColor(
+                      {
+                        light: "brand-8",
+                        "light-bw": "brand-8",
+                        "light-bold": "brand-6",
+                        dark: "brand-7",
+                        "dark-bw": "neutral-800",
+                        "dark-bold": "brand-7",
+                      },
+                      theme
+                    ),
+                  ],
+                  borderSTROKE: [2],
+                  borderSTYLE: ["dashed"],
+                  maxW: ["none", "3xl"],
+                  mx: ["auto"],
+                },
+                {
+                  px: ["9", "14", "32"],
+                  pb: ["10"],
+                  textALIGN: [
+                    getComputedValue(
+                      {
+                        default: "left",
+                        center: "center",
+                      },
+                      variant
+                    ),
+                  ],
+                  textWRAP: [
+                    getComputedValue(
+                      {
+                        default: "pretty",
+                        center: "balance",
+                      },
+                      variant
+                    ),
+                  ],
+                  maxW: [
+                    getComputedValue(
+                      {
+                        default: "none",
+                        center: "none",
+                      },
+                      variant
+                    ),
+                  ],
+                },
+              ],
             },
             h2: {
               classes: {
@@ -2601,7 +1728,7 @@ export const paneDesigns = (
                 textCOLOR: [
                   getComputedColor(
                     {
-                      light: "brand-5",
+                      light: "brand-7",
                       "light-bw": "brand-1",
                       "light-bold": "brand-5",
                       dark: "brand-4",
@@ -2612,6 +1739,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["3xl", "5xl", "6xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
                 pb: ["2.5", "3.5"],
@@ -2634,6 +1762,7 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["2xl", "3xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
                 pb: ["2.5", "3.5"],
@@ -2655,12 +1784,34 @@ export const paneDesigns = (
                   ),
                 ],
                 textSIZE: ["xl", "2xl"],
+                lineHEIGHT: ["snug"],
                 fontFACE: ["action"],
                 pt: ["9", "14", "20"],
                 pb: ["2.5", "3.5"],
               },
             },
+            p: {
+              classes: {
+                textCOLOR: [
+                  getComputedColor(
+                    {
+                      light: "brand-7",
+                      "light-bw": "brand-1",
+                      "light-bold": "brand-7",
+                      dark: "brand-8",
+                      "dark-bw": "brand-2",
+                      "dark-bold": "brand-8",
+                    },
+                    theme
+                  ),
+                ],
+                textSIZE: ["lg", "xl"],
+                lineHEIGHT: ["loose"],
+                py: ["2.5", "3.5"],
+              },
+            },
           },
+          buttons: {},
         } as OptionsPayloadDatum,
       },
     ],
@@ -2671,6 +1822,7 @@ export const paneDesigns = (
     name: "Section title",
     priority: 60,
     variants: [`default`],
+    designType: `section`,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -2823,6 +1975,7 @@ export const paneDesigns = (
     name: "Section title - Inverse",
     priority: 61,
     variants: [`default`],
+    designType: `section`,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -2975,6 +2128,7 @@ export const paneDesigns = (
     name: "Section title - Brand Colours",
     priority: 62,
     variants: [`default`],
+    designType: `section`,
     type: `starter`,
     panePayload: {
       heightOffsetDesktop: 0,
@@ -3116,6 +2270,7 @@ export const paneDesigns = (
     slug: "empty",
     name: "Empty Pane",
     variants: [`default`],
+    designType: `copy`,
     priority: 80,
     type: `starter`,
     panePayload: {
@@ -3426,300 +2581,13 @@ export const paneDesigns = (
   //    },
   //  ],
   //},
-  {
-    id: "borderedText",
-    slug: "borderedText",
-    name: "Bordered paragraphs",
-    variants: [`default`],
-    priority: 50,
-    type: `starter`,
-    panePayload: {
-      heightOffsetDesktop: 0,
-      heightOffsetTablet: 0,
-      heightOffsetMobile: 0,
-      heightRatioDesktop: `0.00`,
-      heightRatioTablet: `0.00`,
-      heightRatioMobile: `0.00`,
-      bgColour: !odd
-        ? tailwindToHex(
-            getComputedColor(
-              {
-                light: "brand-2",
-                "light-bw": "white",
-                "light-bold": "brand-2",
-                dark: "black",
-                "dark-bw": "black",
-                "dark-bold": "brand-1",
-              },
-              theme
-            )
-          )
-        : tailwindToHex(
-            getComputedColor(
-              {
-                light: "white",
-                "light-bw": "brand-2",
-                "light-bold": "white",
-                dark: "brand-1",
-                "dark-bw": "brand-1",
-                "dark-bold": "black",
-              },
-              theme
-            )
-          ),
-      codeHook: null,
-    },
-    files: [],
-    fragments: [
-      {
-        type: "markdown",
-        markdownBody: `Your story begins here!\n`,
-        imageMaskShapeDesktop: "none",
-        imageMaskShapeTablet: "none",
-        imageMaskShapeMobile: "none",
-        textShapeOutsideDesktop: "none",
-        textShapeOutsideTablet: "none",
-        textShapeOutsideMobile: "none",
-        isModal: false,
-        hiddenViewports: "none",
-        optionsPayload: {
-          classNamesPayload: {
-            parent: {
-              classes: [
-                { my: [12, 16], px: [12] },
-                {
-                  bgCOLOR: [
-                    getComputedColor(
-                      {
-                        light: "brand-2",
-                        "light-bw": "white",
-                        "light-bold": "white",
-                        dark: "brand-1",
-                        "dark-bw": "black",
-                        "dark-bold": "brand-1",
-                      },
-                      theme
-                    ),
-                  ],
-                  borderCOLOR: [
-                    getComputedColor(
-                      {
-                        light: "brand-8",
-                        "light-bw": "brand-8",
-                        "light-bold": "brand-6",
-                        dark: "brand-7",
-                        "dark-bw": "neutral-800",
-                        "dark-bold": "brand-7",
-                      },
-                      theme
-                    ),
-                  ],
-                  borderSTROKE: [2],
-                  borderSTYLE: ["dashed"],
-                  maxW: ["none", "3xl"],
-                  mx: ["auto"],
-                },
-                { maxW: ["none", "2xl"], mx: ["auto"], p: [8] },
-              ],
-            },
-            p: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-7",
-                      dark: "brand-6",
-                      "dark-bw": "brand-2",
-                      "dark-bold": "brand-8",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["lg", "xl"],
-                my: [3, 4],
-              },
-            },
-            h2: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-5",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "brand-8",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["3xl", "5xl", "6xl"],
-                fontFACE: ["action"],
-                pt: ["9", "14", "20"],
-              },
-            },
-            h3: {
-              classes: {
-                fontWEIGHT: ["bold"],
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["2xl", "3xl"],
-                fontFACE: ["action"],
-                pt: ["9", "14", "20"],
-              },
-            },
-            h4: {
-              classes: {
-                textCOLOR: [
-                  getComputedColor(
-                    {
-                      light: "brand-7",
-                      "light-bw": "brand-1",
-                      "light-bold": "brand-5",
-                      dark: "brand-4",
-                      "dark-bw": "white",
-                      "dark-bold": "brand-3",
-                    },
-                    theme
-                  ),
-                ],
-                textSIZE: ["xl", "2xl"],
-                fontFACE: ["action"],
-                pt: ["9", "14", "20"],
-              },
-            },
-          },
-        } as OptionsPayloadDatum,
-      },
-    ],
-  },
-  //{
-  //  id: "titleText",
-  //  slug: "titleText",
-  //  name: "Quick section",
-  //  priority: getComputedNumber(
-  //    {
-  //      default: 55,
-  //      onecolumn: 56,
-  //      center: 57,
-  //    },
-  //    variant
-  //  ),
-  //  type: `starter`,
-  //  panePayload: {
-  //    heightOffsetDesktop: 0,
-  //    heightOffsetTablet: 0,
-  //    heightOffsetMobile: 0,
-  //    heightRatioDesktop: `0.00`,
-  //    heightRatioTablet: `0.00`,
-  //    heightRatioMobile: `0.00`,
-  //    bgColour: tailwindToHex(
-  //      getComputedColor(
-  //        {
-  //          light: "mywhite",
-  //          "light-bw": "mywhite",
-  //          "light-bold": "myoffwhite",
-  //          dark: "myblack",
-  //          "dark-bw": "myblack",
-  //          "dark-bold": "black",
-  //        },
-  //        theme
-  //      )
-  //    ),
-  //    codeHook: null,
-  //  },
-  //  files: [],
-  //  fragments: [
-  //    {
-  //      type: "markdown",
-  //      markdownBody: `## add a section title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n`,
-  //      imageMaskShapeDesktop: "none",
-  //      imageMaskShapeTablet: "none",
-  //      imageMaskShapeMobile: "none",
-  //      textShapeOutsideDesktop: "none",
-  //      textShapeOutsideTablet: "none",
-  //      textShapeOutsideMobile: "none",
-  //      isModal: false,
-  //      hiddenViewports: "none",
-  //      optionsPayload: {
-  //        classNamesPayload: {
-  //          parent: {
-  //            classes: [
-  //              { my: [12, 16] },
-  //              { maxW: ["2xl", "3xl"], mx: ["auto"], px: [8] },
-  //            ],
-  //          },
-  //          h2: {
-  //            classes: {
-  //              fontWEIGHT: ["bold"],
-  //              textCOLOR: [
-  //                getComputedColor(
-  //                  {
-  //                    light: "myblue",
-  //                    "light-bw": "myblack",
-  //                    "light-bold": "myorange",
-  //                    dark: "mygreen",
-  //                    "dark-bw": "myoffwhite",
-  //                    "dark-bold": "myorange",
-  //                  },
-  //                  theme
-  //                ),
-  //              ],
-  //              textSIZE: ["3xl", "4xl"],
-  //              my: [8, 12],
-  //              fontFACE: ["action"],
-  //            },
-  //          },
-  //          h3: {
-  //            classes: {
-  //              fontWEIGHT: ["bold"],
-  //              textCOLOR: ["myblue"],
-  //              textSIZE: ["xl", "3xl"],
-  //              my: [8, 12],
-  //              fontFACE: ["action"],
-  //            },
-  //          },
-  //          h4: {
-  //            classes: {
-  //              textCOLOR: ["myblue"],
-  //              textSIZE: ["xl", "2xl"],
-  //              my: [8, 12],
-  //              fontFACE: ["action"],
-  //            },
-  //          },
-  //          p: {
-  //            classes: {
-  //              textCOLOR: ["mydarkgrey"],
-  //              textSIZE: ["lg", "xl"],
-  //              my: [3, 4],
-  //              lineHEIGHT: ["loose"],
-  //            },
-  //          },
-  //        },
-  //      } as OptionsPayloadDatum,
-  //    },
-  //  ],
-  //},
+  // breaks --- svg shapes
   {
     id: "breaks-1",
     slug: "breaks-1",
     name: "Stepped from above",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `above`,
     type: `break`,
@@ -3827,6 +2695,7 @@ export const paneDesigns = (
     slug: "breaks-2",
     name: "Cut 1 into below",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `below`,
     type: `break`,
@@ -3934,6 +2803,7 @@ export const paneDesigns = (
     slug: "breaks-3",
     name: "Cut 2 into below",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `below`,
     type: `break`,
@@ -4041,6 +2911,7 @@ export const paneDesigns = (
     slug: "breaks-4",
     name: "Low Cut 1 into below",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `below`,
     type: `break`,
@@ -4148,6 +3019,7 @@ export const paneDesigns = (
     slug: "breaks-5",
     name: "Low Cut 2 into below",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `below`,
     type: `break`,
@@ -4255,6 +3127,7 @@ export const paneDesigns = (
     slug: "breaks-6",
     name: "Jag from above",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `above`,
     type: `break`,
@@ -4362,6 +3235,7 @@ export const paneDesigns = (
     slug: "breaks-7",
     name: "Burst 1 from above",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `above`,
     type: `break`,
@@ -4469,6 +3343,7 @@ export const paneDesigns = (
     slug: "breaks-8",
     name: "Burst 2 from above",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `above`,
     type: `break`,
@@ -4576,6 +3451,7 @@ export const paneDesigns = (
     slug: "breaks-9",
     name: "Crooked from above",
     variants: [`default`],
+    designType: `decorative`,
     priority: 100,
     orientation: `above`,
     type: `break`,
@@ -4695,7 +3571,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `default`).find((p) => p.id === "intro-default") as PaneDesign,
@@ -4721,7 +3596,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `onecolumn`).find((p) => p.id === "intro-onecolumn") as PaneDesign,
@@ -4747,7 +3621,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `center`).find((p) => p.id === "intro-center") as PaneDesign,
@@ -4773,7 +3646,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `default`).find((p) => p.id === "intro-slim-default") as PaneDesign,
@@ -4799,7 +3671,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `onecolumn`).find((p) => p.id === "intro-slim-onecolumn") as PaneDesign,
@@ -4825,7 +3696,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `center`).find((p) => p.id === "intro-slim-center") as PaneDesign,
@@ -4851,7 +3721,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `default`).find(
@@ -4879,7 +3748,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `onecolumn`).find(
@@ -4907,7 +3775,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
       paneDesigns(theme, `center`).find((p) => p.id === "intro-slim-bordered-center") as PaneDesign,
@@ -4933,7 +3800,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
@@ -4957,7 +3823,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`paragraph`],
     paneDesigns: [
       paneDesigns(theme, `onecolumn`).find((p) => p.id === "paragraph-onecolumn") as PaneDesign,
     ],
@@ -4981,7 +3846,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`paragraph`],
     paneDesigns: [
       paneDesigns(theme, `center`).find((p) => p.id === "paragraph-center") as PaneDesign,
     ],
@@ -5005,7 +3869,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`paragraph`],
     paneDesigns: [paneDesigns(theme, `default`).find((p) => p.id === "borderedText") as PaneDesign],
     paneDesignsOdd: {
       borderedText: paneDesigns(theme, `default`, true).find(
@@ -5027,10 +3890,9 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `16x9`).find((p) => p.id === "intro-image-slim-16x9") as PaneDesign,
+      paneDesigns(theme, `16x9`).find((p) => p.id === "hero-image-16x9") as PaneDesign,
       paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
@@ -5053,10 +3915,63 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`decorative`, `title`, `paragraph`],
     paneDesigns: [
       paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `square`).find((p) => p.id === "intro-image-slim-square") as PaneDesign,
+      paneDesigns(theme, `square`).find((p) => p.id === "hero-image-square") as PaneDesign,
+      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+    ],
+    paneDesignsOdd: {
+      "paragraph-default": paneDesigns(theme, `default`, true).find(
+        (p) => p.id === "paragraph-default"
+      ) as PaneDesign,
+    },
+  },
+  basicImage16x9Bordered: {
+    name: "Basic Page - with 16x9 hero image, bordered",
+    isContext: false,
+    tailwindBgColour: getComputedColor(
+      {
+        light: "brand-2",
+        "light-bw": "brand-2",
+        "light-bold": "white",
+        dark: "brand-1",
+        "dark-bw": "brand-1",
+        "dark-bold": "black",
+      },
+      theme
+    ),
+    paneDesigns: [
+      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `16x9Bordered`).find(
+        (p) => p.id === "hero-image-16x9Bordered"
+      ) as PaneDesign,
+      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+    ],
+    paneDesignsOdd: {
+      "paragraph-default": paneDesigns(theme, `default`, true).find(
+        (p) => p.id === "paragraph-default"
+      ) as PaneDesign,
+    },
+  },
+  basicImageSquareBordered: {
+    name: "Basic Page - with square hero image, bordered",
+    isContext: false,
+    tailwindBgColour: getComputedColor(
+      {
+        light: "brand-2",
+        "light-bw": "brand-2",
+        "light-bold": "white",
+        dark: "brand-1",
+        "dark-bw": "brand-1",
+        "dark-bold": "black",
+      },
+      theme
+    ),
+    paneDesigns: [
+      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `squareBordered`).find(
+        (p) => p.id === "hero-image-squareBordered"
+      ) as PaneDesign,
       paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
@@ -5079,7 +3994,6 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesignsMap: [`empty`],
     paneDesigns: [paneDesigns(theme, `default`).find((p) => p.id === "empty") as PaneDesign],
     paneDesignsOdd: {
       borderedText: paneDesigns(theme, `default`, true).find((p) => p.id === "empty") as PaneDesign,
