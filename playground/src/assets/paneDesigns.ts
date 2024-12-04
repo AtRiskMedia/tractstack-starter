@@ -1222,7 +1222,6 @@ export const paneDesigns = (
             ol: {
               classes: {
                 maxW: ["screen-md"],
-                minW: ["96"],
               },
             },
             ul: {
@@ -1251,7 +1250,6 @@ export const paneDesigns = (
                 mt: ["0"],
                 maxW: ["none", "none", "xl"],
                 flex: ["none"],
-                w: ["fit-contents"],
               },
               count: 4,
               override: {
@@ -1259,7 +1257,7 @@ export const paneDesigns = (
                 maxW: [null, null, null, ["none"]],
                 flex: [null, null, null, ["1"]],
                 w: [null, null, null, ["full"]],
-                textSIZE: [["7xl"], null, null, null],
+                textSIZE: [["5xl", "6xl", "7xl"], null, null, null],
                 lineHEIGHT: [["tight"], null, null, null],
                 fontWEIGHT: [["bold"], null, null, null],
                 textCOLOR: [
