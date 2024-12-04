@@ -1,10 +1,12 @@
 import TractStackModal from "@/components/storykeep/components/TractStackModal.tsx";
 import { useState } from "react";
 import { Switch } from "@headlessui/react";
+import { classNames } from "@/utils/helpers.ts";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 
 export type ChangeLayoutModalProps = {
   onClose: () => void;
-}
+};
 
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
@@ -15,8 +17,16 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
       header={
         <div className="flex justify-between">
           <h2 className="text-2xl font-bold mb-4">Generating Page</h2>
-          <button className="bg-red-400 h-fit px-2 rounded-md" onClick={() => props.onClose()}>
-            X
+          <button
+            className={classNames(
+              "h-fit right-0 top-1/2 transform -translate-y-1/2",
+              "bg-black hover:bg-myorange text-white rounded-full p-2 shadow-lg",
+              "transition-all duration-300 ease-in-out"
+            )}
+            title="Cancel"
+            onClick={() => props.onClose()}
+          >
+            <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
       }
@@ -41,14 +51,6 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
               <Switch.Label className="mr-4">Enable Odd Panes</Switch.Label>
             </div>
           </Switch.Group>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
-          <p>Changing layout...</p>
         </div>
       }
     />
