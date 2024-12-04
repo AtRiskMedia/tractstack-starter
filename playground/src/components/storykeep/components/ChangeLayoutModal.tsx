@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Switch } from "@headlessui/react";
 import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { paneFragmentDesignType } from "@/store/storykeep.ts";
+import { paneDesignType } from "@/store/storykeep.ts";
 import { paneDesigns } from "@/assets/paneDesigns.ts";
 import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
 import type { ViewportAuto } from "@/types.ts";
@@ -19,7 +19,8 @@ export type ChangeLayoutModalProps = {
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
 
-  const paneType = paneFragmentDesignType.get()[props.paneId];
+  const paneType = paneDesignType.get()[props.paneId];
+  console.log(paneType.current);
   return (
     <TractStackModal
       widthProvider={() => "max-w-[80%]"}
