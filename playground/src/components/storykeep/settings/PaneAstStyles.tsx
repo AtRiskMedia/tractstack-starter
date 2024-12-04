@@ -1,11 +1,9 @@
 import { memo, useRef, useMemo, useState, useEffect, useCallback } from "react";
 import { Switch, Listbox } from "@headlessui/react";
 import { useStore } from "@nanostores/react";
-import {
-  XMarkIcon,
-  CheckIcon,
-  ChevronUpDownIcon,
-} from "@heroicons/react/24/outline";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { generateMarkdownLookup } from "../../../utils/compositor/generateMarkdownLookup";
 import {
   getActiveTagData,
@@ -117,36 +115,24 @@ export const PaneAstStyles = (props: {
     (linkTargetKey && linkTargetKey !== `*`);
   const isListItem =
     typeof targetId.idx === `number`
-      ? typeof markdownLookup?.listItemsLookup[targetId.outerIdx] ===
-          `object` &&
-        typeof markdownLookup.listItemsLookup[targetId.outerIdx][
-          targetId.idx
-        ] === `number`
+      ? typeof markdownLookup?.listItemsLookup[targetId.outerIdx] === `object` &&
+        typeof markdownLookup.listItemsLookup[targetId.outerIdx][targetId.idx] === `number`
       : null;
   const isCodeItem =
     typeof targetId.idx === `number`
-      ? typeof markdownLookup?.codeItemsLookup[targetId.outerIdx] ===
-          `object` &&
-        typeof markdownLookup.codeItemsLookup[targetId.outerIdx][
-          targetId.idx
-        ] === `number`
+      ? typeof markdownLookup?.codeItemsLookup[targetId.outerIdx] === `object` &&
+        typeof markdownLookup.codeItemsLookup[targetId.outerIdx][targetId.idx] === `number`
       : null;
   const isImage =
     typeof targetId.idx === `number`
       ? typeof markdownLookup?.imagesLookup[targetId.outerIdx] === `object` &&
-        typeof markdownLookup.imagesLookup[targetId.outerIdx][targetId.idx] ===
-          `number`
+        typeof markdownLookup.imagesLookup[targetId.outerIdx][targetId.idx] === `number`
       : null;
-  const parentClassNamesPayload =
-    markdownDatum?.payload.optionsPayload.classNamesPayload.parent;
-  const modalClassNamesPayload =
-    markdownDatum?.payload.optionsPayload.classNamesPayload.modal;
-  const imageClassNamesPayload =
-    markdownDatum.payload.optionsPayload.classNamesPayload.img;
-  const codeItemClassNamesPayload =
-    markdownDatum.payload.optionsPayload.classNamesPayload.code;
-  const listItemClassNamesPayload =
-    markdownDatum.payload.optionsPayload.classNamesPayload.li;
+  const parentClassNamesPayload = markdownDatum?.payload.optionsPayload.classNamesPayload.parent;
+  const modalClassNamesPayload = markdownDatum?.payload.optionsPayload.classNamesPayload.modal;
+  const imageClassNamesPayload = markdownDatum.payload.optionsPayload.classNamesPayload.img;
+  const codeItemClassNamesPayload = markdownDatum.payload.optionsPayload.classNamesPayload.code;
+  const listItemClassNamesPayload = markdownDatum.payload.optionsPayload.classNamesPayload.li;
   const outerTagClassNamesPayload =
     thisTag && markdownDatum.payload.optionsPayload.classNamesPayload[thisTag];
   const linkTargetLookup =
@@ -157,15 +143,13 @@ export const PaneAstStyles = (props: {
     linkTargetLookup &&
     linkTargetLookup !== `*` &&
     markdownDatum?.payload?.optionsPayload?.buttons
-      ? markdownDatum.payload.optionsPayload.buttons[linkTargetLookup]
-          .classNamesPayload.button
+      ? markdownDatum.payload.optionsPayload.buttons[linkTargetLookup].classNamesPayload.button
       : isLink &&
           linkMode === `hover` &&
           linkTargetLookup &&
           linkTargetLookup !== `*` &&
           markdownDatum?.payload?.optionsPayload?.buttons
-        ? markdownDatum.payload.optionsPayload.buttons[linkTargetLookup]
-            .classNamesPayload.hover
+        ? markdownDatum.payload.optionsPayload.buttons[linkTargetLookup].classNamesPayload.hover
         : { classes: {} };
   const buttonClassNamesPayloadArray = useMemo(() => {
     if (
@@ -174,8 +158,7 @@ export const PaneAstStyles = (props: {
       linkTargetLookup !== "*" &&
       markdownDatum?.payload?.optionsPayload?.buttons
     ) {
-      const buttonData =
-        markdownDatum.payload.optionsPayload.buttons[linkTargetLookup];
+      const buttonData = markdownDatum.payload.optionsPayload.buttons[linkTargetLookup];
       return [
         buttonData.classNamesPayload.button.classes || {},
         buttonData.classNamesPayload.hover.classes || {},
@@ -198,15 +181,11 @@ export const PaneAstStyles = (props: {
       if (linkMode && linkTargetKey) {
         const index = parseInt(option);
         const buttonStyle = buttonStyleClasses[index] as ButtonStyleClass;
-        const currentField = cloneDeep(
-          $paneFragmentMarkdown[markdownFragmentId]
-        );
+        const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
         if (!currentField.current.payload.optionsPayload.buttons) {
           currentField.current.payload.optionsPayload.buttons = {};
         }
-        if (
-          !currentField.current.payload.optionsPayload.buttons[linkTargetKey]
-        ) {
+        if (!currentField.current.payload.optionsPayload.buttons[linkTargetKey]) {
           currentField.current.payload.optionsPayload.buttons[linkTargetKey] = {
             urlTarget: linkTargetKey,
             callbackPayload: "",
@@ -220,31 +199,19 @@ export const PaneAstStyles = (props: {
         currentField.current.payload.optionsPayload.buttons[
           linkTargetKey
         ].classNamesPayload.button.classes = Object.fromEntries(
-          Object.entries(buttonStyle[0]).map(([key, value]) => [
-            key,
-            value as Tuple,
-          ])
+          Object.entries(buttonStyle[0]).map(([key, value]) => [key, value as Tuple])
         ) as ClassNamesPayloadDatumValue;
         currentField.current.payload.optionsPayload.buttons[
           linkTargetKey
         ].classNamesPayload.hover.classes = Object.fromEntries(
-          Object.entries(buttonStyle[1]).map(([key, value]) => [
-            key,
-            value as Tuple,
-          ])
+          Object.entries(buttonStyle[1]).map(([key, value]) => [key, value as Tuple])
         ) as ClassNamesPayloadDatumValue;
         updateStoreField("paneFragmentMarkdown", currentField.current);
         lastInteractedTypeStore.set(`markdown`);
         lastInteractedPaneStore.set(targetId.paneId);
       }
     },
-    [
-      linkMode,
-      linkTargetKey,
-      markdownFragmentId,
-      updateStoreField,
-      targetId.paneId,
-    ]
+    [linkMode, linkTargetKey, markdownFragmentId, updateStoreField, targetId.paneId]
   );
 
   const removeLinkStyle = (className: string) => {
@@ -258,9 +225,8 @@ export const PaneAstStyles = (props: {
       const payloadForTag =
         thisButtonKey &&
         thisTag &&
-        (currentField?.current?.payload?.optionsPayload?.buttons?.[
-          thisButtonKey
-        ]?.classNamesPayload?.[thisTag] as ClassNamesPayloadInnerDatum);
+        (currentField?.current?.payload?.optionsPayload?.buttons?.[thisButtonKey]
+          ?.classNamesPayload?.[thisTag] as ClassNamesPayloadInnerDatum);
       if (
         payloadForTag &&
         typeof payloadForTag === `object` &&
@@ -277,8 +243,7 @@ export const PaneAstStyles = (props: {
             optionsPayload: {
               ...currentField.current.payload.optionsPayload,
               classNamesPayload: {
-                ...currentField.current.payload.optionsPayload
-                  .classNamesPayload,
+                ...currentField.current.payload.optionsPayload.classNamesPayload,
                 [thisTag]: payloadForTag,
               },
             },
@@ -319,15 +284,11 @@ export const PaneAstStyles = (props: {
             payloadForTag.classes?.[parentLayer] &&
             className in payloadForTag.classes[parentLayer]
           ) {
-            delete (
-              payloadForTag.classes[parentLayer] as Record<string, string[]>
-            )[className];
+            delete (payloadForTag.classes[parentLayer] as Record<string, string[]>)[className];
           }
         } else {
           if (payloadForTag.classes && className in payloadForTag.classes) {
-            delete (payloadForTag.classes as Record<string, string[]>)[
-              className
-            ];
+            delete (payloadForTag.classes as Record<string, string[]>)[className];
           }
           if (payloadForTag.override && className in payloadForTag.override) {
             delete payloadForTag.override[className];
@@ -342,8 +303,7 @@ export const PaneAstStyles = (props: {
             optionsPayload: {
               ...currentField.current.payload.optionsPayload,
               classNamesPayload: {
-                ...currentField.current.payload.optionsPayload
-                  .classNamesPayload,
+                ...currentField.current.payload.optionsPayload.classNamesPayload,
                 [thisTag]: payloadForTag,
               },
             },
@@ -366,8 +326,7 @@ export const PaneAstStyles = (props: {
   const handleWidgetConfig = useCallback(() => {
     if (
       markdownDatum?.markdown?.htmlAst &&
-      (typeof targetId.outerIdx === "number" ||
-        $editMode?.targetId?.outerIdx !== undefined)
+      (typeof targetId.outerIdx === "number" || $editMode?.targetId?.outerIdx !== undefined)
     ) {
       const codeNode =
         markdownDatum?.markdown?.htmlAst &&
@@ -379,7 +338,7 @@ export const PaneAstStyles = (props: {
         const match = codeNode.match(/(\w+)\((.*?)\)/);
         if (match) {
           const [, key, valuesString] = match;
-          const values = valuesString.split("|").map(item => item.trim());
+          const values = valuesString.split("|").map((item) => item.trim());
           setWidgetData([key, ...values]);
         } else {
           console.error("Invalid widget format:", codeNode);
@@ -392,13 +351,10 @@ export const PaneAstStyles = (props: {
     setAddClass(false);
   }, [markdownDatum, targetId, $editMode]);
 
-  // naz debug - pane classes here
-  //console.log($paneFragmentMarkdown[markdownFragmentId].current.payload.optionsPayload);
-
   const handleAddLayer = (start: boolean) => {
     const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
-    const payloadForTag = currentField.current.payload.optionsPayload
-      .classNamesPayload.parent as ClassNamesPayloadInnerDatum;
+    const payloadForTag = currentField.current.payload.optionsPayload.classNamesPayload
+      .parent as ClassNamesPayloadInnerDatum;
     if (Array.isArray(payloadForTag.classes)) {
       if (start) {
         payloadForTag.classes.unshift({});
@@ -430,9 +386,9 @@ export const PaneAstStyles = (props: {
     const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
     const payloadForTag =
       thisTag &&
-      (currentField.current.payload.optionsPayload.classNamesPayload[
-        thisTag
-      ] as ClassNamesPayloadInnerDatum | undefined);
+      (currentField.current.payload.optionsPayload.classNamesPayload[thisTag] as
+        | ClassNamesPayloadInnerDatum
+        | undefined);
     if (payloadForTag && markdownLookup) {
       // already has override; edit in place
       if (activeTagData?.hasOverride && typeof thisGlobalNth === `number`) {
@@ -442,10 +398,7 @@ export const PaneAstStyles = (props: {
             delete payloadForTag.override[thisClass];
           }
         }
-        if (
-          payloadForTag?.override &&
-          Object.keys(payloadForTag.override).length === 0
-        ) {
+        if (payloadForTag?.override && Object.keys(payloadForTag.override).length === 0) {
           delete payloadForTag.override;
           delete payloadForTag.count;
         }
@@ -458,9 +411,7 @@ export const PaneAstStyles = (props: {
               ? Object.keys(markdownLookup.codeItems).length
               : thisTag === `li`
                 ? Object.keys(markdownLookup.listItems).length
-                : markdownLookup?.nthTagLookup[
-                      thisTag as keyof typeof markdownLookup.nthTagLookup
-                    ]
+                : markdownLookup?.nthTagLookup[thisTag as keyof typeof markdownLookup.nthTagLookup]
                   ? Object.keys(
                       markdownLookup.nthTagLookup[
                         thisTag as keyof typeof markdownLookup.nthTagLookup
@@ -503,8 +454,7 @@ export const PaneAstStyles = (props: {
   ) => {
     const thisTag = linkMode;
     const thisClass = selectedStyle;
-    const thisValue =
-      typeof isNegative !== `undefined` && isNegative ? `!${value}` : value;
+    const thisValue = typeof isNegative !== `undefined` && isNegative ? `!${value}` : value;
     const thisButtonKey = linkTargetKey;
     const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
     const payloadForTag =
@@ -531,9 +481,8 @@ export const PaneAstStyles = (props: {
 
               [thisButtonKey]: {
                 classNamesPayload: {
-                  ...currentField.current.payload.optionsPayload.buttons[
-                    thisButtonKey
-                  ].classNamesPayload,
+                  ...currentField.current.payload.optionsPayload.buttons[thisButtonKey]
+                    .classNamesPayload,
                   [thisTag]: payloadForTag,
                 },
               },
@@ -555,33 +504,27 @@ export const PaneAstStyles = (props: {
       const thisTag = activeTagData.tag;
       const thisGlobalNth = activeTagData.globalNth;
       const thisClass = activeTagData.class;
-      const thisValue =
-        typeof isNegative !== `undefined` && isNegative ? `!${value}` : value;
+      const thisValue = typeof isNegative !== `undefined` && isNegative ? `!${value}` : value;
       const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
-      if (
-        !currentField.current.payload.optionsPayload.classNamesPayload[thisTag]
-      ) {
-        currentField.current.payload.optionsPayload.classNamesPayload[thisTag] =
-          {
-            classes: {},
-          };
+      if (!currentField.current.payload.optionsPayload.classNamesPayload[thisTag]) {
+        currentField.current.payload.optionsPayload.classNamesPayload[thisTag] = {
+          classes: {},
+        };
       }
-      const payloadForTag = currentField.current.payload.optionsPayload
-        .classNamesPayload[thisTag] as ClassNamesPayloadInnerDatum;
+      const payloadForTag = currentField.current.payload.optionsPayload.classNamesPayload[
+        thisTag
+      ] as ClassNamesPayloadInnerDatum;
       if (!payloadForTag.classes) {
         payloadForTag.classes = {};
       }
       let thisTuple: Tuple;
-      if (
-        activeTagData.tag === `parent` &&
-        Array.isArray(payloadForTag.classes)
-      ) {
+      if (activeTagData.tag === `parent` && Array.isArray(payloadForTag.classes)) {
         if (!payloadForTag.classes[parentLayer]) {
           payloadForTag.classes[parentLayer] = {};
         }
-        thisTuple = (
-          payloadForTag.classes[parentLayer] as Record<string, Tuple>
-        )[thisClass] || [""];
+        thisTuple = (payloadForTag.classes[parentLayer] as Record<string, Tuple>)[thisClass] || [
+          "",
+        ];
       } else if (activeTagData?.hasOverride) {
         if (!payloadForTag.override) {
           payloadForTag.override = {};
@@ -589,22 +532,13 @@ export const PaneAstStyles = (props: {
         if (!payloadForTag.override[thisClass]) {
           payloadForTag.override[thisClass] = [];
         }
-        thisTuple = payloadForTag.override[thisClass][
-          thisGlobalNth as number
-        ] || [""];
+        thisTuple = payloadForTag.override[thisClass][thisGlobalNth as number] || [""];
       } else {
-        thisTuple = (payloadForTag.classes as Record<string, Tuple>)[
-          thisClass
-        ] || [""];
+        thisTuple = (payloadForTag.classes as Record<string, Tuple>)[thisClass] || [""];
       }
       const newTuple = updateViewportTuple(thisTuple, viewport, thisValue);
-      if (
-        activeTagData.tag === `parent` &&
-        Array.isArray(payloadForTag.classes)
-      ) {
-        (payloadForTag.classes[parentLayer] as Record<string, Tuple>)[
-          thisClass
-        ] = newTuple;
+      if (activeTagData.tag === `parent` && Array.isArray(payloadForTag.classes)) {
+        (payloadForTag.classes[parentLayer] as Record<string, Tuple>)[thisClass] = newTuple;
       } else if (activeTagData?.hasOverride) {
         payloadForTag.override![thisClass][thisGlobalNth as number] = newTuple;
       } else {
@@ -639,10 +573,8 @@ export const PaneAstStyles = (props: {
 
   const handleDeleteLayer = () => {
     const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
-    const payloadForTag =
-      currentField.current.payload.optionsPayload.classNamesPayload.parent;
-    if (Array.isArray(payloadForTag.classes))
-      payloadForTag.classes.splice(parentLayer, 1);
+    const payloadForTag = currentField.current.payload.optionsPayload.classNamesPayload.parent;
+    if (Array.isArray(payloadForTag.classes)) payloadForTag.classes.splice(parentLayer, 1);
     if (payloadForTag)
       updateStoreField("paneFragmentMarkdown", {
         ...currentField.current,
@@ -690,18 +622,11 @@ export const PaneAstStyles = (props: {
           typeof payloadForTag.classes === "object" &&
           typeof payloadForTag.classes[parentLayer] === "object"
         ) {
-          (payloadForTag.classes[parentLayer] as Record<string, Tuple>)[
-            selectedClass
-          ] = [""];
+          (payloadForTag.classes[parentLayer] as Record<string, Tuple>)[selectedClass] = [""];
         }
       } else if (payloadForTag && !(selectedClass in payloadForTag.classes)) {
-        if (
-          typeof payloadForTag.classes === "object" &&
-          !Array.isArray(payloadForTag.classes)
-        ) {
-          (payloadForTag.classes as Record<string, Tuple>)[selectedClass] = [
-            "",
-          ];
+        if (typeof payloadForTag.classes === "object" && !Array.isArray(payloadForTag.classes)) {
+          (payloadForTag.classes as Record<string, Tuple>)[selectedClass] = [""];
         }
       }
       if (thisTag && payloadForTag)
@@ -712,8 +637,7 @@ export const PaneAstStyles = (props: {
             optionsPayload: {
               ...currentField.current.payload.optionsPayload,
               classNamesPayload: {
-                ...currentField.current.payload.optionsPayload
-                  .classNamesPayload,
+                ...currentField.current.payload.optionsPayload.classNamesPayload,
                 [thisTag]: payloadForTag,
               },
             },
@@ -753,9 +677,8 @@ export const PaneAstStyles = (props: {
 
               [thisButtonKey]: {
                 classNamesPayload: {
-                  ...currentField.current.payload.optionsPayload.buttons[
-                    thisButtonKey
-                  ].classNamesPayload,
+                  ...currentField.current.payload.optionsPayload.buttons[thisButtonKey]
+                    .classNamesPayload,
                   [thisTag]: payloadForTag,
                 },
               },
@@ -800,9 +723,7 @@ export const PaneAstStyles = (props: {
             return false;
         }
       })
-      .filter(([, classInfo]) =>
-        classInfo.title.toLowerCase().includes(query.toLowerCase())
-      );
+      .filter(([, classInfo]) => classInfo.title.toLowerCase().includes(query.toLowerCase()));
   }, [styleFilter, query]);
 
   const ClassTag = (className: string) => (
@@ -880,18 +801,15 @@ export const PaneAstStyles = (props: {
   useEffect(() => {
     const thisTabs: StyleTab[] = [];
     if (isImage) thisTabs.push({ name: `Image`, tag: `img`, priority: 1 });
-    else if (isCodeItem)
-      thisTabs.push({ name: `Widget`, tag: `code`, priority: 1 });
+    else if (isCodeItem) thisTabs.push({ name: `Widget`, tag: `code`, priority: 1 });
     else if (thisTagTitle && !isListItem)
       thisTabs.push({ name: thisTagTitle, tag: thisTag, priority: 0 });
     if (isListItem && thisTag) {
       thisTabs.push({ name: `List Item`, tag: `li`, priority: 2 });
       thisTabs.push({ name: `List Container`, tag: thisTag, priority: 3 });
     }
-    if (hasModal)
-      thisTabs.push({ name: `Modal Styles`, tag: `modal`, priority: 3 });
-    if (!hasTextShapeOutside)
-      thisTabs.push({ name: `Pane Styles`, tag: `parent`, priority: 4 });
+    if (hasModal) thisTabs.push({ name: `Modal Styles`, tag: `modal`, priority: 3 });
+    if (!hasTextShapeOutside) thisTabs.push({ name: `Pane Styles`, tag: `parent`, priority: 4 });
     setSelectedStyle(null);
     setParentLayer(0);
     setTabs(thisTabs);
@@ -917,20 +835,22 @@ export const PaneAstStyles = (props: {
   const mergeClassesWithAllOverrides = (
     classNamesPayload: ClassNamesPayloadInnerDatum
   ): ClassNamesPayloadDatumValue => {
-    const mergedClasses: ClassNamesPayloadDatumValue = Array.isArray(
-      classNamesPayload.classes
-    )
+    const mergedClasses: ClassNamesPayloadDatumValue = Array.isArray(classNamesPayload.classes)
       ? {}
       : { ...classNamesPayload.classes };
     const globalNth = targetId.globalNth || 0;
     if (classNamesPayload.override) {
-      Object.entries(classNamesPayload.override).forEach(
-        ([className, overrides]) => {
-          if (globalNth in overrides) {
+      Object.entries(classNamesPayload.override).forEach(([className, overrides]) => {
+        if (globalNth in overrides) {
+          if (
+            globalNth in overrides &&
+            className in mergedClasses &&
+            mergedClasses[className] &&
+            overrides[globalNth]
+          )
             mergedClasses[className] = overrides[globalNth];
-          }
         }
-      );
+      });
     }
     return mergedClasses;
   };
@@ -967,15 +887,10 @@ export const PaneAstStyles = (props: {
       }
     } else if (activeTag) {
       if (activeTag === "parent") {
-        const currentField = cloneDeep(
-          $paneFragmentMarkdown[markdownFragmentId]
-        );
-        const payloadForTag = currentField.current.payload.optionsPayload
-          .classNamesPayload.parent as ClassNamesPayloadInnerDatum;
-        if (
-          Array.isArray(pastedPayload) &&
-          Array.isArray(payloadForTag.classes)
-        ) {
+        const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
+        const payloadForTag = currentField.current.payload.optionsPayload.classNamesPayload
+          .parent as ClassNamesPayloadInnerDatum;
+        if (Array.isArray(pastedPayload) && Array.isArray(payloadForTag.classes)) {
           payloadForTag.classes = pastedPayload;
         }
         updateStoreField("paneFragmentMarkdown", {
@@ -985,8 +900,7 @@ export const PaneAstStyles = (props: {
             optionsPayload: {
               ...currentField.current.payload.optionsPayload,
               classNamesPayload: {
-                ...currentField.current.payload.optionsPayload
-                  .classNamesPayload,
+                ...currentField.current.payload.optionsPayload.classNamesPayload,
                 parent: payloadForTag,
               },
             },
@@ -995,14 +909,13 @@ export const PaneAstStyles = (props: {
         lastInteractedTypeStore.set(`markdown`);
         lastInteractedPaneStore.set(targetId.paneId);
       } else {
-        const currentField = cloneDeep(
-          $paneFragmentMarkdown[markdownFragmentId]
-        );
-        const payloadForTag = currentField.current.payload.optionsPayload
-          .classNamesPayload[activeTag] as ClassNamesPayloadInnerDatum;
+        const currentField = cloneDeep($paneFragmentMarkdown[markdownFragmentId]);
+        const payloadForTag = currentField.current.payload.optionsPayload.classNamesPayload[
+          activeTag
+        ] as ClassNamesPayloadInnerDatum;
         const currentGlobalNth = targetId.globalNth ?? null;
         if (payloadForTag.override && currentGlobalNth !== null) {
-          Object.keys(payloadForTag.override).forEach(className => {
+          Object.keys(payloadForTag.override).forEach((className) => {
             if (
               typeof currentGlobalNth === `number` &&
               payloadForTag.override![className][currentGlobalNth] !== undefined
@@ -1027,8 +940,7 @@ export const PaneAstStyles = (props: {
             optionsPayload: {
               ...currentField.current.payload.optionsPayload,
               classNamesPayload: {
-                ...currentField.current.payload.optionsPayload
-                  .classNamesPayload,
+                ...currentField.current.payload.optionsPayload.classNamesPayload,
                 [activeTag]: payloadForTag,
               },
             },
@@ -1042,7 +954,7 @@ export const PaneAstStyles = (props: {
 
   useEffect(() => {
     if (activeTag)
-      setTabs(prevItems =>
+      setTabs((prevItems) =>
         prevItems && activeTag ? sortByActiveTag(prevItems, activeTag) : null
       );
   }, [activeTag]);
@@ -1124,10 +1036,7 @@ export const PaneAstStyles = (props: {
                   setAddClass(false);
                 }}
                 className="bg-mygreen/50 hover:bg-myorange text-black px-2 py-1 rounded"
-                disabled={
-                  $paneFragmentMarkdown[markdownFragmentId]?.history.length ===
-                  0
-                }
+                disabled={$paneFragmentMarkdown[markdownFragmentId]?.history.length === 0}
               >
                 Undo
               </button>
@@ -1142,9 +1051,7 @@ export const PaneAstStyles = (props: {
                     ? parentClassNamesPayload.classes
                     : activeTag === `modal`
                       ? modalClassNamesPayload?.classes || {}
-                      : mergeClassesWithAllOverrides(
-                          classNamesPayload || { classes: {} }
-                        )
+                      : mergeClassesWithAllOverrides(classNamesPayload || { classes: {} })
                 }
                 onPaste={handlePasteStyles}
               />
@@ -1202,11 +1109,8 @@ export const PaneAstStyles = (props: {
     activeTag &&
     ![`parent`, `modal`].includes(activeTag) && (
       <div className="my-4 flex flex-wrap gap-x-1.5 gap-y-3.5">
-        {classNamesPayload?.classes &&
-        Object.keys(classNamesPayload.classes).length ? (
-          Object.keys(classNamesPayload.classes).map(className =>
-            ClassTag(className)
-          )
+        {classNamesPayload?.classes && Object.keys(classNamesPayload.classes).length ? (
+          Object.keys(classNamesPayload.classes).map((className) => ClassTag(className))
         ) : (
           <span>No styles</span>
         )}
@@ -1283,30 +1187,28 @@ export const PaneAstStyles = (props: {
             +
           </button>
           {parentClassNamesPayload?.classes &&
-            Object.keys(parentClassNamesPayload?.classes).map(
-              (_, idx: number) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setParentLayer(idx);
-                    setSelectedStyle(null);
-                  }}
-                  className={classNames(
-                    "py-1 px-1.5 rounded-md",
-                    idx !== parentLayer
-                      ? "text-md underline underline-offset-2 text-mydarkgrey hover:text-black hover:bg-myorange/20"
-                      : "text-md text-black bg-myorange/50 font-bold pointer-events-none"
-                  )}
-                >
-                  {idx + 1}
-                </button>
-              )
-            )}
+            Object.keys(parentClassNamesPayload?.classes).map((_, idx: number) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setParentLayer(idx);
+                  setSelectedStyle(null);
+                }}
+                className={classNames(
+                  "py-1 px-1.5 rounded-md",
+                  idx !== parentLayer
+                    ? "text-md underline underline-offset-2 text-mydarkgrey hover:text-black hover:bg-myorange/20"
+                    : "text-md text-black bg-myorange/50 font-bold pointer-events-none"
+                )}
+              >
+                {idx + 1}
+              </button>
+            ))}
           {parentClassNamesPayload?.classes &&
             Array.isArray(parentClassNamesPayload?.classes) &&
             parentClassNamesPayload?.classes[parentLayer] &&
-            typeof Object.keys(parentClassNamesPayload?.classes[parentLayer])
-              .length === `number` && (
+            typeof Object.keys(parentClassNamesPayload?.classes[parentLayer]).length ===
+              `number` && (
               <button
                 onClick={() => {
                   handleAddLayer(false);
@@ -1323,10 +1225,9 @@ export const PaneAstStyles = (props: {
           {parentClassNamesPayload?.classes &&
           Array.isArray(parentClassNamesPayload?.classes) &&
           parentClassNamesPayload?.classes[parentLayer] &&
-          typeof Object.keys(parentClassNamesPayload?.classes[parentLayer])
-            .length === `number` ? (
-            Object.keys(parentClassNamesPayload?.classes[parentLayer]).map(
-              className => ClassTag(className)
+          typeof Object.keys(parentClassNamesPayload?.classes[parentLayer]).length === `number` ? (
+            Object.keys(parentClassNamesPayload?.classes[parentLayer]).map((className) =>
+              ClassTag(className)
             )
           ) : (
             <div>
@@ -1349,9 +1250,7 @@ export const PaneAstStyles = (props: {
     activeTag === `modal` && (
       <div className="mt-2 flex flex-wrap gap-x-1.5 gap-y-1.5">
         {modalClassNamesPayload?.classes ? (
-          Object.keys(modalClassNamesPayload?.classes).map(className =>
-            ClassTag(className)
-          )
+          Object.keys(modalClassNamesPayload?.classes).map((className) => ClassTag(className))
         ) : (
           <span>No styles</span>
         )}
@@ -1434,9 +1333,7 @@ export const PaneAstStyles = (props: {
             <h4 className="text-lg">
               <strong>{tailwindClasses[selectedStyle].title}</strong> on{" "}
               {isLink || activeTagData?.hasOverride ? (
-                <span className="underline font-bold text-mydarkgrey">
-                  THIS
-                </span>
+                <span className="underline font-bold text-mydarkgrey">THIS</span>
               ) : (
                 <span className="underline font-bold text-mydarkgrey">ALL</span>
               )}{" "}
@@ -1547,13 +1444,8 @@ export const PaneAstStyles = (props: {
 
             {!isLink &&
             tabs?.length &&
-            ![`Pane Styles`, `Modal Styles`].includes(
-              tagTitles[tabs.at(0)!.tag]
-            ) &&
-            (mobileValue ||
-              tabletValue ||
-              desktopValue ||
-              activeTagData?.hasOverride) ? (
+            ![`Pane Styles`, `Modal Styles`].includes(tagTitles[tabs.at(0)!.tag]) &&
+            (mobileValue || tabletValue || desktopValue || activeTagData?.hasOverride) ? (
               <div className="flex items-center mt-4">
                 <Switch
                   checked={activeTagData?.hasOverride}
@@ -1564,17 +1456,13 @@ export const PaneAstStyles = (props: {
                 >
                   <span
                     className={`${
-                      activeTagData?.hasOverride
-                        ? "translate-x-6"
-                        : "translate-x-1"
+                      activeTagData?.hasOverride ? "translate-x-6" : "translate-x-1"
                     } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                   />
                 </Switch>
                 <div className="ml-3">
                   <div className="text-md text-black font-bold">
-                    {!activeTagData?.hasOverride
-                      ? `Quick style mode`
-                      : `Custom styles`}
+                    {!activeTagData?.hasOverride ? `Quick style mode` : `Custom styles`}
                   </div>
                   <div className="text-md text-mydarkgrey">
                     {!activeTagData?.hasOverride
@@ -1663,11 +1551,8 @@ export const PaneAstStyles = (props: {
                     />
                   </div>
                   <div className="my-4 flex flex-wrap gap-x-1.5 gap-y-3.5">
-                    {classNamesPayload?.classes &&
-                    Object.keys(classNamesPayload.classes).length ? (
-                      Object.keys(classNamesPayload.classes).map(className =>
-                        ClassTag(className)
-                      )
+                    {classNamesPayload?.classes && Object.keys(classNamesPayload.classes).length ? (
+                      Object.keys(classNamesPayload.classes).map((className) => ClassTag(className))
                     ) : (
                       <div className="w-full">
                         <label
@@ -1685,9 +1570,7 @@ export const PaneAstStyles = (props: {
                               ref={buttonStyleListboxRef}
                               className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 xs:text-sm"
                             >
-                              <span className="block truncate">
-                                {buttonStyleOptions.at(0)}
-                              </span>
+                              <span className="block truncate">{buttonStyleOptions.at(0)}</span>
                               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                                 <ChevronUpDownIcon
                                   className="h-5 w-5 text-mydarkgrey"
@@ -1697,9 +1580,7 @@ export const PaneAstStyles = (props: {
                             </Listbox.Button>
                             <Listbox.Options
                               className={`absolute z-10 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none xs:text-sm ${
-                                buttonStyleOpenAbove
-                                  ? "bottom-full mb-1"
-                                  : "top-full mt-1"
+                                buttonStyleOpenAbove ? "bottom-full mb-1" : "top-full mt-1"
                               }`}
                               style={{ maxHeight: `${buttonStyleMaxHeight}px` }}
                             >
@@ -1708,9 +1589,7 @@ export const PaneAstStyles = (props: {
                                   key={option}
                                   className={({ active }) =>
                                     `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                                      active
-                                        ? "bg-myorange/10 text-black"
-                                        : "text-black"
+                                      active ? "bg-myorange/10 text-black" : "text-black"
                                     }`
                                   }
                                   value={idx}
@@ -1768,13 +1647,7 @@ export const PaneAstStyles = (props: {
           handleAddStyleIntercept={handleAddStyleInterceptCallback}
         />
       ),
-    [
-      addClass,
-      styleFilter,
-      selectedClass,
-      filteredClasses,
-      handleAddStyleInterceptCallback,
-    ]
+    [addClass, styleFilter, selectedClass, filteredClasses, handleAddStyleInterceptCallback]
   );
 
   if (!tabs) return null;

@@ -86,6 +86,8 @@ export function AstToButton({
             )}px`;
           }
         }, 100);
+      } else {
+        window.location.href = targetUrl;
       }
     } else {
       window.location.href = targetUrl;

@@ -26,7 +26,7 @@ const processParentClasses = (
     return [[], [], [], []];
   }
   const processClassObject = (classObj: ClassNamesPayloadDatumValue) => {
-    return processClassesForViewports(classObj, undefined);
+    return processClassesForViewports(classObj, {});
   };
   let all: string[] = [];
   let mobile: string[] = [];
@@ -87,7 +87,9 @@ const processTupleForViewport = (tuple: Tuple, viewportIndex: number): TupleValu
 const processClassesForViewports = (
   classes: ClassNamesPayloadDatumValue,
   // | ClassNamesPayloadValue,
-  override: Record<string, Tuple[]> | undefined,
+  override: {
+    [key: string]: (Tuple | null)[];
+  },
   count: number = 1
 ): [string[], string[], string[], string[]] => {
   const processForViewport = (viewportIndex: number): string[] => {
@@ -149,7 +151,7 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
     if (!Array.isArray(allSelectors)) {
       const [all, mobile, tablet, desktop] = processClassesForViewports(
         allSelectors,
-        override,
+        override || {},
         count
       );
       optionsPayload.classNames = {
@@ -198,7 +200,7 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
     const modalClasses = classes.modal.classes;
     const [all, mobile, tablet, desktop] = processClassesForViewports(
       modalClasses as ClassNamesPayloadDatumValue,
-      undefined
+      {}
     );
     // we direct inline these classes to the modal, so no []
     optionsPayload.classNamesModal = {
@@ -220,7 +222,7 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
       if (buttonClasses) {
         const [allButton, mobileButton, tabletButton, desktopButton] = processClassesForViewports(
           buttonClasses,
-          undefined
+          {}
         );
 
         let [allHover, mobileHover, tabletHover, desktopHover] = [[], [], [], []] as [
@@ -232,7 +234,7 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
         if (buttonHoverClasses) {
           [allHover, mobileHover, tabletHover, desktopHover] = processClassesForViewports(
             buttonHoverClasses,
-            undefined
+            {}
           );
         }
 

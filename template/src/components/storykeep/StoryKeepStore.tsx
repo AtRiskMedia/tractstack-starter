@@ -25,6 +25,7 @@ import {
   paneFragmentMarkdown,
   paneFragmentBgPane,
   paneFragmentBgColour,
+  paneDesignType,
   paneIsHiddenPane,
   paneHasOverflowHidden,
   paneHasMaxHScreen,
@@ -136,6 +137,10 @@ export const StoryKeepStore = (props: { storyfragment: StoryFragmentDatum }) => 
                 {
                   store: paneHeightRatioTablet,
                   value: payload.heightRatioMobile,
+                },
+                {
+                  store: paneDesignType,
+                  value: payload.optionsPayload.designType || `unknown`,
                 },
                 {
                   store: paneIsHiddenPane,

@@ -40,14 +40,14 @@ function processEnvSettingValue(setting: EnvSettingDatum): string | null {
       const num = parseFloat(setting.value);
       return isNaN(num) ? "0" : num.toString();
     }
-    case "string[]":
+    case "string[]": {
       const result = setting.value
         .split(",")
         .map((v) => v.trim())
         .filter(Boolean)
         .join(",");
-      console.log(`Processing ${setting.name}:`, { input: setting.value, output: result });
       return result;
+    }
     case "string":
       return setting.value || (setting.required ? "" : null);
     default:

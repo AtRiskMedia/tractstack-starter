@@ -104,6 +104,7 @@ export async function cleanPaneDesigns(rows: Row[]): Promise<PaneDesign[]> {
         slug: row.slug,
         name: row.title,
         variants: [`default`],
+        designType: optionsPayload.designType || `unknown`,
         priority: 100,
         type: `reuse`,
         panePayload: {

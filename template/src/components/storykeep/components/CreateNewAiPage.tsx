@@ -34,6 +34,20 @@ interface PageType {
   name: string;
 }
 
+function extractImageMarkdown(markdown: string): string | null {
+  const bulletImageRegex = /^\s*\*\s*!\[.*?\]\(.*?\)\s*$/m;
+  const match = markdown.match(bulletImageRegex);
+  return match ? match[0] : null;
+}
+function convertToOrderedList(markdown: string): string {
+  const lines = markdown.split(/\n+/).filter((line) => line.trim());
+  const numberedLines = lines.map((line, index) => {
+    const cleanLine = line.replace(/^#+\s*/, "").trim();
+    return `${index + 1}. ${cleanLine}`;
+  });
+  return numberedLines.join("\n") + "\n";
+}
+
 const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNewPageProps) => {
   const [stage, setStage] = useState<GenerateStage>("GENERATING_COPY");
   const $theme = useStore(themeStore);
@@ -125,17 +139,18 @@ const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNew
 
       const newPaneDesigns: PaneDesign[] = [];
 
-      selectedDesign.paneDesignsMap.forEach((designType, index) => {
-        const originalPane = selectedDesign.paneDesigns[index];
+      selectedDesign.paneDesigns.forEach((originalPane) => {
         if (!originalPane) return;
 
-        switch (designType) {
+        switch (originalPane.designType) {
+          // currently we aren't using section in the AI generated content; but we could
+          case "section":
           case "decorative":
             // Pass through decorative panes unchanged
             newPaneDesigns.push(originalPane);
             break;
 
-          case "title": {
+          case "hero": {
             // Replace markdown body in title pane with generated title
             const titlePane = structuredClone(originalPane);
             if (titlePane.fragments?.length) {
@@ -153,7 +168,28 @@ const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNew
             break;
           }
 
-          case "paragraph":
+          case "hero-image": {
+            // Replace markdown body in title pane with generated title
+            const titlePane = structuredClone(originalPane);
+            if (titlePane.fragments?.length) {
+              titlePane.fragments = titlePane.fragments.map((fragment) => {
+                if (fragment.type === "markdown") {
+                  const OL = convertToOrderedList(generatedCopy?.title || ``);
+                  const UL = extractImageMarkdown(fragment.markdownBody) || ``;
+                  const newHeroCopy = `${OL}${UL}`;
+                  return {
+                    ...fragment,
+                    markdownBody: newHeroCopy,
+                  };
+                }
+                return fragment;
+              });
+            }
+            newPaneDesigns.push(titlePane);
+            break;
+          }
+
+          case "copy":
             // Create a new pane for each paragraph while preserving styling
             generatedCopy.paragraphs.forEach((paragraph, i) => {
               const isOdd = i % 2 === 1;

@@ -9,14 +9,16 @@ import type { BeliefDatum, EventStream } from "../../types";
 const SingleIdentifyAs = ({
   value,
   target,
+  noprompt,
   readonly = false,
 }: {
   value: { slug: string; target: string; extra: string };
   target: string;
+  noprompt: boolean;
   readonly?: boolean;
 }) => {
   const $heldBeliefsAll = useStore(heldBeliefs);
-  const thisTitle = value.target;
+  const thisTitle = noprompt ? `Tell me more!` : value.target;
   const thisScale = heldBeliefsScales.agreement;
   const start = { id: 0, slug: `0`, name: `0`, color: `` };
   const [selected, setSelected] = useState(start);
@@ -122,6 +124,7 @@ export const IdentifyAs = ({
 }) => {
   const targets = value.target.split(",").map((t) => t.trim());
   const extra = value && typeof value.extra === `string` ? value.extra : null;
+  const noprompt = extra === ``;
 
   return (
     <>
@@ -132,6 +135,7 @@ export const IdentifyAs = ({
             key={`${value.slug}-${index}`}
             value={{ ...value, target }}
             target={target.toUpperCase()}
+            noprompt={noprompt}
             readonly={readonly}
           />
         ))}

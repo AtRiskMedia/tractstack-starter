@@ -23,6 +23,7 @@ import {
   paneFragmentMarkdown,
   paneFragmentBgPane,
   paneFragmentBgColour,
+  paneDesignType,
   paneIsHiddenPane,
   paneHasOverflowHidden,
   paneHasMaxHScreen,
@@ -173,6 +174,7 @@ function initializePaneStores(
     paneId,
     createFieldWithHistory(paneDesign.panePayload.heightRatioTablet)
   );
+  paneDesignType.setKey(paneId, paneDesign.designType);
   paneIsHiddenPane.setKey(
     paneId,
     createFieldWithHistory(paneDesign?.panePayload?.hiddenPane || false)

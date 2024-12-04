@@ -292,7 +292,6 @@ export const DesignSnapshotModal = ({ onClose }: DesignSnapshotModalProps) => {
                 name: getCurrentDesign()?.name || "",
                 isContext: false,
                 tailwindBgColour: null,
-                paneDesignsMap: [],
                 paneDesigns: [getCurrentDesign()!],
               }}
               viewportKey="desktop"
