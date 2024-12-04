@@ -29,7 +29,7 @@ import {
   paneHeldBeliefs,
   paneWithheldBeliefs,
   paneImpression,
-  paneCodeHook,
+  paneCodeHook, paneFragmentDesignType,
 } from "../../../store/storykeep";
 import { contentMap } from "../../../store/events";
 import { cleanString } from "../../../utils/helpers";
@@ -299,6 +299,10 @@ export const PaneInsert = (props: {
         store: paneWithheldBeliefs,
         value: {} as BeliefDatum,
       },
+      {
+        store: paneFragmentDesignType,
+        value: paneData.optionsPayload.designType,
+      }
     ];
     paneStores.forEach(({ store, value }) => {
       if (typeof store.get()[paneId] === `undefined`)

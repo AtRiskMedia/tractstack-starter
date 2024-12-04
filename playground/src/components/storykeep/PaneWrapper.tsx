@@ -236,7 +236,11 @@ const PaneWrapper = (props: {
             </div>
           </div>
         )}
-        {changingLayout && <ChangeLayoutModal onClose={() => setChangingLayout(false)}/> }
+        {changingLayout && <ChangeLayoutModal paneId={props.id}
+                                              slug={props.slug}
+                                              isContext={props.isContext}
+                                              viewportKey={props.viewportKey}
+                                              onClose={() => setChangingLayout(false)}/> }
         {toolMode === "settings" && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
             <div className="relative">

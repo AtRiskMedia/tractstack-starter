@@ -3,14 +3,23 @@ import { useState } from "react";
 import { Switch } from "@headlessui/react";
 import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import { paneFragmentDesignType } from "@/store/storykeep.ts";
+import { paneDesigns } from "@/assets/paneDesigns.ts";
+import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
+import type { ViewportAuto } from "@/types.ts";
 
 export type ChangeLayoutModalProps = {
+  slug: string;
+  isContext: boolean;
+  paneId: string;
+  viewportKey: ViewportAuto;
   onClose: () => void;
 };
 
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
 
+  const paneType = paneFragmentDesignType.get()[props.paneId];
   return (
     <TractStackModal
       widthProvider={() => "max-w-[80%]"}
@@ -31,7 +40,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
         </div>
       }
       body={
-        <div className="flex flex-col">
+        <div className="flex flex-col h-full">
           <Switch.Group>
             <div className="flex items-center gap-x-6 py-4">
               <Switch
@@ -51,6 +60,20 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
               <Switch.Label className="mr-4">Enable Odd Panes</Switch.Label>
             </div>
           </Switch.Group>
+          <div className="flex justify-center flex-1 gap-x-8">
+            {paneType && paneDesigns()
+              .filter((x) => x.designType === paneType.current)
+              .map((design) => (
+                <div className="border-2 border-black rounded-md">
+                  <PreviewPane
+                    design={design}
+                    viewportKey={props.viewportKey}
+                    slug={props.slug}
+                    isContext={props.isContext}
+                  />
+                </div>
+              ))}
+          </div>
         </div>
       }
     />

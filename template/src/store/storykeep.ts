@@ -307,3 +307,4 @@ export const paneFragmentIds = map<Record<string, FieldWithHistory<string[]>>>()
 export const paneFragmentBgPane = map<Record<string, FieldWithHistory<BgPaneDatum>>>();
 export const paneFragmentBgColour = map<Record<string, FieldWithHistory<BgColourDatum>>>();
 export const paneFragmentMarkdown = map<Record<string, FieldWithHistory<MarkdownEditDatum>>>();
+export const paneFragmentDesignType = map<Record<string, FieldWithHistory<DesignType>>>();

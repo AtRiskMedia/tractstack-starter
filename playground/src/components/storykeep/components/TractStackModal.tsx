@@ -12,7 +12,7 @@ const TractStackModal = (props: TractStackModalProps) => {
   }
 
   return (
-    <div className="fixed inset-0 bg-mylightgrey bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+    <div className="z-104 fixed inset-0 bg-mylightgrey bg-opacity-50 overflow-y-scroll h-full w-full flex items-center justify-center">
       <div className={`bg-white p-8 rounded-lg shadow-xl ${getContentWidth()} w-full`}>
         {props.header}
         {props.body}
