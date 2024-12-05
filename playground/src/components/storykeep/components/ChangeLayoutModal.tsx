@@ -1,11 +1,11 @@
 import TractStackModal from "@/components/storykeep/components/TractStackModal.tsx";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Switch } from "@headlessui/react";
 import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { paneDesignType } from "@/store/storykeep.ts";
 import { paneDesigns } from "@/assets/paneDesigns.ts";
-import { type PaneDesign, type Theme, themes, type ViewportAuto } from "@/types.ts";
+import { type DesignType, type PaneDesign, type Theme, themes, type ViewportAuto } from "@/types.ts";
 import PanePreview from "@/components/storykeep/components/PanePreview.tsx";
 
 export type ChangeLayoutModalProps = {
@@ -16,21 +16,35 @@ export type ChangeLayoutModalProps = {
   onClose: () => void;
 };
 
+type PaneDesignResult = {
+  theme: Theme;
+  panes: PaneDesign[]
+}
+
+const getPaneDesigns = (paneType: DesignType, isOdd: boolean): PaneDesignResult[] => {
+  console.log("get pane designs");
+  const designs: PaneDesignResult[] = [];
+  themes.forEach((theme) => {
+    const filteredDesigns = paneDesigns(theme, "default", isOdd).filter(
+      (x) => x.designType === paneType
+    );
+    if (filteredDesigns.length > 0) {
+      designs.push({ theme, panes: filteredDesigns });
+    }
+  });
+  return designs;
+}
+
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
-  const paneType = paneDesignType.get()[props.paneId];
 
-  const getPaneDesigns = (): {theme: Theme, panes: PaneDesign[]}[] => {
-    const designs: {theme: Theme, panes: PaneDesign[]}[] = [];
-    themes.forEach((theme) => {
-      const filteredDesigns = paneDesigns(theme)
-                              .filter((x) => x.designType === paneType.current);
-      if(filteredDesigns.length > 0) {
-        designs.push({theme, panes: filteredDesigns});
-      }
-    })
-    return designs;
-  }
+  const paneType = useMemo<DesignType>(() => {
+    const type = paneDesignType.get()[props.paneId]?.current || "copy";
+    if(type === "unknown") {
+      return "copy";
+    }
+    return type;
+  }, [props.paneId]);
 
   return (
     <TractStackModal
@@ -73,10 +87,11 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
             </div>
           </Switch.Group>
           <div className="grid justify-center overflow-y-scroll grid-cols-6 gap-4 w-fit">
-            {paneType && getPaneDesigns()
+            {getPaneDesigns(paneType, isOddPanes)
               .map((designs) => (
                 designs.panes.map(design => (
                   <PanePreview
+                    key={`${design.id}-${isOddPanes}`}
                     isSelected={false}
                     onClick={() => console.log("clicked: " + design)}
                     theme={designs.theme}
