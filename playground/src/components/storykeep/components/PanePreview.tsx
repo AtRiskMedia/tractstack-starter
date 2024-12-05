@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
-import DesignSnapshot from "./DesignSnapshot";
-import { getEnvValue } from "../../../utils/preview-brand";
-import { getPreviewModeValue } from "../../../store/storykeep";
-import { classNames } from "../../../utils/helpers";
-import type { PageDesign, Theme } from "../../../types";
+import type { PaneDesign, Theme } from "@/types.ts";
+import { getPreviewModeValue } from "@/store/storykeep.ts";
+import { getEnvValue } from "@/utils/preview-brand.ts";
+import { classNames } from "@/utils/helpers.ts";
+import PaneDesignSnapshot from "@/components/storykeep/components/PaneDesignSnapshot.tsx";
 
-interface DesignPreviewProps {
-  design: PageDesign;
+interface PanePreviewProps {
+  design: PaneDesign;
   isSelected: boolean;
   onClick: () => void;
   theme: Theme;
 }
 
-export default function DesignPreview({ design, isSelected, onClick, theme }: DesignPreviewProps) {
+export default function PanePreview({ design, isSelected, onClick, theme }: PanePreviewProps) {
   const [snapshotImage, setSnapshotImage] = useState<string>("");
   const [brandColors, setBrandColors] = useState<string[]>([]);
   const [lastTheme, setLastTheme] = useState<Theme>(theme);
@@ -36,10 +36,10 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
     <button
       onClick={onClick}
       className={classNames(
-        "relative rounded-lg transition-all",
+        "relative rounded-lg transition-all flex flex-col justify-between bg-mydarkgrey p-1",
         isSelected
           ? "ring-2 ring-myorange ring-offset-2"
-          : "hover:ring-2 hover:ring-myorange hover:ring-offset-2"
+          : "hover:ring-2 hover:ring-myorange hover:ring-offset-2",
       )}
       role="radio"
       aria-checked={isSelected}
@@ -49,8 +49,8 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
     >
       <div className="relative aspect-square w-full">
         {!snapshotImage || !brandColors.length ? (
-          <div className="absolute inset-0">
-            <DesignSnapshot
+          <div className="inset-0">
+            <PaneDesignSnapshot
               design={design}
               theme={theme}
               brandColors={brandColors}
@@ -61,11 +61,11 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
           <img
             src={snapshotImage}
             alt={`${design.name} design preview`}
-            className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
+            className="inset-0 w-full h-full object-contain object-top rounded-lg"
           />
         )}
       </div>
-      <div className="absolute inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">
+      <div className="inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">
         {design.name}
       </div>
     </button>

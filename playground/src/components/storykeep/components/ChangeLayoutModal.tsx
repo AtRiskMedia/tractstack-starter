@@ -5,8 +5,8 @@ import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { paneDesignType } from "@/store/storykeep.ts";
 import { paneDesigns } from "@/assets/paneDesigns.ts";
-import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
-import type { ViewportAuto } from "@/types.ts";
+import { type PaneDesign, type Theme, themes, type ViewportAuto } from "@/types.ts";
+import PanePreview from "@/components/storykeep/components/PanePreview.tsx";
 
 export type ChangeLayoutModalProps = {
   slug: string;
@@ -18,9 +18,20 @@ export type ChangeLayoutModalProps = {
 
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
-
   const paneType = paneDesignType.get()[props.paneId];
-  console.log(paneType.current);
+
+  const getPaneDesigns = (): {theme: Theme, panes: PaneDesign[]}[] => {
+    const designs: {theme: Theme, panes: PaneDesign[]}[] = [];
+    themes.forEach((theme) => {
+      const filteredDesigns = paneDesigns(theme)
+                              .filter((x) => x.designType === paneType.current);
+      if(filteredDesigns.length > 0) {
+        designs.push({theme, panes: filteredDesigns});
+      }
+    })
+    return designs;
+  }
+
   return (
     <TractStackModal
       widthProvider={() => "max-w-[80%]"}
@@ -41,7 +52,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
         </div>
       }
       body={
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-fit w-full">
           <Switch.Group>
             <div className="flex items-center gap-x-6 py-4">
               <Switch
@@ -61,19 +72,19 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
               <Switch.Label className="mr-4">Enable Odd Panes</Switch.Label>
             </div>
           </Switch.Group>
-          <div className="flex justify-center flex-1 gap-x-8">
-            {paneType && paneDesigns()
-              .filter((x) => x.designType === paneType.current)
-              .map((design) => (
-                <div className="border-2 border-black rounded-md">
-                  <PreviewPane
+          <div className="grid justify-center overflow-y-scroll grid-cols-6 gap-4 w-fit">
+            {paneType && getPaneDesigns()
+              .map((designs) => (
+                designs.panes.map(design => (
+                  <PanePreview
+                    isSelected={false}
+                    onClick={() => console.log("clicked: " + design)}
+                    theme={designs.theme}
                     design={design}
-                    viewportKey={props.viewportKey}
-                    slug={props.slug}
-                    isContext={props.isContext}
                   />
-                </div>
-              ))}
+                ))
+              ))
+            }
           </div>
         </div>
       }

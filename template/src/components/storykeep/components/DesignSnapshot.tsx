@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import imageCompression from "browser-image-compression";
 import PreviewPage from "./PreviewPage";
 import type { PageDesign, Theme } from "../../../types";
+import { blobToBase64 } from "@/utils/helpers.ts";
 
 interface DesignSnapshotProps {
   design: PageDesign;
@@ -12,14 +13,6 @@ interface DesignSnapshotProps {
   onComplete?: (imageData: string) => void;
   forceRegenerate?: boolean;
 }
-
-const blobToBase64 = (blob: File) => {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result);
-    reader.readAsDataURL(blob);
-  });
-};
 
 export default function DesignSnapshot({
   design,

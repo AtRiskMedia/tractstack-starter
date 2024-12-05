@@ -1,16 +1,14 @@
-import { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { classNames } from "../../../utils/helpers";
 import { paneDesigns } from "../../../assets/paneDesigns";
 import PreviewPage from "./PreviewPage";
 import { toPng } from "html-to-image";
 import imageCompression from "browser-image-compression";
-import type { Variant, Theme } from "../../../types";
+import { themes, type Variant } from "../../../types";
 
 interface DesignSnapshotModalProps {
   onClose: () => void;
 }
-
-const themes: Theme[] = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"];
 
 const getScaledProgress = (current: number, total: number) =>
   total === 0 ? 1 : (Math.floor((current / total) * 11 + 1) % 12) + 1;

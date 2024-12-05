@@ -4,6 +4,7 @@ import type { Root } from "hast";
 import type { MapStore } from "nanostores";
 
 export type Theme = "light" | "light-bw" | "light-bold" | "dark" | "dark-bw" | "dark-bold";
+export const themes: Theme[] = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"];
 
 export interface CreationState {
   id: string | null;

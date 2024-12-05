@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import imageCompression from "browser-image-compression";
-import PreviewPage from "./PreviewPage";
-import type { PageDesign, Theme } from "../../../types";
 import { blobToBase64 } from "@/utils/helpers.ts";
+import type { PaneDesign, Theme } from "@/types.ts";
+import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
 
-interface DesignSnapshotProps {
-  design: PageDesign;
+interface PaneDesignSnapshotProps {
+  design: PaneDesign;
   theme: Theme;
   brandColors: string[];
   onStart?: () => void;
@@ -14,14 +14,14 @@ interface DesignSnapshotProps {
   forceRegenerate?: boolean;
 }
 
-export default function DesignSnapshot({
+export default function PaneDesignSnapshot({
   design,
   theme,
   brandColors,
   onStart,
   onComplete,
   forceRegenerate,
-}: DesignSnapshotProps) {
+}: PaneDesignSnapshotProps) {
   const [isGenerating, setIsGenerating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -77,7 +77,7 @@ export default function DesignSnapshot({
             maxSizeMB: 1,
             maxWidthOrHeight: 1920,
             useWebWorker: true,
-          }
+          },
         );
 
         const compressedBase64 = await blobToBase64(compressedFile);
@@ -129,7 +129,7 @@ export default function DesignSnapshot({
             isolation: "isolate",
           }}
         >
-          <PreviewPage design={design} viewportKey="desktop" slug="preview" isContext={false} />
+          <PreviewPane design={design} viewportKey="desktop" slug="preview" isContext={false} />
         </div>
       </div>
     </>
