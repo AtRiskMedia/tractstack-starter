@@ -430,36 +430,6 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
     }
   );
 
-  //const handleSave = useCallback(async () => {
-  //  try {
-  //    // First handle any brand image uploads
-  //    if (Object.keys(brandImages).length > 0) {
-  //      const imageSuccess = await saveBrandImages(brandImages);
-  //      if (!imageSuccess) {
-  //        throw new Error("Failed to save brand images");
-  //      }
-  //      setBrandImages({}); // Clear images after successful upload
-  //    }
-
-  //    const success = await saveEnvSettings(localSettings, originalSettings);
-  //    if (success) {
-  //      envSettings.set({
-  //        current: localSettings,
-  //        original: localSettings,
-  //        history: [],
-  //      });
-  //      setOriginalSettings(localSettings);
-  //      setHasUnsavedChanges(false);
-  //      setSaveSuccess(true);
-  //      setTimeout(() => {
-  //        setSaveSuccess(false);
-  //      }, 7000);
-  //    }
-  //  } catch (error) {
-  //    console.error("Error in handleSave:", error);
-  //  }
-  //}, [localSettings, originalSettings, brandImages]);
-
   const handleSavePublish = useCallback(async () => {
     try {
       // First handle any brand image uploads
@@ -485,26 +455,19 @@ const EnvironmentSettings = ({ contentMap, showOnlyGroup }: EnvironmentSettingsP
       setHasUnsavedChanges(false);
       setSaveSuccess(true);
 
-      // Check if brand colors changed
-      const brandChanged = originalSettings.some(
-        (setting) =>
-          setting.name === "PUBLIC_BRAND" &&
-          setting.value !== localSettings.find((s) => s.name === "PUBLIC_BRAND")?.value
-      );
-
-      if (brandChanged) {
-        // update the css var colours
-        const brandColors = localSettings
-          .find((s) => s.name === "PUBLIC_BRAND")
-          ?.value.split(",")
-          .map((color) => `#${color.trim()}`);
-        if (brandColors)
-          brandColors.forEach((color, index) => {
-            document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
-          });
+      // Always update brand colors in the UI immediately
+      const brandColors = localSettings
+        .find((s) => s.name === "PUBLIC_BRAND")
+        ?.value.split(",")
+        .map((color) => `#${color.trim()}`);
+      if (brandColors) {
+        brandColors.forEach((color, index) => {
+          document.documentElement.style.setProperty(`--brand-${index + 1}`, color);
+        });
       }
 
-      //setShowRebuildModal(true);
+      // Always trigger rebuild
+      setShowRebuildModal(true);
 
       setTimeout(() => {
         setSaveSuccess(false);
