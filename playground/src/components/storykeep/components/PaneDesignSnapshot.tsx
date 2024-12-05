@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import imageCompression from "browser-image-compression";
 import { blobToBase64 } from "@/utils/helpers.ts";
 import type { PaneDesign, Theme } from "@/types.ts";
 import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
@@ -71,19 +70,10 @@ export default function PaneDesignSnapshot({
           canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
         });
 
-        const compressedFile = await imageCompression(
-          new File([webpBlob], "image.webp", { type: "image/webp" }),
-          {
-            maxSizeMB: 1,
-            maxWidthOrHeight: 1920,
-            useWebWorker: true,
-          },
-        );
+        const base64 = await blobToBase64(webpBlob);
 
-        const compressedBase64 = await blobToBase64(compressedFile);
-
-        if (onComplete && typeof compressedBase64 === "string") {
-          onComplete(compressedBase64);
+        if (onComplete && typeof base64 === "string") {
+          onComplete(base64);
         }
 
         styleSheet.remove();
