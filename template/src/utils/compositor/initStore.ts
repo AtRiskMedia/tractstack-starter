@@ -66,6 +66,10 @@ export function initializeStores(
   }
   try {
     if (mode === "storyfragment") {
+      const newStoryFragmentSlug = findUniqueSlug(
+        cleanString(design.pageTitle ?? ``).substring(0, 14) ?? "create",
+        contentMapSlugs
+      );
       const paneIds = design.paneDesigns.map(() => ulid());
       initializeStoryFragmentStores(
         newId,
@@ -73,10 +77,18 @@ export function initializeStores(
         design,
         paneIds,
         contentMapSlugs,
+        newStoryFragmentSlug,
         hasTitleSlug || false
       );
       design.paneDesigns.forEach((paneDesign, index) => {
-        initializePaneStores(paneIds[index], paneDesign, false, contentMapSlugs);
+        initializePaneStores(
+          paneIds[index],
+          paneDesign,
+          false,
+          contentMapSlugs,
+          newStoryFragmentSlug,
+          index
+        );
       });
     } else {
       initializePaneStores(
@@ -84,6 +96,8 @@ export function initializeStores(
         design.paneDesigns[0],
         true,
         contentMapSlugs,
+        ``,
+        -1,
         design.pageTitle ?? ""
       );
     }
@@ -101,15 +115,13 @@ function initializeStoryFragmentStores(
   design: PageDesign,
   paneIds: string[],
   contentMapSlugs: string[],
+  newStoryFragmentSlug: string,
   hasTitleSlug?: boolean
 ) {
   const storyFragmentStores = {
     init: { init: true },
     title: design.pageTitle ?? "",
-    slug: findUniqueSlug(
-      cleanString(design.pageTitle ?? ``).substring(0, 20) ?? "create",
-      contentMapSlugs
-    ),
+    slug: newStoryFragmentSlug,
     tractStackId: tractStackId,
     menuId: "",
     paneIds: paneIds,
@@ -141,6 +153,8 @@ function initializePaneStores(
   paneDesign: PaneDesign,
   isContext: boolean,
   contentMapSlugs: string[],
+  newStoryFragmentSlug: string,
+  index: number,
   title?: string
 ) {
   paneInit.setKey(paneId, { init: true });
@@ -153,7 +167,7 @@ function initializePaneStores(
           ? "create"
           : isContext
             ? cleanString(title ?? ``).substring(0, 20)
-            : paneDesign.slug,
+            : `${newStoryFragmentSlug}-${paneDesign.designType}-${index}`,
         contentMapSlugs
       )
     )
