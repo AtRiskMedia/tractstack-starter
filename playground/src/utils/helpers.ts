@@ -676,7 +676,15 @@ export function extractEntriesAtIndex(
 declare global {
   interface Array<T> {
     setAt(index: number, value: T): void;
+    last(): T;
   }
+}
+
+Array.prototype.last = function <T>(): T {
+  if(this.length > 0) {
+    return this[this.length - 1];
+  }
+  return this[0];
 }
 
 Array.prototype.setAt = function <T>(index: number, value: T): void {

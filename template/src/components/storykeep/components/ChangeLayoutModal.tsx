@@ -7,6 +7,7 @@ import { paneDesignType } from "@/store/storykeep.ts";
 import { paneDesigns } from "@/assets/paneDesigns.ts";
 import { type DesignType, type PaneDesign, type Theme, themes, type ViewportAuto } from "@/types.ts";
 import PanePreview from "@/components/storykeep/components/PanePreview.tsx";
+import { applyLayoutChange } from "@/utils/autoLayout.ts";
 
 export type ChangeLayoutModalProps = {
   slug: string;
@@ -93,7 +94,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
                   <PanePreview
                     key={`${design.id}-${isOddPanes}`}
                     isSelected={false}
-                    onClick={() => console.log("clicked: " + design)}
+                    onClick={() => applyLayoutChange(props.paneId, design)}
                     theme={designs.theme}
                     design={design}
                   />
