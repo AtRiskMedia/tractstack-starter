@@ -21,7 +21,7 @@ if (!hasTursoReady || !hasContentReady) {
 }
 
 const user = Astro.locals.user as AuthStatus;
-const canonicalURL = new URL(`/storykeep/manage/menu/${id}`, Astro.url).href;
+const canonicalURL = `/storykeep/manage/menu/${id}`;
 
 let menu: MenuDatum;
 

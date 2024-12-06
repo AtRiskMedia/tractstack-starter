@@ -21,9 +21,7 @@ if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 
-// set the canonicalUrl to the actual storyfragment
-const baseUrl = new URL(Astro.url.pathname, Astro.url);
-const canonicalURL = new URL(`/storykeep/settings`, baseUrl).href;
+const canonicalURL = `/storykeep/settings`;
 
 // menu
 const menuPayload = {

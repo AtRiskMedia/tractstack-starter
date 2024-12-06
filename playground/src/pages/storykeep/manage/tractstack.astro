@@ -17,7 +17,7 @@ if (!hasTursoReady || !hasContentReady) {
 }
 
 const user = Astro.locals.user as AuthStatus;
-const canonicalURL = new URL(`/storykeep/manage/tractstack`, Astro.url).href;
+const canonicalURL = `/storykeep/manage/tractstack`;
 
 const tractstacks = await getAllTractStack();
 

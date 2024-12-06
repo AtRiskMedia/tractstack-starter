@@ -76,8 +76,6 @@ export function initializeStores(
         tractStackId,
         design,
         paneIds,
-        contentMapSlugs,
-        newStoryFragmentSlug,
         hasTitleSlug || false
       );
       design.paneDesigns.forEach((paneDesign, index) => {
@@ -114,8 +112,6 @@ function initializeStoryFragmentStores(
   tractStackId: string,
   design: PageDesign,
   paneIds: string[],
-  contentMapSlugs: string[],
-  newStoryFragmentSlug: string,
   hasTitleSlug?: boolean
 ) {
   const storyFragmentStores = {

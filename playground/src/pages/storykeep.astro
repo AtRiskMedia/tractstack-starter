@@ -23,9 +23,7 @@ const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
 const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
 
-// set the canonicalUrl to the actual storyfragment
-const baseUrl = new URL(Astro.url.pathname, Astro.url);
-const canonicalURL = new URL(`/storykeep`, baseUrl).href;
+const canonicalURL = `/storykeep`;
 
 // get storykeep datum
 const payload = !notPreviewNotReady ? await getFullContentMap() : [];

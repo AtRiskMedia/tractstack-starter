@@ -25,8 +25,7 @@ if (!hasTursoReady || !hasContentReady) {
   return Astro.redirect("/storykeep");
 }
 
-const baseUrl = new URL(Astro.url.pathname, Astro.url);
-const canonicalURL = new URL(`/context/${slug}`, baseUrl).href;
+const canonicalURL = `/context/${slug}`;
 
 const filesRaw = await getAllFileDatum();
 const files = cleanTursoFileDatum(filesRaw);

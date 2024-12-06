@@ -21,7 +21,7 @@ if (!hasTursoReady || !hasContentReady) {
 }
 
 const user = Astro.locals.user as AuthStatus;
-const canonicalURL = new URL(`/storykeep/manage/tractstack/${slug}`, Astro.url).href;
+const canonicalURL = `/storykeep/manage/tractstack/${slug}`;
 
 let tractstack: TractStackDatum | undefined = undefined;
 
