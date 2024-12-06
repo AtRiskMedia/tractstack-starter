@@ -21,6 +21,7 @@ interface CreateNewPageProps {
   newId: string;
   tractStackId: string;
   contentMapSlugs: string[];
+  hello: boolean;
 }
 
 const pageTypes = [
@@ -48,7 +49,13 @@ function convertToOrderedList(markdown: string): string {
   return numberedLines.join("\n") + "\n";
 }
 
-const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNewPageProps) => {
+const CreateNewPage = ({
+  newId,
+  tractStackId,
+  mode,
+  contentMapSlugs,
+  hello,
+}: CreateNewPageProps) => {
   const [stage, setStage] = useState<GenerateStage>("GENERATING_COPY");
   const $theme = useStore(themeStore);
   const [missionInput, setMissionInput] = useState("");
@@ -229,6 +236,7 @@ const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNew
         userDesign,
         mode,
         contentMapSlugs,
+        hello,
         true
       );
       if (success) creationStateStore.set({ id: newId, isInitialized: true });

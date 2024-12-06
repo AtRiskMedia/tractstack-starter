@@ -2,7 +2,7 @@
 import { ulid } from "ulid";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 import { getTractStackIdBySlug } from "../../../api/turso";
-import { isTursoReady, getContentMap } from "../../../api/turso";
+import { isTursoReady, getContentMap, isContentReady } from "../../../api/turso";
 import { getSetupChecks } from "../../../utils/setupChecks";
 import CreateNewPage from "../../../components/storykeep/components/CreateNewPage";
 import type { ContentMap } from "../../../types";
@@ -11,6 +11,7 @@ import type { ContentMap } from "../../../types";
 const { hasTurso, hasConcierge } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 if (!hasTursoReady) {
   return Astro.redirect("/storykeep");
 }
@@ -41,6 +42,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
       contentMapSlugs={contentMapSlugs}
       newId={newId}
       tractStackId={tractStackId}
+      hello={!hasContentReady}
       client:load
     />
   </div>

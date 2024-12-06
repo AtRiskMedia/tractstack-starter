@@ -58,6 +58,7 @@ export function initializeStores(
   design: PageDesign,
   mode: "storyfragment" | "context",
   contentMapSlugs: string[],
+  hello: boolean,
   hasTitleSlug?: boolean
 ): boolean {
   if (!newId) {
@@ -66,12 +67,21 @@ export function initializeStores(
   }
   try {
     if (mode === "storyfragment") {
-      const newStoryFragmentSlug = findUniqueSlug(
-        cleanString(design.pageTitle ?? ``).substring(0, 14) ?? "create",
-        contentMapSlugs
-      );
+      const newStoryFragmentSlug = hello
+        ? `hello`
+        : findUniqueSlug(
+            cleanString(design.pageTitle ?? ``).substring(0, 14) ?? "create",
+            contentMapSlugs
+          );
       const paneIds = design.paneDesigns.map(() => ulid());
-      initializeStoryFragmentStores(newId, tractStackId, design, paneIds, hasTitleSlug || false);
+      initializeStoryFragmentStores(
+        newId,
+        tractStackId,
+        design,
+        paneIds,
+        hello,
+        hasTitleSlug || false
+      );
       design.paneDesigns.forEach((paneDesign, index) => {
         initializePaneStores(
           paneIds[index],
@@ -106,12 +116,13 @@ function initializeStoryFragmentStores(
   tractStackId: string,
   design: PageDesign,
   paneIds: string[],
+  hello: boolean,
   hasTitleSlug?: boolean
 ) {
   const storyFragmentStores = {
     init: { init: true },
     title: design.pageTitle ?? "",
-    slug: ``,
+    slug: hello ? `hello` : ``,
     tractStackId: tractStackId,
     menuId: "",
     paneIds: paneIds,
