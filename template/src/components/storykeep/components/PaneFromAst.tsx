@@ -290,7 +290,8 @@ const PaneFromAst = ({
   const imageSrcSet = thisImage?.srcSet ? thisImage.optimizedSrc : null;
 
   // Handle code hooks
-  const regexpHook = /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief)\((.*?)\)/;
+  const regexpHook =
+    /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*?)\)/;
   const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
   const thisHookRaw = thisAst?.children?.length && thisAst.children[0].value?.match(regexpHook);
   const hook = thisHookRaw && typeof thisHookRaw[1] === "string" ? thisHookRaw[1] : null;

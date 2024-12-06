@@ -71,13 +71,7 @@ export function initializeStores(
         contentMapSlugs
       );
       const paneIds = design.paneDesigns.map(() => ulid());
-      initializeStoryFragmentStores(
-        newId,
-        tractStackId,
-        design,
-        paneIds,
-        hasTitleSlug || false
-      );
+      initializeStoryFragmentStores(newId, tractStackId, design, paneIds, hasTitleSlug || false);
       design.paneDesigns.forEach((paneDesign, index) => {
         initializePaneStores(
           paneIds[index],
