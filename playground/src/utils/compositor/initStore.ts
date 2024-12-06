@@ -121,7 +121,7 @@ function initializeStoryFragmentStores(
   const storyFragmentStores = {
     init: { init: true },
     title: design.pageTitle ?? "",
-    slug: newStoryFragmentSlug,
+    slug: ``,
     tractStackId: tractStackId,
     menuId: "",
     paneIds: paneIds,

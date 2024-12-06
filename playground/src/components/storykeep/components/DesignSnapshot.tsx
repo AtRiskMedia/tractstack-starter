@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { toPng } from "html-to-image";
-import imageCompression from "browser-image-compression";
 import PreviewPage from "./PreviewPage";
 import type { PageDesign, Theme } from "../../../types";
 
