@@ -223,7 +223,14 @@ const CreateNewPage = ({ newId, tractStackId, mode, contentMapSlugs }: CreateNew
   const handleLoadDesign = useCallback(
     async (userDesign: PageDesign): Promise<boolean> => {
       if (!userDesign) return false;
-      const success = initializeStores(newId, tractStackId, userDesign, mode, contentMapSlugs);
+      const success = initializeStores(
+        newId,
+        tractStackId,
+        userDesign,
+        mode,
+        contentMapSlugs,
+        true
+      );
       if (success) creationStateStore.set({ id: newId, isInitialized: true });
       return success;
     },

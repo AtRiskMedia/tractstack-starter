@@ -57,7 +57,8 @@ export function initializeStores(
   tractStackId: string,
   design: PageDesign,
   mode: "storyfragment" | "context",
-  contentMapSlugs: string[]
+  contentMapSlugs: string[],
+  hasTitleSlug?: boolean
 ): boolean {
   if (!newId) {
     console.error("No newId found in creationStateStore");
@@ -66,7 +67,14 @@ export function initializeStores(
   try {
     if (mode === "storyfragment") {
       const paneIds = design.paneDesigns.map(() => ulid());
-      initializeStoryFragmentStores(newId, tractStackId, design, paneIds, contentMapSlugs);
+      initializeStoryFragmentStores(
+        newId,
+        tractStackId,
+        design,
+        paneIds,
+        contentMapSlugs,
+        hasTitleSlug || false
+      );
       design.paneDesigns.forEach((paneDesign, index) => {
         initializePaneStores(paneIds[index], paneDesign, false, contentMapSlugs);
       });
@@ -92,7 +100,8 @@ function initializeStoryFragmentStores(
   tractStackId: string,
   design: PageDesign,
   paneIds: string[],
-  contentMapSlugs: string[]
+  contentMapSlugs: string[],
+  hasTitleSlug?: boolean
 ) {
   const storyFragmentStores = {
     init: { init: true },
@@ -124,7 +133,7 @@ function initializeStoryFragmentStores(
     createFieldWithHistory(storyFragmentStores.tailwindBgColour)
   );
 
-  initializeStoreErrors(newId, "storyFragment");
+  initializeStoreErrors(newId, "storyFragment", hasTitleSlug || false);
 }
 
 function initializePaneStores(
@@ -253,7 +262,7 @@ function initializePaneFragments(paneId: string, paneDesign: PaneDesign) {
   );
 }
 
-function initializeStoreErrors(id: string, type: "storyFragment" | "pane") {
+function initializeStoreErrors(id: string, type: "storyFragment" | "pane", hasTitleSlug?: boolean) {
   const keys: StoreKey[] =
     type === "storyFragment"
       ? [
@@ -288,12 +297,19 @@ function initializeStoreErrors(id: string, type: "storyFragment" | "pane") {
   const emptyState = keys.reduce(
     (acc, key) => ({
       ...acc,
-      [key]: [`storyFragmentSlug`, `storyFragmentTitle`].includes(key),
+      [key]: [`storyFragmentSlug`, `storyFragmentTitle`].includes(key) && !hasTitleSlug,
+    }),
+    {} as Record<StoreKey, boolean>
+  );
+  const fullState = keys.reduce(
+    (acc, key) => ({
+      ...acc,
+      [key]: true,
     }),
     {} as Record<StoreKey, boolean>
   );
 
-  unsavedChangesStore.setKey(id, emptyState);
+  unsavedChangesStore.setKey(id, fullState);
   uncleanDataStore.setKey(id, emptyState);
   temporaryErrorsStore.setKey(id, emptyState);
 }
