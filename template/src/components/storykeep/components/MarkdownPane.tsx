@@ -139,7 +139,7 @@ const MarkdownPane = ({
     ));
 
   return (
-    <div ref={self}>
+    <>
       {(parentClasses as string[])
         .slice()
         .reverse()
@@ -147,9 +147,9 @@ const MarkdownPane = ({
           (accContent: JSX.Element, cssClass: string) => (
             <div className={classNames(hidden, cssClass)}>{accContent}</div>
           ),
-          <div>{content}</div>
+          <>{content}</>
         )}
-    </div>
+    </>
   );
 };
 
