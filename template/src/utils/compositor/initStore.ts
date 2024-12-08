@@ -57,7 +57,9 @@ export function initializeStores(
   tractStackId: string,
   design: PageDesign,
   mode: "storyfragment" | "context",
-  contentMapSlugs: string[]
+  contentMapSlugs: string[],
+  hello: boolean,
+  hasTitleSlug?: boolean
 ): boolean {
   if (!newId) {
     console.error("No newId found in creationStateStore");
@@ -65,10 +67,30 @@ export function initializeStores(
   }
   try {
     if (mode === "storyfragment") {
+      const newStoryFragmentSlug = hello
+        ? `hello`
+        : findUniqueSlug(
+            cleanString(design.pageTitle ?? ``).substring(0, 14) ?? "create",
+            contentMapSlugs
+          );
       const paneIds = design.paneDesigns.map(() => ulid());
-      initializeStoryFragmentStores(newId, tractStackId, design, paneIds, contentMapSlugs);
+      initializeStoryFragmentStores(
+        newId,
+        tractStackId,
+        design,
+        paneIds,
+        hello,
+        hasTitleSlug || false
+      );
       design.paneDesigns.forEach((paneDesign, index) => {
-        initializePaneStores(paneIds[index], paneDesign, false, contentMapSlugs);
+        initializePaneStores(
+          paneIds[index],
+          paneDesign,
+          false,
+          contentMapSlugs,
+          newStoryFragmentSlug,
+          index
+        );
       });
     } else {
       initializePaneStores(
@@ -76,6 +98,8 @@ export function initializeStores(
         design.paneDesigns[0],
         true,
         contentMapSlugs,
+        ``,
+        -1,
         design.pageTitle ?? ""
       );
     }
@@ -92,15 +116,13 @@ function initializeStoryFragmentStores(
   tractStackId: string,
   design: PageDesign,
   paneIds: string[],
-  contentMapSlugs: string[]
+  hello: boolean,
+  hasTitleSlug?: boolean
 ) {
   const storyFragmentStores = {
     init: { init: true },
     title: design.pageTitle ?? "",
-    slug: findUniqueSlug(
-      cleanString(design.pageTitle ?? ``).substring(0, 20) ?? "create",
-      contentMapSlugs
-    ),
+    slug: hello ? `hello` : ``,
     tractStackId: tractStackId,
     menuId: "",
     paneIds: paneIds,
@@ -124,7 +146,7 @@ function initializeStoryFragmentStores(
     createFieldWithHistory(storyFragmentStores.tailwindBgColour)
   );
 
-  initializeStoreErrors(newId, "storyFragment");
+  initializeStoreErrors(newId, "storyFragment", hasTitleSlug || false);
 }
 
 function initializePaneStores(
@@ -132,6 +154,8 @@ function initializePaneStores(
   paneDesign: PaneDesign,
   isContext: boolean,
   contentMapSlugs: string[],
+  newStoryFragmentSlug: string,
+  index: number,
   title?: string
 ) {
   paneInit.setKey(paneId, { init: true });
@@ -144,7 +168,7 @@ function initializePaneStores(
           ? "create"
           : isContext
             ? cleanString(title ?? ``).substring(0, 20)
-            : paneDesign.slug,
+            : `${newStoryFragmentSlug}-${paneDesign.designType}-${index}`,
         contentMapSlugs
       )
     )
@@ -253,7 +277,7 @@ function initializePaneFragments(paneId: string, paneDesign: PaneDesign) {
   );
 }
 
-function initializeStoreErrors(id: string, type: "storyFragment" | "pane") {
+function initializeStoreErrors(id: string, type: "storyFragment" | "pane", hasTitleSlug?: boolean) {
   const keys: StoreKey[] =
     type === "storyFragment"
       ? [
@@ -288,12 +312,19 @@ function initializeStoreErrors(id: string, type: "storyFragment" | "pane") {
   const emptyState = keys.reduce(
     (acc, key) => ({
       ...acc,
-      [key]: [`storyFragmentSlug`, `storyFragmentTitle`].includes(key),
+      [key]: [`storyFragmentSlug`, `storyFragmentTitle`].includes(key) && !hasTitleSlug,
+    }),
+    {} as Record<StoreKey, boolean>
+  );
+  const fullState = keys.reduce(
+    (acc, key) => ({
+      ...acc,
+      [key]: true,
     }),
     {} as Record<StoreKey, boolean>
   );
 
-  unsavedChangesStore.setKey(id, emptyState);
+  unsavedChangesStore.setKey(id, fullState);
   uncleanDataStore.setKey(id, emptyState);
   temporaryErrorsStore.setKey(id, emptyState);
 }

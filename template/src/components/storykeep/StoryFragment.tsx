@@ -30,10 +30,10 @@ import DesignNewPane from "./components/DesignNewPane";
 import { classNames, handleEditorResize, debounce } from "../../utils/helpers";
 import type { ViewportKey } from "../../types";
 
-function getSubstring(str: string) {
-  const dashIndex = str.indexOf("-");
-  return dashIndex !== -1 ? str.substring(0, dashIndex) : str;
-}
+//function getSubstring(str: string) {
+//  const dashIndex = str.indexOf("-");
+//  return dashIndex !== -1 ? str.substring(0, dashIndex) : str;
+//}
 
 function findUniqueSuffix(str: string, arr: string[]): string {
   if (!arr.includes(str)) {
@@ -141,10 +141,10 @@ export const StoryFragment = (props: {
       $storyFragmentTitle[thisId]?.current !== `` &&
       ![`create`, ``].includes($storyFragmentSlug[thisId]?.current)
     ) {
-      paneIds.forEach((paneId: string) => {
-        const newTitle = `${$storyFragmentTitle[thisId].current.substring(0, 20)} - ${getSubstring($paneSlug[paneId].current)}`;
+      paneIds.forEach((paneId: string, index: number) => {
+        const newTitle = `${$storyFragmentTitle[thisId].current.substring(0, 20)}`;
         const newSlug = findUniqueSuffix(
-          `${$storyFragmentSlug[thisId].current.substring(0, 20)}-${getSubstring($paneSlug[paneId].current)}`,
+          `${$storyFragmentSlug[thisId].current.substring(0, 20)}-${index}`,
           usedSlugs
         );
         updateStoreField(`paneTitle`, newTitle, paneId);

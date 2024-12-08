@@ -17,8 +17,7 @@ if (!hasTursoReady) {
 const slug = `create`;
 const newId = ulid();
 
-const baseUrl = new URL(Astro.url.pathname, Astro.url);
-const canonicalURL = new URL(`/context/${slug}`, baseUrl).href;
+const canonicalURL = `/context/${slug}`;
 
 const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
@@ -38,6 +37,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
           contentMapSlugs={contentMapSlugs}
           newId={newId}
           tractStackId={``}
+          hello={false}
           client:load
         />
       ) : (

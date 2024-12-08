@@ -57,7 +57,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={canonicalURL} />
+    <link rel="canonical" href={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
@@ -75,13 +75,13 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
     <meta property="og:image" content={defaultSocialImageURL} />
     <meta property="og:logo" content={defaultSocialLogoURL} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />

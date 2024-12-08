@@ -18,7 +18,7 @@ if (!hasTursoReady || !hasContentReady) {
 }
 
 const user = Astro.locals.user as AuthStatus;
-const canonicalURL = new URL(`/storykeep/manage/image`, Astro.url).href;
+const canonicalURL = `/storykeep/manage/image`;
 
 const imagesRaw = await getAllFileDatum();
 const images = cleanTursoFileDatum(imagesRaw);

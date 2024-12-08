@@ -17,7 +17,6 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
   const [brandColors, setBrandColors] = useState<string[]>([]);
   const [lastTheme, setLastTheme] = useState<Theme>(theme);
 
-  // Force regeneration when theme changes
   useEffect(() => {
     if (theme !== lastTheme) {
       setSnapshotImage("");
@@ -36,7 +35,7 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
     <button
       onClick={onClick}
       className={classNames(
-        "relative rounded-lg transition-all",
+        "relative rounded-lg transition-all max-w-[750px]",
         isSelected
           ? "ring-2 ring-myorange ring-offset-2"
           : "hover:ring-2 hover:ring-myorange hover:ring-offset-2"
@@ -58,11 +57,13 @@ export default function DesignPreview({ design, isSelected, onClick, theme }: De
             />
           </div>
         ) : (
-          <img
-            src={snapshotImage}
-            alt={`${design.name} design preview`}
-            className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
-          />
+          <div className="relative w-full h-full">
+            <img
+              src={snapshotImage}
+              alt={`${design.name} design preview`}
+              className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
+            />
+          </div>
         )}
       </div>
       <div className="absolute inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">

@@ -3,7 +3,7 @@ import { ulid } from "ulid";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import { getTractStackIdBySlug } from "../../../../api/turso";
 import { getSetupChecks } from "../../../../utils/setupChecks";
-import { isTursoReady, getContentMap } from "../../../../api/turso";
+import { isTursoReady, getContentMap, isContentReady } from "../../../../api/turso";
 import CreateNewAiPage from "../../../../components/storykeep/components/CreateNewAiPage";
 import type { ContentMap } from "../../../../types";
 
@@ -11,6 +11,7 @@ import type { ContentMap } from "../../../../types";
 const { hasTurso, hasConcierge, hasAssemblyAI } = getSetupChecks();
 const notPreviewNotReady = hasConcierge && !hasTurso;
 const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
 if (!hasTursoReady) {
   return Astro.redirect("/storykeep");
 }
@@ -18,8 +19,7 @@ if (!hasTursoReady) {
 const slug = `create`;
 const newId = ulid();
 
-const baseUrl = new URL(Astro.url.pathname, Astro.url);
-const canonicalURL = new URL(`/${slug}`, baseUrl).href;
+const canonicalURL = `/${slug}`;
 
 const TRACTSTACK_SLUG = import.meta.env.PUBLIC_TRACTSTACK;
 const tractStackId = await getTractStackIdBySlug(TRACTSTACK_SLUG);
@@ -45,6 +45,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
           contentMapSlugs={contentMapSlugs}
           newId={newId}
           tractStackId={tractStackId}
+          hello={!hasContentReady}
           client:load
         />
       ) : (

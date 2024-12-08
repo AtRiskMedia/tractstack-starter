@@ -13,6 +13,8 @@ interface DesignSnapshotProps {
   forceRegenerate?: boolean;
 }
 
+const WIDTH = 500;
+
 export default function DesignSnapshot({
   design,
   theme,
@@ -42,32 +44,35 @@ export default function DesignSnapshot({
 
         if (!contentRef.current) return;
 
+        // Take screenshot at WIDTHpx while maintaining aspect ratio
+        const scale = WIDTH / 1500;
+        const scaledHeight = contentRef.current.offsetHeight * scale;
+
         const pngImage = await toPng(contentRef.current, {
-          width: 1500,
-          height: contentRef.current.offsetHeight,
+          width: WIDTH,
+          height: scaledHeight,
           style: {
-            transform: "scale(1)",
+            transform: `scale(${scale})`,
             transformOrigin: "top left",
           },
           pixelRatio: 1,
           backgroundColor: "#ffffff",
           quality: 1,
-          canvasWidth: 1500,
-          canvasHeight: contentRef.current.offsetHeight,
+          canvasWidth: WIDTH,
+          canvasHeight: scaledHeight,
         });
 
-        const img = new Image();
-        img.src = pngImage;
-        await new Promise((resolve) => (img.onload = resolve));
-
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0);
-
         const webpBlob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = WIDTH;
+            canvas.height = scaledHeight;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0);
+            canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
+          };
+          img.src = pngImage;
         });
 
         const base64 = await blobToBase64(webpBlob);

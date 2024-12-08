@@ -3,14 +3,30 @@ export interface Props {
   videoUrl: string;
   title: string;
 }
+
 const { videoUrl, title } = Astro.props;
 ---
+
+<!-- Schema.org VideoObject structured data -->
+<script
+  is:inline
+  type="application/ld+json"
+  set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "VideoObject",
+    name: title,
+    description: title,
+    contentUrl: videoUrl,
+    embedUrl: videoUrl,
+  })}
+/>
 
 <astro-bunny-video data-src={videoUrl} data-title={title}>
   <div class="w-full">
     <div id="video-container"></div>
   </div>
 </astro-bunny-video>
+
 <script>
   class AstroBunnyVideo extends HTMLElement {
     private currentIframe: HTMLIFrameElement | null = null;
