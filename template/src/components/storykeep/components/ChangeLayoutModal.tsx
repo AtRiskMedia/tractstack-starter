@@ -94,7 +94,10 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
                   <PanePreview
                     key={`${design.id}-${isOddPanes}`}
                     isSelected={false}
-                    onClick={() => applyLayoutChange(props.paneId, design)}
+                    onClick={() => {
+                      applyLayoutChange(props.paneId, design)
+                      props.onClose?.();
+                    }}
                     theme={designs.theme}
                     design={design}
                   />
