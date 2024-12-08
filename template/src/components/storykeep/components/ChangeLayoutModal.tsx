@@ -87,7 +87,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
               <Switch.Label className="mr-4">Enable Odd Panes</Switch.Label>
             </div>
           </Switch.Group>
-          <div className="grid justify-center overflow-y-scroll grid-cols-6 gap-4 w-fit">
+          <div className="grid items-stretch justify-stretch overflow-y-scroll grid-cols-6 gap-4 w-full">
             {getPaneDesigns(paneType, isOddPanes)
               .map((designs) => (
                 designs.panes.map(design => (
