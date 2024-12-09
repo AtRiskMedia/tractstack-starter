@@ -12,6 +12,29 @@ interface ConfigUpdatePayload {
   updates: Record<string, unknown>;
 }
 
+async function readConfigFile(filename: string): Promise<Record<string, any> | null> {
+  try {
+    const configPath = path.join(CONFIG_DIR, filename);
+
+    // Add file existence check
+    try {
+      await fs.access(configPath);
+    } catch {
+      // If file doesn't exist and it's init.json, return default structure
+      if (filename === "init.json") {
+        return {};
+      }
+      return null;
+    }
+
+    const fileContents = await fs.readFile(configPath, "utf-8");
+    return JSON.parse(fileContents);
+  } catch (error) {
+    console.error(`Error reading ${filename}:`, error);
+    return null;
+  }
+}
+
 async function updateEnvFile(updates: Record<string, unknown>) {
   try {
     // Read existing .env content
@@ -75,12 +98,11 @@ export const POST: APIRoute = async ({ request, params }) => {
     switch (operation) {
       case "read": {
         const configFile = (await request.json()) as { file: string };
-        const filePath = path.join(CONFIG_DIR, `${configFile.file}.json`);
-        const fileContent = await fs.readFile(filePath, "utf-8");
+        const fileContent = await readConfigFile(`${configFile.file}.json`);
 
         result = {
           success: true,
-          data: JSON.parse(fileContent),
+          data: fileContent,
         };
         break;
       }
@@ -108,12 +130,24 @@ export const POST: APIRoute = async ({ request, params }) => {
         // Update config file if we have config updates
         if (Object.keys(configUpdates).length > 0) {
           const filePath = path.join(CONFIG_DIR, `${file}.json`);
-          const fileContent = await fs.readFile(filePath, "utf-8");
-          const currentConfig = JSON.parse(fileContent);
+
+          // Create config directory if it doesn't exist
+          await fs.mkdir(CONFIG_DIR, { recursive: true });
+
+          // Read existing config or create new empty config
+          let currentConfig = {};
+          try {
+            const fileContent = await fs.readFile(filePath, "utf-8");
+            currentConfig = JSON.parse(fileContent);
+          } catch {
+            // File doesn't exist or can't be parsed, use empty object
+          }
+
           const newConfig = {
             ...currentConfig,
             ...configUpdates,
           };
+
           await fs.writeFile(filePath, JSON.stringify(newConfig, null, 2));
         }
 

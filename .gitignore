@@ -15,8 +15,11 @@ pnpm-debug.log*
 # environment variables
 **/.env
 **/.env.*
-!playground/.env.example
+!playground/.env.template
 !template/.env
+
+# unique config
+playground/config/init.json
 
 # macOS-specific files
 .DS_Store

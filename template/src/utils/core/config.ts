@@ -17,6 +17,22 @@ const CONFIG_FILES = ["init.json", "turso.json"];
 async function readConfigFile(filename: string): Promise<ConfigFile | null> {
   try {
     const configPath = path.join(process.cwd(), "config", filename);
+
+    // Check if file exists
+    try {
+      await fs.access(configPath);
+    } catch {
+      // If file doesn't exist and it's init.json, return default structure
+      if (filename === "init.json") {
+        return {
+          name: filename,
+          content: {},
+        };
+      }
+      // For other files, return null
+      return null;
+    }
+
     const fileContents = await fs.readFile(configPath, "utf-8");
 
     return {
@@ -125,7 +141,8 @@ export async function validateConfig(config: Config | null): Promise<ValidationR
   }
 
   const initConfig = config.init as Record<string, unknown>;
-  const isInitialized = initConfig.SITE_INIT === true;
+  const isInitialized =
+    initConfig.SITE_INIT === true && initConfig.HOME_SLUG && initConfig.TRACTSTACK_HOME_SLUG;
   const hasValidHomeSlug = typeof initConfig.HOME_SLUG === "string";
 
   if (!isInitialized || !hasValidHomeSlug) {

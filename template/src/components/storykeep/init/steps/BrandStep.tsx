@@ -52,19 +52,31 @@ export default function BrandStep({
         siteUrl: initConfig.SITE_URL || "",
         slogan: initConfig.SLOGAN || "",
         footer: initConfig.FOOTER || "",
-        brandColors: initConfig.BRAND_COLOURS || knownBrand.default,
+        brandColors:
+          initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
       };
 
+      // Set initial values and fill in defaults for missing ones
       setCurrentValues(values);
       setInitialValues(values);
 
-      // Set initial brand preset
+      // Set initial brand preset with default handling
       const matchingPreset = Object.entries(knownBrand).find(
         ([, value]) => value === initConfig.BRAND_COLOURS
       )?.[0];
-      setSelectedBrandPreset(matchingPreset || "custom");
+      setSelectedBrandPreset(matchingPreset || "default");
+
+      // Inject defaults for critical missing values
+      if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
+        onConfigUpdate({
+          WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
+          BRAND_COLOURS:
+            initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+          OPEN_DEMO: initConfig.OPEN_DEMO || false,
+        });
+      }
     }
-  }, [config]);
+  }, [config, onConfigUpdate]);
 
   if (!isActive) return null;
 
