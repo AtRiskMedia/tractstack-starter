@@ -20,6 +20,7 @@ import { getFinalLocation } from "@/utils/helpers.ts";
 import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 import { GhostBlock } from "@/components/other/GhostBlock.tsx";
 import { allowTagInsert, allowWidgetInsert } from "@/utils/compositor/markdownUtils.ts";
+import { toolAddModeDefaultHeight } from "@/constants.ts";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;
@@ -135,7 +136,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           resetDragStore();
           const root = paneFragmentMarkdown.get()[props.fragmentId].current.markdown.htmlAst;
           setDragShape({ markdownLookup, root, fragmentId, paneId, idx, outerIdx });
-          setGhostBlockHeight(20);
+          setGhostBlockHeight(toolAddModeDefaultHeight);
         }}
         onStop={() => {
           dragging.current = false;
