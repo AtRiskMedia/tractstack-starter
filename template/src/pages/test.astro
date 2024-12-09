@@ -5,27 +5,27 @@ if (!generatedCss) {
   try {
     // Generate CSS
     await fetch(`${Astro.url.origin}/api/fs/generateTailwind`, {
-      method: 'POST',
+      method: "POST",
     });
 
     // Update version
     await fetch(`${Astro.url.origin}/api/fs/update`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        file: 'init',
+        file: "init",
         updates: {
-          STYLES_VER: Date.now()
-        }
-      })
+          STYLES_VER: Date.now(),
+        },
+      }),
     });
 
     generatedCss = true;
-    console.log(`SUCCESS`)
+    console.log(`SUCCESS`);
   } catch (error) {
-    console.error('Error generating CSS:', error);
+    console.error("Error generating CSS:", error);
   }
 }
 ---

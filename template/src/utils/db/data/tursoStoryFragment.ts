@@ -1,6 +1,6 @@
 import { cleanTursoPane } from "./tursoPane";
 import { getResourcesByCategorySlug } from "../utils";
-import { getOptimizedImages } from "../../common/helpers";
+//import { getOptimizedImages } from "../../common/helpers";
 import type { Row } from "@libsql/client";
 import type {
   TursoPane,
@@ -30,8 +30,8 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
         ) {
           const panesPayloadRaw = typeof r?.panes === `string` && JSON.parse(r.panes);
           const allFiles = panesPayloadRaw.map((p: TursoPane) => p.files);
-          console.log(`must fix`,allFiles)
-          const thisFilesPayload: FileNode[] = [] // await getOptimizedImages(allFiles);
+          console.log(`must fix`, allFiles);
+          const thisFilesPayload: FileNode[] = []; //await getOptimizedImages(allFiles);
           const paneFileNodes: PaneFileNode[] = [];
           panesPayloadRaw.forEach((p: TursoPane) => {
             const paneFiles = thisFilesPayload.filter((f) => f.paneId === p.id);

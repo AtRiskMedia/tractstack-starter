@@ -29,3 +29,4 @@ playground/node_modules
 
 # storykeep css
 **/storykeep.css
+**/tailwindLookup.json

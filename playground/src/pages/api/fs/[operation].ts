@@ -114,7 +114,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         await generateOptimizedCss(whitelistedClasses);
         result = {
           success: true,
-          message: "CSS generated successfully"
+          message: "CSS generated successfully",
         };
         break;
       }
