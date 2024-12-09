@@ -30,7 +30,8 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
         ) {
           const panesPayloadRaw = typeof r?.panes === `string` && JSON.parse(r.panes);
           const allFiles = panesPayloadRaw.map((p: TursoPane) => p.files);
-          const thisFilesPayload: FileNode[] = await getOptimizedImages(allFiles);
+          console.log(`must fix`,allFiles)
+          const thisFilesPayload: FileNode[] = [] // await getOptimizedImages(allFiles);
           const paneFileNodes: PaneFileNode[] = [];
           panesPayloadRaw.forEach((p: TursoPane) => {
             const paneFiles = thisFilesPayload.filter((f) => f.paneId === p.id);
@@ -81,7 +82,7 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
           });
 
           // check for HeaderWidget resources
-          console.log(`cleanTursoStoryFragment NEEDS CONFIG`);
+          console.log(`cleanTursoStoryFragment on HEADER_WIDGET NEEDS CONFIG`);
           const headerWidgetResourcesCategory =
             import.meta.env.HEADER_WIDGET_RESOURCE_CATEGORY || ``;
           for (const str of headerWidgetResourcesCategory.split(`|`)) {

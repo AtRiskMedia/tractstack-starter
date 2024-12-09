@@ -1,0 +1,33 @@
+---
+let generatedCss = false;
+
+if (!generatedCss) {
+  try {
+    // Generate CSS
+    await fetch(`${Astro.url.origin}/api/fs/generateTailwind`, {
+      method: 'POST',
+    });
+
+    // Update version
+    await fetch(`${Astro.url.origin}/api/fs/update`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        file: 'init',
+        updates: {
+          STYLES_VER: Date.now()
+        }
+      })
+    });
+
+    generatedCss = true;
+    console.log(`SUCCESS`)
+  } catch (error) {
+    console.error('Error generating CSS:', error);
+  }
+}
+---
+
+<div>ok</div>

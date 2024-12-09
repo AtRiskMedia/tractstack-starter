@@ -21,6 +21,9 @@ pnpm-debug.log*
 # unique config
 playground/config/init.json
 
+# public
+playground/public/styles/frontend.css
+
 # macOS-specific files
 .DS_Store
 

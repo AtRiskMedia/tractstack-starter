@@ -3,6 +3,8 @@ import type { APIRoute } from "astro";
 import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "../../../utils/core/config";
+import { getUniqueTailwindClasses } from "../../../utils/db/utils";
+import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
 const ENV_FILE = path.join(process.cwd(), ".env");
@@ -103,6 +105,16 @@ export const POST: APIRoute = async ({ request, params }) => {
         result = {
           success: true,
           data: fileContent,
+        };
+        break;
+      }
+
+      case "generateTailwind": {
+        const whitelistedClasses = await getUniqueTailwindClasses("");
+        await generateOptimizedCss(whitelistedClasses);
+        result = {
+          success: true,
+          message: "CSS generated successfully"
         };
         break;
       }
