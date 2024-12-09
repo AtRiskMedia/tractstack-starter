@@ -3,7 +3,6 @@ import {
   PaintBrushIcon,
   Cog8ToothIcon,
   TrashIcon,
-  PlusCircleIcon,
   Square3Stack3DIcon,
 } from "@heroicons/react/24/outline";
 import type {
@@ -76,9 +75,9 @@ export const toolAddModesIcons: Record<ToolAddMode, string> = {
   h3: "h3.svg",
   h4: "h4.svg",
   img: "image.svg",
-  yt: "yt.svg",
-  bunny: "bunny.svg",
-  signup: "signup.svg",
+  yt: "",
+  bunny: "",
+  signup: "",
   identify: "",
   toggle: "",
   aside: "aside.svg",

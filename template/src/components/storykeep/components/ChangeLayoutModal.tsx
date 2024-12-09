@@ -41,7 +41,6 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
 
   const paneType = useMemo<DesignType>(() => {
     const type = paneDesignType.get()[props.paneId]?.current || "copy";
-    console.log(type);
     if(type === "unknown") {
       return "copy";
     }
