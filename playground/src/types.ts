@@ -239,6 +239,11 @@ export interface ContextPaneDatum {
   codeHookOptions: { [key: number]: string };
 }
 
+export interface MenuLinkDatum extends MenuLink {
+  to: string;
+  internal: boolean;
+}
+
 export interface MenuDatum {
   id: string;
   title: string;
@@ -865,3 +870,72 @@ export type EditModeValue = {
   targetId?: PaneAstTargetId;
   payload?: any;
 };
+
+export interface EventNode {
+  type: string;
+  slug?: string;
+  title?: string;
+  parentId?: string;
+}
+export interface EventNodes {
+  [key: string]: EventNode;
+}
+
+export interface Event {
+  id: string;
+  type: string;
+  verb: string;
+  duration?: number;
+  targetId?: string;
+  score?: string;
+  targetSlug?: string;
+}
+export interface Events {
+  [key: string]: Event;
+}
+
+export interface EventStreamController {
+  stop: () => void;
+}
+
+export interface BreakOptionsDatum {
+  id: string;
+  artpackMode: string;
+  styles: { fill: string };
+  shapeName: string;
+}
+
+export interface MaskOptionsDatum {
+  id: string;
+  artpackMode: string;
+  classNamesParent: string;
+  styles: {
+    backgroundImage: string;
+    backgroundSize: string;
+    WebkitMaskImage: string;
+    maskImage: string;
+    maskRepeat: string;
+    WebkitMaskSize: string;
+    maskSize: string;
+  };
+}
+
+export interface ShapeOptionsDatum {
+  id: string;
+  shapeName: string;
+  classNamesParent: string;
+  artpackMode: string | null;
+}
+
+export interface BeliefOptionDatum {
+  id: number;
+  slug: string;
+  name: string;
+  color: string;
+}
+
+export interface SignupProps {
+  persona: string;
+  prompt: string;
+  clarifyConsent: boolean;
+}

@@ -1,0 +1,102 @@
+---
+import { getStoryFragmentBySlug } from "../utils/db/utils";
+import { isValidContentPath } from "../utils/common/routeValidation";
+import { getConfig, validateConfig } from "../utils/core/config";
+import Layout from "../layouts/Layout.astro";
+import HeaderWidget from "../custom/HeaderWidget.astro";
+import Header from "../components/frontend/Header.astro";
+import Footer from "../components/frontend/Footer.astro";
+import StoryFragmentWrapper from "../components/frontend/StoryFragmentWrapper.astro";
+import ImpressionWrapper from "../components/frontend/widgets/ImpressionWrapper";
+import type { AuthStatus, Current } from "../types";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// valid storyfragment?
+const { slug } = Astro.params;
+const lookup = slug || config.init?.HOME_SLUG;
+if (slug === config.init?.HOME_SLUG) return Astro.redirect("/");
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// valid datum?
+const storyfragment = await getStoryFragmentBySlug(lookup);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+const current: Current = storyfragment
+  ? {
+      id: storyfragment.id,
+      slug: storyfragment.slug,
+      title: storyfragment.title,
+      parentId: storyfragment.tractStackId,
+      parentSlug: storyfragment.tractStackSlug,
+      parentTitle: storyfragment.tractStackTitle,
+    }
+  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+---
+
+<Layout
+  config={config}
+  title={storyfragment.title}
+  pubDatetime={storyfragment.created}
+  modDatetime={storyfragment.changed}
+  ogImage={typeof storyfragment?.socialImagePath === `string`
+    ? storyfragment.socialImagePath
+    : undefined}
+>
+  {
+    config?.init?.ENABLE_HEADER_WIDGET ? (
+      <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
+    ) : null
+  }
+  <Header
+    title={storyfragment.title}
+    menu={storyfragment.menuPayload}
+    slug={lookup}
+    isContext={false}
+    isEditable={true}
+    impressions={storyfragment.impressions}
+    user={user}
+    config={config}
+  />
+  <main id="main-content" class="w-full overflow-hidden">
+    <StoryFragmentWrapper
+      tailwindBgColour={storyfragment.tailwindBgColour}
+      panesPayload={storyfragment.panesPayload}
+      current={current}
+      resourcesPayload={storyfragment.resourcesPayload}
+    />
+  </main>
+  {
+    storyfragment.impressions?.length ? (
+      <ImpressionWrapper
+        slug={storyfragment.slug}
+        isContext={true}
+        payload={storyfragment.impressions}
+        client:idle
+      />
+    ) : null
+  }
+  <Footer
+    created={storyfragment.created}
+    menu={storyfragment.menuPayload}
+    backToTop={true}
+    slug={lookup}
+    isContext={false}
+    config={config}
+  />
+</Layout>

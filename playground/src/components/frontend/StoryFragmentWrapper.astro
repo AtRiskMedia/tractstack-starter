@@ -1,0 +1,106 @@
+---
+import { classNames } from "../../utils/common/helpers";
+import Pane from "./Pane.astro";
+import CodeHook from "../../custom/CodeHook.astro";
+import Filter from "../../components/frontend/state/Filter";
+import type { Current, PaneDatum, ResourcePayloadDatum } from "../../types";
+
+export interface Props {
+  tailwindBgColour: string | null;
+  panesPayload: PaneDatum[];
+  current: Current;
+  resourcesPayload: ResourcePayloadDatum;
+}
+const { tailwindBgColour, panesPayload, current, resourcesPayload } = Astro.props;
+
+// per pane settings
+const applyFilter: { [key: string]: boolean } = panesPayload.reduce(function (acc, cur) {
+  if (cur.optionsPayload.heldBeliefs || cur.optionsPayload.withheldBeliefs)
+    return { ...acc, [cur.id]: true };
+  return acc;
+}, {});
+const hiddenPanes: { [key: string]: boolean } = panesPayload.reduce(function (acc, cur) {
+  if (cur.optionsPayload.hiddenPane) return { ...acc, [cur.id]: true };
+  return acc;
+}, {});
+const overflowHidden: { [key: string]: boolean } = panesPayload.reduce(function (acc, cur) {
+  if (cur.optionsPayload.overflowHidden) return { ...acc, [cur.id]: true };
+  return acc;
+}, {});
+const maxHScreen: { [key: string]: boolean } = panesPayload.reduce(function (acc, cur) {
+  if (cur.optionsPayload.maxHScreen) return { ...acc, [cur.id]: true };
+  return acc;
+}, {});
+---
+
+<astro-storyfragment data-id={JSON.stringify(current)}>
+  <div class={tailwindBgColour ? tailwindBgColour : ``}>
+    {
+      panesPayload.map((pane: PaneDatum, idx: number) => (
+        <div
+          id={`pane-${pane.id}`}
+          class={classNames(
+            `pane`,
+            typeof applyFilter[pane.id] === `boolean` ? `invisible` : ``,
+            typeof overflowHidden[pane.id] === `boolean` ? `overflow-hidden` : ``,
+            typeof maxHScreen[pane.id] === `boolean` ? `h-max-screen` : ``
+          )}
+          data-hidden={typeof hiddenPanes[pane.id] === `boolean` ? `true` : `false`}
+        >
+          {applyFilter[pane.id] ? (
+            <Filter
+              client:load
+              id={pane.id}
+              heldBeliefsFilter={pane.optionsPayload?.heldBeliefs || {}}
+              withheldBeliefsFilter={pane.optionsPayload?.withheldBeliefs || {}}
+            />
+          ) : null}
+          {resourcesPayload?.perCodeHookPayload[idx] ? (
+            <div id={pane.slug}>
+              <CodeHook
+                target={resourcesPayload?.perCodeHookPayload[idx].target}
+                resources={resourcesPayload?.resources?.filter(
+                  (resource) =>
+                    resourcesPayload?.perCodeHookResourceCategory[idx] &&
+                    resourcesPayload?.perCodeHookResourceCategory[idx].includes(
+                      resource?.category || ``
+                    )
+                )}
+                options={resourcesPayload?.perCodeHookOptions[idx] || null}
+              />
+            </div>
+          ) : (
+            <Pane
+              payload={panesPayload.filter((p: PaneDatum) => p.id === pane.id).at(0)!}
+              slug={current.slug}
+              isContext={false}
+            />
+          )}
+        </div>
+      ))
+    }
+  </div>
+</astro-storyfragment>
+
+<script>
+  import { storySteps, current } from "../../store/events";
+
+  class StoryFragment extends HTMLElement {
+    constructor() {
+      super();
+      const id = this.dataset.id;
+      const thisId = id ? JSON.parse(id) : null;
+      if (thisId) {
+        current.set(thisId);
+        const storyStep = {
+          id: thisId.id,
+          slug: thisId.slug,
+          title: thisId.title,
+          type: `StoryFragment`,
+        };
+        storySteps.set([...storySteps.get(), storyStep]);
+      }
+    }
+  }
+  customElements.define("astro-storyfragment", StoryFragment);
+</script>

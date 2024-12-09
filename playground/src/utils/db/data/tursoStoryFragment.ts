@@ -81,6 +81,7 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
           });
 
           // check for HeaderWidget resources
+          console.log(`cleanTursoStoryFragment NEEDS CONFIG`);
           const headerWidgetResourcesCategory =
             import.meta.env.HEADER_WIDGET_RESOURCE_CATEGORY || ``;
           for (const str of headerWidgetResourcesCategory.split(`|`)) {

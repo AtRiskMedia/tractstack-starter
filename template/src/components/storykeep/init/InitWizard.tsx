@@ -41,13 +41,23 @@ const PUBLISH_TRIGGERS = [
 export default function InitWizard({
   hasConcierge,
   validation: initialValidation,
-  config: initialConfig,
 }: InitWizardProps) {
+  const initialConfig = initialValidation.config;
   const $store = useStore(initWizardStore);
   const [steps, setSteps] = useState<InitStepConfig[]>([]);
   const [validation, setValidation] = useState<ValidationResult>(initialValidation);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Logo and branding configuration
+  const logo =
+    (typeof initialConfig?.init?.LOGO === "string" && initialConfig?.init?.LOGO) || "/logo.svg";
+  const logoIsSvg = logo.includes("svg");
+  const wordmark =
+    (typeof initialConfig?.init?.WORDMARK === "string" && initialConfig?.init?.WORDMARK) ||
+    "/wordmark.svg";
+  const wordmarkIsSvg = wordmark.includes("svg");
+  const wordmarkMode = initialConfig?.init?.WORDMARK_MODE || `default`;
 
   const [configState, setConfigState] = useState<ConfigState>({
     current: initialConfig,
@@ -325,9 +335,44 @@ export default function InitWizard({
       <div className="rounded-lg px-3.5 py-6 shadow-inner bg-white mx-4">
         <div className="flex flex-col space-y-8">
           <div className="relative">
-            <h2 className="inline-block font-action text-myblue text-2xl md:text-3xl">
-              Hello world!
-            </h2>
+            <div className="flex flex-col items-center justify-center gap-4">
+              {[`default`, `logo`].includes(wordmarkMode) && (
+                <div className="h-16 w-auto">
+                  {logoIsSvg ? (
+                    <object
+                      type="image/svg+xml"
+                      data={logo}
+                      className="h-full w-auto pointer-events-none"
+                      aria-label="Logo"
+                    >
+                      Logo
+                    </object>
+                  ) : (
+                    <img src={logo} className="h-full w-auto pointer-events-none" alt="Logo" />
+                  )}
+                </div>
+              )}
+              {[`default`, `wordmark`].includes(wordmarkMode) && (
+                <div className="h-16 w-auto">
+                  {wordmarkIsSvg ? (
+                    <object
+                      type="image/svg+xml"
+                      data={wordmark}
+                      className="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                      aria-label="Wordmark"
+                    >
+                      Wordmark
+                    </object>
+                  ) : (
+                    <img
+                      src={wordmark}
+                      className="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                      alt="Wordmark"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {error && <div className="p-4 bg-myred/10 text-myred rounded-md">{error}</div>}

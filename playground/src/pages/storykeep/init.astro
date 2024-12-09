@@ -1,22 +1,11 @@
 ---
-import Layout from "../../layouts/Layout.astro";
+import Layout from "../../layouts/InitLayout.astro";
 import { tursoClient } from "../../utils/db/client";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import InitWizard from "../../components/storykeep/init/InitWizard";
-import type { InitConfig } from "../../types";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
-
-// Create a secure version of config by removing sensitive data
-const secureConfig = config
-  ? {
-      ...config,
-      init: {
-        ...((config.init as InitConfig) || {}),
-      },
-    }
-  : null;
 
 // Create a secure version of validation
 const secureValidation = {
@@ -24,7 +13,7 @@ const secureValidation = {
   hasPassword: validation.hasPassword,
   capabilities: validation.capabilities,
   errors: validation.errors,
-  config: secureConfig,
+  config,
 };
 
 let error = "";
@@ -41,9 +30,9 @@ try {
     {error && <div class="error">{error}</div>}
     <InitWizard
       client:only="react"
+      config={config}
       hasConcierge={validation.capabilities.hasConcierge}
       validation={secureValidation}
-      config={secureConfig}
     />
   </main>
 </Layout>

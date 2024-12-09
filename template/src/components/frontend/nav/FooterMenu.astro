@@ -1,0 +1,61 @@
+---
+import { preParseAction } from "../../../utils/concierge/preParseAction";
+import { lispLexer } from "../../../utils/concierge/lispLexer";
+import type { MenuDatum, MenuLink, MenuLinkDatum } from "../../../types";
+
+interface Props {
+  payload: MenuDatum;
+  slug: string;
+  isContext: boolean;
+}
+
+const { payload, slug, isContext } = Astro.props;
+const thisPayload = payload.optionsPayload;
+const additionalLinks = thisPayload
+  .filter((e: MenuLink) => !e.featured)
+  .map((e: MenuLink) => {
+    const item = { ...e } as MenuLinkDatum;
+    const thisPayload = lispLexer(e.actionLisp);
+    const to = preParseAction(thisPayload, slug, isContext);
+    if (typeof to === `string`) {
+      item.to = to;
+      item.internal = true;
+    } else if (typeof to === `object`) item.to = to[0];
+    return item;
+  });
+const featuredLinks = thisPayload
+  .filter((e: MenuLink) => e.featured)
+  .map((e: MenuLink) => {
+    const item = { ...e } as MenuLinkDatum;
+    const thisPayload = lispLexer(e.actionLisp);
+    const to = preParseAction(thisPayload, slug, isContext);
+    if (typeof to === `string`) {
+      item.to = to;
+      item.internal = true;
+    } else if (typeof to === `object`) item.to = to[0];
+    return item;
+  });
+const allLinks = additionalLinks.concat(featuredLinks);
+---
+
+<div class="mx-auto max-w-4xl py-12 px-4">
+  <nav class="flex flex-wrap justify-center gap-4">
+    {
+      allLinks.map((item: MenuLinkDatum) => (
+        <a
+          href={item.to}
+          class:list={[
+            "px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200",
+            "hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange",
+            item.featured
+              ? "bg-myorange text-white hover:bg-myblue"
+              : "bg-white text-mydarkgrey hover:bg-myorange/20 hover:text-black border border-mydarkgrey/20",
+          ]}
+          title={item.description}
+        >
+          <span class="font-bold">{item.name}</span>
+        </a>
+      ))
+    }
+  </nav>
+</div>

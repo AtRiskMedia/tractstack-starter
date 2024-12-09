@@ -569,7 +569,7 @@ export async function getOptimizedImages(
 
   const optimizedImages: FileNode[] = await Promise.all(
     allFiles.map(async (f: TursoFileNode) => {
-      const baseUrl = `${import.meta.env.PUBLIC_IMAGE_URL}${f.url}`;
+      const baseUrl = `/${f.url}`;
       let src: string = baseUrl;
       let optimizedSrc: string | undefined;
 

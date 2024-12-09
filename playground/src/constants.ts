@@ -33,3 +33,8 @@ export const SHORT_SCREEN_THRESHOLD = 900;
 export const SMALL_SCREEN_WIDTH = 600;
 export const MIN_SCROLL_THRESHOLD = 220;
 export const HYSTERESIS = 200;
+
+export const CONCIERGE_SYNC_INTERVAL = 4000;
+export const THRESHOLD_READ = 42000;
+export const THRESHOLD_GLOSSED = 7000;
+export const JWT_LIFETIME = 15 * 60 * 1000;
