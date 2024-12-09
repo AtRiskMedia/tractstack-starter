@@ -1,0 +1,20 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getConfig, validateConfig } from "../utils/core/config";
+
+// Validate at page level
+const config = await getConfig();
+const validation = await validateConfig(config);
+
+// Handle routing at page level
+if (!validation.isValid) {
+  return Astro.redirect("/storykeep/init");
+}
+---
+
+<Layout title="Config Page">
+  <main>
+    <h1>Tract Stack</h1>
+    <p>This is the main page content</p>
+  </main>
+</Layout>

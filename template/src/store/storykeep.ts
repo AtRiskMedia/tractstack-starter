@@ -1,5 +1,6 @@
 import { map, atom } from "nanostores";
 import { persistentAtom } from "@nanostores/persistent";
+import settingsMap from "../../config/settingsMap.json";
 import type {
   BeliefDatum,
   BgPaneDatum,
@@ -20,19 +21,28 @@ import type {
   EditModeValue,
   StylesMemory,
   EnvSetting,
+  EnvSettingType,
   Analytics,
   DashboardAnalytics,
   CreationState,
   Theme,
   DesignType,
 } from "../types";
-import { knownEnvSettings, toolAddModes, PUBLIC_THEME } from "../constants";
+import { toolAddModes, PUBLIC_THEME } from "../constants";
 
 export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
 
 export const lastInteractedPaneStore = atom<string | null>(null);
 export const visiblePanesStore = map<Record<string, boolean>>({});
 export const lastInteractedTypeStore = atom<"markdown" | "bgpane" | null>(null);
+
+export const knownEnvSettings: EnvSetting[] = Object.entries(settingsMap.settings).map(
+  ([name, setting]) => ({
+    name,
+    ...setting,
+    type: setting.type as EnvSettingType, // Assert the type matches EnvSettingType
+  })
+);
 
 export const envSettings = map<{
   current: EnvSetting[];

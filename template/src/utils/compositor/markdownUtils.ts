@@ -4,8 +4,8 @@ import { fromHtml } from "hast-util-from-html";
 import { toMdast } from "hast-util-to-mdast";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { MS_BETWEEN_UNDO, MAX_HISTORY_LENGTH } from "../../constants";
-import { cloneDeep } from "../../utils/helpers";
-import { tailwindClasses } from "../../assets/tailwindClasses";
+import { cloneDeep } from "../../utils/common/helpers";
+import { tailwindClasses } from "./tailwindClasses";
 import type { Root as HastRoot, Element as HastElement, Text as HastText } from "hast";
 import type { Root as MdastRoot, List, ListItem } from "mdast";
 import type {
