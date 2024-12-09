@@ -1,6 +1,6 @@
 import { cleanTursoPane } from "./tursoPane";
 import { getResourcesByCategorySlug } from "../utils";
-//import { getOptimizedImages } from "../../common/helpers";
+import { getOptimizedImages, createDefaultImageNode } from "../../common/helpers";
 import type { Row } from "@libsql/client";
 import type {
   TursoPane,
@@ -11,6 +11,7 @@ import type {
   CodeHookDatum,
   PaneFileNode,
   FileNode,
+  TursoFileNode,
 } from "../../../types";
 
 export async function cleanTursoStoryFragment(rows: Row[]) {
@@ -30,8 +31,14 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
         ) {
           const panesPayloadRaw = typeof r?.panes === `string` && JSON.parse(r.panes);
           const allFiles = panesPayloadRaw.map((p: TursoPane) => p.files);
-          console.log(`must fix`, allFiles);
-          const thisFilesPayload: FileNode[] = []; //await getOptimizedImages(allFiles);
+          let thisFilesPayload: FileNode[] = [];
+          try {
+            thisFilesPayload = await getOptimizedImages(allFiles);
+          } catch (error) {
+            console.error("Error processing images:", error);
+            // Return default images instead of empty array
+            thisFilesPayload = allFiles.flat().map((f:TursoFileNode) => createDefaultImageNode(f));
+          }
           const paneFileNodes: PaneFileNode[] = [];
           panesPayloadRaw.forEach((p: TursoPane) => {
             const paneFiles = thisFilesPayload.filter((f) => f.paneId === p.id);

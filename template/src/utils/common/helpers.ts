@@ -1,4 +1,6 @@
 import { getImage } from "astro:assets";
+import fs from "node:fs/promises";
+import path from "node:path";
 import type {
   GraphNodes,
   GraphNode,
@@ -569,16 +571,36 @@ export async function getOptimizedImages(
 
   const optimizedImages: FileNode[] = await Promise.all(
     allFiles.map(async (f: TursoFileNode) => {
-      const baseUrl = `/${f.url}`;
+      // Remove /api prefix from URL
+      const cleanUrl = f.url.replace(/^\/api/, "");
+      const baseUrl = `${cleanUrl}`;
+
+      // Check if file exists
+      try {
+        await fs.access(path.join(process.cwd(), "public", cleanUrl));
+      } catch {
+        // Return with default static image if file not found
+        return {
+          id: f.id,
+          filename: f.filename,
+          altDescription: f.alt_description,
+          src: "/static.jpg",
+          srcSet: false,
+          paneId: paneId || f.paneId,
+          markdown: f.markdown,
+          optimizedSrc: "/static.jpg",
+        };
+      }
+
       let src: string = baseUrl;
       let optimizedSrc: string | undefined;
 
       if (f.src_set) {
         const optimizedUrls = await getOptimizedImageSet(baseUrl);
-        optimizedSrc = optimizedUrls.join(", "); // Full srcSet string
-        src = optimizedUrls[0].split(" ")[0]; // Mobile (600px) optimized src
+        optimizedSrc = optimizedUrls.length ? optimizedUrls.join(", ") : "/static.jpg";
+        src = optimizedUrls.length ? optimizedUrls[0].split(" ")[0] : "/static.jpg";
       } else {
-        optimizedSrc = (await getOptimizedImage(src)) || undefined;
+        optimizedSrc = (await getOptimizedImage(src)) || "/static.jpg";
       }
 
       return {
@@ -595,4 +617,17 @@ export async function getOptimizedImages(
   );
 
   return optimizedImages;
+}
+
+export function createDefaultImageNode(original: TursoFileNode, paneId?: string): FileNode {
+  return {
+    id: original.id,
+    filename: original.filename,
+    altDescription: original.alt_description,
+    src: "/static.jpg",
+    srcSet: false,
+    paneId: paneId || original.paneId,
+    markdown: original.markdown,
+    optimizedSrc: "/static.jpg",
+  };
 }
