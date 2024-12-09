@@ -7,7 +7,7 @@ import {
   dropDraggingElement,
   resetDragStore,
   setDragPosition,
-  setGhostSize,
+  setGhostBlockHeight,
 } from "../../../store/storykeep.ts";
 
 interface ToolAddModeSelectorProps {

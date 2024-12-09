@@ -64,12 +64,12 @@ import {
   removeElementFromMarkdown,
   updateHistory,
 } from "@/utils/compositor/markdownUtils.ts";
-import { generateMarkdownLookup } from "@/utils/compositor/generateMarkdownLookup.ts";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { toHast } from "mdast-util-to-hast";
 import type { Root, Root as HastRoot, RootContent } from "hast";
 import type { Root as MdastRoot } from "mdast";
 import { toMarkdown } from "mdast-util-to-markdown";
+import { generateMarkdownLookup } from "@/utils/compositor/generateMarkdownLookup.ts";
 
 const BREAKPOINTS = {
   xl: 1367,

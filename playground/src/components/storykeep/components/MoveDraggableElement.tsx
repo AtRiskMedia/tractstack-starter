@@ -10,7 +10,7 @@ import {
   setDragHoverInfo,
   setDragPosition,
   setDragShape,
-  setGhostSize,
+  setGhostBlockHeight,
 } from "@/store/storykeep.ts";
 import { moveElements } from "@/utils/storykeep.ts";
 import type { MarkdownLookup } from "@/types.ts";
@@ -135,7 +135,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           resetDragStore();
           const root = paneFragmentMarkdown.get()[props.fragmentId].current.markdown.htmlAst;
           setDragShape({ markdownLookup, root, fragmentId, paneId, idx, outerIdx });
-          setGhostSize(100, 50);
+          setGhostBlockHeight(20);
         }}
         onStop={() => {
           dragging.current = false;

@@ -5,9 +5,10 @@ import {
   dropDraggingElement,
   resetDragStore,
   setDragPosition,
-  setGhostSize,
+  setGhostBlockHeight,
 } from "@/store/storykeep.ts";
 import type { ToolAddMode } from "@/types.ts";
+import { toolAddModeDefaultHeight, toolAddModesSizes } from "@/constants.ts";
 
 export type DraggableElementProps = {
   children?: React.ReactElement;
@@ -53,7 +54,15 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
       onStart={() => {
         dragging.current = true;
         resetDragStore();
-        setGhostSize(100, 50);
+
+        let height = toolAddModeDefaultHeight;
+        if(props.el) {
+          const addModeHeight = toolAddModesSizes[props.el];
+          if(addModeHeight > 0) {
+            height = addModeHeight;
+          }
+        }
+        setGhostBlockHeight(height);
       }}
       onStop={() => {
         dragging.current = false;

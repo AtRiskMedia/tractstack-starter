@@ -69,6 +69,24 @@ export const toolAddModes = [
   "aside",
 ] as const;
 
+export const toolAddModeDefaultHeight: number = 60;
+
+// all sizes in pixels. 0 or less than 0 means the code will use toolAddModeDefaultHeight
+export const toolAddModesSizes: Record<ToolAddMode, number> = {
+  p: 60,
+  h2: 85,
+  h3: 72,
+  h4: 68,
+  img: 140,
+  yt: 0,
+  bunny: 0,
+  signup: 0,
+  identify: 0,
+  toggle: 0,
+  aside: 0,
+  belief: 0,
+}
+
 export const toolAddModesIcons: Record<ToolAddMode, string> = {
   p: "paragraph.svg",
   h2: "h2.svg",

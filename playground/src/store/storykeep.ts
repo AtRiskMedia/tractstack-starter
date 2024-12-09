@@ -137,7 +137,6 @@ export interface DragShape extends DragNode {
 export type DragHandle = {
   pos: ControlPosition;
   ghostHeight: number;
-  ghostWidth: number;
   hoverElement: DragState | null;
   affectedFragments: Set<string>;
   affectedPanes: Set<string>;
@@ -148,7 +147,6 @@ export type DragHandle = {
 const EMPTY_DRAG_HANDLE: DragHandle = {
   pos: { x: 0, y: 0 },
   ghostHeight: 0,
-  ghostWidth: 0,
   hoverElement: null,
   dropState: null,
   affectedFragments: new Set<string>(),
@@ -246,10 +244,9 @@ export const setDragPosition = (pos: ControlPosition) => {
   //console.log("drag pos: " + JSON.stringify(pos));
 };
 
-export const setGhostSize = (w: number, h: number) => {
+export const setGhostBlockHeight = (h: number) => {
   dragHandleStore.set({
     ...dragHandleStore.get(),
-    ghostWidth: w,
     ghostHeight: h,
   });
 };
