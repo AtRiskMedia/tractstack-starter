@@ -30,6 +30,7 @@ const CORE_FILES = [
   "env.d.ts",
   "README.md",
   "LICENSE.md",
+  "Dockerfile.example",
 ];
 
 // Paths to exclude from copying
