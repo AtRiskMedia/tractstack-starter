@@ -112,9 +112,9 @@ const processClassesForViewports = (
   const tablet = processForViewport(1);
   const desktop = processForViewport(2);
   const all = mobile.map((_, index) => {
-    const mobileClasses = mobile[index].split(" ");
-    const tabletClasses = tablet[index].split(" ");
-    const desktopClasses = desktop[index].split(" ");
+    const mobileClasses = mobile[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
+    const tabletClasses = tablet[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
+    const desktopClasses = desktop[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
 
     const combinedClasses = new Set(mobileClasses);
 
