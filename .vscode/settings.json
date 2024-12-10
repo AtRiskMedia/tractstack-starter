@@ -1,0 +1,8 @@
+{
+  "search.exclude": {
+    "**/template/**": true
+  },
+  "files.watcherExclude": {
+    "**/template/**": true
+  }
+}

@@ -34,18 +34,13 @@ const CORE_FILES = [
 ];
 
 // Paths to exclude from copying
-const EXCLUDED_PATHS = [
-  "public/styles/frontend.css",
-  "public/images",
-  "config/init.json"
-];
+const EXCLUDED_PATHS = ["public/styles/frontend.css", "public/images", "config/init.json"];
 
 async function copyWithExclusions(src: string, dest: string) {
   const filter = (srcPath: string) => {
     const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
-    return !EXCLUDED_PATHS.some(excludedPath => 
-      relativePath.startsWith(excludedPath) || 
-      relativePath === excludedPath
+    return !EXCLUDED_PATHS.some(
+      (excludedPath) => relativePath.startsWith(excludedPath) || relativePath === excludedPath
     );
   };
 

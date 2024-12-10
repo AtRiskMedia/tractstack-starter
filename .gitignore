@@ -37,3 +37,9 @@ playground/public/images
 # fonts
 **/fonts/*
 !**/fonts/Inter*
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+.idea/*
+!.idea/tractstack.iml
