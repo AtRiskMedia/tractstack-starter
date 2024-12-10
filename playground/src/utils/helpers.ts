@@ -5,7 +5,7 @@ import type {
   GraphNode,
   GraphNodeDatum,
   GraphNodes,
-  GraphRelationshipDatum,
+  GraphRelationshipDatum, MarkdownLookup,
   TursoFileNode,
 } from "../types";
 import { type DragNode, Location } from "../store/storykeep.ts";
@@ -744,3 +744,10 @@ export const blobToBase64 = (blob: Blob) => {
     reader.readAsDataURL(blob);
   });
 };
+
+export const isListContainer = (markdown: MarkdownLookup): boolean => {
+  if(!markdown) return false;
+  // if all the nth tags are ol/ul then image is in list container
+  return Object.values(markdown.nthTag)
+    .every(tag => ["ul", "ol"].includes(tag));
+}

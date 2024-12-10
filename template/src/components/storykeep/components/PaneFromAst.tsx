@@ -13,7 +13,7 @@ import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
 import EraserWrapper from "./EraserWrapper";
 import InsertWrapper from "./InsertWrapper";
 import { wrapWithStylesIndicator } from "./StylesWrapper";
-import { classNames } from "../../../utils/helpers";
+import { classNames, isListContainer } from "../../../utils/helpers";
 import { Belief } from "../../../components/widgets/Belief";
 import { IdentifyAs } from "../../../components/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../components/widgets/ToggleBelief";
@@ -438,6 +438,11 @@ function buildComponentFromAst(
     );
   }
 
+  const canDragNDrop = (): boolean => {
+    if(Tag === "ul") return false;
+    return isWidget || !!buttonPayload;
+  }
+
   // if set-up for recursive handling
   if (["p", "em", "strong", "ol", "ul", "li", "h2", "h3", "h4"].includes(Tag)) {
     const TagComponent =
@@ -462,11 +467,12 @@ function buildComponentFromAst(
             toolMode={toolMode}
             toolAddMode={toolAddMode}
             queueUpdate={queueUpdate}
-            ignoreDragNDrop={isWidget || !!buttonPayload}
+            ignoreDragNDrop={canDragNDrop()}
           />
         ))}
       </TagComponent>
     );
+
 
     if (noOverlay || [`ol`, `ul`, `strong`, `em`].includes(Tag)) {
       if (isWidget) {
@@ -521,7 +527,7 @@ function buildComponentFromAst(
             idx={idx}
             outerIdx={outerIdx}
             markdownLookup={markdownLookup}
-            ignoreDragNDrop={ignoreDragNDrop}
+            ignoreDragNDrop={ignoreDragNDrop || (isImage && isListContainer(markdownLookup))}
           >
             {child}
           </EditableInnerElementWrapper>
