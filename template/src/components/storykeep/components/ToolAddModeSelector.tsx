@@ -24,7 +24,7 @@ const ToolAddModeSelector = forwardRef<HTMLSelectElement, ToolAddModeSelectorPro
           name="toolAddMode"
           value={toolAddMode}
           onChange={handleChange}
-          className="block w-fit-contents rounded-md border-0 py-1.5 pl-3 pr-10 text-mydarkgrey ring-1 ring-inset ring-mylightgrey focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
+          className="block w-fit rounded-md border-0 py-1.5 pl-3 pr-10 text-mydarkgrey ring-1 ring-inset ring-mylightgrey focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
         >
           {toolAddModes.map((mode) => (
             <option key={mode} value={mode}>

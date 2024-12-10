@@ -117,10 +117,14 @@ const processClassesForViewports = (
     const desktopClasses = desktop[index].split(" ");
     const combinedClasses = new Set(mobileClasses);
     tabletClasses.forEach((cls) => {
-      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))) combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
+      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
+        combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
     });
     desktopClasses.forEach((cls) => {
-      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")) && !tabletClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))) {
+      if (
+        !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")) &&
+        !tabletClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))
+      ) {
         combinedClasses.add(`xl:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
       }
     });

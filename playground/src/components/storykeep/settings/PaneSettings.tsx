@@ -235,7 +235,7 @@ export const PaneSettings = (props: { id: string; storyFragmentId: string }) => 
           <div className="flex-grow">
             <PaneHeightRatio id={id} />
           </div>
-          <div className="w-fit-contents flex flex-col gap-y-6">
+          <div className="w-fit flex flex-col gap-y-6">
             <div className="flex items-center">
               <Switch
                 checked={$paneHasOverflowHidden[id].current}
