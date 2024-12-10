@@ -37,7 +37,7 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
           } catch (error) {
             console.error("Error processing images:", error);
             // Return default images instead of empty array
-            thisFilesPayload = allFiles.flat().map((f:TursoFileNode) => createDefaultImageNode(f));
+            thisFilesPayload = allFiles.flat().map((f: TursoFileNode) => createDefaultImageNode(f));
           }
           const paneFileNodes: PaneFileNode[] = [];
           panesPayloadRaw.forEach((p: TursoPane) => {

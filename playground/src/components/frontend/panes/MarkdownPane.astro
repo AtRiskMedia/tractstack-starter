@@ -1,7 +1,13 @@
 ---
 import PaneFromAst from "./PaneFromAst.astro";
 import { classNames } from "../../../utils/common/helpers";
-import type { MarkdownLookup, FileNode, MarkdownPaneDatum, MarkdownDatum } from "../../../types";
+import type {
+  Config,
+  MarkdownLookup,
+  FileNode,
+  MarkdownPaneDatum,
+  MarkdownDatum,
+} from "../../../types";
 
 interface Props {
   payload: MarkdownPaneDatum;
@@ -11,9 +17,10 @@ interface Props {
   slug: string;
   isContext: boolean;
   markdownLookup: MarkdownLookup;
+  config: Config;
 }
 
-const { payload, markdown, files, paneId, slug, isContext, markdownLookup } = Astro.props;
+const { config, payload, markdown, files, paneId, slug, isContext, markdownLookup } = Astro.props;
 const hasHidden =
   payload.hiddenViewports.includes(`desktop`) ||
   payload.hiddenViewports.includes(`tablet`) ||
@@ -49,11 +56,7 @@ const parentClasses = Array.isArray(classNamesParent)
       return <div class={classNames(hidden, cssClass)}>{content}</div>;
     },
     astPayload.ast
-      .filter(
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        (e: any) => !(e?.type === `text` && e?.value === `\n`)
-      )
-      /* eslint-disable @typescript-eslint/no-explicit-any */
+      .filter((e: any) => !(e?.type === `text` && e?.value === `\n`))
       .map((thisAstPayload: any, idx: number) => (
         <PaneFromAst
           payload={{
@@ -67,6 +70,7 @@ const parentClasses = Array.isArray(classNamesParent)
           idx={null}
           outerIdx={idx}
           markdownLookup={markdownLookup}
+          config={config}
         />
       ))
   )

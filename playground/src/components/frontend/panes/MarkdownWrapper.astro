@@ -5,7 +5,13 @@ import Modal from "./Modal.astro";
 import MarkdownInsideModal from "./MarkdownInsideModal.astro";
 import { generateMarkdownLookup } from "../../../utils/compositor/generateMarkdownLookup";
 import { classNames } from "../../../utils/common/helpers";
-import type { MarkdownDatum, MarkdownPaneDatum, FileNode, BgPaneDatum } from "../../../types";
+import type {
+  Config,
+  MarkdownDatum,
+  MarkdownPaneDatum,
+  FileNode,
+  BgPaneDatum,
+} from "../../../types";
 
 interface Props {
   payload: MarkdownPaneDatum | BgPaneDatum;
@@ -15,9 +21,10 @@ interface Props {
   paneId: string;
   slug: string;
   isContext: boolean;
+  config: Config;
 }
 
-const { payload, markdown, files, paneHeight, paneId, slug, isContext } = Astro.props;
+const { config, payload, markdown, files, paneHeight, paneId, slug, isContext } = Astro.props;
 
 // this is either MarkdownPane, Modal+MarkdownInsideModal, or MarkdownInsidePane
 
@@ -71,6 +78,7 @@ const markdownLookup = markdown?.htmlAst && generateMarkdownLookup(markdown.html
           slug={slug}
           isContext={isContext}
           markdownLookup={markdownLookup}
+          config={config}
         />
       </div>
     </div>
@@ -88,6 +96,7 @@ const markdownLookup = markdown?.htmlAst && generateMarkdownLookup(markdown.html
       slug={slug}
       isContext={isContext}
       markdownLookup={markdownLookup}
+      config={config}
     />
   ) : null
 }
@@ -102,6 +111,7 @@ const markdownLookup = markdown?.htmlAst && generateMarkdownLookup(markdown.html
       slug={slug}
       isContext={isContext}
       markdownLookup={markdownLookup}
+      config={config}
     />
   ) : null
 }

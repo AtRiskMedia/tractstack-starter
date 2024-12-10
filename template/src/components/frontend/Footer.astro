@@ -34,7 +34,7 @@ const socials = typeof config?.init?.SOCIALS === "string" ? config.init.SOCIALS 
     }
   </div>
   <div class="pb-6">
-    {menu ? <FooterMenu payload={menu} slug={slug} isContext={isContext} /> : null}
+    {menu ? <FooterMenu payload={menu} slug={slug} isContext={isContext} config={config} /> : null}
     <Socials payload={socials} />
     <div class="my-2 flex flex-col items-center justify-center xs:flex-row text-myblue">
       <div class="px-12 text-center text-2xl">

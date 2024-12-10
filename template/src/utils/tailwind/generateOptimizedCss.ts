@@ -8,6 +8,33 @@ interface CssLookup {
   };
 }
 
+function escapeSelector(selector: string): string {
+  // Handle different cases:
+  // 1. Classes with dots (mt-2.5)
+  // 2. Pseudo-classes (hover:)
+  // 3. Media query prefixes (md:)
+  const parts = selector.split(":");
+  const baseClass = parts[0].replace(/\./g, "\\.");
+  const pseudoClasses = parts.slice(1);
+
+  // For hover classes, we need to escape both parts
+  if (selector.startsWith("hover:")) {
+    return `hover\\:${parts[1]}:hover`;
+  }
+
+  // For other pseudo-classes
+  const pseudoClass = pseudoClasses.join(":");
+  return pseudoClass ? `${baseClass}:${pseudoClass}` : baseClass;
+}
+
+function getLookupKey(className: string): string {
+  // For hover classes, append :hover to match the lookup format
+  if (className.startsWith("hover:")) {
+    return `${className}:hover`;
+  }
+  return className;
+}
+
 export async function generateOptimizedCss(whitelistedClasses: string[]): Promise<void> {
   try {
     console.log("Processing whitelist:", whitelistedClasses);
@@ -21,11 +48,12 @@ export async function generateOptimizedCss(whitelistedClasses: string[]): Promis
 
     // Process each class
     whitelistedClasses.forEach((className) => {
-      const escapedClass = className.replace(/[/:]/g, "\\$&");
-      const lookup = cssLookup[className] || cssLookup[escapedClass];
+      const lookupKey = getLookupKey(className);
+      const escapedClass = escapeSelector(className);
+      const lookup = cssLookup[lookupKey];
 
       if (!lookup) {
-        console.log(`Missing lookup for class: ${className}`);
+        console.log(`Missing lookup for class: ${className} (lookup key: ${lookupKey})`);
         return;
       }
 
@@ -39,15 +67,14 @@ export async function generateOptimizedCss(whitelistedClasses: string[]): Promis
       // Collect media queries
       if (lookup.media) {
         Object.entries(lookup.media).forEach(([query, properties]) => {
-          // Ensure we're not adding '@media' twice by checking if it's already in the query
           const cleanedQuery = query.startsWith("@media") ? query : `@media ${query}`;
           if (!mediaQueries[cleanedQuery]) {
             mediaQueries[cleanedQuery] = [];
           }
           mediaQueries[cleanedQuery].push(
-            `.${escapedClass}{${Object.entries(properties)
+            `.${escapedClass.replace(/(md|xs|xl):/, "$1\\:")}{${Object.entries(properties)
               .map(([prop, value]) => `${prop}:${value}`)
-              .join(";")}}`
+              .join(";")}} `
           );
         });
       }

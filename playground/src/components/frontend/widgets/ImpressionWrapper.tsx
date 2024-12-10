@@ -4,17 +4,19 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { panesVisible, showImpressions } from "../../../store/events";
 import { useInterval } from "../../../utils/common/useInterval";
 import { Impression } from "./Impression";
-import type { ImpressionDatum } from "../../../types";
+import type { Config, ImpressionDatum } from "../../../types";
 
 const ImpressionWrapper = ({
   payload,
   slug,
   isContext,
+  config,
   icon = false,
 }: {
   payload: ImpressionDatum[];
   slug: string;
   isContext: boolean;
+  config: Config;
   icon?: boolean;
 }) => {
   const $inView = useStore(panesVisible);
@@ -72,7 +74,7 @@ const ImpressionWrapper = ({
           <span className="sr-only">Hide impressions</span>
           <XMarkIcon className="h-6 w-6" aria-hidden="true" />
         </button>
-        <Impression payload={currentImpression} slug={slug} isContext={isContext} />
+        <Impression payload={currentImpression} slug={slug} isContext={isContext} config={config} />
       </aside>
     );
   }

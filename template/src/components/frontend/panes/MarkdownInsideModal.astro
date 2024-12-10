@@ -3,7 +3,13 @@ import PaneFromAst from "./PaneFromAst.astro";
 import { SvgInsideLeftModal } from "./SvgInsideLeftModal";
 import { SvgInsideRightModal } from "./SvgInsideRightModal";
 import { classNames } from "../../../utils/common/helpers";
-import type { MarkdownLookup, FileNode, MarkdownDatum, MarkdownPaneDatum } from "../../../types";
+import type {
+  Config,
+  MarkdownLookup,
+  FileNode,
+  MarkdownDatum,
+  MarkdownPaneDatum,
+} from "../../../types";
 
 interface Props {
   payload: MarkdownPaneDatum;
@@ -21,6 +27,7 @@ interface Props {
   slug: string;
   isContext: boolean;
   markdownLookup: MarkdownLookup;
+  config: Config;
 }
 
 const {
@@ -33,6 +40,7 @@ const {
   slug,
   isContext,
   markdownLookup,
+  config,
 } = Astro.props;
 
 const optionsPayload = payload.optionsPayload;
@@ -138,6 +146,7 @@ const payloads = [`mobile`, `tablet`, `desktop`].map((viewportKey: string) => {
                 idx={null}
                 outerIdx={idx}
                 markdownLookup={markdownLookup}
+                config={config}
               />
             ))}
         </div>

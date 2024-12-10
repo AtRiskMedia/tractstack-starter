@@ -1,22 +1,23 @@
 ---
 import { preParseAction } from "../../../utils/concierge/preParseAction";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
-import type { MenuDatum, MenuLink, MenuLinkDatum } from "../../../types";
+import type { Config, MenuDatum, MenuLink, MenuLinkDatum } from "../../../types";
 
 interface Props {
   payload: MenuDatum;
   slug: string;
   isContext: boolean;
+  config: Config;
 }
 
-const { payload, slug, isContext } = Astro.props;
+const { payload, slug, isContext, config } = Astro.props;
 const thisPayload = payload.optionsPayload;
 const additionalLinks = thisPayload
   .filter((e: MenuLink) => !e.featured)
   .map((e: MenuLink) => {
     const item = { ...e } as MenuLinkDatum;
     const thisPayload = lispLexer(e.actionLisp);
-    const to = preParseAction(thisPayload, slug, isContext);
+    const to = preParseAction(thisPayload, slug, isContext, config);
     if (typeof to === `string`) {
       item.to = to;
       item.internal = true;
@@ -28,7 +29,7 @@ const featuredLinks = thisPayload
   .map((e: MenuLink) => {
     const item = { ...e } as MenuLinkDatum;
     const thisPayload = lispLexer(e.actionLisp);
-    const to = preParseAction(thisPayload, slug, isContext);
+    const to = preParseAction(thisPayload, slug, isContext, config);
     if (typeof to === `string`) {
       item.to = to;
       item.internal = true;

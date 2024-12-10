@@ -9,7 +9,7 @@ import { AstToButton } from "../widgets/AstToButton";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
 import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
-import type { ButtonData, FileNode, MarkdownLookup } from "../../../types";
+import type { Config, ButtonData, FileNode, MarkdownLookup } from "../../../types";
 
 interface Props {
   payload: {
@@ -24,6 +24,7 @@ interface Props {
   idx: number | null;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
+  config: Config;
 }
 
 const {
@@ -35,6 +36,7 @@ const {
   idx = null,
   outerIdx,
   markdownLookup,
+  config,
 } = Astro.props;
 
 const thisAst = payload.ast.at(0);
@@ -77,7 +79,7 @@ const buttonPayload =
     ? payload.buttonData[thisAst.properties.href]
     : undefined;
 const callbackPayload = buttonPayload?.callbackPayload && lispLexer(buttonPayload?.callbackPayload);
-const targetUrl = callbackPayload && preParseAction(callbackPayload, slug, isContext);
+const targetUrl = callbackPayload && preParseAction(callbackPayload, slug, isContext, config);
 const isExternalUrl =
   (typeof targetUrl === `string` && targetUrl.substring(0, 8) === `https://`) ||
   (typeof thisAst.properties?.href === `string` &&
@@ -122,6 +124,7 @@ const value3 = thisHookValuesRaw && thisHookValuesRaw.length > 2 ? thisHookValue
           idx={!idx ? childIdx : idx}
           outerIdx={outerIdx}
           markdownLookup={markdownLookup}
+          config={config}
         />
       ))}
     </Tag>

@@ -83,7 +83,11 @@ const wordmarkIsSvg = wordmark.includes("svg");
         }
       </div>
     </a>
-    {!!menu ? <Menu payload={menu} slug={slug} isContext={isContext} client:load /> : null}
+    {
+      !!menu ? (
+        <Menu payload={menu} slug={slug} isContext={isContext} config={config} client:load />
+      ) : null
+    }
   </div>
   <div
     class="flex flex-row flex-nowrap justify-between pt-4 pb-3
@@ -132,6 +136,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
             icon={true}
             isContext={isContext}
             slug={slug}
+            config={config}
             client:load
           />
         ) : null

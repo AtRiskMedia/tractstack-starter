@@ -9,6 +9,7 @@ import type {
   MarkdownDatum,
   MarkdownPaneDatum,
   ClassNamesPayloadValue,
+  Config,
 } from "../../../types";
 
 interface Props {
@@ -20,9 +21,10 @@ interface Props {
   slug: string;
   isContext: boolean;
   markdownLookup: MarkdownLookup;
+  config: Config;
 }
 
-const { payload, markdown, files, paneHeight, paneId, slug, isContext, markdownLookup } =
+const { config, payload, markdown, files, paneHeight, paneId, slug, isContext, markdownLookup } =
   Astro.props;
 
 const optionsPayload = payload.optionsPayload;
@@ -132,6 +134,7 @@ const payloads = [`mobile`, `tablet`, `desktop`].map((viewportKey: string) => {
                       idx={null}
                       outerIdx={idx}
                       markdownLookup={markdownLookup}
+                      config={config}
                     />
                   ))}
               </div>

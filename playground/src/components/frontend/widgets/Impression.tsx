@@ -2,19 +2,21 @@ import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParseAction";
 import { preParseImpression } from "../../../utils/concierge/preParseImpression";
 import { current, events } from "../../../store/events";
-import type { ImpressionDatum } from "../../../types";
+import type { ImpressionDatum, Config } from "../../../types";
 
 export const Impression = ({
   payload,
   slug,
   isContext,
+  config,
 }: {
   payload: ImpressionDatum;
   slug: string;
   isContext: boolean;
+  config: Config;
 }) => {
   const thisButtonPayload = lispLexer(payload.actionsLisp);
-  const actionPayload = preParseAction(thisButtonPayload, slug, isContext);
+  const actionPayload = preParseAction(thisButtonPayload, slug, isContext, config);
   const event = preParseImpression(payload.id, payload.title, current.get().id, thisButtonPayload);
   const pushEvent = function (): void {
     if (event) events.set([...events.get(), event]);

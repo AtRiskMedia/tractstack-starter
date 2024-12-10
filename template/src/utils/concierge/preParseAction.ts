@@ -1,7 +1,7 @@
-//import type {LispTokens} from '../../types.ts';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const preParseAction = (payload: any, slug: string, isContext: boolean) => {
+import type { /* LispTokens, */ Config } from "../../types.ts";
+
+export const preParseAction = (payload: any, slug: string, isContext: boolean, config: Config) => {
   const thisPayload = (payload && payload[0]) || false;
   const command = (thisPayload && thisPayload[0] && thisPayload[0][0]) || null;
   const parameters = (thisPayload && thisPayload[0] && thisPayload[0][1]) || null;
@@ -10,7 +10,6 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean) =
   const parameterThree = (parameters && parameters[2]) || null;
   //const parameterFour = (parameters && parameters[3]) || null;
 
-  console.log(`preParseAction NEEDS CONFIG`);
   switch (command) {
     case `goto`:
       switch (parameterOne) {
@@ -40,11 +39,11 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean) =
         case `product`:
           return `/products/${parameterTwo}`;
         case `storyFragment`:
-          if (parameterTwo !== import.meta.env.PUBLIC_HOME) return `/${parameterTwo}`;
+          if (parameterTwo !== config?.init?.HOME_SLUG) return `/${parameterTwo}`;
           return `/`;
         case `storyFragmentPane`:
           if (parameterTwo && parameterThree) {
-            if (parameterTwo !== import.meta.env.PUBLIC_HOME)
+            if (parameterTwo !== config?.init?.HOME_SLUG)
               return `/${parameterTwo}#${parameterThree}`;
             return `/#${parameterThree}`;
           }
@@ -56,7 +55,7 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean) =
           break;
         case `bunny`:
           if (parameterTwo && parameterThree) {
-            if (parameterTwo !== import.meta.env.PUBLIC_HOME)
+            if (parameterTwo !== config?.init?.HOME_SLUG)
               return `/${parameterTwo}?t=${parameterThree}s#bunny`;
             return `/?t=${parameterThree}s#bunny`;
           }

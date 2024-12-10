@@ -3,17 +3,17 @@ import { Popover, Transition } from "@headlessui/react";
 import ChevronDownIcon from "@heroicons/react/20/solid/ChevronDownIcon";
 import { preParseAction } from "../../utils/concierge/preParseAction";
 import { lispLexer } from "../../utils/concierge/lispLexer";
-import type { MenuDatum, MenuLink, MenuLinkDatum } from "../../types";
+import type { Config, MenuDatum, MenuLink, MenuLinkDatum } from "../../types";
 
-const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) => {
-  const { payload, slug, isContext } = props;
+const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum; config: Config }) => {
+  const { payload, slug, isContext, config } = props;
   const thisPayload = payload.optionsPayload;
   const additionalLinks = thisPayload
     .filter((e: MenuLink) => !e.featured)
     .map((e: MenuLink) => {
       const item = { ...e } as MenuLinkDatum;
       const thisPayload = lispLexer(e.actionLisp);
-      const to = preParseAction(thisPayload, slug, isContext);
+      const to = preParseAction(thisPayload, slug, isContext, config);
       if (typeof to === `string`) {
         item.to = to;
         item.internal = true;
@@ -25,7 +25,7 @@ const Menu = (props: { slug: string; isContext: boolean; payload: MenuDatum }) =
     .map((e: MenuLink) => {
       const item = { ...e } as MenuLinkDatum;
       const thisPayload = lispLexer(e.actionLisp);
-      const to = preParseAction(thisPayload, slug, isContext);
+      const to = preParseAction(thisPayload, slug, isContext, config);
       if (typeof to === `string`) {
         item.to = to;
         item.internal = true;

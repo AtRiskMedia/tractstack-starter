@@ -3,15 +3,16 @@ import { classNames } from "../../utils/common/helpers";
 import Pane from "./Pane.astro";
 import CodeHook from "../../custom/CodeHook.astro";
 import Filter from "../../components/frontend/state/Filter";
-import type { Current, PaneDatum, ResourcePayloadDatum } from "../../types";
+import type { Config, Current, PaneDatum, ResourcePayloadDatum } from "../../types";
 
 export interface Props {
   tailwindBgColour: string | null;
   panesPayload: PaneDatum[];
   current: Current;
   resourcesPayload: ResourcePayloadDatum;
+  config: Config;
 }
-const { tailwindBgColour, panesPayload, current, resourcesPayload } = Astro.props;
+const { config, tailwindBgColour, panesPayload, current, resourcesPayload } = Astro.props;
 
 // per pane settings
 const applyFilter: { [key: string]: boolean } = panesPayload.reduce(function (acc, cur) {
@@ -74,6 +75,7 @@ const maxHScreen: { [key: string]: boolean } = panesPayload.reduce(function (acc
               payload={panesPayload.filter((p: PaneDatum) => p.id === pane.id).at(0)!}
               slug={current.slug}
               isContext={false}
+              config={config}
             />
           )}
         </div>

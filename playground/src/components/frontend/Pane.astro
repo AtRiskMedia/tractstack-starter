@@ -2,15 +2,16 @@
 import { classNames } from "../../utils/common/helpers";
 import BgPane from "./panes/BgPane.astro";
 import MarkdownWrapper from "./panes/MarkdownWrapper.astro";
-import type { PaneDatum, BgColourDatum, BgPaneDatum, MarkdownPaneDatum } from "../../types";
+import type { Config, PaneDatum, BgColourDatum, BgPaneDatum, MarkdownPaneDatum } from "../../types";
 
 interface Props {
   payload: PaneDatum;
   slug: string;
   isContext: boolean;
+  config: Config;
 }
 
-const { payload, slug, isContext } = Astro.props;
+const { config, payload, slug, isContext } = Astro.props;
 
 // - if paneHeightRatio[Desktop|Tablet|Mobile], calculate height and inject
 const paneHeightRatioDesktop =
@@ -97,6 +98,7 @@ const paneFragments =
                 paneId={payload.id}
                 slug={slug}
                 isContext={isContext}
+                config={config}
               />
             ) : null}
           </div>
