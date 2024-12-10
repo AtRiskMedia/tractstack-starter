@@ -7,6 +7,12 @@ export async function processEventStream(client: Client, payload: EventPayload) 
   const { events, referrer, visit } = payload;
   const { fingerprint_id, visit_id } = visit;
 
+  console.log("Processing event payload:", {
+    eventCount: events.length,
+    types: [...new Set(events.map((e) => e.type))],
+    sample: events[0],
+  });
+
   // Handle campaign tracking
   //const campaign_id: string | null = referrer?.utmCampaign
   //  ?
@@ -28,6 +34,20 @@ export async function processEventStream(client: Client, payload: EventPayload) 
         case "StoryFragment":
         case "Pane":
         case "Context": {
+          console.log("Processing content event:", {
+            eventId: event.id,
+            type: event.type,
+            parentId: event.parentId,
+            verb: event.verb,
+          });
+
+          console.log("Ensuring corpus entries:", {
+            objectId: event.id,
+            type: event.type,
+            parentId: event.parentId,
+            parentType: event.type === "Pane" ? "StoryFragment" : "TractStack",
+          });
+
           // Ensure object exists in corpus
           const eventId = ulid();
           const objectCorpusId = await ensureCorpusEntry(client, event.id, event.type);
@@ -40,6 +60,13 @@ export async function processEventStream(client: Client, payload: EventPayload) 
               event.parentId,
               event.type === "Pane" ? "StoryFragment" : "TractStack"
             );
+          }
+
+          if (parentCorpusId) {
+            console.log("Parent relationship created:", {
+              objectId: objectCorpusId,
+              parentId: parentCorpusId,
+            });
           }
 
           await client.execute({

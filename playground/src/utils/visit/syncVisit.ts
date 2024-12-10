@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../db/client";
-import { v4 as uuidv4 } from "uuid";
+import { ulid } from "ulid";
 import { auth } from "../../store/auth";
 import type { AuthSettings } from "../../store/auth";
 import type { Client } from "@libsql/client";
@@ -63,7 +63,7 @@ export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse
       response.fingerprint = options.fingerprint;
     } else {
       // Generate new fingerprint
-      const newFingerprint = `t8k-${uuidv4()}`;
+      const newFingerprint = `t8k-${ulid()}`;
       fingerprintId = await createFingerprint(client, newFingerprint);
       response.fingerprint = newFingerprint;
     }
@@ -124,7 +124,7 @@ export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse
 async function createFingerprint(client: Client, fingerprint: string): Promise<string> {
   const { rows } = await client.execute({
     sql: `INSERT INTO fingerprints (id, fingerprint) VALUES (?, ?)`,
-    args: [uuidv4(), fingerprint],
+    args: [ulid(), fingerprint],
   });
   return rows[0].id as string;
 }
@@ -169,7 +169,7 @@ async function getOrCreateVisit(
   }
 
   // Create new visit
-  const visitId = uuidv4();
+  const visitId = ulid();
   await client.execute({
     sql: `INSERT INTO visits (
             id, fingerprint_id, http_referrer, http_user_agent,

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { tursoClient } from "../../../utils/db/client";
-import { processEventStream } from "../../../utils/analytics/processEventStream";
-import { getCurrentVisit } from "../../../utils/analytics/getCurrentVisit";
+import { processEventStream } from "../../../utils/visit/processEventStream";
+import { getCurrentVisit } from "../../../utils/visit/getCurrentVisit";
 import type { EventPayload } from "../../../types";
 
 export const POST: APIRoute = async ({ request, params }) => {

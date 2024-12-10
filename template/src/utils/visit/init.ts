@@ -10,7 +10,7 @@ import {
   loading,
   referrer,
 } from "../../store/auth";
-import { syncVisit } from "../analytics/syncVisit.ts";
+import { syncVisit } from "./syncVisit.ts";
 import { JWT_LIFETIME } from "../../constants";
 
 export async function init() {

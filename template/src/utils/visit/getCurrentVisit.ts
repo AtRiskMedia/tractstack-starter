@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Client } from "@libsql/client";
-import { v4 as uuidv4 } from "uuid";
+import { ulid } from "ulid";
 
 interface VisitContext {
   fingerprint_id: string;
@@ -21,7 +21,7 @@ export async function getCurrentVisit(client: Client): Promise<VisitContext> {
 }
 
 async function getFingerprint(client: Client): Promise<string> {
-  const fingerprintId = uuidv4();
+  const fingerprintId = ulid();
 
   await client.execute({
     sql: "INSERT INTO fingerprints (id) VALUES (?)",
@@ -32,7 +32,7 @@ async function getFingerprint(client: Client): Promise<string> {
 }
 
 async function createVisit(client: Client, fingerprint_id: string): Promise<string> {
-  const visitId = uuidv4();
+  const visitId = ulid();
 
   await client.execute({
     sql: `INSERT INTO visits (id, fingerprint_id, campaign_id) 
