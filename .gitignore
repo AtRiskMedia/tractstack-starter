@@ -23,6 +23,7 @@ playground/config/init.json
 
 # public
 playground/public/styles/frontend.css
+playground/public/images
 
 # macOS-specific files
 .DS_Store
