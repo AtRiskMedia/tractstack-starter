@@ -1,0 +1,13 @@
+{
+  "WORDMARK_MODE": "default",
+  "BRAND_COLOURS": "0f1912,f6f4f3,cfae97,ded2c3,24423c,a8cd20,452a3d,f3f5f6",
+  "OPEN_DEMO": false,
+  "STYLES_VER": "20",
+  "HOME_SLUG": "hello",
+  "TRACTSTACK_HOME_SLUG": "hello",
+  "SITE_URL": "https://you.com",
+  "SLOGAN": "ok",
+  "FOOTER": "ok",
+  "SITE_INIT": true,
+  "GTAG": ""
+}

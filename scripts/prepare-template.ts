@@ -21,6 +21,7 @@ const TEMPLATE_DIR = path.join(ROOT_DIR, "template");
 const CORE_FILES = [
   "src",
   "public",
+  "config",
   ".prettierrc",
   ".prettierignore",
   "astro.config.mjs",
@@ -34,7 +35,8 @@ const CORE_FILES = [
 // Paths to exclude from copying
 const EXCLUDED_PATHS = [
   "public/styles/frontend.css",
-  "public/images"
+  "public/images",
+  "config/init.json"
 ];
 
 async function copyWithExclusions(src: string, dest: string) {

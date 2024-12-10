@@ -1,0 +1,4 @@
+{
+  "LOCAL_DB_INIT": false,
+  "TURSO_DB_INIT": true
+}
