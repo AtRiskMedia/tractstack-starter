@@ -54,6 +54,31 @@ const DesignNewPane = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const allStarterDesigns = [
+    ...paneDesigns($theme ?? PUBLIC_THEME, "default").filter((p) => p.type === "starter" && p.name),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "center").filter((p) => p.type === "starter" && p.name),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumn").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "defaultEmpty").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "centerEmpty").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumnEmpty").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "square").filter((p) => p.type === "starter" && p.name),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "16x9").filter((p) => p.type === "starter" && p.name),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "squareBordered").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+    ...paneDesigns($theme ?? PUBLIC_THEME, "16x9Bordered").filter(
+      (p) => p.type === "starter" && p.name
+    ),
+  ];
+
   const filteredDesigns =
     query === ""
       ? activePaneDesigns
@@ -114,31 +139,30 @@ const DesignNewPane = ({
 
   const changeMode = (newMode: ModeType) => {
     setMode(newMode as ModeType);
-    //if (newMode === `design`) {
-    //  console.log(`available`,
-    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)
-    //  )
-    //  setActivePaneDesigns(
-    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)
-    //  );
-    //  setSelectedDesign(
-    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `starter`)[0]
-    //  );
-    //} else if (newMode === `break`) {
-    //  setActivePaneDesigns(
-    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)
-    //  );
-    //  setSelectedDesign(
-    //    paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)[0]
-    //  );
-    //} else if (newMode === `codehook`) {
-    //  // Just switch mode - codehook already selected
-    //  setSelectedDesign(null);
-    //  setActivePaneDesigns([]);
-    //} else {
-    //  setActivePaneDesigns(reusePaneDesigns);
-    //  setSelectedDesign(reusePaneDesigns[0]);
-    //}
+    if (newMode === `design`) {
+      const newDesigns: PaneDesign[] = Array.from(
+        new Map(allStarterDesigns.map((design) => [design.name, design])).values()
+      ).sort((a, b) => {
+        // Convert priority to number and sort in ascending order
+        return (Number(a.priority) || 0) - (Number(b.priority) || 0);
+      });
+      setActivePaneDesigns(newDesigns);
+      setSelectedDesign(newDesigns[0]);
+    } else if (newMode === `break`) {
+      setActivePaneDesigns(
+        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)
+      );
+      setSelectedDesign(
+        paneDesigns($theme, `default`).filter((p: PaneDesign) => p.type === `break`)[0]
+      );
+    } else if (newMode === `codehook`) {
+      // Just switch mode - codehook already selected
+      setSelectedDesign(null);
+      setActivePaneDesigns([]);
+    } else {
+      setActivePaneDesigns(reusePaneDesigns);
+      setSelectedDesign(reusePaneDesigns[0]);
+    }
     setCurrentIndex(0);
     setQuery(``);
   };
@@ -148,38 +172,6 @@ const DesignNewPane = ({
       let newDesigns: PaneDesign[];
 
       if (mode === "design") {
-        const allStarterDesigns = [
-          ...paneDesigns($theme ?? PUBLIC_THEME, "default").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "center").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumn").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "defaultEmpty").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "centerEmpty").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "onecolumnEmpty").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "square").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "16x9").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "squareBordered").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-          ...paneDesigns($theme ?? PUBLIC_THEME, "16x9Bordered").filter(
-            (p) => p.type === "starter" && p.name
-          ),
-        ];
         newDesigns = Array.from(
           new Map(allStarterDesigns.map((design) => [design.name, design])).values()
         ).sort((a, b) => {
