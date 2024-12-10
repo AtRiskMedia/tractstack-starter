@@ -56,7 +56,7 @@ export default function BrandStep({
         footer: initConfig.FOOTER || "",
         brandColors:
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
-        gtag: initConfig.GTAG || "",
+        gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
       };
 
       // Set initial values and fill in defaults for missing ones

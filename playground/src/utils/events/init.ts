@@ -10,6 +10,7 @@ import {
   loading,
   referrer,
 } from "../../store/auth";
+import { syncVisit } from "../analytics/syncVisit.ts";
 import { JWT_LIFETIME } from "../../constants";
 
 export async function init() {
@@ -110,27 +111,13 @@ export async function init() {
   };
   referrer.set(ref);
 
-  // remembers session for 75 minutes across tabs;
-  // or when consent has been given
-  // must pass utmSource and fingerprint if avail with consent
-  //const settings =
-  //  (lastActive > Date.now() - JWT_LIFETIME * 5 || authPayload?.consent === "1") && authPayload?.key
-  //    ? {
-  //        fingerprint: authPayload.key,
-  //        encryptedCode: authPayload?.encryptedCode,
-  //        encryptedEmail: authPayload?.encryptedEmail,
-  //        referrer: ref,
-  //      }
-  //    : { referrer: ref };
-  console.log(`conciergeSync in init.ts NOT WIRED UP`);
-  const conciergeSync = {
-    fingerprint: ``,
-    neo4jEnabled: false,
-    firstname: ``,
-    lastname: ``,
-    knownLead: false,
-    auth: false,
-  };
+  const conciergeSync = await syncVisit({
+    fingerprint: authPayload?.key,
+    encryptedCode: authPayload?.encryptedCode,
+    encryptedEmail: authPayload?.encryptedEmail,
+    referrer: ref,
+  });
+
   if (conciergeSync?.fingerprint) {
     auth.setKey(`key`, conciergeSync.fingerprint);
   }

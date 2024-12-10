@@ -752,6 +752,11 @@ export interface Current {
   parentTitle?: string;
 }
 
+export interface VisitContext {
+  fingerprint_id: string;
+  visit_id: string;
+}
+
 export type EventStream = {
   id: string;
   type: string;
@@ -763,7 +768,21 @@ export type EventStream = {
   title?: string;
   targetSlug?: string;
   isContextPane?: string;
+  object?: string | boolean;
 };
+
+export interface EventPayload {
+  events: EventStream[];
+  referrer?: {
+    httpReferrer?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+  };
+  visit: VisitContext;
+}
 
 export type EnvSettingType = "string" | "boolean" | "number" | "string[]";
 

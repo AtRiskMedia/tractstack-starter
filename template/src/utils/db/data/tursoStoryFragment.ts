@@ -71,7 +71,7 @@ export async function cleanTursoStoryFragment(rows: Row[], config: Config) {
             [key: number]: ResourceDatum[];
           } = {};
           const perCodeHookResourceCategory: { [key: number]: string[] } = {};
-          const setOfAllResourceCategory: Set<string[]> = new Set();
+          const setOfAllResourceCategory = new Set<string>();
           const perCodeHookOptions: { [key: number]: string } = {};
           panesPayload?.forEach((p: PaneDatum, idx: number) => {
             if (p?.optionsPayload?.codeHook?.options) {
@@ -91,7 +91,10 @@ export async function cleanTursoStoryFragment(rows: Row[], config: Config) {
 
           // check for HeaderWidget resources
           const headerWidgetResourcesCategory = config?.init?.HEADER_WIDGET_RESOURCE_CATEGORY || ``;
-          for (const str of headerWidgetResourcesCategory.split(`|`)) {
+          for (const str of (typeof headerWidgetResourcesCategory === `string`
+            ? headerWidgetResourcesCategory
+            : ``
+          ).split(`|`)) {
             setOfAllResourceCategory.add(str);
           }
 
@@ -117,7 +120,12 @@ export async function cleanTursoStoryFragment(rows: Row[], config: Config) {
             resources: codeHooksResourcePayload,
             headerWidget: codeHooksResourcePayload?.filter(
               (resource) =>
-                headerWidgetResourcesCategory.split(`|`).includes(resource?.category || ``) || []
+                (typeof headerWidgetResourcesCategory === `string`
+                  ? headerWidgetResourcesCategory
+                  : ``
+                )
+                  .split(`|`)
+                  .includes(resource?.category || ``) || []
             ),
           };
 
