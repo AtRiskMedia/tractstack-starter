@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@nanostores/react";
+import { ulid } from "ulid";
 import {
   initWizardStore,
   setCurrentStep,
@@ -82,6 +83,12 @@ export default function InitWizard({
   // Central handler for all configuration updates
   const handleConfigUpdate = useCallback(
     async (step: InitStep, updates: Record<string, unknown>) => {
+      // Check if we need to generate a JWT secret
+      const currentJwtSecret = configState.current?.init?.PRIVATE_JWT_SECRET;
+      if (!currentJwtSecret || currentJwtSecret.length === 0) {
+        updates.PRIVATE_JWT_SECRET = ulid();
+      }
+
       setConfigState((prev) => {
         const newStepChanges = {
           ...prev.stepChanges,
@@ -125,7 +132,7 @@ export default function InitWizard({
         setIsProcessing(false);
       }
     },
-    []
+    [configState]
   );
 
   // Central save handler

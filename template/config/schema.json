@@ -31,6 +31,27 @@
     },
     "file_markdown": {
       "sql": "CREATE TABLE IF NOT EXISTS file_markdown (id TEXT PRIMARY KEY, file_id TEXT NOT NULL REFERENCES file(id), markdown_id TEXT NOT NULL REFERENCES markdown(id), UNIQUE(file_id, markdown_id))"
+    },
+    "visits": {
+      "sql": "CREATE TABLE IF NOT EXISTS visits (id TEXT PRIMARY KEY, fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), campaign_id TEXT REFERENCES campaigns(id), merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "fingerprints": {
+      "sql": "CREATE TABLE IF NOT EXISTS fingerprints (id TEXT PRIMARY KEY, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "campaigns": {
+      "sql": "CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, merged TEXT, source TEXT, medium TEXT, term TEXT, content TEXT, http_referrer TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "actions": {
+      "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, parent_id TEXT REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "corpus": {
+      "sql": "CREATE TABLE IF NOT EXISTS corpus (id TEXT PRIMARY KEY, object_name TEXT NOT NULL, object_id TEXT NOT NULL, object_type TEXT NOT NULL, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "parents": {
+      "sql": "CREATE TABLE IF NOT EXISTS parents (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), parent_id TEXT NOT NULL REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "heldbeliefs": {
+      "sql": "CREATE TABLE IF NOT EXISTS heldbeliefs (id TEXT PRIMARY KEY, belief_id TEXT NOT NULL REFERENCES corpus(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, object TEXT, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     }
   },
   "indexes": [
@@ -42,6 +63,17 @@
     "CREATE INDEX IF NOT EXISTS idx_file_pane_pane_id ON file_pane(pane_id)",
     "CREATE INDEX IF NOT EXISTS idx_file_markdown_file_id ON file_markdown(file_id)",
     "CREATE INDEX IF NOT EXISTS idx_file_markdown_markdown_id ON file_markdown(markdown_id)",
-    "CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON pane(markdown_id)"
+    "CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON pane(markdown_id)",
+    "CREATE INDEX IF NOT EXISTS idx_visits_fingerprint_id ON visits(fingerprint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_visits_campaign_id ON visits(campaign_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_object_id ON actions(object_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_visit_id ON actions(visit_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_fingerprint_id ON actions(fingerprint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_parent_id ON actions(parent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_parents_object_id ON parents(object_id)",
+    "CREATE INDEX IF NOT EXISTS idx_parents_parent_id ON parents(parent_id)",
+    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_belief_id ON heldbeliefs(belief_id)",
+    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_corpus_object_id ON corpus(object_id)"
   ]
 }
