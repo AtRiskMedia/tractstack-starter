@@ -112,22 +112,18 @@ const processClassesForViewports = (
   const tablet = processForViewport(1);
   const desktop = processForViewport(2);
   const all = mobile.map((_, index) => {
-    const mobileClasses = mobile[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
-    const tabletClasses = tablet[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
-    const desktopClasses = desktop[index].replace(/(xs:|md:|xl:)/g, "").split(" ");
-
+    const mobileClasses = mobile[index].split(" ");
+    const tabletClasses = tablet[index].split(" ");
+    const desktopClasses = desktop[index].split(" ");
     const combinedClasses = new Set(mobileClasses);
-
     tabletClasses.forEach((cls) => {
-      if (!mobileClasses.includes(cls)) combinedClasses.add(`md:${cls}`);
+      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))) combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
     });
-
     desktopClasses.forEach((cls) => {
-      if (!mobileClasses.includes(cls) && !tabletClasses.includes(cls)) {
-        combinedClasses.add(`xl:${cls}`);
+      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")) && !tabletClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))) {
+        combinedClasses.add(`xl:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
       }
     });
-
     return Array.from(combinedClasses).join(" ");
   });
   return [
