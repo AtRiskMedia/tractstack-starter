@@ -17,7 +17,13 @@ export const Impression = ({
 }) => {
   const thisButtonPayload = lispLexer(payload.actionsLisp);
   const actionPayload = preParseAction(thisButtonPayload, slug, isContext, config);
-  const event = preParseImpression(payload.id, payload.title, current.get().id, thisButtonPayload);
+  const event = preParseImpression(
+    payload.id,
+    payload.title,
+    current.get().id,
+    thisButtonPayload,
+    config
+  );
   const pushEvent = function (): void {
     if (event) events.set([...events.get(), event]);
   };

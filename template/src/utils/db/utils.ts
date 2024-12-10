@@ -23,6 +23,7 @@ import type {
   MenuDatum,
   FileDatum,
   TursoQuery,
+  Config,
 } from "../../types.ts";
 import type { ResultSet } from "@libsql/client";
 
@@ -256,7 +257,10 @@ export async function getTractStackIdBySlug(slug: string): Promise<string | null
   }
 }
 
-export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmentDatum | null> {
+export async function getStoryFragmentBySlug(
+  slug: string,
+  config: Config
+): Promise<StoryFragmentDatum | null> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -343,7 +347,7 @@ export async function getStoryFragmentBySlug(slug: string): Promise<StoryFragmen
       args: [slug],
     });
 
-    const storyfragments = await cleanTursoStoryFragment(rows);
+    const storyfragments = await cleanTursoStoryFragment(rows, config);
     const storyfragment = storyfragments?.at(0);
     if (storyfragment) return storyfragment;
     return null;

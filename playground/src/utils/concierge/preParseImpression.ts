@@ -1,12 +1,24 @@
-//import type {LispTokens} from '../../types.ts';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const preParseImpression = (id: string, title: string, parentId: string, payload: any) => {
+import type { /* LispTokens, */ Config } from "../../types.ts";
+
+export const preParseImpression = (
+  id: string,
+  title: string,
+  parentId: string,
+  payload: any,
+  config: Config
+) => {
   const thisPayload = (payload && payload[0]) || false;
   const command = (thisPayload && thisPayload[0] && thisPayload[0][0]) || null;
   const parameters = (thisPayload && thisPayload[0] && thisPayload[0][1]) || null;
   const parameterOne = (parameters && parameters[0]) || null;
   const parameterTwo = (parameters && parameters[1]) || null;
   //const parameterThree = (parameters && parameters[2]) || null;
+
+  if (!config?.init?.HOME_SLUG) {
+    console.log(`Site misconfiguration: HOME_SLUG not found`);
+    return null;
+  }
 
   switch (command) {
     case `goto`: {
@@ -19,7 +31,7 @@ export const preParseImpression = (id: string, title: string, parentId: string, 
             title,
             type: `Impression`,
             verb: `CLICKED`,
-            targetSlug: import.meta.env.PUBLIC_HOME,
+            targetSlug: config?.init?.HOME_SLUG,
           };
 
         case `storyFragment`:

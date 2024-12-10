@@ -30,7 +30,7 @@ if (!isValidContentPath(lookup)) {
 }
 
 // valid datum?
-const storyfragment = await getStoryFragmentBySlug(lookup);
+const storyfragment = await getStoryFragmentBySlug(lookup, config);
 if (!storyfragment) {
   return new Response(null, {
     status: 404,

@@ -4,6 +4,7 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { panesVisible, showImpressions } from "../../../store/events";
 import { useInterval } from "../../../utils/common/useInterval";
 import { Impression } from "./Impression";
+import { IMPRESSIONS_DELAY } from "../../../constants";
 import type { Config, ImpressionDatum } from "../../../types";
 
 const ImpressionWrapper = ({
@@ -27,18 +28,15 @@ const ImpressionWrapper = ({
     undefined
   );
 
-  useInterval(
-    () => {
-      if (activeImpressions.length > offset + 1) {
-        setCurrentImpression(activeImpressions[offset]);
-        setOffset(offset + 1);
-      } else {
-        setCurrentImpression(activeImpressions[0]);
-        setOffset(0);
-      }
-    },
-    import.meta.env.PUBLIC_IMPRESSIONS_DELAY || 22000
-  );
+  useInterval(() => {
+    if (activeImpressions.length > offset + 1) {
+      setCurrentImpression(activeImpressions[offset]);
+      setOffset(offset + 1);
+    } else {
+      setCurrentImpression(activeImpressions[0]);
+      setOffset(0);
+    }
+  }, IMPRESSIONS_DELAY);
 
   useEffect(() => {
     // these are the panes to watch for from inView

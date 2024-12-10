@@ -1,7 +1,7 @@
-//import type {LispTokens} from '../../types.ts';
+import type { /* LispTokens, */ Config } from "../../types.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export const preParseClicked = (id: string, payload: any) => {
+export const preParseClicked = (id: string, payload: any, config: Config) => {
   const thisPayload = (payload && payload[0]) || false;
   const command = (thisPayload && thisPayload[0] && thisPayload[0][0]) || null;
   const parameters = (thisPayload && thisPayload[0] && thisPayload[0][1]) || null;
@@ -9,16 +9,21 @@ export const preParseClicked = (id: string, payload: any) => {
   const parameterTwo = (parameters && parameters[1]) || null;
   //const parameterThree = (parameters && parameters[2]) || null;
 
+  if (!config?.init?.HOME_SLUG) {
+    console.log(2, config);
+    console.log(`Site misconfiguration: HOME_SLUG not found`);
+    return null;
+  }
+
   switch (command) {
     case `goto`: {
       switch (parameterOne) {
         case `home`:
-          console.log(`preParseClicked NEEDS CONFIG`);
           return {
             id: id,
             type: `PaneClicked`,
             verb: `CLICKED`,
-            targetSlug: import.meta.env.PUBLIC_HOME,
+            targetSlug: config?.init?.HOME_SLUG,
           };
 
         case `storyFragment`:

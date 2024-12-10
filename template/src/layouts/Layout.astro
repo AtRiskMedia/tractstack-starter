@@ -33,11 +33,10 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 
-const googleSiteVerification = config?.init?.GOOGLE_SITE_VERIFICATION || false;
-console.log(`MUST IMPLEMENT GTAG in init.json`);
+const gtag = config?.init?.GTAG || false;
 const gtagUrl =
-  typeof googleSiteVerification === `string` && googleSiteVerification.length > 1
-    ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
+  typeof gtag === `string` && gtag.length > 1
+    ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
     : null;
 
 const contentMap: ContentMap[] = await getContentMap();
@@ -49,7 +48,7 @@ const contentMap: ContentMap[] = await getContentMap();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <link rel="canonical" href={config?.init?.SITE_URL + canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
@@ -96,24 +95,26 @@ const contentMap: ContentMap[] = await getContentMap();
 
     <!-- Google Analytics -->
     {gtagUrl && <script async src={gtagUrl} is:inline />}
-    <script is:inline define:vars={{ googleSiteVerification }}>
-      // Define gtag function type
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        window.dataLayer.push(arguments);
-      }
-      window.gtag = gtag;
-
-      document.addEventListener("astro:page-load", () => {
-        if (window.gtag) {
-          gtag("js", new Date());
-          gtag("config", googleSiteVerification, {
-            page_title: document.title,
-            page_path: window.location.pathname,
-            page_location: window.location.href,
-          });
+    <script is:inline define:vars={{ gtag }}>
+      if (gtag) {
+        // Define gtag function type
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          window.dataLayer.push(arguments);
         }
-      });
+        window.gtag = gtag;
+
+        document.addEventListener("astro:page-load", () => {
+          if (window.gtag) {
+            gtag("js", new Date());
+            gtag("config", gtag, {
+              page_title: document.title,
+              page_path: window.location.pathname,
+              page_location: window.location.href,
+            });
+          }
+        });
+      }
     </script>
 
     <!-- Tract Stack Concierge -->

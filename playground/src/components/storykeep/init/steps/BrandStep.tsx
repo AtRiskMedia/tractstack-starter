@@ -32,6 +32,7 @@ export default function BrandStep({
     slogan: "",
     footer: "",
     brandColors: knownBrand.default,
+    gtag: "",
   });
 
   const [initialValues, setInitialValues] = useState({
@@ -39,6 +40,7 @@ export default function BrandStep({
     slogan: "",
     footer: "",
     brandColors: knownBrand.default,
+    gtag: "",
   });
 
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
@@ -54,6 +56,7 @@ export default function BrandStep({
         footer: initConfig.FOOTER || "",
         brandColors:
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+        gtag: initConfig.GTAG || "",
       };
 
       // Set initial values and fill in defaults for missing ones
@@ -122,6 +125,9 @@ export default function BrandStep({
       if (currentValues.brandColors !== initialValues.brandColors) {
         updates.BRAND_COLOURS = currentValues.brandColors;
       }
+      if (currentValues.gtag !== initialValues.gtag) {
+        updates.GTAG = currentValues.gtag;
+      }
 
       // Only update if there are changes
       if (Object.keys(updates).length > 0) {
@@ -185,6 +191,20 @@ export default function BrandStep({
               className={commonInputClass}
               required
             />
+          </label>
+
+          <label className="block">
+            <span className="text-mydarkgrey font-bold">Google Analytics ID</span>
+            <input
+              type="text"
+              value={currentValues.gtag}
+              onChange={(e) => setCurrentValues((prev) => ({ ...prev, gtag: e.target.value }))}
+              placeholder="G-XXXXXXXXXX"
+              className={commonInputClass}
+            />
+            <span className="text-sm text-mydarkgrey mt-1 block">
+              Optional: Enter your Google Analytics 4 Measurement ID
+            </span>
           </label>
 
           <div className="space-y-2">

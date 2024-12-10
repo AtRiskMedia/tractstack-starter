@@ -12,9 +12,10 @@ import type {
   PaneFileNode,
   FileNode,
   TursoFileNode,
+  Config,
 } from "../../../types";
 
-export async function cleanTursoStoryFragment(rows: Row[]) {
+export async function cleanTursoStoryFragment(rows: Row[], config: Config) {
   if (!rows.length) return [];
 
   const storyfragments: Promise<(StoryFragmentDatum | null)[]> = (async () => {
@@ -89,9 +90,7 @@ export async function cleanTursoStoryFragment(rows: Row[]) {
           });
 
           // check for HeaderWidget resources
-          console.log(`cleanTursoStoryFragment on HEADER_WIDGET NEEDS CONFIG`);
-          const headerWidgetResourcesCategory =
-            import.meta.env.HEADER_WIDGET_RESOURCE_CATEGORY || ``;
+          const headerWidgetResourcesCategory = config?.init?.HEADER_WIDGET_RESOURCE_CATEGORY || ``;
           for (const str of headerWidgetResourcesCategory.split(`|`)) {
             setOfAllResourceCategory.add(str);
           }

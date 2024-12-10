@@ -3,6 +3,7 @@ import { preParseClicked } from "../../../utils/concierge/preParseClicked";
 import { preParseBunny } from "../../../utils/concierge/preParseBunny";
 import { events } from "../../../store/events";
 import type { MouseEvent } from "react";
+import type { Config } from "../../../types";
 
 export const PlayButton = ({ className = "" }) => {
   return (
@@ -30,6 +31,7 @@ export function AstToButton({
   targetUrl,
   paneId,
   slug,
+  config,
 }: {
   text: string;
   className: string;
@@ -37,9 +39,10 @@ export function AstToButton({
   targetUrl: string;
   paneId: string;
   slug: string;
+  config: Config;
 }) {
   const bunny = preParseBunny(callbackPayload);
-  const event = preParseClicked(paneId, callbackPayload);
+  const event = preParseClicked(paneId, callbackPayload, config);
 
   const pushEvent = function (): void {
     if (bunny) {
