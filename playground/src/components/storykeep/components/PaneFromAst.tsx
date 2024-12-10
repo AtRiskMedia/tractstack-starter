@@ -225,7 +225,7 @@ const ImageWrapper = ({
         outerIdx={outerIdx}
         idx={idx}
         markdownLookup={markdownLookup}
-        ignoreDragNDrop={ignoreDragNDrop}
+        ignoreDragNDrop={true}
       >
         {children}
       </EditableInnerElementWrapper>

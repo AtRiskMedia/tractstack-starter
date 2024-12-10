@@ -55,13 +55,20 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
         ? typeof dragShape.markdownLookup.codeItemsLookup[dragShape.outerIdx][dragShape.idx] === `number`
         : false;
 
-    if (dragShape.idx !== null && !isWidget) {
+    const isImage =
+      typeof dragShape.idx === `number` && typeof dragShape.markdownLookup.imagesLookup[dragShape.outerIdx] !== `undefined`
+        ? typeof dragShape.markdownLookup.imagesLookup[dragShape.outerIdx][dragShape.idx] === `number`
+        : false;
+
+    const isListElement = isWidget || isImage;
+
+    if (dragShape.idx !== null && !isListElement) {
       // @ts-expect-error has children
       if(outerChildlren.children[dragShape.idx].children[0].type === "text") {
         tagName = "p"; // disguise as p for now if that's an inner text element in list
       }
     }
-    if(isWidget) {
+    if(isListElement) {
       allowTag = allowWidgetInsert(outerIdx, idx, markdownLookup);
     } else if(idx === null) { // skip inner list elements check for now
       allowTag = allowTagInsert(tagName, outerIdx, idx, markdownLookup);
