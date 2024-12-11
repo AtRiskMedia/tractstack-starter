@@ -5,7 +5,13 @@ import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { paneDesignType } from "@/store/storykeep.ts";
 import { paneDesigns } from "@/assets/paneDesigns.ts";
-import { type DesignType, type PaneDesign, type Theme, themes, type ViewportAuto } from "@/types.ts";
+import {
+  type DesignType,
+  type PaneDesign,
+  type Theme,
+  themes,
+  type ViewportAuto,
+} from "@/types.ts";
 import PanePreview from "@/components/storykeep/components/PanePreview.tsx";
 import { applyLayoutChange } from "@/utils/autoLayout.ts";
 
@@ -19,8 +25,8 @@ export type ChangeLayoutModalProps = {
 
 type PaneDesignResult = {
   theme: Theme;
-  panes: PaneDesign[]
-}
+  panes: PaneDesign[];
+};
 
 const getPaneDesigns = (paneType: DesignType, isOdd: boolean): PaneDesignResult[] => {
   console.log("get pane designs");
@@ -34,14 +40,14 @@ const getPaneDesigns = (paneType: DesignType, isOdd: boolean): PaneDesignResult[
     }
   });
   return designs;
-}
+};
 
 const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
   const [isOddPanes, setIsOddPanes] = useState(false);
 
   const paneType = useMemo<DesignType>(() => {
     const type = paneDesignType.get()[props.paneId]?.current || "copy";
-    if(type === "unknown") {
+    if (type === "unknown") {
       return "copy";
     }
     return type;
@@ -88,22 +94,20 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
             </div>
           </Switch.Group>
           <div className="grid items-stretch justify-stretch overflow-y-scroll grid-cols-6 gap-4 w-full">
-            {getPaneDesigns(paneType, isOddPanes)
-              .map((designs) => (
-                designs.panes.map(design => (
-                  <PanePreview
-                    key={`${design.id}-${isOddPanes}`}
-                    isSelected={false}
-                    onClick={() => {
-                      applyLayoutChange(props.paneId, design)
-                      props.onClose?.();
-                    }}
-                    theme={designs.theme}
-                    design={design}
-                  />
-                ))
+            {getPaneDesigns(paneType, isOddPanes).map((designs) =>
+              designs.panes.map((design) => (
+                <PanePreview
+                  key={`${design.id}-${isOddPanes}`}
+                  isSelected={false}
+                  onClick={() => {
+                    applyLayoutChange(props.paneId, design);
+                    props.onClose?.();
+                  }}
+                  theme={designs.theme}
+                  design={design}
+                />
               ))
-            }
+            )}
           </div>
         </div>
       }
