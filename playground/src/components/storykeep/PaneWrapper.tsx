@@ -94,7 +94,7 @@ const PaneWrapper = (props: {
   const isCodeHook = $paneCodeHook?.[id]?.current;
   const [paneElement, setPaneElement] = useState<HTMLDivElement | null>(null);
   const [changingLayout, setChangingLayout] = useState<boolean>(false);
-  const [changingMarkdown, setChanginMarkdown] = useState<boolean>(false);
+  const [changingMarkdown, setChangingMarkdown] = useState<boolean>(false);
 
   const paneRef = useCallback(
     (node: HTMLDivElement) => {
@@ -211,7 +211,7 @@ const PaneWrapper = (props: {
   }
 
   const onChangeMarkdownClicked = () => {
-    setChanginMarkdown(true);
+    setChangingMarkdown(true);
   }
 
   if (!isClient) return null;
@@ -257,7 +257,8 @@ const PaneWrapper = (props: {
                                               isContext={props.isContext}
                                               viewportKey={props.viewportKey}
                                               onClose={() => setChangingLayout(false)}/> }
-        {changingMarkdown && <ChangeMarkdownModal />}
+        {changingMarkdown && <ChangeMarkdownModal paneId={props.id}
+                                                  onClose={() => setChangingMarkdown(false)}/>}
         {toolMode === "settings" && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
             <div className="relative">
