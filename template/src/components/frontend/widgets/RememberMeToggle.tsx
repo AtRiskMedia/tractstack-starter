@@ -22,11 +22,11 @@ export const RememberMeToggle = () => {
       localStorage.removeItem("auth:active");
       localStorage.removeItem("auth:visitId");
       localStorage.removeItem("auth:knownCorpusIds");
-      
+
       // Clear user beliefs
       localStorage.removeItem("user");
       heldBeliefs.set([]);
-      
+
       // Clear the store values
       auth.setKey("beliefs", undefined);
       auth.setKey("encryptedCode", undefined);

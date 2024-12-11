@@ -204,7 +204,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
         // Fetch held beliefs
         const { rows: beliefRows } = await client.execute({
-  sql: `
+          sql: `
     WITH latest_fingerprint AS (
       SELECT f.id as fingerprint_id
       FROM fingerprints f
@@ -221,9 +221,9 @@ export const POST: APIRoute = async ({ request, params }) => {
     FROM heldbeliefs b
     JOIN corpus c ON b.belief_id = c.id
     JOIN latest_fingerprint lf ON b.fingerprint_id = lf.fingerprint_id`,
-  args: [rows[0].id], // lead_id
-});
-  
+          args: [rows[0].id], // lead_id
+        });
+
         result = {
           success: true,
           data: {
