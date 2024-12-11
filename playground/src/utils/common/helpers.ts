@@ -572,7 +572,7 @@ export async function getOptimizedImages(
   const optimizedImages: FileNode[] = await Promise.all(
     allFiles.map(async (f: TursoFileNode) => {
       // Remove /api prefix from URL
-      let optimizedSrc: string | null = null
+      let optimizedSrc: string | undefined = undefined;
       let cleanUrl = f.url.replace(/^\/api/, "");
       const cleanFile = !f.src_set
         ? f.url.replace(/^\/api/, "")
@@ -595,8 +595,7 @@ export async function getOptimizedImages(
         };
       }
 
-      if (!f.filename.endsWith(`svg`)
-      && f.src_set) {
+      if (!f.filename.endsWith(`svg`) && f.src_set) {
         const optimizedUrls = await getOptimizedImageSet(cleanUrl);
         optimizedSrc = optimizedUrls.length ? optimizedUrls.join(", ") : "/static.jpg";
         cleanUrl = optimizedUrls.length ? optimizedUrls[0].split(" ")[0] : "/static.jpg";
