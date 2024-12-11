@@ -1,182 +1,319 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
-import type { EventPayload } from "../../types";
+import type { EventPayload, EventStream, ContentMap } from "../../types";
 
-export async function processEventStream(client: Client, payload: EventPayload) {
-  const { events, referrer, visit } = payload;
-  const { fingerprint_id, visit_id } = visit;
+function debugEventProcessing(events: EventStream[], contentMap: ContentMap[]) {
+  const eventNodes = new Set(events.map((e) => e.id));
+  const parentNodes = new Set(events.filter((e) => e.parentId).map((e) => e.parentId));
+  const tractStackNodes = new Set(
+    contentMap.filter((c) => c.type === "TractStack").map((c) => c.id)
+  );
 
-  console.log("Processing event payload:", {
-    eventCount: events.length,
-    types: [...new Set(events.map((e) => e.type))],
-    sample: events[0],
+  console.debug(`Event Processing Debug:
+    Total Events: ${events.length}
+    Content Map Entries: ${contentMap.length}
+    Unique Event Nodes: ${eventNodes.size}
+    Parent Nodes: ${parentNodes.size}
+    TractStack Nodes: ${tractStackNodes.size}
+    Event Types: ${Array.from(new Set(events.map((e) => e.type))).join(", ")}
+    Content Map Types: ${Array.from(new Set(contentMap.map((c) => c.type))).join(", ")}
+    
+    Missing Nodes: ${Array.from(eventNodes).filter((id) => !contentMap.find((c) => c.id === id))}
+    
+    Missing Parents: ${Array.from(parentNodes).filter((id) => !contentMap.find((c) => c.id === id))}
+
+    Missing TractStacks: ${Array.from(tractStackNodes).filter(
+      (id) => !contentMap.find((c) => c.id === id && c.type === "TractStack")
+    )}
+  `);
+  console.log(events);
+}
+
+function extractNeededCorpusData(
+  events: EventStream[],
+  fullContentMap?: ContentMap[]
+): ContentMap[] {
+  if (!fullContentMap || !Array.isArray(fullContentMap)) {
+    return [];
+  }
+
+  const neededIds = new Set<string>();
+  const neededParentIds = new Set<string>();
+  const tractStackIds = new Set<string>();
+
+  events.forEach((event) => {
+    if (event.type !== "Belief") {
+      neededIds.add(event.id);
+
+      if (event.parentId) {
+        neededParentIds.add(event.parentId);
+        const parent = fullContentMap.find((item) => item.id === event.parentId);
+        if (parent?.parentId) {
+          tractStackIds.add(parent.parentId);
+        }
+      }
+
+      if (event.targetId) {
+        neededIds.add(event.targetId);
+      }
+    }
   });
 
+  return fullContentMap.filter(
+    (item) => neededIds.has(item.id) || neededParentIds.has(item.id) || tractStackIds.has(item.id)
+  );
+}
+
+async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promise<void> {
+  // Group nodes by type
+  const tractStacks = contentMap.filter((node) => node.type === "TractStack");
+  const storyFragments = contentMap.filter((node) => node.type === "StoryFragment");
+  const panes = contentMap.filter((node) => node.type === "Pane");
+
+  // Process TractStacks first
+  for (const node of tractStacks) {
+    const query = {
+      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
+      args: [ulid(), node.id, node.type, node.title || "Unknown"],
+    };
+    console.log(query);
+    await client.execute(query);
+  }
+
+  // Then StoryFragments (which may depend on TractStacks)
+  for (const node of storyFragments) {
+    const insertQuery = {
+      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
+      args: [ulid(), node.id, node.type, node.title || "Unknown"],
+    };
+    console.log(insertQuery);
+    await client.execute(insertQuery);
+
+    if (node.parentId) {
+      const selectNodeQuery = {
+        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
+        args: [node.id, node.type],
+      };
+      console.log(selectNodeQuery);
+      const { rows: nodeRows } = await client.execute(selectNodeQuery);
+
+      const selectParentQuery = {
+        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'TractStack'",
+        args: [node.parentId],
+      };
+      console.log(selectParentQuery);
+      const { rows: parentRows } = await client.execute(selectParentQuery);
+
+      if (nodeRows.length > 0 && parentRows.length > 0) {
+        const parentQuery = {
+          sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
+          args: [ulid(), nodeRows[0].id, parentRows[0].id],
+        };
+        console.log(parentQuery);
+        await client.execute(parentQuery);
+      }
+    }
+  }
+
+  // Finally Panes (which may depend on StoryFragments)
+  for (const node of panes) {
+    const insertQuery = {
+      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
+      args: [ulid(), node.id, node.type, node.title || "Unknown"],
+    };
+    console.log(insertQuery);
+    await client.execute(insertQuery);
+
+    if (node.parentId) {
+      const selectNodeQuery = {
+        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
+        args: [node.id, node.type],
+      };
+      console.log(selectNodeQuery);
+      const { rows: nodeRows } = await client.execute(selectNodeQuery);
+
+      const selectParentQuery = {
+        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'StoryFragment'",
+        args: [node.parentId],
+      };
+      console.log(selectParentQuery);
+      const { rows: parentRows } = await client.execute(selectParentQuery);
+
+      if (nodeRows.length > 0 && parentRows.length > 0) {
+        const parentQuery = {
+          sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
+          args: [ulid(), nodeRows[0].id, parentRows[0].id],
+        };
+        console.log(parentQuery);
+        await client.execute(parentQuery);
+      }
+    }
+  }
+}
+
+async function processBeliefEvent(
+  client: Client,
+  event: EventStream,
+  visit_id: string,
+  fingerprint_id: string
+): Promise<void> {
+  // Use INSERT OR IGNORE for belief corpus entry
+  const beliefId = ulid();
+  const insertCorpusQuery = {
+    sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
+    args: [beliefId, event.id, "Belief", event.id],
+  };
+  console.log(insertCorpusQuery);
+  await client.execute(insertCorpusQuery);
+
+  // Get corpus ID for belief
+  const selectQuery = {
+    sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'Belief'",
+    args: [event.id],
+  };
+  console.log(selectQuery);
+  const { rows } = await client.execute(selectQuery);
+
+  const beliefCorpusId = rows[0].id;
+
+  // Always record an INTERACTED action
+  const interactedQuery = {
+    sql: `INSERT INTO actions (id, object_id, visit_id, fingerprint_id, verb)
+          VALUES (?, ?, ?, ?, 'INTERACTED')`,
+    args: [ulid(), beliefCorpusId, visit_id, fingerprint_id],
+  };
+  console.log(interactedQuery);
+  await client.execute(interactedQuery);
+
+  if (event.verb === "UNSET") {
+    const deleteQuery = {
+      sql: "DELETE FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
+      args: [beliefCorpusId, fingerprint_id],
+    };
+    console.log(deleteQuery);
+    await client.execute(deleteQuery);
+    return;
+  }
+
+  // Check for existing belief state
+  const checkBeliefQuery = {
+    sql: "SELECT verb, object FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
+    args: [beliefCorpusId, fingerprint_id],
+  };
+  console.log(checkBeliefQuery);
+  const { rows: existingBelief } = await client.execute(checkBeliefQuery);
+
+  if (existingBelief.length > 0) {
+    const updateQuery = {
+      sql: `UPDATE heldbeliefs 
+            SET verb = ?, object = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE belief_id = ? AND fingerprint_id = ?`,
+      args: [event.verb, event.object || null, beliefCorpusId, fingerprint_id],
+    };
+    console.log(updateQuery);
+    await client.execute(updateQuery);
+  } else {
+    const insertQuery = {
+      sql: `INSERT INTO heldbeliefs (id, belief_id, fingerprint_id, verb, object)
+            VALUES (?, ?, ?, ?, ?)`,
+      args: [ulid(), beliefCorpusId, fingerprint_id, event.verb, event.object || null],
+    };
+    console.log(insertQuery);
+    await client.execute(insertQuery);
+  }
+}
+
+export async function processEventStream(client: Client, payload: EventPayload) {
+  const { events, referrer, visit, contentMap: rawContentMap } = payload;
+  const { fingerprint_id, visit_id } = visit;
+
+  // Extract needed corpus data (excluding beliefs)
+  const contentMap = extractNeededCorpusData(events, rawContentMap);
+
+  // Debug output
+  debugEventProcessing(events, contentMap);
+
   // Handle campaign tracking
-  //const campaign_id: string | null = referrer?.utmCampaign
-  //  ?
-  if (referrer?.utmCampaign)
-    await processCampaign(client, {
-      name: referrer.utmCampaign,
-      source: referrer.utmSource,
-      medium: referrer.utmMedium,
-      term: referrer.utmTerm,
-      content: referrer.utmContent,
-      http_referrer: referrer.httpReferrer,
-    });
-  //: null;
+  let campaign_id: string | null = null;
+  if (referrer?.utmCampaign) {
+    const selectQuery = {
+      sql: "SELECT id FROM campaigns WHERE name = ?",
+      args: [referrer.utmCampaign],
+    };
+    console.log(selectQuery);
+    const { rows } = await client.execute(selectQuery);
+
+    if (rows.length > 0) {
+      campaign_id = rows[0].id as string;
+    } else {
+      campaign_id = ulid();
+      const insertQuery = {
+        sql: `INSERT INTO campaigns 
+              (id, name, source, medium, term, content, http_referrer)
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          campaign_id,
+          referrer.utmCampaign,
+          referrer.utmSource || null,
+          referrer.utmMedium || null,
+          referrer.utmTerm || null,
+          referrer.utmContent || null,
+          referrer.httpReferrer || null,
+        ],
+      };
+      console.log(insertQuery);
+      await client.execute(insertQuery);
+    }
+
+    if (campaign_id) {
+      const updateQuery = {
+        sql: "UPDATE visits SET campaign_id = ? WHERE id = ?",
+        args: [campaign_id, visit_id],
+      };
+      console.log(updateQuery);
+      await client.execute(updateQuery);
+    }
+  }
+
+  // Ensure all needed nodes exist first with proper hierarchy
+  if (contentMap.length) {
+    await ensureNodesExist(client, contentMap);
+  }
 
   // Process each event
   for (const event of events) {
     try {
-      switch (event.type) {
-        case "StoryFragment":
-        case "Pane":
-        case "Context": {
-          console.log("Processing content event:", {
-            eventId: event.id,
-            type: event.type,
-            parentId: event.parentId,
-            verb: event.verb,
-          });
-
-          console.log("Ensuring corpus entries:", {
-            objectId: event.id,
-            type: event.type,
-            parentId: event.parentId,
-            parentType: event.type === "Pane" ? "StoryFragment" : "TractStack",
-          });
-
-          // Ensure object exists in corpus
-          const eventId = ulid();
-          const objectCorpusId = await ensureCorpusEntry(client, event.id, event.type);
-
-          // If there's a parent, ensure it exists in corpus too
-          let parentCorpusId = null;
-          if (event.parentId) {
-            parentCorpusId = await ensureCorpusEntry(
-              client,
-              event.parentId,
-              event.type === "Pane" ? "StoryFragment" : "TractStack"
-            );
-          }
-
-          if (parentCorpusId) {
-            console.log("Parent relationship created:", {
-              objectId: objectCorpusId,
-              parentId: parentCorpusId,
-            });
-          }
-
-          await client.execute({
-            sql: `INSERT INTO actions 
-                  (id, object_id, visit_id, fingerprint_id, verb, parent_id)
-                  VALUES (?, ?, ?, ?, ?, ?)`,
-            args: [eventId, objectCorpusId, visit_id, fingerprint_id, event.verb, parentCorpusId],
-          });
-          break;
-        }
-
-        case "Belief": {
-          const newEventId = ulid();
-          const beliefCorpusId = await ensureCorpusEntry(client, event.id, "Belief");
-          // Convert any object value to string or null
-          const objectStr = event.object !== undefined ? String(event.object) : null;
-
-          if (event.verb === "UNSET") {
-            await client.execute({
-              sql: `DELETE FROM heldbeliefs 
-                    WHERE belief_id = ? AND fingerprint_id = ?`,
-              args: [beliefCorpusId, fingerprint_id],
-            });
-          } else {
-            const { rows } = await client.execute({
-              sql: `SELECT 1 FROM heldbeliefs 
-                    WHERE belief_id = ? AND fingerprint_id = ?`,
-              args: [beliefCorpusId, fingerprint_id],
-            });
-
-            if (rows.length > 0) {
-              await client.execute({
-                sql: `UPDATE heldbeliefs 
-                      SET verb = ?, object = ?, updated_at = CURRENT_TIMESTAMP 
-                      WHERE belief_id = ? AND fingerprint_id = ?`,
-                args: [event.verb, objectStr, beliefCorpusId, fingerprint_id],
-              });
-            } else {
-              await client.execute({
-                sql: `INSERT INTO heldbeliefs 
-                      (id, belief_id, fingerprint_id, verb, object)
-                      VALUES (?, ?, ?, ?, ?)`,
-                args: [newEventId, beliefCorpusId, fingerprint_id, event.verb, objectStr],
-              });
-            }
-          }
-          break;
-        }
+      if (event.type === "Belief") {
+        await processBeliefEvent(client, event, visit_id, fingerprint_id);
+        continue;
       }
+
+      // Get corpus ID for event
+      const selectQuery = {
+        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
+        args: [event.id, event.type],
+      };
+      console.log(selectQuery);
+      const { rows } = await client.execute(selectQuery);
+
+      if (rows.length === 0) {
+        console.error(`Missing corpus entry for event:`, event);
+        continue;
+      }
+
+      // Record the action
+      const actionQuery = {
+        sql: `INSERT INTO actions 
+              (id, object_id, visit_id, fingerprint_id, verb)
+              VALUES (?, ?, ?, ?, ?)`,
+        args: [ulid(), rows[0].id, visit_id, fingerprint_id, event.verb],
+      };
+      console.log(actionQuery);
+      await client.execute(actionQuery);
     } catch (error) {
       console.error(`Error processing event:`, event, error);
       throw error;
     }
   }
-}
-
-async function processCampaign(client: Client, campaign: any) {
-  // Check if campaign exists
-  const { rows } = await client.execute({
-    sql: "SELECT id FROM campaigns WHERE name = ?",
-    args: [campaign.name],
-  });
-
-  if (rows.length > 0) {
-    return rows[0].id;
-  }
-
-  // Create new campaign
-  const campaignId = ulid();
-  await client.execute({
-    sql: `INSERT INTO campaigns 
-          (id, name, source, medium, term, content, http_referrer) 
-          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      campaignId,
-      campaign.name,
-      campaign.source,
-      campaign.medium,
-      campaign.term,
-      campaign.content,
-      campaign.http_referrer,
-    ],
-  });
-
-  return campaignId;
-}
-
-async function ensureCorpusEntry(
-  client: Client,
-  objectId: string,
-  objectType: string,
-  objectName: string = ""
-): Promise<string> {
-  // Check if corpus entry exists
-  const { rows } = await client.execute({
-    sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
-    args: [objectId, objectType],
-  });
-
-  if (rows.length > 0) {
-    return rows[0].id as string;
-  }
-
-  // Create new corpus entry
-  const corpusId = ulid();
-  await client.execute({
-    sql: `INSERT INTO corpus (id, object_id, object_type, object_name)
-          VALUES (?, ?, ?, ?)`,
-    args: [corpusId, objectId, objectType, objectName],
-  });
-
-  return corpusId;
 }

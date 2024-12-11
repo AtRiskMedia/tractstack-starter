@@ -66,13 +66,13 @@ const contentMap: ContentMap[] = await getContentMap();
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={config.init.SITE_URL + canonicalURL} />
+    <meta property="og:url" content={config?.init?.SITE_URL + canonicalURL} />
     <meta property="og:image" content={socialImageWithVersion} />
     <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={config.init.SITE_URL + canonicalURL} />
+    <meta property="twitter:url" content={config?.init?.SITE_URL + canonicalURL} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />

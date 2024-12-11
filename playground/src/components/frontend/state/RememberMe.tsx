@@ -17,7 +17,8 @@ export const RememberMe = () => {
     if ($heldBeliefsAll.length) setActive(true);
   }, [$heldBeliefsAll, $authPayload]);
 
-  if (!import.meta.env.PROD || (!active && !consent)) return null;
+  if (!active && !consent) return null;
+
   if (!consent)
     return (
       <a

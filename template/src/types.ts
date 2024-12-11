@@ -396,7 +396,7 @@ export type ContentMap = {
   title: string;
   created: Date;
   changed: Date | null;
-  type: `StoryFragment` | `Pane`;
+  type: `StoryFragment` | `Pane` | `TractStack`;
   parentId?: string;
   parentSlug?: string;
   parentTitle?: string;
@@ -773,15 +773,9 @@ export type EventStream = {
 
 export interface EventPayload {
   events: EventStream[];
-  referrer?: {
-    httpReferrer?: string;
-    utmSource?: string;
-    utmMedium?: string;
-    utmCampaign?: string;
-    utmTerm?: string;
-    utmContent?: string;
-  };
+  referrer?: Referrer;
   visit: VisitContext;
+  contentMap?: ContentMap[];
 }
 
 export type EnvSettingType = "string" | "boolean" | "number" | "string[]";
@@ -957,4 +951,11 @@ export interface SignupProps {
   persona: string;
   prompt: string;
   clarifyConsent: boolean;
+}
+
+export interface ContactPersona {
+  id: string;
+  description: string;
+  title: string;
+  disabled?: boolean;
 }

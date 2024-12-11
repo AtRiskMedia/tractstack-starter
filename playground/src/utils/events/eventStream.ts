@@ -12,8 +12,7 @@ export function eventStream() {
         events.set([]);
         const result = await eventSync(payload);
         if (!result) {
-          console.log(`sync failed; events re-queued`);
-          events.set([...events.get(), ...payload]);
+          console.log(`sync failed; events dropped`);
         }
       }
     } catch (e) {

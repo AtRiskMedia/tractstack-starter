@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { cleanTursoResource } from "./data/tursoResource";
 import { cleanTursoPayload } from "./data/tursoPayload";
-import { cleanTursoContentMap } from "./data/tursoContentMap";
 import { cleanTursoStoryFragment } from "./data/tursoStoryFragment";
 import { cleanTursoContextPane } from "./data/tursoContextPane";
 import { cleanTursoFile } from "./data/tursoFile";
@@ -578,31 +577,96 @@ export async function getContentMap(): Promise<ContentMap[]> {
       return [];
     }
 
-    const [storyfragments, panes] = await Promise.all([
+    // Query for all three types together
+    const results = await Promise.all([
+      // Get TractStacks
+      client.execute(
+        `SELECT 
+          id, title, slug, 'TractStack' as type, NULL as parent_id, NULL as parent_title, NULL as parent_slug
+         FROM tractstack`
+      ),
+
+      // Get StoryFragments with TractStack info
       client.execute(
         `SELECT 
           sf.id AS id,
           sf.title AS title,
           sf.slug AS slug,
-          sf.created AS created,
-          sf.changed AS changed,
-          ts.id AS tractstack_id,
-          ts.title AS tractstack_title,
-          ts.slug AS tractstack_slug,
+          'StoryFragment' as type,
+          ts.id AS parent_id,
+          ts.title AS parent_title,
+          ts.slug AS parent_slug,
           GROUP_CONCAT(sp.pane_id) AS pane_ids
-          FROM 
-            storyfragment sf
-          JOIN 
-            tractstack ts ON sf.tractstack_id = ts.id
-          LEFT JOIN 
-            storyfragment_pane sp ON sf.id = sp.storyfragment_id
-          GROUP BY 
-            sf.id, sf.title, sf.slug, ts.id, ts.title, ts.slug`
+         FROM 
+          storyfragment sf
+          JOIN tractstack ts ON sf.tractstack_id = ts.id
+          LEFT JOIN storyfragment_pane sp ON sf.id = sp.storyfragment_id
+         GROUP BY 
+          sf.id, sf.title, sf.slug, ts.id, ts.title, ts.slug`
       ),
-      client.execute(`SELECT id, slug, title, is_context_pane, changed, created FROM pane`),
+
+      // Get Panes with StoryFragment info
+      client.execute(
+        `SELECT 
+          p.id, 
+          p.title, 
+          p.slug, 
+          'Pane' as type,
+          p.is_context_pane,
+          sf.id AS parent_id,
+          sf.title AS parent_title,
+          sf.slug AS parent_slug,
+          sf.tractstack_id AS tractstack_id
+         FROM pane p
+         LEFT JOIN storyfragment_pane sp ON p.id = sp.pane_id
+         LEFT JOIN storyfragment sf ON sp.storyfragment_id = sf.id`
+      ),
     ]);
 
-    return cleanTursoContentMap(storyfragments.rows, panes.rows);
+    const [tractStacks, storyFragments, panes] = results;
+
+    // Combine and transform all results
+    const contentMap: ContentMap[] = [
+      // Add TractStacks
+      ...tractStacks.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        type: "TractStack" as const,
+        created: new Date(), // You might want to add created field to tractstack table
+        changed: null,
+      })),
+
+      // Add StoryFragments
+      ...storyFragments.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        type: "StoryFragment" as const,
+        parentId: row.parent_id,
+        parentTitle: row.parent_title,
+        parentSlug: row.parent_slug,
+        panes: row.pane_ids?.split(",") || [],
+        created: new Date(row.created || Date.now()),
+        changed: row.changed ? new Date(row.changed) : null,
+      })),
+
+      // Add Panes
+      ...panes.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        type: "Pane" as const,
+        parentId: row.parent_id,
+        parentTitle: row.parent_title,
+        parentSlug: row.parent_slug,
+        isContextPane: row.is_context_pane === 1,
+        created: new Date(row.created || Date.now()),
+        changed: row.changed ? new Date(row.changed) : null,
+      })),
+    ];
+
+    return contentMap;
   } catch (error) {
     console.log("Unable to fetch content map:", error);
     return [];

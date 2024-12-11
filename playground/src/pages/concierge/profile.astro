@@ -1,0 +1,83 @@
+---
+import { getConfig, validateConfig } from "../../utils/core/config";
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/frontend/Header.astro";
+import Footer from "../../components/frontend/Footer.astro";
+import { InformationCircle } from "../../components/frontend/icons/InformationCircle";
+import { RememberMeToggle } from "../../components/frontend/widgets/RememberMeToggle";
+import { ProfileSwitch } from "../../components/frontend/profile/ProfileSwitch";
+import type { AuthStatus } from "../../types";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const gtag = config?.init?.GTAG || false;
+---
+
+<Layout
+  title="Configure your Session"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <Header
+    title="Configure your Session"
+    slug="profile"
+    isContext={false}
+    user={user}
+    config={config}
+  />
+  <main id="main-content">
+    <div class="px-6 font-main text-xl py-24">
+      <div class="max-w-3xl mx-auto">
+        <div class="space-y-6">
+          <p class="text-black">
+            This website has been &quot;pressed&quot; with Tract Stack. As you read and click around
+            it will open up like a choose-your-own adventure book.
+          </p>
+          <p class="text-black">
+            Without your consent, no personal information will be collected from your device.
+          </p>
+          <h3 class="text-xl pt-12 text-mydarkgrey text-sm inline-flex">
+            Allow Tract Stack to retain memory of your session and preferences
+            <span class="pl-2" title="We will use a few kilobytes of localStorage in your browser.">
+              <InformationCircle classes="w-5 h-5 text-mydarkgrey/50" />
+            </span>
+          </h3>
+          <RememberMeToggle client:load />
+          <ProfileSwitch client:load />
+
+          {
+            gtag ? (
+              <p class="pt-12 text-mydarkgrey">
+                <em>This site uses Google Analytics.</em> Please refer to
+                <a
+                  class="text-myblue underline hover:text-black"
+                  href="https://policies.google.com/technologies/partner-sites"
+                  target="_blank"
+                >
+                  Google privacy policy
+                </a>
+                .
+              </p>
+            ) : null
+          }
+        </div>
+        <div class="text-center pt-6
+      text-2xl md:text-3xl">
+          <a
+            href="/"
+            class="px-3.5 py-2.5 bg-myblack text-white rounded-lg hover:rotate-1 hover:bg-myorange"
+          >
+            Close
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer created={new Date()} slug="profile" isContext={false} config={config} />
+</Layout>

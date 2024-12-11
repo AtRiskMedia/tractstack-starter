@@ -76,12 +76,8 @@ export async function eventSync(payload: EventStream[]) {
   const apiPayload = {
     events,
     referrer: ref.httpReferrer !== `` ? ref : undefined,
+    contentMap: map,
   };
-
-  //if (!import.meta.env.PROD) {
-  //  console.log(`dev mode. skipping event pushPayload:`, apiPayload);
-  //  return true;
-  //}
 
   try {
     const response = await fetch("/api/turso/stream", {

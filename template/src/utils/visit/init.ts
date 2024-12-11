@@ -15,7 +15,7 @@ import { JWT_LIFETIME } from "../../constants";
 
 export async function init() {
   pageLoadTime.set(Date.now());
-  if (!import.meta.env.PROD || locked.get()) {
+  if (locked.get()) {
     return null;
   }
 
