@@ -554,7 +554,7 @@ async function getOptimizedImageSet(baseUrl: string): Promise<string[]> {
   const optimizedUrls = await Promise.all(
     sizes.map(async (size) => {
       const sizeUrl = baseUrl.replace(/(\.[^.]+)$/, `_${size}px$1`);
-      const optimizedSrc = await getOptimizedImage(sizeUrl);
+      const optimizedSrc = sizeUrl; //await getOptimizedImage(sizeUrl);
       return optimizedSrc ? `${optimizedSrc} ${size}w` : "";
     })
   );
@@ -572,12 +572,15 @@ export async function getOptimizedImages(
   const optimizedImages: FileNode[] = await Promise.all(
     allFiles.map(async (f: TursoFileNode) => {
       // Remove /api prefix from URL
-      const cleanUrl = f.url.replace(/^\/api/, "");
-      const baseUrl = `${cleanUrl}`;
+      let optimizedSrc: string | null = null
+      let cleanUrl = f.url.replace(/^\/api/, "");
+      const cleanFile = !f.src_set
+        ? f.url.replace(/^\/api/, "")
+        : f.url.replace(/^\/api/, "").replace(/(\.[^.]+)$/, "_1920px$1");
 
       // Check if file exists
       try {
-        await fs.access(path.join(process.cwd(), "public", cleanUrl));
+        await fs.access(path.join(process.cwd(), "public", cleanFile));
       } catch {
         // Return with default static image if file not found
         return {
@@ -592,22 +595,18 @@ export async function getOptimizedImages(
         };
       }
 
-      let src: string = baseUrl;
-      let optimizedSrc: string | undefined;
-
-      if (f.src_set) {
-        const optimizedUrls = await getOptimizedImageSet(baseUrl);
+      if (!f.filename.endsWith(`svg`)
+      && f.src_set) {
+        const optimizedUrls = await getOptimizedImageSet(cleanUrl);
         optimizedSrc = optimizedUrls.length ? optimizedUrls.join(", ") : "/static.jpg";
-        src = optimizedUrls.length ? optimizedUrls[0].split(" ")[0] : "/static.jpg";
-      } else {
-        optimizedSrc = (await getOptimizedImage(src)) || "/static.jpg";
+        cleanUrl = optimizedUrls.length ? optimizedUrls[0].split(" ")[0] : "/static.jpg";
       }
 
       return {
         id: f.id,
         filename: f.filename,
         altDescription: f.alt_description,
-        src,
+        src: cleanUrl,
         srcSet: f.src_set,
         paneId: paneId || f.paneId,
         markdown: f.markdown,
