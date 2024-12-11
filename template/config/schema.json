@@ -45,7 +45,7 @@
       "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, parent_id TEXT REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "corpus": {
-      "sql": "CREATE TABLE IF NOT EXISTS corpus (id TEXT PRIMARY KEY, object_name TEXT NOT NULL, object_id TEXT NOT NULL, object_type TEXT NOT NULL, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+      "sql": "CREATE TABLE IF NOT EXISTS corpus (id TEXT PRIMARY KEY, object_id TEXT NOT NULL, object_type TEXT NOT NULL, object_name TEXT NOT NULL, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, object_type))"
     },
     "parents": {
       "sql": "CREATE TABLE IF NOT EXISTS parents (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), parent_id TEXT NOT NULL REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, parent_id))"

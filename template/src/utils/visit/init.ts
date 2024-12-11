@@ -43,19 +43,13 @@ export async function init() {
 
   // register page view
   const cur = current.get();
-  if (cur.id && cur.slug && cur.title) {
-    const pageViewEvent = cur.parentId
-      ? {
-          id: cur.id,
-          parentId: cur.parentId,
-          type: `StoryFragment`,
-          verb: `PAGEVIEWED`,
-        }
-      : {
-          id: cur.id,
-          type: `Pane`,
-          verb: `PAGEVIEWED`,
-        };
+  if (cur.id && cur.slug && cur.title && cur.parentId) {
+    const pageViewEvent = {
+      id: cur.id,
+      parentId: cur.parentId,
+      type: `StoryFragment`,
+      verb: `PAGEVIEWED`,
+    };
     events.set([...events.get(), pageViewEvent]);
   }
 
@@ -72,13 +66,6 @@ export async function init() {
         verb: `ENTERED`,
       };
       events.set([...events.get(), enteredEvent]);
-    } else if (!internal && ref && cur?.id) {
-      const event = {
-        id: cur.id,
-        type: `Pane`,
-        verb: `ENTERED`,
-      };
-      events.set([...events.get(), event]);
     }
   }
 
@@ -91,8 +78,6 @@ export async function init() {
   auth.setKey(`active`, Date.now().toString());
   locked.set(true);
 
-  // otherwise no token, inactive, or soon inactive, get one
-  // check for utmParams
   const urlSearchParams = new URLSearchParams(window.location.search);
   const params = Object.fromEntries(urlSearchParams.entries());
   const httpReferrer = document.referrer;
@@ -113,6 +98,7 @@ export async function init() {
 
   const conciergeSync = await syncVisit({
     fingerprint: authPayload?.key,
+    visitId: authPayload?.visitId,
     encryptedCode: authPayload?.encryptedCode,
     encryptedEmail: authPayload?.encryptedEmail,
     referrer: ref,
@@ -120,9 +106,6 @@ export async function init() {
 
   if (conciergeSync?.fingerprint) {
     auth.setKey(`key`, conciergeSync.fingerprint);
-  }
-  if (conciergeSync?.neo4jEnabled) {
-    auth.setKey(`neo4jEnabled`, `1`);
   }
   if (conciergeSync?.firstname) {
     profile.set({

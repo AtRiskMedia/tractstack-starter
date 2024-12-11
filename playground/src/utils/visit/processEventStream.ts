@@ -3,13 +3,14 @@ import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
 import type { EventPayload, EventStream, ContentMap } from "../../types";
 
+const DEBUG = false;
+
 function debugEventProcessing(events: EventStream[], contentMap: ContentMap[]) {
   const eventNodes = new Set(events.map((e) => e.id));
   const parentNodes = new Set(events.filter((e) => e.parentId).map((e) => e.parentId));
   const tractStackNodes = new Set(
     contentMap.filter((c) => c.type === "TractStack").map((c) => c.id)
   );
-
   console.debug(`Event Processing Debug:
     Total Events: ${events.length}
     Content Map Entries: ${contentMap.length}
@@ -28,6 +29,7 @@ function debugEventProcessing(events: EventStream[], contentMap: ContentMap[]) {
     )}
   `);
   console.log(events);
+  console.log(``);
 }
 
 function extractNeededCorpusData(
@@ -77,7 +79,7 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
       sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
       args: [ulid(), node.id, node.type, node.title || "Unknown"],
     };
-    console.log(query);
+    if (DEBUG) console.log(query);
     await client.execute(query);
   }
 
@@ -87,7 +89,7 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
       sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
       args: [ulid(), node.id, node.type, node.title || "Unknown"],
     };
-    console.log(insertQuery);
+    if (DEBUG) console.log(insertQuery);
     await client.execute(insertQuery);
 
     if (node.parentId) {
@@ -95,14 +97,14 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
         sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
         args: [node.id, node.type],
       };
-      console.log(selectNodeQuery);
+      if (DEBUG) console.log(selectNodeQuery);
       const { rows: nodeRows } = await client.execute(selectNodeQuery);
 
       const selectParentQuery = {
         sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'TractStack'",
         args: [node.parentId],
       };
-      console.log(selectParentQuery);
+      if (DEBUG) console.log(selectParentQuery);
       const { rows: parentRows } = await client.execute(selectParentQuery);
 
       if (nodeRows.length > 0 && parentRows.length > 0) {
@@ -110,7 +112,7 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
           sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
           args: [ulid(), nodeRows[0].id, parentRows[0].id],
         };
-        console.log(parentQuery);
+        if (DEBUG) console.log(parentQuery);
         await client.execute(parentQuery);
       }
     }
@@ -122,7 +124,7 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
       sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
       args: [ulid(), node.id, node.type, node.title || "Unknown"],
     };
-    console.log(insertQuery);
+    if (DEBUG) console.log(insertQuery);
     await client.execute(insertQuery);
 
     if (node.parentId) {
@@ -130,14 +132,14 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
         sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
         args: [node.id, node.type],
       };
-      console.log(selectNodeQuery);
+      if (DEBUG) console.log(selectNodeQuery);
       const { rows: nodeRows } = await client.execute(selectNodeQuery);
 
       const selectParentQuery = {
         sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'StoryFragment'",
         args: [node.parentId],
       };
-      console.log(selectParentQuery);
+      if (DEBUG) console.log(selectParentQuery);
       const { rows: parentRows } = await client.execute(selectParentQuery);
 
       if (nodeRows.length > 0 && parentRows.length > 0) {
@@ -145,7 +147,7 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
           sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
           args: [ulid(), nodeRows[0].id, parentRows[0].id],
         };
-        console.log(parentQuery);
+        if (DEBUG) console.log(parentQuery);
         await client.execute(parentQuery);
       }
     }
@@ -164,7 +166,7 @@ async function processBeliefEvent(
     sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
     args: [beliefId, event.id, "Belief", event.id],
   };
-  console.log(insertCorpusQuery);
+  if (DEBUG) console.log(insertCorpusQuery);
   await client.execute(insertCorpusQuery);
 
   // Get corpus ID for belief
@@ -172,7 +174,7 @@ async function processBeliefEvent(
     sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'Belief'",
     args: [event.id],
   };
-  console.log(selectQuery);
+  if (DEBUG) console.log(selectQuery);
   const { rows } = await client.execute(selectQuery);
 
   const beliefCorpusId = rows[0].id;
@@ -183,7 +185,7 @@ async function processBeliefEvent(
           VALUES (?, ?, ?, ?, 'INTERACTED')`,
     args: [ulid(), beliefCorpusId, visit_id, fingerprint_id],
   };
-  console.log(interactedQuery);
+  if (DEBUG) console.log(interactedQuery);
   await client.execute(interactedQuery);
 
   if (event.verb === "UNSET") {
@@ -191,7 +193,7 @@ async function processBeliefEvent(
       sql: "DELETE FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
       args: [beliefCorpusId, fingerprint_id],
     };
-    console.log(deleteQuery);
+    if (DEBUG) console.log(deleteQuery);
     await client.execute(deleteQuery);
     return;
   }
@@ -201,7 +203,7 @@ async function processBeliefEvent(
     sql: "SELECT verb, object FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
     args: [beliefCorpusId, fingerprint_id],
   };
-  console.log(checkBeliefQuery);
+  if (DEBUG) console.log(checkBeliefQuery);
   const { rows: existingBelief } = await client.execute(checkBeliefQuery);
 
   if (existingBelief.length > 0) {
@@ -211,7 +213,7 @@ async function processBeliefEvent(
             WHERE belief_id = ? AND fingerprint_id = ?`,
       args: [event.verb, event.object || null, beliefCorpusId, fingerprint_id],
     };
-    console.log(updateQuery);
+    if (DEBUG) console.log(updateQuery);
     await client.execute(updateQuery);
   } else {
     const insertQuery = {
@@ -219,7 +221,7 @@ async function processBeliefEvent(
             VALUES (?, ?, ?, ?, ?)`,
       args: [ulid(), beliefCorpusId, fingerprint_id, event.verb, event.object || null],
     };
-    console.log(insertQuery);
+    if (DEBUG) console.log(insertQuery);
     await client.execute(insertQuery);
   }
 }
@@ -227,12 +229,9 @@ async function processBeliefEvent(
 export async function processEventStream(client: Client, payload: EventPayload) {
   const { events, referrer, visit, contentMap: rawContentMap } = payload;
   const { fingerprint_id, visit_id } = visit;
-
-  // Extract needed corpus data (excluding beliefs)
   const contentMap = extractNeededCorpusData(events, rawContentMap);
 
-  // Debug output
-  debugEventProcessing(events, contentMap);
+  if (DEBUG) debugEventProcessing(events, contentMap);
 
   // Handle campaign tracking
   let campaign_id: string | null = null;
@@ -241,7 +240,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
       sql: "SELECT id FROM campaigns WHERE name = ?",
       args: [referrer.utmCampaign],
     };
-    console.log(selectQuery);
+    if (DEBUG) console.log(selectQuery);
     const { rows } = await client.execute(selectQuery);
 
     if (rows.length > 0) {
@@ -262,7 +261,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
           referrer.httpReferrer || null,
         ],
       };
-      console.log(insertQuery);
+      if (DEBUG) console.log(insertQuery);
       await client.execute(insertQuery);
     }
 
@@ -271,7 +270,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
         sql: "UPDATE visits SET campaign_id = ? WHERE id = ?",
         args: [campaign_id, visit_id],
       };
-      console.log(updateQuery);
+      if (DEBUG) console.log(updateQuery);
       await client.execute(updateQuery);
     }
   }
@@ -294,11 +293,11 @@ export async function processEventStream(client: Client, payload: EventPayload) 
         sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
         args: [event.id, event.type],
       };
-      console.log(selectQuery);
+      if (DEBUG) console.log(selectQuery);
       const { rows } = await client.execute(selectQuery);
 
       if (rows.length === 0) {
-        console.error(`Missing corpus entry for event:`, event);
+        if (DEBUG) console.error(`Missing corpus entry for event:`, event);
         continue;
       }
 
@@ -309,7 +308,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
               VALUES (?, ?, ?, ?, ?)`,
         args: [ulid(), rows[0].id, visit_id, fingerprint_id, event.verb],
       };
-      console.log(actionQuery);
+      if (DEBUG) console.log(actionQuery);
       await client.execute(actionQuery);
     } catch (error) {
       console.error(`Error processing event:`, event, error);

@@ -3,6 +3,7 @@ import type { AuthSettings } from "../../store/auth";
 
 interface SyncOptions {
   fingerprint?: string;
+  visitId?: string;
   encryptedCode?: string;
   encryptedEmail?: string;
   referrer?: {
@@ -17,13 +18,14 @@ interface SyncOptions {
 
 interface SyncResponse {
   fingerprint: string;
-  neo4jEnabled: boolean;
+  visitId?: string;
   auth: boolean;
   firstname?: string;
   knownLead: boolean;
   encryptedEmail?: string;
   encryptedCode?: string;
   beliefs?: string;
+  knownCorpusIds?: string[];
 }
 
 export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse> {
@@ -44,12 +46,15 @@ export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse
     // Update auth store
     const authUpdate: Partial<AuthSettings> = {
       key: result.data.fingerprint,
-      neo4jEnabled: result.data.neo4jEnabled ? "1" : undefined,
+      visitId: result.data.visitId,
       beliefs: result.data.beliefs,
       encryptedEmail: options.encryptedEmail,
       encryptedCode: options.encryptedCode,
       active: Date.now().toString(),
       hasProfile: result.data.auth ? "1" : undefined,
+      knownCorpusIds: result.data.knownCorpusIds
+        ? JSON.stringify(result.data.knownCorpusIds)
+        : undefined,
     };
 
     Object.entries(authUpdate).forEach(([key, value]) => {

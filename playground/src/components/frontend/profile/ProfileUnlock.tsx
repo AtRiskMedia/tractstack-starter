@@ -8,7 +8,7 @@ export async function goUnlockProfile(payload: { email: string; codeword: string
   try {
     //const ref = referrer.get();
     //const settings = { ...payload, referrer: ref };
-    console.log(`goUnlockProfile requires concierge proxy`,payload,referrer);
+    console.log(`goUnlockProfile requires concierge proxy`, payload, referrer);
     const conciergeSync = {
       auth: null,
       error: null,

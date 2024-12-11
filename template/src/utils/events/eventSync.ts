@@ -1,10 +1,37 @@
 import type { ContentMap, EventStream } from "../../types";
 import { contentMap } from "../../store/events";
+import { auth } from "../../store/auth";
 import { referrer } from "../../store/auth";
 
 export async function eventSync(payload: EventStream[]) {
+  const authPayload = auth.get();
   const map = contentMap.get();
   const events: EventStream[] = [];
+  // Get known corpus IDs from auth store
+  const knownIds = new Set(
+    authPayload.knownCorpusIds ? JSON.parse(authPayload.knownCorpusIds) : []
+  );
+  // Collect all IDs needed for this event batch
+  const neededIds = new Set<string>();
+  payload.forEach((e: EventStream) => {
+    neededIds.add(e.id);
+    if (e.parentId) {
+      neededIds.add(e.parentId);
+    }
+    if (e.targetId) {
+      neededIds.add(e.targetId);
+    }
+    if (e.type === "PaneClicked" && e.targetSlug) {
+      const target = map.find((m: ContentMap) => m.slug === e.targetSlug);
+      if (target) {
+        neededIds.add(target.id);
+      }
+    }
+  });
+  // Filter content map to only required new IDs
+  const filteredContentMap = map.filter(
+    (item: ContentMap) => neededIds.has(item.id) && !knownIds.has(item.id)
+  );
 
   // Convert each event to the expected format
   payload.forEach((e: EventStream) => {
@@ -76,7 +103,9 @@ export async function eventSync(payload: EventStream[]) {
   const apiPayload = {
     events,
     referrer: ref.httpReferrer !== `` ? ref : undefined,
-    contentMap: map,
+    contentMap: filteredContentMap.length > 0 ? filteredContentMap : undefined,
+    fingerprint: authPayload?.key,
+    visitId: authPayload?.visitId,
   };
 
   try {
@@ -92,6 +121,10 @@ export async function eventSync(payload: EventStream[]) {
     if (!result.success) {
       console.error("Event sync failed:", result.error);
       return false;
+    }
+    if (filteredContentMap.length > 0) {
+      const newKnownIds = [...knownIds, ...filteredContentMap.map((item) => item.id)];
+      auth.setKey("knownCorpusIds", JSON.stringify(newKnownIds));
     }
     return true;
   } catch (error) {

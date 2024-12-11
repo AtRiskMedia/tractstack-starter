@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
 import { tursoClient } from "../../../utils/db/client";
 import { processEventStream } from "../../../utils/visit/processEventStream";
-import { getCurrentVisit } from "../../../utils/visit/getCurrentVisit";
 import { ulid } from "ulid";
 import type { EventPayload } from "../../../types";
 
 interface SyncVisitPayload {
   fingerprint?: string;
+  visitId?: string;
   encryptedCode?: string;
   encryptedEmail?: string;
   referrer?: {
@@ -37,17 +37,25 @@ export const POST: APIRoute = async ({ request, params }) => {
         const payload = (await request.json()) as SyncVisitPayload;
 
         // Create new fingerprint entry
-        const fingerprintId = ulid();
-        await client.execute({
-          sql: "INSERT INTO fingerprints (id) VALUES (?)",
+        const fingerprintId = payload?.fingerprint || ulid();
+        if (!payload?.fingerprint)
+          await client.execute({
+            sql: "INSERT INTO fingerprints (id) VALUES (?)",
+            args: [fingerprintId],
+          });
+
+        const { rows: corpusRows } = await client.execute({
+          sql: `SELECT DISTINCT c.object_id 
+          FROM corpus c
+          INNER JOIN actions a ON a.object_id = c.id
+          WHERE a.fingerprint_id = ?`,
           args: [fingerprintId],
         });
 
-        // Create visit record
-        const visitId = ulid();
-        let campaignId = null;
+        const knownCorpusIds = corpusRows.map((row) => row.object_id);
 
         // Handle campaign/referrer data if present
+        let campaignId = null;
         if (payload.referrer?.utmCampaign) {
           const { rows: campaignRows } = await client.execute({
             sql: "SELECT id FROM campaigns WHERE name = ?",
@@ -74,18 +82,21 @@ export const POST: APIRoute = async ({ request, params }) => {
           }
         }
 
-        await client.execute({
-          sql: "INSERT INTO visits (id, fingerprint_id, campaign_id) VALUES (?, ?, ?)",
-          args: [visitId, fingerprintId, campaignId],
-        });
+        const visitId = payload?.visitId || ulid();
+        if (!payload?.visitId)
+          await client.execute({
+            sql: "INSERT INTO visits (id, fingerprint_id, campaign_id) VALUES (?, ?, ?)",
+            args: [visitId, fingerprintId, campaignId],
+          });
 
         result = {
           success: true,
           data: {
             fingerprint: fingerprintId,
-            neo4jEnabled: false,
+            visitId: visitId,
             auth: false,
             knownLead: false,
+            knownCorpusIds,
           },
         };
         break;
@@ -93,6 +104,19 @@ export const POST: APIRoute = async ({ request, params }) => {
 
       case "stream": {
         const payload = await request.json();
+        const fingerprintId = payload?.fingerprint;
+        const visitId = payload?.visitId;
+        if (!fingerprintId || !visitId)
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Visit not registered!",
+            }),
+            {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
         if (!payload || !payload.events || !Array.isArray(payload.events)) {
           return new Response(
             JSON.stringify({
@@ -106,11 +130,13 @@ export const POST: APIRoute = async ({ request, params }) => {
           );
         }
 
-        const visitContext = await getCurrentVisit(client);
         const eventPayload: EventPayload = {
           events: payload.events,
           referrer: payload.referrer,
-          visit: visitContext,
+          visit: {
+            fingerprint_id: fingerprintId,
+            visit_id: visitId,
+          },
           contentMap: payload.contentMap,
         };
 
