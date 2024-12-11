@@ -163,16 +163,16 @@ export const POST: APIRoute = async ({ request, params }) => {
         // Look up lead
         const { rows } = await client.execute({
           sql: `SELECT 
-            id, 
-            first_name, 
-            email, 
-            password_hash,
-            encrypted_code,
-            contact_persona,
-            short_bio 
-          FROM leads 
-          WHERE ${queryWhere}
-          LIMIT 1`,
+      id, 
+      first_name, 
+      email, 
+      password_hash,
+      encrypted_code,
+      contact_persona,
+      short_bio 
+    FROM leads 
+    WHERE ${queryWhere}
+    LIMIT 1`,
           args: queryArgs,
         });
 
@@ -202,6 +202,28 @@ export const POST: APIRoute = async ({ request, params }) => {
           });
         }
 
+        // Fetch held beliefs
+        const { rows: beliefRows } = await client.execute({
+  sql: `
+    WITH latest_fingerprint AS (
+      SELECT f.id as fingerprint_id
+      FROM fingerprints f
+      JOIN heldbeliefs b ON f.id = b.fingerprint_id
+      WHERE f.lead_id = ?
+      GROUP BY f.id
+      ORDER BY MAX(b.updated_at) DESC
+      LIMIT 1
+    )
+    SELECT c.object_name as slug, 
+           c.object_id as id, 
+           b.verb, 
+           b.object
+    FROM heldbeliefs b
+    JOIN corpus c ON b.belief_id = c.id
+    JOIN latest_fingerprint lf ON b.fingerprint_id = lf.fingerprint_id`,
+  args: [rows[0].id], // lead_id
+});
+  
         result = {
           success: true,
           data: {
@@ -211,6 +233,7 @@ export const POST: APIRoute = async ({ request, params }) => {
             shortBio: rows[0].short_bio,
             encryptedEmail: rows[0].encrypted_email,
             encryptedCode: rows[0].encrypted_code,
+            beliefs: beliefRows.length > 0 ? JSON.stringify(beliefRows) : undefined,
           },
         };
         break;

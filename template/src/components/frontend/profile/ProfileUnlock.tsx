@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import ChevronRightIcon from "@heroicons/react/20/solid/ChevronRightIcon";
 import { auth, profile, error, success, loading } from "../../../store/auth";
+import { heldBeliefs } from "../../../store/beliefs";
 import { classNames } from "../../../utils/common/helpers";
 
 export async function goUnlockProfile(payload: { email: string; codeword: string }) {
@@ -36,6 +37,12 @@ export async function goUnlockProfile(payload: { email: string; codeword: string
       email: result.data.email,
       shortBio: result.data.shortBio,
     });
+
+    // Set beliefs if present
+    if (result.data.beliefs) {
+      const parsedBeliefs = JSON.parse(result.data.beliefs);
+      heldBeliefs.set(parsedBeliefs);
+    }
 
     auth.setKey(`encryptedEmail`, result.data.encryptedEmail);
     auth.setKey(`encryptedCode`, result.data.encryptedCode);
