@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import ChevronRightIcon from "@heroicons/react/20/solid/ChevronRightIcon";
-import { auth, profile, error, success, loading, referrer } from "../../../store/auth";
+import { auth, profile, error, success, loading } from "../../../store/auth";
 import { classNames } from "../../../utils/common/helpers";
 
 export async function goUnlockProfile(payload: { email: string; codeword: string }) {
   try {
-    //const ref = referrer.get();
-    //const settings = { ...payload, referrer: ref };
-    console.log(`goUnlockProfile requires concierge proxy`, payload, referrer);
-    const conciergeSync = {
-      auth: null,
-      error: null,
-      encryptedCode: null,
-      encryptedEmail: null,
-      fingerprint: null,
-    }; //await getTokens(settings);
-    if (conciergeSync?.error) {
+    const response = await fetch("/api/turso/unlock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...payload,
+        fingerprint: auth.get().key,
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success) {
       error.set(true);
       success.set(false);
       loading.set(undefined);
@@ -29,37 +29,25 @@ export async function goUnlockProfile(payload: { email: string; codeword: string
       auth.setKey(`unlockedProfile`, undefined);
       return false;
     }
-    if (conciergeSync?.auth) {
-      auth.setKey(`unlockedProfile`, `1`);
-      auth.setKey(`hasProfile`, `1`);
-    }
-    if (conciergeSync?.encryptedEmail) {
-      auth.setKey(`encryptedEmail`, conciergeSync.encryptedEmail);
-    }
-    if (conciergeSync?.encryptedCode) {
-      auth.setKey(`encryptedCode`, conciergeSync.encryptedCode);
-    }
-    auth.setKey(`active`, Date.now().toString());
-    if (conciergeSync?.fingerprint) {
-      auth.setKey(`key`, conciergeSync.fingerprint);
-    }
+
+    profile.set({
+      firstname: result.data.firstname,
+      contactPersona: result.data.contactPersona,
+      email: result.data.email,
+      shortBio: result.data.shortBio,
+    });
+
+    auth.setKey(`encryptedEmail`, result.data.encryptedEmail);
+    auth.setKey(`encryptedCode`, result.data.encryptedCode);
+    auth.setKey(`unlockedProfile`, `1`);
+    auth.setKey(`hasProfile`, `1`);
     success.set(true);
     loading.set(false);
     return true;
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  } catch (e: any) {
+  } catch (e) {
     error.set(true);
     success.set(false);
     loading.set(undefined);
-    profile.set({
-      firstname: undefined,
-      contactPersona: undefined,
-      email: undefined,
-      shortBio: undefined,
-    });
-    auth.setKey(`unlockedProfile`, undefined);
-    auth.setKey(`hasProfile`, undefined);
-    console.log(`error`, e);
     return false;
   }
 }
@@ -79,8 +67,7 @@ export const ProfileUnlock = () => {
         email,
         codeword,
       };
-      /* eslint-disable @typescript-eslint/no-explicit-any */
-      goUnlockProfile(payload).then((res: any) => {
+      goUnlockProfile(payload).then((res) => {
         if (!res) setBadLogin(true);
       });
     }

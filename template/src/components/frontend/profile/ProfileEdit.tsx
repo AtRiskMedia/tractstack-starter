@@ -8,7 +8,7 @@ import ArrowPathRoundedSquareIcon from "@heroicons/react/24/outline/ArrowPathRou
 import BellSlashIcon from "@heroicons/react/24/outline/BellSlashIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import ChatBubbleBottomCenterIcon from "@heroicons/react/24/outline/ChatBubbleBottomCenterIcon";
-import { newProfile, sync, auth, profile, error, success, loading } from "../../../store/auth";
+import { newProfile,  auth, profile, error, success, loading } from "../../../store/auth";
 import { classNames } from "../../../utils/common/helpers";
 import { contactPersona } from "../../../../config/contactPersona.json";
 import type { FormEvent } from "react";
@@ -23,31 +23,35 @@ async function goSaveProfile(payload: {
   init: boolean;
 }) {
   try {
-    console.log(`ProfileEdit requires concierge proxy`);
-    const response = {
-      data: {
-        auth: null,
-        firstname: null,
-        contactPersona: null,
-        email: null,
-        shortBio: null,
-        knownLead: null,
+    const response = await fetch("/api/turso/update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    };
-    //await fetchWithAuth("/auth/profile", {
-    //  method: "POST",
-    //  body: JSON.stringify({ ...payload }),
-    //});
+      body: JSON.stringify({
+        ...payload,
+        fingerprint: auth.get().key,
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      error.set(true);
+      success.set(false);
+      loading.set(undefined);
+      return false;
+    }
+
     profile.set({
       firstname: payload.firstname,
       contactPersona: payload.persona,
       email: payload.email,
       shortBio: payload.bio,
     });
-    if (response?.data?.knownLead) {
-      auth.setKey(`hasProfile`, `1`);
-      auth.setKey(`consent`, `1`);
-    }
+
+    // Update encrypted values
+    auth.setKey(`encryptedEmail`, result.data.encryptedEmail);
+    auth.setKey(`encryptedCode`, result.data.encryptedCode);
     success.set(true);
     loading.set(false);
     return true;
@@ -55,55 +59,7 @@ async function goSaveProfile(payload: {
     error.set(true);
     success.set(false);
     loading.set(undefined);
-    profile.set({
-      firstname: undefined,
-      contactPersona: undefined,
-      email: undefined,
-      shortBio: undefined,
-    });
-    auth.setKey(`unlockedProfile`, undefined);
-    auth.setKey(`hasProfile`, undefined);
     return false;
-  }
-}
-
-async function goLoadProfile() {
-  try {
-    const response = {
-      firstname: null,
-      contactPersona: null,
-      email: null,
-      shortBio: null,
-      knownLead: null,
-      auth: null,
-    };
-    //await fetchWithAuth("/auth/profile");
-    profile.set({
-      firstname: response?.firstname || undefined,
-      contactPersona: response?.contactPersona || undefined,
-      email: response?.email || undefined,
-      shortBio: response?.shortBio || undefined,
-    });
-    if (response?.knownLead) {
-      auth.setKey(`hasProfile`, `1`);
-      auth.setKey(`consent`, `1`);
-    }
-    if (typeof response?.auth !== `undefined` && response.auth) auth.setKey(`unlockedProfile`, `1`);
-    success.set(true);
-    loading.set(false);
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  } catch (e: any) {
-    error.set(true);
-    success.set(false);
-    loading.set(undefined);
-    profile.set({
-      firstname: undefined,
-      contactPersona: undefined,
-      email: undefined,
-      shortBio: undefined,
-    });
-    auth.setKey(`unlockedProfile`, undefined);
-    auth.setKey(`hasProfile`, undefined);
   }
 }
 
@@ -116,10 +72,6 @@ export const ProfileEdit = () => {
   const [saved, setSaved] = useState(false);
   const [personaSelected, setPersonaSelected] = useState<ContactPersona>(contactPersona[0]);
   const $profile = useStore(profile);
-  const $error = useStore(error);
-  const $loading = useStore(loading);
-  const $success = useStore(success);
-  const $sync = useStore(sync);
 
   const Icon =
     personaSelected.title === `DMs open`
@@ -154,23 +106,22 @@ export const ProfileEdit = () => {
           ? `50%`
           : `2%`;
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitted(true);
-    if (firstname && codeword && email && bio && personaSelected.id) {
-      const payload = {
-        firstname,
-        email,
-        codeword,
-        bio,
-        persona: personaSelected.id,
-        init: false,
-      };
-      goSaveProfile(payload).then((res: any) => {
-        if (res) setSaved(true);
-      });
+  // Initialize form with current profile data
+  useEffect(() => {
+    if ($profile) {
+      if ($profile.firstname) setFirstname($profile.firstname);
+      if ($profile.email) setEmail($profile.email);
+      if ($profile.shortBio) setBio($profile.shortBio);
+      if ($profile.contactPersona) {
+        const pref = contactPersona.find((p) => p.id === $profile.contactPersona);
+        if (pref) setPersonaSelected(pref);
+      }
+      setSubmitted(false);
+      error.set(undefined);
+      success.set(true);
+      loading.set(undefined);
     }
-  };
+  }, [$profile]);
 
   useEffect(() => {
     // triggers "saved" alert if coming from ProfileCreate
@@ -186,60 +137,24 @@ export const ProfileEdit = () => {
     }
   }, [saved]);
 
-  useEffect(() => {
-    // on init, load profile from concierge
-    if (
-      $sync &&
-      typeof $success == `undefined` &&
-      typeof $error === `undefined` &&
-      typeof $loading === `undefined` &&
-      typeof submitted === `undefined` &&
-      import.meta.env.PROD
-    ) {
-      const checkProfile = profile.get();
-      if (!checkProfile.firstname || !checkProfile.contactPersona || !checkProfile.email) {
-        error.set(false);
-        loading.set(true);
-        goLoadProfile();
-      } else {
-        error.set(false);
-        loading.set(false);
-        success.set(true);
-      }
-    } else if (
-      $sync &&
-      typeof $success == `boolean` &&
-      $success &&
-      typeof $error === `boolean` &&
-      !$error &&
-      typeof $loading === `boolean` &&
-      !$loading &&
-      typeof submitted === `undefined` &&
-      import.meta.env.PROD
-    ) {
-      setSubmitted(false);
-      const val = profile.get();
-      if (val.firstname) setFirstname(val.firstname);
-      if (val.email) setEmail(val.email);
-      if (val.shortBio) setBio(val.shortBio);
-      const pref = contactPersona.filter((p) => p.id === val.contactPersona).at(0)!;
-      if (pref) setPersonaSelected(pref);
-      error.set(undefined);
-      success.set(true);
-      loading.set(undefined);
-    } else if (
-      typeof submitted === `undefined` &&
-      $error &&
-      typeof $loading === `undefined` &&
-      !$success
-    ) {
-      error.set(undefined);
-      success.set(undefined);
-      if (!$sync) window.location.reload();
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitted(true);
+    if (firstname && codeword && email && personaSelected.id) {
+      const payload = {
+        firstname,
+        email,
+        codeword,
+        bio,
+        persona: personaSelected.id,
+        init: false,
+      };
+      goSaveProfile(payload).then((res: any) => {
+        if (res) setSaved(true);
+      });
     }
-  }, [$sync, $success, $error, submitted, $loading]);
+  };
 
-  if (typeof submitted === `undefined`) return <div />;
   return (
     <>
       <h3 className="font-action text-xl py-6 text-myblue">Welcome to Tract Stack</h3>

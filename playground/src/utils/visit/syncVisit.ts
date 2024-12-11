@@ -1,20 +1,6 @@
 import { auth } from "../../store/auth";
 import type { AuthSettings } from "../../store/auth";
-
-interface SyncOptions {
-  fingerprint?: string;
-  visitId?: string;
-  encryptedCode?: string;
-  encryptedEmail?: string;
-  referrer?: {
-    httpReferrer?: string;
-    utmSource?: string;
-    utmMedium?: string;
-    utmCampaign?: string;
-    utmTerm?: string;
-    utmContent?: string;
-  };
-}
+import type { SyncOptions } from "../../types";
 
 interface SyncResponse {
   fingerprint: string;

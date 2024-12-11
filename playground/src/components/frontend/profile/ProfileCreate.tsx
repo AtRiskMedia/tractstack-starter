@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { useStore } from "@nanostores/react";
@@ -7,10 +8,9 @@ import ArrowPathRoundedSquareIcon from "@heroicons/react/24/outline/ArrowPathRou
 import BellSlashIcon from "@heroicons/react/24/outline/BellSlashIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import ChatBubbleBottomCenterIcon from "@heroicons/react/24/outline/ChatBubbleBottomCenterIcon";
-import { newProfile, sync, auth, profile, error, success, loading } from "../../../store/auth";
+import { newProfile, auth, profile, error, success, loading } from "../../../store/auth";
 import { classNames } from "../../../utils/common/helpers";
 import { contactPersona } from "../../../../config/contactPersona.json";
-import { goUnlockProfile } from "./ProfileUnlock";
 import type { FormEvent } from "react";
 
 async function goSaveProfile(payload: {
@@ -22,30 +22,50 @@ async function goSaveProfile(payload: {
   init: boolean;
 }) {
   try {
-    console.log(`ProfileCreate requires concierge proxy`);
-    //await fetchWithAuth("/auth/profile", {
-    //  method: "POST",
-    //  body: JSON.stringify({ ...payload }),
-    //});
+    const response = await fetch("/api/turso/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...payload,
+        fingerprint: auth.get().key,
+      }),
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      error.set(true);
+      success.set(false);
+      loading.set(undefined);
+      profile.set({
+        firstname: undefined,
+        contactPersona: undefined,
+        email: undefined,
+        shortBio: undefined,
+      });
+      auth.setKey(`unlockedProfile`, undefined);
+      auth.setKey(`hasProfile`, undefined);
+      return false;
+    }
+
     profile.set({
       firstname: payload.firstname,
       contactPersona: payload.persona,
       email: payload.email,
       shortBio: payload.bio,
     });
+
+    // Store encrypted values
+    auth.setKey(`encryptedEmail`, result.data.encryptedEmail);
+    auth.setKey(`encryptedCode`, result.data.encryptedCode);
     auth.setKey(`hasProfile`, `1`);
     auth.setKey(`unlockedProfile`, `1`);
     auth.setKey(`consent`, `1`);
     newProfile.set(true);
-    const settings = {
-      email: payload.email,
-      codeword: payload.codeword,
-    };
-    await goUnlockProfile(settings);
     success.set(true);
     loading.set(false);
     return true;
-    /* eslint-disable @typescript-eslint/no-explicit-any */
   } catch (e: any) {
     error.set(true);
     success.set(false);
@@ -62,51 +82,6 @@ async function goSaveProfile(payload: {
   }
 }
 
-async function goLoadProfile() {
-  try {
-    console.log(`ProfileCreate requires concierge proxy`);
-    const response = {
-      data: {
-        auth: null,
-        firstname: null,
-        contactPersona: null,
-        email: null,
-        shortBio: null,
-        knownLead: null,
-      },
-    };
-    //await fetchWithAuth("/auth/profile");
-    profile.set({
-      firstname: response?.data?.firstname || undefined,
-      contactPersona: response?.data?.contactPersona || undefined,
-      email: response?.data?.email || undefined,
-      shortBio: response?.data?.shortBio || undefined,
-    });
-    if (response?.data?.knownLead) {
-      auth.setKey(`hasProfile`, `1`);
-      auth.setKey(`consent`, `1`);
-    }
-    if (typeof response?.data?.auth !== `undefined` && response?.data?.auth) {
-      auth.setKey(`unlockedProfile`, `1`);
-    }
-    success.set(true);
-    loading.set(false);
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-  } catch (e: any) {
-    error.set(true);
-    success.set(false);
-    loading.set(undefined);
-    profile.set({
-      firstname: undefined,
-      contactPersona: undefined,
-      email: undefined,
-      shortBio: undefined,
-    });
-    auth.setKey(`unlockedProfile`, undefined);
-    auth.setKey(`hasProfile`, undefined);
-  }
-}
-
 export const ProfileCreate = () => {
   const [submitted, setSubmitted] = useState<boolean | undefined>(undefined);
   const [email, setEmail] = useState(``);
@@ -116,10 +91,6 @@ export const ProfileCreate = () => {
   const [badSave, setBadSave] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(contactPersona[0]);
   const $profile = useStore(profile);
-  const $error = useStore(error);
-  const $loading = useStore(loading);
-  const $success = useStore(success);
-  const $sync = useStore(sync);
 
   const Icon =
     personaSelected.title === `DMs open`
@@ -185,47 +156,6 @@ export const ProfileCreate = () => {
     }
   }, [badSave]);
 
-  useEffect(() => {
-    // on init, load profile from concierge
-    if (
-      $sync &&
-      typeof $success == `undefined` &&
-      typeof $error === `undefined` &&
-      typeof $loading === `undefined` &&
-      typeof submitted === `undefined` &&
-      import.meta.env.PROD
-    ) {
-      error.set(false);
-      loading.set(true);
-      goLoadProfile();
-    } else if (
-      $sync &&
-      typeof $success == `boolean` &&
-      $success &&
-      typeof $error === `boolean` &&
-      !$error &&
-      typeof $loading === `boolean` &&
-      !$loading &&
-      typeof submitted === `undefined` &&
-      import.meta.env.PROD
-    ) {
-      setSubmitted(false);
-      error.set(undefined);
-      success.set(true);
-      loading.set(undefined);
-    } else if (
-      typeof submitted === `undefined` &&
-      $error &&
-      typeof $loading === `undefined` &&
-      !$success
-    ) {
-      error.set(undefined);
-      success.set(undefined);
-      if (!$sync) window.location.reload();
-    }
-  }, [$sync, $success, $error, submitted, $loading]);
-
-  if (typeof submitted === `undefined`) return <div />;
   return (
     <>
       <h3 className="font-action text-xl py-6 text-myblue">Feel free to introduce yourself</h3>

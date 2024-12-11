@@ -959,3 +959,18 @@ export interface ContactPersona {
   title: string;
   disabled?: boolean;
 }
+
+export interface SyncOptions {
+  fingerprint?: string;
+  visitId?: string;
+  encryptedCode?: string;
+  encryptedEmail?: string;
+  referrer?: {
+    httpReferrer?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+  };
+}

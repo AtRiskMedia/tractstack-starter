@@ -36,7 +36,10 @@
       "sql": "CREATE TABLE IF NOT EXISTS visits (id TEXT PRIMARY KEY, fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), campaign_id TEXT REFERENCES campaigns(id), merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "fingerprints": {
-      "sql": "CREATE TABLE IF NOT EXISTS fingerprints (id TEXT PRIMARY KEY, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+      "sql": "CREATE TABLE IF NOT EXISTS fingerprints (id TEXT PRIMARY KEY, merged TEXT, lead_id TEXT REFERENCES leads(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    },
+    "leads": {
+      "sql": "CREATE TABLE IF NOT EXISTS leads (id TEXT PRIMARY KEY, first_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, contact_persona TEXT NOT NULL, short_bio TEXT, encrypted_code TEXT, encrypted_email TEXT, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP)"
     },
     "campaigns": {
       "sql": "CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, merged TEXT, source TEXT, medium TEXT, term TEXT, content TEXT, http_referrer TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
@@ -74,6 +77,8 @@
     "CREATE INDEX IF NOT EXISTS idx_parents_parent_id ON parents(parent_id)",
     "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_belief_id ON heldbeliefs(belief_id)",
     "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
-    "CREATE INDEX IF NOT EXISTS idx_corpus_object_id ON corpus(object_id)"
+    "CREATE INDEX IF NOT EXISTS idx_corpus_object_id ON corpus(object_id)",
+    "CREATE INDEX IF NOT EXISTS idx_fingerprints_lead_id ON fingerprints(lead_id)",
+    "CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email)"
   ]
 }
