@@ -1,8 +1,6 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "../components/frontend/state/SetContentMap";
-import { getContentMap } from "../utils/db/utils";
-import type { ContentMap, Config } from "../types";
+import type { Config } from "../types";
 
 export interface Props {
   config: Config;
@@ -22,7 +20,6 @@ const {
   modDatetime,
 } = Astro.props;
 
-const stylesUrl = `/styles/frontend.css?v=${config?.init?.STYLES_VER || `1`}`;
 const defaultFavIcon = `/favicon.ico`;
 const defaultSocialImageURL = ogImage || `/og.png`;
 const defaultSocialLogoURL = `/oglogo.png`;
@@ -32,14 +29,6 @@ const defaultSocialDesc = `No-code website builder and content marketing platfor
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
-
-const gtag = config?.init?.GTAG || false;
-const gtagUrl =
-  typeof gtag === `string` && gtag.length > 1
-    ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
-    : null;
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>
@@ -53,7 +42,7 @@ const contentMap: ContentMap[] = await getContentMap();
 
     <!-- Custom styles -->
     <link rel="stylesheet" href="/styles/custom.css" />
-    <link rel="stylesheet" href={stylesUrl} />
+    <link rel="stylesheet" href="/styles/storykeep.css" />
 
     <!-- General Meta Tags -->
     <title>{defaultSocialTitle}</title>
@@ -93,30 +82,6 @@ const contentMap: ContentMap[] = await getContentMap();
       )
     }
 
-    <!-- Google Analytics -->
-    {gtagUrl && <script async src={gtagUrl} is:inline />}
-    <script is:inline define:vars={{ gtag }}>
-      if (gtag) {
-        // Define gtag function type
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {
-          window.dataLayer.push(arguments);
-        }
-        window.gtag = gtag;
-
-        document.addEventListener("astro:page-load", () => {
-          if (window.gtag) {
-            gtag("js", new Date());
-            gtag("config", gtag, {
-              page_title: document.title,
-              page_path: window.location.pathname,
-              page_location: window.location.href,
-            });
-          }
-        });
-      }
-    </script>
-
     <!-- Tract Stack Concierge -->
     <script>
       import {
@@ -127,19 +92,11 @@ const contentMap: ContentMap[] = await getContentMap();
         stopLoadingAnimation,
         debounce,
       } from "../utils/common/helpers";
-      import { eventStream } from "../utils/events/eventStream";
-      import { inView } from "../utils/events/inView";
-      import { eventProcessQueue } from "../utils/events/eventProcessQueue";
       import { init } from "../utils/visit/init";
-      import type { EventStreamController } from "../types";
+
       const debouncedHandleScroll = debounce(handleScroll, 50);
 
-      let eventStreamController: EventStreamController | null = null;
       function setupEventHandlers() {
-        if (!eventStreamController) {
-          eventStreamController = eventStream() as EventStreamController;
-        }
-        eventProcessQueue();
         document.addEventListener("astro:before-preparation", startLoadingAnimation);
         document.addEventListener("astro:after-swap", stopLoadingAnimation);
       }
@@ -149,7 +106,6 @@ const contentMap: ContentMap[] = await getContentMap();
         init();
         handleScroll();
         handleResize();
-        inView();
         setupEventHandlers();
         scrollToTop();
 
@@ -157,15 +113,7 @@ const contentMap: ContentMap[] = await getContentMap();
         document.addEventListener("scroll", debouncedHandleScroll);
       });
 
-      document.addEventListener("astro:before-swap", () => {
-        eventProcessQueue();
-      });
-
       document.addEventListener("astro:before-preparation", () => {
-        if (eventStreamController) {
-          eventStreamController.stop();
-          eventStreamController = null;
-        }
         window.removeEventListener(`resize`, handleResize);
         document.removeEventListener("scroll", debouncedHandleScroll);
       });
@@ -179,7 +127,6 @@ const contentMap: ContentMap[] = await getContentMap();
       class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
     >
     </div>
-    <SetContentMap payload={contentMap} client:only="react" />
     <div id="content" class="transition-opacity duration-300">
       <slot />
     </div>

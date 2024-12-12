@@ -3,10 +3,10 @@ import { getContextPaneBySlug } from "../../utils/db/utils";
 import { isValidContentPath } from "../../utils/common/routeValidation";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import ContextPaneWrapper from "../../components/frontend/ContextPaneWrapper.astro";
-import ImpressionWrapper from "../../components/frontend/widgets/ImpressionWrapper";
+import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
 import Layout from "../../layouts/Layout.astro";
-import Header from "../../components/frontend/Header.astro";
-import Footer from "../../components/frontend/Footer.astro";
+import Header from "../../components/common/Header.astro";
+import Footer from "../../components/common/Footer.astro";
 import type { Current, AuthStatus } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
@@ -63,7 +63,13 @@ const current: Current = pane
   </main>
   {
     pane.impressions?.length ? (
-    <ImpressionWrapper payload={pane.impressions} slug={pane.slug} isContext={true} config={config} client:load />
+      <ImpressionWrapper
+        payload={pane.impressions}
+        slug={pane.slug}
+        isContext={true}
+        config={config}
+        client:load
+      />
     ) : null
   }
   <Footer created={pane.created} slug={pane.slug} isContext={true} config={config} />

@@ -135,19 +135,14 @@ const contentMap: ContentMap[] = await getContentMap();
       const debouncedHandleScroll = debounce(handleScroll, 50);
 
       let eventStreamController: EventStreamController | null = null;
-
       function setupEventHandlers() {
         if (!eventStreamController) {
           eventStreamController = eventStream() as EventStreamController;
         }
         eventProcessQueue();
-
-        // Set up animation event listeners
         document.addEventListener("astro:before-preparation", startLoadingAnimation);
         document.addEventListener("astro:after-swap", stopLoadingAnimation);
       }
-
-      // Initial setup
       setupEventHandlers();
 
       document.addEventListener("astro:page-load", () => {
@@ -165,6 +160,7 @@ const contentMap: ContentMap[] = await getContentMap();
       document.addEventListener("astro:before-swap", () => {
         eventProcessQueue();
       });
+
       document.addEventListener("astro:before-preparation", () => {
         if (eventStreamController) {
           eventStreamController.stop();
