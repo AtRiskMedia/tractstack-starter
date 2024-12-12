@@ -30,7 +30,7 @@ import type {
 import { knownEnvSettings, PUBLIC_THEME, toolAddModes } from "../constants";
 import type { ControlPosition } from "react-draggable";
 import type { Root } from "hast";
-import { createNodeId } from "@/utils/helpers.ts";
+import { createNodeId, createNodeIdFromDragNode } from "@/utils/helpers.ts";
 
 export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
 
@@ -211,7 +211,7 @@ export const setDragHoverInfo = (el: DragState | null) => {
 
   const nodes = new Set<string>(dragHandleStore.get().affectedFragments);
   if (el) {
-    const elId = createNodeId(el);
+    const elId = createNodeIdFromDragNode(el);
     const elIdWithDir = elId + "-" + el.location;
     dragHoverStatesBuffer.push(elIdWithDir);
 

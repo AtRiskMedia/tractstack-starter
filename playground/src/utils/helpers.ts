@@ -600,10 +600,13 @@ export async function getOptimizedImages(
   return optimizedImages;
 }
 
-export const createNodeId = (node: DragNode): string => {
+export const createNodeIdFromDragNode = (node: DragNode): string => {
   if (!node) return "";
-  return `${node.fragmentId}-${node.paneId}-${node.outerIdx}-${node.idx || 0}`;
+  return createNodeId(node.fragmentId, node.paneId, node.outerIdx, node.idx);
 };
+export const createNodeId = (fragmentId: string, paneId: string, outerIdx: number, idx: number|null): string => {
+  return `${fragmentId}-${paneId}-${outerIdx}-${idx || 0}`;
+}
 
 export function swapObjectValues(obj: any, key1: string, key2: string): any {
   if (!(key1 in obj) || !(key2 in obj)) {

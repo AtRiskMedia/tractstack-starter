@@ -7,7 +7,7 @@ import { fromMarkdown } from "mdast-util-from-markdown";
 import { cleanHtmlAst } from "@/utils/compositor/markdownUtils.ts";
 import { markdownToHtmlAst } from "@/utils/compositor/markdownUtils.ts";
 import type { Root } from "hast";
-import { useStoryKeepUtils } from "@/utils/storykeep.ts";
+import { fixOverrideClassesForFragment, useStoryKeepUtils } from "@/utils/storykeep.ts";
 import { useStore } from "@nanostores/react";
 
 export type ChangeMarkdownModalProps = {
@@ -65,6 +65,7 @@ const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
           htmlAst: newHtmlAst,
         },
       };
+      fixOverrideClassesForFragment(updatedFragment.payload, updatedFragment.markdown);
       updateStoreField("paneFragmentMarkdown", updatedFragment);
       props.onClose();
     }

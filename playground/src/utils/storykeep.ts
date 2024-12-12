@@ -48,9 +48,9 @@ import {
 } from "../constants";
 import type {
   FieldWithHistory,
-  HistoryEntry,
+  HistoryEntry, MarkdownDatum,
   MarkdownEditDatum,
-  MarkdownLookup,
+  MarkdownLookup, MarkdownPaneDatum,
   OptionsPayloadDatum,
   StoreKey,
   StoreMapType,
@@ -791,6 +791,42 @@ function swapClassNamesPayload_Classes(
       classes: classesCopy,
     };
   }
+}
+
+export function fixOverrideClassesForFragment(payload: MarkdownPaneDatum, field: MarkdownDatum) {
+  if(!payload || !field) return;
+
+  const classesPayloads = {...payload.optionsPayload.classNamesPayload};
+  if(!classesPayloads) return;
+
+  const markdown = generateMarkdownLookup(field.htmlAst);
+  Object.keys(classesPayloads).forEach(tag => {
+    if(!markdown.nthTagLookup[tag]) return;
+
+    const tagsAmount = Object.values(markdown.nthTagLookup?.[tag]).length ?? 0;
+    const overrides = classesPayloads[tag].override;
+    classesPayloads[tag].count = tagsAmount;
+    if(overrides) {
+      Object.keys(overrides).forEach(overrideKey => {
+        if (!overrides[overrideKey]) return;
+
+        const length = overrides[overrideKey].length;
+        if(length < tagsAmount) {
+          while (overrides[overrideKey].length < tagsAmount) {
+            // @ts-expect-error tuple isn't iteratable
+            classesPayloads[tag].override[overrideKey].push(null);
+          }
+        } else {
+          while (overrides[overrideKey].length > tagsAmount) {
+            // @ts-expect-error tuple isn't iteratable
+            classesPayloads[tag].override[overrideKey].pop();
+          }
+        }
+      });
+    }
+  });
+
+  payload.optionsPayload = {...payload.optionsPayload, classNamesPayload: classesPayloads};
 }
 
 function fixPayloadOverrides(
