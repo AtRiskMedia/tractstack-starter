@@ -21,6 +21,7 @@ interface InitWizardProps {
   hasConcierge: boolean;
   validation: ValidationResult;
   config: Config | null;
+  init: boolean;
 }
 
 interface ConfigState {
@@ -41,6 +42,7 @@ const PUBLISH_TRIGGERS = [
 export default function InitWizard({
   hasConcierge,
   validation: initialValidation,
+  init,
 }: InitWizardProps) {
   const initialConfig = initialValidation.config;
   const $store = useStore(initWizardStore);
@@ -48,6 +50,7 @@ export default function InitWizard({
   const [validation, setValidation] = useState<ValidationResult>(initialValidation);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasInit = init && initialConfig?.init?.SITE_INIT;
 
   // Logo and branding configuration
   const logo =
@@ -221,14 +224,14 @@ export default function InitWizard({
         id: "setup",
         title: "Setup Story Keep",
         description: "Initialize your Story Keep instance",
-        isComplete: initialConfig?.init?.SITE_INIT || $store.completedSteps.includes("setup"),
+        isComplete: hasInit || $store.completedSteps.includes("setup"),
         isLocked: false,
       },
       {
         id: "brand",
         title: "Brand Customization",
         description: "Customize your site's look and feel",
-        isComplete: initialConfig?.init?.SITE_INIT || $store.completedSteps.includes("brand"),
+        isComplete: hasInit || $store.completedSteps.includes("brand"),
         isLocked: !$store.completedSteps.includes("setup"),
       },
     ];
@@ -239,15 +242,14 @@ export default function InitWizard({
           id: "integrations",
           title: "Set Up Integrations",
           description: "Connect external services and APIs",
-          isComplete:
-            initialConfig?.init?.SITE_INIT || $store.completedSteps.includes("integrations"),
+          isComplete: hasInit || $store.completedSteps.includes("integrations"),
           isLocked: !$store.completedSteps.includes("brand"),
         },
         {
           id: "security",
           title: "Secure Your Site",
           description: "Set up authentication and access control",
-          isComplete: initialConfig?.init?.SITE_INIT || $store.completedSteps.includes("security"),
+          isComplete: hasInit || $store.completedSteps.includes("security"),
           isLocked: !$store.completedSteps.includes("integrations"),
         }
       );
@@ -257,7 +259,7 @@ export default function InitWizard({
         id: "publish",
         title: "Republish with New Config",
         description: "Apply your configuration changes",
-        isComplete: initialConfig?.init?.SITE_INIT || $store.completedSteps.includes("publish"),
+        isComplete: hasInit || $store.completedSteps.includes("publish"),
         isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
       },
       {
@@ -294,7 +296,7 @@ export default function InitWizard({
         isProcessing,
       };
 
-      if (initialConfig?.init?.SITE_INIT) return <CreateHomeStep {...commonProps} />;
+      if (hasInit) return <CreateHomeStep {...commonProps} />;
 
       switch (step.id) {
         case "setup":

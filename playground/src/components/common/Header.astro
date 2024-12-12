@@ -124,7 +124,7 @@ px-4 md:px-8 bg-mywhite shadow-inner"
             isEditable={isEditable}
             client:load
           />
-        ) : slug === `storykeep` && user?.isAuthenticated ? (
+        ) : slug === `storykeep` && user?.isAdmin ? (
           <ConfigureStoryKeep client:load />
         ) : null
       }

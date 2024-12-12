@@ -25,7 +25,7 @@ try {
 }
 ---
 
-<Layout title="Initialize Site">
+<Layout title="Re-Configure your Tract Stack">
   <main>
     {error && <div class="error">{error}</div>}
     <InitWizard
@@ -33,7 +33,7 @@ try {
       config={config}
       hasConcierge={validation.capabilities.hasConcierge}
       validation={secureValidation}
-      init={true}
+      init={false}
     />
   </main>
 </Layout>

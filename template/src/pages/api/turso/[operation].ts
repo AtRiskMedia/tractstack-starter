@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { dashboardAnalytics } from "../../../utils/db/api/dashboardAnalytics";
 import { streamEvents } from "../../../utils/db/api/stream";
 import { syncVisit } from "../../../utils/db/api/syncVisit";
 import { unlockProfile } from "../../../utils/db/api/unlock";
@@ -14,11 +15,14 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     let result;
     switch (operation) {
-      case "syncVisit":
-        result = await syncVisit(body);
-        break;
       case "stream":
         result = await streamEvents(body);
+        break;
+      case "dashboardAnalytics":
+        result = await dashboardAnalytics(body);
+        break;
+      case "syncVisit":
+        result = await syncVisit(body);
         break;
       case "unlock":
         result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);

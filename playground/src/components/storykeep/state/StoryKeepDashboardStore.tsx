@@ -13,9 +13,14 @@ export const StoryKeepDashboardStore = () => {
 
   async function fetchDashboardAnalytics() {
     try {
-      const response = await fetch(
-        `/api/concierge/storykeep/dashboardAnalytics?duration=${encodeURIComponent(duration)}`
-      );
+      const response = await fetch("/api/turso/dashboardAnalytics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ duration }),
+      });
+
       const data = await response.json();
       if (data.success) {
         storedDashboardAnalytics.set(processDashboardAnalytics(data.data));
