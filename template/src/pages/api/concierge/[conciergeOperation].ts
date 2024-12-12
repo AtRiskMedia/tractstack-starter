@@ -6,7 +6,7 @@ const BACKEND_URL = import.meta.env.PRIVATE_CONCIERGE_BASE_URL;
 const CONCIERGE_SECRET = import.meta.env.PRIVATE_CONCIERGE_AUTH_SECRET;
 
 export const POST: APIRoute = async ({ request, params }) => {
-  const { operation } = params;
+  const { conciergeOperation } = params;
 
   try {
     const config = await getConfig();
@@ -26,7 +26,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     }
 
     let result;
-    switch (operation) {
+    switch (conciergeOperation) {
       case "status": {
         const response = await fetch(`${BACKEND_URL}/storykeep/status`, {
           method: "GET",
@@ -86,7 +86,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
 
       default:
-        throw new Error(`Unknown operation: ${operation}`);
+        throw new Error(`Unknown operation: ${conciergeOperation}`);
     }
 
     return new Response(JSON.stringify(result), {
@@ -94,7 +94,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error(`Error in concierge ${operation} route:`, error);
+    console.error(`Error in concierge ${conciergeOperation} route:`, error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -110,7 +110,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
 // Also support GET for status operation
 export const GET: APIRoute = async ({ params }) => {
-  if (params.operation === "status") {
+  if (params.conciergeOperation === "status") {
     return POST({
       request: new Request("http://dummy"),
       params,

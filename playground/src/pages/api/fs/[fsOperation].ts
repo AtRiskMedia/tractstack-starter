@@ -77,7 +77,7 @@ async function updateEnvFile(updates: Record<string, unknown>) {
 }
 
 export const POST: APIRoute = async ({ request, params }) => {
-  const { operation } = params;
+  const { fsOperation } = params;
 
   try {
     const config = await getConfig();
@@ -97,7 +97,7 @@ export const POST: APIRoute = async ({ request, params }) => {
     }
 
     let result;
-    switch (operation) {
+    switch (fsOperation) {
       case "read": {
         const configFile = (await request.json()) as { file: string };
         const fileContent = await readConfigFile(`${configFile.file}.json`);
@@ -171,7 +171,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
 
       default:
-        throw new Error(`Unknown operation: ${operation}`);
+        throw new Error(`Unknown operation: ${fsOperation}`);
     }
 
     return new Response(JSON.stringify(result), {
@@ -179,7 +179,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error(`Error in filesystem ${operation} operation:`, error);
+    console.error(`Error in filesystem ${fsOperation} operation:`, error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -194,7 +194,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 };
 
 export const GET: APIRoute = async ({ params }) => {
-  if (params.operation === "read") {
+  if (params.fsOperation === "read") {
     return POST({
       request: new Request("http://dummy"),
       params,

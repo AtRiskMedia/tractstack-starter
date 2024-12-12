@@ -5,24 +5,36 @@ import { syncVisit } from "../../../utils/db/api/syncVisit";
 import { unlockProfile } from "../../../utils/db/api/unlock";
 import { createProfile } from "../../../utils/db/api/create";
 import { updateProfile } from "../../../utils/db/api/update";
+import { executeQueries } from "../../../utils/db/api/executeQueries";
+import { getPaneDesigns } from "../../../utils/db/api/paneDesigns";
+import { getUniqueTailwindClasses } from "../../../utils/db/api/uniqueTailwindClasses";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
-    const { operation } = params;
+    const { tursoOperation } = params;
     const body = await request.json();
 
     let result;
-    switch (operation) {
+    switch (tursoOperation) {
       case "stream":
         result = await streamEvents(body);
+        break;
+      case "syncVisit":
+        result = await syncVisit(body);
+        break;
+      case "executeQueries":
+        result = await executeQueries(body);
         break;
       case "dashboardAnalytics":
         result = await dashboardAnalytics(body);
         break;
-      case "syncVisit":
-        result = await syncVisit(body);
+      case "uniqueTailwindClasses":
+        result = await getUniqueTailwindClasses(body);
+        break;
+      case "paneDesigns":
+        result = await getPaneDesigns();
         break;
       case "unlock":
         result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
@@ -34,7 +46,7 @@ export const POST: APIRoute = async ({ request, params }) => {
         result = await updateProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
         break;
       default:
-        throw new Error(`Unknown operation: ${operation}`);
+        throw new Error(`Unknown operation: ${tursoOperation}`);
     }
 
     return new Response(JSON.stringify({ success: true, data: result }), {
@@ -42,7 +54,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error(`Error in turso ${params.operation} route:`, error);
+    console.error(`Error in turso ${params.tursoOperation} route:`, error);
     return new Response(
       JSON.stringify({
         success: false,
