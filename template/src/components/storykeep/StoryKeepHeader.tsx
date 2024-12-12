@@ -99,6 +99,7 @@ export const StoryKeepHeader = memo(
     menus: MenuDatum[];
     config: Config;
   }) => {
+    console.log(`will need to pass config?`, config);
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
     const [isSaving, setIsSaving] = useState(false);
@@ -188,17 +189,51 @@ export const StoryKeepHeader = memo(
 
     async function fetchAnalytics() {
       try {
-        const type = isContext ? `pane` : `storyfragment`;
-        console.log(`StoryKeepHeader must add analytics fetch`);
-        const response = null; // await fetch(
-        //  `/api/concierge/storykeep/analytics?id=${encodeURIComponent(id)}&type=${encodeURIComponent(type)}&duration=${encodeURIComponent(duration)}`
-        //);
-        //const data = await response.json();
-        //if (data.success) {
-        //  storedAnalytics.set(processedAnalytics(data.data));
-        //  if (Object.keys(data.data?.pie || {}).length || Object.keys(data.data?.line || {}).length)
-        //    setHasAnalytics(true);
-        //}
+        if (id === "create") return;
+        const type = isContext ? "pane" : "storyfragment";
+        const response = await fetch("/api/turso/analytics", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id,
+            type,
+            duration,
+          }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          const processedData: RawAnalytics = {
+            pie: [
+              {
+                id: Number(id),
+                object_id: id,
+                object_name: type,
+                object_type: type === "pane" ? "Pane" : "StoryFragment",
+                total_actions: result.data.pie?.length || 0,
+                verbs: result.data.pie || [],
+              },
+            ],
+            line: [
+              {
+                id: Number(id),
+                object_id: id,
+                object_name: type,
+                object_type: type === "pane" ? "Pane" : "StoryFragment",
+                total_actions: result.data.line?.length || 0,
+                verbs: result.data.line || [],
+              },
+            ],
+          };
+
+          const analytics = processedAnalytics(processedData);
+          storedAnalytics.set(analytics);
+          setHasAnalytics(
+            (result.data.pie && result.data.pie.length > 0) ||
+              (result.data.line && result.data.line.length > 0)
+          );
+        }
       } catch (error) {
         console.error("Error fetching analytics data:", error);
       }

@@ -7,6 +7,7 @@ import { createProfile } from "../../../utils/db/api/create";
 import { updateProfile } from "../../../utils/db/api/update";
 import { executeQueries } from "../../../utils/db/api/executeQueries";
 import { getPaneDesigns } from "../../../utils/db/api/paneDesigns";
+import { getAnalytics } from "../../../utils/db/api/analytics";
 import { getUniqueTailwindClasses } from "../../../utils/db/api/uniqueTailwindClasses";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
@@ -26,6 +27,9 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "executeQueries":
         result = await executeQueries(body);
+        break;
+      case "analytics":
+        result = await getAnalytics(body.id, body.type, body.duration);
         break;
       case "dashboardAnalytics":
         result = await dashboardAnalytics(body);
