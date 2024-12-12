@@ -19,7 +19,7 @@ if (!validation.isValid || !config) {
 
 // valid storyfragment?
 const { slug } = Astro.params;
-const lookup = slug || config.init?.HOME_SLUG;
+const lookup = slug || config?.init?.HOME_SLUG;
 if (slug === config.init?.HOME_SLUG) return Astro.redirect("/");
 if (!lookup) return Astro.redirect("/404");
 if (!isValidContentPath(lookup)) {

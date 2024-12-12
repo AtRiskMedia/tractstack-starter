@@ -117,7 +117,7 @@ export const StoryKeepHeader = memo(
       keys: [thisId],
     });
     const $paneFragmentIds = useStore(paneFragmentIds, { keys: [thisId] });
-    const isHome = slug && slug === config.init?.HOME_SLUG;
+    const isHome = slug && slug === config?.init?.HOME_SLUG;
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const $viewportSet = useStore(viewportSetStore);
