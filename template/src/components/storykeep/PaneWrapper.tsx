@@ -10,12 +10,12 @@ import {
   visiblePanesStore,
   editModeStore,
   showAnalytics,
-  storedAnalytics,
+  storedAnalytics, paneFragmentMarkdown, paneFragmentIds,
 } from "../../store/storykeep";
 import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
 import Pane from "./Pane";
 import CodeHookWrapper from "./CodeHookWrapper";
-import { isFullScreenEditModal } from "../../utils/storykeep";
+import { fragmentHasAnyOverrides, isFullScreenEditModal } from "../../utils/storykeep";
 import { classNames } from "../../utils/helpers";
 import type { ReactNode } from "react";
 import type { ViewportAuto, ToolMode, ToolAddMode } from "../../types";
@@ -208,11 +208,19 @@ const PaneWrapper = (props: {
 
   const onChangeLayoutClicked = () => {
     setChangingLayout(true);
-  }
+  };
 
   const onChangeMarkdownClicked = () => {
-    setChangingMarkdown(true);
-  }
+    const ids = paneFragmentIds.get()[id].current;
+    const markdownFragmentId = ids.last();
+    const pane = paneFragmentMarkdown.get()[markdownFragmentId];
+
+    if (!fragmentHasAnyOverrides(pane)) {
+      setChangingMarkdown(true);
+    } else {
+      alert("Cannot edit markdown, pane has style overrides!");
+    }
+  };
 
   if (!isClient) return null;
 

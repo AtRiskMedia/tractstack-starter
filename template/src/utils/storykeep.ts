@@ -793,7 +793,23 @@ function swapClassNamesPayload_Classes(
   }
 }
 
-export function fixOverrideClassesForFragment(payload: MarkdownPaneDatum, field: MarkdownDatum) {
+export function fragmentHasAnyOverrides(curField: FieldWithHistory<MarkdownEditDatum>) {
+  if(!curField) return false;
+  const classesPayloads = curField.current.payload.optionsPayload.classNamesPayload;
+  if(!classesPayloads) return false;
+
+  const tags = Object.keys(classesPayloads);
+  for(let i = 0; i < tags.length; i++) {
+    const tag = tags[i];
+    const overrides = classesPayloads[tag].override;
+    if(overrides && Object.keys(overrides).length > 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function addMissingOverrideClassesForFragment(payload: MarkdownPaneDatum, field: MarkdownDatum) {
   if(!payload || !field) return;
 
   const classesPayloads = {...payload.optionsPayload.classNamesPayload};
