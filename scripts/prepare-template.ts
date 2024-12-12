@@ -27,7 +27,6 @@ const CORE_FILES = [
   "astro.config.mjs",
   "tailwind.config.cjs",
   "tsconfig.json",
-  "env.d.ts",
   "README.md",
   "LICENSE.md",
   "Dockerfile.example",
