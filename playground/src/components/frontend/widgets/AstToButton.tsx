@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { preParseClicked } from "../../../utils/concierge/preParseClicked";
-import { preParseBunny } from "../../../utils/concierge/preParseBunny";
+import { preParseClicked } from "../../../utils/concierge/preParse_Clicked";
+import { preParseBunny } from "../../../utils/concierge/preParse_Bunny";
 import { events } from "../../../store/events";
 import type { MouseEvent } from "react";
 import type { Config } from "../../../types";
