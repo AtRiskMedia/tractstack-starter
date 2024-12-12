@@ -55,6 +55,7 @@ import type {
   LineDataSeries,
   StoryFragmentDatum,
   ContextPaneDatum,
+  Config,
 } from "../../types";
 
 const processedAnalytics = (data: RawAnalytics): Analytics => {
@@ -85,20 +86,18 @@ export const StoryKeepHeader = memo(
     user,
     isContext,
     originalData,
-    hasContentReady,
     contentMapSlugs,
-    hasTurso,
     menus,
+    config,
   }: {
     id: string;
     slug: string;
     user: AuthStatus;
     isContext: boolean;
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
-    hasContentReady: boolean;
     contentMapSlugs: string[];
-    hasTurso: boolean;
     menus: MenuDatum[];
+    config: Config;
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
@@ -253,12 +252,11 @@ export const StoryKeepHeader = memo(
         [`storyFragmentTitle`, `storyFragmentSlug`].includes(storeKey) &&
         [``, `create`].includes($storyFragmentSlug[thisId].current)
       ) {
-        const clean = hasContentReady
-          ? findUniqueSlug(
-              cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
-              contentMapSlugs
-            )
-          : `hello`;
+        console.log(`on first save we may need to pass flag to set slug=hello`);
+        const clean = findUniqueSlug(
+          cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
+          contentMapSlugs
+        );
         temporaryErrorsStore.setKey(thisId, {
           ...(temporaryErrorsStore.get()[thisId] || {}),
           [`storyFragmentTitle`]: false,
@@ -412,7 +410,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo || !hasTurso ? (
+              {user.isOpenDemo ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"
@@ -461,17 +459,15 @@ export const StoryKeepHeader = memo(
                   updateStoreField={updateStoreField}
                   handleUndo={handleUndo}
                 />
-                {!isHome &&
-                  hasContentReady &&
-                  ![`create`, ``].includes($storyFragmentSlug[thisId]?.current) && (
-                    <StoryFragmentSlug
-                      id={thisId}
-                      isEditing={isEditing}
-                      handleEditingChange={handleInterceptEdit}
-                      updateStoreField={updateStoreField}
-                      handleUndo={handleUndo}
-                    />
-                  )}
+                {!isHome && ![`create`, ``].includes($storyFragmentSlug[thisId]?.current) && (
+                  <StoryFragmentSlug
+                    id={thisId}
+                    isEditing={isEditing}
+                    handleEditingChange={handleInterceptEdit}
+                    updateStoreField={updateStoreField}
+                    handleUndo={handleUndo}
+                  />
+                )}
               </>
             ) : isContext ? (
               <>

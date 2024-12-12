@@ -1,7 +1,7 @@
 import { cleanTursoFile } from "../db/data/tursoFile";
 import { getOptimizedImages } from "../common/helpers";
 import { PUBLIC_THEME } from "../../constants";
-import { tailwindToHex, colorValues } from "./tailwindColors";
+import { tailwindToHex, colorValues } from "../tailwind/tailwindColors";
 import type { Row } from "@libsql/client";
 import type {
   Theme,

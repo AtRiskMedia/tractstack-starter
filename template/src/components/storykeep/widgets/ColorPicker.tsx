@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { HexColorPicker } from "react-colorful";
 import tinycolor from "tinycolor2";
-import { tailwindColors } from "../../../utils/compositor/tailwindColors";
+import { tailwindColors } from "../../../utils/tailwind/tailwindColors";
 import { getComputedColor } from "../../../utils/common/helpers";
 import { useDropdownDirection } from "../../../utils/storykeep/useDropdownDirection";
 

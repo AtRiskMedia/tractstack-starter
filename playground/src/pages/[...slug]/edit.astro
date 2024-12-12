@@ -31,7 +31,7 @@ const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 
 // valid datum?
-const storyfragment = await getStoryFragmentBySlug(slug);
+const storyfragment = await getStoryFragmentBySlug(slug, config);
 if (!storyfragment && slug !== `create`) {
   return Astro.redirect("/404");
 }
@@ -67,6 +67,7 @@ if (!storyfragment && slug !== `create`) {
         originalData={storyfragment}
         contentMapSlugs={contentMapSlugs}
         menus={menus}
+        config={config}
       />
     </header>
 
