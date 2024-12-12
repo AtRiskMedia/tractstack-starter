@@ -1,5 +1,5 @@
 import { tursoClient } from "../client";
-import { cleanPaneDesigns } from "../../compositor/paneDesigns";
+import { cleanPaneDesigns } from "../data/tursoPaneDesign";
 import type { PaneDesign } from "../../../types";
 
 export async function getPaneDesigns(): Promise<PaneDesign[]> {

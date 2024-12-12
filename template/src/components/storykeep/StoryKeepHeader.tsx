@@ -99,7 +99,6 @@ export const StoryKeepHeader = memo(
     menus: MenuDatum[];
     config: Config;
   }) => {
-    console.log(`will need to pass config?`, config);
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
     const [isSaving, setIsSaving] = useState(false);
@@ -528,7 +527,7 @@ export const StoryKeepHeader = memo(
             ) : null}
             {$editMode?.type === `storyfragment` && $editMode?.mode === `settings` && (
               <>
-                <StoryFragmentSettings id={$editMode.id} menus={menus} />
+                <StoryFragmentSettings id={$editMode.id} menus={menus} config={config} />
                 <button
                   type="button"
                   className="my-1 rounded bg-myblue px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"

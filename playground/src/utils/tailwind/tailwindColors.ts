@@ -4,16 +4,12 @@ type TailwindColorPalette = {
   [colorName: string]: string[];
 };
 
-const defaultColors = colorConfig.defaultColors;
-const envBrand = import.meta.env.PUBLIC_BRAND;
-const brandColours: string[] = (() => {
-  const PREVIEW_BRAND = null; //getEnvValue(`PUBLIC_BRAND`);
-  console.log(`tailwindColors.ts must get config BRAND_COLOURS`);
-  const thisBrand = PREVIEW_BRAND || envBrand;
-  if (thisBrand && typeof thisBrand === "string") {
+function getBrandColours(brand: string | null): string[] {
+  const defaultColors = colorConfig.defaultColors;
+  if (brand && typeof brand === "string") {
     const hexColorRegex = /^([A-Fa-f0-9]{6}(?:,[A-Fa-f0-9]{6})*)$/;
-    if (hexColorRegex.test(thisBrand)) {
-      return thisBrand.split(",");
+    if (hexColorRegex.test(brand)) {
+      return brand.split(",");
     } else {
       console.error(
         "Does not match the expected format of hexadecimal colors separated by commas."
@@ -21,9 +17,10 @@ const brandColours: string[] = (() => {
     }
   }
   return defaultColors;
-})();
+}
 
-export function getBrandColor(colorVar: string): string | null {
+export function getBrandColor(colorVar: string, brand: string | null): string | null {
+  const brandColours = getBrandColours(brand);
   const colorName = colorVar.replace("var(--brand-", "").replace(")", "");
   const index = parseInt(colorName) - 1;
   return index >= 0 && index < brandColours.length ? brandColours[index] : null;
@@ -49,15 +46,15 @@ export const getTailwindColorOptions = () => {
   return [...standardColors, ...customColorOptions];
 };
 
-export const tailwindToHex = (tailwindColor: string): string => {
+export const tailwindToHex = (tailwindColor: string, brand: string | null): string => {
   if (tailwindColor.startsWith("bg-brand-")) {
-    const brandColor = getBrandColor(`var(--${tailwindColor.slice(3)})`);
+    const brandColor = getBrandColor(`var(--${tailwindColor.slice(3)})`, brand);
     if (brandColor) {
       return brandColor;
     }
   }
   if (tailwindColor.startsWith("brand-")) {
-    const brandColor = getBrandColor(`var(--${tailwindColor})`);
+    const brandColor = getBrandColor(`var(--${tailwindColor})`, brand);
     if (brandColor) {
       return `#${brandColor}`;
     }
@@ -65,7 +62,7 @@ export const tailwindToHex = (tailwindColor: string): string => {
   if (tailwindColor in customColors) {
     const color = customColors[tailwindColor as keyof typeof customColors];
     if (color.startsWith("var(--")) {
-      const brandColor = getBrandColor(color);
+      const brandColor = getBrandColor(color, brand);
       if (brandColor) {
         return `#${brandColor}`;
       }

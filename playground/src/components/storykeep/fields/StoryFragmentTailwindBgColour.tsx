@@ -9,19 +9,21 @@ import {
   tailwindToHex,
   getTailwindColorOptions,
 } from "../../../utils/tailwind/tailwindColors";
-import type { StoreKey } from "../../../types";
 import TailwindColorCombobox from "../fields/TailwindColorCombobox";
+import type { StoreKey, Config } from "../../../types";
 
 interface StoryFragmentTailwindBgColourProps {
   id: string;
   updateStoreField: (storeKey: StoreKey, newValue: string) => boolean;
   handleUndo: (storeKey: StoreKey, id: string) => void;
+  config: Config;
 }
 
 const StoryFragmentTailwindBgColour = ({
   id,
   updateStoreField,
   handleUndo,
+  config,
 }: StoryFragmentTailwindBgColourProps) => {
   const $storyFragmentTailwindBgColour = useStore(storyFragmentTailwindBgColour, { keys: [id] });
 
@@ -29,7 +31,9 @@ const StoryFragmentTailwindBgColour = ({
   const [selectedTailwindColor, setSelectedTailwindColor] = useState("");
 
   const hexColor = useMemo(() => {
-    const computedColor = getComputedColor(tailwindToHex(localValue));
+    const computedColor = getComputedColor(
+      tailwindToHex(localValue, config?.init?.BRAND_COLOURS || null)
+    );
     return computedColor;
   }, [localValue]);
   const tailwindColorOptions = useMemo(() => getTailwindColorOptions(), []);
@@ -43,7 +47,9 @@ const StoryFragmentTailwindBgColour = ({
   useEffect(() => {
     setLocalValue($storyFragmentTailwindBgColour[id]?.current || "");
     const currentColor = $storyFragmentTailwindBgColour[id]?.current || "";
-    const matchingTailwindColor = hexToTailwind(tailwindToHex(currentColor));
+    const matchingTailwindColor = hexToTailwind(
+      tailwindToHex(currentColor, config?.init?.BRAND_COLOURS || null)
+    );
     setSelectedTailwindColor(matchingTailwindColor || "");
   }, [$storyFragmentTailwindBgColour[id]?.current]);
 
@@ -72,8 +78,11 @@ const StoryFragmentTailwindBgColour = ({
     setLocalValue($storyFragmentTailwindBgColour[id]?.current || "");
     const matchingTailwindColor = tailwindColorOptions.find(
       (color) =>
-        tailwindToHex(`bg-${color}`) ===
-        tailwindToHex($storyFragmentTailwindBgColour[id]?.current || "")
+        tailwindToHex(`bg-${color}`, config?.init?.BRAND_COLOURS || null) ===
+        tailwindToHex(
+          $storyFragmentTailwindBgColour[id]?.current || "",
+          config?.init?.BRAND_COLOURS || null
+        )
     );
     setSelectedTailwindColor(matchingTailwindColor || "");
   }, [handleUndo, $storyFragmentTailwindBgColour, id, tailwindColorOptions]);
@@ -103,6 +112,7 @@ const StoryFragmentTailwindBgColour = ({
         <TailwindColorCombobox
           selectedColor={selectedTailwindColor}
           onColorChange={handleTailwindColorChange}
+          config={config}
         />
       </div>
     </div>

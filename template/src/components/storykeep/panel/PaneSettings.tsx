@@ -27,10 +27,10 @@ import {
 } from "../../../store/storykeep";
 import { contentMap } from "../../../store/events";
 import { cleanString, classNames } from "../../../utils/common/helpers";
-import type { StoreKey } from "../../../types";
+import type { StoreKey, Config } from "../../../types";
 
-export const PaneSettings = (props: { id: string; storyFragmentId: string }) => {
-  const { id, storyFragmentId } = props;
+export const PaneSettings = (props: { id: string; storyFragmentId: string; config: Config }) => {
+  const { id, storyFragmentId, config } = props;
   const [confirmRemoval, setConfirmRemoval] = useState(false);
   const $contentMap = useStore(contentMap);
   const $storyFragmentSlug = useStore(storyFragmentSlug, {
@@ -175,7 +175,7 @@ export const PaneSettings = (props: { id: string; storyFragmentId: string }) => 
               </p>
             </div>
 
-            <PaneBgColour paneId={id} />
+            <PaneBgColour paneId={id} config={config} />
             <div className="flex flex-col">
               <div className="flex-shrink">
                 <button

@@ -14,14 +14,15 @@ import { PaneInsert } from "./PaneInsert";
 import { PaneAstStyles } from "./PaneAstStyles";
 import { useEditModalDimensions } from "../../../utils/storykeep/useEditModalDimensions";
 import { classNames } from "../../../utils/common/helpers";
-import type { FileDatum } from "../../../types";
+import type { FileDatum, Config } from "../../../types";
 
 interface EditModalProps {
   id: string;
   files: FileDatum[];
+  config: Config;
 }
 
-export const EditModal = ({ id, files }: EditModalProps) => {
+export const EditModal = ({ id, files, config }: EditModalProps) => {
   const $creationState = useStore(creationStateStore);
   const thisId = id !== `create` ? id : ($creationState.id ?? `error`);
   const [isClient, setIsClient] = useState(false);
@@ -156,7 +157,7 @@ export const EditModal = ({ id, files }: EditModalProps) => {
                 }
               />
             ) : $editMode?.type === `pane` && $editMode?.mode === `settings` ? (
-              <PaneSettings id={$editMode.id} storyFragmentId={thisId} />
+              <PaneSettings id={$editMode.id} storyFragmentId={thisId} config={config} />
             ) : $editMode?.type === `pane` &&
               $editMode?.mode === `styles` &&
               typeof $editMode.targetId !== `undefined` ? (
@@ -165,9 +166,10 @@ export const EditModal = ({ id, files }: EditModalProps) => {
                 id={thisId}
                 files={files}
                 targetId={$editMode.targetId}
+                config={config}
               />
             ) : $editMode?.type === `pane` && $editMode?.mode === `break` ? (
-              <PaneBreakSettings id={$editMode.id} />
+              <PaneBreakSettings id={$editMode.id} config={config} />
             ) : null}
           </div>
         </div>

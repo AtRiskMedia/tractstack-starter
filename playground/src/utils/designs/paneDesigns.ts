@@ -1,7 +1,14 @@
 import { colorValues } from "../tailwind/tailwindColors";
 import { tailwindToHex } from "../tailwind/tailwindColors";
 import { PUBLIC_THEME } from "../../constants";
-import type { Theme, Variant, PageDesign, PaneDesign, OptionsPayloadDatum } from "../../types";
+import type {
+  Config,
+  Theme,
+  Variant,
+  PageDesign,
+  PaneDesign,
+  OptionsPayloadDatum,
+} from "../../types";
 
 type TailwindColor = (typeof colorValues)[number];
 type ThemeColorMap = { [key in Theme]: TailwindColor };
@@ -73,6 +80,7 @@ export const buttonStyleClasses = [
 export const paneDesigns = (
   theme: Theme = PUBLIC_THEME,
   variant: Variant = `default`,
+  config: Config,
   odd?: boolean
 ): PaneDesign[] => [
   {
@@ -108,7 +116,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -472,7 +481,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -792,7 +802,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -1141,7 +1152,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -1394,7 +1406,8 @@ export const paneDesigns = (
                 "dark-bold": "brand-1",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           )
         : tailwindToHex(
             getComputedColor(
@@ -1407,7 +1420,8 @@ export const paneDesigns = (
                 "dark-bold": "black",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           ),
       codeHook: null,
     },
@@ -1613,7 +1627,8 @@ export const paneDesigns = (
                 "dark-bold": "brand-1",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           )
         : tailwindToHex(
             getComputedColor(
@@ -1626,7 +1641,8 @@ export const paneDesigns = (
                 "dark-bold": "black",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           ),
       codeHook: null,
     },
@@ -1840,7 +1856,8 @@ export const paneDesigns = (
                 "dark-bold": "brand-1",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           )
         : tailwindToHex(
             getComputedColor(
@@ -1853,7 +1870,8 @@ export const paneDesigns = (
                 "dark-bold": "black",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           ),
       codeHook: null,
     },
@@ -1993,7 +2011,8 @@ export const paneDesigns = (
                 "dark-bold": "brand-2",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           )
         : tailwindToHex(
             getComputedColor(
@@ -2006,7 +2025,8 @@ export const paneDesigns = (
                 "dark-bold": "white",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           ),
       codeHook: null,
     },
@@ -2145,7 +2165,8 @@ export const paneDesigns = (
             "dark-bold": "brand-4",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -2289,7 +2310,8 @@ export const paneDesigns = (
                 "dark-bold": "brand-1",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           )
         : tailwindToHex(
             getComputedColor(
@@ -2302,7 +2324,8 @@ export const paneDesigns = (
                 "dark-bold": "black",
               },
               theme
-            )
+            ),
+            config?.init?.BRAND_COLOURS || null
           ),
       codeHook: null,
     },
@@ -2607,7 +2630,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -2637,7 +2661,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2657,7 +2682,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2677,7 +2703,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2715,7 +2742,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -2745,7 +2773,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2765,7 +2794,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2785,7 +2815,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2823,7 +2854,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -2853,7 +2885,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2873,7 +2906,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2893,7 +2927,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2931,7 +2966,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -2961,7 +2997,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -2981,7 +3018,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3001,7 +3039,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3039,7 +3078,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -3069,7 +3109,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3089,7 +3130,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3109,7 +3151,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3147,7 +3190,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -3177,7 +3221,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3197,7 +3242,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3217,7 +3263,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3255,7 +3302,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -3285,7 +3333,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3305,7 +3354,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3325,7 +3375,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3363,7 +3414,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -3393,7 +3445,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3413,7 +3466,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3433,7 +3487,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3471,7 +3526,8 @@ export const paneDesigns = (
             "dark-bold": "black",
           },
           theme
-        )
+        ),
+        config?.init?.BRAND_COLOURS || null
       ),
       codeHook: null,
     },
@@ -3501,7 +3557,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3521,7 +3578,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3541,7 +3599,8 @@ export const paneDesigns = (
                     "dark-bold": "neutral-800",
                   },
                   theme
-                )
+                ),
+                config?.init?.BRAND_COLOURS || null
               ),
               filetype: "svg",
               objectFit: "cover",
@@ -3553,7 +3612,10 @@ export const paneDesigns = (
   },
 ];
 
-export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDesign> => ({
+export const pageDesigns = (
+  theme: Theme = PUBLIC_THEME,
+  config: Config
+): Record<string, PageDesign> => ({
   basic: {
     name: "Basic Page",
     isContext: false,
@@ -3569,12 +3631,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "intro-default") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "intro-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3594,12 +3656,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "intro-onecolumn") as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "paragraph-onecolumn") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find((p) => p.id === "intro-onecolumn") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
+        (p) => p.id === "paragraph-onecolumn"
+      ) as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, true).find(
+      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, config, true).find(
         (p) => p.id === "paragraph-onecolumn"
       ) as PaneDesign,
     },
@@ -3619,12 +3683,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "intro-center") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "paragraph-center") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "intro-center") as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "paragraph-center") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-center": paneDesigns(theme, `center`, true).find(
+      "paragraph-center": paneDesigns(theme, `center`, config, true).find(
         (p) => p.id === "paragraph-center"
       ) as PaneDesign,
     },
@@ -3644,12 +3708,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "intro-slim-default") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `default`, config).find(
+        (p) => p.id === "intro-slim-default"
+      ) as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3669,12 +3735,16 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "intro-slim-onecolumn") as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "paragraph-onecolumn") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
+        (p) => p.id === "intro-slim-onecolumn"
+      ) as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
+        (p) => p.id === "paragraph-onecolumn"
+      ) as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, true).find(
+      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, config, true).find(
         (p) => p.id === "paragraph-onecolumn"
       ) as PaneDesign,
     },
@@ -3694,12 +3764,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "intro-slim-center") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "paragraph-center") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "intro-slim-center") as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "paragraph-center") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-center": paneDesigns(theme, `center`, true).find(
+      "paragraph-center": paneDesigns(theme, `center`, config, true).find(
         (p) => p.id === "paragraph-center"
       ) as PaneDesign,
     },
@@ -3719,14 +3789,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `default`).find(
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `default`, config).find(
         (p) => p.id === "intro-slim-bordered-default"
       ) as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3746,14 +3816,16 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find(
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
         (p) => p.id === "intro-slim-bordered-onecolumn"
       ) as PaneDesign,
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "paragraph-onecolumn") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
+        (p) => p.id === "paragraph-onecolumn"
+      ) as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, true).find(
+      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, config, true).find(
         (p) => p.id === "paragraph-onecolumn"
       ) as PaneDesign,
     },
@@ -3773,12 +3845,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "intro-slim-bordered-center") as PaneDesign,
-      paneDesigns(theme, `center`).find((p) => p.id === "paragraph-center") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `center`, config).find(
+        (p) => p.id === "intro-slim-bordered-center"
+      ) as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "paragraph-center") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-center": paneDesigns(theme, `center`, true).find(
+      "paragraph-center": paneDesigns(theme, `center`, config, true).find(
         (p) => p.id === "paragraph-center"
       ) as PaneDesign,
     },
@@ -3798,10 +3872,10 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3821,10 +3895,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `onecolumn`).find((p) => p.id === "paragraph-onecolumn") as PaneDesign,
+      paneDesigns(theme, `onecolumn`, config).find(
+        (p) => p.id === "paragraph-onecolumn"
+      ) as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, true).find(
+      "paragraph-onecolumn": paneDesigns(theme, `onecolumn`, config, true).find(
         (p) => p.id === "paragraph-onecolumn"
       ) as PaneDesign,
     },
@@ -3844,10 +3920,10 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `center`).find((p) => p.id === "paragraph-center") as PaneDesign,
+      paneDesigns(theme, `center`, config).find((p) => p.id === "paragraph-center") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-center": paneDesigns(theme, `center`, true).find(
+      "paragraph-center": paneDesigns(theme, `center`, config, true).find(
         (p) => p.id === "paragraph-center"
       ) as PaneDesign,
     },
@@ -3866,9 +3942,11 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesigns: [paneDesigns(theme, `default`).find((p) => p.id === "borderedText") as PaneDesign],
+    paneDesigns: [
+      paneDesigns(theme, `default`, config).find((p) => p.id === "borderedText") as PaneDesign,
+    ],
     paneDesignsOdd: {
-      borderedText: paneDesigns(theme, `default`, true).find(
+      borderedText: paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "borderedText"
       ) as PaneDesign,
     },
@@ -3888,12 +3966,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `16x9`).find((p) => p.id === "hero-image-16x9") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `16x9`, config).find((p) => p.id === "hero-image-16x9") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3913,12 +3991,12 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `square`).find((p) => p.id === "hero-image-square") as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `square`, config).find((p) => p.id === "hero-image-square") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3938,14 +4016,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `16x9Bordered`).find(
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `16x9Bordered`, config).find(
         (p) => p.id === "hero-image-16x9Bordered"
       ) as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3965,14 +4043,14 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`).find((p) => p.id === "breaks-7") as PaneDesign,
-      paneDesigns(theme, `squareBordered`).find(
+      paneDesigns(theme, `default`, config).find((p) => p.id === "breaks-7") as PaneDesign,
+      paneDesigns(theme, `squareBordered`, config).find(
         (p) => p.id === "hero-image-squareBordered"
       ) as PaneDesign,
-      paneDesigns(theme, `default`).find((p) => p.id === "paragraph-default") as PaneDesign,
+      paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
     paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, true).find(
+      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
         (p) => p.id === "paragraph-default"
       ) as PaneDesign,
     },
@@ -3991,9 +4069,13 @@ export const pageDesigns = (theme: Theme = PUBLIC_THEME): Record<string, PageDes
       },
       theme
     ),
-    paneDesigns: [paneDesigns(theme, `default`).find((p) => p.id === "empty") as PaneDesign],
+    paneDesigns: [
+      paneDesigns(theme, `default`, config).find((p) => p.id === "empty") as PaneDesign,
+    ],
     paneDesignsOdd: {
-      borderedText: paneDesigns(theme, `default`, true).find((p) => p.id === "empty") as PaneDesign,
+      borderedText: paneDesigns(theme, `default`, config, true).find(
+        (p) => p.id === "empty"
+      ) as PaneDesign,
     },
   },
 });

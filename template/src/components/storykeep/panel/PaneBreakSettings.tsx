@@ -18,6 +18,7 @@ import {
 import PaneBgColour from "../fields/PaneBgColour";
 import TailwindColorCombobox from "../fields/TailwindColorCombobox";
 import { getComputedColor, isDeepEqual } from "../../../utils/common/helpers";
+import type { Config } from "../../../types";
 
 const availableCollections = ["kCz"] as const;
 const availableImagesWithPrefix = ["none", ...Object.keys(SvgBreaks)] as const;
@@ -40,9 +41,10 @@ interface LocalSettings {
 
 interface PaneBreakSettingsProps {
   id: string;
+  config: Config;
 }
 
-export const PaneBreakSettings = ({ id }: PaneBreakSettingsProps) => {
+export const PaneBreakSettings = ({ id, config }: PaneBreakSettingsProps) => {
   const $paneFragmentIds = useStore(paneFragmentIds, { keys: [id] });
   const [fragmentId, setFragmentId] = useState<string | null>(null);
   const $paneFragmentBgPane = useStore(paneFragmentBgPane, {
@@ -163,7 +165,9 @@ export const PaneBreakSettings = ({ id }: PaneBreakSettingsProps) => {
   }, []);
 
   const handleTailwindColorChange = useCallback((newTailwindColor: string) => {
-    const hexColor = getComputedColor(tailwindToHex(`bg-${newTailwindColor}`));
+    const hexColor = getComputedColor(
+      tailwindToHex(`bg-${newTailwindColor}`, config?.init?.BRAND_COLOURS || null)
+    );
     setLocalSettings((prev) => ({
       ...prev,
       colour: hexColor,
@@ -193,7 +197,9 @@ export const PaneBreakSettings = ({ id }: PaneBreakSettingsProps) => {
       const hiddenViewports = currentSettings.hiddenViewports.split(",");
       const currentColor = artpack?.desktop?.svgFill || "#10120d";
       const matchingTailwindColor = tailwindColorOptions.find(
-        (color) => getComputedColor(tailwindToHex(`bg-${color}`)) === currentColor
+        (color) =>
+          getComputedColor(tailwindToHex(`bg-${color}`, config?.init?.BRAND_COLOURS || null)) ===
+          currentColor
       );
 
       setLocalSettings({
@@ -332,10 +338,11 @@ export const PaneBreakSettings = ({ id }: PaneBreakSettingsProps) => {
         <TailwindColorCombobox
           selectedColor={selectedTailwindColor}
           onColorChange={handleTailwindColorChange}
+          config={config}
         />
       </div>
 
-      <PaneBgColour paneId={id} />
+      <PaneBgColour paneId={id} config={config} />
     </div>
   );
 };

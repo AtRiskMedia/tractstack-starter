@@ -42,6 +42,7 @@ import type {
   Tuple,
   ButtonStyleClass,
   FileDatum,
+  Config,
 } from "../../../types";
 import type { ColorStyle } from "../../../utils/tailwind/tailwindColors";
 
@@ -59,8 +60,9 @@ export const PaneAstStyles = (props: {
   id: string;
   targetId: PaneAstTargetId;
   files: FileDatum[];
+  config: Config;
 }) => {
-  const { id, targetId, files } = props;
+  const { id, targetId, files, config } = props;
   const [styleFilter, setStyleFilter] = useState<StyleFilter>("popular");
   const buttonStyleListboxRef = useRef<HTMLButtonElement>(null);
   const { openAbove: buttonStyleOpenAbove, maxHeight: buttonStyleMaxHeight } =
@@ -1352,12 +1354,15 @@ export const PaneAstStyles = (props: {
                         viewport="mobile"
                         allowNegative={activeTagData?.allowNegative ?? false}
                         isNegative={activeTagData?.mobileIsNegative ?? false}
+                        config={config}
                       />
                     </div>
                     <div className="ml-2">
                       <ColorPickerWrapper
                         id="mobile-color"
-                        defaultColor={getComputedColor(tailwindToHex(mobileValue))}
+                        defaultColor={getComputedColor(
+                          tailwindToHex(mobileValue, config?.init?.BRAND_COLOURS || null)
+                        )}
                         onColorChange={(color) =>
                           handleFinalChangeIntercept(hexToTailwind(color) || color, "mobile")
                         }
@@ -1374,12 +1379,15 @@ export const PaneAstStyles = (props: {
                         allowNegative={activeTagData?.allowNegative}
                         isNegative={activeTagData?.tabletIsNegative ?? false}
                         isInferred={tabletValue === mobileValue}
+                        config={config}
                       />
                     </div>
                     <div className="ml-2">
                       <ColorPickerWrapper
                         id="tablet-color"
-                        defaultColor={getComputedColor(tailwindToHex(tabletValue))}
+                        defaultColor={getComputedColor(
+                          tailwindToHex(tabletValue, config?.init?.BRAND_COLOURS || null)
+                        )}
                         onColorChange={(color) =>
                           handleFinalChangeIntercept(hexToTailwind(color) || color, "tablet")
                         }
@@ -1396,12 +1404,15 @@ export const PaneAstStyles = (props: {
                         allowNegative={activeTagData?.allowNegative ?? false}
                         isNegative={activeTagData?.desktopIsNegative ?? false}
                         isInferred={desktopValue === tabletValue}
+                        config={config}
                       />
                     </div>
                     <div className="ml-2">
                       <ColorPickerWrapper
                         id="desktop-color"
-                        defaultColor={getComputedColor(tailwindToHex(desktopValue))}
+                        defaultColor={getComputedColor(
+                          tailwindToHex(desktopValue, config?.init?.BRAND_COLOURS || null)
+                        )}
                         onColorChange={(color) =>
                           handleFinalChangeIntercept(hexToTailwind(color) || color, "desktop")
                         }
@@ -1419,6 +1430,7 @@ export const PaneAstStyles = (props: {
                     viewport="mobile"
                     allowNegative={activeTagData?.allowNegative ?? false}
                     isNegative={activeTagData?.mobileIsNegative ?? false}
+                    config={config}
                   />
                   <ViewportComboBox
                     value={tabletValue}
@@ -1428,6 +1440,7 @@ export const PaneAstStyles = (props: {
                     allowNegative={activeTagData?.allowNegative}
                     isNegative={activeTagData?.tabletIsNegative ?? false}
                     isInferred={tabletValue === mobileValue}
+                    config={config}
                   />
                   <ViewportComboBox
                     value={desktopValue}
@@ -1437,6 +1450,7 @@ export const PaneAstStyles = (props: {
                     allowNegative={activeTagData?.allowNegative ?? false}
                     isNegative={activeTagData?.desktopIsNegative ?? false}
                     isInferred={desktopValue === tabletValue}
+                    config={config}
                   />
                 </>
               )}

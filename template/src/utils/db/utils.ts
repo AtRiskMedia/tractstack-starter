@@ -6,7 +6,7 @@ import { cleanTursoContextPane } from "./data/tursoContextPane";
 import { cleanTursoFile } from "./data/tursoFile";
 import { cleanTursoMenu } from "./data/tursoMenu";
 import { cleanTursoTractStack } from "./data/tursoTractStack";
-import { cleanPaneDesigns } from "../compositor/paneDesigns";
+import { cleanPaneDesigns } from "./data/tursoPaneDesign";
 import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
 import { tursoClient } from "./client";
 import type {

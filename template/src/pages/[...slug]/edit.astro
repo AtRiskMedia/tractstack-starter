@@ -92,6 +92,7 @@ if (!storyfragment && slug !== `create`) {
         client:only="react"
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         files={files}
+        config={config}
       />
     </div>
   </div>
