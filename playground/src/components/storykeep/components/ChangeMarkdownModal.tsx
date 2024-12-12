@@ -3,16 +3,93 @@ import { paneFragmentIds, paneFragmentMarkdown } from "@/store/storykeep.ts";
 import { useState } from "react";
 import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import { fromMarkdown } from "mdast-util-from-markdown";
+import { cleanHtmlAst } from "@/utils/compositor/markdownUtils.ts";
+import { markdownToHtmlAst } from "@/utils/compositor/markdownUtils.ts";
+import type { Root } from "hast";
+import { useStoryKeepUtils } from "@/utils/storykeep.ts";
+import { useStore } from "@nanostores/react";
 
 export type ChangeMarkdownModalProps = {
   paneId: string;
   onClose: () => void;
 }
 
+enum RunState {
+  None = 0,
+  Revalidate = 1,
+  Ready = 2,
+}
+
+
+const getButtonText = (state: RunState): string => {
+  switch (state) {
+    case RunState.Ready: return "Apply";
+    case RunState.Revalidate: return "Validate Again";
+    case RunState.None: return "Validate & Apply";
+    default: return "UNKNOWN";
+  }
+}
+
+const getButtonColor = (state: RunState): string => {
+  switch (state) {
+    case RunState.Ready: return "bg-green-300";
+    case RunState.Revalidate: return "bg-orange-300";
+    case RunState.None: return "bg-green-300";
+    default: return "bg-blue-100";
+  }
+}
+
+
 const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
   const ids = paneFragmentIds.get()[props.paneId].current;
-  const pane = paneFragmentMarkdown.get()[ids.last()];
+  const markdownFragmentId = ids.last();
+
+  const pane = paneFragmentMarkdown.get()[markdownFragmentId];
   const [markdown, setMarkdown] = useState<string>(pane?.current.markdown.body || "");
+  const [error, setError] = useState<string>("");
+  const [state, setState] = useState<RunState>(RunState.None);
+  const $paneFragmentMarkdown = useStore(paneFragmentMarkdown, {
+    keys: [markdownFragmentId],
+  });
+  const { updateStoreField } = useStoryKeepUtils(markdownFragmentId, []);
+
+  function buildElementFromNewMarkdown() {
+    const newHtmlAst = cleanHtmlAst(markdownToHtmlAst(markdown)) as Root;
+    if (newHtmlAst) {
+      const updatedFragment = {
+        ...$paneFragmentMarkdown[markdownFragmentId]?.current,
+        markdown: {
+          ...$paneFragmentMarkdown[markdownFragmentId]?.current?.markdown,
+          body: markdown,
+          htmlAst: newHtmlAst,
+        },
+      };
+      updateStoreField("paneFragmentMarkdown", updatedFragment);
+      props.onClose();
+    }
+  }
+
+  const process = () => {
+    switch (state) {
+      case RunState.Revalidate:
+      case RunState.None: {
+        const mdast = fromMarkdown(markdown);
+        if (mdast) {
+          setState(RunState.Ready);
+          setError("");
+          buildElementFromNewMarkdown();
+        } else {
+          setError("Validation error");
+        }
+        break;
+      }
+      case RunState.Ready: {
+        buildElementFromNewMarkdown();
+      }
+      break;
+    }
+  }
 
   return (
     <TractStackModal
@@ -35,9 +112,16 @@ const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
       }
       body={
         <div className="flex flex-col h-fit w-full">
-          <textarea value={markdown} rows={16}/>
+          {error?.length > 0 && <span className="text-red-500">{error}</span>}
+          <textarea value={markdown}
+                    rows={16}
+                    onChange={e => setMarkdown(e.target.value)}/>
           <div className="flex justify-end mt-4">
-            <button className="bg-green-300 p-4 rounded-md group-hover:bg-black">Apply</button>
+            <button className={`${getButtonColor(state)} p-4 rounded-md group-hover:bg-black`}
+                    onClick={process}
+            >
+              {getButtonText(state)}
+            </button>
           </div>
         </div>
       }
