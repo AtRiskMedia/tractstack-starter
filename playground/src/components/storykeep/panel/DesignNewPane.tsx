@@ -207,15 +207,28 @@ const DesignNewPane = ({
     async function runFetch() {
       try {
         setIsLoading(true);
-        console.log(`DesignNewPane.tsx needs turso api endpoint`);
-        const designsResult = [] as PaneDesign[]; // (await tursoClient.paneDesigns()) as PaneDesign[];
-        // prevent use of duplicate panes on one storyFragment
-        if (Array.isArray(designsResult)) {
-          setReusePaneDesigns(designsResult.filter((p: PaneDesign) => !paneIds.includes(p.id)));
+        const response = await fetch("/api/turso/paneDesigns", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        if (result.success && Array.isArray(result.data)) {
+          // prevent use of duplicate panes on one storyFragment
+          setReusePaneDesigns(result.data.filter((p: PaneDesign) => !paneIds.includes(p.id)));
+        } else {
+          throw new Error("Invalid response format from server");
         }
         setError(null);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error("Error fetching pane designs:", err);
         setError(err instanceof Error ? err.message : "An unknown error occurred");
       } finally {
         setIsLoading(false);

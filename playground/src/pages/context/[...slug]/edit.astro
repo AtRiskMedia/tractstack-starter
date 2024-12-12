@@ -39,7 +39,7 @@ if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astr
   pubDatetime={contextPane?.created}
   modDatetime={contextPane?.changed}
   canonicalURL={canonicalURL}
-        config={config}
+  config={config}
 >
   <div
     id="storykeep-content"
@@ -70,7 +70,7 @@ if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astr
         <ContextPage
           id={slug === "create" ? null : contextPane?.id ? contextPane.id : `error`}
           slug={slug}
-        config={config}
+          config={config}
           client:only="react"
         />
         <div

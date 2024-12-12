@@ -18,10 +18,10 @@ import {
 } from "../../store/storykeep";
 import PaneWrapper from "./compositor/PaneWrapper";
 import { classNames, handleEditorResize, debounce } from "../../utils/common/helpers";
-import type { ViewportKey,Config } from "../../types";
+import type { ViewportKey, Config } from "../../types";
 
-export const ContextPage = (props: { id: string | null; slug: string,config:Config }) => {
-  const { id, slug,config } = props;
+export const ContextPage = (props: { id: string | null; slug: string; config: Config }) => {
+  const { id, slug, config } = props;
   const [isClient, setIsClient] = useState(false);
   const $creationState = useStore(creationStateStore);
   const thisId = id ?? $creationState.id ?? `error`;
