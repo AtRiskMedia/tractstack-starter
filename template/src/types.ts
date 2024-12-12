@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toolAddModes } from "./constants";
+import type { MapStore } from "nanostores";
 import type { Root } from "hast";
 
 export interface ClassNamesPayloadValue {
@@ -974,3 +975,25 @@ export interface SyncOptions {
     utmContent?: string;
   };
 }
+
+export type ButtonStyleClass = {
+  [key: string]: string[];
+}[];
+
+export type StoreMapType = {
+  [K in StoreKey]?: MapStore<Record<string, FieldWithHistory<any>>>;
+};
+
+export type StoreValueType = {
+  storyFragmentTitle: string;
+  storyFragmentSlug: string;
+  storyFragmentTailwindBgColour: string;
+  storyFragmentSocialImagePath: string;
+  storyFragmentMenuId: string;
+  paneFragmentMarkdown: MarkdownEditDatum;
+  paneTitle: string;
+  paneSlug: string;
+  // Add other store types here
+};
+
+export type ValidationFunction = (value: string) => boolean;
