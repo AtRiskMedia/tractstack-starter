@@ -25,6 +25,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
   pubDatetime={new Date()}
   modDatetime={null}
   canonicalURL={canonicalURL}
+  config={config}
 >
   <div id="storykeep-content">
     {
@@ -35,6 +36,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
           newId={newId}
           tractStackId={``}
           hello={false}
+          config={config}
           client:only="react"
         />
       ) : (

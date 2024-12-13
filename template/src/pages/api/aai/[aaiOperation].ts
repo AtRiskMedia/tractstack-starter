@@ -1,22 +1,24 @@
 import type { APIRoute } from "astro";
-import { askLemur } from "../../../utils/aai/askLemur";
-import { getConfig } from "../../../utils/core/config";
+import { runLemurTask } from "../../../utils/aai/askLemur";
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
     const { aaiOperation } = params;
     const body = await request.json();
+
     let result;
     switch (aaiOperation) {
       case "askLemur":
         if (!body.prompt) {
-          throw new Error("Prompt is required for LeMUR task");
+          throw new Error("prompt is required for LeMUR task");
         }
-        result = await askLemur(body);
+        result = await runLemurTask(body);
         break;
+
       default:
         throw new Error(`Unknown operation: ${aaiOperation}`);
     }
+
     return new Response(JSON.stringify({ success: true, data: result }), {
       status: 200,
       headers: { "Content-Type": "application/json" },

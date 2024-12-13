@@ -1,61 +1,38 @@
+import { AssemblyAI } from "assemblyai";
+
 interface LemurTaskParams {
   prompt: string;
   context?: string | Record<string, unknown>;
-  finalModel?: string;
-  inputText?: string;
-  maxOutputSize?: number;
+  final_model?: string;
+  input_text?: string;
+  max_output_size?: number;
   temperature?: number;
-  transcriptIds?: string[];
+  transcript_ids?: string[];
 }
 
-interface LemurResponse {
-  response: string;
-  usage: {
-    model: string;
-    tokens: number;
-  };
-}
+const client = new AssemblyAI({
+  apiKey: import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY,
+});
 
-export async function askLemur(
-  params: LemurTaskParams,
-): Promise<LemurResponse | null> {
+export async function runLemurTask(params: LemurTaskParams) {
   if (!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY) {
     console.error("AssemblyAI API key not configured");
     return null;
   }
 
   try {
-    const response = await fetch("https://api.assemblyai.com/lemur/v3/generate/task", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: String(import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY),
-      },
-      body: JSON.stringify({
-        prompt: params.prompt,
-        context: params.context,
-        final_model: params.finalModel,
-        input_text: params.inputText,
-        max_output_size: params.maxOutputSize,
-        temperature: params.temperature,
-        transcript_ids: params.transcriptIds,
-      }),
+    const result = await client.lemur.task({
+      prompt: params.prompt,
+      context: params.context,
+      final_model: params.final_model,
+      input_text: params.input_text,
+      max_output_size: params.max_output_size,
+      temperature: params.temperature,
+      transcript_ids: params.transcript_ids,
     });
-
-    if (!response.ok) {
-      throw new Error(`AssemblyAI API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return {
-      response: data.response,
-      usage: {
-        model: data.model || "unknown",
-        tokens: data.tokens || 0,
-      },
-    };
+    return result;
   } catch (error) {
-    console.error("Error in askLemur:", error);
+    console.error("Error in runLemurTask:", error);
     throw error;
   }
 }

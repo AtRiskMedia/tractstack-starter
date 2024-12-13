@@ -131,12 +131,11 @@ const CreateNewPage = ({
         }),
       });
       const result = await response.json();
-      console.log(result);
-      const copy = parseMarkdownSections(result.response);
-      //console.log(result.response);
-      //console.log(result.usage);
-      return copy;
+      console.log(result.data.response);
+      console.log(result.data.usage);
+      return parseMarkdownSections(result.data.response);
     } else {
+      console.log(`must update prompt for context page gen`);
       const copy = {
         pageTitle: `Page Title`,
         title: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,
