@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { useStore } from "@nanostores/react";
 import { classNames } from "../../../utils/common/helpers";
 import { reconcileData, resetUnsavedChanges } from "../../../utils/data/reconcileData";
-import { previewMode, getPreviewModeValue } from "../../../store/storykeep";
 import { getTailwindWhitelist } from "../../../utils/data/tursoTailwindWhitelist";
 import type {
   ReconciledData,
@@ -38,78 +36,55 @@ export const SaveProcessModal = ({
 }: SaveProcessModalProps) => {
   const [stage, setStage] = useState<SaveStage>("RECONCILING");
   const [error, setError] = useState<string | null>(null);
-  const [whitelist, setWhitelist] = useState<string[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [slug, setSlug] = useState("");
-  const $previewMode = useStore(previewMode);
-  const isPreview = getPreviewModeValue($previewMode);
 
   useEffect(() => {
-    async function runFetch() {
+    const runSaveProcess = async () => {
       try {
-        console.log(`SaveProcessModal must add turso proxy to uniqueTailwindClasses`);
-        //const result = (await tursoClient.uniqueTailwindClasses(id)) as string[];
-        setWhitelist([]);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching datum payload:", err);
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
-      } finally {
-        setIsLoaded(true);
-      }
-    }
-    runFetch();
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      const runSaveProcess = async () => {
-        try {
-          const data = await reconcileChanges();
-          const slug = !isContext ? data?.storyFragment?.data?.slug : data?.contextPane?.data?.slug;
-          setSlug(slug ?? ``);
-          const hasFiles = !isContext
-            ? data?.storyFragment?.data?.panesPayload
-            : [data?.contextPane?.data?.panePayload];
-          const files = hasFiles
-            ?.map((p) => {
-              if (p?.files.length) {
-                return p.files
-                  .map((f) => {
-                    if (f.src.startsWith(`data:image`))
-                      return {
-                        filename: f.filename,
-                        src: f.src,
-                        paneId: f.paneId,
-                        markdown: f.markdown,
-                      };
-                    return null;
-                  })
-                  .filter((n) => n);
-              }
-              return null;
-            })
-            .filter((n) => n)
-            .flat() as FileDatum[];
-          setStage("UPDATING_STYLES");
-          await updateCustomStyles(data);
-          if (files && files.length) {
-            setStage("UPLOADING_IMAGES");
-            await uploadFiles(files);
-          }
-          setStage("PUBLISHING");
-          await publishChanges(data);
-          setStage("COMPLETED");
-          resetUnsavedChanges(id, isContext);
-        } catch (err) {
-          setStage("ERROR");
-          setError(err instanceof Error ? err.message : "An unknown error occurred");
+        const data = await reconcileChanges();
+        const slug = !isContext ? data?.storyFragment?.data?.slug : data?.contextPane?.data?.slug;
+        setSlug(slug ?? ``);
+        const hasFiles = !isContext
+          ? data?.storyFragment?.data?.panesPayload
+          : [data?.contextPane?.data?.panePayload];
+        const files = hasFiles
+          ?.map((p) => {
+            if (p?.files.length) {
+              return p.files
+                .map((f) => {
+                  if (f.src.startsWith(`data:image`))
+                    return {
+                      filename: f.filename,
+                      src: f.src,
+                      paneId: f.paneId,
+                      markdown: f.markdown,
+                    };
+                  return null;
+                })
+                .filter((n) => n);
+            }
+            return null;
+          })
+          .filter((n) => n)
+          .flat() as FileDatum[];
+        setStage("UPDATING_STYLES");
+        await updateCustomStyles(data);
+        if (files && files.length) {
+          setStage("UPLOADING_IMAGES");
+          await uploadFiles(files);
         }
-      };
+        setStage("PUBLISHING");
+        await publishChanges(data);
+        setStage("COMPLETED");
+        resetUnsavedChanges(id, isContext);
+      } catch (err) {
+        setStage("ERROR");
+        setError(err instanceof Error ? err.message : "An unknown error occurred");
+      }
+    };
 
-      runSaveProcess();
-    }
-  }, [isLoaded, id, isContext]);
+    runSaveProcess();
+  }, [id, isContext]);
 
   const reconcileChanges = async (): Promise<ReconciledData> => {
     try {
@@ -123,9 +98,6 @@ export const SaveProcessModal = ({
   };
 
   const uploadFiles = async (files: FileDatum[]): Promise<boolean> => {
-    if (isPreview) {
-      return true;
-    }
     try {
       console.log(`must publish files`, files);
       return true;
@@ -175,7 +147,7 @@ export const SaveProcessModal = ({
       const result2 = await existing.json();
       const existingClasses = result2.data || [];
       // Merge all classes without duplicates
-      const newWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...whitelist])];
+      const newWhitelist = [...new Set([...newWhitelistItems, ...existingClasses])];
 
       const response = await fetch("/api/fs/generateTailwindWhitelist", {
         method: "POST",
@@ -192,6 +164,19 @@ export const SaveProcessModal = ({
       }
 
       const result = await response.json();
+      if (result.success)
+        await fetch("/api/fs/update", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            file: "init",
+            updates: {
+              STYLES_VER: Date.now(),
+            },
+          }),
+        });
       return result.success;
     } catch (err) {
       setStage("ERROR");
