@@ -4,9 +4,9 @@ import { getConfig, validateConfig } from "../../../../utils/core/config";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 import Header from "../../../../components/common/Header.astro";
 import Footer from "../../../../components/common/Footer.astro";
-import ResourceEditor from "../../../../components/storykeep/manage/ResourceEditor";
-import { getResourcesBySlug } from "../../../../utils/db/utils";
-import type { AuthStatus, MenuDatum, ResourceDatum } from "../../../../types";
+import TractStackEditor from "../../../../components/storykeep/manage/TractStackEditor";
+import { getTractStackBySlug } from "../../../../utils/db/utils";
+import type { AuthStatus, MenuDatum, TractStackDatum } from "../../../../types";
 
 const { slug } = Astro.params;
 const create = slug === "create";
@@ -17,26 +17,23 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/storykeep/manage/resource/${slug}`;
+const canonicalURL = `/storykeep/manage/tractstack/${slug}`;
 
-let resource: ResourceDatum;
+let tractstack: TractStackDatum | undefined = undefined;
 
 if (create) {
-  resource = {
+  tractstack = {
     id: ulid(),
     title: "",
     slug: "",
-    category: null,
-    actionLisp: "",
-    oneliner: "",
-    optionsPayload: {},
+    socialImagePath: "",
   };
 } else {
   if (!slug) return Astro.redirect("/404");
-  const resources = await getResourcesBySlug([slug]);
-  resource = resources[0];
-  if (!resource) return Astro.redirect("/404");
+  const tractstacks = await getTractStackBySlug(slug);
+  tractstack = tractstacks?.at(0);
 }
+if (!tractstack) return Astro.redirect("/404");
 
 const menuPayload: MenuDatum = {
   id: `storykeep`,
@@ -60,14 +57,14 @@ const menuPayload: MenuDatum = {
 ---
 
 <StoryKeep
-  title={create ? "Create New Resource" : `Edit Resource: ${resource.title}`}
+  title={create ? "Create New TractStack" : `Edit TractStack: ${tractstack.title}`}
   canonicalURL={canonicalURL}
   config={config}
 >
   <Header
-    title={create ? "Create New Resource" : `Edit Resource: ${resource.title}`}
+    title={create ? "Create New TractStack" : `Edit TractStack: ${tractstack.title}`}
     menu={menuPayload}
-    slug={`storykeep-manage-resource-${slug}`}
+    slug={`storykeep-manage-tractstack-${slug}`}
     isContext={false}
     user={user}
     isStoryKeep={true}
@@ -77,14 +74,14 @@ const menuPayload: MenuDatum = {
   <main id="main-content" class="min-h-screen">
     <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
       <div class="py-1.5 bg-white px-3.5">
-        <ResourceEditor resource={resource} create={create} client:load />
+        <TractStackEditor tractstack={tractstack} create={create} client:load />
       </div>
     </div>
   </main>
   <Footer
     menu={menuPayload}
     backToTop={true}
-    slug={`storykeep-manage-resource-${slug}`}
+    slug={`storykeep-manage-tractstack-${slug}`}
     isContext={false}
     config={config}
   />
