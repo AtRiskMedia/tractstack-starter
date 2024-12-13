@@ -574,9 +574,7 @@ export async function getOptimizedImages(
       // Remove /api prefix from URL
       let optimizedSrc: string | undefined = undefined;
       let cleanUrl = f.url.replace(/^\/api/, "");
-      const cleanFile = !f.src_set
-        ? f.url.replace(/^\/api/, "")
-        : f.url.replace(/^\/api/, "").replace(/(\.[^.]+)$/, "_1920px$1");
+      const cleanFile = !f.src_set ? f.url : f.url.replace(/(\.[^.]+)$/, "_1920px$1");
 
       // Check if file exists
       try {

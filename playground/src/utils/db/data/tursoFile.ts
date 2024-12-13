@@ -1,5 +1,5 @@
 import type { Row } from "@libsql/client";
-import type { TursoFileNode } from "../../../types";
+import type { TursoFileNode } from "../../types";
 
 export function cleanTursoFile(rows: Row[]): TursoFileNode[] {
   if (!rows.length) return [];

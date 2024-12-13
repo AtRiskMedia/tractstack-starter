@@ -758,7 +758,7 @@ export async function getFileById(id: string): Promise<FileDatum | null> {
           altDescription: file.alt_description,
           paneId: file.paneId,
           markdown: file.markdown,
-          src: `/${file.url}`.replace(/(\.[^.]+)$/, "_1920px$1"),
+          src: `${file.url}`.replace(/(\.[^.]+)$/, "_1920px$1"),
           srcSet: false,
         };
       return {
@@ -767,7 +767,7 @@ export async function getFileById(id: string): Promise<FileDatum | null> {
         altDescription: file.alt_description,
         paneId: file.paneId,
         markdown: file.markdown,
-        src: `/${file.url}`,
+        src: `${file.url}`,
         srcSet: false,
       };
     }
