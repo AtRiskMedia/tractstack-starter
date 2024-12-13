@@ -333,6 +333,7 @@ export const StoryFragment = (props: {
             </div>
           ) : isDesigningNew && paneId !== `insert` ? null : (
             <PaneWrapper
+              storyFragmentId={id}
               id={paneId}
               slug={slug}
               isContext={isContext}
