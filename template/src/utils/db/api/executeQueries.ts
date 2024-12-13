@@ -12,8 +12,9 @@ export async function executeQueries(
     if (!client) return { success: false, results: [] };
 
     for (const query of queries) {
-      const result = await client.execute(query);
-      results.push(result);
+      console.log(`skipping:`, query);
+      //const result = await client.execute(query);
+      //results.push(result);
     }
 
     return { success: true, results };

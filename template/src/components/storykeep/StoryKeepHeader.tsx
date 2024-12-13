@@ -7,7 +7,7 @@ import AdjustmentsVerticalIcon from "@heroicons/react/24/outline/AdjustmentsVert
 import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRippleIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { SaveProcessModal } from "./header/SaveProcessModal";
+import { SaveProcessModal } from "./state/SaveProcessModal";
 import ViewportSelector from "./header/ViewportSelector";
 import ToolModeSelector from "./header/ToolModeSelector";
 import ToolAddModeSelector from "./header/ToolAddModeSelector";

@@ -27,6 +27,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Admin-only routes
   const adminProtectedRoutes = [
     "/storykeep/settings",
+    "/api/fs/update",
+    "/api/concierge/status",
+    "/api/concierge/publish",
     ...(isInitialized ? ["/storykeep/init"] : []),
   ];
 
@@ -36,12 +39,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/context/*/edit",
     "/storykeep",
     "/storykeep/create/*",
-    "/api/fs/update",
-    "/api/concierge/status",
-    "/api/concierge/publish",
     "/api/turso/paneDesigns",
-    "/api/turso/execute",
+    "/api/turso/executeQueries",
+    "/api/turso/analytics",
+    "/api/turso/dashboardAnalytics",
     "/api/turso/uniqueTailwindClasses",
+    "/api/turso/paneDesigns",
   ];
 
   // Routes that can be accessed in open demo mode
@@ -50,6 +53,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/context/*/edit",
     "/storykeep",
     "/storykeep/create/*",
+    "/api/turso/analytics",
+    "/api/turso/dashboardAnalytics",
     "/api/turso/paneDesigns",
   ];
 

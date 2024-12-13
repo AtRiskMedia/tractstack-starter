@@ -3,7 +3,7 @@ let generatedCss = false;
 
 if (!generatedCss) {
   try {
-    // Generate CSS
+    // Generate CSS based on db
     await fetch(`${Astro.url.origin}/api/fs/generateTailwind`, {
       method: "POST",
     });
@@ -30,4 +30,4 @@ if (!generatedCss) {
 }
 ---
 
-<div>ok</div>
+<div>{generatedCss}</div>

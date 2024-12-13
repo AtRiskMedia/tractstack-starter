@@ -119,6 +119,17 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "generateTailwindWhitelist": {
+        const { whitelist } = (await request.json()) as { whitelist?: string[] };
+        const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));
+        await generateOptimizedCss(whitelistedClasses);
+        result = {
+          success: true,
+          message: "CSS generated successfully",
+        };
+        break;
+      }
+
       case "update": {
         const { file, updates } = (await request.json()) as ConfigUpdatePayload;
 

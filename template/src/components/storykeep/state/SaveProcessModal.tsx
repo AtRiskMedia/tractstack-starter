@@ -12,6 +12,7 @@ import type {
   StoryFragmentQueries,
   ContextPaneQueries,
   PaneDatum,
+  TursoQuery,
 } from "../../../types";
 
 type SaveStage =
@@ -126,18 +127,22 @@ export const SaveProcessModal = ({
 
   const publishTailwind = async (): Promise<boolean> => {
     try {
-      const response = await fetch(`/api/concierge/storykeep/publish`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          target: `tailwind`,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) return true;
-      return false;
+      console.log(
+        `this step probably isn't required now; was used previously to generate tailwind from whitelist -- we are doing this all in the one step now`
+      );
+      return true;
+      //const response = await fetch(`/api/concierge/storykeep/publish`, {
+      //  method: "POST",
+      //  headers: {
+      //    "Content-Type": "application/json",
+      //  },
+      //  body: JSON.stringify({
+      //    target: `tailwind`,
+      //  }),
+      //});
+      //const data = await response.json();
+      //if (data.success) return true;
+      //return false;
     } catch (err) {
       setStage("ERROR");
       setError(
@@ -152,18 +157,20 @@ export const SaveProcessModal = ({
       return true;
     }
     try {
-      const response = await fetch(`/api/concierge/storykeep/files`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          files,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) return true;
-      return false;
+      console.log(`must publish files`, files);
+      return true;
+      //const response = await fetch(`/api/concierge/storykeep/files`, {
+      //  method: "POST",
+      //  headers: {
+      //    "Content-Type": "application/json",
+      //  },
+      //  body: JSON.stringify({
+      //    files,
+      //  }),
+      //});
+      //const data = await response.json();
+      //if (data.success) return true;
+      //return false;
     } catch (err) {
       setStage("ERROR");
       setError(
@@ -187,18 +194,20 @@ export const SaveProcessModal = ({
             : [];
       const newWhitelistItems = getTailwindWhitelist(panes);
       const newWhitelist = [...new Set([...newWhitelistItems, ...whitelist])];
-      const response = await fetch(`/api/concierge/storykeep/tailwind`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          whitelist: newWhitelist,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) return true;
-      return false;
+      console.log(`must publish tailwind`, newWhitelist);
+      return true;
+      //const response = await fetch(`/api/concierge/storykeep/tailwind`, {
+      //  method: "POST",
+      //  headers: {
+      //    "Content-Type": "application/json",
+      //  },
+      //  body: JSON.stringify({
+      //    whitelist: newWhitelist,
+      //  }),
+      //});
+      //const data = await response.json();
+      //if (data.success) return true;
+      //return false;
     } catch (err) {
       setStage("ERROR");
       setError(
@@ -227,22 +236,32 @@ export const SaveProcessModal = ({
         "file_markdown",
       ];
 
-      for (const queryType of executionOrder) {
+      // Collect all valid queries in order
+      const queriesInOrder = executionOrder.reduce((acc: TursoQuery[], queryType) => {
         if (queryType in queries) {
           const typeQueries = queries[queryType as keyof typeof queries];
           const queryArray = Array.isArray(typeQueries) ? typeQueries : [typeQueries];
-
-          for (const query of queryArray) {
-            if (query && query.sql) {
-              try {
-                console.log(`SaveProcessModal needs turso execute endpoint`);
-                //await tursoClient.execute([query]);
-              } catch (queryError) {
-                console.error(`Error executing query:`, query, queryError);
-              }
-            }
-          }
+          acc.push(...queryArray.filter((q) => q && q.sql));
         }
+        return acc;
+      }, []);
+
+      // Execute the queries using the new API endpoint
+      const response = await fetch("/api/turso/executeQueries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(queriesInOrder),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to execute queries: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to execute queries");
       }
     } catch (err) {
       setStage("ERROR");
