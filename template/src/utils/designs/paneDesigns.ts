@@ -3943,13 +3943,10 @@ export const pageDesigns = (
       theme
     ),
     paneDesigns: [
-      paneDesigns(theme, `default`, config).find((p) => p.id === "borderedText") as PaneDesign,
-    ],
-    paneDesignsOdd: {
-      borderedText: paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "borderedText"
+      paneDesigns(theme, `default`, config).find(
+        (p) => p.id === "paragraph-inset-default"
       ) as PaneDesign,
-    },
+    ],
   },
   basicImage16x9: {
     name: "Basic Page - with 16x9 hero image",
@@ -3970,11 +3967,6 @@ export const pageDesigns = (
       paneDesigns(theme, `16x9`, config).find((p) => p.id === "hero-image-16x9") as PaneDesign,
       paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
-    paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "paragraph-default"
-      ) as PaneDesign,
-    },
   },
   basicImageSquare: {
     name: "Basic Page - with square hero image",
@@ -3995,11 +3987,6 @@ export const pageDesigns = (
       paneDesigns(theme, `square`, config).find((p) => p.id === "hero-image-square") as PaneDesign,
       paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
-    paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "paragraph-default"
-      ) as PaneDesign,
-    },
   },
   basicImage16x9Bordered: {
     name: "Basic Page - with 16x9 hero image, bordered",
@@ -4022,11 +4009,6 @@ export const pageDesigns = (
       ) as PaneDesign,
       paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
-    paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "paragraph-default"
-      ) as PaneDesign,
-    },
   },
   basicImageSquareBordered: {
     name: "Basic Page - with square hero image, bordered",
@@ -4049,11 +4031,6 @@ export const pageDesigns = (
       ) as PaneDesign,
       paneDesigns(theme, `default`, config).find((p) => p.id === "paragraph-default") as PaneDesign,
     ],
-    paneDesignsOdd: {
-      "paragraph-default": paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "paragraph-default"
-      ) as PaneDesign,
-    },
   },
   empty: {
     name: "Empty Page",
@@ -4072,10 +4049,5 @@ export const pageDesigns = (
     paneDesigns: [
       paneDesigns(theme, `default`, config).find((p) => p.id === "empty") as PaneDesign,
     ],
-    paneDesignsOdd: {
-      borderedText: paneDesigns(theme, `default`, config, true).find(
-        (p) => p.id === "empty"
-      ) as PaneDesign,
-    },
   },
 });
