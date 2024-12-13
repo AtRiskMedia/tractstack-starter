@@ -32,7 +32,7 @@ export async function updateCssVars(brandColors: string): Promise<CssUpdateResul
     });
 
     // Apply all updates sequentially
-    const updatedContent = colorVarUpdates.reduce((content, update) => update, cssContent);
+    const updatedContent = colorVarUpdates.reduce((update) => update, cssContent);
 
     // Write updated content back to file
     await fs.writeFile(CSS_FILE_PATH, updatedContent, "utf-8");

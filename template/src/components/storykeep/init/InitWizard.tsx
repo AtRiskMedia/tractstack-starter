@@ -290,7 +290,8 @@ export default function InitWizard({
         isLocked:
           !$store.completedSteps.includes(requiresPublish ? "publish" : "security") ||
           !isInitialized ||
-          (!init && !hasInitCompleted),
+          (!init && !hasInitCompleted) ||
+          (init && hasHomeSlug),
       }
     );
 
