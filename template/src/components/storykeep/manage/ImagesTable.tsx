@@ -45,32 +45,38 @@ export default function ImagesTable({ images }: ImagesTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {filteredImages.map((image) => (
-              <tr key={image.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <img
-                    src={image.src}
-                    alt={image.altDescription}
-                    className="h-16 w-16 object-contain"
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
-                  {image.filename}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
-                  {image.altDescription}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
-                  <a
-                    href={`/storykeep/manage/image/${image.id}`}
-                    className="text-myblue hover:text-myorange"
-                    title="Edit"
-                  >
-                    <BeakerIcon className="h-5 w-5" />
-                  </a>
-                </td>
+            {!filteredImages.length ? (
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">None found.</td>
               </tr>
-            ))}
+            ) : (
+              filteredImages.map((image) => (
+                <tr key={image.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <img
+                      src={image.src}
+                      alt={image.altDescription}
+                      className="h-16 w-16 object-contain"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
+                    {image.filename}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
+                    {image.altDescription}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
+                    <a
+                      href={`/storykeep/manage/image/${image.id}`}
+                      className="text-myblue hover:text-myorange"
+                      title="Edit"
+                    >
+                      <BeakerIcon className="h-5 w-5" />
+                    </a>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

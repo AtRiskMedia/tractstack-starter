@@ -40,23 +40,29 @@ export default function MenusTable({ menus }: MenusTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {filteredMenus.map((menu) => (
-              <tr key={menu.id}>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">{menu.title}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
-                  {menu.theme}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
-                  <a
-                    href={`/storykeep/manage/menu/${menu.id}`}
-                    className="text-myblue hover:text-myorange"
-                    title="Edit"
-                  >
-                    <BeakerIcon className="h-5 w-5" />
-                  </a>
-                </td>
+            {!filteredMenus.length ? (
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">None found.</td>
               </tr>
-            ))}
+            ) : (
+              filteredMenus.map((menu) => (
+                <tr key={menu.id}>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">{menu.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
+                    {menu.theme}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
+                    <a
+                      href={`/storykeep/manage/menu/${menu.id}`}
+                      className="text-myblue hover:text-myorange"
+                      title="Edit"
+                    >
+                      <BeakerIcon className="h-5 w-5" />
+                    </a>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

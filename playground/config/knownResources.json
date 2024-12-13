@@ -1,0 +1,28 @@
+{
+  "crusade": {
+    "location": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "details": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "ytembed": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "date": {
+      "type": "date",
+      "defaultValue": ""
+    },
+    "cancelled": {
+      "type": "boolean",
+      "defaultValue": false
+    },
+    "live": {
+      "type": "boolean",
+      "defaultValue": false
+    }
+  }
+}

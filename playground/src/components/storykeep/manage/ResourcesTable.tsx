@@ -1,18 +1,16 @@
 import { useState } from "react";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
-import type { FileDatum } from "../../../types";
+import type { ResourceDatum } from "../../../types";
 
-interface ImagesTableProps {
-  images: FileDatum[];
+interface ResourcesTableProps {
+  resources: ResourceDatum[];
 }
 
-export default function ImagesTable({ images }: ImagesTableProps) {
+export default function ResourcesTable({ resources }: ResourcesTableProps) {
   const [query, setQuery] = useState("");
 
-  const filteredImages = images.filter(
-    (image) =>
-      image.filename.toLowerCase().includes(query.toLowerCase()) ||
-      image.altDescription.toLowerCase().includes(query.toLowerCase())
+  const filteredResources = resources.filter((resource) =>
+    resource.title.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
@@ -20,7 +18,7 @@ export default function ImagesTable({ images }: ImagesTableProps) {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search images..."
+          placeholder="Search resources..."
           className="w-full p-2 border rounded"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -31,13 +29,13 @@ export default function ImagesTable({ images }: ImagesTableProps) {
           <thead className="bg-mylightgrey/20">
             <tr>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
-                Preview
+                Title
               </th>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
-                Filename
+                Slug
               </th>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
-                Alt Description
+                Category
               </th>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
                 Actions
@@ -45,29 +43,25 @@ export default function ImagesTable({ images }: ImagesTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {!filteredImages.length ? (
+            {!filteredResources.length ? (
               <tr>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">None found.</td>
               </tr>
             ) : (
-              filteredImages.map((image) => (
-                <tr key={image.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <img
-                      src={image.src}
-                      alt={image.altDescription}
-                      className="h-16 w-16 object-contain"
-                    />
-                  </td>
+              filteredResources.map((resource) => (
+                <tr key={resource.slug}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
-                    {image.filename}
+                    {resource.title}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
-                    {image.altDescription}
+                    {resource.slug}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
+                    {resource.category || "N/A"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                     <a
-                      href={`/storykeep/manage/image/${image.id}`}
+                      href={`/storykeep/manage/resource/${resource.slug}`}
                       className="text-myblue hover:text-myorange"
                       title="Edit"
                     >

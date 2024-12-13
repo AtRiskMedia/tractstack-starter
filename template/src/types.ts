@@ -997,3 +997,10 @@ export type StoreValueType = {
 };
 
 export type ValidationFunction = (value: string) => boolean;
+
+export interface ResourceSetting {
+  [key: string]: {
+    type: "string" | "boolean" | "number" | "date";
+    defaultValue?: any;
+  };
+}
