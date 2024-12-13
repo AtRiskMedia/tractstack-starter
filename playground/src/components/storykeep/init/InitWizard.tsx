@@ -51,6 +51,7 @@ export default function InitWizard({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasInit = init && initialConfig?.init?.SITE_INIT;
+  const [hasInitCompleted, setHasInitCompleted] = useState(false);
 
   // Logo and branding configuration
   const logo =
@@ -132,9 +133,10 @@ export default function InitWizard({
   );
 
   // Central save handler
-  const saveConfigChanges = async (changes: Record<string, unknown>) => {
+  async function saveConfigChanges(changes: Record<string, unknown>) {
     try {
-      const response = await fetch("/api/fs/update", {
+      // Save the config file
+      const configResponse = await fetch("/api/fs/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -146,16 +148,33 @@ export default function InitWizard({
         }),
       });
 
-      if (!response.ok) {
+      if (!configResponse.ok) {
         throw new Error("Failed to save configuration");
       }
 
-      return await response.json();
+      // If brand colors were changed, update CSS through API
+      if ("BRAND_COLOURS" in changes) {
+        const cssResponse = await fetch("/api/fs/updateCss", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            brandColors: changes.BRAND_COLOURS,
+          }),
+        });
+
+        if (!cssResponse.ok) {
+          throw new Error("Failed to update CSS variables");
+        }
+      }
+
+      return await configResponse.json();
     } catch (error) {
       console.error("Error saving config:", error);
       throw error;
     }
-  };
+  }
 
   // Central publish handler
   const handlePublish = async () => {
@@ -188,6 +207,7 @@ export default function InitWizard({
         setIsProcessing(true);
         setError(null);
         // Only actually publish in PublishStep
+        if (step === "publish" && !hasInit) setHasInitCompleted(true);
         if (step === "publish" && !hasConcierge) window.location.reload();
         else if (step === "publish" && configState.needsPublish.size > 0) {
           await handlePublish();
@@ -270,7 +290,7 @@ export default function InitWizard({
         isLocked:
           !$store.completedSteps.includes(requiresPublish ? "publish" : "security") ||
           !isInitialized ||
-          hasHomeSlug,
+          (!init && !hasInitCompleted),
       }
     );
 
@@ -280,7 +300,7 @@ export default function InitWizard({
     if (nextStep) {
       setCurrentStep(nextStep.id);
     }
-  }, [$store.completedSteps, configState]);
+  }, [$store.completedSteps, configState, hasInitCompleted]);
 
   // Step renderer with unified props
   const renderStep = useCallback(

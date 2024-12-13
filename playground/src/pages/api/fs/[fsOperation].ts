@@ -170,6 +170,43 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "updateCss": {
+        const { brandColors } = (await request.json()) as { brandColors: string };
+        const cssPath = path.join(process.cwd(), "public", "styles", "custom.css");
+
+        try {
+          // Read existing CSS file
+          const cssContent = await fs.readFile(cssPath, "utf-8");
+
+          // Parse the comma-separated color string
+          const colors = brandColors.split(",").map((color) => `#${color.trim()}`);
+          if (colors.length !== 8) {
+            throw new Error("Invalid brand colors format - expected 8 color values");
+          }
+
+          // Create new CSS variable declarations
+          const colorVars = colors
+            .map((color, index) => `  --brand-${index + 1}: ${color};`)
+            .join("\n");
+
+          // Replace existing CSS variables while preserving the rest of the file
+          const updatedContent = cssContent.replace(/:root\s*{[^}]*}/, `:root {\n${colorVars}\n}`);
+
+          // Write updated content back to file
+          await fs.writeFile(cssPath, updatedContent, "utf-8");
+
+          result = {
+            success: true,
+            message: "CSS variables updated successfully",
+          };
+          break;
+        } catch (error) {
+          throw new Error(
+            error instanceof Error ? error.message : "Failed to update CSS variables"
+          );
+        }
+      }
+
       default:
         throw new Error(`Unknown operation: ${fsOperation}`);
     }

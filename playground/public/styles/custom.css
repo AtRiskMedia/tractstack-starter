@@ -1,15 +1,12 @@
 :root {
-  --font-main: "Font-Main";
-  --font-action: "Font-Action";
-  --scale: 1;
-  --brand-1: #000000; /* black */
-  --brand-2: #ffffff; /* white */
-  --brand-3: #33b2f5; /* bright orange */
-  --brand-4: #eeeb4e; /* bright green */
-  --brand-5: #293f58; /* dark blue */
-  --brand-6: #a7b1b7; /* bright grey */
-  --brand-7: #393d34; /* dark grey */
-  --brand-8: #e3e3e3; /* off white */
+  --brand-1: #0f1912;
+  --brand-2: #f6f4f3;
+  --brand-3: #cfae97;
+  --brand-4: #ded2c3;
+  --brand-5: #24423c;
+  --brand-6: #a8cd20;
+  --brand-7: #452a3d;
+  --brand-8: #f3f5f6;
 }
 
 @font-face {

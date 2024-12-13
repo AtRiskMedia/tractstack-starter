@@ -15,6 +15,7 @@ import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
 const validation = await validateConfig(config);
+const isPreviewMode = !validation.capabilities.hasTurso || !validation.capabilities.hasConcierge;
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
@@ -83,7 +84,7 @@ const impressions = user.isOpenDemo
           over. Have fun, and seriously... try to break things!
         </span>
       </div>
-    ) : (
+    ) : isPreviewMode ? (
       <div class="my-1 pt-2 shadow-inner px-1">
         <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
           <div>
@@ -109,7 +110,8 @@ const impressions = user.isOpenDemo
           </div>
         </span>
       </div>
-    )
+    ) : null
+  }
   }
   <Header
     title="Welcome to your Story Keep"
