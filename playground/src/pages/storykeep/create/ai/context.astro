@@ -1,0 +1,53 @@
+---
+import { ulid } from "ulid";
+import { getConfig, validateConfig } from "../../../../utils/core/config";
+import StoryKeep from "../../../../layouts/StoryKeep.astro";
+import CreateNewAiPage from "../../../../components/storykeep/create/CreateNewAiPage";
+import { getContentMap } from "../../../../utils/db/utils";
+import type { ContentMap } from "../../../../types";
+
+const slug = `create`;
+const newId = ulid();
+
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+const canonicalURL = `/context/${slug}`;
+
+const contentMap: ContentMap[] = await getContentMap();
+const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
+---
+
+<StoryKeep
+  title="Create New Context Page"
+  pubDatetime={new Date()}
+  modDatetime={null}
+  canonicalURL={canonicalURL}
+>
+  <div id="storykeep-content">
+    {
+      validation?.capabilities?.hasAssemblyAI ? (
+        <CreateNewAiPage
+          mode="context"
+          contentMapSlugs={contentMapSlugs}
+          newId={newId}
+          tractStackId={``}
+          hello={false}
+          client:only="react"
+        />
+      ) : (
+        <>
+          <div>AssemblyAI API key not found</div>
+          <a
+            class="text-myblue underline hover:text-black hover:underline-offset-2"
+            href="/storykeep/settings"
+          >
+            Goto Settings
+          </a>
+        </>
+      )
+    }
+  </div>
+</StoryKeep>

@@ -7,7 +7,7 @@ import {
 } from "../../../store/storykeep";
 import { lispLexer } from "../../../utils/concierge/lispLexer";
 import { preParseAction } from "../../../utils/concierge/preParse_Action";
-import { AstToButton } from "../panes/AstToButton";
+import { AstToButton } from "../../common/widgets/AstToButton";
 import EditableContent from "./EditableContent";
 import { getGlobalNth } from "../../../utils/compositor/markdownUtils";
 import EraserWrapper from "../panes/EraserWrapper";

@@ -1,5 +1,3 @@
-import type { Config } from "../../types";
-
 interface LemurTaskParams {
   prompt: string;
   context?: string | Record<string, unknown>;
@@ -20,9 +18,8 @@ interface LemurResponse {
 
 export async function askLemur(
   params: LemurTaskParams,
-  config: Config
 ): Promise<LemurResponse | null> {
-  if (!config?.init?.PRIVATE_ASSEMBLYAI_API_KEY) {
+  if (!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY) {
     console.error("AssemblyAI API key not configured");
     return null;
   }
@@ -32,7 +29,7 @@ export async function askLemur(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: String(config.init.PRIVATE_ASSEMBLYAI_API_KEY),
+        Authorization: String(import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY),
       },
       body: JSON.stringify({
         prompt: params.prompt,

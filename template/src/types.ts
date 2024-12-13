@@ -657,6 +657,12 @@ export type GeneratedCopy = {
   paragraphs: string[];
   title?: string;
 };
+export type GenerateStage =
+  | "GENERATING_COPY"
+  | "PREPARING_DESIGN"
+  | "LOADING_DESIGN"
+  | "COMPLETED"
+  | "ERROR";
 
 export type Theme = "light" | "light-bw" | "light-bold" | "dark" | "dark-bw" | "dark-bold";
 

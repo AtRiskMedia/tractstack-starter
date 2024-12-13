@@ -6,26 +6,13 @@ export const POST: APIRoute = async ({ request, params }) => {
   try {
     const { aaiOperation } = params;
     const body = await request.json();
-    const config = await getConfig();
-    if (!config) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Configuration not available",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
     let result;
     switch (aaiOperation) {
       case "askLemur":
         if (!body.prompt) {
           throw new Error("Prompt is required for LeMUR task");
         }
-        result = await askLemur(body, config);
+        result = await askLemur(body);
         break;
       default:
         throw new Error(`Unknown operation: ${aaiOperation}`);
