@@ -190,6 +190,7 @@ export const ContextPane = (props: { id: string | null; slug: string }) => {
         )}
       >
         <PaneWrapper
+          storyFragmentId={id}
           id={thisId}
           slug={slug}
           isContext={true}

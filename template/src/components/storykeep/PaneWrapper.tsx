@@ -10,17 +10,19 @@ import {
   visiblePanesStore,
   editModeStore,
   showAnalytics,
-  storedAnalytics, paneFragmentMarkdown, paneFragmentIds,
+  storedAnalytics, paneFragmentMarkdown, paneFragmentIds, storyFragmentPaneIds,
 } from "../../store/storykeep";
 import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
 import Pane from "./Pane";
 import CodeHookWrapper from "./CodeHookWrapper";
-import { fragmentHasAnyOverrides, isFullScreenEditModal } from "../../utils/storykeep";
+import { fragmentHasAnyOverrides, isFullScreenEditModal, removePane, useStoryKeepUtils } from "../../utils/storykeep";
 import { classNames } from "../../utils/helpers";
 import type { ReactNode } from "react";
 import type { ViewportAuto, ToolMode, ToolAddMode } from "../../types";
 import ChangeLayoutModal from "@/components/storykeep/components/ChangeLayoutModal.tsx";
 import ChangeMarkdownModal from "@/components/storykeep/components/ChangeMarkdownModal.tsx";
+import { TrashIcon } from "@heroicons/react/24/outline";
+import ConfirmationModal from "@/components/storykeep/components/ConfirmationModal.tsx";
 
 const InsertAboveBelowWrapper = ({
   children,
@@ -73,6 +75,7 @@ const InsertAboveBelowWrapper = ({
 };
 
 const PaneWrapper = (props: {
+  storyFragmentId: string|null;
   id: string;
   slug: string;
   isContext: boolean;
@@ -82,7 +85,7 @@ const PaneWrapper = (props: {
   toolAddMode: ToolAddMode;
   isDesigningNew: boolean;
 }) => {
-  const { id, slug, isContext, toolMode, toolAddMode, viewportKey, insertPane, isDesigningNew } =
+  const { storyFragmentId, id, slug, isContext, toolMode, toolAddMode, viewportKey, insertPane, isDesigningNew } =
     props;
   const [isClient, setIsClient] = useState(false);
   const $showAnalytics = useStore(showAnalytics);
@@ -95,6 +98,8 @@ const PaneWrapper = (props: {
   const [paneElement, setPaneElement] = useState<HTMLDivElement | null>(null);
   const [changingLayout, setChangingLayout] = useState<boolean>(false);
   const [changingMarkdown, setChangingMarkdown] = useState<boolean>(false);
+  const { updateStoreField } = useStoryKeepUtils(id);
+  const [pendingDeletePane, setPendingDeletePane] = useState<boolean>(false);
 
   const paneRef = useCallback(
     (node: HTMLDivElement) => {
@@ -222,6 +227,15 @@ const PaneWrapper = (props: {
     }
   };
 
+  const handleRemove = () => {
+    if(storyFragmentId === null) return;
+
+    const ids = storyFragmentPaneIds.get()[storyFragmentId].current;
+
+    const updatedIds = removePane(ids, id);
+    updateStoreField("storyFragmentPaneIds", updatedIds, storyFragmentId);
+  };
+
   if (!isClient) return null;
 
   return (
@@ -240,33 +254,62 @@ const PaneWrapper = (props: {
         ) : (
           Content
         )}
+        {toolMode === "eraser" && (
+          <div className="absolute inset-0 flex justify-end w-full h-fit">
+            <div className="relative">
+              <button
+                className="text-xl p-4 mr-6 mt-2 bg-red-500 text-black font-bold mb-2 group-hover:text-white rounded-md"
+                onClick={() => setPendingDeletePane(true)}
+              >
+                <TrashIcon className="h-5 w-5" aria-hidden="true"/>
+              </button>
+            </div>
+          </div>
+        )}
         {toolMode === "styles" && (
           <div className="absolute inset-0 flex justify-end w-full h-fit">
             <div className="relative">
-                <button className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
-                        onClick={onChangeLayoutClicked}>
-                  Change Layout
-                </button>
+              <button
+                className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
+                onClick={onChangeLayoutClicked}
+              >
+                Change Layout
+              </button>
             </div>
           </div>
         )}
         {toolMode === "text" && (
           <div className="absolute inset-0 flex justify-end w-full h-fit">
             <div className="relative">
-              <button className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
-                      onClick={onChangeMarkdownClicked}>
+              <button
+                className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
+                onClick={onChangeMarkdownClicked}
+              >
                 Edit Markdown
               </button>
             </div>
           </div>
         )}
-        {changingLayout && <ChangeLayoutModal paneId={props.id}
-                                              slug={props.slug}
-                                              isContext={props.isContext}
-                                              viewportKey={props.viewportKey}
-                                              onClose={() => setChangingLayout(false)}/> }
-        {changingMarkdown && <ChangeMarkdownModal paneId={props.id}
-                                                  onClose={() => setChangingMarkdown(false)}/>}
+        {changingLayout && (
+          <ChangeLayoutModal
+            paneId={props.id}
+            slug={props.slug}
+            isContext={props.isContext}
+            viewportKey={props.viewportKey}
+            onClose={() => setChangingLayout(false)}
+          />
+        )}
+        {changingMarkdown && (
+          <ChangeMarkdownModal paneId={props.id} onClose={() => setChangingMarkdown(false)} />
+        )}
+        {pendingDeletePane && (
+          <ConfirmationModal header="Are you sure you want to delete this pane?"
+                             onConfirm={() => {
+                               handleRemove();
+                               setPendingDeletePane(false);
+                             }}
+                             onCancel={() => setPendingDeletePane(false)} />
+        )}
         {toolMode === "settings" && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
             <div className="relative">
