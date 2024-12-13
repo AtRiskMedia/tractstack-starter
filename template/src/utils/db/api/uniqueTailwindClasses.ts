@@ -1,6 +1,5 @@
 import { tursoClient } from "../client";
 import { getTailwindWhitelist } from "../data/tursoTailwindWhitelist";
-import type { ClassNamesPayload } from "../../../types";
 
 export async function getUniqueTailwindClasses(id: string) {
   try {
@@ -13,20 +12,7 @@ export async function getUniqueTailwindClasses(id: string) {
       args: [id],
     });
 
-    // Extract and process payloads
-    const payloads = rows
-      .map((row) => {
-        try {
-          return typeof row.options_payload === "string"
-            ? (JSON.parse(row.options_payload) as ClassNamesPayload)
-            : null;
-        } catch {
-          return null;
-        }
-      })
-      .filter((p): p is ClassNamesPayload => p !== null);
-
-    return getTailwindWhitelist(payloads);
+    return getTailwindWhitelist(rows);
   } catch (error) {
     console.error("Error fetching pane payloads:", error);
     throw error;

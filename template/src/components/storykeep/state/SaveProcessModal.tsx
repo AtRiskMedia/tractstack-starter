@@ -17,7 +17,6 @@ import type {
 
 type SaveStage =
   | "RECONCILING"
-  | "PUBLISH_TAILWIND"
   | "UPDATING_STYLES"
   | "UPLOADING_IMAGES"
   | "PUBLISHING"
@@ -100,8 +99,6 @@ export const SaveProcessModal = ({
           }
           setStage("PUBLISHING");
           await publishChanges(data);
-          setStage("PUBLISH_TAILWIND");
-          await publishTailwind();
           setStage("COMPLETED");
           resetUnsavedChanges(id, isContext);
         } catch (err) {
@@ -121,33 +118,6 @@ export const SaveProcessModal = ({
     } catch (err) {
       setStage("ERROR");
       setError(err instanceof Error ? err.message : "An error occurred during data reconciliation");
-      throw err;
-    }
-  };
-
-  const publishTailwind = async (): Promise<boolean> => {
-    try {
-      console.log(
-        `this step probably isn't required now; was used previously to generate tailwind from whitelist -- we are doing this all in the one step now`
-      );
-      return true;
-      //const response = await fetch(`/api/concierge/storykeep/publish`, {
-      //  method: "POST",
-      //  headers: {
-      //    "Content-Type": "application/json",
-      //  },
-      //  body: JSON.stringify({
-      //    target: `tailwind`,
-      //  }),
-      //});
-      //const data = await response.json();
-      //if (data.success) return true;
-      //return false;
-    } catch (err) {
-      setStage("ERROR");
-      setError(
-        err instanceof Error ? err.message : "An error occurred while publishing tailwind whitelist"
-      );
       throw err;
     }
   };
@@ -193,21 +163,36 @@ export const SaveProcessModal = ({
               })
             : [];
       const newWhitelistItems = getTailwindWhitelist(panes);
-      const newWhitelist = [...new Set([...newWhitelistItems, ...whitelist])];
-      console.log(`must publish tailwind`, newWhitelist);
-      return true;
-      //const response = await fetch(`/api/concierge/storykeep/tailwind`, {
-      //  method: "POST",
-      //  headers: {
-      //    "Content-Type": "application/json",
-      //  },
-      //  body: JSON.stringify({
-      //    whitelist: newWhitelist,
-      //  }),
-      //});
-      //const data = await response.json();
-      //if (data.success) return true;
-      //return false;
+      // Get existing classes from database
+      const existing = await fetch("/api/turso/uniqueTailwindClasses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(id),
+      });
+      if (!existing.ok) {
+        throw new Error("Failed to fetch existing Tailwind classes");
+      }
+      const result2 = await existing.json();
+      const existingClasses = result2.data || [];
+      // Merge all classes without duplicates
+      const newWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...whitelist])];
+
+      const response = await fetch("/api/fs/generateTailwindWhitelist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          whitelist: newWhitelist,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update styles: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.success;
     } catch (err) {
       setStage("ERROR");
       setError(
@@ -278,8 +263,6 @@ export const SaveProcessModal = ({
         return "Updating custom styles...";
       case "UPLOADING_IMAGES":
         return "Uploading images...";
-      case "PUBLISH_TAILWIND":
-        return "Updating tailwind whitelist...";
       case "PUBLISHING":
         return "Publishing changes...";
       case "COMPLETED":
@@ -308,11 +291,9 @@ export const SaveProcessModal = ({
                     ? "w-2/6"
                     : stage === "UPLOADING_IMAGES"
                       ? "w-3/6"
-                      : stage === "PUBLISH_TAILWIND"
-                        ? "w-4/6"
-                        : stage === "PUBLISHING"
-                          ? "w-5/6"
-                          : "w-full"
+                      : stage === "PUBLISHING"
+                        ? "w-5/6"
+                        : "w-full"
               )}
             ></div>
           </div>
