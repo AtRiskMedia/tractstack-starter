@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { Switch } from "@headlessui/react";
 import ArrowUpIcon from "@heroicons/react/20/solid/ArrowUpIcon";
@@ -13,20 +13,20 @@ import PaneImpression from "../fields/PaneImpression";
 import PaneBeliefs from "../fields/PaneBeliefs";
 import PaneBgColour from "../fields/PaneBgColour";
 import CodeHookSettings from "../fields/CodeHookSettings";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
+import { MoveDirection, movePane, removePane, useStoryKeepUtils } from "../../../utils/storykeep";
 import {
-  paneTitle,
-  paneSlug,
-  paneIsHiddenPane,
-  paneHasOverflowHidden,
-  paneHasMaxHScreen,
-  paneCodeHook,
-  storyFragmentSlug,
-  storyFragmentPaneIds,
   editModeStore,
+  paneCodeHook,
+  paneHasMaxHScreen,
+  paneHasOverflowHidden,
+  paneIsHiddenPane,
+  paneSlug,
+  paneTitle,
+  storyFragmentPaneIds,
+  storyFragmentSlug,
 } from "../../../store/storykeep";
 import { contentMap } from "../../../store/events";
-import { cleanString, classNames } from "../../../utils/helpers";
+import { classNames, cleanString } from "../../../utils/helpers";
 import type { StoreKey } from "../../../types";
 
 export const PaneSettings = (props: { id: string; storyFragmentId: string }) => {
@@ -80,34 +80,28 @@ export const PaneSettings = (props: { id: string; storyFragmentId: string }) => 
   };
 
   const handleMoveUp = () => {
-    const paneIds = [...$storyFragmentPaneIds[storyFragmentId].current];
-    const currentIndex = paneIds.indexOf(id);
-    if (currentIndex > 0) {
-      [paneIds[currentIndex - 1], paneIds[currentIndex]] = [
-        paneIds[currentIndex],
-        paneIds[currentIndex - 1],
-      ];
-      updateStoreField("storyFragmentPaneIds", paneIds, storyFragmentId);
-    }
+    const updatedPanes = movePane(
+      $storyFragmentPaneIds[storyFragmentId].current,
+      id,
+      MoveDirection.UP
+    );
+    updateStoreField("storyFragmentPaneIds", updatedPanes, storyFragmentId);
   };
 
   const handleMoveDown = () => {
-    const paneIds = [...$storyFragmentPaneIds[storyFragmentId].current];
-    const currentIndex = paneIds.indexOf(id);
-    if (currentIndex < paneIds.length - 1) {
-      [paneIds[currentIndex], paneIds[currentIndex + 1]] = [
-        paneIds[currentIndex + 1],
-        paneIds[currentIndex],
-      ];
-      updateStoreField("storyFragmentPaneIds", paneIds, storyFragmentId);
-    }
+    const updatedPanes = movePane(
+      $storyFragmentPaneIds[storyFragmentId].current,
+      id,
+      MoveDirection.DOWN
+    );
+    updateStoreField("storyFragmentPaneIds", updatedPanes, storyFragmentId);
   };
 
   const handleRemove = () => {
     if (confirmRemoval) {
-      const currentPaneIds = [...$storyFragmentPaneIds[storyFragmentId].current];
-      const updatedPaneIds = currentPaneIds.filter((paneId) => paneId !== id);
-      updateStoreField("storyFragmentPaneIds", updatedPaneIds, storyFragmentId);
+      const updatedIds = removePane($storyFragmentPaneIds[storyFragmentId].current, id);
+      updateStoreField("storyFragmentPaneIds", updatedIds, storyFragmentId);
+
       editModeStore.set(null);
       setConfirmRemoval(false);
     } else setConfirmRemoval(true);

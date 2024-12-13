@@ -773,7 +773,7 @@ function swapClassNamesPayload_Classes(
       ...optionsPayload.classNamesPayload[el1TagName].classes,
     };
 
-    Object.keys(classesCopy).forEach(key => {
+    Object.keys(classesCopy).forEach((key) => {
       const swapRes = swapObjectValues(
         // @ts-expect-error TS tuples are read only but JS doesn't recognize tuples hence the error
         classesCopy[key],
@@ -791,6 +791,40 @@ function swapClassNamesPayload_Classes(
       classes: classesCopy,
     };
   }
+}
+
+export enum MoveDirection {
+  UP = 0,
+  DOWN = 1,
+}
+
+export const movePane = (paneIds: string[], id: string, dir: MoveDirection) => {
+  const newPaneIds = [...paneIds];
+  // nothing to move, single pane
+  if(paneIds.length <= 1) return paneIds;
+
+  const currentIndex = newPaneIds.indexOf(id);
+  if (dir === MoveDirection.UP) {
+    if (currentIndex > 0) {
+      [newPaneIds[currentIndex - 1], newPaneIds[currentIndex]] = [
+        newPaneIds[currentIndex],
+        newPaneIds[currentIndex - 1],
+      ];
+    }
+  } else if(dir === MoveDirection.DOWN) {
+    if (currentIndex < newPaneIds.length - 1) {
+      [newPaneIds[currentIndex], newPaneIds[currentIndex + 1]] = [
+        newPaneIds[currentIndex + 1],
+        newPaneIds[currentIndex],
+      ];
+    }
+  }
+  return newPaneIds;
+}
+
+export const removePane = (paneIds: string[], id: string) => {
+  const updatedPaneIds = [...paneIds].filter((paneId) => paneId !== id);
+  return updatedPaneIds;
 }
 
 export function fragmentHasAnyOverrides(curField: FieldWithHistory<MarkdownEditDatum>) {
