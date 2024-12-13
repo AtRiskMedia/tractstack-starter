@@ -1,24 +1,33 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import type { ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import {
+  editModeStore,
+  lastInteractedPaneStore,
+  paneCodeHook,
+  paneFragmentIds,
+  paneFragmentMarkdown,
   paneInit,
   paneTitle,
-  paneCodeHook,
-  lastInteractedPaneStore,
-  visiblePanesStore,
-  editModeStore,
   showAnalytics,
-  storedAnalytics, paneFragmentMarkdown, paneFragmentIds, storyFragmentPaneIds,
+  storedAnalytics,
+  storyFragmentPaneIds,
+  visiblePanesStore,
 } from "../../store/storykeep";
 import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
 import Pane from "./Pane";
 import CodeHookWrapper from "./CodeHookWrapper";
-import { fragmentHasAnyOverrides, isFullScreenEditModal, removePane, useStoryKeepUtils } from "../../utils/storykeep";
+import {
+  fragmentHasAnyOverrides,
+  isFullScreenEditModal,
+  MoveDirection, movePane,
+  removePane,
+  useStoryKeepUtils,
+} from "../../utils/storykeep";
 import { classNames } from "../../utils/helpers";
-import type { ReactNode } from "react";
-import type { ViewportAuto, ToolMode, ToolAddMode } from "../../types";
+import type { ToolAddMode, ToolMode, ViewportAuto } from "../../types";
 import ChangeLayoutModal from "@/components/storykeep/components/ChangeLayoutModal.tsx";
 import ChangeMarkdownModal from "@/components/storykeep/components/ChangeMarkdownModal.tsx";
 import { TrashIcon } from "@heroicons/react/24/outline";
@@ -74,8 +83,23 @@ const InsertAboveBelowWrapper = ({
   );
 };
 
+const PaneMoveButtons = ({ onMove }: { onMove: (direction: MoveDirection) => void }) => {
+  return (
+    <div className="flex ml-2 gap-x-2">
+      <button className="rounded-md bg-blue-400 h-8 w-12 m-auto"
+              onClick={() => onMove(MoveDirection.UP)}>
+        <ArrowUpIcon className="m-auto h-4 w-4"/>
+      </button>
+      <button className="rounded-md bg-cyan-400 h-8 w-12 m-auto"
+              onClick={() => onMove(MoveDirection.DOWN)}>
+        <ArrowDownIcon className="m-auto h-4 w-4" />
+      </button>
+    </div>
+  );
+};
+
 const PaneWrapper = (props: {
-  storyFragmentId: string|null;
+  storyFragmentId: string | null;
   id: string;
   slug: string;
   isContext: boolean;
@@ -85,8 +109,17 @@ const PaneWrapper = (props: {
   toolAddMode: ToolAddMode;
   isDesigningNew: boolean;
 }) => {
-  const { storyFragmentId, id, slug, isContext, toolMode, toolAddMode, viewportKey, insertPane, isDesigningNew } =
-    props;
+  const {
+    storyFragmentId,
+    id,
+    slug,
+    isContext,
+    toolMode,
+    toolAddMode,
+    viewportKey,
+    insertPane,
+    isDesigningNew,
+  } = props;
   const [isClient, setIsClient] = useState(false);
   const $showAnalytics = useStore(showAnalytics);
   const $storedAnalytics = useStore(storedAnalytics);
@@ -228,13 +261,20 @@ const PaneWrapper = (props: {
   };
 
   const handleRemove = () => {
-    if(storyFragmentId === null) return;
-
+    if (storyFragmentId === null) return;
     const ids = storyFragmentPaneIds.get()[storyFragmentId].current;
 
     const updatedIds = removePane(ids, id);
     updateStoreField("storyFragmentPaneIds", updatedIds, storyFragmentId);
   };
+
+  const handleMove = (dir: MoveDirection) => {
+    if (storyFragmentId === null) return;
+    const ids = storyFragmentPaneIds.get()[storyFragmentId].current;
+
+    const updatedIds = movePane(ids, id, dir);
+    updateStoreField("storyFragmentPaneIds", updatedIds, storyFragmentId);
+  }
 
   if (!isClient) return null;
 
@@ -261,13 +301,14 @@ const PaneWrapper = (props: {
                 className="text-xl p-4 mr-6 mt-2 bg-red-500 text-black font-bold mb-2 group-hover:text-white rounded-md"
                 onClick={() => setPendingDeletePane(true)}
               >
-                <TrashIcon className="h-5 w-5" aria-hidden="true"/>
+                <TrashIcon className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
           </div>
         )}
         {toolMode === "styles" && (
-          <div className="absolute inset-0 flex justify-end w-full h-fit">
+          <div className="absolute inset-0 flex justify-between w-full h-fit">
+            <PaneMoveButtons onMove={handleMove}/>
             <div className="relative">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
@@ -279,7 +320,8 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "text" && (
-          <div className="absolute inset-0 flex justify-end w-full h-fit">
+          <div className="absolute inset-0 flex justify-between w-full h-fit">
+            <PaneMoveButtons onMove={handleMove}/>
             <div className="relative">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
@@ -303,12 +345,14 @@ const PaneWrapper = (props: {
           <ChangeMarkdownModal paneId={props.id} onClose={() => setChangingMarkdown(false)} />
         )}
         {pendingDeletePane && (
-          <ConfirmationModal header="Are you sure you want to delete this pane?"
-                             onConfirm={() => {
-                               handleRemove();
-                               setPendingDeletePane(false);
-                             }}
-                             onCancel={() => setPendingDeletePane(false)} />
+          <ConfirmationModal
+            header="Are you sure you want to delete this pane?"
+            onConfirm={() => {
+              handleRemove();
+              setPendingDeletePane(false);
+            }}
+            onCancel={() => setPendingDeletePane(false)}
+          />
         )}
         {toolMode === "settings" && (
           <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
