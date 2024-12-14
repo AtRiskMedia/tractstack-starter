@@ -144,7 +144,6 @@ export async function validateConfig(config: Config | null): Promise<ValidationR
   const isInitialized =
     initConfig.SITE_INIT === true && initConfig.HOME_SLUG && initConfig.TRACTSTACK_HOME_SLUG;
   const hasValidHomeSlug = typeof initConfig.HOME_SLUG === "string";
-
   if (!isInitialized || !hasValidHomeSlug) {
     return {
       isValid: false,

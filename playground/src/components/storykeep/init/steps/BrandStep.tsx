@@ -77,8 +77,8 @@ export default function BrandStep({
             initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
           OPEN_DEMO: initConfig.OPEN_DEMO || false,
           STYLES_VER: initConfig.STYLES_VER || `1`,
-          HOME_SLUG: ``,
-          TRACTSTACK_HOME_SLUG: ``,
+          HOME_SLUG: initConfig.HOME_SLUG || ``,
+          TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || `HELLO`,
         });
       }
     }

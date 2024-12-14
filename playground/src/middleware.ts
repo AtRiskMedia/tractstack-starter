@@ -19,17 +19,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Get config validation - note this is separate from auth
   const config = await getConfig();
   const validation = await validateConfig(config);
-  const isInitialized = (config?.init as Record<string, unknown>)?.SITE_INIT === true;
+  const isInitialized =
+    (config?.init as Record<string, unknown>)?.SITE_INIT === true &&
+    typeof import.meta.env.PRIVATE_ADMIN_PASSWORD === `string` &&
+    import.meta.env.PRIVATE_ADMIN_PASSWORD;
 
   const url = new URL(context.request.url);
   const forceLogin = url.searchParams.get("force") === "true";
 
+  if (!isInitialized) return next();
+
   // Admin-only routes
   const adminProtectedRoutes = [
     "/storykeep/settings",
-    "/api/fs/update",
-    "/api/concierge/status",
-    "/api/concierge/publish",
     ...(isInitialized ? ["/storykeep/init"] : []),
   ];
 
@@ -37,14 +39,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const protectedRoutes = [
     "/*/edit",
     "/context/*/edit",
-    "/storykeep",
-    "/storykeep/create/*",
+    "/storykeep/*",
+    "/api/fs/update",
+    "/api/turso/initializeContent",
+    "/api/concierge/status",
+    "/api/concierge/publish",
     "/api/turso/paneDesigns",
-    "/api/turso/executeQueries",
-    "/api/turso/analytics",
-    "/api/turso/dashboardAnalytics",
+    "/api/turso/execute",
     "/api/turso/uniqueTailwindClasses",
-    "/api/turso/paneDesigns",
   ];
 
   // Routes that can be accessed in open demo mode
@@ -53,25 +55,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/context/*/edit",
     "/storykeep",
     "/storykeep/create/*",
-    "/api/turso/analytics",
-    "/api/turso/dashboardAnalytics",
     "/api/turso/paneDesigns",
   ];
 
   // Always allow access to login/logout pages if we have password protection
-  if (
-    validation.hasPassword &&
-    ["/storykeep/login", "/storykeep/logout"].includes(context.url.pathname)
-  ) {
+  if (["/storykeep/login", "/storykeep/logout"].includes(context.url.pathname)) {
     return next();
   }
 
   // If config is invalid and we don't have password protection, redirect to init
-  if (
-    !validation.isValid &&
-    !validation.hasPassword &&
-    !(context.url.pathname === "/storykeep/init" || context.url.pathname === "/api/fs/update")
-  ) {
+  if (!validation.isValid && !validation.hasPassword) {
     return context.redirect("/storykeep/init");
   }
 

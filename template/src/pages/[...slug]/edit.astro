@@ -11,15 +11,16 @@ import { getAllMenus, getContentMap } from "../../utils/db/utils";
 import { components } from "../../custom/CodeHook.astro";
 import type { AuthStatus, ContentMap } from "../../types";
 
+const { slug } = Astro.params;
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
 const validation = await validateConfig(config);
-if (!validation.isValid || !config) {
+const firstPage = slug === `create` && (!validation.isValid || !config);
+if ((!validation.isValid && slug !== `create`) || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
 // valid storyfragment?
-const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/${slug}`;
@@ -68,6 +69,7 @@ if (!storyfragment && slug !== `create`) {
         contentMapSlugs={contentMapSlugs}
         menus={menus}
         config={config}
+        firstPage={firstPage}
       />
     </header>
 

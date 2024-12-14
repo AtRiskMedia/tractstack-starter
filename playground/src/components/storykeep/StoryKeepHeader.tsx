@@ -89,6 +89,7 @@ export const StoryKeepHeader = memo(
     contentMapSlugs,
     menus,
     config,
+    firstPage,
   }: {
     id: string;
     slug: string;
@@ -98,6 +99,7 @@ export const StoryKeepHeader = memo(
     contentMapSlugs: string[];
     menus: MenuDatum[];
     config: Config;
+    firstPage?: boolean;
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
@@ -117,7 +119,7 @@ export const StoryKeepHeader = memo(
       keys: [thisId],
     });
     const $paneFragmentIds = useStore(paneFragmentIds, { keys: [thisId] });
-    const isHome = slug && slug === config?.init?.HOME_SLUG;
+    const isHome = (slug && slug === config?.init?.HOME_SLUG) || firstPage;
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const $viewportSet = useStore(viewportSetStore);
@@ -286,11 +288,12 @@ export const StoryKeepHeader = memo(
         [`storyFragmentTitle`, `storyFragmentSlug`].includes(storeKey) &&
         [``, `create`].includes($storyFragmentSlug[thisId].current)
       ) {
-        console.log(`on first save we may need to pass flag to set slug=hello`);
-        const clean = findUniqueSlug(
-          cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
-          contentMapSlugs
-        );
+        const clean = firstPage
+          ? `hello`
+          : findUniqueSlug(
+              cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
+              contentMapSlugs
+            );
         temporaryErrorsStore.setKey(thisId, {
           ...(temporaryErrorsStore.get()[thisId] || {}),
           [`storyFragmentTitle`]: false,
@@ -477,6 +480,7 @@ export const StoryKeepHeader = memo(
                   isContext={isContext}
                   onClose={handleSaveComplete}
                   originalData={originalData}
+                  firstPage={firstPage || false}
                 />
               )}
             </div>

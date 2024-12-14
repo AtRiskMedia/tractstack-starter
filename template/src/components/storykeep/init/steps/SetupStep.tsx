@@ -11,12 +11,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
   if (!isActive) return null;
 
   const handleStartSetup = () => {
-    if (hasConcierge) {
-      onComplete();
-    } else {
-      console.log(`may need to flag site as ready`);
-      onComplete();
-    }
+    onComplete();
   };
 
   return (

@@ -92,7 +92,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   if ($success && submitted) {
     return (
       <div className="bg-mygreen/10 p-4 rounded-lg">
-        <p className="text-mygreen font-semibold">Thanks for signing up, {firstname}!</p>
+        <p className="text-mygreen font-bold">Thanks for signing up, {firstname}!</p>
         <p className="text-sm mt-2">
           <a href="/concierge/profile" className="text-myblue hover:text-black underline">
             Complete your profile
@@ -196,7 +196,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
                           <>
                             <span
                               className={classNames(
-                                selected ? "font-semibold" : "font-normal",
+                                selected ? "font-bold" : "font-normal",
                                 "block truncate"
                               )}
                             >

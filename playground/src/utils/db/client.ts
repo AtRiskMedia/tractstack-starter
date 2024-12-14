@@ -125,7 +125,7 @@ class TursoClientManager {
       try {
         const tursoConfig = JSON.parse(await fs.readFile(tursoPath, "utf-8"));
         const isCloud = this.hasTursoCredentials();
-        needsInit = isCloud ? !tursoConfig.TURSO_DB_INIT : !tursoConfig.LOCAL_DB_INIT;
+        needsInit = isCloud ? !tursoConfig.TURSO_DB_INIT : true;
       } catch {
         needsInit = true;
       }

@@ -323,7 +323,7 @@ const ImageMeta = (props: {
       {isProcessing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-full text-center">
-            <h3 className="text-xl font-semibold mb-4">Processing Image</h3>
+            <h3 className="text-xl font-bold mb-4">Processing Image</h3>
             <div className="animate-pulse mb-4">
               <div className="h-2 bg-myorange rounded"></div>
             </div>
@@ -335,7 +335,7 @@ const ImageMeta = (props: {
       {isSelectingFile && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg w-full">
-            <h3 className="text-lg font-semibold mb-2">Select a file</h3>
+            <h3 className="text-lg font-bold mb-2">Select a file</h3>
             <Combobox
               value={selectedFile}
               onChange={(file) => {
