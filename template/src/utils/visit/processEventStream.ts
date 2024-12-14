@@ -3,7 +3,7 @@ import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
 import type { EventPayload, EventStream, ContentMap } from "../../types";
 
-const DEBUG = true;
+const DEBUG = false;
 
 function debugEventProcessing(events: EventStream[], contentMap: ContentMap[]) {
   const eventNodes = new Set(events.map((e) => e.id));

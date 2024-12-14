@@ -227,7 +227,14 @@ export const POST: APIRoute = async ({ request, params }) => {
             .join("\n");
 
           // Replace existing CSS variables while preserving the rest of the file
-          const updatedContent = cssContent.replace(/:root\s*{[^}]*}/, `:root {\n${colorVars}\n}`);
+let updatedContent = cssContent;
+colors.forEach((color, index) => {
+  const varNumber = index + 1;
+  updatedContent = updatedContent.replace(
+    new RegExp(`--brand-${varNumber}: #[0-9a-fA-F]+;`),
+    `--brand-${varNumber}: ${color};`
+  );
+});
 
           // Write updated content back to file
           await fs.writeFile(cssPath, updatedContent, "utf-8");

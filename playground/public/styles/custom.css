@@ -1,4 +1,7 @@
 :root {
+  --font-main: "Font-Main";
+  --font-action: "Font-Action";
+  --scale: 1;
   --brand-1: #10120d;
   --brand-2: #fcfcfc;
   --brand-3: #f58333;
@@ -27,27 +30,6 @@
   src: url("../fonts/Inter-Black.woff2");
   font-display: swap;
 }
-
-/*
-@font-face {
-  font-family: "Font-Main";
-  src: url("../fonts/Futura-Boo.woff");
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Font-Main";
-  src: url("../fonts/Futura-Bol.woff");
-  font-weight: bold;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Font-Action";
-  src: url("../fonts/Bison-Bold.woff");
-  font-display: swap;
-}
-*/
 
 html {
   scroll-behavior: smooth;

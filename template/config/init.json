@@ -2,12 +2,11 @@
   "WORDMARK_MODE": "default",
   "BRAND_COLOURS": "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
   "OPEN_DEMO": false,
-  "STYLES_VER": 1734140668483,
+  "SITE_INIT": true,
+  "STYLES_VER": "1",
   "HOME_SLUG": "hello",
   "TRACTSTACK_HOME_SLUG": "HELLO",
-  "SITE_URL": "https://you.ca",
-  "SLOGAN": "okok",
-  "FOOTER": "ok",
-  "SITE_INIT": true,
-  "GTAG": ""
+  "SITE_URL": "https://you.com",
+  "SLOGAN": "ok",
+  "FOOTER": "ok"
 }
