@@ -221,20 +221,15 @@ export const POST: APIRoute = async ({ request, params }) => {
             throw new Error("Invalid brand colors format - expected 8 color values");
           }
 
-          // Create new CSS variable declarations
-          const colorVars = colors
-            .map((color, index) => `  --brand-${index + 1}: ${color};`)
-            .join("\n");
-
           // Replace existing CSS variables while preserving the rest of the file
-let updatedContent = cssContent;
-colors.forEach((color, index) => {
-  const varNumber = index + 1;
-  updatedContent = updatedContent.replace(
-    new RegExp(`--brand-${varNumber}: #[0-9a-fA-F]+;`),
-    `--brand-${varNumber}: ${color};`
-  );
-});
+          let updatedContent = cssContent;
+          colors.forEach((color, index) => {
+            const varNumber = index + 1;
+            updatedContent = updatedContent.replace(
+              new RegExp(`--brand-${varNumber}: #[0-9a-fA-F]+;`),
+              `--brand-${varNumber}: ${color};`
+            );
+          });
 
           // Write updated content back to file
           await fs.writeFile(cssPath, updatedContent, "utf-8");

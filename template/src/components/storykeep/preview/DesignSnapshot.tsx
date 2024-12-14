@@ -7,7 +7,6 @@ import { blobToBase64 } from "@/utils/common/helpers.ts";
 interface DesignSnapshotProps {
   design: PageDesign;
   theme: Theme;
-  brandColors: string[];
   config: Config;
   onStart?: () => void;
   onComplete?: (imageData: string) => void;
@@ -19,7 +18,6 @@ const WIDTH = 500;
 export default function DesignSnapshot({
   design,
   theme,
-  brandColors,
   config,
   onStart,
   onComplete,
@@ -29,18 +27,18 @@ export default function DesignSnapshot({
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!contentRef.current || !brandColors.length) return;
+    if (!contentRef.current) return;
     if (!isGenerating && !forceRegenerate) return;
 
     const generateSnapshot = async () => {
       try {
         onStart?.();
 
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = brandColors
-          .map((color, i) => `--brand-${i + 1}: ${color};`)
-          .join("\n");
-        document.head.appendChild(styleSheet);
+        //const styleSheet = document.createElement("style");
+        //styleSheet.textContent = brandColors
+        //  .map((color, i) => `--brand-${i + 1}: ${color};`)
+        //  .join("\n");
+        //document.head.appendChild(styleSheet);
 
         await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -83,7 +81,7 @@ export default function DesignSnapshot({
           onComplete(base64);
         }
 
-        styleSheet.remove();
+        //styleSheet.remove();
       } catch (error) {
         console.error("Error generating snapshot:", error);
       } finally {
@@ -101,7 +99,7 @@ export default function DesignSnapshot({
         }
       });
     };
-  }, [design, theme, brandColors, onComplete, onStart, isGenerating, forceRegenerate]);
+  }, [design, theme, onComplete, onStart, isGenerating, forceRegenerate]);
 
   return (
     <>

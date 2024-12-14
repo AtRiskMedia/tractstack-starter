@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/InitLayout.astro";
+import Layout from "../../layouts/StoryKeep.astro";
 import { tursoClient } from "../../utils/db/client";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import InitWizard from "../../components/storykeep/init/InitWizard";
@@ -25,7 +25,7 @@ try {
 }
 ---
 
-<Layout title="Re-Configure your Tract Stack">
+<Layout title="Re-Configure your Tract Stack" config={config!}>
   <main>
     {error && <div class="error">{error}</div>}
     <InitWizard
