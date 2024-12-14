@@ -1,19 +1,20 @@
-import TractStackModal from "@/components/storykeep/components/TractStackModal.tsx";
 import { useMemo, useState } from "react";
 import { Switch } from "@headlessui/react";
-import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { paneDesignType } from "@/store/storykeep.ts";
-import { paneDesigns } from "@/assets/paneDesigns.ts";
 import {
+  type Config,
   type DesignType,
   type PaneDesign,
   type Theme,
   themes,
   type ViewportAuto,
 } from "@/types.ts";
-import PanePreview from "@/components/storykeep/components/PanePreview.tsx";
 import { applyLayoutChange } from "@/utils/autoLayout.ts";
+import { paneDesigns } from "@/utils/designs/paneDesigns.ts";
+import TractStackModal from "@/components/storykeep/panes/TractStackModal.tsx";
+import { classNames } from "@/utils/common/helpers.ts";
+import PanePreview from "@/components/storykeep/panes/PanePreview.tsx";
 
 export type ChangeLayoutModalProps = {
   slug: string;
@@ -21,6 +22,7 @@ export type ChangeLayoutModalProps = {
   paneId: string;
   viewportKey: ViewportAuto;
   onClose: () => void;
+  config: Config;
 };
 
 type PaneDesignResult = {
@@ -28,11 +30,11 @@ type PaneDesignResult = {
   panes: PaneDesign[];
 };
 
-const getPaneDesigns = (paneType: DesignType, isOdd: boolean): PaneDesignResult[] => {
+const getPaneDesigns = (paneType: DesignType, config: Config, isOdd: boolean): PaneDesignResult[] => {
   console.log("get pane designs");
   const designs: PaneDesignResult[] = [];
   themes.forEach((theme) => {
-    const filteredDesigns = paneDesigns(theme, "default", isOdd).filter(
+    const filteredDesigns = paneDesigns(theme, "default", config, isOdd).filter(
       (x) => x.designType === paneType
     );
     if (filteredDesigns.length > 0) {
@@ -94,10 +96,11 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
             </div>
           </Switch.Group>
           <div className="grid items-stretch justify-stretch overflow-y-scroll grid-cols-6 gap-4 w-full">
-            {getPaneDesigns(paneType, isOddPanes).map((designs) =>
+            {getPaneDesigns(paneType, props.config, isOddPanes).map((designs) =>
               designs.panes.map((design) => (
                 <PanePreview
                   key={`${design.id}-${isOddPanes}`}
+                  config={props.config}
                   isSelected={false}
                   onClick={() => {
                     applyLayoutChange(props.paneId, design);

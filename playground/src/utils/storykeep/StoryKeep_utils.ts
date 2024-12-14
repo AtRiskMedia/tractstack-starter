@@ -1,13 +1,23 @@
 import { useCallback, useRef, useState } from "react";
 import {
+  MAX_HISTORY_LENGTH,
+  MS_BETWEEN_UNDO,
+  reservedSlugs,
+  SHORT_SCREEN_THRESHOLD, toolAddModeInsertDefault,
+} from "@/constants.ts";
+import type {
+  FieldWithHistory,
+  HistoryEntry, MarkdownDatum, MarkdownEditDatum, MarkdownLookup, MarkdownPaneDatum, OptionsPayloadDatum,
+  StoreKey,
+  StoreMapType, ToolAddMode,
+  ValidationFunction,
+} from "@/types.ts";
+import {
   editModeStore,
   lastInteractedPaneStore,
   lastInteractedTypeStore,
-  paneCodeHook,
-  paneFiles,
-  paneFragmentBgColour,
-  paneFragmentBgPane,
-  paneFragmentIds,
+  paneCodeHook, paneFiles, paneFragmentBgColour,
+  paneFragmentBgPane, paneFragmentIds,
   paneFragmentMarkdown,
   paneHasMaxHScreen,
   paneHasOverflowHidden,
@@ -15,10 +25,7 @@ import {
   paneHeightOffsetMobile,
   paneHeightOffsetTablet,
   paneHeightRatioDesktop,
-  paneHeightRatioMobile,
-  paneHeightRatioTablet,
-  paneHeldBeliefs,
-  paneImpression,
+  paneHeightRatioMobile, paneHeightRatioTablet, paneHeldBeliefs, paneImpression,
   paneIsHiddenPane,
   paneSlug,
   paneTitle,
@@ -32,30 +39,28 @@ import {
   temporaryErrorsStore,
   uncleanDataStore,
   unsavedChangesStore,
-} from "../store/storykeep";
+} from "@/store/storykeep";
 import {
   cloneDeep,
-  getHtmlTagFromMdast,
+  getNthFromAstUsingElement,
   isDeepEqual,
-  swapObjectValues, extractEntriesAtIndex, getNthFromAstUsingElement, removeAt, mergeObjectKeys,
-} from "./helpers";
+  mergeObjectKeys,
+  removeAt,
+  swapObjectValues,
+} from "../common/helpers";
+import type { Root, RootContent } from "hast";
+import { toMarkdown } from "mdast-util-to-markdown";
 import {
-  MAX_HISTORY_LENGTH,
-  MS_BETWEEN_UNDO,
-  reservedSlugs,
-} from "../constants";
-import type {
-  FieldWithHistory,
-  HistoryEntry, MarkdownDatum,
-  MarkdownEditDatum,
-  MarkdownLookup, MarkdownPaneDatum,
-  OptionsPayloadDatum,
-  StoreKey,
-  StoreMapType,
-  ToolAddMode,
-  ValidationFunction,
-  HistoryEntry,
-} from "../types";
+  cleanHtmlAst,
+  getGlobalNth,
+  insertElementIntoMarkdown, removeElementFromMarkdown,
+  updateHistory,
+} from "@/utils/compositor/markdownUtils.ts";
+import { toHast } from "mdast-util-to-hast";
+import { fromMarkdown } from "mdast-util-from-markdown";
+import { generateMarkdownLookup } from "@/utils/compositor/generateMarkdownLookup.ts";
+import type { Root as MdastRoot } from "mdast";
+import type { Root as HastRoot } from "hast";
 
 const BREAKPOINTS = {
   xl: 1367,

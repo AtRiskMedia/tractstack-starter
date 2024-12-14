@@ -1,4 +1,4 @@
-import MultiButtonsModal from "@/components/storykeep/components/MultiButtonsModal.tsx";
+import MultiButtonsModal from "@/components/storykeep/panes/MultiButtonsModal.tsx";
 
 export type ConfirmationModalProps = {
   header: string;

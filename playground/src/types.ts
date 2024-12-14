@@ -160,6 +160,7 @@ export interface BgPaneDatum extends PaneFragmentDatum {
   shapeTablet?: string;
   shapeMobile?: string;
   optionsPayload: OptionsPayloadDatum;
+}
 
 export type Theme = "light" | "light-bw" | "light-bold" | "dark" | "dark-bw" | "dark-bold";
 export const themes: Theme[] = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"];
@@ -670,8 +671,6 @@ export type GenerateStage =
   | "LOADING_DESIGN"
   | "COMPLETED"
   | "ERROR";
-
-export type Theme = "light" | "light-bw" | "light-bold" | "dark" | "dark-bw" | "dark-bold";
 
 export type Variant =
   | `default`

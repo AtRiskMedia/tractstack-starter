@@ -1,6 +1,6 @@
-import TractStackModal from "@/components/storykeep/components/TractStackModal.tsx";
-import { classNames } from "@/utils/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import TractStackModal from "@/components/storykeep/panes/TractStackModal.tsx";
+import { classNames } from "@/utils/common/helpers.ts";
 
 export type ButtonProps = {
   text: string;

@@ -3,7 +3,7 @@ import type { ToolAddMode } from "@/types.ts";
 import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants.ts";
 import { Menu, Transition } from "@headlessui/react";
 import ChevronDownIcon from "@heroicons/react/20/solid/ChevronDownIcon";
-import { InsertDraggableElement } from "@/components/storykeep/components/InsertDraggableElement.tsx";
+import { InsertDraggableElement } from "@/components/storykeep/panes/InsertDraggableElement.tsx";
 
 export type MiscElementsDropdownProps = {
   onClickedOption: (mode: ToolAddMode) => void;

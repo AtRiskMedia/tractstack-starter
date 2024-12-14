@@ -17,7 +17,7 @@ import { generateMarkdownLookup } from "../../../utils/compositor/generateMarkdo
 import type { ButtonData, ClassNamesPayloadDatumValue, MarkdownLookup } from "../../../types";
 import type { KeyboardEvent, ClipboardEvent } from "react";
 import type { Root } from "hast";
-import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
+import { MoveDraggableElement } from "@/components/storykeep/panes/MoveDraggableElement.tsx";
 
 interface EditableContentProps {
   content: string;

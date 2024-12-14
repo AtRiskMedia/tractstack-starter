@@ -1,17 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
-import { blobToBase64 } from "@/utils/helpers.ts";
-import type { PaneDesign, Theme } from "@/types.ts";
-import PreviewPane from "@/components/storykeep/components/PreviewPane.tsx";
-
-interface PaneDesignSnapshotProps {
-  design: PaneDesign;
-  theme: Theme;
-  brandColors: string[];
-  onStart?: () => void;
-  onComplete?: (imageData: string) => void;
-  forceRegenerate?: boolean;
-}
+import { blobToBase64 } from "@/utils/common/helpers.ts";
+import PreviewPane from "@/components/storykeep/preview/PreviewPane.tsx";
+import type { PaneDesignSnapshotProps } from "./PaneDesignSnapshotProps";
 
 export default function PaneDesignSnapshot({
   design,

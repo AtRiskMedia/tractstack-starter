@@ -12,15 +12,15 @@ import {
   setDragShape,
   setGhostBlockHeight,
 } from "@/store/storykeep.ts";
-import { moveElements } from "@/utils/storykeep.ts";
 import type { MarkdownLookup } from "@/types.ts";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { useStore } from "@nanostores/react";
-import { getFinalLocation } from "@/utils/helpers.ts";
 import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
-import { GhostBlock } from "@/components/other/GhostBlock.tsx";
 import { allowTagInsert, allowWidgetInsert } from "@/utils/compositor/markdownUtils.ts";
 import { toolAddModeDefaultHeight } from "@/constants.ts";
+import { getFinalLocation } from "@/utils/common/helpers.ts";
+import { GhostBlock } from "old/src/components/other/GhostBlock.tsx";
+import { moveElements } from "@/utils/storykeep/StoryKeep_utils.ts";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;

@@ -1,10 +1,10 @@
 import { memo } from "react";
-import {
-  InsertDraggableElement,
-  type DraggableElementProps,
-} from "@/components/storykeep/components/InsertDraggableElement.tsx";
 import { toolAddModesIcons } from "@/constants.ts";
 import type { ToolAddMode } from "@/types.ts";
+import {
+  type DraggableElementProps,
+  InsertDraggableElement,
+} from "@/components/storykeep/panes/InsertDraggableElement.tsx";
 
 export const InsertableElement = memo((props: DraggableElementProps) => {
   const elType: ToolAddMode|undefined = props?.el || undefined;

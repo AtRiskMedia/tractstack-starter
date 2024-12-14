@@ -1,7 +1,7 @@
 import { allowTagErase } from "../../../utils/compositor/markdownUtils";
 import type { ReactNode } from "react";
 import type { MarkdownLookup } from "../../../types";
-import { eraseElement } from "@/utils/storykeep.ts";
+import { eraseElement } from "@/utils/storykeep/StoryKeep_utils.ts";
 
 interface Props {
   fragmentId: string;

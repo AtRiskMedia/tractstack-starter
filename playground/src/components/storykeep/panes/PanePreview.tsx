@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import type { PaneDesign, Theme } from "@/types.ts";
-import { getPreviewModeValue } from "@/store/storykeep.ts";
-import { getEnvValue } from "@/utils/preview-brand.ts";
-import { classNames } from "@/utils/helpers.ts";
-import PaneDesignSnapshot from "@/components/storykeep/components/PaneDesignSnapshot.tsx";
+import type { Config, PaneDesign, Theme } from "@/types.ts";
+import { getPreviewModeValue } from "old/src/store/storykeep.ts";
+import { getEnvValue } from "old/src/utils/preview-brand.ts";
+import { classNames } from "@/utils/common/helpers.ts";
+import PaneDesignSnapshot from "@/components/storykeep/panes/PaneDesignSnapshot.tsx";
 
 interface PanePreviewProps {
   design: PaneDesign;
   isSelected: boolean;
   onClick: () => void;
   theme: Theme;
+  config: Config;
 }
 
-export default function PanePreview({ design, isSelected, onClick, theme }: PanePreviewProps) {
+export default function PanePreview({ design, isSelected, onClick, theme, config }: PanePreviewProps) {
   const [snapshotImage, setSnapshotImage] = useState<string>("");
   const [brandColors, setBrandColors] = useState<string[]>([]);
   const [lastTheme, setLastTheme] = useState<Theme>(theme);
@@ -51,6 +52,7 @@ export default function PanePreview({ design, isSelected, onClick, theme }: Pane
         {!snapshotImage || !brandColors.length ? (
           <div className="inset-0">
             <PaneDesignSnapshot
+              config={config}
               design={design}
               theme={theme}
               brandColors={brandColors}

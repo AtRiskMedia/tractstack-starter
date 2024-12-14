@@ -16,23 +16,23 @@ import {
   storyFragmentPaneIds,
   visiblePanesStore,
 } from "../../../store/storykeep";
-import AnalyticsWrapper from "../nivo/AnalyticsWrapper";
 import Pane from "./Pane";
 import CodeHookWrapper from "./CodeHookWrapper";
+import type { Config, ToolAddMode, ToolMode, ViewportAuto } from "@/types.ts";
 import {
   fragmentHasAnyOverrides,
   isFullScreenEditModal,
-  MoveDirection, movePane,
+  MoveDirection,
+  movePane,
   removePane,
   useStoryKeepUtils,
-} from "../../utils/storykeep";
-import { classNames } from "../../utils/helpers";
-import type { ToolAddMode, ToolMode, ViewportAuto } from "../../types";
-import ChangeLayoutModal from "@/components/storykeep/components/ChangeLayoutModal.tsx";
-import ChangeMarkdownModal from "@/components/storykeep/components/ChangeMarkdownModal.tsx";
+} from "@/utils/storykeep/StoryKeep_utils.ts";
+import { classNames } from "@/utils/common/helpers.ts";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import ConfirmationModal from "@/components/storykeep/components/ConfirmationModal.tsx";
-
+import ChangeLayoutModal from "@/components/storykeep/panes/ChangeLayoutModal.tsx";
+import ConfirmationModal from "@/components/storykeep/panes/ConfirmationModal.tsx";
+import ChangeMarkdownModal from "@/components/storykeep/panes/ChangeMarkdownModal.tsx";
+import AnalyticsWrapper from "@/components/storykeep/nivo/AnalyticsWrapper.tsx";
 const InsertAboveBelowWrapper = ({
   children,
   onInsertClick,
@@ -112,23 +112,15 @@ const PaneWrapper = (props: {
 }) => {
   const {
     storyFragmentId,
-   
     id,
-   
     slug,
-   
     isContext,
-   
     toolMode,
-   
     toolAddMode,
-   
     viewportKey,
-   
     insertPane,
-   
     isDesigningNew,
- , config,
+    config,
   } = props;
   const [isClient, setIsClient] = useState(false);
   const $showAnalytics = useStore(showAnalytics);
@@ -350,6 +342,7 @@ const PaneWrapper = (props: {
             isContext={props.isContext}
             viewportKey={props.viewportKey}
             onClose={() => setChangingLayout(false)}
+            config={props.config}
           />
         )}
         {changingMarkdown && (

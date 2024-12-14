@@ -16,9 +16,9 @@ import { toolAddModeTitles } from "../../../constants";
 import { classNames, getFinalLocation } from "../../../utils/common/helpers";
 import type { MarkdownLookup, ToolAddMode } from "../../../types";
 import { isPosInsideRect } from "@/utils/math.ts";
-import { insertElement } from "@/utils/storykeep.ts";
-import { GhostBlock } from "@/components/other/GhostBlock.tsx";
 import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
+import { insertElement } from "@/utils/storykeep/StoryKeep_utils.ts";
+import { GhostBlock } from "old/src/components/other/GhostBlock.tsx";
 
 interface InsertWrapperProps {
   fragmentId: string;

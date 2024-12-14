@@ -28,7 +28,7 @@ import type {
   Config,
 } from "../../../types";
 import type { Element as HastElement } from "hast";
-import { MoveDraggableElement } from "@/components/storykeep/components/MoveDraggableElement.tsx";
+import { MoveDraggableElement } from "@/components/storykeep/panes/MoveDraggableElement.tsx";
 
 // const whitelist_please = `xs:flex-nowrap xl:flex-wrap`
 
@@ -258,7 +258,8 @@ function buildComponentFromAst(
   queueUpdate: (id: string, updateFn: () => void) => void,
   paneFragmentIds: string[],
   toolAddMode: ToolAddMode,
-  ignoreDragNDrop: boolean
+  ignoreDragNDrop: boolean,
+  config: Config
 ) {
   const thisAst = payload.ast[0];
   const Tag = thisAst?.tagName || thisAst?.type;
@@ -823,6 +824,7 @@ const PaneFromAst = ({
   toolAddMode,
   queueUpdate,
   ignoreDragNDrop,
+  config
 }: PaneFromAstProps) => {
   return buildComponentFromAst(
     payload,
@@ -840,7 +842,8 @@ const PaneFromAst = ({
     queueUpdate,
     paneFragmentIds,
     toolAddMode,
-    ignoreDragNDrop || false
+    ignoreDragNDrop || false,
+    config
   );
 };
 

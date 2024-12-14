@@ -10,7 +10,6 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { SaveProcessModal } from "./state/SaveProcessModal";
 import ViewportSelector from "./header/ViewportSelector";
 import ToolModeSelector from "./header/ToolModeSelector";
-import ToolAddModeSelector from "./header/ToolAddModeSelector";
 import PaneTitle from "./fields/PaneTitle";
 import PaneSlug from "./fields/PaneSlug";
 import StoryFragmentTitle from "./fields/StoryFragmentTitle";
@@ -57,7 +56,7 @@ import type {
   ContextPaneDatum,
   Config,
 } from "../../types";
-import { AddElementsPanel } from "@/components/storykeep/components/AddElementsPanel.tsx";
+import { AddElementsPanel } from "@/components/storykeep/panes/AddElementsPanel.tsx";
 
 const processedAnalytics = (data: RawAnalytics): Analytics => {
   const result: Analytics = {};
