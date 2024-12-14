@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import PreviewPage from "./PreviewPage";
 import type { PageDesign, Theme, Config } from "../../../types";
-import { blobToBase64 } from "@/utils/helpers.ts";
+import { blobToBase64 } from "@/utils/common/helpers.ts";
 
 interface DesignSnapshotProps {
   design: PageDesign;
