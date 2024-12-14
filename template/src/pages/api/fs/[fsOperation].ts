@@ -119,6 +119,32 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "saveImage": {
+        const { path: imagePath, filename, data } = await request.json();
+        const publicDir = path.join(process.cwd(), "public");
+        const fullPath = path.join(publicDir, imagePath);
+
+        try {
+          // Ensure directory exists
+          await fs.mkdir(fullPath, { recursive: true });
+
+          // Convert base64 to buffer and save
+          const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
+          const buffer = Buffer.from(base64Data, "base64");
+          await fs.writeFile(path.join(fullPath, filename), buffer);
+
+          result = {
+            success: true,
+            path: path.join(imagePath, filename),
+          };
+        } catch (err) {
+          throw new Error(
+            `Failed to save image: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+        }
+        break;
+      }
+
       case "generateTailwindWhitelist": {
         const { whitelist } = (await request.json()) as { whitelist?: string[] };
         const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));

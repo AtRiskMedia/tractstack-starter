@@ -26,9 +26,8 @@ import {
   paneImpression,
   paneHeldBeliefs,
   paneWithheldBeliefs,
-  previewMode,
-  getPreviewModeValue,
 } from "../../store/storykeep";
+import { formatDateForUrl } from "../../utils/common/helpers";
 import type {
   StoryFragmentDatum,
   ContextPaneDatum,
@@ -46,12 +45,6 @@ import type {
 
 const isImageDataUrl = (str: string) =>
   /^data:image\/(jpeg|jpg|png|gif|webp|svg);base64,/.test(str);
-
-function formatDateForUrl(date: Date): string {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  return `${year}-${month}`;
-}
 
 function createGenericUpdateQuery<T>(
   tableName: string,
@@ -634,7 +627,6 @@ function reconcileFiles(
 ) {
   const currentFiles = currentPane.files || [];
   const originalFiles = originalPane?.files || [];
-  const isPreview = getPreviewModeValue(previewMode.get());
 
   const currentFileIds = new Set(currentFiles.map((f) => f.id));
   const originalFileIds = new Set(originalFiles.map((f) => f.id));
@@ -658,9 +650,9 @@ function reconcileFiles(
         foundFileIds.add(file.id);
         if (!originalFileIds.has(file.id) || isImageDataUrl(file.src)) {
           const currentDate = new Date();
-          const url = isPreview
-            ? file.src // base64 data
-            : `/api/images/${formatDateForUrl(currentDate)}/${file.filename}`;
+          const url = !file.src.includes("base64")
+            ? file.src // isn't base64 data
+            : `/images/${formatDateForUrl(currentDate)}/${file.filename}`;
 
           queries.files.push({
             sql: `INSERT INTO file (id, filename, url, alt_description, src_set) 
@@ -675,8 +667,7 @@ function reconcileFiles(
               file.filename,
               url,
               altText || file.altDescription || null,
-              // Set src_set to false for preview mode base64 images
-              isPreview ? false : !file.filename.endsWith(".svg"),
+              file.src.includes("base64") ? true : !file.filename.endsWith(".svg"),
             ],
           });
 

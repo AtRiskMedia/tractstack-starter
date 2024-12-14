@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { classNames } from "../../../utils/common/helpers";
+import { classNames, formatDateForUrl } from "../../../utils/common/helpers";
 import { reconcileData, resetUnsavedChanges } from "../../../utils/data/reconcileData";
 import { getTailwindWhitelist } from "../../../utils/data/tursoTailwindWhitelist";
 import type {
@@ -9,17 +9,27 @@ import type {
   FileDatum,
   StoryFragmentQueries,
   ContextPaneQueries,
-  PaneDatum,
   TursoQuery,
 } from "../../../types";
 
 type SaveStage =
   | "RECONCILING"
+  | "PROCESSING_DESKTOP_IMAGES"
+  | "PROCESSING_TABLET_IMAGES"
+  | "PROCESSING_MOBILE_IMAGES"
   | "UPDATING_STYLES"
   | "UPLOADING_IMAGES"
   | "PUBLISHING"
   | "COMPLETED"
   | "ERROR";
+
+interface ImageProcessingProgress {
+  desktop: number;
+  tablet: number;
+  mobile: number;
+  total: number;
+  current: number;
+}
 
 type SaveProcessModalProps = {
   id: string;
@@ -37,11 +47,133 @@ export const SaveProcessModal = ({
   const [stage, setStage] = useState<SaveStage>("RECONCILING");
   const [error, setError] = useState<string | null>(null);
   const [slug, setSlug] = useState("");
+  const [progress, setProgress] = useState<ImageProcessingProgress>({
+    desktop: 0,
+    tablet: 0,
+    mobile: 0,
+    total: 0,
+    current: 0,
+  });
+
+  const resizeImage = async (base64: string, targetWidth: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+
+        const scaleFactor = targetWidth / img.width;
+        canvas.width = targetWidth;
+        canvas.height = img.height * scaleFactor;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = base64;
+    });
+  };
+
+  const processImages = async (
+    files: FileDatum[],
+    size: number,
+    stage: "PROCESSING_DESKTOP_IMAGES" | "PROCESSING_TABLET_IMAGES" | "PROCESSING_MOBILE_IMAGES"
+  ): Promise<{ filename: string; data: string }[]> => {
+    // For desktop size (1920px), use the existing processed images
+    if (size === 1920) {
+      setStage(stage);
+      const results = files
+        .filter((f) => f.src.startsWith("data:image") && !f.filename.endsWith(".svg"))
+        .map((file) => ({
+          filename: file.filename.replace(/\.(\w+)$/, `_${size}px.$1`),
+          data: file.src,
+        }));
+      setProgress((prev) => ({
+        ...prev,
+        desktop: 100,
+        total: results.length,
+        current: results.length,
+      }));
+      return results;
+    }
+
+    const results = [];
+    const imageFiles = files.filter(
+      (f) => f.src.startsWith("data:image") && !f.filename.endsWith(".svg")
+    );
+
+    setProgress((prev) => ({ ...prev, total: imageFiles.length }));
+    setStage(stage);
+
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      const resized = await resizeImage(file.src, size);
+      const sizeFilename = file.filename.replace(/\.(\w+)$/, `_${size}px.$1`);
+
+      results.push({ filename: sizeFilename, data: resized });
+
+      setProgress((prev) => ({
+        ...prev,
+        [stage === "PROCESSING_TABLET_IMAGES" ? "tablet" : "mobile"]:
+          ((i + 1) / imageFiles.length) * 100,
+        current: i + 1,
+      }));
+    }
+
+    return results;
+  };
+
+  const uploadFiles = async (files: FileDatum[]): Promise<boolean> => {
+    try {
+      const monthPath = formatDateForUrl(new Date());
+
+      // Handle SVGs first
+      const svgFiles = files.filter((f) => f.filename.endsWith(".svg"));
+      for (const file of svgFiles) {
+        await fetch("/api/fs/saveImage", {
+          method: "POST",
+          body: JSON.stringify({
+            path: `images/${monthPath}`,
+            filename: file.filename,
+            data: file.src,
+          }),
+        });
+      }
+
+      // Process images at different sizes
+      const desktopImages = await processImages(files, 1920, "PROCESSING_DESKTOP_IMAGES");
+      const tabletImages = await processImages(files, 1080, "PROCESSING_TABLET_IMAGES");
+      const mobileImages = await processImages(files, 600, "PROCESSING_MOBILE_IMAGES");
+
+      // Upload all processed images
+      setStage("UPLOADING_IMAGES");
+      const allImages = [...desktopImages, ...tabletImages, ...mobileImages];
+      for (const { filename, data } of allImages) {
+        await fetch("/api/fs/saveImage", {
+          method: "POST",
+          body: JSON.stringify({
+            path: `images/${monthPath}`,
+            filename,
+            data,
+          }),
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const runSaveProcess = async () => {
       try {
-        const data = await reconcileChanges();
+        const data = reconcileData(id, isContext, originalData);
         const slug = !isContext ? data?.storyFragment?.data?.slug : data?.contextPane?.data?.slug;
         setSlug(slug ?? ``);
         const hasFiles = !isContext
@@ -55,6 +187,7 @@ export const SaveProcessModal = ({
                   if (f.src.startsWith(`data:image`))
                     return {
                       filename: f.filename,
+                      altDescription: f.altDescription,
                       src: f.src,
                       paneId: f.paneId,
                       markdown: f.markdown,
@@ -67,12 +200,14 @@ export const SaveProcessModal = ({
           })
           .filter((n) => n)
           .flat() as FileDatum[];
+
         setStage("UPDATING_STYLES");
         await updateCustomStyles(data);
+
         if (files && files.length) {
-          setStage("UPLOADING_IMAGES");
           await uploadFiles(files);
         }
+
         setStage("PUBLISHING");
         await publishChanges(data);
         setStage("COMPLETED");
@@ -86,53 +221,15 @@ export const SaveProcessModal = ({
     runSaveProcess();
   }, [id, isContext]);
 
-  const reconcileChanges = async (): Promise<ReconciledData> => {
-    try {
-      const data = reconcileData(id, isContext, originalData);
-      return data;
-    } catch (err) {
-      setStage("ERROR");
-      setError(err instanceof Error ? err.message : "An error occurred during data reconciliation");
-      throw err;
-    }
-  };
-
-  const uploadFiles = async (files: FileDatum[]): Promise<boolean> => {
-    try {
-      console.log(`must publish files`, files);
-      return true;
-      //const response = await fetch(`/api/concierge/storykeep/files`, {
-      //  method: "POST",
-      //  headers: {
-      //    "Content-Type": "application/json",
-      //  },
-      //  body: JSON.stringify({
-      //    files,
-      //  }),
-      //});
-      //const data = await response.json();
-      //if (data.success) return true;
-      //return false;
-    } catch (err) {
-      setStage("ERROR");
-      setError(
-        err instanceof Error ? err.message : "An error occurred while publishing optimized images"
-      );
-      throw err;
-    }
-  };
-
   const updateCustomStyles = async (payload: ReconciledData): Promise<boolean> => {
     try {
       const panes =
         !isContext && payload?.storyFragment?.data?.panesPayload
           ? payload.storyFragment.data.panesPayload
           : payload?.contextPane?.data?.panePayload
-            ? [payload.contextPane.data.panePayload].map((p: PaneDatum) => {
-                return {
-                  options_payload: p.optionsPayload,
-                };
-              })
+            ? [payload.contextPane.data.panePayload].map((p) => ({
+                options_payload: p.optionsPayload,
+              }))
             : [];
       const newWhitelistItems = getTailwindWhitelist(panes);
       // Get existing classes from database
@@ -244,10 +341,16 @@ export const SaveProcessModal = ({
     switch (currentStage) {
       case "RECONCILING":
         return "Reconciling data changes...";
+      case "PROCESSING_DESKTOP_IMAGES":
+        return `Processing desktop images (${progress.current}/${progress.total})...`;
+      case "PROCESSING_TABLET_IMAGES":
+        return `Processing tablet images (${progress.current}/${progress.total})...`;
+      case "PROCESSING_MOBILE_IMAGES":
+        return `Processing mobile images (${progress.current}/${progress.total})...`;
       case "UPDATING_STYLES":
         return "Updating custom styles...";
       case "UPLOADING_IMAGES":
-        return "Uploading images...";
+        return "Uploading processed images...";
       case "PUBLISHING":
         return "Publishing changes...";
       case "COMPLETED":
@@ -259,6 +362,27 @@ export const SaveProcessModal = ({
     }
   };
 
+  const getProgressPercentage = () => {
+    switch (stage) {
+      case "RECONCILING":
+        return 10;
+      case "PROCESSING_DESKTOP_IMAGES":
+        return 20 + progress.desktop * 0.2;
+      case "PROCESSING_TABLET_IMAGES":
+        return 40 + progress.tablet * 0.2;
+      case "PROCESSING_MOBILE_IMAGES":
+        return 60 + progress.mobile * 0.2;
+      case "UPLOADING_IMAGES":
+        return 80;
+      case "PUBLISHING":
+        return 90;
+      case "COMPLETED":
+        return 100;
+      default:
+        return 0;
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[10101] bg-mydarkgrey bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
@@ -267,20 +391,12 @@ export const SaveProcessModal = ({
           <div className="h-2 bg-mylightgrey rounded-full">
             <div
               className={classNames(
-                "h-full rounded-full",
+                "h-full rounded-full transition-all duration-500",
                 stage === "COMPLETED" ? "bg-green-500" : "bg-blue-500",
-                stage === "ERROR" ? "bg-red-500" : "",
-                stage === "RECONCILING"
-                  ? "w-1/6"
-                  : stage === "UPDATING_STYLES"
-                    ? "w-2/6"
-                    : stage === "UPLOADING_IMAGES"
-                      ? "w-3/6"
-                      : stage === "PUBLISHING"
-                        ? "w-5/6"
-                        : "w-full"
+                stage === "ERROR" ? "bg-red-500" : ""
               )}
-            ></div>
+              style={{ width: `${getProgressPercentage()}%` }}
+            />
           </div>
         </div>
         <p className="text-lg mb-4">{getStageDescription(stage)}</p>

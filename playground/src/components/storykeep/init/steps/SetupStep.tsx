@@ -1,5 +1,3 @@
-import { previewMode } from "../../../../store/storykeep";
-
 interface SetupStepProps {
   onComplete: () => void;
   onBack: () => void;
@@ -16,7 +14,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
     if (hasConcierge) {
       onComplete();
     } else {
-      previewMode.set("true");
+      console.log(`may need to flag site as ready`);
       onComplete();
     }
   };
