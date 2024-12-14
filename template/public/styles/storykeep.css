@@ -2279,9 +2279,6 @@ select {
 .z-999 {
   z-index: 9999;
 }
-.z-9002 {
-  z-index: 9002;
-}
 .z-auto {
   z-index: auto;
 }
@@ -4912,9 +4909,6 @@ select {
 }
 .min-w-r9 {
   min-width: calc(var(--scale) * 2.25rem);
-}
-.max-w-\[80\%\] {
-    max-width: 80%;
 }
 .max-w-0 {
   max-width: 0;

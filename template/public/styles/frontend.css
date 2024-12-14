@@ -36,5 +36,3 @@
 .text-2xl{font-size:1.5rem;line-height:2rem}
 .pb-10{padding-bottom:2.5rem}
 @media (min-width: 0px) {.xs\:inline-block{display:inline-block} }
-@media (min-width: 801px) {.md\:inline-block{display:inline-block} .md\:text-5xl{font-size:3rem;line-height:1} .md\:text-3xl{font-size:1.875rem;line-height:2.25rem} .md\:my-12{margin-bottom:3rem;margin-top:3rem} .md\:text-2xl{font-size:1.5rem;line-height:2rem} .md\:text-xl{font-size:1.25rem;line-height:1.75rem} .md\:mt-5{margin-top:1.25rem} .md\:mt-10{margin-top:2.5rem} .md\:mx-10{margin-left:2.5rem;margin-right:2.5rem} .md\:mb-20{margin-bottom:5rem} .md\:max-w-screen-lg{max-width:1024px} .md\:rounded-lg{border-radius:0.5rem} .md\:px-14{padding-left:3.5rem;padding-right:3.5rem} .md\:py-32{padding-bottom:8rem;padding-top:8rem} .md\:pt-14{padding-top:3.5rem} .md\:pb-3.5{padding-bottom:0.875rem} .md\:py-3.5{padding-bottom:0.875rem;padding-top:0.875rem} }
-@media (min-width: 1367px) {.xl\:inline-block{display:inline-block} .xl\:text-6xl{font-size:3.75rem;line-height:1} .xl\:max-w-screen-xl{max-width:1280px} .xl\:px-32{padding-left:8rem;padding-right:8rem} .xl\:pt-20{padding-top:5rem} }

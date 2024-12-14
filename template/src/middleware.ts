@@ -39,6 +39,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const protectedRoutes = [
     "/*/edit",
     "/context/*/edit",
+    "/storykeep",
     "/storykeep/*",
     "/api/fs/update",
     "/api/turso/initializeContent",
