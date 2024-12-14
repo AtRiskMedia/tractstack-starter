@@ -13113,7 +13113,7 @@ select {
 .font-light {
   font-weight: 300;
 }
-.font-medium {
+.font-bold {
   font-weight: 500;
 }
 .font-normal {
@@ -48822,7 +48822,7 @@ select {
   .md\:font-light {
     font-weight: 300;
   }
-  .md\:font-medium {
+  .md\:font-bold {
     font-weight: 500;
   }
   .md\:font-normal {
@@ -67485,7 +67485,7 @@ select {
   .xl\:font-light {
     font-weight: 300;
   }
-  .xl\:font-medium {
+  .xl\:font-bold {
     font-weight: 500;
   }
   .xl\:font-normal {

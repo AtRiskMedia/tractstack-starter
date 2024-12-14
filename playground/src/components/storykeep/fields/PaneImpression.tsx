@@ -2,8 +2,8 @@ import { useStore } from "@nanostores/react";
 import ChevronDoubleLeftIcon from "@heroicons/react/24/outline/ChevronDoubleLeftIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { paneImpression } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
-import ContentEditableField from "../components/ContentEditableField";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
+import ContentEditableField from "./ContentEditableField";
 import type { ImpressionDatum, StoreKey } from "../../../types";
 
 interface PaneImpressionProps {

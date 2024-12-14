@@ -1,31 +1,28 @@
 ---
 import { ulid } from "ulid";
+import { getConfig, validateConfig } from "../../../utils/core/config";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
-import { getTractStackIdBySlug } from "../../../api/turso";
-import { isTursoReady, getContentMap, isContentReady } from "../../../api/turso";
-import { getSetupChecks } from "../../../utils/setupChecks";
-import CreateNewPage from "../../../components/storykeep/components/CreateNewPage";
+import { getTractStackIdBySlug } from "../../../utils/db/utils";
+import CreateNewPage from "../../../components/storykeep/create/CreateNewPage";
+import { getContentMap } from "../../../utils/db/utils";
 import type { ContentMap } from "../../../types";
-
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady) {
-  return Astro.redirect("/storykeep");
-}
 
 const slug = `create`;
 const newId = ulid();
 
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
 const canonicalURL = `/${slug}`;
 
-const TRACTSTACK_SLUG = import.meta.env.PUBLIC_TRACTSTACK;
-const tractStackId = await getTractStackIdBySlug(TRACTSTACK_SLUG);
-if (!tractStackId) {
-  return Astro.redirect("/404");
-}
+const homeSlug = config?.init?.HOME_SLUG;
+const tractStackHomeSlug =
+  typeof config?.init?.TRACTSTACK_HOME_SLUG === `string` ? config.init.TRACTSTACK_HOME_SLUG : null;
+if (!tractStackHomeSlug) return Astro.redirect("/404");
+const tractStackId = await getTractStackIdBySlug(tractStackHomeSlug);
+if (!tractStackId) return Astro.redirect("/404");
 const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
 ---
@@ -35,6 +32,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
   pubDatetime={new Date()}
   modDatetime={null}
   canonicalURL={canonicalURL}
+  config={config}
 >
   <div id="storykeep-content">
     <CreateNewPage
@@ -42,8 +40,9 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
       contentMapSlugs={contentMapSlugs}
       newId={newId}
       tractStackId={tractStackId}
-      hello={!hasContentReady}
-      client:load
+      hello={slug === homeSlug}
+      config={config}
+      client:only="react"
     />
   </div>
 </StoryKeep>

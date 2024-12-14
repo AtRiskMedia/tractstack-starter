@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
 import { storedDashboardAnalytics, analyticsDuration } from "../../../store/storykeep";
-import { classNames } from "../../../utils/helpers";
+import { classNames } from "../../../utils/common/helpers";
 import Line from "./Line";
 
 const DashboardActivity = () => {

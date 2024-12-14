@@ -2,13 +2,14 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { classNames } from "../../../utils/helpers";
 import DevicePhoneMobileIcon from "@heroicons/react/24/outline/DevicePhoneMobileIcon";
 import DeviceTabletIcon from "@heroicons/react/24/outline/DeviceTabletIcon";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
-import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
-import { tailwindToHex, colorValues } from "../../../assets/tailwindColors";
+import { classNames } from "../../../utils/common/helpers";
+import { useDropdownDirection } from "../../../utils/storykeep/useDropdownDirection";
+import { tailwindToHex, colorValues } from "../../../utils/tailwind/tailwindColors";
 import type { ChangeEvent } from "react";
+import type { Config } from "../../../types";
 
 interface ViewportComboBoxProps {
   value: string;
@@ -22,6 +23,7 @@ interface ViewportComboBoxProps {
   allowNegative?: boolean;
   isNegative?: boolean;
   isInferred?: boolean;
+  config: Config;
 }
 
 const ViewportComboBox = ({
@@ -32,6 +34,7 @@ const ViewportComboBox = ({
   allowNegative = false,
   isNegative = false,
   isInferred = false,
+  config,
 }: ViewportComboBoxProps) => {
   const [internalValue, setInternalValue] = useState(value);
   const [query, setQuery] = useState("");
@@ -145,7 +148,12 @@ const ViewportComboBox = ({
                         {colorValues.includes(item) && (
                           <div
                             className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
-                            style={{ backgroundColor: tailwindToHex(item) }}
+                            style={{
+                              backgroundColor: tailwindToHex(
+                                item,
+                                config?.init?.BRAND_COLOURS || null
+                              ),
+                            }}
                           />
                         )}
                         <span

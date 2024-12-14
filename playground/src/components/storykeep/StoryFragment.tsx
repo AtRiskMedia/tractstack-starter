@@ -24,11 +24,11 @@ import {
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
 import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
-import { useStoryKeepUtils } from "../../utils/storykeep";
-import PaneWrapper from "./PaneWrapper";
-import DesignNewPane from "./components/DesignNewPane";
-import { classNames, handleEditorResize, debounce } from "../../utils/helpers";
-import type { ViewportKey } from "../../types";
+import { useStoryKeepUtils } from "../../utils/storykeep/StoryKeep_utils";
+import PaneWrapper from "./compositor/PaneWrapper";
+import DesignNewPane from "./panel/DesignNewPane";
+import { classNames, handleEditorResize, debounce } from "../../utils/common/helpers";
+import type { ViewportKey, Config } from "../../types";
 
 //function getSubstring(str: string) {
 //  const dashIndex = str.indexOf("-");
@@ -51,8 +51,9 @@ export const StoryFragment = (props: {
   slug: string;
   isContext: boolean;
   knownCodeHooks: string[];
+  config: Config;
 }) => {
-  const { id, slug, isContext, knownCodeHooks } = props;
+  const { id, slug, isContext, knownCodeHooks, config } = props;
   const [isClient, setIsClient] = useState(false);
   const $creationState = useStore(creationStateStore);
   const thisId = id ?? $creationState.id ?? `error`;
@@ -329,6 +330,7 @@ export const StoryFragment = (props: {
                 slug={slug}
                 isContext={isContext}
                 knownCodeHooks={knownCodeHooks}
+                config={config}
               />
             </div>
           ) : isDesigningNew && paneId !== `insert` ? null : (
@@ -342,6 +344,7 @@ export const StoryFragment = (props: {
               toolMode={toolMode}
               toolAddMode={toolAddMode}
               isDesigningNew={isDesigningNew}
+              config={config}
             />
           )}
         </div>

@@ -1,11 +1,11 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "../components/SetContentMap";
-import { getContentMap, isTursoReady } from "../api/turso";
-import { getSetupChecks } from "../utils/setupChecks";
-import type { ContentMap, StylesVersion } from "../types";
+import SetContentMap from "../components/frontend/state/SetContentMap";
+import { getContentMap } from "../utils/db/utils";
+import type { ContentMap, Config } from "../types";
 
 export interface Props {
+  config: Config;
   title?: string;
   canonicalURL?: string;
   pubDatetime?: Date;
@@ -14,6 +14,7 @@ export interface Props {
 }
 
 const {
+  config,
   title = ``,
   ogImage,
   canonicalURL = Astro.url.pathname,
@@ -21,62 +22,24 @@ const {
   modDatetime,
 } = Astro.props;
 
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady && hasTurso ? await isTursoReady() : false;
-
-let stylesUrl = "/styles/storykeep.css";
-if (hasTursoReady) {
-  const stylesVerUrl =
-    typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
-    import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
-      ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
-      : null;
-  const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
-  const stylesVer: StylesVersion =
-    !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
-  stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
-}
-
-const defaultFavIcon =
-  typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
-    ? import.meta.env.PUBLIC_FAVICON
-    : `/favicon.ico`;
-const defaultSocialImageURL =
-  typeof ogImage === `string` && ogImage
-    ? ogImage
-    : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
-      ? import.meta.env.PUBLIC_OG
-      : `/og.png`;
-const defaultSocialLogoURL =
-  typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
-    ? import.meta.env.PUBLIC_OGLOGO
-    : `/oglogo.png`;
-const defaultSocialTitle =
-  typeof title === `string` && title
-    ? title
-    : typeof import.meta.env.PUBLIC_OGTITLE === `string` && import.meta.env.PUBLIC_OGTITLE
-      ? import.meta.env.PUBLIC_OGTITLE
-      : `My first Tract Stack`;
-const defaultSocialAuthor =
-  typeof import.meta.env.PUBLIC_OGAUTHOR === `string` && import.meta.env.PUBLIC_OGAUTHOR
-    ? import.meta.env.PUBLIC_OGAUTHOR
-    : `t.b.d.`;
-const defaultSocialDesc =
-  typeof import.meta.env.PUBLIC_OGDESC === `string` && import.meta.env.PUBLIC_OGDESC
-    ? import.meta.env.PUBLIC_OGDESC
-    : `The best is yet to come!`;
+const stylesUrl = `/styles/frontend.css?v=${config?.init?.STYLES_VER || `1`}`;
+const defaultFavIcon = `/favicon.ico`;
+const defaultSocialImageURL = ogImage || `/og.png`;
+const defaultSocialLogoURL = `/oglogo.png`;
+const defaultSocialTitle = typeof title === `string` && title ? title : `My first Tract Stack`;
+const defaultSocialAuthor = `Tract Stack`;
+const defaultSocialDesc = `No-code website builder and content marketing platform`;
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 
-const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const gtag = config?.init?.GTAG || false;
 const gtagUrl =
-  typeof googleSiteVerification === `string` && googleSiteVerification.length > 1
-    ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
+  typeof gtag === `string` && gtag.length > 1
+    ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
     : null;
 
-const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
+const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>
@@ -85,7 +48,7 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <link rel="canonical" href={config?.init?.SITE_URL + canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
@@ -103,13 +66,13 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta property="og:url" content={config?.init?.SITE_URL + canonicalURL} />
     <meta property="og:image" content={socialImageWithVersion} />
     <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta property="twitter:url" content={config?.init?.SITE_URL + canonicalURL} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />
@@ -132,24 +95,26 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
 
     <!-- Google Analytics -->
     {gtagUrl && <script async src={gtagUrl} is:inline />}
-    <script is:inline define:vars={{ googleSiteVerification }}>
-      // Define gtag function type
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        window.dataLayer.push(arguments);
-      }
-      window.gtag = gtag;
-
-      document.addEventListener("astro:page-load", () => {
-        if (window.gtag) {
-          gtag("js", new Date());
-          gtag("config", googleSiteVerification, {
-            page_title: document.title,
-            page_path: window.location.pathname,
-            page_location: window.location.href,
-          });
+    <script is:inline define:vars={{ gtag }}>
+      if (gtag) {
+        // Define gtag function type
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+          window.dataLayer.push(arguments);
         }
-      });
+        window.gtag = gtag;
+
+        document.addEventListener("astro:page-load", () => {
+          if (window.gtag) {
+            gtag("js", new Date());
+            gtag("config", gtag, {
+              page_title: document.title,
+              page_path: window.location.pathname,
+              page_location: window.location.href,
+            });
+          }
+        });
+      }
     </script>
 
     <!-- Tract Stack Concierge -->
@@ -161,34 +126,27 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
         startLoadingAnimation,
         stopLoadingAnimation,
         debounce,
-      } from "../utils/helpers";
-      import { initializeBrandColors } from "../utils/brand-init";
+      } from "../utils/common/helpers";
       import { eventStream } from "../utils/events/eventStream";
       import { inView } from "../utils/events/inView";
       import { eventProcessQueue } from "../utils/events/eventProcessQueue";
-      import { init } from "../utils/init";
+      import { init } from "../utils/visit/init";
       import type { EventStreamController } from "../types";
       const debouncedHandleScroll = debounce(handleScroll, 50);
 
       let eventStreamController: EventStreamController | null = null;
-
       function setupEventHandlers() {
         if (!eventStreamController) {
           eventStreamController = eventStream() as EventStreamController;
         }
         eventProcessQueue();
-
-        // Set up animation event listeners
         document.addEventListener("astro:before-preparation", startLoadingAnimation);
         document.addEventListener("astro:after-swap", stopLoadingAnimation);
       }
-
-      // Initial setup
       setupEventHandlers();
 
       document.addEventListener("astro:page-load", () => {
         init();
-        initializeBrandColors();
         handleScroll();
         handleResize();
         inView();
@@ -197,26 +155,12 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
 
         window.addEventListener(`resize`, handleResize);
         document.addEventListener("scroll", debouncedHandleScroll);
-
-        const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
-        if (googleSiteVerification) {
-          // @ts-expect-error gtag
-          gtag("js", new Date());
-          // @ts-expect-error gtag
-          gtag("config", googleSiteVerification);
-          // @ts-expect-error gtag
-          gtag("event", "page_view", {
-            page_title: document.title,
-            page_location: window.location.pathname,
-            page_path: window.location.pathname,
-            send_page_view: true,
-          });
-        }
       });
 
       document.addEventListener("astro:before-swap", () => {
         eventProcessQueue();
       });
+
       document.addEventListener("astro:before-preparation", () => {
         if (eventStreamController) {
           eventStreamController.stop();

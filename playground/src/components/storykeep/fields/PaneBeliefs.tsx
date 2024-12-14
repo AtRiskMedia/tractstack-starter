@@ -4,8 +4,8 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ChevronDoubleLeftIcon from "@heroicons/react/24/outline/ChevronDoubleLeftIcon";
 import { paneHeldBeliefs, paneWithheldBeliefs } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
-import ContentEditableField from "../components/ContentEditableField";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
+import ContentEditableField from "./ContentEditableField";
 import type { BeliefDatum } from "../../../types";
 
 interface PaneBeliefsProps {

@@ -1,0 +1,117 @@
+---
+import MarkdownPane from "./MarkdownPane.astro";
+import MarkdownInsidePane from "./MarkdownInsidePane.astro";
+import Modal from "./Modal.astro";
+import MarkdownInsideModal from "./MarkdownInsideModal.astro";
+import { generateMarkdownLookup } from "../../../utils/compositor/generateMarkdownLookup";
+import { classNames } from "../../../utils/common/helpers";
+import type {
+  Config,
+  MarkdownDatum,
+  MarkdownPaneDatum,
+  FileNode,
+  BgPaneDatum,
+} from "../../../types";
+
+interface Props {
+  payload: MarkdownPaneDatum | BgPaneDatum;
+  markdown: MarkdownDatum;
+  files: FileNode[];
+  paneHeight: [number, number, number];
+  paneId: string;
+  slug: string;
+  isContext: boolean;
+  config: Config;
+}
+
+const { config, payload, markdown, files, paneHeight, paneId, slug, isContext } = Astro.props;
+
+// this is either MarkdownPane, Modal+MarkdownInsideModal, or MarkdownInsidePane
+
+const thisPayload = payload as MarkdownPaneDatum;
+const thisModalPayload =
+  thisPayload.isModal && typeof thisPayload?.optionsPayload?.modal !== `undefined`
+    ? thisPayload.optionsPayload.modal
+    : null;
+const hasHidden =
+  payload.hiddenViewports.includes(`desktop`) ||
+  payload.hiddenViewports.includes(`tablet`) ||
+  payload.hiddenViewports.includes(`mobile`);
+const hidden = hasHidden
+  ? ``.concat(
+      payload.hiddenViewports.includes(`desktop`) ? `xl:hidden` : `xl:grid`,
+      payload.hiddenViewports.includes(`tablet`) ? `md:hidden` : `md:grid`,
+      payload.hiddenViewports.includes(`mobile`) ? `hidden` : `grid`
+    )
+  : `grid`;
+const paneFragmentStyle = {
+  gridArea: "1/1/1/1",
+};
+
+// has modal shape?
+const isModal = thisPayload.isModal && typeof thisPayload?.optionsPayload?.modal !== `undefined`;
+
+// uses textShapeOutside
+const hasTextShapeOutside =
+  thisPayload.textShapeOutsideMobile !== `none` ||
+  thisPayload.textShapeOutsideTablet !== `none` ||
+  thisPayload.textShapeOutsideDesktop !== `none`;
+
+// generate markdown global lookup
+const markdownLookup = markdown?.htmlAst && generateMarkdownLookup(markdown.htmlAst);
+---
+
+{
+  isModal && thisModalPayload ? (
+    <div class={classNames(hidden, `h-fit-contents`)} id={`t8k-${thisPayload.id}-modal-container`}>
+      <div class="relative w-full h-full justify-self-start" style={paneFragmentStyle}>
+        <Modal payload={thisPayload} modalPayload={thisModalPayload} />
+      </div>
+      <div class="relative w-full h-full justify-self-start" style={paneFragmentStyle}>
+        <MarkdownInsideModal
+          payload={thisPayload}
+          markdown={markdown}
+          files={files}
+          paneHeight={paneHeight}
+          modalPayload={thisModalPayload}
+          paneId={paneId}
+          slug={slug}
+          isContext={isContext}
+          markdownLookup={markdownLookup}
+          config={config}
+        />
+      </div>
+    </div>
+  ) : null
+}
+
+{
+  !isModal && hasTextShapeOutside ? (
+    <MarkdownInsidePane
+      payload={thisPayload}
+      markdown={markdown}
+      files={files}
+      paneHeight={paneHeight}
+      paneId={paneId}
+      slug={slug}
+      isContext={isContext}
+      markdownLookup={markdownLookup}
+      config={config}
+    />
+  ) : null
+}
+
+{
+  !isModal && !hasTextShapeOutside ? (
+    <MarkdownPane
+      payload={thisPayload}
+      markdown={markdown}
+      files={files}
+      paneId={paneId}
+      slug={slug}
+      isContext={isContext}
+      markdownLookup={markdownLookup}
+      config={config}
+    />
+  ) : null
+}

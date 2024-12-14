@@ -17,7 +17,6 @@ export async function eventProcessQueue() {
           verb: verb,
           duration: diff,
         };
-        //console.log(`=force-event`, event);
         events.set([...events.get(), event]);
       }
     }

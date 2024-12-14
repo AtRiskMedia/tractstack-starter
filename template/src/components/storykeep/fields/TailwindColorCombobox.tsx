@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
+import { useDropdownDirection } from "../../../utils/storykeep/useDropdownDirection";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
@@ -7,15 +7,21 @@ import {
   getTailwindColorOptions,
   tailwindToHex,
   getBrandColor,
-} from "../../../assets/tailwindColors";
-import { classNames } from "../../../utils/helpers";
+} from "../../../utils/tailwind/tailwindColors";
+import { classNames } from "../../../utils/common/helpers";
+import type { Config } from "../../../types";
 
 interface TailwindColorComboboxProps {
   selectedColor: string;
   onColorChange: (color: string) => void;
+  config: Config;
 }
 
-const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorComboboxProps) => {
+const TailwindColorCombobox = ({
+  selectedColor,
+  onColorChange,
+  config,
+}: TailwindColorComboboxProps) => {
   const [query, setQuery] = useState("");
   const tailwindColorOptions = useMemo(() => getTailwindColorOptions(), []);
   const filteredColors = useMemo(
@@ -30,10 +36,12 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
 
   const getColorValue = (color: string) => {
     if (color.startsWith("brand-")) {
-      const brandColor = getBrandColor(`var(--${color})`);
-      return brandColor ? `#${brandColor}` : tailwindToHex(`bg-${color}`);
+      const brandColor = getBrandColor(`var(--${color})`, config?.init?.BRAND_COLOURS || null);
+      return brandColor
+        ? `#${brandColor}`
+        : tailwindToHex(`bg-${color}`, config?.init?.BRAND_COLOURS || null);
     }
-    return tailwindToHex(`bg-${color}`);
+    return tailwindToHex(`bg-${color}`, config?.init?.BRAND_COLOURS || null);
   };
 
   return (
@@ -55,7 +63,12 @@ const TailwindColorCombobox = ({ selectedColor, onColorChange }: TailwindColorCo
         {selectedColor && !query && (
           <div
             className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
-            style={{ backgroundColor: tailwindToHex(`bg-${selectedColor}`) }}
+            style={{
+              backgroundColor: tailwindToHex(
+                `bg-${selectedColor}`,
+                config?.init?.BRAND_COLOURS || null
+              ),
+            }}
           />
         )}
         <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">

@@ -6,10 +6,10 @@ import {
   lastInteractedTypeStore,
   lastInteractedPaneStore,
 } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
-import { cloneDeep, classNames } from "../../../utils/helpers";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
+import { cloneDeep, classNames } from "../../../utils/common/helpers";
 import { cleanHtmlAst, findLinkNodes } from "../../../utils/compositor/markdownUtils";
-import ContentEditableField from "../components/ContentEditableField";
+import ContentEditableField from "./ContentEditableField";
 import { toHast } from "mdast-util-to-hast";
 import { toMarkdown } from "mdast-util-to-markdown";
 import { fromMarkdown } from "mdast-util-from-markdown";

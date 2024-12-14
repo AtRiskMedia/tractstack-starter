@@ -1,87 +1,39 @@
 ---
-import { getFullContentMap } from "../../api/turso";
-import StoryKeep from "../../layouts/StoryKeep.astro";
-import Header from "../../components/Header.astro";
-import Footer from "../../components/Footer.astro";
-import ImpressionWrapper from "../../components/ImpressionWrapper";
-import EnvironmentSettings from "../../components/storykeep/fields/EnvironmentSettings";
-import { isTursoReady, isContentReady } from "../../api/turso";
-import { getSetupChecks } from "../../utils/setupChecks";
-import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "../../types";
+import Layout from "../../layouts/InitLayout.astro";
+import { tursoClient } from "../../utils/db/client";
+import { getConfig, validateConfig } from "../../utils/core/config";
+import InitWizard from "../../components/storykeep/init/InitWizard";
 
-// user authenticated?
-const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
 
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+// Create a secure version of validation
+const secureValidation = {
+  isValid: validation.isValid,
+  hasPassword: validation.hasPassword,
+  capabilities: validation.capabilities,
+  errors: validation.errors,
+  config,
+};
+
+let error = "";
+try {
+  await tursoClient.getClient();
+} catch (e) {
+  console.error("Database initialization error:", e);
+  error = e instanceof Error ? e.message : "Unknown error";
 }
-
-const canonicalURL = `/storykeep/settings`;
-
-// menu
-const menuPayload = {
-  id: `storykeep`,
-  title: "Story Keep Menu",
-  theme: "default",
-  optionsPayload: [
-    {
-      name: "Dashboard",
-      description: "Your Story Keep Dashboard",
-      featured: true,
-      actionLisp: "(goto (storykeep dashboard))",
-    },
-    {
-      name: "Logout",
-      description: "Close this session",
-      featured: true,
-      actionLisp: "(goto (storykeep logout))",
-    },
-  ],
-} as MenuDatum;
-// impression
-const impressions = user.isOpenDemo
-  ? [
-      {
-        id: `storykeep`,
-        parentId: `storykeep`,
-        title: "Would you like your website to be built with Tract Stack?",
-        body: "We offer Tract Stack as a service with premium agency support.",
-        actionLisp: "",
-        buttonText: "Interested!",
-        actionsLisp: "(goto (url https://tractstack.com/#pricing))",
-      },
-    ]
-  : ([] as ImpressionDatum[]);
-
-const contentMap: FullContentMap[] = await getFullContentMap();
 ---
 
-<StoryKeep title="Advanced Settings" canonicalURL={canonicalURL}>
-  <Header
-    title="Advanced Settings"
-    menu={menuPayload}
-    slug="storykeep-settings"
-    isContext={false}
-    impressions={impressions}
-    user={user}
-    isStoryKeep={true}
-  />
-  <main id="main-content" class="min-h-screen">
-    <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
-      <div class="py-1.5 bg-white px-3.5">
-        <EnvironmentSettings contentMap={contentMap} client:only="react" />
-      </div>
-    </div>
+<Layout title="Re-Configure your Tract Stack">
+  <main>
+    {error && <div class="error">{error}</div>}
+    <InitWizard
+      client:only="react"
+      config={config}
+      hasConcierge={validation.capabilities.hasConcierge}
+      validation={secureValidation}
+      init={false}
+    />
   </main>
-  {
-    impressions?.length ? (
-      <ImpressionWrapper slug={`storykeep`} isContext={false} payload={impressions} client:idle />
-    ) : null
-  }
-  <Footer menu={menuPayload} backToTop={true} slug={`storykeep-settings`} isContext={false} />
-</StoryKeep>
+</Layout>

@@ -1,15 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
-import Footer from "../components/Footer.astro";
+import Header from "../components/common/Header.astro";
+import Footer from "../components/common/Footer.astro";
+import { getConfig, validateConfig } from "../utils/core/config";
 import type { AuthStatus } from "../types";
 
-// user authenticated?
 const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
 ---
 
-<Layout title="Page not Found" pubDatetime={new Date()} modDatetime={new Date()}>
-  <Header title="Page not Found" slug="error" isContext={false} user={user} />
+<Layout title="Page not Found" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
+  <Header title="Page not Found" slug="error" isContext={false} user={user} config={config} />
   <main id="main-content">
     <h2 class="text-center text-3xl text-myblue">This content could not be found.</h2>
     <div class="text-center py-16
@@ -22,5 +27,5 @@ const user = Astro.locals.user as AuthStatus;
       </a>
     </div>
   </main>
-  <Footer created={new Date()} slug="error" isContext={false} />
+  <Footer created={new Date()} slug="error" isContext={false} config={config} />
 </Layout>

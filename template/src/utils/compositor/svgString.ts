@@ -1,5 +1,5 @@
-import { SvgPanes, SvgBreaks, SvgModals } from "../../assets/shapes";
-import type { SvgPaneDatum, SvgBreaksDatum, SvgModalDatum } from "../../assets/shapes";
+import { SvgPanes, SvgBreaks, SvgModals } from "../common/shapes";
+import type { SvgPaneDatum, SvgBreaksDatum, SvgModalDatum } from "../common/shapes";
 
 export const SvgString = (shapeName: string, viewportKey: string, id: string) => {
   const shapeData =

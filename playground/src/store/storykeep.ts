@@ -1,5 +1,6 @@
 import { map, atom } from "nanostores";
 import { persistentAtom } from "@nanostores/persistent";
+import settingsMap from "../../config/settingsMap.json";
 import type {
   BeliefDatum,
   BgPaneDatum,
@@ -21,22 +22,31 @@ import type {
   EditModeValue,
   StylesMemory,
   EnvSetting,
+  EnvSettingType,
   Analytics,
   DashboardAnalytics,
   CreationState,
   Theme,
   DesignType,
 } from "../types";
-import { knownEnvSettings, PUBLIC_THEME, toolAddModes } from "../constants";
+import { PUBLIC_THEME, toolAddModes } from "../constants";
 import type { ControlPosition } from "react-draggable";
 import type { Root } from "hast";
-import { createNodeId, createNodeIdFromDragNode } from "@/utils/helpers.ts";
+import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
 
 export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
 
 export const lastInteractedPaneStore = atom<string | null>(null);
 export const visiblePanesStore = map<Record<string, boolean>>({});
 export const lastInteractedTypeStore = atom<"markdown" | "bgpane" | null>(null);
+
+export const knownEnvSettings: EnvSetting[] = Object.entries(settingsMap.settings).map(
+  ([name, setting]) => ({
+    name,
+    ...setting,
+    type: setting.type as EnvSettingType, // Assert the type matches EnvSettingType
+  })
+);
 
 export const envSettings = map<{
   current: EnvSetting[];

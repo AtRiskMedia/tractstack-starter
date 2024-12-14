@@ -1,6 +1,6 @@
 import ExclamationCircleIcon from "@heroicons/react/24/outline/ExclamationCircleIcon";
 import ChevronDoubleLeftIcon from "@heroicons/react/24/outline/ChevronDoubleLeftIcon";
-import ContentEditableField from "../components/ContentEditableField";
+import ContentEditableField from "./ContentEditableField";
 import { useStore } from "@nanostores/react";
 import { paneTitle, uncleanDataStore, temporaryErrorsStore } from "../../../store/storykeep";
 import type { StoreKey } from "../../../types";

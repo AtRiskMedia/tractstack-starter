@@ -3,7 +3,7 @@ import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 import Pie from "./Pie";
 import Line from "./Line";
 import { analyticsDuration, showAnalytics } from "../../../store/storykeep";
-import { classNames } from "../../../utils/helpers";
+import { classNames } from "../../../utils/common/helpers";
 import type { ProcessedAnalytics } from "../../../types";
 
 const AnalyticsWrapper = (props: { title: string; isPane: boolean; data: ProcessedAnalytics }) => {

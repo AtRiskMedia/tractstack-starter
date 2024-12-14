@@ -1,0 +1,78 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { InformationCircle } from "../../components/icons/InformationCircle";
+import { RememberMeToggle } from "../../components/other/RememberMeToggle";
+import { ProfileSwitch } from "../../components/other/ProfileSwitch";
+import { isTursoReady, isContentReady } from "../../api/turso";
+import { getSetupChecks } from "../../utils/setupChecks";
+import type { AuthStatus } from "../../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasConcierge, hasTurso } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
+  return Astro.redirect("/storykeep");
+}
+
+const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+---
+
+<Layout title="Configure your Session" pubDatetime={new Date()} modDatetime={new Date()}>
+  <Header title="Configure your Session" slug="profile" isContext={false} user={user} />
+  <main id="main-content">
+    <div class="px-6 font-main text-xl py-24">
+      <div class="max-w-3xl mx-auto">
+        <div class="space-y-6">
+          <p class="text-black">
+            This website has been &quot;pressed&quot; with Tract Stack. As you read and click around
+            it will open up like a choose-your-own adventure book.
+          </p>
+          <p class="text-black">
+            Without your consent, no personal information will be collected from your device.
+          </p>
+          <h3 class="text-xl pt-12 text-mydarkgrey text-sm inline-flex">
+            Allow Tract Stack to retain memory of your session and preferences
+            <span class="pl-2" title="We will use a few kilobytes of localStorage in your browser.">
+              <InformationCircle classes="w-5 h-5 text-mydarkgrey/50" />
+            </span>
+          </h3>
+          <RememberMeToggle client:load />
+          <ProfileSwitch client:load />
+
+          {
+            googleSiteVerification ? (
+              <p class="pt-12 text-mydarkgrey">
+                <em>This site uses Google Analytics.</em> Please refer to
+                <a
+                  class="text-myblue underline hover:text-black"
+                  href="https://policies.google.com/technologies/partner-sites"
+                  target="_blank"
+                >
+                  Google privacy policy
+                </a>
+                .
+              </p>
+            ) : null
+          }
+        </div>
+        <div class="text-center pt-6
+      text-2xl md:text-3xl">
+          <a
+            href="/"
+            class="px-3.5 py-2.5 bg-myblack text-white rounded-lg hover:rotate-1 hover:bg-myorange"
+          >
+            Close
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+  <Footer created={new Date()} slug="profile" isContext={false} />
+</Layout>

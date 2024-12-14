@@ -3,20 +3,20 @@ import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ChevronDoubleLeftIcon from "@heroicons/react/24/outline/ChevronDoubleLeftIcon";
-import ContentEditableField from "../components/ContentEditableField";
+import ContentEditableField from "./ContentEditableField";
 import {
   paneFragmentMarkdown,
   paneMarkdownFragmentId,
   lastInteractedTypeStore,
   lastInteractedPaneStore,
 } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
 import {
   updateMarkdownElement,
   extractMarkdownElement,
   markdownToHtmlAst,
 } from "../../../utils/compositor/markdownUtils";
-import { cloneDeep } from "../../../utils/helpers";
+import { cloneDeep } from "../../../utils/common/helpers";
 import { widgetMeta } from "../../../constants";
 
 interface WidgetProps {

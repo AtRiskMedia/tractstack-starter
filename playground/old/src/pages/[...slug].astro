@@ -1,0 +1,111 @@
+---
+import StoryFragmentWrapper from "../components/StoryFragmentWrapper.astro";
+import ImpressionWrapper from "../components/ImpressionWrapper";
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import HeaderWidget from "../custom/HeaderWidget.astro";
+import Footer from "../components/Footer.astro";
+import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
+import { ENABLE_HEADER_WIDGET } from "../constants";
+import { getSetupChecks } from "../utils/setupChecks";
+import { isValidContentPath } from "../utils/routeValidation";
+import type { AuthStatus, Current } from "../types";
+
+// user authenticated?
+const user = Astro.locals.user as AuthStatus;
+
+// confirm set-up
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
+const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
+if (!hasTursoReady || !hasContentReady) {
+  return Astro.redirect("/storykeep");
+}
+
+// which storyfragment?
+const { slug } = Astro.params;
+const lookup = slug || import.meta.env.PUBLIC_HOME;
+
+// Validate the route parameter
+if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// get and validate storyfragment datum
+const storyfragment = await getStoryFragmentBySlug(lookup);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// id for this storyfragment
+const current: Current = storyfragment
+  ? {
+      id: storyfragment.id,
+      slug: storyfragment.slug,
+      title: storyfragment.title,
+      parentId: storyfragment.tractStackId,
+      parentSlug: storyfragment.tractStackSlug,
+      parentTitle: storyfragment.tractStackTitle,
+    }
+  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+---
+
+{
+  storyfragment ? (
+    <Layout
+      title={storyfragment.title}
+      pubDatetime={storyfragment.created}
+      modDatetime={storyfragment.changed}
+      ogImage={
+        typeof storyfragment?.socialImagePath === `string`
+          ? storyfragment.socialImagePath
+          : undefined
+      }
+    >
+      {ENABLE_HEADER_WIDGET ? (
+        <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
+      ) : null}
+      <Header
+        title={storyfragment.title}
+        menu={storyfragment.menuPayload}
+        slug={lookup}
+        isContext={false}
+        isEditable={true}
+        impressions={storyfragment.impressions}
+        user={user}
+      />
+      <main id="main-content" class="w-full overflow-hidden">
+        <StoryFragmentWrapper
+          tailwindBgColour={storyfragment.tailwindBgColour}
+          panesPayload={storyfragment.panesPayload}
+          current={current}
+          resourcesPayload={storyfragment.resourcesPayload}
+        />
+      </main>
+      {storyfragment.impressions?.length ? (
+        <ImpressionWrapper
+          slug={storyfragment.slug}
+          isContext={true}
+          payload={storyfragment.impressions}
+          client:idle
+        />
+      ) : null}
+      <Footer
+        created={storyfragment.created}
+        menu={storyfragment.menuPayload}
+        backToTop={true}
+        slug={lookup}
+        isContext={false}
+      />
+    </Layout>
+  ) : null
+}

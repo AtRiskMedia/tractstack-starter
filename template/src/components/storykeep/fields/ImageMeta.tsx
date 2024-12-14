@@ -15,9 +15,9 @@ import {
   lastInteractedPaneStore,
   paneFiles,
 } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
-import ContentEditableField from "../components/ContentEditableField";
-import { useDropdownDirection } from "../../../hooks/useDropdownDirection";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
+import ContentEditableField from "./ContentEditableField";
+import { useDropdownDirection } from "../../../utils/storykeep/useDropdownDirection";
 import {
   markdownToHtmlAst,
   updateMarkdownElement,

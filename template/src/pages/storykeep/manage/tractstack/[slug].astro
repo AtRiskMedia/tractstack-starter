@@ -1,26 +1,22 @@
 ---
 import { ulid } from "ulid";
+import { getConfig, validateConfig } from "../../../../utils/core/config";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
-import Header from "../../../../components/Header.astro";
-import Footer from "../../../../components/Footer.astro";
-import TractStackEditor from "../../../../components/storykeep/components/TractStackEditor";
-import { getTractStackBySlug, isTursoReady, isContentReady } from "../../../../api/turso";
-import { getSetupChecks } from "../../../../utils/setupChecks";
+import Header from "../../../../components/common/Header.astro";
+import Footer from "../../../../components/common/Footer.astro";
+import TractStackEditor from "../../../../components/storykeep/manage/TractStackEditor";
+import { getTractStackBySlug } from "../../../../utils/db/utils";
 import type { AuthStatus, MenuDatum, TractStackDatum } from "../../../../types";
 
 const { slug } = Astro.params;
 const create = slug === "create";
 
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
-}
-
 const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
 const canonicalURL = `/storykeep/manage/tractstack/${slug}`;
 
 let tractstack: TractStackDatum | undefined = undefined;
@@ -63,6 +59,7 @@ const menuPayload: MenuDatum = {
 <StoryKeep
   title={create ? "Create New TractStack" : `Edit TractStack: ${tractstack.title}`}
   canonicalURL={canonicalURL}
+  config={config}
 >
   <Header
     title={create ? "Create New TractStack" : `Edit TractStack: ${tractstack.title}`}
@@ -72,6 +69,7 @@ const menuPayload: MenuDatum = {
     user={user}
     isStoryKeep={true}
     isEditable={false}
+    config={config}
   />
   <main id="main-content" class="min-h-screen">
     <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
@@ -85,5 +83,6 @@ const menuPayload: MenuDatum = {
     backToTop={true}
     slug={`storykeep-manage-tractstack-${slug}`}
     isContext={false}
+    config={config}
   />
 </StoryKeep>

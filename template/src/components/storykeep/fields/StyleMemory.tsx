@@ -2,7 +2,7 @@ import { useStore } from "@nanostores/react";
 import EyeDropperIcon from "@heroicons/react/24/outline/EyeDropperIcon";
 import ClipboardDocumentIcon from "@heroicons/react/24/outline/ClipboardDocumentIcon";
 import { stylesMemoryStore } from "../../../store/storykeep";
-import { classNames } from "../../../utils/helpers";
+import { classNames } from "../../../utils/common/helpers";
 import { tagNames } from "../../../types";
 import type { ClassNamesPayloadDatumValue, AllTag } from "../../../types";
 

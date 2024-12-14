@@ -1,5 +1,5 @@
 import { ResponsivePie } from "@nivo/pie";
-import { oneDarkTheme } from "../../../assets/nivo";
+import { oneDarkTheme } from "../../../../config/nivo.json";
 
 const Pie = ({ data }: { data: { id: string; value: number }[] }) => (
   <div style={{ width: "400px", height: "200px" }}>

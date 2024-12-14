@@ -1,54 +1,44 @@
 ---
-import { getAllFileDatum, getStoryFragmentBySlug } from "../../api/turso";
-import { cleanTursoFileDatum } from "../../utils/compositor/tursoFileDatum";
+import { getConfig, validateConfig } from "../../utils/core/config";
+import { getAllFileDatum, getStoryFragmentBySlug } from "../../utils/db/utils";
+import { cleanTursoFileDatum } from "../../utils/db/data/tursoFileDatum";
 import StoryKeep from "../../layouts/StoryKeep.astro";
-import { EditModal } from "../../components/storykeep/EditModal";
-import { StoryFragment } from "../../components/storykeep/StoryFragment";
-import { StoryKeepStore } from "../../components/storykeep/StoryKeepStore";
 import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
-import {
-  getAllMenus,
-  isTursoReady,
-  isContentPrimed,
-  isContentReady,
-  getContentMap,
-} from "../../api/turso";
-import { getSetupChecks } from "../../utils/setupChecks";
+import { StoryKeepStore } from "../../components/storykeep/state/StoryKeepStore";
+import { EditModal } from "../../components/storykeep/panel/EditModal";
+import { StoryFragment } from "../../components/storykeep/StoryFragment";
+import { getAllMenus, getContentMap } from "../../utils/db/utils";
 import { components } from "../../custom/CodeHook.astro";
 import type { AuthStatus, ContentMap } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
-
-const { slug } = Astro.params;
-
-if (!slug) return Astro.redirect("/404");
-
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-const hasContentPrimed = !notPreviewNotReady ? await isContentPrimed() : false;
-if (!hasTursoReady || !hasContentPrimed) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
+
+// valid storyfragment?
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/${slug}`;
 
 const filesRaw = await getAllFileDatum();
 const files = cleanTursoFileDatum(filesRaw);
-
-const storyfragment = await getStoryFragmentBySlug(slug);
-if (!storyfragment && slug !== `create`) {
-  return Astro.redirect("/404");
-}
-
 const menus = await getAllMenus();
 const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
+
+// valid datum?
+const storyfragment = await getStoryFragmentBySlug(slug, config);
+if (!storyfragment && slug !== `create`) {
+  return Astro.redirect("/404");
+}
 ---
 
 <StoryKeep
+  config={config}
   title={storyfragment?.title}
   pubDatetime={storyfragment?.created}
   modDatetime={storyfragment?.changed}
@@ -75,10 +65,9 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
         isContext={false}
         user={user}
         originalData={storyfragment}
-        hasContentReady={hasContentReady}
         contentMapSlugs={contentMapSlugs}
-        hasTurso={hasTurso}
         menus={menus}
+        config={config}
       />
     </header>
 
@@ -90,6 +79,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
           slug={slug}
           isContext={false}
           knownCodeHooks={components ? Object.keys(components) : []}
+          config={config}
         />
         <div
           class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
@@ -102,6 +92,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
         client:only="react"
         id={slug === "create" ? `create` : storyfragment?.id ? storyfragment.id : `error`}
         files={files}
+        config={config}
       />
     </div>
   </div>

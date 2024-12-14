@@ -1,41 +1,37 @@
 ---
-import { getAllFileDatum, getContextPaneBySlug } from "../../../api/turso";
-import { cleanTursoFileDatum } from "../../../utils/compositor/tursoFileDatum";
+import { getConfig, validateConfig } from "../../../utils/core/config";
+import { getAllFileDatum, getContextPaneBySlug } from "../../../utils/db/utils";
+import { cleanTursoFileDatum } from "../../../utils/db/data/tursoFileDatum";
+import { getAllMenus, getContentMap } from "../../../utils/db/utils";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
-import { EditModal } from "../../../components/storykeep/EditModal";
-import { ContextPane } from "../../../components/storykeep/ContextPane";
-import { StoryKeepContextStore } from "../../../components/storykeep/StoryKeepContextStore";
+import { EditModal } from "../../../components/storykeep/panel/EditModal";
+import { ContextPage } from "../../../components/storykeep/ContextPage";
+import { StoryKeepContextStore } from "../../../components/storykeep/state/StoryKeepContextStore";
 import { StoryKeepHeader } from "../../../components/storykeep/StoryKeepHeader";
-import { getSetupChecks } from "../../../utils/setupChecks";
-import { getAllMenus, isTursoReady, isContentReady, getContentMap } from "../../../api/turso";
 import type { AuthStatus, ContentMap } from "../../../types";
 
 const user = Astro.locals.user as AuthStatus;
-
-const { slug } = Astro.params;
-
-if (!slug) return Astro.redirect("/404");
-
-// confirm set-up
-const { hasConcierge, hasTurso } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
+
+// valid context page?
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/context/${slug}`;
 
 const filesRaw = await getAllFileDatum();
 const files = cleanTursoFileDatum(filesRaw);
-
-const contextPane = await getContextPaneBySlug(slug);
-if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astro.redirect("/404");
-
 const menus = await getAllMenus();
 const contentMap: ContentMap[] = await getContentMap();
 const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
+
+// valid datum ?
+const contextPane = await getContextPaneBySlug(slug);
+if ((!contextPane || !contextPane.panePayload) && slug !== `create`) return Astro.redirect("/404");
 ---
 
 <StoryKeep
@@ -43,6 +39,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
   pubDatetime={contextPane?.created}
   modDatetime={contextPane?.changed}
   canonicalURL={canonicalURL}
+  config={config}
 >
   <div
     id="storykeep-content"
@@ -62,18 +59,18 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
         isContext={true}
         user={user}
         originalData={contextPane}
-        hasContentReady={true}
         contentMapSlugs={contentMapSlugs}
-        hasTurso={hasTurso}
         menus={menus}
+        config={config}
       />
     </header>
 
     <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
       <main id="website-content" class="overflow-auto w-full">
-        <ContextPane
+        <ContextPage
           id={slug === "create" ? null : contextPane?.id ? contextPane.id : `error`}
           slug={slug}
+          config={config}
           client:only="react"
         />
         <div
@@ -87,6 +84,7 @@ const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
         client:only="react"
         id={slug === "create" ? `create` : contextPane?.id ? contextPane.id : `error`}
         files={files}
+        config={config}
       />
     </div>
   </div>

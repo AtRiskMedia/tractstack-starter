@@ -1,34 +1,26 @@
 ---
-import StoryFragmentWrapper from "../components/StoryFragmentWrapper.astro";
-import ImpressionWrapper from "../components/ImpressionWrapper";
+import { getStoryFragmentBySlug } from "../utils/db/utils";
+import { isValidContentPath } from "../utils/common/routeValidation";
+import { getConfig, validateConfig } from "../utils/core/config";
 import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
 import HeaderWidget from "../custom/HeaderWidget.astro";
-import Footer from "../components/Footer.astro";
-import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
-import { ENABLE_HEADER_WIDGET } from "../constants";
-import { getSetupChecks } from "../utils/setupChecks";
-import { isValidContentPath } from "../utils/routeValidation";
+import Header from "../components/common/Header.astro";
+import Footer from "../components/common/Footer.astro";
+import StoryFragmentWrapper from "../components/frontend/StoryFragmentWrapper.astro";
+import ImpressionWrapper from "../components/common/widgets/ImpressionWrapper";
 import type { AuthStatus, Current } from "../types";
 
-// user authenticated?
 const user = Astro.locals.user as AuthStatus;
-
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
 
-// which storyfragment?
+// valid storyfragment?
 const { slug } = Astro.params;
-const lookup = slug || import.meta.env.PUBLIC_HOME;
-
-// Validate the route parameter
-if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
+const lookup = slug || config?.init?.HOME_SLUG;
+if (slug === config.init?.HOME_SLUG) return Astro.redirect("/");
 if (!lookup) return Astro.redirect("/404");
 if (!isValidContentPath(lookup)) {
   return new Response(null, {
@@ -37,16 +29,14 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
-// get and validate storyfragment datum
-const storyfragment = await getStoryFragmentBySlug(lookup);
+// valid datum?
+const storyfragment = await getStoryFragmentBySlug(lookup, config);
 if (!storyfragment) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
-
-// id for this storyfragment
 const current: Current = storyfragment
   ? {
       id: storyfragment.id,
@@ -59,53 +49,56 @@ const current: Current = storyfragment
   : { id: `unknown`, slug: `unknown`, title: `unknown` };
 ---
 
-{
-  storyfragment ? (
-    <Layout
-      title={storyfragment.title}
-      pubDatetime={storyfragment.created}
-      modDatetime={storyfragment.changed}
-      ogImage={
-        typeof storyfragment?.socialImagePath === `string`
-          ? storyfragment.socialImagePath
-          : undefined
-      }
-    >
-      {ENABLE_HEADER_WIDGET ? (
-        <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
-      ) : null}
-      <Header
-        title={storyfragment.title}
-        menu={storyfragment.menuPayload}
-        slug={lookup}
-        isContext={false}
-        isEditable={true}
-        impressions={storyfragment.impressions}
-        user={user}
+<Layout
+  config={config}
+  title={storyfragment.title}
+  pubDatetime={storyfragment.created}
+  modDatetime={storyfragment.changed}
+  ogImage={typeof storyfragment?.socialImagePath === `string`
+    ? storyfragment.socialImagePath
+    : undefined}
+>
+  {
+    config?.init?.ENABLE_HEADER_WIDGET ? (
+      <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
+    ) : null
+  }
+  <Header
+    title={storyfragment.title}
+    menu={storyfragment.menuPayload}
+    slug={lookup}
+    isContext={false}
+    isEditable={true}
+    impressions={storyfragment.impressions}
+    user={user}
+    config={config}
+  />
+  <main id="main-content" class="w-full overflow-hidden">
+    <StoryFragmentWrapper
+      tailwindBgColour={storyfragment.tailwindBgColour}
+      panesPayload={storyfragment.panesPayload}
+      current={current}
+      resourcesPayload={storyfragment.resourcesPayload}
+      config={config}
+    />
+  </main>
+  {
+    storyfragment.impressions?.length ? (
+      <ImpressionWrapper
+        slug={storyfragment.slug}
+        isContext={true}
+        payload={storyfragment.impressions}
+        config={config}
+        client:idle
       />
-      <main id="main-content" class="w-full overflow-hidden">
-        <StoryFragmentWrapper
-          tailwindBgColour={storyfragment.tailwindBgColour}
-          panesPayload={storyfragment.panesPayload}
-          current={current}
-          resourcesPayload={storyfragment.resourcesPayload}
-        />
-      </main>
-      {storyfragment.impressions?.length ? (
-        <ImpressionWrapper
-          slug={storyfragment.slug}
-          isContext={true}
-          payload={storyfragment.impressions}
-          client:idle
-        />
-      ) : null}
-      <Footer
-        created={storyfragment.created}
-        menu={storyfragment.menuPayload}
-        backToTop={true}
-        slug={lookup}
-        isContext={false}
-      />
-    </Layout>
-  ) : null
-}
+    ) : null
+  }
+  <Footer
+    created={storyfragment.created}
+    menu={storyfragment.menuPayload}
+    backToTop={true}
+    slug={lookup}
+    isContext={false}
+    config={config}
+  />
+</Layout>

@@ -13,6 +13,9 @@ import type {
   ToolAddMode,
 } from "./types";
 
+export const AUTH_COOKIE_NAME = "auth_token";
+export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
+export const MS_BETWEEN_UNDO = 6000;
 export const DB_DIR = ".tractstack";
 export const DEMO_DB = "demo.db";
 export const PROD_DB = "prod.db";
@@ -21,24 +24,25 @@ export const REPLICA_COUNT = 3;
 
 export const genAiPrompt = `You are writing copy for a high traffic internet website. Write for an audience who is reading this website copy and is very interested in what it has to offer. Create a markdown summary of the given text following this structure: Start with a # Heading 1 web page title that's appropriate for SEO. Next a ## Heading 2 containing a catchy, concise title that encapsulates the main theme. Follow with a single paragraph that provides an overall short description, setting the context for the entire piece. Create 3-5 ### Heading 3 sections, each focusing on a key aspect or subtopic of the main theme. Each heading should be followed by one or two paragraphs expanding on that subtopic. Optionally, include a #### Heading 4 subsection under one or more of the ### Heading 3 sections if there's a need to dive deeper into a specific point. This should also be followed by one or two paragraphs. Ensure all content is in pure markdown format, without any HTML tags or special formatting. Adjust the number of sections and subsections based on the length and complexity of the original text: For shorter texts (under 500 words), use fewer sections. For longer texts (over 2000 words), use more sections and subsections. Keep the overall structure and flow coherent, ensuring each section logically leads to the next. Use paragraphs instead of bullet points or lists for the main content under each heading. Maintain a consistent tone and style throughout the summary, matching the original text's voice where appropriate. Aim for a comprehensive yet concise summary that captures the essence of the original text while adhering to this structured format.`;
 
-export const PUBLIC_THEME = import.meta.env.PUBLIC_THEME || `light`;
-export const CONCIERGE_SYNC_INTERVAL = 4000;
-export const THRESHOLD_READ = import.meta.env.PUBLIC_THRESHOLD_READ || 42000;
-export const THRESHOLD_GLOSSED =
-  import.meta.env.PUBLIC_THRESHOLD_GLOSSED || 7000;
-export const JWT_LIFETIME = 15 * 60 * 1000;
 export const WORDMARK_MODE = import.meta.env.PUBLIC_WORDMARK_MODE || "default";
 export const ENABLE_HEADER_WIDGET =
   import.meta.env.ENABLE_HEADER_WIDGET === "true" || false;
 
 export const MAX_HISTORY_LENGTH = 10;
-export const MS_BETWEEN_UNDO = 6000;
 export const MAX_LENGTH_CONTENT = 10000;
+
+export const PUBLIC_THEME = `light-bold`;
 
 export const SHORT_SCREEN_THRESHOLD = 900;
 export const SMALL_SCREEN_WIDTH = 600;
 export const MIN_SCROLL_THRESHOLD = 220;
 export const HYSTERESIS = 200;
+
+export const CONCIERGE_SYNC_INTERVAL = 4000;
+export const THRESHOLD_READ = 42000;
+export const THRESHOLD_GLOSSED = 7000;
+export const JWT_LIFETIME = 15 * 60 * 1000;
+export const IMPRESSIONS_DELAY = 5000;
 
 export const tagTitles: Record<Tag, string> = {
   p: "Paragraph",
@@ -483,8 +487,7 @@ export const knownEnvSettings: EnvSetting[] = [
     name: "PUBLIC_SOFT_READ_THRESHOLD",
     defaultValue: "7000",
     type: "number",
-    description:
-      "Soft threshold for considering content as glossed (in milliseconds)",
+    description: "Soft threshold for considering content as glossed (in milliseconds)",
     group: "Options",
     priority: false,
     required: false,
@@ -694,16 +697,10 @@ export const knownResourceSettings: {
 export function isKnownResourceSetting(
   categorySlug: string | number
 ): categorySlug is keyof typeof knownResourceSettings {
-  return (
-    typeof categorySlug === "string" && categorySlug in knownResourceSettings
-  );
+  return typeof categorySlug === "string" && categorySlug in knownResourceSettings;
 }
-export function getResourceSetting(
-  categorySlug: string | number
-): ResourceSetting | undefined {
-  return isKnownResourceSetting(categorySlug)
-    ? knownResourceSettings[categorySlug]
-    : undefined;
+export function getResourceSetting(categorySlug: string | number): ResourceSetting | undefined {
+  return isKnownResourceSetting(categorySlug) ? knownResourceSettings[categorySlug] : undefined;
 }
 
 // Helper function to validate and process a resource value based on its type

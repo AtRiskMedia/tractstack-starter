@@ -1,0 +1,243 @@
+---
+import { ViewTransitions } from "astro:transitions";
+import SetContentMap from "../components/SetContentMap";
+import { getContentMap, isTursoReady } from "../api/turso";
+import { getSetupChecks } from "../utils/setupChecks";
+import type { ContentMap, StylesVersion } from "../types";
+
+export interface Props {
+  title?: string;
+  canonicalURL?: string;
+  pubDatetime?: Date;
+  modDatetime?: Date | null;
+  ogImage?: string;
+}
+
+const {
+  title = ``,
+  ogImage,
+  canonicalURL = Astro.url.pathname,
+  pubDatetime,
+  modDatetime,
+} = Astro.props;
+
+const { hasTurso, hasConcierge } = getSetupChecks();
+const notPreviewNotReady = hasConcierge && !hasTurso;
+const hasTursoReady = !notPreviewNotReady && hasTurso ? await isTursoReady() : false;
+
+let stylesUrl = "/styles/storykeep.css";
+if (hasTursoReady) {
+  const stylesVerUrl =
+    typeof import.meta.env.PUBLIC_CONCIERGE_STYLES_URL === `string` &&
+    import.meta.env.PUBLIC_CONCIERGE_STYLES_URL.length
+      ? `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/v.json`
+      : null;
+  const requestStyles = stylesVerUrl ? await fetch(stylesVerUrl) : null;
+  const stylesVer: StylesVersion =
+    !requestStyles || requestStyles?.status === 404 ? 0 : await requestStyles.json();
+  stylesUrl = `${import.meta.env.PUBLIC_CONCIERGE_STYLES_URL}/frontend.css?v=${stylesVer?.v || 0}`;
+}
+
+const defaultFavIcon =
+  typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
+    ? import.meta.env.PUBLIC_FAVICON
+    : `/favicon.ico`;
+const defaultSocialImageURL =
+  typeof ogImage === `string` && ogImage
+    ? ogImage
+    : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
+      ? import.meta.env.PUBLIC_OG
+      : `/og.png`;
+const defaultSocialLogoURL =
+  typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
+    ? import.meta.env.PUBLIC_OGLOGO
+    : `/oglogo.png`;
+const defaultSocialTitle =
+  typeof title === `string` && title
+    ? title
+    : typeof import.meta.env.PUBLIC_OGTITLE === `string` && import.meta.env.PUBLIC_OGTITLE
+      ? import.meta.env.PUBLIC_OGTITLE
+      : `My first Tract Stack`;
+const defaultSocialAuthor =
+  typeof import.meta.env.PUBLIC_OGAUTHOR === `string` && import.meta.env.PUBLIC_OGAUTHOR
+    ? import.meta.env.PUBLIC_OGAUTHOR
+    : `t.b.d.`;
+const defaultSocialDesc =
+  typeof import.meta.env.PUBLIC_OGDESC === `string` && import.meta.env.PUBLIC_OGDESC
+    ? import.meta.env.PUBLIC_OGDESC
+    : `The best is yet to come!`;
+const buildVersion = import.meta.env.BUILD_TIME || Date.now();
+const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
+const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
+
+const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const gtagUrl =
+  typeof googleSiteVerification === `string` && googleSiteVerification.length > 1
+    ? `https://www.googletagmanager.com/gtag/js?id=${googleSiteVerification}`
+    : null;
+
+const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
+---
+
+<!doctype html>
+<html lang="en" class="motion-safe:scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
+    <link rel="canonical" href={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Custom styles -->
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href={stylesUrl} />
+
+    <!-- General Meta Tags -->
+    <title>{defaultSocialTitle}</title>
+    <meta name="title" content={defaultSocialTitle} />
+    <meta name="description" content={defaultSocialDesc} />
+    <meta name="author" content={defaultSocialAuthor} />
+    <link rel="sitemap" href="/sitemap.xml" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content={defaultSocialTitle} />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content={defaultSocialDesc} />
+    <meta property="og:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta property="og:image" content={socialImageWithVersion} />
+    <meta property="og:logo" content={socialLogoWithVersion} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta property="twitter:title" content={defaultSocialTitle} />
+    <meta property="twitter:description" content={defaultSocialDesc} />
+    <meta property="twitter:image" content={defaultSocialLogoURL} />
+
+    <!-- Article Published/Modified time -->
+    {
+      pubDatetime && (
+        <>
+          <meta property="article:published_time" content={pubDatetime.toISOString()} />
+        </>
+      )
+    }
+    {
+      modDatetime && (
+        <>
+          <meta property="article:modified_time" content={modDatetime.toISOString()} />
+        </>
+      )
+    }
+
+    <!-- Google Analytics -->
+    {gtagUrl && <script async src={gtagUrl} is:inline />}
+    <script is:inline define:vars={{ googleSiteVerification }}>
+      // Define gtag function type
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      window.gtag = gtag;
+
+      document.addEventListener("astro:page-load", () => {
+        if (window.gtag) {
+          gtag("js", new Date());
+          gtag("config", googleSiteVerification, {
+            page_title: document.title,
+            page_path: window.location.pathname,
+            page_location: window.location.href,
+          });
+        }
+      });
+    </script>
+
+    <!-- Tract Stack Concierge -->
+    <script>
+      import {
+        scrollToTop,
+        handleResize,
+        handleScroll,
+        startLoadingAnimation,
+        stopLoadingAnimation,
+        debounce,
+      } from "../utils/helpers";
+      import { initializeBrandColors } from "../utils/brand-init";
+      import { eventStream } from "../utils/events/eventStream";
+      import { inView } from "../utils/events/inView";
+      import { eventProcessQueue } from "../utils/events/eventProcessQueue";
+      import { init } from "../utils/init";
+      import type { EventStreamController } from "../types";
+      const debouncedHandleScroll = debounce(handleScroll, 50);
+
+      let eventStreamController: EventStreamController | null = null;
+
+      function setupEventHandlers() {
+        if (!eventStreamController) {
+          eventStreamController = eventStream() as EventStreamController;
+        }
+        eventProcessQueue();
+
+        // Set up animation event listeners
+        document.addEventListener("astro:before-preparation", startLoadingAnimation);
+        document.addEventListener("astro:after-swap", stopLoadingAnimation);
+      }
+
+      // Initial setup
+      setupEventHandlers();
+
+      document.addEventListener("astro:page-load", () => {
+        init();
+        initializeBrandColors();
+        handleScroll();
+        handleResize();
+        inView();
+        setupEventHandlers();
+        scrollToTop();
+
+        window.addEventListener(`resize`, handleResize);
+        document.addEventListener("scroll", debouncedHandleScroll);
+
+        const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+        if (googleSiteVerification) {
+          // @ts-expect-error gtag
+          gtag("js", new Date());
+          // @ts-expect-error gtag
+          gtag("config", googleSiteVerification);
+          // @ts-expect-error gtag
+          gtag("event", "page_view", {
+            page_title: document.title,
+            page_location: window.location.pathname,
+            page_path: window.location.pathname,
+            send_page_view: true,
+          });
+        }
+      });
+
+      document.addEventListener("astro:before-swap", () => {
+        eventProcessQueue();
+      });
+      document.addEventListener("astro:before-preparation", () => {
+        if (eventStreamController) {
+          eventStreamController.stop();
+          eventStreamController = null;
+        }
+        window.removeEventListener(`resize`, handleResize);
+        document.removeEventListener("scroll", debouncedHandleScroll);
+      });
+    </script>
+
+    <ViewTransitions />
+  </head>
+  <body class="w-full">
+    <div
+      id="loading-indicator"
+      class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
+    >
+    </div>
+    <SetContentMap payload={contentMap} client:only="react" />
+    <div id="content" class="transition-opacity duration-300">
+      <slot />
+    </div>
+  </body>
+</html>

@@ -7,7 +7,7 @@ import {
   paneHeightOffsetTablet,
   paneHeightOffsetMobile,
 } from "../../../store/storykeep";
-import { useStoryKeepUtils } from "../../../utils/storykeep";
+import { useStoryKeepUtils } from "../../../utils/storykeep/StoryKeep_utils";
 import type { StoreKey } from "../../../types";
 
 interface PaneHeightOffsetProps {

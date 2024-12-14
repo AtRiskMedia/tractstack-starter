@@ -1,19 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@nanostores/react";
+import { ulid } from "ulid";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ChevronDoubleLeftIcon from "@heroicons/react/24/outline/ChevronDoubleLeftIcon";
 import { paneFragmentIds, paneFragmentBgColour } from "../../../store/storykeep";
-import { useStoryKeepUtils, createFieldWithHistory } from "../../../utils/storykeep";
-import { tailwindToHex, hexToTailwind } from "../../../assets/tailwindColors";
-import ColorPickerWrapper from "../components/ColorPickerWrapper";
+import {
+  useStoryKeepUtils,
+  createFieldWithHistory,
+} from "../../../utils/storykeep/StoryKeep_utils";
+import { tailwindToHex, hexToTailwind } from "../../../utils/tailwind/tailwindColors";
+import ColorPickerWrapper from "../widgets/ColorPickerWrapper";
 import TailwindColorCombobox from "../fields/TailwindColorCombobox";
-import { ulid } from "ulid";
+import type { Config } from "../../../types";
 
 interface PaneBgColourProps {
   paneId: string;
+  config: Config;
 }
 
-const PaneBgColour = ({ paneId }: PaneBgColourProps) => {
+const PaneBgColour = ({ paneId, config }: PaneBgColourProps) => {
   const $paneFragmentIds = useStore(paneFragmentIds, { keys: [paneId] });
   const [bgColorFragmentId, setBgColorFragmentId] = useState<string | null>(null);
   const $paneFragmentBgColour = useStore(paneFragmentBgColour, {
@@ -45,7 +50,7 @@ const PaneBgColour = ({ paneId }: PaneBgColourProps) => {
 
   const handleColorChange = useCallback(
     (newColor: string) => {
-      const hexColor = tailwindToHex(`bg-${newColor}`);
+      const hexColor = tailwindToHex(`bg-${newColor}`, config?.init?.BRAND_COLOURS || null);
       setColor(hexColor);
       const matchingTailwindColor = hexToTailwind(hexColor);
       setSelectedTailwindColor(matchingTailwindColor || "");
@@ -84,7 +89,7 @@ const PaneBgColour = ({ paneId }: PaneBgColourProps) => {
 
   const handleTailwindColorChange = useCallback(
     (newTailwindColor: string) => {
-      const hexColor = tailwindToHex(`bg-${newTailwindColor}`);
+      const hexColor = tailwindToHex(`bg-${newTailwindColor}`, config?.init?.BRAND_COLOURS || null);
       handleColorChange(hexColor);
     },
     [handleColorChange]
@@ -151,6 +156,7 @@ const PaneBgColour = ({ paneId }: PaneBgColourProps) => {
         <TailwindColorCombobox
           selectedColor={selectedTailwindColor}
           onColorChange={handleTailwindColorChange}
+          config={config}
         />
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { ResponsiveLine } from "@nivo/line";
-import { theme, oneDarkTheme } from "../../../assets/nivo";
+import { theme, oneDarkTheme } from "../../../../config/nivo.json";
 import type { LineDataSeries } from "../../../types";
 
 type Duration = "daily" | "weekly" | "monthly";

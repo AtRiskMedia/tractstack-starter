@@ -7,14 +7,15 @@ import AdjustmentsVerticalIcon from "@heroicons/react/24/outline/AdjustmentsVert
 import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRippleIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { SaveProcessModal } from "./components/SaveProcessModal";
-import ViewportSelector from "./components/ViewportSelector";
-import ToolModeSelector from "./components/ToolModeSelector";
+import { SaveProcessModal } from "./state/SaveProcessModal";
+import ViewportSelector from "./header/ViewportSelector";
+import ToolModeSelector from "./header/ToolModeSelector";
+import ToolAddModeSelector from "./header/ToolAddModeSelector";
 import PaneTitle from "./fields/PaneTitle";
 import PaneSlug from "./fields/PaneSlug";
 import StoryFragmentTitle from "./fields/StoryFragmentTitle";
 import StoryFragmentSlug from "./fields/StoryFragmentSlug";
-import { StoryFragmentSettings } from "./settings/StoryFragmentSettings";
+import { StoryFragmentSettings } from "./panel/StoryFragmentSettings";
 import {
   editModeStore,
   unsavedChangesStore,
@@ -39,8 +40,8 @@ import {
   creationStateStore,
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
-import { classNames, cleanString, findUniqueSlug } from "../../utils/helpers";
-import { useStoryKeepUtils } from "../../utils/storykeep";
+import { classNames, cleanString, findUniqueSlug } from "../../utils/common/helpers";
+import { useStoryKeepUtils } from "../../utils/storykeep/StoryKeep_utils";
 import type {
   MenuDatum,
   AuthStatus,
@@ -54,6 +55,7 @@ import type {
   LineDataSeries,
   StoryFragmentDatum,
   ContextPaneDatum,
+  Config,
 } from "../../types";
 import { AddElementsPanel } from "@/components/storykeep/components/AddElementsPanel.tsx";
 
@@ -85,20 +87,18 @@ export const StoryKeepHeader = memo(
     user,
     isContext,
     originalData,
-    hasContentReady,
     contentMapSlugs,
-    hasTurso,
     menus,
+    config,
   }: {
     id: string;
     slug: string;
     user: AuthStatus;
     isContext: boolean;
     originalData: StoryFragmentDatum | ContextPaneDatum | null;
-    hasContentReady: boolean;
     contentMapSlugs: string[];
-    hasTurso: boolean;
     menus: MenuDatum[];
+    config: Config;
   }) => {
     const [hasAnalytics, setHasAnalytics] = useState(false);
     const $creationState = useStore(creationStateStore);
@@ -118,7 +118,7 @@ export const StoryKeepHeader = memo(
       keys: [thisId],
     });
     const $paneFragmentIds = useStore(paneFragmentIds, { keys: [thisId] });
-    const isHome = slug && slug === import.meta.env.PUBLIC_HOME;
+    const isHome = slug && slug === config?.init?.HOME_SLUG;
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const $viewportSet = useStore(viewportSetStore);
@@ -188,15 +188,50 @@ export const StoryKeepHeader = memo(
 
     async function fetchAnalytics() {
       try {
-        const type = isContext ? `pane` : `storyfragment`;
-        const response = await fetch(
-          `/api/concierge/storykeep/analytics?id=${encodeURIComponent(id)}&type=${encodeURIComponent(type)}&duration=${encodeURIComponent(duration)}`
-        );
-        const data = await response.json();
-        if (data.success) {
-          storedAnalytics.set(processedAnalytics(data.data));
-          if (Object.keys(data.data?.pie || {}).length || Object.keys(data.data?.line || {}).length)
-            setHasAnalytics(true);
+        if (id === "create") return;
+        const type = isContext ? "pane" : "storyfragment";
+        const response = await fetch("/api/turso/analytics", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id,
+            type,
+            duration,
+          }),
+        });
+        const result = await response.json();
+        if (result.success) {
+          const processedData: RawAnalytics = {
+            pie: [
+              {
+                id: Number(id),
+                object_id: id,
+                object_name: type,
+                object_type: type === "pane" ? "Pane" : "StoryFragment",
+                total_actions: result.data.pie?.length || 0,
+                verbs: result.data.pie || [],
+              },
+            ],
+            line: [
+              {
+                id: Number(id),
+                object_id: id,
+                object_name: type,
+                object_type: type === "pane" ? "Pane" : "StoryFragment",
+                total_actions: result.data.line?.length || 0,
+                verbs: result.data.line || [],
+              },
+            ],
+          };
+
+          const analytics = processedAnalytics(processedData);
+          storedAnalytics.set(analytics);
+          setHasAnalytics(
+            (result.data.pie && result.data.pie.length > 0) ||
+              (result.data.line && result.data.line.length > 0)
+          );
         }
       } catch (error) {
         console.error("Error fetching analytics data:", error);
@@ -251,12 +286,11 @@ export const StoryKeepHeader = memo(
         [`storyFragmentTitle`, `storyFragmentSlug`].includes(storeKey) &&
         [``, `create`].includes($storyFragmentSlug[thisId].current)
       ) {
-        const clean = hasContentReady
-          ? findUniqueSlug(
-              cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
-              contentMapSlugs
-            )
-          : `hello`;
+        console.log(`on first save we may need to pass flag to set slug=hello`);
+        const clean = findUniqueSlug(
+          cleanString($storyFragmentTitle[thisId].current).substring(0, 20),
+          contentMapSlugs
+        );
         temporaryErrorsStore.setKey(thisId, {
           ...(temporaryErrorsStore.get()[thisId] || {}),
           [`storyFragmentTitle`]: false,
@@ -411,7 +445,7 @@ export const StoryKeepHeader = memo(
                 <PresentationChartBarIcon className="h-6 w-6" />
               </button>
 
-              {user.isOpenDemo || !hasTurso ? (
+              {user.isOpenDemo ? (
                 <button
                   type="button"
                   title="Changes will not be saved! Have fun!"
@@ -460,17 +494,15 @@ export const StoryKeepHeader = memo(
                   updateStoreField={updateStoreField}
                   handleUndo={handleUndo}
                 />
-                {!isHome &&
-                  hasContentReady &&
-                  ![`create`, ``].includes($storyFragmentSlug[thisId]?.current) && (
-                    <StoryFragmentSlug
-                      id={thisId}
-                      isEditing={isEditing}
-                      handleEditingChange={handleInterceptEdit}
-                      updateStoreField={updateStoreField}
-                      handleUndo={handleUndo}
-                    />
-                  )}
+                {!isHome && ![`create`, ``].includes($storyFragmentSlug[thisId]?.current) && (
+                  <StoryFragmentSlug
+                    id={thisId}
+                    isEditing={isEditing}
+                    handleEditingChange={handleInterceptEdit}
+                    updateStoreField={updateStoreField}
+                    handleUndo={handleUndo}
+                  />
+                )}
               </>
             ) : isContext ? (
               <>
@@ -496,7 +528,7 @@ export const StoryKeepHeader = memo(
             ) : null}
             {$editMode?.type === `storyfragment` && $editMode?.mode === `settings` && (
               <>
-                <StoryFragmentSettings id={$editMode.id} menus={menus} />
+                <StoryFragmentSettings id={$editMode.id} menus={menus} config={config} />
                 <button
                   type="button"
                   className="my-1 rounded bg-myblue px-2 py-1 text-lg text-white shadow-sm hover:bg-myorange/50 hover:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"

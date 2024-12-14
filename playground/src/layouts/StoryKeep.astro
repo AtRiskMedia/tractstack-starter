@@ -1,54 +1,34 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "../components/SetContentMap";
-import { getContentMap } from "../api/turso";
-import { getSetupChecks } from "../utils/setupChecks";
-import type { ContentMap } from "../types";
+import type { Config } from "../types";
 
 export interface Props {
-  canonicalURL: string;
+  config: Config;
   title?: string;
+  canonicalURL?: string;
   pubDatetime?: Date;
   modDatetime?: Date | null;
   ogImage?: string;
 }
 
-const { title, ogImage, canonicalURL, pubDatetime, modDatetime } = Astro.props;
+const {
+  config,
+  title = ``,
+  ogImage,
+  canonicalURL = Astro.url.pathname,
+  pubDatetime,
+  modDatetime,
+} = Astro.props;
 
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-
-const defaultFavIcon =
-  typeof import.meta.env.PUBLIC_FAVICON === `string` && import.meta.env.PUBLIC_FAVICON
-    ? import.meta.env.PUBLIC_FAVICON
-    : `/favicon.ico`;
-const defaultSocialImageURL =
-  typeof ogImage === `string` && ogImage
-    ? ogImage
-    : typeof import.meta.env.PUBLIC_OG === `string` && import.meta.env.PUBLIC_OG
-      ? import.meta.env.PUBLIC_OG
-      : `/og.png`;
-const defaultSocialLogoURL =
-  typeof import.meta.env.PUBLIC_OGLOGO === `string` && import.meta.env.PUBLIC_OGLOGO
-    ? import.meta.env.PUBLIC_OGLOGO
-    : `/oglogo.png`;
-const defaultSocialTitle =
-  typeof title === `string` && title
-    ? title
-    : typeof import.meta.env.PUBLIC_OGTITLE === `string` && import.meta.env.PUBLIC_OGTITLE
-      ? import.meta.env.PUBLIC_OGTITLE
-      : `My first Tract Stack`;
-const defaultSocialAuthor =
-  typeof import.meta.env.PUBLIC_OGAUTHOR === `string` && import.meta.env.PUBLIC_OGAUTHOR
-    ? import.meta.env.PUBLIC_OGAUTHOR
-    : `t.b.d.`;
-const defaultSocialDesc =
-  typeof import.meta.env.PUBLIC_OGDESC === `string` && import.meta.env.PUBLIC_OGDESC
-    ? import.meta.env.PUBLIC_OGDESC
-    : `The best is yet to come!`;
-const storykeepCss = `/styles/storykeep.css`;
-
-const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [];
+const defaultFavIcon = `/favicon.ico`;
+const defaultSocialImageURL = ogImage || `/og.png`;
+const defaultSocialLogoURL = `/oglogo.png`;
+const defaultSocialTitle = typeof title === `string` && title ? title : `My first Tract Stack`;
+const defaultSocialAuthor = `Tract Stack`;
+const defaultSocialDesc = `No-code website builder and content marketing platform`;
+const buildVersion = import.meta.env.BUILD_TIME || Date.now();
+const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
+const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 ---
 
 <!doctype html>
@@ -57,12 +37,12 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <link rel="canonical" href={config?.init?.SITE_URL + canonicalURL} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
     <link rel="stylesheet" href="/styles/custom.css" />
-    <link rel="stylesheet" href={storykeepCss} />
+    <link rel="stylesheet" href="/styles/storykeep.css" />
 
     <!-- General Meta Tags -->
     <title>{defaultSocialTitle}</title>
@@ -75,13 +55,13 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
-    <meta property="og:image" content={defaultSocialImageURL} />
-    <meta property="og:logo" content={defaultSocialLogoURL} />
+    <meta property="og:url" content={config?.init?.SITE_URL + canonicalURL} />
+    <meta property="og:image" content={socialImageWithVersion} />
+    <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={import.meta.env.PUBLIC_SITE_URL + canonicalURL} />
+    <meta property="twitter:url" content={config?.init?.SITE_URL + canonicalURL} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />
@@ -105,46 +85,48 @@ const contentMap: ContentMap[] = !notPreviewNotReady ? await getContentMap() : [
     <!-- Tract Stack Concierge -->
     <script>
       import {
+        scrollToTop,
+        handleResize,
+        handleScroll,
         startLoadingAnimation,
         stopLoadingAnimation,
-        handleScroll,
-        scrollToTop,
         debounce,
-      } from "../utils/helpers";
-      import { initializeBrandColors } from "../utils/brand-init";
-      import { init } from "../utils/init";
+      } from "../utils/common/helpers";
+      import { init } from "../utils/visit/init";
+
+      const debouncedHandleScroll = debounce(handleScroll, 50);
 
       function setupEventHandlers() {
-        // Set up animation event listeners
         document.addEventListener("astro:before-preparation", startLoadingAnimation);
         document.addEventListener("astro:after-swap", stopLoadingAnimation);
       }
-
-      // Initial setup
       setupEventHandlers();
-
-      // controls scrollToTop button visibility
-      const debouncedHandleScroll = debounce(handleScroll, 50);
 
       document.addEventListener("astro:page-load", () => {
         init();
-        setupEventHandlers();
         handleScroll();
-        initializeBrandColors();
+        handleResize();
+        setupEventHandlers();
         scrollToTop();
+
+        window.addEventListener(`resize`, handleResize);
         document.addEventListener("scroll", debouncedHandleScroll);
+      });
+
+      document.addEventListener("astro:before-preparation", () => {
+        window.removeEventListener(`resize`, handleResize);
+        document.removeEventListener("scroll", debouncedHandleScroll);
       });
     </script>
 
     <ViewTransitions />
   </head>
-  <body>
+  <body class="w-full">
     <div
       id="loading-indicator"
       class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
     >
     </div>
-    <SetContentMap payload={contentMap} client:load />
     <div id="content" class="transition-opacity duration-300">
       <slot />
     </div>
