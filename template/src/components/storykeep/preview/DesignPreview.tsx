@@ -19,7 +19,6 @@ export default function DesignPreview({
   config,
 }: DesignPreviewProps) {
   const [snapshotImage, setSnapshotImage] = useState<string>("");
-  const [brandColors, setBrandColors] = useState<string[]>([]);
   const [lastTheme, setLastTheme] = useState<Theme>(theme);
 
   // Reset snapshot when theme changes
@@ -31,15 +30,15 @@ export default function DesignPreview({
   }, [theme, lastTheme]);
 
   // Initialize brand colors from config
-  useEffect(() => {
-    const brandString = config?.init?.BRAND_COLOURS;
-    if (typeof brandString === "string" && brandString.trim()) {
-      const colors = brandString.split(",").map((color) => `#${color.trim()}`);
-      setBrandColors(colors);
-    }
-  }, [config?.init?.BRAND_COLOURS]);
+  //useEffect(() => {
+  //  const brandString = config?.init?.BRAND_COLOURS;
+  //  if (typeof brandString === "string" && brandString.trim()) {
+  //    const colors = brandString.split(",").map((color) => `#${color.trim()}`);
+  //    setBrandColors(colors);
+  //  }
+  //}, [config?.init?.BRAND_COLOURS]);
 
-  const showSnapshot = snapshotImage && brandColors.length > 0;
+  const showSnapshot = !!snapshotImage;
 
   return (
     <button
@@ -62,7 +61,6 @@ export default function DesignPreview({
             <DesignSnapshot
               design={design}
               theme={theme}
-              brandColors={brandColors}
               onComplete={setSnapshotImage}
               config={config}
             />

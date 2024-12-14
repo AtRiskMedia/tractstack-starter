@@ -4,8 +4,9 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { Combobox } from "@headlessui/react";
 import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
+import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import { knownBrand } from "../../../../constants";
-import type { Config, InitConfig } from "../../../../types";
+import type { Config, InitConfig, Theme } from "../../../../types";
 
 interface BrandStepProps {
   onComplete: () => void;
@@ -26,20 +27,35 @@ export default function BrandStep({
 }: BrandStepProps) {
   const [error, setError] = useState<string | null>(null);
 
-  // Track both current and initial values to detect changes
-  const [currentValues, setCurrentValues] = useState({
+  const [currentValues, setCurrentValues] = useState<{
+    siteUrl: string;
+    slogan: string;
+    footer: string;
+    brandColors: string;
+    theme: Theme;
+    gtag: string;
+  }>({
     siteUrl: "",
     slogan: "",
     footer: "",
     brandColors: knownBrand.default,
+    theme: "light-bold",
     gtag: "",
   });
 
-  const [initialValues, setInitialValues] = useState({
+  const [initialValues, setInitialValues] = useState<{
+    siteUrl: string;
+    slogan: string;
+    footer: string;
+    brandColors: string;
+    theme: Theme;
+    gtag: string;
+  }>({
     siteUrl: "",
     slogan: "",
     footer: "",
     brandColors: knownBrand.default,
+    theme: "light-bold",
     gtag: "",
   });
 
@@ -57,19 +73,17 @@ export default function BrandStep({
         brandColors:
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
+        theme: (initConfig.THEME as Theme) || "light-bold",
       };
 
-      // Set initial values and fill in defaults for missing ones
       setCurrentValues(values);
       setInitialValues(values);
 
-      // Set initial brand preset with default handling
       const matchingPreset = Object.entries(knownBrand).find(
         ([, value]) => value === initConfig.BRAND_COLOURS
       )?.[0];
       setSelectedBrandPreset(matchingPreset || "default");
 
-      // Inject defaults for critical missing values
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS || !initConfig.STYLES_VER) {
         onConfigUpdate({
           WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
@@ -79,6 +93,7 @@ export default function BrandStep({
           STYLES_VER: initConfig.STYLES_VER || `1`,
           HOME_SLUG: initConfig.HOME_SLUG || ``,
           TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || `HELLO`,
+          THEME: initConfig.THEME || "light-bold",
         });
       }
     }
@@ -105,12 +120,20 @@ export default function BrandStep({
     setSelectedBrandPreset(preset);
   };
 
+  const handleColorChange = (newValue: string) => {
+    onConfigUpdate({ BRAND_COLOURS: newValue });
+    setCurrentValues((prev) => ({ ...prev, brandColors: newValue }));
+    const matchingPreset = Object.entries(knownBrand).find(
+      ([, presetValue]) => presetValue === newValue
+    )?.[0];
+    setSelectedBrandPreset(matchingPreset || "custom");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     try {
-      // Compare current values with initial values to determine what changed
       const updates: Record<string, unknown> = {};
 
       if (currentValues.siteUrl !== initialValues.siteUrl) {
@@ -129,7 +152,6 @@ export default function BrandStep({
         updates.GTAG = currentValues.gtag;
       }
 
-      // Only update if there are changes
       if (Object.keys(updates).length > 0) {
         onConfigUpdate(updates);
       }
@@ -266,16 +288,22 @@ export default function BrandStep({
 
               <BrandColorPicker
                 value={currentValues.brandColors}
-                onChange={(newValue) => {
-                  onConfigUpdate({ BRAND_COLOURS: newValue });
-                  const matchingPreset = Object.entries(knownBrand).find(
-                    ([, presetValue]) => presetValue === newValue
-                  )?.[0];
-                  setSelectedBrandPreset(matchingPreset || "custom");
-                }}
+                onChange={handleColorChange}
                 onEditingChange={() => {}}
               />
             </div>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <div className="space-y-2">
+            <label className="block text-sm font-normal text-mydarkgrey">Theme</label>
+            <ThemeVisualSelector
+              value={currentValues.theme as Theme}
+              onChange={(theme) => setCurrentValues((prev) => ({ ...prev, theme }))}
+              brandString={currentValues.brandColors}
+              config={config!}
+            />
           </div>
         </div>
 
