@@ -86,6 +86,7 @@ export default function BrandStep({
 
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS || !initConfig.STYLES_VER) {
         onConfigUpdate({
+          SITE_INIT: initConfig.SITE_INIT || false,
           WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
           BRAND_COLOURS:
             initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
