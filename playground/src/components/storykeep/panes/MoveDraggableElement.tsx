@@ -19,8 +19,8 @@ import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragND
 import { allowTagInsert, allowWidgetInsert } from "@/utils/compositor/markdownUtils.ts";
 import { toolAddModeDefaultHeight } from "@/constants.ts";
 import { getFinalLocation } from "@/utils/common/helpers.ts";
-import { GhostBlock } from "old/src/components/other/GhostBlock.tsx";
 import { moveElements } from "@/utils/storykeep/StoryKeep_utils.ts";
+import { GhostBlock } from "@/components/storykeep/GhostBlock.tsx";
 
 export type MoveDraggableElementProps = {
   children?: React.ReactElement;

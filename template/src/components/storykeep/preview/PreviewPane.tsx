@@ -1,6 +1,6 @@
 import PreviewPaneRenderer from "./PreviewPaneRenderer";
 import preparePreviewPane from "../../../utils/data/preparePreviewPane";
-import type { ViewportAuto, PaneDesign, Config } from "../../../types";
+import type { ViewportAuto, PaneDesign, Config } from "@/types.ts";
 
 interface PreviewPaneProps {
   design: PaneDesign;
