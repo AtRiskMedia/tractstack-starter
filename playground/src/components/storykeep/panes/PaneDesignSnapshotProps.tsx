@@ -1,4 +1,4 @@
-import type { PaneDesign, Theme } from "@/types";
+import type { Config, PaneDesign, Theme } from "@/types";
 
 export interface PaneDesignSnapshotProps {
 design: PaneDesign;

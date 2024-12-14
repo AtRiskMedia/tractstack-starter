@@ -8,6 +8,9 @@ module.exports = {
       xl: "1367px",
     },
     extend: {
+      maxWidth: {
+        '1/5': "80%",
+      },
       zIndex: {
         1: "101",
         2: "102",
@@ -32,6 +35,7 @@ module.exports = {
         104: "1004",
         105: "1005",
         999: "9999",
+        9002: "9002",
       },
       colors: {
         mywhite: "#fcfcfc",

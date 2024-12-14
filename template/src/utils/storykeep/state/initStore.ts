@@ -198,7 +198,7 @@ function initializePaneStores(
     paneId,
     createFieldWithHistory(paneDesign.panePayload.heightRatioTablet)
   );
-  paneDesignType.setKey(paneId, paneDesign.designType);
+  paneDesignType.setKey(paneId, createFieldWithHistory(paneDesign.designType));
   paneIsHiddenPane.setKey(
     paneId,
     createFieldWithHistory(paneDesign?.panePayload?.hiddenPane || false)
