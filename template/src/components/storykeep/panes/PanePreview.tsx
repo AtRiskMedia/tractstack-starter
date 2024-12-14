@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import type { Config, PaneDesign, Theme } from "@/types.ts";
-import { getPreviewModeValue } from "old/src/store/storykeep.ts";
-import { getEnvValue } from "old/src/utils/preview-brand.ts";
 import { classNames } from "@/utils/common/helpers.ts";
 import PaneDesignSnapshot from "@/components/storykeep/panes/PaneDesignSnapshot.tsx";
 
@@ -26,12 +24,15 @@ export default function PanePreview({ design, isSelected, onClick, theme, config
     }
   }, [theme, lastTheme]);
 
+  // Initialize brand colors from config
   useEffect(() => {
-    const isPreviewMode = getPreviewModeValue(localStorage.getItem("preview-mode") || "false");
-    const brandString = isPreviewMode ? getEnvValue("PUBLIC_BRAND") : import.meta.env.PUBLIC_BRAND;
-    const colors = brandString.split(",").map((color: string) => `#${color.trim()}`);
-    setBrandColors(colors);
-  }, []);
+    const brandString = config?.init?.BRAND_COLOURS;
+    if (typeof brandString === "string" && brandString.trim()) {
+      const colors = brandString.split(",").map((color) => `#${color.trim()}`);
+      setBrandColors(colors);
+    }
+  }, [config?.init?.BRAND_COLOURS]);
+  const showSnapshot = snapshotImage && brandColors.length > 0;
 
   return (
     <button
@@ -49,7 +50,7 @@ export default function PanePreview({ design, isSelected, onClick, theme, config
       type="button"
     >
       <div className="relative aspect-square w-full">
-        {!snapshotImage || !brandColors.length ? (
+        {!showSnapshot ? (
           <div className="inset-0">
             <PaneDesignSnapshot
               config={config}
@@ -60,11 +61,13 @@ export default function PanePreview({ design, isSelected, onClick, theme, config
             />
           </div>
         ) : (
-          <img
-            src={snapshotImage}
-            alt={`${design.name} design preview`}
-            className="inset-0 w-full h-full object-contain object-top rounded-lg"
-          />
+          <div className="relative w-full h-full">
+            <img
+              src={snapshotImage}
+              alt={`${design.name} design preview`}
+              className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
+            />
+          </div>
         )}
       </div>
       <div className="inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">
