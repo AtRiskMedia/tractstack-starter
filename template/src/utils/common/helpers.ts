@@ -573,7 +573,7 @@ export async function getOptimizedImages(
     allFiles.map(async (f: TursoFileNode) => {
       // Remove /api prefix from URL
       let optimizedSrc: string | undefined = undefined;
-      let cleanUrl = f.url.replace(/^\/api/, "");
+      let cleanUrl = f.url;
       const cleanFile = !f.src_set ? f.url : f.url.replace(/(\.[^.]+)$/, "_1920px$1");
 
       // Check if file exists
@@ -626,4 +626,10 @@ export function createDefaultImageNode(original: TursoFileNode, paneId?: string)
     markdown: original.markdown,
     optimizedSrc: "/static.jpg",
   };
+}
+
+export function formatDateForUrl(date: Date): string {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  return `${year}-${month}`;
 }

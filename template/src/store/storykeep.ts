@@ -59,20 +59,6 @@ export const creationStateStore = atom<CreationState>({
   isInitialized: false,
 });
 
-// Track if we're in preview mode - store as string 'true'/'false'
-export const previewMode = persistentAtom<string>("preview-mode", "false");
-// Track if preview database is initialized - store as string 'true'/'false'
-export const previewDbInitialized = persistentAtom<string>("preview-db-initialized", "false");
-// Helper function to get boolean value
-export function getPreviewModeValue(value: string): boolean {
-  return value === "true";
-}
-// Reset preview state
-export function resetPreviewState() {
-  previewMode.set("false");
-  previewDbInitialized.set("false");
-}
-
 // all look-ups by ulid
 //
 
