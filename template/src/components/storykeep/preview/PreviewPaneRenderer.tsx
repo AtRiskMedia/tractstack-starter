@@ -62,6 +62,12 @@ const PreviewPaneRenderer = ({
     <div
       id={`pane-inner-${id}`}
       style={bgColourStyle}
+      className={classNames(
+        optionsPayload.maxHScreen ? `max-h-screen` : ``,
+        optionsPayload.overflowHidden ? `overflow-hidden` : ``,
+        `grid`,
+        bgColourFragment ? `bg-[${bgColourFragment.bgColour}]` : ""
+      )}
     >
       {optionsPayload.paneFragmentsPayload?.map(
         (fragment: BgColourDatum | BgPaneDatum | MarkdownPaneDatum, idx: number) => {
@@ -69,6 +75,7 @@ const PreviewPaneRenderer = ({
             return (
               <div
                 key={idx}
+                className="relative w-full h-auto justify-self-start"
                 style={{ gridArea: "1/1/1/1" }}
               >
                 <BgPane payload={fragment} viewportKey={viewportKey} />
@@ -78,8 +85,26 @@ const PreviewPaneRenderer = ({
             return (
               <div
                 key={idx}
+                className="relative w-full h-auto justify-self-start"
                 style={{ gridArea: "1/1/1/1" }}
               >
+                <MarkdownWrapper
+                  readonly={true}
+                  payload={fragment}
+                  markdown={markdown}
+                  files={files}
+                  paneHeight={[...paneHeight]}
+                  paneId={id}
+                  paneFragmentIds={optionsPayload.paneFragmentsPayload?.map((f) => f.id) || []}
+                  markdownFragmentId={markdown.id}
+                  slug={slug}
+                  queueUpdate={() => {}} // Mock function, as we don't need real updates in preview
+                  toolMode={toolMode}
+                  toolAddMode={toolAddMode}
+                  viewportKey={viewportKey}
+                  isContext={isContext}
+                  config={config}
+                />
               </div>
             );
           }

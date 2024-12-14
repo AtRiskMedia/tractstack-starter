@@ -57,7 +57,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
 
   return (
     <TractStackModal
-      widthProvider={() => "max-w-1/5"}
+      widthProvider={() => "max-w-7xl"}
       header={
         <div className="flex justify-between">
           <h2 className="text-2xl font-bold mb-4">Generating Page</h2>

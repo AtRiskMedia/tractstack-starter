@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import BgPane from "../compositor//BgPane";
 import MarkdownWrapper from "../panes/MarkdownWrapper";
-import { classNames } from "../../../utils/common/helpers";
+import { classNames } from "@/utils/common/helpers.ts";
 import type {
   PaneDatum,
   BgPaneDatum,
@@ -11,7 +11,7 @@ import type {
   ToolMode,
   ToolAddMode,
   Config,
-} from "../../../types";
+} from "@/types.ts";
 
 interface PreviewPaneRendererProps {
   paneData: PaneDatum;

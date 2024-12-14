@@ -9,7 +9,7 @@ module.exports = {
     },
     extend: {
       maxWidth: {
-        '1/5': "80%",
+        '80%': "80%",
       },
       zIndex: {
         1: "101",
