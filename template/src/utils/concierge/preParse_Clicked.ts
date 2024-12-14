@@ -10,7 +10,6 @@ export const preParseClicked = (id: string, payload: any, config: Config) => {
   //const parameterThree = (parameters && parameters[2]) || null;
 
   if (!config?.init?.HOME_SLUG) {
-    console.log(2, config);
     console.log(`Site misconfiguration: HOME_SLUG not found`);
     return null;
   }

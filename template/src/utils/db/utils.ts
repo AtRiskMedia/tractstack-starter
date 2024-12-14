@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ulid } from "ulid";
 import { cleanTursoResource } from "./data/tursoResource";
 import { cleanTursoPayload } from "./data/tursoPayload";
 import { cleanTursoStoryFragment } from "./data/tursoStoryFragment";
@@ -883,5 +884,20 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
   } catch (error) {
     console.log("Unable to fetch content map:", error);
     return [];
+  }
+}
+
+export async function initializeContent(): Promise<void> {
+  const client = await tursoClient.getClient();
+  if (client) {
+    try {
+      await client.execute({
+        sql: "INSERT INTO tractstack (id, title, slug, social_image_path) VALUES (?, ?, ?, ?) ON CONFLICT (slug) DO NOTHING",
+        args: [`${ulid()}`, "Tract Stack", "HELLO", ""],
+      });
+    } catch (error) {
+      console.error("Content initialization error:", error);
+      throw error;
+    }
   }
 }

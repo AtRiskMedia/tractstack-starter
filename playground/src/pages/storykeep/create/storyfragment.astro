@@ -11,8 +11,7 @@ const slug = `create`;
 const newId = ulid();
 
 const config = await getConfig();
-const validation = await validateConfig(config);
-if (!validation.isValid || !config) {
+if (!config) {
   return Astro.redirect("/storykeep/init");
 }
 const canonicalURL = `/${slug}`;

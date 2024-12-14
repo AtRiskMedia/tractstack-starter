@@ -36,6 +36,7 @@ type SaveProcessModalProps = {
   isContext: boolean;
   originalData: StoryFragmentDatum | ContextPaneDatum | null;
   onClose: (slug: string) => void;
+  firstPage: boolean;
 };
 
 export const SaveProcessModal = ({
@@ -43,6 +44,7 @@ export const SaveProcessModal = ({
   isContext,
   originalData,
   onClose,
+  firstPage,
 }: SaveProcessModalProps) => {
   const [stage, setStage] = useState<SaveStage>("RECONCILING");
   const [error, setError] = useState<string | null>(null);
@@ -261,6 +263,7 @@ export const SaveProcessModal = ({
       }
 
       const result = await response.json();
+      if (firstPage) console.log(`INIT now`);
       if (result.success)
         await fetch("/api/fs/update", {
           method: "POST",
@@ -271,6 +274,12 @@ export const SaveProcessModal = ({
             file: "init",
             updates: {
               STYLES_VER: Date.now(),
+              ...(firstPage
+                ? {
+                    HOME_SLUG: `hello`,
+                    SITE_INIT: true,
+                  }
+                : {}),
             },
           }),
         });

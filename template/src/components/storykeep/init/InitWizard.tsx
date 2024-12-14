@@ -13,6 +13,7 @@ import BrandStep from "./steps/BrandStep";
 import SecurityStep from "./steps/SecurityStep";
 import PublishStep from "./steps/PublishStep";
 import CreateHomeStep from "./steps/CreateHomeStep";
+import HasHomeStep from "./steps/HasHomeStep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import LockClosedIcon from "@heroicons/react/24/outline/LockClosedIcon";
 import type { InitStep, InitStepConfig, ValidationResult, Config } from "../../../types";
@@ -52,6 +53,12 @@ export default function InitWizard({
   const [error, setError] = useState<string | null>(null);
   const hasInit = init && initialConfig?.init?.SITE_INIT;
   const [hasInitCompleted, setHasInitCompleted] = useState(false);
+  const hasHome = !!(
+    typeof initialConfig?.init?.HOME_SLUG === `string` &&
+    initialConfig.init.HOME_SLUG &&
+    typeof initialConfig?.init?.TRACTSTACK_HOME_SLUG === `string` &&
+    initialConfig.init.TRACTSTACK_HOME_SLUG
+  );
 
   // Logo and branding configuration
   const logo =
@@ -179,7 +186,6 @@ export default function InitWizard({
   // Central publish handler
   const handlePublish = async () => {
     if (!hasConcierge) return true;
-
     try {
       // Only publish if we have changes that require it
       if (configState.needsPublish.size > 0) {
@@ -200,17 +206,36 @@ export default function InitWizard({
     }
   };
 
+  // Create first Tract Stack
+  const handleInitializeContent = async () => {
+    try {
+      await fetch("/api/turso/initializeContent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      return true;
+    } catch (error) {
+      console.error("Error initializing content:", error);
+      throw error;
+    }
+  };
+
   // Step completion handler
   const handleStepComplete = useCallback(
     async (step: InitStep) => {
       try {
         setIsProcessing(true);
         setError(null);
+        // reload for fresh config
+        //if (step === "publish" && !hasConcierge) window.location.reload();
         // Only actually publish in PublishStep
-        if (step === "publish" && !hasInit) setHasInitCompleted(true);
-        if (step === "publish" && !hasConcierge) window.location.reload();
-        else if (step === "publish" && configState.needsPublish.size > 0) {
-          await handlePublish();
+        if (step === "publish") {
+          await handleInitializeContent();
+          if (!hasInit) setHasInitCompleted(true);
+          if (configState.needsPublish.size > 0) {
+            await handlePublish();
+          }
         }
         completeStep(step);
       } catch (err) {
@@ -291,7 +316,7 @@ export default function InitWizard({
           !$store.completedSteps.includes(requiresPublish ? "publish" : "security") ||
           !isInitialized ||
           (!init && !hasInitCompleted) ||
-          (init && hasHomeSlug),
+          (init && !hasHomeSlug),
       }
     );
 
@@ -317,7 +342,10 @@ export default function InitWizard({
         isProcessing,
       };
 
-      if (hasInit) return <CreateHomeStep {...commonProps} />;
+      if (hasInit || hasInitCompleted) {
+        if (hasHome) return <HasHomeStep {...commonProps} />;
+        return <CreateHomeStep {...commonProps} />;
+      }
 
       switch (step.id) {
         case "setup":

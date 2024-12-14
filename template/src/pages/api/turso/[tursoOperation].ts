@@ -9,6 +9,7 @@ import { executeQueries } from "../../../utils/db/api/executeQueries";
 import { getPaneDesigns } from "../../../utils/db/api/paneDesigns";
 import { getAnalytics } from "../../../utils/db/api/analytics";
 import { getUniqueTailwindClasses } from "../../../utils/db/api/uniqueTailwindClasses";
+import { initializeContent } from "../../../utils/db/utils";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -48,6 +49,10 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "update":
         result = await updateProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
+        break;
+      case "initializeContent":
+        await initializeContent();
+        result = true;
         break;
       default:
         throw new Error(`Unknown operation: ${tursoOperation}`);

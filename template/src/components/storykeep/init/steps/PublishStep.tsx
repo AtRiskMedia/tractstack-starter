@@ -18,17 +18,12 @@ export default function PublishStep({
   isActive,
   hasConcierge,
   isProcessing,
-  onConfigUpdate,
   needsPublish,
 }: PublishStepProps) {
   if (!isActive) return null;
 
   const handlePublish = async () => {
-    // Set SITE_INIT to true and trigger publish
     try {
-      onConfigUpdate({
-        SITE_INIT: true,
-      });
       onComplete();
     } catch (error) {
       console.error("Error in publish step:", error);

@@ -37,8 +37,6 @@ function getLookupKey(className: string): string {
 
 export async function generateOptimizedCss(whitelistedClasses: string[]): Promise<void> {
   try {
-    console.log("Processing whitelist:", whitelistedClasses);
-
     const lookupPath = path.join(process.cwd(), "config", "tailwindLookup.json");
     const lookupContent = await fs.readFile(lookupPath, "utf-8");
     const cssLookup: CssLookup = JSON.parse(lookupContent);
@@ -92,7 +90,6 @@ export async function generateOptimizedCss(whitelistedClasses: string[]): Promis
 
     const outputPath = path.join(process.cwd(), "public", "styles", "frontend.css");
     await fs.writeFile(outputPath, css);
-    console.log(`CSS written to ${outputPath}`);
   } catch (error) {
     console.error("Error in generateOptimizedCss:", error);
     throw error;
