@@ -7,7 +7,6 @@ import type { PaneDesignSnapshotProps } from "./PaneDesignSnapshotProps";
 export default function PaneDesignSnapshot({
   design,
   theme,
-  brandColors,
   onStart,
   onComplete,
   forceRegenerate,
@@ -17,18 +16,18 @@ export default function PaneDesignSnapshot({
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!contentRef.current || !brandColors.length) return;
+    if (!contentRef.current) return;
     if (!isGenerating && !forceRegenerate) return;
 
     const generateSnapshot = async () => {
       try {
         onStart?.();
 
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = brandColors
-          .map((color, i) => `--brand-${i + 1}: ${color};`)
-          .join("\n");
-        document.head.appendChild(styleSheet);
+        // const styleSheet = document.createElement("style");
+        // styleSheet.textContent = brandColors
+        //   .map((color, i) => `--brand-${i + 1}: ${color};`)
+        //   .join("\n");
+        // document.head.appendChild(styleSheet);
 
         await new Promise((resolve) => setTimeout(resolve, 250));
 
@@ -68,7 +67,7 @@ export default function PaneDesignSnapshot({
           onComplete(base64);
         }
 
-        styleSheet.remove();
+        //styleSheet.remove();
       } catch (error) {
         console.error("Error generating snapshot:", error);
       } finally {
@@ -82,11 +81,11 @@ export default function PaneDesignSnapshot({
       const styles = document.querySelectorAll("style");
       styles.forEach((style) => {
         if (style.textContent?.includes("--brand-")) {
-          style.remove();
+          //style.remove();
         }
       });
     };
-  }, [design, theme, brandColors, onComplete, onStart, isGenerating, forceRegenerate]);
+  }, [design, theme, onComplete, onStart, isGenerating, forceRegenerate]);
 
   return (
     <>
