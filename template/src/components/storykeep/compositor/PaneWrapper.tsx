@@ -85,7 +85,7 @@ const InsertAboveBelowWrapper = ({
 
 const PaneMoveButtons = ({ onMove }: { onMove: (direction: MoveDirection) => void }) => {
   return (
-    <div className="flex ml-2 gap-x-2">
+    <div className="pointer-events-auto flex ml-2 gap-x-2">
       <button className="rounded-md bg-blue-400 h-8 w-12 m-auto"
               onClick={() => onMove(MoveDirection.UP)}>
         <ArrowUpIcon className="m-auto h-4 w-4"/>
@@ -310,9 +310,9 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "styles" && (
-          <div className="absolute inset-0 flex justify-between w-full h-fit">
+          <div className="pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
             <PaneMoveButtons onMove={handleMove}/>
-            <div className="relative">
+            <div className="pointer-events-auto relative">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
                 onClick={onChangeLayoutClicked}
@@ -323,9 +323,9 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "text" && (
-          <div className="absolute inset-0 flex justify-between w-full h-fit">
+          <div className="pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
             <PaneMoveButtons onMove={handleMove}/>
-            <div className="relative">
+            <div className="pointer-events-auto relative">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
                 onClick={onChangeMarkdownClicked}
