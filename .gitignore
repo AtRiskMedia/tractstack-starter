@@ -20,6 +20,7 @@ pnpm-debug.log*
 
 # unique config
 playground/config/init.json
+playground/config/turso.json
 
 # public
 playground/public/styles/frontend.css

@@ -35,7 +35,6 @@ const PUBLISH_TRIGGERS = [
   "PRIVATE_TURSO_DATABASE_URL",
   "PRIVATE_TURSO_AUTH_TOKEN",
   "PRIVATE_ASSEMBLYAI_API_KEY",
-  "BRAND_COLOURS",
   "PRIVATE_ADMIN_PASSWORD",
   "PRIVATE_EDITOR_PASSWORD",
 ];
@@ -43,6 +42,7 @@ const PUBLISH_TRIGGERS = [
 export default function InitWizard({
   hasConcierge,
   validation: initialValidation,
+  config,
   init,
 }: InitWizardProps) {
   const initialConfig = initialValidation.config;
@@ -54,10 +54,10 @@ export default function InitWizard({
   const hasInit = init && initialConfig?.init?.SITE_INIT;
   const [hasInitCompleted, setHasInitCompleted] = useState(false);
   const hasHome = !!(
-    typeof initialConfig?.init?.HOME_SLUG === `string` &&
-    initialConfig.init.HOME_SLUG &&
-    typeof initialConfig?.init?.TRACTSTACK_HOME_SLUG === `string` &&
-    initialConfig.init.TRACTSTACK_HOME_SLUG
+    typeof config?.init?.HOME_SLUG === `string` &&
+    config.init.HOME_SLUG &&
+    typeof config?.init?.TRACTSTACK_HOME_SLUG === `string` &&
+    config.init.TRACTSTACK_HOME_SLUG
   );
 
   // Logo and branding configuration
@@ -227,11 +227,8 @@ export default function InitWizard({
       try {
         setIsProcessing(true);
         setError(null);
-        // reload for fresh config
-        //if (step === "publish" && !hasConcierge) window.location.reload();
-        // Only actually publish in PublishStep
+        if (step === "brand" && !hasHome) await handleInitializeContent();
         if (step === "publish") {
-          await handleInitializeContent();
           if (!hasInit) setHasInitCompleted(true);
           if (configState.needsPublish.size > 0) {
             await handlePublish();
@@ -259,16 +256,12 @@ export default function InitWizard({
 
   // Step configuration and management
   useEffect(() => {
-    const isInitialized =
-      (configState.current?.init as Record<string, unknown>)?.SITE_INIT === true;
-    const hasHomeSlug = Boolean((configState.current?.init as Record<string, unknown>)?.HOME_SLUG);
     const requiresPublish = configState.needsPublish.size > 0;
-
     const newSteps: InitStepConfig[] = [
       {
         id: "setup",
-        title: "Setup Story Keep",
-        description: "Initialize your Story Keep instance",
+        title: "Welcome to your Story Keep",
+        description: "Make it your own Tract Stack instance",
         isComplete: hasInit || $store.completedSteps.includes("setup"),
         isLocked: false,
       },
@@ -280,7 +273,6 @@ export default function InitWizard({
         isLocked: !$store.completedSteps.includes("setup"),
       },
     ];
-
     if (hasConcierge)
       newSteps.push(
         {
@@ -298,27 +290,23 @@ export default function InitWizard({
           isLocked: !$store.completedSteps.includes("integrations"),
         }
       );
-
-    newSteps.push(
-      {
+    if (requiresPublish)
+      newSteps.push({
         id: "publish",
         title: "Republish with New Config",
         description: "Apply your configuration changes",
         isComplete: hasInit || $store.completedSteps.includes("publish"),
         isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
-      },
-      {
-        id: "createHome",
-        title: "Create Home Page",
-        description: "Set up your site's landing page",
-        isComplete: $store.completedSteps.includes("createHome"),
-        isLocked:
-          !$store.completedSteps.includes(requiresPublish ? "publish" : "security") ||
-          !isInitialized ||
-          (!init && !hasInitCompleted) ||
-          (init && !hasHomeSlug),
-      }
-    );
+      });
+    newSteps.push({
+      id: "createHome",
+      title: "Create Home Page",
+      description: "Set up your site's landing page",
+      isComplete: $store.completedSteps.includes("createHome"),
+      isLocked: !$store.completedSteps.includes(
+        requiresPublish ? "publish" : hasConcierge ? "security" : "brand"
+      ),
+    });
 
     setSteps(newSteps);
 
@@ -342,8 +330,8 @@ export default function InitWizard({
         isProcessing,
       };
 
+      if (hasHome && hasInitCompleted) return <HasHomeStep {...commonProps} />;
       if (hasInit || hasInitCompleted) {
-        if (hasHome) return <HasHomeStep {...commonProps} />;
         return <CreateHomeStep {...commonProps} />;
       }
 
@@ -365,6 +353,7 @@ export default function InitWizard({
             />
           );
         case "createHome":
+          if (hasHome) return <HasHomeStep {...commonProps} />;
           return <CreateHomeStep {...commonProps} />;
         default:
           return null;

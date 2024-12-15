@@ -145,6 +145,44 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "saveBrandImage": {
+        const { data, filename } = await request.json();
+        const customDir = path.join(process.cwd(), "public", "custom");
+        try {
+          await fs.mkdir(customDir, { recursive: true });
+          const existingFiles = await fs.readdir(customDir);
+          const matchingFiles = existingFiles.filter((file) =>
+            file.startsWith(filename.split(".")[0])
+          );
+          for (const file of matchingFiles) {
+            await fs.unlink(path.join(customDir, file));
+          }
+
+          // Check if it's SVG and handle accordingly
+          if (filename.toLowerCase().endsWith(".svg")) {
+            // For SVG, we'll write it as text instead of binary
+            const svgData = data.replace(/^data:image\/svg\+xml;base64,/, "");
+            const svgText = Buffer.from(svgData, "base64").toString("utf-8");
+            await fs.writeFile(path.join(customDir, filename), svgText);
+          } else {
+            // For other formats (like PNG), we keep the binary writing
+            const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
+            const buffer = Buffer.from(base64Data, "base64");
+            await fs.writeFile(path.join(customDir, filename), buffer);
+          }
+
+          result = {
+            success: true,
+            path: `/custom/${filename}`,
+          };
+        } catch (err) {
+          throw new Error(
+            `Failed to save brand image: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+        }
+        break;
+      }
+
       case "generateTailwindWhitelist": {
         const { whitelist } = (await request.json()) as { whitelist?: string[] };
         const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));

@@ -5,6 +5,9 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { Combobox } from "@headlessui/react";
 import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
+import OpenGraphSettings from "./settings/OpenGraphSettings";
+import SocialLinks from "./settings/SocialLinks";
+import BrandImageUploads from "./settings/BrandImageUploads";
 import { knownBrand } from "../../../../constants";
 import type { Config, InitConfig, Theme } from "../../../../types";
 
@@ -34,6 +37,15 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
+    ogTitle: string;
+    ogAuthor: string;
+    ogDesc: string;
+    socialLinks: string;
+    og: string;
+    oglogo: string;
+    logo: string;
+    wordmark: string;
+    favicon: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -41,6 +53,15 @@ export default function BrandStep({
     brandColors: knownBrand.default,
     theme: "light-bold",
     gtag: "",
+    ogTitle: "",
+    ogAuthor: "",
+    ogDesc: "",
+    socialLinks: "",
+    og: "",
+    oglogo: "",
+    logo: "",
+    wordmark: "",
+    favicon: "",
   });
 
   const [initialValues, setInitialValues] = useState<{
@@ -50,6 +71,15 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
+    ogTitle: string;
+    ogAuthor: string;
+    ogDesc: string;
+    socialLinks: string;
+    og: string;
+    oglogo: string;
+    logo: string;
+    wordmark: string;
+    favicon: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -57,10 +87,21 @@ export default function BrandStep({
     brandColors: knownBrand.default,
     theme: "light-bold",
     gtag: "",
+    ogTitle: "",
+    ogAuthor: "",
+    ogDesc: "",
+    socialLinks: "",
+    og: "",
+    oglogo: "",
+    logo: "",
+    wordmark: "",
+    favicon: "",
   });
 
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
   const [customColors, setCustomColors] = useState<string | null>(null);
+  const [images, setImages] = useState<Record<string, string>>({});
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
 
   // Initialize values from config
   useEffect(() => {
@@ -74,6 +115,15 @@ export default function BrandStep({
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
         theme: (initConfig.THEME as Theme) || "light-bold",
+        ogTitle: initConfig.OGTITLE || "",
+        ogAuthor: initConfig.OGAUTHOR || "",
+        ogDesc: initConfig.OGDESC || "",
+        socialLinks: initConfig.SOCIALS || "",
+        og: initConfig.OG || "",
+        oglogo: initConfig.OGLOGO || "",
+        logo: initConfig.LOGO || "",
+        wordmark: initConfig.WORDMARK || "",
+        favicon: initConfig.FAVICON || "",
       };
 
       setCurrentValues(values);
@@ -86,6 +136,7 @@ export default function BrandStep({
 
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS || !initConfig.STYLES_VER) {
         onConfigUpdate({
+          SITE_INIT: initConfig.SITE_INIT || false,
           WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
           BRAND_COLOURS:
             initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
@@ -94,12 +145,58 @@ export default function BrandStep({
           HOME_SLUG: initConfig.HOME_SLUG || ``,
           TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || `HELLO`,
           THEME: initConfig.THEME || "light-bold",
+          SOCIALS: initConfig.SOCIALS || "",
         });
       }
     }
   }, [config, onConfigUpdate]);
 
   if (!isActive) return null;
+
+  const handleImageChange = async (
+    id: string,
+    base64: string,
+    extension: string,
+    filename: string
+  ) => {
+    try {
+      if (!base64) {
+        // Handle image removal
+        setImages((prev) => {
+          const newImages = { ...prev };
+          delete newImages[id];
+          return newImages;
+        });
+        onConfigUpdate({ [id]: "" });
+        return;
+      }
+      setIsUploadingImages(true);
+      setError(null);
+      const response = await fetch("/api/fs/saveBrandImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: base64,
+          filename,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+      const result = await response.json();
+      if (result.success) {
+        setImages((prev) => ({
+          ...prev,
+          [id]: base64,
+        }));
+        onConfigUpdate({ [id]: result.path });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setIsUploadingImages(false);
+    }
+  };
 
   const handleBrandPresetChange = (preset: string) => {
     if (preset === "custom") {
@@ -120,6 +217,18 @@ export default function BrandStep({
     setSelectedBrandPreset(preset);
   };
 
+  const handleOpenGraphChange = (field: "title" | "author" | "description", value: string) => {
+    const fieldMap = {
+      title: "ogTitle",
+      author: "ogAuthor",
+      description: "ogDesc",
+    };
+    setCurrentValues((prev) => ({
+      ...prev,
+      [fieldMap[field]]: value,
+    }));
+  };
+
   const handleColorChange = (newValue: string) => {
     onConfigUpdate({ BRAND_COLOURS: newValue });
     setCurrentValues((prev) => ({ ...prev, brandColors: newValue }));
@@ -131,6 +240,9 @@ export default function BrandStep({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUploadingImages || isProcessing) {
+      return;
+    }
     setError(null);
 
     try {
@@ -150,6 +262,33 @@ export default function BrandStep({
       }
       if (currentValues.gtag !== initialValues.gtag) {
         updates.GTAG = currentValues.gtag;
+      }
+      if (currentValues.ogTitle !== initialValues.ogTitle) {
+        updates.OGTITLE = currentValues.ogTitle;
+      }
+      if (currentValues.ogAuthor !== initialValues.ogAuthor) {
+        updates.OGAUTHOR = currentValues.ogAuthor;
+      }
+      if (currentValues.ogDesc !== initialValues.ogDesc) {
+        updates.OGDESC = currentValues.ogDesc;
+      }
+      if (currentValues.socialLinks !== initialValues.socialLinks) {
+        updates.SOCIALS = currentValues.socialLinks;
+      }
+      if (currentValues.wordmark !== initialValues.wordmark) {
+        updates.WORDMARK = currentValues.wordmark;
+      }
+      if (currentValues.logo !== initialValues.logo) {
+        updates.LOGO = currentValues.logo;
+      }
+      if (currentValues.og !== initialValues.og) {
+        updates.OG = currentValues.og;
+      }
+      if (currentValues.oglogo !== initialValues.oglogo) {
+        updates.OGLOGO = currentValues.oglogo;
+      }
+      if (currentValues.favicon !== initialValues.favicon) {
+        updates.FAVICON = currentValues.favicon;
       }
 
       if (Object.keys(updates).length > 0) {
@@ -305,6 +444,30 @@ export default function BrandStep({
               config={config!}
             />
           </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <OpenGraphSettings
+            title={currentValues.ogTitle}
+            author={currentValues.ogAuthor}
+            description={currentValues.ogDesc}
+            onChange={handleOpenGraphChange}
+          />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <BrandImageUploads
+            images={images}
+            initialConfig={config}
+            onImageChange={handleImageChange}
+          />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <SocialLinks
+            value={currentValues.socialLinks}
+            onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
+          />
         </div>
 
         <div className="flex justify-end pt-4">

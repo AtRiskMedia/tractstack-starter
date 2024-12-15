@@ -34,12 +34,6 @@ export default function DesignSnapshot({
       try {
         onStart?.();
 
-        //const styleSheet = document.createElement("style");
-        //styleSheet.textContent = brandColors
-        //  .map((color, i) => `--brand-${i + 1}: ${color};`)
-        //  .join("\n");
-        //document.head.appendChild(styleSheet);
-
         await new Promise((resolve) => setTimeout(resolve, 250));
 
         if (!contentRef.current) return;
@@ -90,15 +84,6 @@ export default function DesignSnapshot({
     };
 
     generateSnapshot();
-
-    return () => {
-      const styles = document.querySelectorAll("style");
-      styles.forEach((style) => {
-        if (style.textContent?.includes("--brand-")) {
-          style.remove();
-        }
-      });
-    };
   }, [design, theme, onComplete, onStart, isGenerating, forceRegenerate]);
 
   return (

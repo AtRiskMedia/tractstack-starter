@@ -1,12 +1,12 @@
 {
   "WORDMARK_MODE": "default",
-  "BRAND_COLOURS": "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+  "BRAND_COLOURS": "dd90a8,2f24ff,b36d3c,3b21d1,c8d0d8,3cb4ff,949d8a,e3e3e3",
   "OPEN_DEMO": false,
-  "STYLES_VER": 1734159054388,
-  "HOME_SLUG": "hello",
+  "STYLES_VER": "1",
+  "HOME_SLUG": "",
   "TRACTSTACK_HOME_SLUG": "HELLO",
-  "SITE_URL": "https://naznaz123.com",
+  "THEME": "light-bold",
+  "SITE_URL": "https://naznaz.com",
   "SLOGAN": "naz",
-  "FOOTER": "naz",
-  "SITE_INIT": true
+  "FOOTER": "naaz"
 }

@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# config
+playground/config/turso.ts
+playground/config/config.ts

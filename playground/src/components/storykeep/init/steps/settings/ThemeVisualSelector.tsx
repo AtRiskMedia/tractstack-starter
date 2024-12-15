@@ -30,6 +30,14 @@ const getInitialSnapshots = () => ({
   "dark-bold": "",
 });
 
+const updateColors = (colorString: string) => {
+  const colors = colorString.split(",");
+  colors.forEach((color, index) => {
+    const varName = `--brand-${index + 1}`;
+    document.documentElement.style.setProperty(varName, `#${color}`);
+  });
+};
+
 export default function ThemeVisualSelector({
   value,
   onChange,
@@ -42,6 +50,7 @@ export default function ThemeVisualSelector({
   // Reset snapshots when brandString changes
   useEffect(() => {
     if (currentBrandString !== brandString) {
+      updateColors(brandString);
       setSnapshots(getInitialSnapshots());
       setCurrentBrandString(brandString);
     }
