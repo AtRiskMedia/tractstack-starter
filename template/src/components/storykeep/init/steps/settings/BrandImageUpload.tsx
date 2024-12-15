@@ -7,7 +7,7 @@ interface BrandImageUploadProps {
   id: string;
   value: string;
   path: string;
-  onChange: (base64: string, extension: string, filename: string) => void;
+  onChange: (base64: string, filename: string) => void;
   height?: number;
   width?: number;
   allowedTypes: string[];
@@ -32,19 +32,16 @@ const BrandImageUpload = ({
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    const ext = `.${file.name.split(".").pop()?.toLowerCase()}`;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
-      onChange(base64, ext, file.name);
+      onChange(base64, file.name);
     };
     reader.readAsDataURL(file);
   };
 
   const handleRemove = () => {
-    onChange("", "", "");
+    onChange("", "");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
