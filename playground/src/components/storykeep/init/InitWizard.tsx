@@ -330,7 +330,7 @@ export default function InitWizard({
         isProcessing,
       };
 
-      if (hasHome) return <HasHomeStep {...commonProps} />;
+      if (hasHome && hasInitCompleted) return <HasHomeStep {...commonProps} />;
       if (hasInit || hasInitCompleted) {
         return <CreateHomeStep {...commonProps} />;
       }
@@ -353,6 +353,7 @@ export default function InitWizard({
             />
           );
         case "createHome":
+          if (hasHome) return <HasHomeStep {...commonProps} />;
           return <CreateHomeStep {...commonProps} />;
         default:
           return null;
