@@ -1,8 +1,8 @@
 {
   "WORDMARK_MODE": "default",
-  "BRAND_COLOURS": "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+  "BRAND_COLOURS": "0f1912,f6f4f3,cfae97,ded2c3,24423c,a8cd20,452a3d,f3f5f6",
   "OPEN_DEMO": false,
-  "STYLES_VER": 1734226902574,
+  "STYLES_VER": 1734140668483,
   "HOME_SLUG": "hello",
   "TRACTSTACK_HOME_SLUG": "HELLO",
   "SITE_URL": "https://you.com",
@@ -10,8 +10,9 @@
   "FOOTER": "ok",
   "SITE_INIT": true,
   "GTAG": "",
-  "OGTITLE": "Make an engaging website, fast!!",
-  "OGAUTHOR": "At Risk Media",
-  "OGDESC": "Tract Stack - no-code website builder and content marketing platform",
-  "SOCIALS": "github|https://github.com/AtRiskMedia/"
+  "FAVICON": "/custom/favicon.ico",
+  "LOGO": "/custom/logo.svg",
+  "WORDMARK": "/custom/wordmark.svg",
+  "OG": "/custom/og.png",
+  "OGLOGO": "/custom/oglogo.png"
 }

@@ -260,8 +260,8 @@ export default function InitWizard({
     const newSteps: InitStepConfig[] = [
       {
         id: "setup",
-        title: "Setup Story Keep",
-        description: "Initialize your Story Keep instance",
+        title: "Welcome to your Story Keep",
+        description: "Make it your own Tract Stack instance",
         isComplete: hasInit || $store.completedSteps.includes("setup"),
         isLocked: false,
       },

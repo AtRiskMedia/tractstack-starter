@@ -369,6 +369,11 @@ export interface InitConfig {
   OGTITLE: string;
   OGDESC: string;
   SOCIALS: string;
+  LOGO: string;
+  WORDMARK: string;
+  OG: string;
+  OGLOGO: string;
+  FAVICON: string;
   [key: string]: unknown;
 }
 
