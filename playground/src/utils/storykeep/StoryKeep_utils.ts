@@ -41,7 +41,7 @@ import {
   unsavedChangesStore,
 } from "@/store/storykeep";
 import {
-  cloneDeep,
+  cloneDeep, extractEntriesAtIndex,
   getNthFromAstUsingElement,
   isDeepEqual,
   mergeObjectKeys,
