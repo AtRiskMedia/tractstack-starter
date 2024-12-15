@@ -330,8 +330,8 @@ export default function InitWizard({
         isProcessing,
       };
 
+      if (hasHome) return <HasHomeStep {...commonProps} />;
       if (hasInit || hasInitCompleted) {
-        if (hasHome) return <HasHomeStep {...commonProps} />;
         return <CreateHomeStep {...commonProps} />;
       }
 

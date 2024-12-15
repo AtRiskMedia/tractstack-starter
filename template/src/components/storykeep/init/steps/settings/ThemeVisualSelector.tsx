@@ -50,7 +50,7 @@ export default function ThemeVisualSelector({
   // Reset snapshots when brandString changes
   useEffect(() => {
     if (currentBrandString !== brandString) {
-      updateColors(brandString)
+      updateColors(brandString);
       setSnapshots(getInitialSnapshots());
       setCurrentBrandString(brandString);
     }
