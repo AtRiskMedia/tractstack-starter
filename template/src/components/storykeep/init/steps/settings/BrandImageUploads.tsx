@@ -46,7 +46,7 @@ export const imageConfigs: Record<string, ImageConfig> = {
 interface BrandImageUploadsProps {
   images: Record<string, string>;
   initialConfig: Config | null;
-  onImageChange: (id: string, base64: string, extension: string, filename: string) => void;
+  onImageChange: (id: string, base64: string, filename: string) => void;
 }
 
 export default function BrandImageUploads({
@@ -81,7 +81,7 @@ export default function BrandImageUploads({
               id={field.id}
               value={field.value}
               path={field.path}
-              onChange={(base64, ext, filename) => onImageChange(field.id, base64, ext, filename)}
+              onChange={(base64, filename) => onImageChange(field.id, base64, filename)}
               height={field.config.height}
               width={field.config.width}
               allowedTypes={field.config.types}

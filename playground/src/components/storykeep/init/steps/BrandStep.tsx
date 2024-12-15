@@ -153,12 +153,7 @@ export default function BrandStep({
 
   if (!isActive) return null;
 
-  const handleImageChange = async (
-    id: string,
-    base64: string,
-    extension: string,
-    filename: string
-  ) => {
+  const handleImageChange = async (id: string, base64: string, filename: string) => {
     try {
       if (!base64) {
         // Handle image removal
