@@ -5,6 +5,7 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { Combobox } from "@headlessui/react";
 import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
+import OpenGraphSettings from "./settings/OpenGraphSettings";
 import { knownBrand } from "../../../../constants";
 import type { Config, InitConfig, Theme } from "../../../../types";
 
@@ -34,6 +35,9 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
+      ogTitle: string;
+  ogAuthor: string;
+  ogDesc: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -41,6 +45,9 @@ export default function BrandStep({
     brandColors: knownBrand.default,
     theme: "light-bold",
     gtag: "",
+    ogTitle: "",
+    ogAuthor: "",
+    ogDesc:""
   });
 
   const [initialValues, setInitialValues] = useState<{
@@ -50,6 +57,9 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
+      ogTitle: string;
+  ogAuthor: string;
+  ogDesc: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -57,6 +67,9 @@ export default function BrandStep({
     brandColors: knownBrand.default,
     theme: "light-bold",
     gtag: "",
+    ogTitle: "",
+    ogAuthor: "",
+    ogDesc:""
   });
 
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
@@ -74,6 +87,9 @@ export default function BrandStep({
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
         theme: (initConfig.THEME as Theme) || "light-bold",
+        ogTitle: initConfig.OGTITLE || "",
+ogAuthor: initConfig.OGAUTHOR || "",
+ogDesc: initConfig.OGDESC || "",
       };
 
       setCurrentValues(values);
@@ -121,6 +137,18 @@ export default function BrandStep({
     setSelectedBrandPreset(preset);
   };
 
+  const handleOpenGraphChange = (field: "title" | "author" | "description", value: string) => {
+  const fieldMap = {
+    title: "ogTitle",
+    author: "ogAuthor", 
+    description: "ogDesc",
+  };
+  setCurrentValues((prev) => ({
+    ...prev,
+    [fieldMap[field]]: value,
+  }));
+};
+
   const handleColorChange = (newValue: string) => {
     onConfigUpdate({ BRAND_COLOURS: newValue });
     setCurrentValues((prev) => ({ ...prev, brandColors: newValue }));
@@ -152,6 +180,15 @@ export default function BrandStep({
       if (currentValues.gtag !== initialValues.gtag) {
         updates.GTAG = currentValues.gtag;
       }
+      if (currentValues.ogTitle !== initialValues.ogTitle) {
+  updates.OGTITLE = currentValues.ogTitle;
+}
+if (currentValues.ogAuthor !== initialValues.ogAuthor) {
+  updates.OGAUTHOR = currentValues.ogAuthor;
+}
+if (currentValues.ogDesc !== initialValues.ogDesc) {
+  updates.OGDESC = currentValues.ogDesc;
+}
 
       if (Object.keys(updates).length > 0) {
         onConfigUpdate(updates);
@@ -307,6 +344,15 @@ export default function BrandStep({
             />
           </div>
         </div>
+
+<div className="mt-8 pt-6 border-t border-myblue/10">
+  <OpenGraphSettings
+    title={currentValues.ogTitle}
+    author={currentValues.ogAuthor}
+    description={currentValues.ogDesc}
+    onChange={handleOpenGraphChange}
+  />
+</div>
 
         <div className="flex justify-end pt-4">
           <button

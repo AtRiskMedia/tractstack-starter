@@ -2,12 +2,15 @@
   "WORDMARK_MODE": "default",
   "BRAND_COLOURS": "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
   "OPEN_DEMO": false,
-  "STYLES_VER": 1734140668483,
+  "STYLES_VER": 1734226902574,
   "HOME_SLUG": "hello",
   "TRACTSTACK_HOME_SLUG": "HELLO",
   "SITE_URL": "https://you.com",
   "SLOGAN": "ok",
   "FOOTER": "ok",
   "SITE_INIT": true,
-  "GTAG": ""
+  "GTAG": "",
+  "OGTITLE": "Make an engaging website, fast!!",
+  "OGAUTHOR": "At Risk Media",
+  "OGDESC": "Tract Stack - no-code website builder and content marketing platform"
 }

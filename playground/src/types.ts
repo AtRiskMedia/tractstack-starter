@@ -357,12 +357,17 @@ export interface ConfigFile {
 export interface InitConfig {
   SITE_INIT: boolean;
   HOME_SLUG: string;
+  TRACTSTACK_HOME_SLUG: string;
   WORDMARK_MODE: string;
   OPEN_DEMO: boolean;
   BRAND_COLOURS: string;
   SITE_URL: string;
   SLOGAN: string;
   FOOTER: string;
+  GTAG: string;
+  OGAUTHOR: string;
+  OGTITLE: string;
+  OGDESCRIPTION: string;
   [key: string]: unknown;
 }
 
