@@ -367,7 +367,8 @@ export interface InitConfig {
   GTAG: string;
   OGAUTHOR: string;
   OGTITLE: string;
-  OGDESCRIPTION: string;
+  OGDESC: string;
+  SOCIALS: string;
   [key: string]: unknown;
 }
 

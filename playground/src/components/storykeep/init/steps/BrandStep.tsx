@@ -6,6 +6,7 @@ import { Combobox } from "@headlessui/react";
 import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import OpenGraphSettings from "./settings/OpenGraphSettings";
+import SocialLinks from "./settings/SocialLinks";
 import { knownBrand } from "../../../../constants";
 import type { Config, InitConfig, Theme } from "../../../../types";
 
@@ -35,9 +36,10 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
-      ogTitle: string;
-  ogAuthor: string;
-  ogDesc: string;
+    ogTitle: string;
+    ogAuthor: string;
+    ogDesc: string;
+    socialLinks: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -47,7 +49,8 @@ export default function BrandStep({
     gtag: "",
     ogTitle: "",
     ogAuthor: "",
-    ogDesc:""
+    ogDesc: "",
+    socialLinks: "",
   });
 
   const [initialValues, setInitialValues] = useState<{
@@ -57,9 +60,10 @@ export default function BrandStep({
     brandColors: string;
     theme: Theme;
     gtag: string;
-      ogTitle: string;
-  ogAuthor: string;
-  ogDesc: string;
+    ogTitle: string;
+    ogAuthor: string;
+    ogDesc: string;
+    socialLinks: string;
   }>({
     siteUrl: "",
     slogan: "",
@@ -69,7 +73,8 @@ export default function BrandStep({
     gtag: "",
     ogTitle: "",
     ogAuthor: "",
-    ogDesc:""
+    ogDesc: "",
+    socialLinks: "",
   });
 
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
@@ -88,8 +93,9 @@ export default function BrandStep({
         gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
         theme: (initConfig.THEME as Theme) || "light-bold",
         ogTitle: initConfig.OGTITLE || "",
-ogAuthor: initConfig.OGAUTHOR || "",
-ogDesc: initConfig.OGDESC || "",
+        ogAuthor: initConfig.OGAUTHOR || "",
+        ogDesc: initConfig.OGDESC || "",
+        socialLinks: initConfig.SOCIALS || "",
       };
 
       setCurrentValues(values);
@@ -111,6 +117,7 @@ ogDesc: initConfig.OGDESC || "",
           HOME_SLUG: initConfig.HOME_SLUG || ``,
           TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || `HELLO`,
           THEME: initConfig.THEME || "light-bold",
+          SOCIALS: initConfig.SOCIALS || "",
         });
       }
     }
@@ -138,16 +145,16 @@ ogDesc: initConfig.OGDESC || "",
   };
 
   const handleOpenGraphChange = (field: "title" | "author" | "description", value: string) => {
-  const fieldMap = {
-    title: "ogTitle",
-    author: "ogAuthor", 
-    description: "ogDesc",
+    const fieldMap = {
+      title: "ogTitle",
+      author: "ogAuthor",
+      description: "ogDesc",
+    };
+    setCurrentValues((prev) => ({
+      ...prev,
+      [fieldMap[field]]: value,
+    }));
   };
-  setCurrentValues((prev) => ({
-    ...prev,
-    [fieldMap[field]]: value,
-  }));
-};
 
   const handleColorChange = (newValue: string) => {
     onConfigUpdate({ BRAND_COLOURS: newValue });
@@ -181,14 +188,17 @@ ogDesc: initConfig.OGDESC || "",
         updates.GTAG = currentValues.gtag;
       }
       if (currentValues.ogTitle !== initialValues.ogTitle) {
-  updates.OGTITLE = currentValues.ogTitle;
-}
-if (currentValues.ogAuthor !== initialValues.ogAuthor) {
-  updates.OGAUTHOR = currentValues.ogAuthor;
-}
-if (currentValues.ogDesc !== initialValues.ogDesc) {
-  updates.OGDESC = currentValues.ogDesc;
-}
+        updates.OGTITLE = currentValues.ogTitle;
+      }
+      if (currentValues.ogAuthor !== initialValues.ogAuthor) {
+        updates.OGAUTHOR = currentValues.ogAuthor;
+      }
+      if (currentValues.ogDesc !== initialValues.ogDesc) {
+        updates.OGDESC = currentValues.ogDesc;
+      }
+      if (currentValues.socialLinks !== initialValues.socialLinks) {
+        updates.SOCIALS = currentValues.socialLinks;
+      }
 
       if (Object.keys(updates).length > 0) {
         onConfigUpdate(updates);
@@ -345,14 +355,21 @@ if (currentValues.ogDesc !== initialValues.ogDesc) {
           </div>
         </div>
 
-<div className="mt-8 pt-6 border-t border-myblue/10">
-  <OpenGraphSettings
-    title={currentValues.ogTitle}
-    author={currentValues.ogAuthor}
-    description={currentValues.ogDesc}
-    onChange={handleOpenGraphChange}
-  />
-</div>
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <OpenGraphSettings
+            title={currentValues.ogTitle}
+            author={currentValues.ogAuthor}
+            description={currentValues.ogDesc}
+            onChange={handleOpenGraphChange}
+          />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <SocialLinks
+            value={currentValues.socialLinks}
+            onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
+          />
+        </div>
 
         <div className="flex justify-end pt-4">
           <button
