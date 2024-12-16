@@ -41,7 +41,7 @@ import {
   unsavedChangesStore,
 } from "@/store/storykeep";
 import {
-  cloneDeep, extractEntriesAtIndex,
+  cloneDeep, extractEntriesAtIndex, getHtmlTagFromMdast,
   getNthFromAstUsingElement,
   isDeepEqual,
   mergeObjectKeys,
@@ -737,12 +737,14 @@ function swapClassNamesPayload_Override(
     };
 
     Object.keys(overrideCopy).forEach(
-      key =>
+      key => {
+        // fix missing keys
         (overrideCopy[key] = swapObjectValues(
           overrideCopy[key],
           el1Nth.toString(10),
           el2Nth.toString(10)
         ))
+      }
     );
 
     field.current.payload.optionsPayload.classNamesPayload[el1TagName] = {
@@ -834,42 +836,6 @@ export function fragmentHasAnyOverrides(curField: FieldWithHistory<MarkdownEditD
   return false;
 }
 
-export function addMissingOverrideClassesForFragment(payload: MarkdownPaneDatum, field: MarkdownDatum) {
-  if(!payload || !field) return;
-
-  const classesPayloads = {...payload.optionsPayload.classNamesPayload};
-  if(!classesPayloads) return;
-
-  const markdown = generateMarkdownLookup(field.htmlAst);
-  Object.keys(classesPayloads).forEach(tag => {
-    if(!markdown.nthTagLookup[tag]) return;
-
-    const tagsAmount = Object.values(markdown.nthTagLookup?.[tag]).length ?? 0;
-    const overrides = classesPayloads[tag].override;
-    classesPayloads[tag].count = tagsAmount;
-    if(overrides) {
-      Object.keys(overrides).forEach(overrideKey => {
-        if (!overrides[overrideKey]) return;
-
-        const length = overrides[overrideKey].length;
-        if(length < tagsAmount) {
-          while (overrides[overrideKey].length < tagsAmount) {
-            // @ts-expect-error tuple isn't iteratable
-            classesPayloads[tag].override[overrideKey].push(null);
-          }
-        } else {
-          while (overrides[overrideKey].length > tagsAmount) {
-            // @ts-expect-error tuple isn't iteratable
-            classesPayloads[tag].override[overrideKey].pop();
-          }
-        }
-      });
-    }
-  });
-
-  payload.optionsPayload = {...payload.optionsPayload, classNamesPayload: classesPayloads};
-}
-
 function fixPayloadOverrides(
   curField: FieldWithHistory<MarkdownEditDatum>,
   el1TagName: string,
@@ -886,8 +852,7 @@ function fixPayloadOverrides(
   const originalOverrides = classesPayload?.override || {};
   if (originalOverrides) {
     const overrideCopy = {
-      ...(newField.current.payload.optionsPayload.classNamesPayload[el2TagName]
-        .override || {}),
+      ...(newField.current.payload.optionsPayload.classNamesPayload[el2TagName]?.override || {}),
     };
 
     const allKeys: string[] = mergeObjectKeys(overrideCopy, originalOverrides, originalClasses);
@@ -904,7 +869,7 @@ function fixPayloadOverrides(
     let isTargetListElement = false;
     // if list element, grab list elements from markdown lookup
     if (el2TagName === "li") {
-      tagsAmount = Object.values(markdownLookup?.listItems).length;
+      tagsAmount = Object.values(markdownLookup?.listItems).length+1;
       isTargetListElement = true;
     } else {
       tagsAmount = Object.values(markdownLookup?.nthTagLookup?.[el2TagName]).length ?? 0;

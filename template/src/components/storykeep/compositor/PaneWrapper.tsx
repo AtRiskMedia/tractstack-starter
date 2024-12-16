@@ -310,7 +310,7 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "styles" && (
-          <div className="pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
+          <div className="z-1 pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
             <PaneMoveButtons onMove={handleMove}/>
             <div className="pointer-events-auto relative">
               <button
@@ -323,7 +323,7 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "text" && (
-          <div className="pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
+          <div className="z-1 pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
             <PaneMoveButtons onMove={handleMove}/>
             <div className="pointer-events-auto relative">
               <button

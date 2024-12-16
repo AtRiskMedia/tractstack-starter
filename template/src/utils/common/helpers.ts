@@ -628,7 +628,7 @@ export const createNodeId = (fragmentId: string, paneId: string, outerIdx: numbe
 
 export function swapObjectValues(obj: any, key1: string, key2: string): any {
   if (!(key1 in obj) || !(key2 in obj)) {
-    return undefined;
+    return obj;
   }
 
   const temp = obj[key1];
@@ -768,6 +768,9 @@ export const blobToBase64 = (blob: Blob) => {
 
 export const isListContainer = (markdown: MarkdownLookup): boolean => {
   if(!markdown) return false;
+  // single element in the nth tag, likely not a list
+  if(Object.values(markdown.nthTag).length <= 1) return false;
+
   // if all the nth tags are ol/ul then image is in list container
   return Object.values(markdown.nthTag)
     .every(tag => ["ul", "ol"].includes(tag));
