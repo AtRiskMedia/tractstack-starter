@@ -61,7 +61,7 @@ const InsertWrapper = ({
   };
 
   useEffect(() => {
-    if (!dragState.dropState) {
+    if (!dragState.elDropState) {
       if (self.current) {
         const rect = self.current.getBoundingClientRect();
         if (isPosInsideRect(rect, dragState.pos)) {
@@ -79,16 +79,16 @@ const InsertWrapper = ({
       }
     } else if (dragState.affectedFragments.size > 0) {
       if (
-        dragState.dropState.fragmentId === fragmentId &&
-        dragState.dropState.paneId === paneId &&
-        dragState.dropState.idx === idx &&
-        dragState.dropState.outerIdx === outerIdx
+        dragState.elDropState.fragmentId === fragmentId &&
+        dragState.elDropState.paneId === paneId &&
+        dragState.elDropState.idx === idx &&
+        dragState.elDropState.outerIdx === outerIdx
       ) {
         console.log(
-          `Drop active element: ${JSON.stringify(dragState.dropState)}`
+          `Drop active element: ${JSON.stringify(dragState.elDropState)}`
         );
-        if(dragState.dropState.location !== "none") {
-          let location = dragState.dropState.location as "before"|"after";
+        if(dragState.elDropState.location !== "none") {
+          let location = dragState.elDropState.location as "before"|"after";
           if(isEmpty) {
             location = "before";
           }

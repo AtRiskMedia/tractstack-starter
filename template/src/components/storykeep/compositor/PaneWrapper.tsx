@@ -283,13 +283,7 @@ const PaneWrapper = (props: {
 
   return (
     <div ref={paneRef} className="relative">
-      <div
-        onClick={handleClick}
-        className={classNames(
-          "w-full",
-          toolMode === `settings` ? "pointer-events-auto cursor-pointer" : ""
-        )}
-      >
+      <div className={classNames("w-full")}>
         {toolMode === `pane` && !isDesigningNew ? (
           <InsertAboveBelowWrapper onInsertClick={handleInsertClick}>
             {Content}
@@ -299,19 +293,11 @@ const PaneWrapper = (props: {
         )}
         {toolMode === "eraser" && (
           <div className="absolute inset-0 flex justify-end w-full h-fit">
-            <div className="relative">
-              <button
-                className="text-xl p-4 mr-6 mt-2 bg-red-500 text-black font-bold mb-2 group-hover:text-white rounded-md"
-                onClick={() => setPendingDeletePane(true)}
-              >
-                <TrashIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
+            <div className="relative"></div>
           </div>
         )}
         {toolMode === "styles" && (
-          <div className="z-1 pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
-            <PaneMoveButtons onMove={handleMove}/>
+          <div className="pointer-events-none absolute inset-0 flex justify-end w-full h-fit">
             <div className="pointer-events-auto relative">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
@@ -323,9 +309,13 @@ const PaneWrapper = (props: {
           </div>
         )}
         {toolMode === "text" && (
-          <div className="z-1 pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
-            <PaneMoveButtons onMove={handleMove}/>
-            <div className="pointer-events-auto relative">
+          <div className="pointer-events-none absolute inset-0 flex justify-center w-full h-fit">
+            <div className="pointer-events-auto absolute ml-auto">
+              <button className="text-xl p-4 mr-6 mt-2 bg-blue-400 rounded-2xl text-black font-bold group-hover:text-white">
+                DRAG
+              </button>
+            </div>
+            <div className="pointer-events-auto relative ml-auto w-fit">
               <button
                 className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
                 onClick={onChangeMarkdownClicked}
@@ -359,10 +349,22 @@ const PaneWrapper = (props: {
           />
         )}
         {toolMode === "settings" && (
-          <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex items-center justify-center group z-104 cursor-pointer pointer-events-auto">
-            <div className="relative">
-              <div className="bg-yellow-300 p-4 rounded-md group-hover:bg-black">
-                <h2 className="text-xl text-black font-bold mb-2 group-hover:text-white">
+          <div className="absolute inset-0 backdrop-blur-sm bg-white/50 dark:bg-black/50 flex justify-center group z-104 w-full h-full pointer-events-auto">
+            <div className="absolute left-0 flex">
+              <PaneMoveButtons onMove={handleMove} />
+              <button
+                className="text-xl ml-10 p-4 mr-6 mt-2 bg-red-500 text-black font-bold mb-2 hover:text-white rounded-md"
+                onClick={() => setPendingDeletePane(true)}
+              >
+                <TrashIcon className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="relative flex items-center">
+              <div
+                onClick={handleClick}
+                className="bg-yellow-300 p-4 rounded-md group/parent hover:bg-black hover:cursor-pointer"
+              >
+                <h2 className="text-xl text-black font-bold mb-2 group-hover/parent:text-white">
                   Configure this Pane
                 </h2>
               </div>
