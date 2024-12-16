@@ -7,7 +7,7 @@ import {
 } from "@/constants.ts";
 import type {
   FieldWithHistory,
-  HistoryEntry, MarkdownDatum, MarkdownEditDatum, MarkdownLookup, MarkdownPaneDatum, OptionsPayloadDatum,
+  HistoryEntry, MarkdownEditDatum, MarkdownLookup, OptionsPayloadDatum,
   StoreKey,
   StoreMapType, ToolAddMode,
   ValidationFunction,
