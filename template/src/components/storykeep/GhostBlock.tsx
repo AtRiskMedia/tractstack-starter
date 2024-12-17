@@ -4,5 +4,5 @@ import { toolAddModeDefaultHeight } from "@/constants.ts";
 
 export const GhostBlock = memo(() => {
   const height = `${dragHandleStore.get().ghostHeight}px` || `${toolAddModeDefaultHeight}px`;
-  return (<div style={{height}} className={`w-full bg-blue-200`}/>);
+  return <div style={{ height }} className={`w-full bg-blue-200`} />;
 });

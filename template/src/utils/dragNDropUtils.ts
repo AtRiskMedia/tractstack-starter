@@ -7,8 +7,7 @@ export function canDrawGhostBlock(
   outerIdx: number,
   ignoreDragNDrop: boolean
 ) {
-  if (lastDragTime.get() === dragStartTime.get())
-    return false;
+  if (lastDragTime.get() === dragStartTime.get()) return false;
 
   const el = dragHandleStore.get().hoverElement;
   if (!el || ignoreDragNDrop) {
@@ -24,6 +23,7 @@ export function canDrawGhostBlock(
 }
 
 export function getRelativeYLocationToElement(dragPosY: number, elRect: DOMRect) {
-  const loc = dragPosY > elRect.y + window.scrollY + elRect.height / 2 ? Location.AFTER : Location.BEFORE;
+  const loc =
+    dragPosY > elRect.y + window.scrollY + elRect.height / 2 ? Location.AFTER : Location.BEFORE;
   return loc;
 }

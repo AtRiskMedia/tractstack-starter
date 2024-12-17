@@ -7,7 +7,8 @@ import type {
   GraphNode,
   GraphNodeDatum,
   GraphNodes,
-  GraphRelationshipDatum, MarkdownLookup,
+  GraphRelationshipDatum,
+  MarkdownLookup,
   TursoFileNode,
 } from "../../types";
 import { type DragNode, Location } from "@/store/storykeep.ts";
@@ -622,9 +623,14 @@ export const createNodeIdFromDragNode = (node: DragNode): string => {
   if (!node) return "";
   return createNodeId(node.fragmentId, node.paneId, node.outerIdx, node.idx);
 };
-export const createNodeId = (fragmentId: string, paneId: string, outerIdx: number, idx: number|null): string => {
+export const createNodeId = (
+  fragmentId: string,
+  paneId: string,
+  outerIdx: number,
+  idx: number | null
+): string => {
   return `${fragmentId}-${paneId}-${outerIdx}-${idx || 0}`;
-}
+};
 
 export function swapObjectValues(obj: any, key1: string, key2: string): any {
   if (!(key1 in obj) || !(key2 in obj)) {
@@ -702,11 +708,11 @@ declare global {
 }
 
 Array.prototype.last = function <T>(): T {
-  if(this.length > 0) {
+  if (this.length > 0) {
     return this[this.length - 1];
   }
   return this[0];
-}
+};
 
 Array.prototype.setAt = function <T>(index: number, value: T): void {
   if (index >= this.length) {
@@ -767,14 +773,13 @@ export const blobToBase64 = (blob: Blob) => {
 };
 
 export const isListContainer = (markdown: MarkdownLookup): boolean => {
-  if(!markdown) return false;
+  if (!markdown) return false;
   // single element in the nth tag, likely not a list
-  if(Object.values(markdown.nthTag).length <= 1) return false;
+  if (Object.values(markdown.nthTag).length <= 1) return false;
 
   // if all the nth tags are ol/ul then image is in list container
-  return Object.values(markdown.nthTag)
-    .every(tag => ["ul", "ol"].includes(tag));
-}
+  return Object.values(markdown.nthTag).every((tag) => ["ul", "ol"].includes(tag));
+};
 
 export function createDefaultImageNode(original: TursoFileNode, paneId?: string): FileNode {
   return {

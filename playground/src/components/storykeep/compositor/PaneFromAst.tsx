@@ -212,7 +212,7 @@ const ImageWrapper = ({
   idx: number | null;
   outerIdx: number;
   markdownLookup: MarkdownLookup;
-  ignoreDragNDrop: boolean;
+  ignoreDragNDrop?: boolean;
 }) => {
   if (!showOverlay) return children;
   if (toolMode === "eraser") return children;
@@ -227,7 +227,7 @@ const ImageWrapper = ({
         outerIdx={outerIdx}
         idx={idx}
         markdownLookup={markdownLookup}
-        ignoreDragNDrop={true}
+        ignoreDragNDrop={typeof ignoreDragNDrop === `boolean` ? ignoreDragNDrop : true}
       >
         {children}
       </EditableInnerElementWrapper>
@@ -442,9 +442,9 @@ function buildComponentFromAst(
   }
 
   const canDragNDrop = (): boolean => {
-    if(Tag === "ul") return false;
+    if (Tag === "ul") return false;
     return isWidget || !!buttonPayload;
-  }
+  };
 
   // if set-up for recursive handling
   if (["p", "em", "strong", "ol", "ul", "li", "h2", "h3", "h4"].includes(Tag)) {
@@ -476,7 +476,6 @@ function buildComponentFromAst(
         ))}
       </TagComponent>
     );
-
 
     if (noOverlay || [`ol`, `ul`, `strong`, `em`].includes(Tag)) {
       if (isWidget) {
@@ -824,7 +823,7 @@ const PaneFromAst = ({
   toolAddMode,
   queueUpdate,
   ignoreDragNDrop,
-  config
+  config,
 }: PaneFromAstProps) => {
   return buildComponentFromAst(
     payload,

@@ -56,9 +56,9 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
         resetDragStore();
 
         let height = toolAddModeDefaultHeight;
-        if(props.el) {
+        if (props.el) {
           const addModeHeight = toolAddModesSizes[props.el];
-          if(addModeHeight > 0) {
+          if (addModeHeight > 0) {
             height = addModeHeight;
           }
         }
@@ -74,9 +74,7 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
         setDragPos({ x: 0, y: 0 });
       }}
     >
-      <div ref={domRef}>
-        {props.children}
-      </div>
+      <div ref={domRef}>{props.children}</div>
     </Draggable>
   );
 });

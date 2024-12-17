@@ -7,7 +7,7 @@ import { InsertDraggableElement } from "@/components/storykeep/panes/InsertDragg
 
 export type MiscElementsDropdownProps = {
   onClickedOption: (mode: ToolAddMode) => void;
-}
+};
 
 export const MiscElementsDropdown = memo((props: MiscElementsDropdownProps) => {
   const missingIcon = (mode: ToolAddMode) => {
@@ -35,8 +35,8 @@ export const MiscElementsDropdown = memo((props: MiscElementsDropdownProps) => {
         leaveTo="transform opacity-0 scale-95"
       >
         <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-          {toolAddModes.filter(missingIcon).map((mode) => (
-            <Menu.Item>
+          {toolAddModes.filter(missingIcon).map((mode, idx) => (
+            <Menu.Item key={idx}>
               {({ active }) => (
                 <button
                   onClick={() => props.onClickedOption(mode)}

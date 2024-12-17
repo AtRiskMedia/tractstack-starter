@@ -13,7 +13,7 @@ import { classNames } from "@/utils/common/helpers.ts";
 export type ChangeMarkdownModalProps = {
   paneId: string;
   onClose: () => void;
-}
+};
 
 enum RunState {
   None = 0,
@@ -21,25 +21,31 @@ enum RunState {
   Ready = 2,
 }
 
-
 const getButtonText = (state: RunState): string => {
   switch (state) {
-    case RunState.Ready: return "Apply";
-    case RunState.Revalidate: return "Validate Again";
-    case RunState.None: return "Validate & Apply";
-    default: return "UNKNOWN";
+    case RunState.Ready:
+      return "Apply";
+    case RunState.Revalidate:
+      return "Validate Again";
+    case RunState.None:
+      return "Validate & Apply";
+    default:
+      return "UNKNOWN";
   }
-}
+};
 
 const getButtonColor = (state: RunState): string => {
   switch (state) {
-    case RunState.Ready: return "bg-green-300";
-    case RunState.Revalidate: return "bg-orange-300";
-    case RunState.None: return "bg-green-300";
-    default: return "bg-blue-100";
+    case RunState.Ready:
+      return "bg-green-300";
+    case RunState.Revalidate:
+      return "bg-orange-300";
+    case RunState.None:
+      return "bg-green-300";
+    default:
+      return "bg-blue-100";
   }
-}
-
+};
 
 const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
   const ids = paneFragmentIds.get()[props.paneId].current;
@@ -84,12 +90,13 @@ const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
         }
         break;
       }
-      case RunState.Ready: {
-        buildElementFromNewMarkdown();
-      }
-      break;
+      case RunState.Ready:
+        {
+          buildElementFromNewMarkdown();
+        }
+        break;
     }
-  }
+  };
 
   return (
     <TractStackModal
@@ -113,12 +120,11 @@ const ChangeMarkdownModal = (props: ChangeMarkdownModalProps) => {
       body={
         <div className="flex flex-col h-fit w-full">
           {error?.length > 0 && <span className="text-red-500">{error}</span>}
-          <textarea value={markdown}
-                    rows={16}
-                    onChange={e => setMarkdown(e.target.value)}/>
+          <textarea value={markdown} rows={16} onChange={(e) => setMarkdown(e.target.value)} />
           <div className="flex justify-end mt-4">
-            <button className={`${getButtonColor(state)} p-4 rounded-md group-hover:bg-black`}
-                    onClick={process}
+            <button
+              className={`${getButtonColor(state)} p-4 rounded-md group-hover:bg-black`}
+              onClick={process}
             >
               {getButtonText(state)}
             </button>

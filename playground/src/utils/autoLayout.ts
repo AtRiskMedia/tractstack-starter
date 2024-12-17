@@ -18,7 +18,7 @@ export const applyLayoutChange = (paneId: string, paneDesign: PaneDesign) => {
   currentPaneFragmentPayload.classNamesPayload = { ...newFragmentPayload.classNamesPayload };
   Object.keys(currentPaneFragmentPayload.classNamesPayload).forEach((className) => {
     // if original snapshot had overrides then apply them to a new payload
-    if(newFragmentPayload.classNamesPayload[className].override) {
+    if (newFragmentPayload.classNamesPayload[className].override) {
       return;
     }
 
@@ -37,7 +37,7 @@ export const applyLayoutChange = (paneId: string, paneDesign: PaneDesign) => {
     currentPaneFragmentPayload.classNames = { ...newFragmentPayload.classNames };
   }
   // copy button names
-  if(newFragmentPayload.buttons) {
+  if (newFragmentPayload.buttons) {
     currentPaneFragmentPayload.buttons = { ...newFragmentPayload.buttons };
   }
 

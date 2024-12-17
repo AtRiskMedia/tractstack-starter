@@ -259,8 +259,9 @@ const EditableContent = ({
     />
   );
 
-  return (ignoreDragNDrop ?
-    drawContent() :
+  return ignoreDragNDrop ? (
+    drawContent()
+  ) : (
     <MoveDraggableElement
       ignoreDragNDrop={ignoreDragNDrop}
       fragmentId={markdownFragmentId}

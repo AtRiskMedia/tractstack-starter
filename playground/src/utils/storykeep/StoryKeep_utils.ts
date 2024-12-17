@@ -3,21 +3,29 @@ import {
   MAX_HISTORY_LENGTH,
   MS_BETWEEN_UNDO,
   reservedSlugs,
-  SHORT_SCREEN_THRESHOLD, toolAddModeInsertDefault,
+  SHORT_SCREEN_THRESHOLD,
+  toolAddModeInsertDefault,
 } from "@/constants.ts";
 import type {
   FieldWithHistory,
-  HistoryEntry, MarkdownEditDatum, MarkdownLookup, OptionsPayloadDatum,
+  HistoryEntry,
+  MarkdownEditDatum,
+  MarkdownLookup,
+  OptionsPayloadDatum,
   StoreKey,
-  StoreMapType, ToolAddMode,
+  StoreMapType,
+  ToolAddMode,
   ValidationFunction,
 } from "@/types.ts";
 import {
   editModeStore,
   lastInteractedPaneStore,
   lastInteractedTypeStore,
-  paneCodeHook, paneFiles, paneFragmentBgColour,
-  paneFragmentBgPane, paneFragmentIds,
+  paneCodeHook,
+  paneFiles,
+  paneFragmentBgColour,
+  paneFragmentBgPane,
+  paneFragmentIds,
   paneFragmentMarkdown,
   paneHasMaxHScreen,
   paneHasOverflowHidden,
@@ -25,7 +33,10 @@ import {
   paneHeightOffsetMobile,
   paneHeightOffsetTablet,
   paneHeightRatioDesktop,
-  paneHeightRatioMobile, paneHeightRatioTablet, paneHeldBeliefs, paneImpression,
+  paneHeightRatioMobile,
+  paneHeightRatioTablet,
+  paneHeldBeliefs,
+  paneImpression,
   paneIsHiddenPane,
   paneSlug,
   paneTitle,
@@ -41,7 +52,9 @@ import {
   unsavedChangesStore,
 } from "@/store/storykeep";
 import {
-  cloneDeep, extractEntriesAtIndex, getHtmlTagFromMdast,
+  cloneDeep,
+  extractEntriesAtIndex,
+  getHtmlTagFromMdast,
   getNthFromAstUsingElement,
   isDeepEqual,
   mergeObjectKeys,
@@ -53,7 +66,8 @@ import { toMarkdown } from "mdast-util-to-markdown";
 import {
   cleanHtmlAst,
   getGlobalNth,
-  insertElementIntoMarkdown, removeElementFromMarkdown,
+  insertElementIntoMarkdown,
+  removeElementFromMarkdown,
   updateHistory,
 } from "@/utils/compositor/markdownUtils.ts";
 import { toHast } from "mdast-util-to-hast";
@@ -110,8 +124,7 @@ const preValidationFunctions: Partial<Record<StoreKey, ValidationFunction>> = {
   storyFragmentSlug: (value: string) =>
     value.length === 0 || (value.length <= 50 && /^[a-z0-9-]*$/.test(value)),
   storyFragmentSocialImagePath: (value: string) =>
-    value.length <= 80 &&
-    /^\/?([\w-.]+(?:\/[\w-.]+)*\/?)?[\w-]*\.?(?:png|jpg)?$/.test(value),
+    value.length <= 80 && /^\/?([\w-.]+(?:\/[\w-.]+)*\/?)?[\w-]*\.?(?:png|jpg)?$/.test(value),
   storyFragmentMenuId: (value: string) => value.length <= 32,
   paneTitle: (value: string) => value.length <= 80,
   paneSlug: (value: string) =>
@@ -120,31 +133,23 @@ const preValidationFunctions: Partial<Record<StoreKey, ValidationFunction>> = {
 };
 
 const validationFunctions: Partial<Record<StoreKey, ValidationFunction>> = {
-  storyFragmentTailwindBgColour: (value: string) =>
-    value.length > 0 && value.length <= 20,
+  storyFragmentTailwindBgColour: (value: string) => value.length > 0 && value.length <= 20,
   storyFragmentTitle: (value: string) => value.length > 0 && value.length <= 80,
   storyFragmentSlug: (value: string) =>
-    value.length > 0 &&
-    value.length <= 50 &&
-    /^[a-z](?:[a-z0-9-]*[a-z0-9])?$/.test(value),
+    value.length > 0 && value.length <= 50 && /^[a-z](?:[a-z0-9-]*[a-z0-9])?$/.test(value),
   storyFragmentSocialImagePath: (value: string) =>
     value.length === 0 ||
     (value.length > 0 &&
       value.length <= 80 &&
       /^\/?([\w-.]+(?:\/[\w-.]+)*\/)?[\w-]+\.(?:png|jpg)$/.test(value)),
-  storyFragmentMenuId: (value: string) =>
-    value.length > 0 && value.length <= 32,
+  storyFragmentMenuId: (value: string) => value.length > 0 && value.length <= 32,
   paneTitle: (value: string) => value.length > 0 && value.length <= 80,
   paneSlug: (value: string) =>
-    value.length > 0 &&
-    value.length <= 50 &&
-    /^[a-z](?:[a-z0-9-]*[a-z0-9])?$/.test(value),
+    value.length > 0 && value.length <= 50 && /^[a-z](?:[a-z0-9-]*[a-z0-9])?$/.test(value),
   // Add more validation functions for other fields as needed
 };
 
-const initializeLastUpdateTime = (
-  storeMap: StoreMapType
-): Record<StoreKey, number> => {
+const initializeLastUpdateTime = (storeMap: StoreMapType): Record<StoreKey, number> => {
   return Object.keys(storeMap).reduce(
     (acc, key) => {
       acc[key as StoreKey] = 0;
@@ -155,12 +160,8 @@ const initializeLastUpdateTime = (
 };
 
 export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
-  const [isEditing, setIsEditing] = useState<
-    Partial<Record<StoreKey, boolean>>
-  >({});
-  const lastUpdateTimeRef = useRef<Record<StoreKey, number>>(
-    initializeLastUpdateTime(storeMap)
-  );
+  const [isEditing, setIsEditing] = useState<Partial<Record<StoreKey, boolean>>>({});
+  const lastUpdateTimeRef = useRef<Record<StoreKey, number>>(initializeLastUpdateTime(storeMap));
 
   const setTemporaryError = useCallback(
     (storeKey: StoreKey) => {
@@ -179,11 +180,7 @@ export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
   );
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
-  const updateStoreField = (
-    storeKey: StoreKey,
-    newValue: any,
-    otherId?: string
-  ): boolean => {
+  const updateStoreField = (storeKey: StoreKey, newValue: any, otherId?: string): boolean => {
     const thisId = otherId || id;
     const store = storeMap[storeKey];
     if (!store) {
@@ -194,10 +191,7 @@ export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
     const isValid =
       isValidValue(storeKey, newValue) &&
       ([`paneSlug`, `storyFragmentSlug`].includes(storeKey)
-        ? !(
-            reservedSlugs.includes(newValue) ||
-            (usedSlugs && usedSlugs.includes(newValue))
-          )
+        ? !(reservedSlugs.includes(newValue) || (usedSlugs && usedSlugs.includes(newValue)))
         : true);
     const isPreValid = isPreValidValue(storeKey, newValue);
     if (!isPreValid) {
@@ -220,11 +214,7 @@ export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
 
     const currentStoreValue = store.get();
     const currentField = currentStoreValue[thisId];
-    if (
-      currentField &&
-      isPreValid &&
-      !isDeepEqual(newValue, currentField.current)
-    ) {
+    if (currentField && isPreValid && !isDeepEqual(newValue, currentField.current)) {
       const now = Date.now();
       const newHistory = updateHistory(storeKey, currentField, now);
       const newField = createNewField(currentField, newValue, newHistory);
@@ -255,8 +245,7 @@ export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
     currentField: FieldWithHistory<string>,
     now: number
   ): HistoryEntry<string>[] => {
-    const timeSinceLastUpdate =
-      now - (lastUpdateTimeRef.current[storeKey] || 0);
+    const timeSinceLastUpdate = now - (lastUpdateTimeRef.current[storeKey] || 0);
     const newHistory = [...currentField.history];
     if (timeSinceLastUpdate > MS_BETWEEN_UNDO) {
       newHistory.unshift({ value: currentField.current, timestamp: now });
@@ -307,18 +296,15 @@ export const useStoryKeepUtils = (id: string, usedSlugs?: string[]) => {
     [storeMap]
   );
 
-  const handleEditingChange = useCallback(
-    (storeKey: StoreKey, editing: boolean) => {
-      if (editing) {
-        setIsEditing(prev => ({ ...prev, [storeKey]: true }));
-      } else {
-        setTimeout(() => {
-          setIsEditing(prev => ({ ...prev, [storeKey]: false }));
-        }, 100);
-      }
-    },
-    []
-  );
+  const handleEditingChange = useCallback((storeKey: StoreKey, editing: boolean) => {
+    if (editing) {
+      setIsEditing((prev) => ({ ...prev, [storeKey]: true }));
+    } else {
+      setTimeout(() => {
+        setIsEditing((prev) => ({ ...prev, [storeKey]: false }));
+      }, 100);
+    }
+  }, []);
 
   return {
     isEditing,
@@ -372,11 +358,7 @@ const copyMarkdownIfFound = (
   }
 };
 
-const isElementInList = (
-  field: MdastRoot,
-  outerIdx: number,
-  idx: number | null
-): boolean => {
+const isElementInList = (field: MdastRoot, outerIdx: number, idx: number | null): boolean => {
   if (!field.children[outerIdx]) return false;
 
   const parent = field.children[outerIdx];
@@ -384,9 +366,7 @@ const isElementInList = (
     if (idx && "children" in parent) {
       const nestedChildren = parent.children[idx];
       if (nestedChildren) {
-        return (
-          nestedChildren.type === "list" || nestedChildren.type === "listItem"
-        );
+        return nestedChildren.type === "list" || nestedChildren.type === "listItem";
       }
     }
     return parent.type === "list";
@@ -397,10 +377,10 @@ const isElementInList = (
 function handleBlockMovementBetweenPanels(
   curFieldMdast: MdastRoot,
   el1OuterIdx: number,
-  el1PaneId: string,
+  //el1PaneId: string,
   el1fragmentId: string,
   el1Idx: number | null,
-  markdownLookup: MarkdownLookup,
+  //markdownLookup: MarkdownLookup,
   newMarkdownLookup: MarkdownLookup,
   el2fragmentId: string,
   field: FieldWithHistory<MarkdownEditDatum>,
@@ -445,7 +425,7 @@ function handleBlockMovementBetweenPanels(
       isTargetPaneAList = true;
       secondAstParent = innerChildren.children;
     }
-    if("children" in innerMdastChildren) {
+    if ("children" in innerMdastChildren) {
       secondMdastParent = innerMdastChildren.children;
     }
   }
@@ -457,7 +437,7 @@ function handleBlockMovementBetweenPanels(
   if (isTargetPaneAList) {
     newTag = "li";
     // @ts-expect-error children exists
-    if(erasedEl.children.length === 1) {
+    if (erasedEl.children.length === 1) {
       if ("tagName" in erasedEl) {
         erasedEl.tagName = "li";
         newMdastEl.type = "listItem";
@@ -480,7 +460,7 @@ function handleBlockMovementBetweenPanels(
     curTag,
     el1Idx !== null ? el1Idx : el1OuterIdx,
     el1OuterIdx,
-    el2Idx !== null ? el2Idx : el2OuterIdx,
+    //el2Idx !== null ? el2Idx : el2OuterIdx,
     newTag,
     originalFieldCopy,
     newField,
@@ -488,7 +468,7 @@ function handleBlockMovementBetweenPanels(
   );
 
   const payload = field.current.payload.optionsPayload.classNamesPayload[curTag]?.override;
-  if(payload) {
+  if (payload) {
     Object.keys(payload).forEach((key) => {
       removeAt(payload[key], originalNth);
     });
@@ -497,8 +477,11 @@ function handleBlockMovementBetweenPanels(
   const lookup = createNodeToClassesLookup(newField);
 
   for (let i = 0; i < el2OuterIdx; ++i) {
-    [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i],];
-    [secondMdastParent[i], secondMdastParent[i + 1]] = [secondMdastParent[i + 1], secondMdastParent[i],];
+    [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i]];
+    [secondMdastParent[i], secondMdastParent[i + 1]] = [
+      secondMdastParent[i + 1],
+      secondMdastParent[i],
+    ];
   }
 
   newField.current.markdown.body = toMarkdown(secondMdast);
@@ -513,10 +496,10 @@ function handleBlockMovementBetweenPanels(
 function handleListElementsMovementBetweenPanels(
   mdast: MdastRoot,
   el1OuterIdx: number,
-  el1PaneId: string,
+  //el1PaneId: string,
   el1fragmentId: string,
   el1Idx: number | null,
-  markdownLookup: MarkdownLookup,
+  //markdownLookup: MarkdownLookup,
   newMarkdownLookup: MarkdownLookup,
   el2FragmentId: string,
   field: FieldWithHistory<MarkdownEditDatum>,
@@ -564,7 +547,7 @@ function handleListElementsMovementBetweenPanels(
     if ("children" in innerChildren) {
       secondAstParent = innerChildren.children;
     }
-    if("children" in innerMdastChildren) {
+    if ("children" in innerMdastChildren) {
       secondMdastParent = innerMdastChildren.children;
     }
   }
@@ -581,7 +564,7 @@ function handleListElementsMovementBetweenPanels(
     // use original mdast to figure out expected field type because we can't extract type from the AST
     // @ts-expect-error children tagName exists
     newTag = getHtmlTagFromMdast(mdast.children[el1OuterIdx].children[el1Idx].children[0]) || "";
-  } else if(isTargetElementAListItem) {
+  } else if (isTargetElementAListItem) {
     // @ts-expect-error children exists
     newTag = "li" || "";
     newMdastEl = erasedElMdast;
@@ -589,7 +572,7 @@ function handleListElementsMovementBetweenPanels(
 
   const hastEl = toHast(mdastChild);
 
-  secondMdastParent.unshift(newMdastEl)
+  secondMdastParent.unshift(newMdastEl);
 
   // @ts-expect-error children exists but need to set up definitions
   secondAstParent.unshift(hastEl);
@@ -599,7 +582,7 @@ function handleListElementsMovementBetweenPanels(
     curTag,
     el1Idx !== null ? el1Idx : el1OuterIdx,
     el1OuterIdx,
-    el2Idx !== null ? el2Idx : el2OuterIdx,
+    //el2Idx !== null ? el2Idx : el2OuterIdx,
     newTag,
     originalFieldCopy,
     newField,
@@ -607,7 +590,7 @@ function handleListElementsMovementBetweenPanels(
   );
 
   const payload = field.current.payload.optionsPayload.classNamesPayload["li"]?.override;
-  if(payload) {
+  if (payload) {
     Object.keys(payload).forEach((key) => {
       removeAt(payload[key], el1Idx);
     });
@@ -615,8 +598,11 @@ function handleListElementsMovementBetweenPanels(
 
   const lookup = createNodeToClassesLookup(newField);
   for (let i = 0; i < el2OuterIdx; ++i) {
-    [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i],];
-    [secondMdastParent[i], secondMdastParent[i + 1]] = [secondMdastParent[i + 1], secondMdastParent[i],];
+    [secondAstParent[i], secondAstParent[i + 1]] = [secondAstParent[i + 1], secondAstParent[i]];
+    [secondMdastParent[i], secondMdastParent[i + 1]] = [
+      secondMdastParent[i + 1],
+      secondMdastParent[i],
+    ];
   }
 
   newField.current.markdown.body = toMarkdown(secondMdast);
@@ -633,7 +619,7 @@ type NodeToClassData = {
   originalNth: number; // this won't be the current Nth, if you just swapped elements then use getNthFromAstUsingElement
   overrideClasses: any;
   classes: any;
-}
+};
 
 function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
   //console.log(field.current);
@@ -643,7 +629,7 @@ function createNodeToClassesLookup(field: FieldWithHistory<MarkdownEditDatum>) {
   const ast = field.current.markdown.htmlAst;
   const payload = field.current.payload.optionsPayload.classNamesPayload;
 
-  for(let i = 0; i < ast.children.length; i++) {
+  for (let i = 0; i < ast.children.length; i++) {
     // @ts-expect-error tagName exists
     const tagName = ast.children[i].tagName;
     const idx = elementsCounter.get(tagName) || 0;
@@ -674,7 +660,7 @@ function postProcessUpdateStyles(
       const overrides = payload[metaData.tagName].override;
       if (overrides) {
         const nth = getNthFromAstUsingElement(ast, c);
-        Object.keys(metaData.overrideClasses).forEach(val => {
+        Object.keys(metaData.overrideClasses).forEach((val) => {
           overrides[val].setAt(nth, metaData.overrideClasses[val]);
         });
       }
@@ -688,26 +674,23 @@ function handleBlockMovementWithinTheSamePanel(
   el2OuterIdx: number,
   field: FieldWithHistory<MarkdownEditDatum>,
   el1fragmentId: string,
-  newHistory: HistoryEntry<MarkdownEditDatum>[],
+  newHistory: HistoryEntry<MarkdownEditDatum>[]
 ) {
   const ast = field.current.markdown.htmlAst;
   const lookup = createNodeToClassesLookup(field);
-  if (
-    ast.children.length >= el1OuterIdx &&
-    ast.children.length >= el2OuterIdx
-  ) {
+  if (ast.children.length >= el1OuterIdx && ast.children.length >= el2OuterIdx) {
     //console.log(ast.children);
     if (el1OuterIdx < el2OuterIdx) {
       // swap elements top to bottom
       for (let i = el1OuterIdx; i < el2OuterIdx; i++) {
-        [ast.children[i], ast.children[i + 1]] = [ast.children[i + 1], ast.children[i],];
-        [mdast.children[i], mdast.children[i+1]] = [mdast.children[i+1], mdast.children[i],];
+        [ast.children[i], ast.children[i + 1]] = [ast.children[i + 1], ast.children[i]];
+        [mdast.children[i], mdast.children[i + 1]] = [mdast.children[i + 1], mdast.children[i]];
       }
     } else {
       // swap elements bottom to top
       for (let i = el1OuterIdx; i > el2OuterIdx; i--) {
-        [ast.children[i], ast.children[i - 1]] = [ast.children[i - 1], ast.children[i],];
-        [mdast.children[i], mdast.children[i-1]] = [mdast.children[i-1], mdast.children[i],];
+        [ast.children[i], ast.children[i - 1]] = [ast.children[i - 1], ast.children[i]];
+        [mdast.children[i], mdast.children[i - 1]] = [mdast.children[i - 1], mdast.children[i]];
       }
     }
     //console.log(ast.children);
@@ -736,16 +719,14 @@ function swapClassNamesPayload_Override(
       ...optionsPayload.classNamesPayload[el1TagName].override,
     };
 
-    Object.keys(overrideCopy).forEach(
-      key => {
-        // fix missing keys
-        (overrideCopy[key] = swapObjectValues(
-          overrideCopy[key],
-          el1Nth.toString(10),
-          el2Nth.toString(10)
-        ))
-      }
-    );
+    Object.keys(overrideCopy).forEach((key) => {
+      // fix missing keys
+      overrideCopy[key] = swapObjectValues(
+        overrideCopy[key],
+        el1Nth.toString(10),
+        el2Nth.toString(10)
+      );
+    });
 
     field.current.payload.optionsPayload.classNamesPayload[el1TagName] = {
       ...field.current.payload.optionsPayload.classNamesPayload[el1TagName],
@@ -794,7 +775,7 @@ export enum MoveDirection {
 export const movePane = (paneIds: string[], id: string, dir: MoveDirection) => {
   const newPaneIds = [...paneIds];
   // nothing to move, single pane
-  if(paneIds.length <= 1) return paneIds;
+  if (paneIds.length <= 1) return paneIds;
 
   const currentIndex = newPaneIds.indexOf(id);
   if (dir === MoveDirection.UP) {
@@ -804,7 +785,7 @@ export const movePane = (paneIds: string[], id: string, dir: MoveDirection) => {
         newPaneIds[currentIndex - 1],
       ];
     }
-  } else if(dir === MoveDirection.DOWN) {
+  } else if (dir === MoveDirection.DOWN) {
     if (currentIndex < newPaneIds.length - 1) {
       [newPaneIds[currentIndex], newPaneIds[currentIndex + 1]] = [
         newPaneIds[currentIndex + 1],
@@ -813,23 +794,23 @@ export const movePane = (paneIds: string[], id: string, dir: MoveDirection) => {
     }
   }
   return newPaneIds;
-}
+};
 
 export const removePane = (paneIds: string[], id: string) => {
   const updatedPaneIds = [...paneIds].filter((paneId) => paneId !== id);
   return updatedPaneIds;
-}
+};
 
 export function fragmentHasAnyOverrides(curField: FieldWithHistory<MarkdownEditDatum>) {
-  if(!curField) return false;
+  if (!curField) return false;
   const classesPayloads = curField.current.payload.optionsPayload.classNamesPayload;
-  if(!classesPayloads) return false;
+  if (!classesPayloads) return false;
 
   const tags = Object.keys(classesPayloads);
-  for(let i = 0; i < tags.length; i++) {
+  for (let i = 0; i < tags.length; i++) {
     const tag = tags[i];
     const overrides = classesPayloads[tag].override;
-    if(overrides && Object.keys(overrides).length > 0) {
+    if (overrides && Object.keys(overrides).length > 0) {
       return true;
     }
   }
@@ -846,7 +827,7 @@ function fixPayloadOverrides(
   markdownLookup: MarkdownLookup
 ) {
   const classesPayload = curField.current.payload.optionsPayload.classNamesPayload[el1TagName];
-  if(!classesPayload) return;
+  if (!classesPayload) return;
 
   const originalClasses = classesPayload?.classes || {};
   const originalOverrides = classesPayload?.override || {};
@@ -869,7 +850,7 @@ function fixPayloadOverrides(
     let isTargetListElement = false;
     // if list element, grab list elements from markdown lookup
     if (el2TagName === "li") {
-      tagsAmount = Object.values(markdownLookup?.listItems).length+1;
+      tagsAmount = Object.values(markdownLookup?.listItems).length + 1;
       isTargetListElement = true;
     } else {
       tagsAmount = Object.values(markdownLookup?.nthTagLookup?.[el2TagName]).length ?? 0;
@@ -908,21 +889,19 @@ function fixStyleClasses(
   curField: FieldWithHistory<MarkdownEditDatum>,
   el1TagName: string,
   newField: FieldWithHistory<MarkdownEditDatum>,
-  el2TagName: string,
+  el2TagName: string
 ) {
   const originalClasses =
-    curField.current.payload.optionsPayload.classNamesPayload[el1TagName]
-      ?.classes || {};
+    curField.current.payload.optionsPayload.classNamesPayload[el1TagName]?.classes || {};
   if (originalClasses) {
     const overrideClasses = {
-      ...(newField.current.payload.optionsPayload.classNamesPayload[el2TagName]
-        .classes || {}),
+      ...(newField.current.payload.optionsPayload.classNamesPayload[el2TagName].classes || {}),
     };
 
     const allKeys: string[] = mergeObjectKeys(overrideClasses, originalClasses);
-    allKeys.forEach(key => {
+    allKeys.forEach((key) => {
       // @ts-expect-error fix type
-      if(!overrideClasses[key]) {
+      if (!overrideClasses[key]) {
         // @ts-expect-error fix type
         overrideClasses[key] = [null];
       }
@@ -940,7 +919,7 @@ function updateClassNames(
   el1TagName: string,
   el1Idx: number | null,
   el1OuterIdx: number,
-  el2Idx: number | null,
+  //el2Idx: number | null,
   el2TagName: string,
   curField: FieldWithHistory<MarkdownEditDatum>,
   newField: FieldWithHistory<MarkdownEditDatum>,
@@ -958,12 +937,7 @@ function updateClassNames(
     markdownLookup
   );
 
-  fixStyleClasses(
-    curField,
-    el1TagName,
-    newField,
-    el2TagName
-  );
+  fixStyleClasses(curField, el1TagName, newField, el2TagName);
 }
 
 function getElementTagAndNth(
@@ -981,12 +955,7 @@ function getElementTagAndNth(
     "children" in originalParent.children[curIdx]
   ) {
     tagName = originalParent.children[curIdx].tagName;
-    const globalNth = getGlobalNth(
-      tagName,
-      curIdx,
-      el1OuterIdx,
-      markdownLookup
-    );
+    const globalNth = getGlobalNth(tagName, curIdx, el1OuterIdx, markdownLookup);
     if (globalNth !== null) {
       nth = globalNth;
     }
@@ -999,7 +968,6 @@ function getElementTagAndNth(
   return { tagName, nth };
 }
 
-
 function swapPayloadClasses(
   originalParent: any,
   curIdx: number,
@@ -1009,18 +977,8 @@ function swapPayloadClasses(
   optionsPayload: OptionsPayloadDatum,
   field: FieldWithHistory<MarkdownEditDatum>
 ) {
-  const el1Info = getElementTagAndNth(
-    originalParent,
-    curIdx,
-    el1OuterIdx,
-    markdownLookup
-  );
-  const el2Info = getElementTagAndNth(
-    originalParent,
-    nextIdx,
-    el1OuterIdx,
-    markdownLookup
-  );
+  const el1Info = getElementTagAndNth(originalParent, curIdx, el1OuterIdx, markdownLookup);
+  const el2Info = getElementTagAndNth(originalParent, nextIdx, el1OuterIdx, markdownLookup);
   // swapClassNames_All(
   //   optionsPayload,
   //   el1Info.tagName,
@@ -1028,20 +986,8 @@ function swapPayloadClasses(
   //   el2Info.nth,
   //   field
   // );
-  swapClassNamesPayload_Override(
-    optionsPayload,
-    el1Info.tagName,
-    el1Info.nth,
-    el2Info.nth,
-    field
-  );
-  swapClassNamesPayload_Classes(
-    optionsPayload,
-    el1Info.tagName,
-    el1Info.nth,
-    el2Info.nth,
-    field
-  );
+  swapClassNamesPayload_Override(optionsPayload, el1Info.tagName, el1Info.nth, el2Info.nth, field);
+  swapClassNamesPayload_Classes(optionsPayload, el1Info.tagName, el1Info.nth, el2Info.nth, field);
 }
 
 function handleListElementMovementWithinTheSamePanel(
@@ -1063,21 +1009,18 @@ function handleListElementMovementWithinTheSamePanel(
 
   const optionsPayload = field.current.payload.optionsPayload;
 
-  if (
-    parent.children.length >= el1Index &&
-    parent.children.length >= el2Index
-  ) {
+  if (parent.children.length >= el1Index && parent.children.length >= el2Index) {
     if (el1Index < el2Index) {
       // swap elements top to bottom
       for (let i = el1Index; i < el2Index; i++) {
-        [parent.children[i], parent.children[i + 1]] = [parent.children[i + 1], parent.children[i],];
-        [parentMdast[i], parentMdast[i + 1]] = [parentMdast[i + 1], parentMdast[i],];
+        [parent.children[i], parent.children[i + 1]] = [parent.children[i + 1], parent.children[i]];
+        [parentMdast[i], parentMdast[i + 1]] = [parentMdast[i + 1], parentMdast[i]];
       }
     } else {
       // swap elements bottom to top
       for (let i = el1Index; i > el2Index; i--) {
-        [parent.children[i], parent.children[i - 1]] = [parent.children[i - 1], parent.children[i],];
-        [parentMdast[i], parentMdast[i - 1]] = [parentMdast[i - 1], parentMdast[i],];
+        [parent.children[i], parent.children[i - 1]] = [parent.children[i - 1], parent.children[i]];
+        [parentMdast[i], parentMdast[i - 1]] = [parentMdast[i - 1], parentMdast[i]];
       }
     }
   }
@@ -1086,7 +1029,15 @@ function handleListElementMovementWithinTheSamePanel(
   if (el1Index < el2Index) {
     // swap elements top to bottom
     for (let i = el1Index; i < el2Index; i++) {
-      swapPayloadClasses(field.current.markdown.htmlAst.children[el1OuterIdx], i, i + 1, el1OuterIdx, markdownLookup, optionsPayload, field);
+      swapPayloadClasses(
+        field.current.markdown.htmlAst.children[el1OuterIdx],
+        i,
+        i + 1,
+        el1OuterIdx,
+        markdownLookup,
+        optionsPayload,
+        field
+      );
     }
   } else {
     // swap elements bottom to top
@@ -1112,14 +1063,20 @@ function handleListElementMovementWithinTheSamePanel(
   });
 }
 
-function getNextElement(fragmentId: string, paneId: string, outerIdx: number, idx: number|null, location: "before"|"after") {
+function getNextElement(
+  fragmentId: string,
+  paneId: string,
+  outerIdx: number,
+  idx: number | null,
+  location: "before" | "after"
+) {
   const dir = location === "after" ? 1 : -1;
   let adjustedOuterIdx = outerIdx;
   let adjustedIdx = idx;
-  if(idx !== null) {
-    adjustedIdx = idx+dir;
+  if (idx !== null) {
+    adjustedIdx = idx + dir;
   } else {
-    adjustedOuterIdx = outerIdx+dir;
+    adjustedOuterIdx = outerIdx + dir;
   }
 
   const pane = paneFragmentMarkdown.get()[fragmentId];
@@ -1130,7 +1087,7 @@ function getNextElement(fragmentId: string, paneId: string, outerIdx: number, id
     if (children.children[idx]) {
       return { fragmentId, paneId, adjustedOuterIdx, adjustedIdx };
     } else {
-      adjustedOuterIdx = outerIdx+dir;
+      adjustedOuterIdx = outerIdx + dir;
     }
   }
 
@@ -1141,18 +1098,22 @@ function getNextElement(fragmentId: string, paneId: string, outerIdx: number, id
   return undefined;
 }
 
-function isSameObject(el1fragmentId: string,
-                      el1OuterIdx: number,
-                      el1PaneId: string,
-                      el1Idx: number | null,
-                      el2FragmentId: string,
-                      el2OuterIdx: number,
-                      el2PaneId: string,
-                      el2Idx: number | null) {
-  return el1fragmentId === el2FragmentId 
-    && el1PaneId === el2PaneId 
-    && el1OuterIdx === el2OuterIdx 
-    && el1Idx === el2Idx;
+function isSameObject(
+  el1fragmentId: string,
+  el1OuterIdx: number,
+  el1PaneId: string,
+  el1Idx: number | null,
+  el2FragmentId: string,
+  el2OuterIdx: number,
+  el2PaneId: string,
+  el2Idx: number | null
+) {
+  return (
+    el1fragmentId === el2FragmentId &&
+    el1PaneId === el2PaneId &&
+    el1OuterIdx === el2OuterIdx &&
+    el1Idx === el2Idx
+  );
 }
 
 function canApplyAdjustedIndices(
@@ -1186,7 +1147,7 @@ export function moveElements(
   el2OuterIdx: number,
   el2PaneId: string,
   el2Idx: number | null,
-  location: "before"|"after",
+  location: "before" | "after"
 ) {
   const field = cloneDeep(paneFragmentMarkdown.get()[el1fragmentId]);
   const curFieldMdast = fromMarkdown(field.current.markdown.body);
@@ -1194,18 +1155,21 @@ export function moveElements(
 
   const nextEl = getNextElement(el2FragmentId, el2PaneId, el2OuterIdx, el2Idx, location);
   if (nextEl) {
-    if(isSameObject(
-      el1fragmentId,
-      el1OuterIdx,
-      el1PaneId,
-      el1Idx,
-      el2FragmentId,
-      nextEl.adjustedOuterIdx,
-      el2PaneId,
-      nextEl.adjustedIdx)) {
+    if (
+      isSameObject(
+        el1fragmentId,
+        el1OuterIdx,
+        el1PaneId,
+        el1Idx,
+        el2FragmentId,
+        nextEl.adjustedOuterIdx,
+        el2PaneId,
+        nextEl.adjustedIdx
+      )
+    ) {
       return;
     }
-    if(canApplyAdjustedIndices(el1Idx, el2Idx, el1OuterIdx, el2OuterIdx, location)) {
+    if (canApplyAdjustedIndices(el1Idx, el2Idx, el1OuterIdx, el2OuterIdx, location)) {
       el2Idx = nextEl.adjustedIdx;
       el2OuterIdx = nextEl.adjustedOuterIdx;
     }
@@ -1216,10 +1180,10 @@ export function moveElements(
       handleListElementsMovementBetweenPanels(
         curFieldMdast,
         el1OuterIdx,
-        el1PaneId,
+        //el1PaneId,
         el1fragmentId,
         el1Idx,
-        markdownLookup,
+        //markdownLookup,
         newMarkdownLookup,
         el2FragmentId,
         field,
@@ -1231,10 +1195,10 @@ export function moveElements(
       handleBlockMovementBetweenPanels(
         curFieldMdast,
         el1OuterIdx,
-        el1PaneId,
+        //el1PaneId,
         el1fragmentId,
         el1Idx,
-        markdownLookup,
+        //markdownLookup,
         newMarkdownLookup,
         el2FragmentId,
         field,
@@ -1244,7 +1208,10 @@ export function moveElements(
       );
     }
   } else {
-    if (isElementInList(curFieldMdast, el1OuterIdx, el1Idx) && isElementInList(curFieldMdast, el2OuterIdx, el2Idx)) {
+    if (
+      isElementInList(curFieldMdast, el1OuterIdx, el1Idx) &&
+      isElementInList(curFieldMdast, el2OuterIdx, el2Idx)
+    ) {
       handleListElementMovementWithinTheSamePanel(
         curFieldMdast,
         el1OuterIdx,
@@ -1262,7 +1229,7 @@ export function moveElements(
         el2OuterIdx,
         field,
         el1fragmentId,
-        newHistory,
+        newHistory
       );
     }
   }
@@ -1308,10 +1275,7 @@ export function insertElement(
   let newOuterIdx = thisOuterIdx;
   let newIdx = thisIdx || 0;
   if (position === "after" && !isEmpty) {
-    if (
-      Object.keys(markdownLookup.nthTag).length <
-      Object.keys(newMarkdownLookup.nthTag).length
-    ) {
+    if (Object.keys(markdownLookup.nthTag).length < Object.keys(newMarkdownLookup.nthTag).length) {
       newOuterIdx = outerIdx + 1;
       newIdx = 0;
     } else if (typeof idx === `number`) {
@@ -1321,28 +1285,14 @@ export function insertElement(
   const newTag =
     toolAddMode === "img"
       ? `img`
-      : [`code`, `img`, `yt`, `bunny`, `belief`, `toggle`, `identify`].includes(
-            toolAddMode
-          )
+      : [`code`, `img`, `yt`, `bunny`, `belief`, `toggle`, `identify`].includes(toolAddMode)
         ? `code`
         : toolAddMode === `aside`
           ? `li`
           : toolAddMode;
-  const newGlobalNth =
-    getGlobalNth(newTag, newIdx, newOuterIdx, newMarkdownLookup) || 0;
+  const newGlobalNth = getGlobalNth(newTag, newIdx, newOuterIdx, newMarkdownLookup) || 0;
 
-  if (
-    [
-      `img`,
-      `code`,
-      `img`,
-      `yt`,
-      `bunny`,
-      `belief`,
-      `toggle`,
-      `identify`,
-    ].includes(toolAddMode)
-  ) {
+  if ([`img`, `code`, `img`, `yt`, `bunny`, `belief`, `toggle`, `identify`].includes(toolAddMode)) {
     editModeStore.set({
       id: paneId,
       mode: "styles",
@@ -1380,12 +1330,7 @@ export const eraseElement = (
   const currentField = cloneDeep(paneFragmentMarkdown.get()[fragmentId]);
   const now = Date.now();
   const newHistory = updateHistory(currentField, now);
-  const newValue = removeElementFromMarkdown(
-    currentField.current,
-    outerIdx,
-    idx,
-    markdownLookup
-  );
+  const newValue = removeElementFromMarkdown(currentField.current, outerIdx, idx, markdownLookup);
   paneFragmentMarkdown.setKey(fragmentId, {
     ...currentField,
     current: newValue,

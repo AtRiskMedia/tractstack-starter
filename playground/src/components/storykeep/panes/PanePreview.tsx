@@ -11,7 +11,13 @@ interface PanePreviewProps {
   config: Config;
 }
 
-export default function PanePreview({ design, isSelected, onClick, theme, config }: PanePreviewProps) {
+export default function PanePreview({
+  design,
+  isSelected,
+  onClick,
+  theme,
+  config,
+}: PanePreviewProps) {
   const [snapshotImage, setSnapshotImage] = useState<string>("");
   const [brandColors, setBrandColors] = useState<string[]>([]);
   const [lastTheme, setLastTheme] = useState<Theme>(theme);
@@ -41,7 +47,7 @@ export default function PanePreview({ design, isSelected, onClick, theme, config
         "relative rounded-lg transition-all flex flex-col justify-between bg-mydarkgrey p-1",
         isSelected
           ? "ring-2 ring-myorange ring-offset-2"
-          : "hover:ring-2 hover:ring-myorange hover:ring-offset-2",
+          : "hover:ring-2 hover:ring-myorange hover:ring-offset-2"
       )}
       role="radio"
       aria-checked={isSelected}

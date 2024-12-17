@@ -86,7 +86,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   useEffect(() => {
     if (dragging.current || props.ignoreDragNDrop) return;
 
-    if (!dragState.elDropState) {
+    if (!dragState.dropState) {
       if (props.self?.current) {
         const rect = props.self?.current.getBoundingClientRect();
         if (isPosInsideRect(rect, dragState.pos)) {
@@ -106,12 +106,12 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       }
     } else if (dragState.affectedFragments.size > 0) {
       if (
-        dragState.elDropState.fragmentId === fragmentId &&
-        dragState.elDropState.paneId === paneId &&
-        dragState.elDropState.idx === idx &&
-        dragState.elDropState.outerIdx === outerIdx
+        dragState.dropState.fragmentId === fragmentId &&
+        dragState.dropState.paneId === paneId &&
+        dragState.dropState.idx === idx &&
+        dragState.dropState.outerIdx === outerIdx
       ) {
-        console.log(`Drop active element: ${JSON.stringify(dragState.elDropState)}`);
+        console.log(`Drop active element: ${JSON.stringify(dragState.dropState)}`);
       }
     }
   }, [dragState]);

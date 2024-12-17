@@ -6,7 +6,7 @@ export type ButtonProps = {
   text: string;
   styles?: string;
   onClick: () => void;
-}
+};
 
 export type MultiButtonsModalProps = {
   header: string;
@@ -15,13 +15,14 @@ export type MultiButtonsModalProps = {
   onClose: () => void;
 };
 
-const DEFAULT_BUTTON_STYLE: string = "bg-brand-3 xs:inline-flex items-center px-6 py-3 font-bold text-white rounded-lg transition-colors hover:bg-brand-4";
+const DEFAULT_BUTTON_STYLE: string =
+  "bg-brand-3 xs:inline-flex items-center px-6 py-3 font-bold text-white rounded-lg transition-colors hover:bg-brand-4";
 
 const MultiButtonsModal = (props: MultiButtonsModalProps) => {
   const getBtnStyles = (btnProps: ButtonProps): string => {
-    if(!btnProps.styles) return DEFAULT_BUTTON_STYLE;
+    if (!btnProps.styles) return DEFAULT_BUTTON_STYLE;
     return btnProps.styles;
-  }
+  };
 
   return (
     <TractStackModal
@@ -55,6 +56,6 @@ const MultiButtonsModal = (props: MultiButtonsModalProps) => {
       }
     />
   );
-}
+};
 
 export default MultiButtonsModal;

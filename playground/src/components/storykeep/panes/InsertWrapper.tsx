@@ -84,12 +84,10 @@ const InsertWrapper = ({
         dragState.dropState.idx === idx &&
         dragState.dropState.outerIdx === outerIdx
       ) {
-        console.log(
-          `Drop active element: ${JSON.stringify(dragState.dropState)}`
-        );
-        if(dragState.dropState.location !== "none") {
-          let location = dragState.dropState.location as "before"|"after";
-          if(isEmpty) {
+        console.log(`Drop active element: ${JSON.stringify(dragState.dropState)}`);
+        if (dragState.dropState.location !== "none") {
+          let location = dragState.dropState.location as "before" | "after";
+          if (isEmpty) {
             location = "before";
           }
           handleInsert(location);
@@ -134,7 +132,7 @@ const InsertWrapper = ({
   if (isEmpty) {
     return (
       <div className="relative min-h-[200px] w-full" ref={self}>
-        {(canDrawGhost && dragState.hoverElement?.location === "before") && <GhostBlock/>}
+        {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock />}
         <button
           className="pointer-events-auto relative z-103 h-full min-h-[200px] w-full bg-mygreen/20 hover:bg-mygreen/50"
           title={`Add ${toolAddModeTitles[toolAddMode]}`}
@@ -148,16 +146,16 @@ const InsertWrapper = ({
             Add {toolAddModeTitles[toolAddMode]}
           </div>
         </button>
-        {(canDrawGhost && dragState.hoverElement?.location === "after") && <GhostBlock/>}
+        {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock />}
       </div>
     );
   }
 
   return (
     <div className="relative" ref={self}>
-      {(canDrawGhost && dragState.hoverElement?.location === "before") && <GhostBlock/>}
+      {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock />}
       {children}
-      {(canDrawGhost && dragState.hoverElement?.location === "after") && <GhostBlock/>}
+      {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock />}
       <div
         className={classNames(
           "z-100 group/top group absolute inset-x-0 top-0 h-1/2 ",

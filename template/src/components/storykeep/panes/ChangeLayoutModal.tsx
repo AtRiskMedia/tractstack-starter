@@ -30,7 +30,11 @@ type PaneDesignResult = {
   panes: PaneDesign[];
 };
 
-const getPaneDesigns = (paneType: DesignType, config: Config, isOdd: boolean): PaneDesignResult[] => {
+const getPaneDesigns = (
+  paneType: DesignType,
+  config: Config,
+  isOdd: boolean
+): PaneDesignResult[] => {
   console.log("get pane designs");
   const designs: PaneDesignResult[] = [];
   themes.forEach((theme) => {

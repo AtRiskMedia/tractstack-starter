@@ -105,7 +105,7 @@ export const dragStartTime = atom<number>(-1);
 export const updateDragStartTime = () => {
   console.log("update drag start time");
   dragStartTime.set(new Date().getTime());
-}
+};
 
 export enum Location {
   NOWHERE = -1,
@@ -154,15 +154,15 @@ export const resetDragStore = () => {
   console.log("reset drag store");
   dragHoverStatesBuffer.length = 0;
   dragHandleStore.set(EMPTY_DRAG_HANDLE);
-}
+};
 
-export const setDragShape = (shape: DragShape|null) => {
+export const setDragShape = (shape: DragShape | null) => {
   dragHandleStore.set({
     ...dragHandleStore.get(),
-    dragShape: shape
+    dragShape: shape,
   });
   //console.log("drag shape: " + JSON.stringify(shape));
-}
+};
 
 export const dropDraggingElement = () => {
   console.log("drop shape.");
@@ -211,12 +211,14 @@ export const setDragHoverInfo = (el: DragState | null) => {
     const elIdWithDir = elId + "-" + el.location;
     dragHoverStatesBuffer.push(elIdWithDir);
 
-    if(dragHoverStatesBuffer.length >= 3 && dragHoverStatesBuffer.shift() === elIdWithDir) {
+    if (dragHoverStatesBuffer.length >= 3 && dragHoverStatesBuffer.shift() === elIdWithDir) {
       console.log("already contains: " + elIdWithDir);
       return;
     }
     // trim buffer so it's never over size
-    while (dragHoverStatesBuffer.length > 3) {dragHoverStatesBuffer.shift();}
+    while (dragHoverStatesBuffer.length > 3) {
+      dragHoverStatesBuffer.shift();
+    }
     nodes.add(elId);
   }
   const panes = new Set<string>(dragHandleStore.get().affectedPanes);

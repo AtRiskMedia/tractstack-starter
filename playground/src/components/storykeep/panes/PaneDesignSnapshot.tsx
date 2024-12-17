@@ -10,7 +10,7 @@ export default function PaneDesignSnapshot({
   onStart,
   onComplete,
   forceRegenerate,
-  config
+  config,
 }: PaneDesignSnapshotProps) {
   const [isGenerating, setIsGenerating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -110,7 +110,13 @@ export default function PaneDesignSnapshot({
             isolation: "isolate",
           }}
         >
-          <PreviewPane design={design} config={config} viewportKey="desktop" slug="preview" isContext={false} />
+          <PreviewPane
+            design={design}
+            config={config}
+            viewportKey="desktop"
+            slug="preview"
+            isContext={false}
+          />
         </div>
       </div>
     </>

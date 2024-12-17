@@ -57,7 +57,12 @@ const MarkdownPane = ({
   const self = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if(self.current && !dragState.hoverElement && !dragState.elDropState && isNonZeroMagnitude(dragState.pos)) {
+    if (
+      self.current &&
+      !dragState.hoverElement &&
+      !dragState.dropState &&
+      isNonZeroMagnitude(dragState.pos)
+    ) {
       const rect = self.current.getBoundingClientRect();
       if (!isPosInsideRect(rect, dragState.pos)) {
         recordExitPane(paneId);
@@ -74,12 +79,8 @@ const MarkdownPane = ({
       ? `${payload.hiddenViewports.includes(viewportKey) && viewportKey === `desktop` ? `hidden` : `grid`}`
       : hasHidden
         ? ``.concat(
-            payload.hiddenViewports.includes(`desktop`)
-              ? `xl:hidden`
-              : `xl:grid`,
-            payload.hiddenViewports.includes(`tablet`)
-              ? `md:hidden`
-              : `md:grid`,
+            payload.hiddenViewports.includes(`desktop`) ? `xl:hidden` : `xl:grid`,
+            payload.hiddenViewports.includes(`tablet`) ? `md:hidden` : `md:grid`,
             payload.hiddenViewports.includes(`mobile`) ? `hidden` : `grid`
           )
         : ``;
@@ -93,14 +94,13 @@ const MarkdownPane = ({
     () => optionsPayload && reduceClassNamesPayload(optionsPayload),
     [optionsPayload]
   );
-  const injectClassNames: { [key: string]: string | string[] } =
-    ((viewportKey &&
-      optionsPayloadDatum?.classNames &&
-      optionsPayloadDatum?.classNames[viewportKey]) ||
-      optionsPayloadDatum?.classNames?.all ||
-      optionsPayload?.classNames?.all || { all: `` }) as {
-      [key: string]: string | string[];
-    };
+  const injectClassNames: { [key: string]: string | string[] } = ((viewportKey &&
+    optionsPayloadDatum?.classNames &&
+    optionsPayloadDatum?.classNames[viewportKey]) ||
+    optionsPayloadDatum?.classNames?.all ||
+    optionsPayload?.classNames?.all || { all: `` }) as {
+    [key: string]: string | string[];
+  };
   const classNamesParentRaw =
     (viewportKey &&
       optionsPayloadDatum?.classNamesParent &&
@@ -109,12 +109,8 @@ const MarkdownPane = ({
     optionsPayload?.classNamesParent?.all ||
     ``;
   const classNamesParent =
-    typeof classNamesParentRaw === `string`
-      ? [classNamesParentRaw]
-      : classNamesParentRaw;
-  const parentClasses = Array.isArray(classNamesParent)
-    ? classNamesParent
-    : [classNamesParent];
+    typeof classNamesParentRaw === `string` ? [classNamesParentRaw] : classNamesParentRaw;
+  const parentClasses = Array.isArray(classNamesParent) ? classNamesParent : [classNamesParent];
   const content = astPayload.ast
     .filter((e: Nodes) => !(e?.type === `text` && e?.value === `\n`))
     .map((thisAstPayload: Nodes, idx: number) => (
