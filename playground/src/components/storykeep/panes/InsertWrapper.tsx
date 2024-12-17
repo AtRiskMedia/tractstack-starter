@@ -16,7 +16,7 @@ import { toolAddModeTitles } from "../../../constants";
 import { classNames, getFinalLocation } from "../../../utils/common/helpers";
 import type { MarkdownLookup, ToolAddMode } from "../../../types";
 import { isPosInsideRect } from "@/utils/math.ts";
-import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
+import { canDrawElementGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 import { insertElement } from "@/utils/storykeep/StoryKeep_utils.ts";
 import { GhostBlock } from "@/components/storykeep/GhostBlock.tsx";
 
@@ -70,8 +70,10 @@ const InsertWrapper = ({
           console.log(`inside afterArea: ${fragmentId} | location: ${loc}`);
           setTimeout(() => {
             setDragHoverInfo({
-              ...getNodeData(),
-              markdownLookup,
+              node: {
+                ...getNodeData(),
+                markdownLookup,
+              },
               location: getFinalLocation(loc, allowTag),
             });
           }, 0);
@@ -79,10 +81,10 @@ const InsertWrapper = ({
       }
     } else if (dragState.affectedFragments.size > 0) {
       if (
-        dragState.dropState.fragmentId === fragmentId &&
-        dragState.dropState.paneId === paneId &&
-        dragState.dropState.idx === idx &&
-        dragState.dropState.outerIdx === outerIdx
+        dragState.dropState.node?.fragmentId === fragmentId &&
+        dragState.dropState.node?.paneId === paneId &&
+        dragState.dropState.node?.idx === idx &&
+        dragState.dropState.node?.outerIdx === outerIdx
       ) {
         console.log(
           `Drop active element: ${JSON.stringify(dragState.dropState)}`
@@ -129,7 +131,7 @@ const InsertWrapper = ({
     ]
   );
 
-  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, false);
+  const canDrawGhost = canDrawElementGhostBlock(fragmentId, paneId, idx, outerIdx, false);
 
   if (isEmpty) {
     return (

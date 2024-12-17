@@ -1,6 +1,6 @@
 import { dragHandleStore, dragStartTime, lastDragTime, Location } from "@/store/storykeep.ts";
 
-export function canDrawGhostBlock(
+export function canDrawElementGhostBlock(
   fragmentId: string,
   paneId: string,
   idx: number | null,
@@ -16,10 +16,10 @@ export function canDrawGhostBlock(
   }
 
   return (
-    el.fragmentId === fragmentId &&
-    el.paneId === paneId &&
-    el.idx === idx &&
-    el.outerIdx === outerIdx
+    el.node?.fragmentId === fragmentId &&
+    el.node?.paneId === paneId &&
+    el.node?.idx === idx &&
+    el.node?.outerIdx === outerIdx
   );
 }
 

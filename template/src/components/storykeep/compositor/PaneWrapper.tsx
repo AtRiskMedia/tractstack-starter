@@ -33,6 +33,7 @@ import ChangeLayoutModal from "@/components/storykeep/panes/ChangeLayoutModal.ts
 import ConfirmationModal from "@/components/storykeep/panes/ConfirmationModal.tsx";
 import ChangeMarkdownModal from "@/components/storykeep/panes/ChangeMarkdownModal.tsx";
 import AnalyticsWrapper from "@/components/storykeep/nivo/AnalyticsWrapper.tsx";
+import { MoveDraggablePane } from "@/components/storykeep/panes/MoveDraggablePane.tsx";
 const InsertAboveBelowWrapper = ({
   children,
   onInsertClick,
@@ -282,6 +283,7 @@ const PaneWrapper = (props: {
   if (!isClient) return null;
 
   return (
+    <MoveDraggablePane paneId={id} ignoreDragNDrop={false}>
     <div ref={paneRef} className="relative">
       <div className={classNames("w-full")}>
         {toolMode === `pane` && !isDesigningNew ? (
@@ -311,7 +313,7 @@ const PaneWrapper = (props: {
         {toolMode === "text" && (
           <div className="pointer-events-none absolute inset-0 flex justify-center w-full h-fit">
             <div className="pointer-events-auto absolute ml-auto">
-              <button className="text-xl p-4 mr-6 mt-2 bg-blue-400 rounded-2xl text-black font-bold group-hover:text-white">
+              <button className="pane-drag-button text-xl p-4 mr-6 mt-2 bg-blue-400 rounded-2xl text-black font-bold group-hover:text-white">
                 DRAG
               </button>
             </div>
@@ -380,6 +382,7 @@ const PaneWrapper = (props: {
         />
       )}
     </div>
+    </MoveDraggablePane>
   );
 };
 

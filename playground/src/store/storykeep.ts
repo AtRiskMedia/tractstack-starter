@@ -118,26 +118,32 @@ export interface DragNode {
   paneId: string;
   idx: number | null;
   outerIdx: number;
+  markdownLookup?: MarkdownLookup;
 }
 
-export interface DragState extends DragNode {
+export interface ElementDragState {
   location: "before" | "after" | "none";
-  markdownLookup: MarkdownLookup;
+  node?: DragNode;
+  pane?: DragPane;
 }
 
 export interface DragShape extends DragNode {
   root: Root;
-  markdownLookup: MarkdownLookup;
+}
+
+export interface DragPane {
+  paneId: string;
 }
 
 export type DragHandle = {
   pos: ControlPosition;
   ghostHeight: number;
-  hoverElement: DragState | null;
+  hoverElement: ElementDragState | null;
   affectedFragments: Set<string>;
   affectedPanes: Set<string>;
-  dropState: DragState | null;
+  dropState: ElementDragState | null;
   dragShape: DragShape | null;
+  dragPane: DragPane | null;
 };
 
 const EMPTY_DRAG_HANDLE: DragHandle = {
@@ -148,12 +154,20 @@ const EMPTY_DRAG_HANDLE: DragHandle = {
   affectedFragments: new Set<string>(),
   affectedPanes: new Set<string>(),
   dragShape: null,
+  dragPane: null,
 };
 
 export const resetDragStore = () => {
   console.log("reset drag store");
   dragHoverStatesBuffer.length = 0;
   dragHandleStore.set(EMPTY_DRAG_HANDLE);
+}
+
+export const setDragPane = (pane: DragPane|null) => {
+  dragHandleStore.set({
+    ...dragHandleStore.get(),
+    dragPane: pane
+  });
 }
 
 export const setDragShape = (shape: DragShape|null) => {
@@ -192,22 +206,24 @@ export const recordExitPane = (paneId: string) => {
 
 const dragHoverStatesBuffer: string[] = [];
 
-export const setDragHoverInfo = (el: DragState | null) => {
+export const setDragHoverInfo = (el: ElementDragState | null) => {
   const existingEl = dragHandleStore.get().hoverElement;
-  if (existingEl) {
+  if (existingEl && existingEl.node) {
+    const dragEl = existingEl.node;
     if (
-      existingEl.paneId === el?.paneId &&
-      existingEl.fragmentId === el?.fragmentId &&
+      dragEl.paneId === el?.node?.paneId &&
+      dragEl.fragmentId === el?.node?.fragmentId &&
       existingEl.location === el.location &&
-      existingEl.idx === el.idx &&
-      existingEl.outerIdx === el.outerIdx
+      dragEl.idx === el?.node?.idx &&
+      dragEl.outerIdx === el?.node?.outerIdx
     )
       return;
   }
 
   const nodes = new Set<string>(dragHandleStore.get().affectedFragments);
   if (el) {
-    const elId = createNodeIdFromDragNode(el);
+    if(el.node) {
+    const elId = createNodeIdFromDragNode(el.node);
     const elIdWithDir = elId + "-" + el.location;
     dragHoverStatesBuffer.push(elIdWithDir);
 
@@ -218,10 +234,11 @@ export const setDragHoverInfo = (el: DragState | null) => {
     // trim buffer so it's never over size
     while (dragHoverStatesBuffer.length > 3) {dragHoverStatesBuffer.shift();}
     nodes.add(elId);
+    }
   }
   const panes = new Set<string>(dragHandleStore.get().affectedPanes);
-  if (el) {
-    panes.add(el.paneId);
+  if (el && el.pane) {
+    panes.add(el.pane.paneId);
   }
   dragHandleStore.set({
     ...dragHandleStore.get(),

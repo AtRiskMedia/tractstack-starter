@@ -118,17 +118,17 @@ export interface DragNode {
   paneId: string;
   idx: number | null;
   outerIdx: number;
+  markdownLookup?: MarkdownLookup;
 }
 
 export interface ElementDragState {
   location: "before" | "after" | "none";
-  node: DragNode;
-  pane: DragPane;
+  node?: DragNode;
+  pane?: DragPane;
 }
 
 export interface DragShape extends DragNode {
   root: Root;
-  markdownLookup: MarkdownLookup;
 }
 
 export interface DragPane {
@@ -141,7 +141,7 @@ export type DragHandle = {
   hoverElement: ElementDragState | null;
   affectedFragments: Set<string>;
   affectedPanes: Set<string>;
-  elDropState: ElementDragState | null;
+  dropState: ElementDragState | null;
   dragShape: DragShape | null;
   dragPane: DragPane | null;
 };
@@ -150,7 +150,7 @@ const EMPTY_DRAG_HANDLE: DragHandle = {
   pos: { x: 0, y: 0 },
   ghostHeight: 0,
   hoverElement: null,
-  elDropState: null,
+  dropState: null,
   affectedFragments: new Set<string>(),
   affectedPanes: new Set<string>(),
   dragShape: null,
@@ -185,7 +185,7 @@ export const dropDraggingElement = () => {
   dragHandleStore.set({
     ...dragHandleStore.get(),
     hoverElement: null,
-    elDropState: existingEl,
+    dropState: existingEl,
   });
 };
 

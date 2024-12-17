@@ -15,7 +15,7 @@ import {
 import type { MarkdownLookup } from "@/types.ts";
 import { isPosInsideRect } from "@/utils/math.ts";
 import { useStore } from "@nanostores/react";
-import { canDrawGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
+import { canDrawElementGhostBlock, getRelativeYLocationToElement } from "@/utils/dragNDropUtils.ts";
 import { allowTagInsert, allowWidgetInsert } from "@/utils/compositor/markdownUtils.ts";
 import { toolAddModeDefaultHeight } from "@/constants.ts";
 import { getFinalLocation } from "@/utils/common/helpers.ts";
@@ -34,7 +34,6 @@ export type MoveDraggableElementProps = {
   self?: RefObject<HTMLDivElement> | null;
 };
 
-
 export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
   const domRef = useRef(null);
@@ -44,33 +43,38 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
   const { fragmentId, paneId, idx, outerIdx, markdownLookup } = props;
 
   let allowTag = { before: true, after: true };
-  if(dragState.dragShape) {
+  if (dragState.dragShape) {
     const dragShape = dragState.dragShape;
     const field = paneFragmentMarkdown.get()[dragShape.fragmentId].current;
     const outerChildlren = field.markdown.htmlAst.children[dragShape.outerIdx];
     // @ts-expect-error has children
     let tagName = outerChildlren.tagName;
     const isWidget =
-      typeof dragShape.idx === `number` && typeof dragShape.markdownLookup.codeItemsLookup[dragShape.outerIdx] !== `undefined`
-        ? typeof dragShape.markdownLookup.codeItemsLookup[dragShape.outerIdx][dragShape.idx] === `number`
+      typeof dragShape.idx === `number` &&
+      typeof dragShape.markdownLookup?.codeItemsLookup[dragShape.outerIdx] !== `undefined`
+        ? typeof dragShape.markdownLookup?.codeItemsLookup[dragShape.outerIdx][dragShape.idx] ===
+          `number`
         : false;
 
     const isImage =
-      typeof dragShape.idx === `number` && typeof dragShape.markdownLookup.imagesLookup[dragShape.outerIdx] !== `undefined`
-        ? typeof dragShape.markdownLookup.imagesLookup[dragShape.outerIdx][dragShape.idx] === `number`
+      typeof dragShape.idx === `number` &&
+      typeof dragShape.markdownLookup?.imagesLookup[dragShape.outerIdx] !== `undefined`
+        ? typeof dragShape.markdownLookup?.imagesLookup[dragShape.outerIdx][dragShape.idx] ===
+          `number`
         : false;
 
     const isListElement = isWidget || isImage;
 
     if (dragShape.idx !== null && !isListElement) {
       // @ts-expect-error has children
-      if(outerChildlren.children[dragShape.idx].children[0].type === "text") {
+      if (outerChildlren.children[dragShape.idx].children[0].type === "text") {
         tagName = "p"; // disguise as p for now if that's an inner text element in list
       }
     }
-    if(isListElement) {
+    if (isListElement) {
       allowTag = allowWidgetInsert(outerIdx, idx, markdownLookup);
-    } else if(idx === null) { // skip inner list elements check for now
+    } else if (idx === null) {
+      // skip inner list elements check for now
       allowTag = allowTagInsert(tagName, outerIdx, idx, markdownLookup);
     }
   }
@@ -88,11 +92,15 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
         if (isPosInsideRect(rect, dragState.pos)) {
           const loc = getRelativeYLocationToElement(dragState.pos.y, rect);
           activeHoverArea.current = loc;
-          console.log(`inside afterArea: ${props.id} | location: ${loc} | ${dragState.pos.y} | ${rect.y} h: ${rect.height}`);
+          console.log(
+            `inside afterArea: ${props.id} | location: ${loc} | ${dragState.pos.y} | ${rect.y} h: ${rect.height}`
+          );
           setTimeout(() => {
             setDragHoverInfo({
-              ...getNodeData(),
-              markdownLookup,
+              node: {
+                ...getNodeData(),
+                markdownLookup,
+              },
               location: getFinalLocation(loc, allowTag),
             });
           }, 0);
@@ -100,10 +108,10 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       }
     } else if (dragState.affectedFragments.size > 0) {
       if (
-        dragState.dropState.fragmentId === fragmentId &&
-        dragState.dropState.paneId === paneId &&
-        dragState.dropState.idx === idx &&
-        dragState.dropState.outerIdx === outerIdx
+        dragState.dropState.node?.fragmentId === fragmentId &&
+        dragState.dropState.node?.paneId === paneId &&
+        dragState.dropState.node?.idx === idx &&
+        dragState.dropState.node?.outerIdx === outerIdx
       ) {
         console.log(`Drop active element: ${JSON.stringify(dragState.dropState)}`);
       }
@@ -117,7 +125,7 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
       const y = mouseEvent.clientY + window.scrollY;
       if (dragging.current) {
         // set timeout 0ms pushes this to the next event frame process
-        setTimeout(() => setDragPosition({x,y}), 0);
+        setTimeout(() => setDragPosition({ x, y }), 0);
       }
     };
 
@@ -129,11 +137,11 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
     };
   }, []);
 
-  const canDrawGhost = canDrawGhostBlock(fragmentId, paneId, idx, outerIdx, props.ignoreDragNDrop);
+  const canDrawGhost = canDrawElementGhostBlock(fragmentId, paneId, idx, outerIdx, props.ignoreDragNDrop);
 
   return (
     <div className="inline">
-      {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock/>}
+      {canDrawGhost && dragState.hoverElement?.location === "before" && <GhostBlock />}
       <Draggable
         nodeRef={domRef}
         defaultPosition={{ x: dragPos.x, y: dragPos.y }}
@@ -151,18 +159,18 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
             const dragEl = dragHandleStore.get().dragShape;
             if (dragEl) {
               const hoverEl = dragHandleStore.get().hoverElement;
-              if (hoverEl && hoverEl.location !== "none") {
+              if (hoverEl && hoverEl.node && hoverEl.location !== "none") {
                 moveElements(
                   props.markdownLookup,
-                  hoverEl.markdownLookup,
+                  hoverEl.node?.markdownLookup || props.markdownLookup,
                   dragEl.fragmentId,
                   dragEl.outerIdx,
                   dragEl.paneId,
                   dragEl.idx,
-                  hoverEl.fragmentId,
-                  hoverEl.outerIdx,
-                  hoverEl.paneId,
-                  hoverEl.idx,
+                  hoverEl.node.fragmentId,
+                  hoverEl.node.outerIdx,
+                  hoverEl.node.paneId,
+                  hoverEl.node.idx,
                   hoverEl.location
                 );
               }
@@ -173,11 +181,9 @@ export const MoveDraggableElement = memo((props: MoveDraggableElementProps) => {
           resetDragStore();
         }}
       >
-        <div ref={domRef}>
-          {props.children}
-        </div>
+        <div ref={domRef}>{props.children}</div>
       </Draggable>
-      {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock/>}
+      {canDrawGhost && dragState.hoverElement?.location === "after" && <GhostBlock />}
     </div>
   );
 });
