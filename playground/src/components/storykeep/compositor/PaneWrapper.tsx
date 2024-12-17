@@ -87,14 +87,16 @@ const PaneMoveButtons = ({ onMove }: { onMove: (direction: MoveDirection) => voi
   return (
     <div className="pointer-events-auto flex ml-2 gap-x-2">
       <button
-        className="rounded-md bg-blue-400 h-8 w-12 m-auto"
+        className="rounded-md bg-blue-400 h-8 w-12 m-auto opacity-20 hover:opacity-100"
         onClick={() => onMove(MoveDirection.UP)}
+        title="Move Pane Up"
       >
         <ArrowUpIcon className="m-auto h-4 w-4" />
       </button>
       <button
-        className="rounded-md bg-cyan-400 h-8 w-12 m-auto"
+        className="rounded-md bg-cyan-400 h-8 w-12 m-auto opacity-20 hover:opacity-100"
         onClick={() => onMove(MoveDirection.DOWN)}
+        title="Move Pane Down"
       >
         <ArrowDownIcon className="m-auto h-4 w-4" />
       </button>
@@ -133,6 +135,11 @@ const PaneWrapper = (props: {
   const $paneTitle = useStore(paneTitle, { keys: [id] });
   const $paneCodeHook = useStore(paneCodeHook, { keys: [id] });
   const $editMode = useStore(editModeStore);
+
+  const ids = paneFragmentIds.get()[id].current;
+  const markdownFragmentId = ids.last();
+  const pane = paneFragmentMarkdown.get()[markdownFragmentId];
+  const markdownBody = pane?.current?.markdown?.body;
   const isCodeHook = $paneCodeHook?.[id]?.current;
   const [paneElement, setPaneElement] = useState<HTMLDivElement | null>(null);
   const [changingLayout, setChangingLayout] = useState<boolean>(false);
@@ -300,12 +307,13 @@ const PaneWrapper = (props: {
             <div className="relative"></div>
           </div>
         )}
-        {toolMode === "styles" && (
+        {toolMode === "styles" && markdownBody && (
           <div className="pointer-events-none absolute inset-0 flex justify-end w-full h-fit">
             <div className="pointer-events-auto relative">
               <button
-                className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white"
+                className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white opacity-20 hover:opacity-100"
                 onClick={onChangeLayoutClicked}
+                title="Choose a New Layout for this Pane"
               >
                 Change Layout
               </button>
@@ -315,19 +323,23 @@ const PaneWrapper = (props: {
         {toolMode === "text" && (
           <div className="pointer-events-none absolute inset-0 flex justify-between w-full h-fit">
             <PaneMoveButtons onMove={handleMove} />
-            <div className="pointer-events-auto relative">
-              <button
-                className="text-xl p-4 mr-6 mt-2 bg-amber-300 text-black font-bold mb-2 group-hover:text-white"
-                onClick={onChangeMarkdownClicked}
-              >
-                Edit Markdown
-              </button>
-            </div>
+            {markdownBody && (
+              <div className="pointer-events-auto relative">
+                <button
+                  className="text-xl p-4 mr-6 mt-2 bg-yellow-300 text-black font-bold mb-2 group-hover:text-white opacity-20 hover:opacity-100"
+                  onClick={onChangeMarkdownClicked}
+                  title="Advanced Text Edit Mode"
+                >
+                  Edit Markdown
+                </button>
+              </div>
+            )}
           </div>
         )}
         {changingLayout && (
           <ChangeLayoutModal
             paneId={props.id}
+            markdownBody={markdownBody}
             slug={props.slug}
             isContext={props.isContext}
             viewportKey={props.viewportKey}

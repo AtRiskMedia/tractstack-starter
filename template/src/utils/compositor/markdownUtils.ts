@@ -133,10 +133,9 @@ export function allowTagInsert(
     case `bunny`:
     case `belief`:
     case `identify`:
-    case `toggle`:
-      {
-        return allowWidgetInsert(outerIdx, idx, markdownLookup);
-      }
+    case `toggle`: {
+      return allowWidgetInsert(outerIdx, idx, markdownLookup);
+    }
     case `aside`: {
       const parentTag = markdownLookup.nthTag[outerIdx];
       // is this already ol ?

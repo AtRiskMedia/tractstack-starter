@@ -9,17 +9,19 @@ import {
   type Theme,
   themes,
   type ViewportAuto,
+  type PaneDesignMarkdown,
 } from "@/types.ts";
 import { applyLayoutChange } from "@/utils/autoLayout.ts";
 import { paneDesigns } from "@/utils/designs/paneDesigns.ts";
 import TractStackModal from "@/components/storykeep/panes/TractStackModal.tsx";
 import { classNames } from "@/utils/common/helpers.ts";
-import PanePreview from "@/components/storykeep/panes/PanePreview.tsx";
+import PanePreview from "@/components/storykeep/preview/PanePreview.tsx";
 
 export type ChangeLayoutModalProps = {
   slug: string;
   isContext: boolean;
   paneId: string;
+  markdownBody: string;
   viewportKey: ViewportAuto;
   onClose: () => void;
   config: Config;
@@ -28,6 +30,22 @@ export type ChangeLayoutModalProps = {
 type PaneDesignResult = {
   theme: Theme;
   panes: PaneDesign[];
+};
+
+export const updatePaneDesignMarkdown = (design: PaneDesign, markdownBody: string): PaneDesign => {
+  const updatedFragments = design.fragments.map((fragment) => {
+    if (fragment.type === "markdown") {
+      return {
+        ...fragment,
+        markdownBody,
+      } as PaneDesignMarkdown;
+    }
+    return fragment;
+  });
+  return {
+    ...design,
+    fragments: updatedFragments,
+  };
 };
 
 const getPaneDesigns = (
@@ -99,7 +117,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
               <Switch.Label className="mr-4">Enable Odd Panes</Switch.Label>
             </div>
           </Switch.Group>
-          <div className="grid items-stretch justify-stretch overflow-y-scroll grid-cols-6 gap-4 w-full">
+          <div className="grid items-stretch justify-stretch overflow-y-scroll grid-cols-2 xl:grid-cols-4 gap-4 w-full">
             {getPaneDesigns(paneType, props.config, isOddPanes).map((designs) =>
               designs.panes.map((design) => (
                 <PanePreview
@@ -111,7 +129,7 @@ const ChangeLayoutModal = (props: ChangeLayoutModalProps) => {
                     props.onClose?.();
                   }}
                   theme={designs.theme}
-                  design={design}
+                  design={updatePaneDesignMarkdown(design, props.markdownBody)}
                 />
               ))
             )}
