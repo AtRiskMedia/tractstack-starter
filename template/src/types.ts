@@ -2,6 +2,8 @@
 import { toolAddModes } from "./constants";
 import type { MapStore } from "nanostores";
 import type { Root } from "hast";
+import type { ParagraphsResponse, SentencesResponse, Transcript } from "assemblyai";
+import type { WordSelection } from "@/store/transcribe/appState.ts";
 
 export interface ClassNamesPayloadValue {
   [key: string]: string | string[];
@@ -1026,4 +1028,77 @@ export interface ResourceSetting {
     type: "string" | "boolean" | "number" | "date";
     defaultValue?: any;
   };
+}
+
+//
+// Transcribe
+//
+
+export interface TranscriptionEntry {
+  uuid: string;
+  title: string;
+  state: ProcessState;
+}
+
+export type StoryChapterOverrides = {
+  gist: string;
+}
+
+export interface StoryData {
+  transcriptId: string,
+  uuid: string;
+  title: string;
+  status: StoryStatus;
+  chaptersOverrides: Map<number, StoryChapterOverrides>;
+  wordsSelection: Record<number, WordSelection[]>;
+}
+
+export type TranscriptServerResponse = {
+  transcript: Transcript,
+  sentences: SentencesResponse,
+  paragraphs: ParagraphsResponse
+}
+
+export enum ProcessState { NONE = -1, QUEUED = 0, PROCESSING = 1, COMPLETED = 2, ERROR = 3 }
+
+export const getProcessState = (status: "queued" | "processing" | "completed" | "error"): ProcessState => {
+  switch (status) {
+    case "completed": return ProcessState.COMPLETED;
+    case "error": return ProcessState.ERROR;
+    case "processing": return ProcessState.PROCESSING;
+    case "queued": return ProcessState.QUEUED;
+    default: return ProcessState.NONE;
+  }
+}
+
+export enum ActiveView {
+  CHAPTERS = 0,
+  PDF_MODE = 1,
+}
+
+export enum TextSelectionType {
+  NONE = "none",
+  HEADLINE = "headline",
+  KEY_POINT = "key_point",
+  ANECDOTE = "anecdote",
+}
+
+export enum TextSelectionOperation {
+  NONE = -1,
+  ADD = 0,
+  REMOVE = 1,
+  EDIT = 2,
+}
+
+export enum SelectedWordType {
+  NOT_SELECTED = 0,
+  FIRST_WORD = 1,
+  MIDDLE = 2,
+  LAST_WORD = 3,
+}
+
+export enum StoryStatus {
+  None = -1,
+  Draft = 0,
+  Published = 1,
 }

@@ -6,6 +6,9 @@ import {
   Square3Stack3DIcon,
 } from "@heroicons/react/24/outline";
 import type { ResourceSetting, EnvSetting, Tag, ToolMode, ToolAddMode } from "./types";
+import type { ParagraphsResponse, SentencesResponse, SubmitParams, Transcript, TranscriptWord } from "assemblyai";
+import { stripSpecialCharsEnd } from "@/utils/transcribe/utils.ts";
+import TreeMap from "ts-treemap";
 
 export const AUTH_COOKIE_NAME = "auth_token";
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
@@ -714,4 +717,14 @@ export function processResourceValue(
     }
   }
   return value;
+}
+
+// 
+// Transcribe
+//
+export const DOUBLE_CLICK_THRESHOLD = 200;
+
+export const transcribeParams: Partial<SubmitParams> = {
+  auto_highlights: true,
+  auto_chapters: true,
 }

@@ -799,3 +799,31 @@ export function formatDateForUrl(date: Date): string {
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   return `${year}-${month}`;
 }
+
+export const JSONBetterStringify = (obj: any): any => {
+  return JSON.stringify(obj, replacer);
+}
+
+export const JSONBetterParser = (obj: any): any => {
+  return JSON.parse(obj, reviver);
+}
+
+function replacer(key: string, value: any) {
+  if(value instanceof Map) {
+    return {
+      dataType: 'Map',
+      value: Array.from(value.entries()), // or with spread: value: [...value]
+    };
+  } else {
+    return value;
+  }
+}
+
+function reviver(key: string, value: any) {
+  if(typeof value === 'object' && value !== null) {
+    if (value.dataType === 'Map') {
+      return new Map(value.value);
+    }
+  }
+  return value;
+}
