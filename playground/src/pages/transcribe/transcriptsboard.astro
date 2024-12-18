@@ -6,4 +6,7 @@ import Layout from "../../layouts/Layout.astro";
 const config = await getConfig();
 
 ---
-<TranscriptsBoard client:visible/>
+
+<Layout title="Transcribes - Transcripts Board" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
+  <TranscriptsBoard client:visible/>
+</Layout>

@@ -14,10 +14,10 @@ export const StoryEntryTailView = (props: Props) => {
         <div className="flex p-2">
             <div className="flex gap-2">
                 <a type="button"
-                   className="inline-flex h-10 items-center justify-center rounded-md bg-neutral-500 px-2 font-medium text-neutral-50 transition active:scale-110"
+                   className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                    href={`/stories/${transcriptId}/${uuid}`}>Edit</a>
                 <button type="button"
-                        className="btn btn-red rounded-md text-neutral-50 px-2"
+                        className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                         onClick={() => props.onDelete(uuid)}>
                     X
                 </button>
