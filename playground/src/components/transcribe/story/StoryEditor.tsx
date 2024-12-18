@@ -1,7 +1,6 @@
 import React, {memo, useEffect, useState} from "react";
 import { setDataToStore } from "@/store/transcribe/transcribeStore.ts";
 import { type StoryData, TextSelectionOperation, TextSelectionType, type TranscriptServerResponse } from "@/types.ts";
-import { getSearchParameters } from "@/utils/transcribe/utils.ts";
 import { JSONBetterParser, JSONBetterStringify } from "@/utils/common/helpers.ts";
 import {
     $activeTranscriptOverride,
@@ -21,12 +20,16 @@ import { StoryTitle } from "@/components/transcribe/story/StoryTitle.tsx";
 import { PDFMode } from "@/components/transcribe/common/PDFMode.tsx";
 import { LoadSpinner } from "@/components/transcribe/helpers/LoadSpinner.tsx";
 
+export type StoryEditorProps = {
+    uuid: string|undefined;
+    storyuuid: string|undefined;
+}
 
-export const StoryEditor = memo(() => {
+export const StoryEditor = memo((props: StoryEditorProps) => {
     const [transcript, setTranscript] = useState<ConvertedTranscript | undefined>(undefined);
     const [storyData, setStoryData] = useState<StoryData>();
-    const searchParams = getSearchParameters();
-    const {uuid, storyuuid} = searchParams;
+    const uuid = props?.uuid || "";
+    const storyuuid = props?.storyuuid || "";
 
     useEffect(() => {
         const run = async () => {
@@ -61,8 +64,10 @@ export const StoryEditor = memo(() => {
                     if(storyResponse?.length > 0) {
                         storyData = JSONBetterParser(storyResponse[0].data);
                     }
-                    applyStoryData(uuid, storyuuid, storyData);
-                    setStoryData(storyData);
+                    if(storyData) {
+                        applyStoryData(uuid, storyuuid, storyData);
+                        setStoryData(storyData);
+                    }
                 }
             } catch (ex) {
                 console.error("error retrieving transcript: " + ex);
@@ -95,9 +100,9 @@ export const StoryEditor = memo(() => {
     const onChapterEdit = (chapter: Chapter) => {
         const activeStory = getActiveStory();
         const storyChapters = activeStory?.chaptersOverrides;
-        let gist = chapter.getGist();
+        let gist: string | undefined = chapter.getGist();
         if(storyChapters)
-            gist = storyChapters.get(chapter.index)?.gist;
+            gist = storyChapters?.get(chapter.index)?.gist;
         const newGist = prompt("Override story chapter gist:", gist || "") || "";
         if(activeStory) {
             overrideStoryChapterGist(chapter.index, newGist);

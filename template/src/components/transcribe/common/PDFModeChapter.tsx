@@ -43,7 +43,7 @@ export const PDFModeChapter = (props: PDFModeChapterEditProps) => {
                 <button onClick={toggleAccordion}
                         className="w-full flex justify-between items-center py-5 text-slate-800">
                     <div className="flex">
-                        <button className="small-btn btn-blue mr-2 px-2"
+                        <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                                 onClick={e => {
                                     if(props.onChapterEdit) {
                                         props.onChapterEdit(props.chapter);

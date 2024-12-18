@@ -1,4 +1,4 @@
-import {memo, useState} from "react";
+import {memo} from "react";
 
 export interface ToggleButtonProps {
     checkActive: () => boolean,

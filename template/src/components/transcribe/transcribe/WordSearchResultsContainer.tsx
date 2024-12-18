@@ -48,11 +48,11 @@ export const WordSearchResultsContainer = memo(() => {
     return (
         <div className="mt-5 ml-5">
             <div className="flex gap-x-4">
-                <button className="btn btn-orange"
+                <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                         onClick={() => excludeAll(true)}>
                     Exclude All
                 </button>
-                <button className="btn btn-green"
+                <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                         onClick={() => excludeAll(false)}>
                     Clear Excluded
                 </button>
