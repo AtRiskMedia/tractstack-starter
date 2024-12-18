@@ -1,5 +1,10 @@
 ---
 import { StoriesBoard } from "../../components/transcribe/story/StoriesBoard";
+import { getConfig } from "../../utils/core/config";
+import Layout from "../../layouts/Layout.astro";
+
+const config = await getConfig();
+
 ---
 
 <StoriesBoard client:visible/>

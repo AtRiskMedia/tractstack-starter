@@ -1,6 +1,12 @@
 ---
 
 import { TranscribesDashboard } from "../../components/transcribe/dashboard/TranscribesDashboard";
+import { getConfig } from "../../utils/core/config";
+import Layout from "../../layouts/Layout.astro";
+
+const config = await getConfig();
 ---
 
-<TranscribesDashboard client:visible/>
+<Layout title="Transcribes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
+  <TranscribesDashboard client:visible/>
+</Layout>

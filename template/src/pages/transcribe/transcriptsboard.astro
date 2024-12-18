@@ -1,4 +1,9 @@
 ---
 import { TranscriptsBoard } from "../../components/transcribe/dashboard/TranscriptsBoard";
+import { getConfig } from "../../utils/core/config";
+import Layout from "../../layouts/Layout.astro";
+
+const config = await getConfig();
+
 ---
 <TranscriptsBoard client:visible/>

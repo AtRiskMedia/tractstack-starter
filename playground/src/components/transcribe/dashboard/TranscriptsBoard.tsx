@@ -55,10 +55,10 @@ export const TranscriptsBoard = memo(() => {
         <main className="flex flex-col w-dvw h-dvh bg-accent-400">
             <h1 className="mx-auto text-4xl py-4">Transcripts</h1>
             <div className="flex flex-col w-full max-w-screen-md mx-auto gap-3">
-                <button className="btn btn-green w-32"
-                        onClick={() => window.location.href = '/transcribe'}>
+                <a className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                        href={'/transcribe'}>
                     Back
-                </button>
+                </a>
                 {
                     transcripts.map(entry => (
                         <TranscribeEntry onCreateStory={onCreateStory}

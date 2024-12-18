@@ -36,7 +36,7 @@ export const IngestVideoPage = () => {
 
     return (
         <div className="flex flex-col bg-amber-500 w-1/3 px-4 pt-2 pb-6 mt-6 mx-auto">
-            <button className="btn btn-green w-32"
+            <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
                     onClick={() => window.location.href = '/'}>
                 Back
             </button>
