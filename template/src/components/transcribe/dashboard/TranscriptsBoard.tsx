@@ -43,7 +43,7 @@ export const TranscriptsBoard = memo(() => {
         if(res.status === 200) {
             const data = await res.json();
             console.log("Created new story: " + JSON.stringify(data));
-            window.location.href = `transcribe/stories/${transcriptUuid}/${data.uuid}`;
+            window.location.href = `/transcribe/stories/${transcriptUuid}/${data.uuid}`;
         }
     }
 

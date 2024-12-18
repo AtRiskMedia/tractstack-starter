@@ -83,7 +83,7 @@ export const StoryEditor = memo((props: StoryEditorProps) => {
             const data = newVal.get(storyuuid);
             console.log("recorded a new change in words selection: " + JSONBetterStringify(data));
 
-            fetch("/api/stories", {
+            fetch("/api/transcribe/stories", {
                method: "PATCH",
                body: JSONBetterStringify({
                    uuid: storyuuid,
@@ -114,8 +114,8 @@ export const StoryEditor = memo((props: StoryEditorProps) => {
             {
                 transcript ?
                     <div className="flex flex-col">
-                        <button className="btn btn-green w-40"
-                                onClick={() => window.location.href = ("/transcribe/stories")}>
+                        <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                onClick={() => window.location.href = ("/transcribe")}>
                             Back
                         </button>
                         {storyData && <StoryTitle value={storyData.title}/>}
