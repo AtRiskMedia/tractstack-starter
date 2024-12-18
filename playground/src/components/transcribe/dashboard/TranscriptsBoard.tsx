@@ -9,6 +9,7 @@ export const TranscriptsBoard = memo(() => {
     useEffect(() => {
         const getEntries = async () => {
             try {
+                console.log("fetch dashboard");
                 const req = await fetch("/api/transcribe/dashboard");
                 const transcripts = await req.json() as TranscriptList;
 

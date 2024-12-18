@@ -1,6 +1,7 @@
 import { createNewv4UUID } from "@/utils/transcribe/utils.ts";
 
 export const TranscribesDashboard = () => {
+  console.log("dashboard");
     return (
         <div className="flex flex-col gap-y-2 w-96 m-auto pt-7">
             <a className="btn btn-blue" href={"/transcribe/ingest"}>

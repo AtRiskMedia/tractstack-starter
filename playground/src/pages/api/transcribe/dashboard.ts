@@ -2,6 +2,7 @@ import type {APIRoute} from "astro";
 
 export const GET: APIRoute = async ({params, request}): Promise<any> => {
     const apiKey = import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY; // Your AssemblyAI API key
+    console.log("dashboard  get");
 
     const transcriptsEndPoint = `https://api.assemblyai.com/v2/transcript`;
     const response = await fetch(transcriptsEndPoint, {
