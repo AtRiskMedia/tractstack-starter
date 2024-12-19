@@ -39,22 +39,22 @@ export const PDFMode = memo((props: PDFModeProps) => {
                 <div className="flex gap-x-2">
                     {isTextModeAvailable(TextSelectionType.ANECDOTE) &&
                         <ToggleButton checkActive={() => activeTextMode === TextSelectionType.ANECDOTE}
-                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-green-500 text-white hover:bg-green-500"
+                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-green-900 text-white hover:bg-green-500"
                                       onClick={() => setActiveTextMode(TextSelectionType.ANECDOTE)}
                                       text="ANECDOTE"/>
                     }
                     {isTextModeAvailable(TextSelectionType.HEADLINE) &&
                         <ToggleButton checkActive={() => activeTextMode === TextSelectionType.HEADLINE}
-                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-orange-500 text-white hover:bg-orange-500"
+                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-orange-900 text-white hover:bg-orange-500"
                                       onClick={() => setActiveTextMode(TextSelectionType.HEADLINE)}
                                       text="HEADLINE"/>
                     }
                     {isTextModeAvailable(TextSelectionType.KEY_POINT) &&
                         <ToggleButton checkActive={() => activeTextMode === TextSelectionType.KEY_POINT}
-                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                      activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-blue-500 text-white hover:bg-blue-500"
+                                      inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-blue-900 text-white hover:bg-blue-500"
                                       onClick={() => setActiveTextMode(TextSelectionType.KEY_POINT)}
                                       text="KEY POINT"/>
                     }
@@ -64,22 +64,22 @@ export const PDFMode = memo((props: PDFModeProps) => {
                         <span className="font-bold">Text Operation:</span>
                         {isTextOpAvailable(TextSelectionOperation.ADD) &&
                             <ToggleButton checkActive={() => activeTextOp === TextSelectionOperation.ADD}
-                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-green-500 text-white hover:bg-green-500"
+                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-green-900 text-white hover:bg-green-500"
                                           onClick={() => setActiveTextOp(TextSelectionOperation.ADD)}
                                           text="Add"/>
                         }
                         {isTextOpAvailable(TextSelectionOperation.EDIT) &&
                             <ToggleButton checkActive={() => activeTextOp === TextSelectionOperation.EDIT}
-                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-blue-500 text-white hover:bg-blue-500"
+                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-blue-900 text-white hover:bg-blue-500"
                                           onClick={() => setActiveTextOp(TextSelectionOperation.EDIT)}
                                           text="Edit"/>
                         }
                         {isTextOpAvailable(TextSelectionOperation.REMOVE) &&
                             <ToggleButton checkActive={() => activeTextOp === TextSelectionOperation.REMOVE}
-                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                          activeClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-red-500 text-white hover:bg-red-500"
+                                          inactiveClassName="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-red-900 text-white hover:bg-red-500"
                                           onClick={() => setActiveTextOp(TextSelectionOperation.REMOVE)}
                                           text="Remove"/>
                         }
