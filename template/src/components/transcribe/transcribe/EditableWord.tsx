@@ -53,7 +53,7 @@ export const EditableWord = (props: EditableWordProps) => {
     return canDrawDeleteIcon() ?
             <div className="flex">
                 {drawWord()}
-                <button className="small-btn btn-red px-1 relative right-[10px] bottom-[8px]"
+                <button className="bg-red-500 px-1 py-0 h-6 rounded-md relative right-[10px] bottom-[8px]"
                         onClick={() => props.onRequestDelete(props.wordIdx, props.word)}>
                     X
                 </button>

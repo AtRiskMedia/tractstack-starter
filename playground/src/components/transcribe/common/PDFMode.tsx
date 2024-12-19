@@ -35,7 +35,7 @@ export const PDFMode = memo((props: PDFModeProps) => {
 
     return (
         <div className="flex flex-col">
-            <aside className="flex flex-col h-fit bg-accent-300 sticky top-0 py-2 px-5">
+            <aside className="flex flex-col h-fit bg-gray-200 sticky top-0 py-2 px-5">
                 <div className="flex gap-x-2">
                     {isTextModeAvailable(TextSelectionType.ANECDOTE) &&
                         <ToggleButton checkActive={() => activeTextMode === TextSelectionType.ANECDOTE}
