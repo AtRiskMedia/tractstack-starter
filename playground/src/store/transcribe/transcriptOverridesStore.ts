@@ -24,7 +24,7 @@ export type TranscriptOverride = {
 // Atomics
 // ================
 
-export const $activeTranscriptOverride = atom<TranscriptOverride>();
+export const $activeTranscriptOverride = atom<TranscriptOverride|undefined>(undefined);
 
 // Helper methods
 // ================
@@ -34,6 +34,7 @@ export const applyTranscriptOverrides = (overrides: TranscriptOverride) => {
         setActiveTranscriptOverrideFromData(overrides);
 
         if(overrides?.wordOverrides?.size > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for (const [key, value] of overrides.wordOverrides) {
                 if(value.word) {
                     overrideWord(value.inChapterIdx, value.chapterIdx, value.word);

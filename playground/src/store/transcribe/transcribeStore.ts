@@ -9,6 +9,7 @@ import type {
   Highlight,
   Word,
 } from "@/utils/transcribe/converters.ts";
+import { stripSpecialCharsEnd } from "@/utils/transcribe/utils.ts";
 
 // Stores
 export const $paragraphStore = atom<Paragraph[] | undefined>(undefined);
@@ -80,6 +81,15 @@ export const overrideWord = (wordIdx: number, chapterIdx: number, newWord: strin
     ...wordCopy,
     overrideText: newWord || "",
   };
+
+  chapterCopy.words.clear();
+  for (let i = 0; i < chapterCopy.rawWords.length; i++) {
+    const word = chapterCopy.rawWords[i];
+    const w = stripSpecialCharsEnd(word.getText().toLowerCase());
+    if (w.length > 0 && !chapterCopy.words.has(w)) {
+      chapterCopy.words.add(w);
+    }
+  }
 
   // apply new chapter change
   const chaptersCopy = [...chapters];

@@ -140,7 +140,7 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
           ++globalWordIdx;
           allWords.push(word);
           wordsArr.push(word);
-          const w = stripSpecialCharsEnd(wordStr.toLowerCase())
+          const w = stripSpecialCharsEnd(word.getText().toLowerCase())
           if (w.length > 0 && !wordsStrSet.has(w)) {
             wordsStrSet.add(w);
           }
