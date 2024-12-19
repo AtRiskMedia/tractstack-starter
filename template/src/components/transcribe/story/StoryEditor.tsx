@@ -114,10 +114,10 @@ export const StoryEditor = memo((props: StoryEditorProps) => {
             {
                 transcript ?
                     <div className="flex flex-col">
-                        <button className="px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
-                                onClick={() => window.location.href = ("/transcribe")}>
+                        <a className="px-4 py-2 w-fit rounded-md text-lg shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange bg-myorange text-white hover:bg-myblue"
+                                href={"/transcribe"}>
                             Back
-                        </button>
+                        </a>
                         {storyData && <StoryTitle value={storyData.title}/>}
                         <PDFMode
                             availableTextModes={[TextSelectionType.ANECDOTE, TextSelectionType.HEADLINE, TextSelectionType.KEY_POINT]}
