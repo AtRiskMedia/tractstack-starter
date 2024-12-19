@@ -48,8 +48,11 @@ export const setAllWordSelection = (chapterIdx: number, selections: WordSelectio
     const activeStoryUuid = $activeStoryUuid.get() || "";
     if(activeStoryUuid.length > 0) {
         const stories = new Map($stories.get());
-        stories.get(activeStoryUuid).wordsSelection = {...$allWordsSelectionMap.get()};
-        $stories.set(stories);
+        const story = stories.get(activeStoryUuid);
+        if (story) {
+            story.wordsSelection = { ...$allWordsSelectionMap.get() };
+            $stories.set(stories);
+        }
     }
 }
 
@@ -63,6 +66,16 @@ export const removeWordSelectionAt = (chapterIdx: number, removeAtIdx: number) =
         ...currentMap,
         [chapterIdx]: [...chapterMap]
     });
+
+    const activeStoryUuid = $activeStoryUuid.get() || "";
+    if(activeStoryUuid.length > 0) {
+        const stories = new Map($stories.get());
+        const story = stories.get(activeStoryUuid);
+        if(story) {
+            story.wordsSelection = { ...$allWordsSelectionMap.get() };
+            $stories.set(stories);
+        }
+    }
 }
 
 export const populateAllWordsSelection = (storyData: StoryData) => {
