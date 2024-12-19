@@ -141,6 +141,9 @@ importers:
       nanostores:
         specifier: 0.10.3
         version: 0.10.3
+      player.js:
+        specifier: ^0.1.0
+        version: 0.1.0
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -361,9 +364,15 @@ importers:
       react-lite-youtube-embed:
         specifier: 2.4.0
         version: 2.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-search-autocomplete:
+        specifier: ^8.5.2
+        version: 8.5.2(@babel/core@7.26.0)(react-dom@18.3.1(react@18.3.1))(react-is@16.13.1)(react@18.3.1)
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
+      ts-treemap:
+        specifier: ^1.1.0
+        version: 1.1.0
       ulid:
         specifier: 2.3.0
         version: 2.3.0
@@ -3889,6 +3898,9 @@ packages:
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
+
+  player.js@0.1.0:
+    resolution: {integrity: sha512-pzWPiqw5b4kQCYhXyoLOZWidWcSySVJTqciDOtoH/MzY97piKnUme494dfczCAC7FLkMSPMH2HfhNJU9D/lVFw==}
 
   possible-typed-array-names@1.0.0:
     resolution: {integrity: sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==}
@@ -9023,6 +9035,8 @@ snapshots:
   pkg-dir@4.2.0:
     dependencies:
       find-up: 4.1.0
+
+  player.js@0.1.0: {}
 
   possible-typed-array-names@1.0.0: {}
 

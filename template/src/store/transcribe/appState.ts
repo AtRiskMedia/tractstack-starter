@@ -3,8 +3,9 @@ import {AssemblyAI} from "assemblyai";
 import {$activeStoryUuid, $stories} from "./storiesStore";
 import type { StoryData } from "@/types.ts";
 
-export const $searchWord = atom<string>("");
+export const $videoPlayer = atom(undefined);
 
+export const $searchWord = atom<string>("");
 export const setSearchWord = (word: string) => {
     $searchWord.set(word);
 }

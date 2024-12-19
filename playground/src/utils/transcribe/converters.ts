@@ -40,6 +40,7 @@ export interface Sentence {
   start: number;
   end: number;
   rawWords: TranscriptWord[],
+  wordsMap: Map<string, number[]>;
 }
 
 export interface TractStackTranscript {
@@ -182,9 +183,7 @@ const buildSentences = (sentencesResponse: SentencesResponse, lookup: TreeMap<nu
       const sentence = sentencesList[i];
       const chapter = lookup.get(<number>lookup.floorKey(sentence.start));
 
-      if(!chapter) continue;
-
-      const wordsMap = chapter.wordsMap;
+      const wordsMap = new Map<string, number[]>();
       for(let j = 0; j < sentence.words.length; j++) {
         const words = sentence.words;
         for (let k = 0; k < words.length; k++) {

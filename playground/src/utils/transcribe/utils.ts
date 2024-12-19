@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { SelectedWordType, TextSelectionType } from "@/types.ts";
 import { $firstWordSelected, $secondWordSelected, type WordSelection } from "@/store/transcribe/appState.ts";
 
+export const convertMillisecondsToSeconds = (milliseconds: number): number => milliseconds / 1000;
+
 export const stripSpecialCharsEnd = (str: string): string => {
   const specialChars = [',', '.', '/', '!', '?']; // Add other characters as needed
 
