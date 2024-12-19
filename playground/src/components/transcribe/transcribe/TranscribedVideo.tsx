@@ -46,7 +46,6 @@ export const TranscribedVideo = memo((props: TranscribedVideoProps) => {
 
                     setDataToStore(convertedData);
                     setTranscript(convertedData);
-                    setAllWords(convertedData.words);
 
                     const transcriptOverrides = await data[1].json();
                     if(transcriptOverrides?.length > 0) {
@@ -55,6 +54,8 @@ export const TranscribedVideo = memo((props: TranscribedVideoProps) => {
                     } else {
                         $activeTranscriptOverride.set(createEmptyTranscriptOverride(uuid));
                     }
+
+                    setAllWords(convertedData.words);
                     dataReady = true;
                 }
             } catch (ex) {
