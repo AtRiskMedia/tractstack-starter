@@ -19,7 +19,7 @@ export const TranscriptWordDrawer = (props: EditableWordProps) => {
     const drawWord = () => {
         return (
             <span className={getClass()}
-                  onClick={e => props.onClick(props.wordIdx, props.word)}
+                  onClick={() => props.onClick(props.wordIdx, props.word)}
             >
             {props.word.getText()}
         </span>

@@ -7,7 +7,7 @@ import { convertMillisecondsToSeconds } from "@/utils/transcribe/utils.ts";
 
 export type ActiveChapterProps = {
     activeChapterIdx: number;
-    transcript: Transcript;
+    transcript: Transcript|undefined;
 }
 
 export const ActiveChapter = memo((props: ActiveChapterProps) => {
@@ -20,18 +20,33 @@ export const ActiveChapter = memo((props: ActiveChapterProps) => {
     }
 
     const hasPreviousChapters = (): boolean => props.activeChapterIdx >= 1;
-    const hasNextChapters = (): boolean => props.activeChapterIdx <= props.transcript.chapters.length - 1;
+    const hasNextChapters = (): boolean => {
+        if(props.transcript?.chapters) {
+            return props.activeChapterIdx <= props.transcript.chapters.length - 1;
+        }
+        return false;
+    }
 
     const seekNextChapter = () => {
+        if(!props.transcript?.chapters) return;
+
         if (hasNextChapters()) {
             const nextChapter = props.transcript.chapters[props.activeChapterIdx + 1];
-            $videoPlayer.get().setCurrentTime(convertMillisecondsToSeconds(nextChapter.start));
+            const player = $videoPlayer.get();
+            if(player) {
+                player.setCurrentTime(convertMillisecondsToSeconds(nextChapter.start));
+            }
         }
     }
     const seekPrevChapter = () => {
+        if(!props.transcript?.chapters) return;
+
         if (hasPreviousChapters()) {
             const prevChapter = props.transcript.chapters[props.activeChapterIdx - 1];
-            $videoPlayer.get().setCurrentTime(convertMillisecondsToSeconds(prevChapter.start));
+            const player = $videoPlayer.get();
+            if(player) {
+                player.setCurrentTime(convertMillisecondsToSeconds(prevChapter.start));
+            }
         }
     }
 

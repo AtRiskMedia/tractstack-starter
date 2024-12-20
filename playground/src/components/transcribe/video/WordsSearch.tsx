@@ -9,9 +9,9 @@ import { Popup } from "@/components/transcribe/common/Popup.tsx";
 export type WordsSearchProps = {
     searching: boolean,
     onClose: () => void,
-    transcript: Transcript,
-    chapterWords: Map<number, ChapterWords>,
-    sentences: SentencesResponse,
+    transcript: Transcript|undefined,
+    chapterWords: Map<number, ChapterWords>|undefined,
+    sentences: SentencesResponse|undefined,
 }
 
 export const WordsSearch = memo((props: WordsSearchProps) => {

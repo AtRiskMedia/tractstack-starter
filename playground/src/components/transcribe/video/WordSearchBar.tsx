@@ -51,7 +51,7 @@ export const WordSearchBar = (props: WordsSearcherProps) => {
         console.log(str, results)
     }
 
-    const handleOnHover = (result: SearchString) => {
+    const handleOnHover = () => {
         // the item hovered
     }
 
