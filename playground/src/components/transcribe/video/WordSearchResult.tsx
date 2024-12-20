@@ -5,6 +5,7 @@ import { $searchWord, $videoPlayer } from "@/store/transcribe/appState.ts";
 import type { Chapter } from "@/utils/transcribe/converters.ts";
 import { $chaptersStore } from "@/store/transcribe/transcribeStore.ts";
 import { convertMillisecondsToSeconds } from "@/utils/transcribe/utils.ts";
+import { MatchingChapterResult } from "@/components/transcribe/video/MatchingChapterResult.tsx";
 
 export type WordSearchResultProps = {
     onWordClicked?: (word: TranscriptWord) => void;
