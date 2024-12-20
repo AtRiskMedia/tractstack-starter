@@ -327,17 +327,22 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     player.setCurrentTime(convertMillisecondsToSeconds(word.start));
   };
 
-  const getSentenceWords = (time: number): Word[] => {
-    if (sentencesMap) {
-      const entry = sentencesMap.get(sentencesMap.floorKey(time));
-      if (!entry) return [];
-      const wordsAmount = sentences.sentences[entry.sentenceIdx].words.length;
-      return $wordStore
-        .get()
-        .slice(entry.chapterWordStartIdx, entry.chapterWordStartIdx + wordsAmount);
-    }
-    return [];
-  };
+    const getSentenceWords = (time: number): Word[] => {
+      if (sentencesMap) {
+        const entryKey = sentencesMap.floorKey(time);
+        if (!entryKey) return [];
+
+        const entry = sentencesMap.get(entryKey);
+        if (!entry) return [];
+
+        const wordsAmount = sentences?.sentences[entry.sentenceIdx].words.length || 0;
+        const allWords = $wordStore.get();
+        if (allWords) {
+          return allWords.slice(entry.chapterWordStartIdx, entry.chapterWordStartIdx + wordsAmount);
+        }
+      }
+      return [];
+    };
 
   const activeChapterIdx = useMemo(() => getActiveChapterIdx(time), [time]);
 
