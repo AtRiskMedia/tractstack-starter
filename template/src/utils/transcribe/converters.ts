@@ -221,7 +221,7 @@ const buildSentences = (sentencesResponse: SentencesResponse, lookup: TreeMap<nu
   return sentences;
 }
 
-const buildParagraphs = (p: ParagraphsResponse): Paragraph[] => {
+const buildParagraphs = (p: ParagraphsResponse|undefined): Paragraph[] => {
   const paragraphs: Paragraph[] = [];
   if (p !== undefined) {
     for (let i = 0; i < p.paragraphs.length; ++i) {
@@ -236,7 +236,7 @@ const buildParagraphs = (p: ParagraphsResponse): Paragraph[] => {
   return paragraphs;
 }
 
-export const buildTranscript = (t: Transcript, s: SentencesResponse, p: ParagraphsResponse): ConvertedTranscript => {
+export const buildTranscript = (t: Transcript, s: SentencesResponse, p: ParagraphsResponse|undefined): ConvertedTranscript => {
   const {chapters, chaptersMap, words} = buildChapters(t, s);
   const sentences: Sentence[] = buildSentences(s, chaptersMap);
   const paragraphs: Paragraph[] = buildParagraphs(p);

@@ -154,8 +154,8 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
                 console.log("retrieving transcript... " + uuid);
                 if (uuid) {
                     console.time("requests");
-                    const transcriptUrl = `/api/transcript?` + new URLSearchParams({transcript_id: uuid}).toString();
-                    const transcriptOverrideUrl = `/api/transcript_override?` + new URLSearchParams({transcript_id: uuid}).toString();
+                    const transcriptUrl = `/api/transcribe/transcript?` + new URLSearchParams({transcript_id: uuid}).toString();
+                    const transcriptOverrideUrl = `/api/transcribe/transcript_override?` + new URLSearchParams({transcript_id: uuid}).toString();
                     const data = await Promise.all([
                         await fetch(transcriptUrl),
                         await fetch(transcriptOverrideUrl),
@@ -230,7 +230,11 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     const getWords = (chapterIdx: number, time: number): Word[] => {
         if(view === View.PARAGRAPH) {
             if (chapterIdx === -1) return [];
-            return $chaptersStore.get()[chapterIdx].rawWords;
+            const chapter = $chaptersStore.get()[chapterIdx];
+            if (chapter) {
+              return chapter.rawWords;
+            }
+            return [];
         } else if(view === View.SENTENCE) {
             return getSentenceWords(time);
         }

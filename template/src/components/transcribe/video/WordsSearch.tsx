@@ -3,8 +3,8 @@ import {WordSearchBar} from "./WordSearchBar";
 import {WordSearchResult} from "./WordSearchResult";
 import type { SentencesResponse, Transcript } from "assemblyai";
 import type { ChapterWords } from "@/components/transcribe/common/TranscriptFollower.tsx";
-import { Popup } from "vis-util";
 import { $wordStore } from "@/store/transcribe/transcribeStore.ts";
+import { Popup } from "@/components/transcribe/common/Popup.tsx";
 
 export type WordsSearchProps = {
     searching: boolean,
