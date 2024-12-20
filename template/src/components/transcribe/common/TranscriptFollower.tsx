@@ -56,6 +56,10 @@ enum View {
 
 function buildChapters(transcript: Transcript) {
     const chaptersMap: TreeMap<number, number> = new TreeMap<number, number>();
+    if(!transcript.chapters) {
+        return chaptersMap;
+    }
+
     for (let i = 0; i < transcript.chapters.length; ++i) {
         const startTime = convertMillisecondsToSeconds(transcript.chapters[i].start);
         chaptersMap.set(startTime, i);
@@ -66,6 +70,11 @@ function buildChapters(transcript: Transcript) {
 function buildSentencesToChaptersMap(sentences: TranscriptSentence[], transcript: Transcript) {
     const sentencesMap: TreeMap<number, SentenceData> = new TreeMap<number, SentenceData>();
     let activeChapterIdx = 0;
+
+    if(!transcript.chapters) {
+        return {sentencesMap, activeChapterIdx};
+    }
+
     let accumulatedSentenceWords = 0;
     let accumulatedChapterWords = 0;
     for (let i = 0; i < sentences.length; ++i) {
@@ -102,13 +111,24 @@ function buildWordsToChaptersMap(activeChapterIdx: number, transcript: Transcrip
     const wordsMap: TreeMap<number, WordData> = new TreeMap<number, WordData>();
     const chapterWords: Map<number, ChapterWords> = new Map<number, ChapterWords>();
 
+    if(!transcript.words) {
+        return {chapterWords};
+    }
+
     activeChapterIdx = 0;
     let globalWordIdxOffset = 0;
     let wordsAmount = 0;
     for (let i = 0; i < transcript.words.length; ++i) {
         const word = transcript.words[i];
         const startTime = convertMillisecondsToSeconds(word.start);
-        const chapterIdx = chaptersMap.get(chaptersMap.floorKey(startTime));
+        const chapterAtWord = chaptersMap?.floorKey(startTime) || 0;
+        let chapterIdx = chaptersMap.get(chapterAtWord) || 0;
+
+        // end of all the transcript words, automatically end the chapter
+        if(i === transcript.words.length-1) {
+            chapterIdx += 1;
+        }
+
         if (activeChapterIdx !== chapterIdx) {
             if (!chapterWords.get(activeChapterIdx)) {
                 chapterWords.set(activeChapterIdx, {
