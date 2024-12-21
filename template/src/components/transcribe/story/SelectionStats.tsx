@@ -13,23 +13,23 @@ export const SelectionStats = memo(() => {
         let anecdotes = 0;
         let headlines = 0;
         let keyPoints = 0;
-        // if(stats?.length > 0) {
-        //     for (const key in stats) {
-        //         stats[key].forEach(x => {
-        //             switch (x.type) {
-        //                 case TextSelectionType.HEADLINE:
-        //                     ++headlines;
-        //                     break;
-        //                 case TextSelectionType.KEY_POINT:
-        //                     ++keyPoints;
-        //                     break;
-        //                 case TextSelectionType.ANECDOTE:
-        //                     ++anecdotes;
-        //                     break;
-        //             }
-        //         })
-        //     }
-        // }
+        if(Object.keys(stats).length > 0) {
+          for (const key in stats) {
+            stats[key].forEach((x) => {
+              switch (x.type) {
+                case TextSelectionType.HEADLINE:
+                  ++headlines;
+                  break;
+                case TextSelectionType.KEY_POINT:
+                  ++keyPoints;
+                  break;
+                case TextSelectionType.ANECDOTE:
+                  ++anecdotes;
+                  break;
+              }
+            });
+          }
+        }
         return {anecdotes, headlines, keyPoints};
     }
 
