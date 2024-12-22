@@ -52,6 +52,7 @@ export function getMarkdownPaneNode(
 
     return {
       id: ulid(),
+      parentId: row.id,
       markdownId: row.markdown_id,
       type: `markdown`,
       ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
@@ -63,7 +64,7 @@ export function getMarkdownPaneNode(
       ...(fragment.optionsPayload?.classNamesParent?.all
         ? { parentCss: fragment.optionsPayload.classNamesParent.all }
         : {}),
-      nodes: elementNodes,
+      nodes: elementNodes.map(x => x.id),
     };
   }
   console.log(`FAILED TO FIND FRAGMENT ********************************`);

@@ -13,6 +13,7 @@ export function getBgPaneNode(fragment: BgPaneDatum): PaneFragmentNode | null {
     if (result)
       return {
         id: ulid(),
+        parentId: fragment.id,
         type: `visual-break`,
         ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
         ...(fragment.hiddenViewports.includes(`tablet`) ? { hiddenViewportTablet: true } : {}),

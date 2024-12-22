@@ -9,6 +9,7 @@ export function getTractStackNode(row: Row): TractStackNode | null {
   )
     return {
       id: row.tractstack_id,
+      parentId: null,
       title: row.tractstack_title,
       slug: row.tractstack_slug,
       ...(typeof row.social_image_path === `string`

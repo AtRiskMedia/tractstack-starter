@@ -1117,8 +1117,7 @@ export enum StoryStatus {
   Published = 1,
 }
 
-export interface TractStackNode {
-  id: string;
+export interface TractStackNode extends BaseNode {
   title: string;
   slug: string;
   socialImagePath?: string;
@@ -1132,8 +1131,12 @@ export interface TractStackNode {
 //  srcSet: boolean;
 //}
 
-export interface PaneNode {
+export interface BaseNode {
   id: string;
+  parentId: string|null;
+}
+
+export interface PaneNode extends BaseNode {
   title: string;
   slug: string;
   isContextPane?: boolean;
@@ -1149,11 +1152,9 @@ export interface PaneNode {
   };
 }
 
-export interface StoryFragmentNode {
-  id: string;
+export interface StoryFragmentNode extends BaseNode {
   title: string;
   slug: string;
-  parentId: string;
   hasMenu: boolean;
   menuId?: string;
   tailwindBgColour?: string;
@@ -1166,8 +1167,7 @@ export interface VisualBreakData {
   svgFill: string;
 }
 
-export interface PaneFragmentNode {
-  id: string;
+export interface PaneFragmentNode extends BaseNode {
   type: "markdown" | "visual-break";
   hiddenViewportMobile?: boolean;
   hiddenViewportTablet?: boolean;
@@ -1199,9 +1199,7 @@ export interface FlattenedClasses {
   [key: string]: string;
 }
 
-export interface FlatNode {
-  nodeId: string;
-  parentId: string | null;
+export interface FlatNode extends BaseNode {
   tagName: string;
   copy?: string;
   src?: string;
@@ -1241,8 +1239,7 @@ export type StylesInput = {
   [key: string]: (StyleValue | null)[];
 };
 
-export interface PaneFragmentNode {
-  id: string;
+export interface PaneFragmentNode extends BaseNode {
   type: "markdown" | "visual-break";
   hiddenViewportMobile?: boolean;
   hiddenViewportTablet?: boolean;
@@ -1251,9 +1248,8 @@ export interface PaneFragmentNode {
 
 export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
   type: "markdown";
-  id: string;
   markdownId: string;
-  nodes: FlatNode[];
+  nodes: string[];
   defaultClasses?: Record<
     string,
     {

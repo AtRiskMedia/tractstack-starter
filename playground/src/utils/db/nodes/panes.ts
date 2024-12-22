@@ -38,6 +38,7 @@ export function getPaneNodes(row: Row): PaneNode[] {
           id: r.id,
           title: r.title,
           slug: r.slug,
+          parentId: row.id,
           ...(r?.height_offset_desktop != 0
             ? { heightOffsetDesktop: r?.height_offset_desktop }
             : {}),

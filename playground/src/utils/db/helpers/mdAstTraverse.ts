@@ -81,7 +81,7 @@ export function mdAstTraverse(
     }
 
     results.push({
-      nodeId: ulid(),
+      id: ulid(),
       parentId,
       tagName: "text",
       copy: cleanText(node.value || ``),
@@ -127,7 +127,7 @@ export function mdAstTraverse(
         }
 
         results.push({
-          nodeId: currentNodeId,
+          id: currentNodeId,
           parentId,
           tagName: "code",
           copy: textNode.value,
@@ -141,7 +141,7 @@ export function mdAstTraverse(
 
     // Create the flat node for non-code elements
     const flatNode: FlatNode = {
-      nodeId: currentNodeId,
+      id: currentNodeId,
       parentId,
       tagName: node.tagName,
       ...(overrideClasses && Object.keys(overrideClasses).length ? { overrideClasses } : {}),
