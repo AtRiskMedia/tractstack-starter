@@ -1,9 +1,19 @@
 ---
 import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
+import { NodesRenderer } from "../components/storykeep/compositor-nodes/NodesRenderer";
+import { addNode, addNodes } from "../store/nodes";
 
 const nodes = await getStoryFragmentNodesBySlug(`hello`, false);
+if(nodes !== null) {
+  addNode(nodes.tractstackNode);
+  addNode(nodes.storyfragmentNode)
+  addNodes(nodes.paneNodes);
+  addNodes(nodes.paneFragmentNodes);
+}
+
 ---
 
+<NodesRenderer />
 <pre>
   {JSON.stringify(nodes, null, 2)}
 </pre>

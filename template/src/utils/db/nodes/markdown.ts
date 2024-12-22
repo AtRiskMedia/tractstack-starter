@@ -53,6 +53,7 @@ export function getMarkdownPaneNode(
     return {
       id: ulid(),
       parentId: row.id,
+      nodeType: "Element",
       markdownId: row.markdown_id,
       type: `markdown`,
       ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),

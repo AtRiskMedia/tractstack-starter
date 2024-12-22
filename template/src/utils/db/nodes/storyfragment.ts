@@ -10,6 +10,7 @@ export function getStoryFragmentNodes(row: Row): StoryFragmentNode | null {
   )
     return {
       id: row.id,
+      nodeType: "StoryFragment",
       title: row.title,
       slug: row.slug,
       parentId: row.tractstack_id,

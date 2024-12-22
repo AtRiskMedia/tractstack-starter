@@ -1131,9 +1131,12 @@ export interface TractStackNode extends BaseNode {
 //  srcSet: boolean;
 //}
 
+export type NodeType = "Root" | "Pane" | "StoryFragment" | "Element";
+
 export interface BaseNode {
   id: string;
   parentId: string|null;
+  nodeType: NodeType;
 }
 
 export interface PaneNode extends BaseNode {
