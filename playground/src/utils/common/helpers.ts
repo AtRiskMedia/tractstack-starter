@@ -10,6 +10,7 @@ import type {
   GraphRelationshipDatum,
   MarkdownLookup,
   TursoFileNode,
+  TupleValue,
 } from "../../types";
 import { type DragNode, Location } from "@/store/storykeep.ts";
 import { toHast } from "mdast-util-to-hast";
@@ -802,16 +803,16 @@ export function formatDateForUrl(date: Date): string {
 
 export const JSONBetterStringify = (obj: any): any => {
   return JSON.stringify(obj, replacer);
-}
+};
 
 export const JSONBetterParser = (obj: any): any => {
   return JSON.parse(obj, reviver);
-}
+};
 
 function replacer(key: string, value: any) {
-  if(value instanceof Map) {
+  if (value instanceof Map) {
     return {
-      dataType: 'Map',
+      dataType: "Map",
       value: Array.from(value.entries()), // or with spread: value: [...value]
     };
   } else {
@@ -820,10 +821,20 @@ function replacer(key: string, value: any) {
 }
 
 function reviver(key: string, value: any) {
-  if(typeof value === 'object' && value !== null) {
-    if (value.dataType === 'Map') {
+  if (typeof value === "object" && value !== null) {
+    if (value.dataType === "Map") {
       return new Map(value.value);
     }
   }
   return value;
+}
+
+export function convertToString(value: TupleValue): string {
+  if (typeof value === "string") return value;
+
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+
+  return String(value);
 }

@@ -1,4 +1,4 @@
-import {useStore} from "@nanostores/react";
+import { useStore } from "@nanostores/react";
 import { useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import type { SentencesResponse, Transcript, TranscriptSentence } from "assemblyai";
 import TreeMap from "ts-treemap";
@@ -259,8 +259,8 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     if (chapters) {
       const key = chapters.floorKey(time);
       if (!key) {
-          const firstKey = chapters.firstKey() || 0;
-          return chapters.get(firstKey) || 0;
+        const firstKey = chapters.firstKey() || 0;
+        return chapters.get(firstKey) || 0;
       }
       return chapters.get(key) || 0;
     }
@@ -271,12 +271,12 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     if (view === View.PARAGRAPH) {
       if (chapterIdx === -1) return [];
       const chapters = $chaptersStore.get();
-        if (chapters) {
-            const chapter = chapters[chapterIdx];
-            if (chapter) {
-                return chapter.rawWords;
-            }
+      if (chapters) {
+        const chapter = chapters[chapterIdx];
+        if (chapter) {
+          return chapter.rawWords;
         }
+      }
     } else if (view === View.SENTENCE) {
       return getSentenceWords(time);
     }
@@ -284,15 +284,15 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
   };
 
   const buildWordsLookup = (chapterIdx: number): TreeMap<number, WordData> => {
-      if(!chapterWords) {
-          return new TreeMap<number, WordData>();
-      }
-      const data = chapterWords.get(chapterIdx);
-      if (data) {
-          const seekTimes = data.wordsSeekTimes;
-          return new TreeMap<number, WordData>(seekTimes);
-      }
+    if (!chapterWords) {
       return new TreeMap<number, WordData>();
+    }
+    const data = chapterWords.get(chapterIdx);
+    if (data) {
+      const seekTimes = data.wordsSeekTimes;
+      return new TreeMap<number, WordData>(seekTimes);
+    }
+    return new TreeMap<number, WordData>();
   };
 
   const getSelectedWordIdx = (chapterIdx: number, time: number): number => {
@@ -306,19 +306,19 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     }
 
     const matchingWord = wordsLookup.floorKey(time);
-    if(!matchingWord) return 0;
+    if (!matchingWord) return 0;
 
     const entry = wordsLookup.get(matchingWord);
     if (!entry) return 0;
     if (view === View.PARAGRAPH) {
       return entry?.wordIdx - entry?.wordIdxOffset;
-    } else if(sentencesMap) {
-        const key = sentencesMap.floorKey(time);
-        if(key) {
-            const sentenceEntry = sentencesMap.get(key);
-            const startIdx = sentenceEntry?.sentenceWordStartIdx ?? 0;
-            return entry?.wordIdx - entry?.wordIdxOffset - startIdx;
-        }
+    } else if (sentencesMap) {
+      const key = sentencesMap.floorKey(time);
+      if (key) {
+        const sentenceEntry = sentencesMap.get(key);
+        const startIdx = sentenceEntry?.sentenceWordStartIdx ?? 0;
+        return entry?.wordIdx - entry?.wordIdxOffset - startIdx;
+      }
     }
     return 0;
   };
@@ -327,22 +327,22 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     player.setCurrentTime(convertMillisecondsToSeconds(word.start));
   };
 
-    const getSentenceWords = (time: number): Word[] => {
-      if (sentencesMap) {
-        const entryKey = sentencesMap.floorKey(time);
-        if (!entryKey) return [];
+  const getSentenceWords = (time: number): Word[] => {
+    if (sentencesMap) {
+      const entryKey = sentencesMap.floorKey(time);
+      if (!entryKey) return [];
 
-        const entry = sentencesMap.get(entryKey);
-        if (!entry) return [];
+      const entry = sentencesMap.get(entryKey);
+      if (!entry) return [];
 
-        const wordsAmount = sentences?.sentences[entry.sentenceIdx].words.length || 0;
-        const allWords = $wordStore.get();
-        if (allWords) {
-          return allWords.slice(entry.chapterWordStartIdx, entry.chapterWordStartIdx + wordsAmount);
-        }
+      const wordsAmount = sentences?.sentences[entry.sentenceIdx].words.length || 0;
+      const allWords = $wordStore.get();
+      if (allWords) {
+        return allWords.slice(entry.chapterWordStartIdx, entry.chapterWordStartIdx + wordsAmount);
       }
-      return [];
-    };
+    }
+    return [];
+  };
 
   const activeChapterIdx = useMemo(() => getActiveChapterIdx(time), [time]);
 

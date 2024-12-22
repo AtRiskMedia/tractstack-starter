@@ -51,10 +51,10 @@ export const GET: APIRoute = async ({ params, request }): Promise<any> => {
         "Content-Type": "application/json",
       },
     });
-  } catch (error: unknown) {
-    console.error("/api/transcript error: " + error);
-
-    return new Response(JSON.stringify({ error: error.message }), {
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("/api/transcript error: " + errorMessage);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: {
         "Content-Type": "application/json",

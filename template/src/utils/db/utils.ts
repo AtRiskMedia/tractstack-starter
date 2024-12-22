@@ -8,6 +8,11 @@ import { cleanTursoFile } from "./data/tursoFile";
 import { cleanTursoMenu } from "./data/tursoMenu";
 import { cleanTursoTractStack } from "./data/tursoTractStack";
 import { cleanPaneDesigns } from "./data/tursoPaneDesign";
+import { getTractStackNode } from "./nodes/tractstack";
+import { getStoryFragmentNodes } from "./nodes/storyfragment";
+import { getPaneNodes } from "./nodes/panes";
+import { getPaneFragmentNodes } from "./nodes/panefragments";
+import { getFileNodes } from "./nodes/files";
 import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
 import { tursoClient } from "./client";
 import type {
@@ -24,6 +29,8 @@ import type {
   FileDatum,
   TursoQuery,
   Config,
+  StoryKeepNodes,
+  FileNode,
 } from "../../types.ts";
 import type { ResultSet } from "@libsql/client";
 
@@ -355,6 +362,155 @@ export async function getStoryFragmentBySlug(
     console.error("Error fetching StoryFragmentBySlug:", error);
     throw error;
   }
+}
+
+// clone of getStoryFragmentBySlug
+export async function getStoryFragmentNodesBySlug(
+  slug: string,
+  includeDatum: boolean = false
+): Promise<StoryKeepNodes | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
+      sql: `SELECT 
+                     sf.id AS id,
+                     sf.title AS title,
+                     sf.slug AS slug,
+                     sf.created AS created,
+                     sf.changed AS changed,
+                     COALESCE(sf.social_image_path, ts.social_image_path) AS social_image_path,
+                     sf.tailwind_background_colour,
+                     sf.menu_id,
+                     ${
+                       includeDatum
+                         ? `
+                     m.title AS menu_title,
+                     m.options_payload AS menu_options_payload,
+                     m.theme AS menu_theme,
+                     `
+                         : ``
+                     }
+                     ts.id AS tractstack_id,
+                     ts.title AS tractstack_title,
+                     ts.slug AS tractstack_slug,
+                     (
+                         WITH RECURSIVE numbered_rows AS (
+                           SELECT 
+                             p.*,
+                             md.body AS markdown_body,
+                             md.id AS markdown_id,
+                             sp.weight,
+                             ROW_NUMBER() OVER (ORDER BY sp.weight ASC) AS row_num
+                           FROM storyfragment_pane sp
+                           JOIN pane p ON sp.pane_id = p.id
+                           LEFT JOIN markdown md ON p.markdown_id = md.id
+                           WHERE sp.storyfragment_id = sf.id
+                         )
+                         SELECT json_group_array(
+                           json_object(
+                             'id', id,
+                             'title', title,
+                             'slug', slug,
+                             'created', created,
+                             'changed', changed,
+                             'height_offset_desktop', height_offset_desktop,
+                             'height_offset_mobile', height_offset_mobile,
+                             'height_offset_tablet', height_offset_tablet,
+                             'height_ratio_desktop', height_ratio_desktop,
+                             'height_ratio_mobile', height_ratio_mobile,
+                             'height_ratio_tablet', height_ratio_tablet,
+                             'options_payload', options_payload,
+                             'markdown_body', markdown_body,
+                             'markdown_id', markdown_id,
+                             'files', CASE ?
+                                WHEN 1 THEN (
+                                  SELECT json_group_array(
+                                    json_object(
+                                      'id', f.id,
+                                      'filename', f.filename,
+                                      'alt_description', f.alt_description,
+                                      'url', f.url,
+                                      'src_set', f.src_set,
+                                      'paneId', nr.id,
+                                      'markdown', CASE 
+                                        WHEN nr.markdown_id IS NOT NULL THEN json('true')
+                                        ELSE json('false')
+                                      END
+                                    )
+                                  )
+                                  FROM (
+                                    SELECT fp.file_id
+                                    FROM file_pane fp
+                                    WHERE fp.pane_id = nr.id
+                                    UNION
+                                    SELECT fm.file_id
+                                    FROM file_markdown fm
+                                    WHERE fm.markdown_id = nr.markdown_id
+                                  ) AS combined_files
+                                  JOIN file f ON combined_files.file_id = f.id
+                                )
+                                ELSE (
+                                  SELECT json_group_array(
+                                    json_object(
+                                      'id', file_id,
+                                      'markdown', CASE 
+                                        WHEN EXISTS (
+                                          SELECT 1 
+                                          FROM file_markdown fm 
+                                          WHERE fm.file_id = combined_files.file_id 
+                                          AND fm.markdown_id = nr.markdown_id
+                                        )
+                                        THEN json('true')
+                                        ELSE json('false')
+                                      END
+                                    )
+                                  )
+                                  FROM (
+                                    SELECT fp.file_id
+                                    FROM file_pane fp
+                                    WHERE fp.pane_id = nr.id
+                                    UNION
+                                    SELECT fm.file_id
+                                    FROM file_markdown fm
+                                    WHERE fm.markdown_id = nr.markdown_id
+                                  ) AS combined_files
+                                )
+                             END
+                           )
+                         )
+                         FROM numbered_rows nr
+                         ORDER BY nr.row_num ASC
+                     ) AS panes
+                 FROM storyfragment sf
+                 ${includeDatum ? "LEFT JOIN menu m ON sf.menu_id = m.id" : ""}
+                 JOIN tractstack ts ON sf.tractstack_id = ts.id
+                 WHERE sf.slug = ?`,
+      args: [includeDatum ? 1 : 0, slug],
+    });
+    const row = rows.length ? rows[0] : null;
+    if (!row) return null;
+    const tractstackNode = getTractStackNode(row);
+    const storyfragmentNode = getStoryFragmentNodes(row);
+    if (includeDatum)
+      console.log(`must rewire; pull fileNodes and menu from storyfragment payload`);
+    const fileNodes = await getAllFileNodes();
+    const paneNodes = getPaneNodes(row);
+    const paneFragmentNodes = getPaneFragmentNodes(row, fileNodes, slug, false);
+    if (tractstackNode && storyfragmentNode)
+      return {
+        tractstackNode,
+        storyfragmentNode,
+        paneNodes,
+        paneFragmentNodes,
+        fileNodes,
+        // menuNodes,
+      };
+  } catch (error) {
+    console.error("Error fetching StoryFragmentBySlug:", error);
+    throw error;
+  }
+  return null;
 }
 
 export async function executeQueries(
@@ -798,47 +954,34 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
-
-    // First check which tables exist
-    const { rows: tableCheck } = await client.execute(
-      `SELECT name FROM sqlite_master 
-       WHERE type='table' AND name IN ('menu', 'pane', 'resource', 'storyfragment', 'tractstack')`
-    );
-
-    const existingTables = tableCheck.map((row) => row.name as string);
-
-    // Build dynamic query based on existing tables
+    //const { rows: tableCheck } = await client.execute(
+    //  `SELECT name FROM sqlite_master
+    //   WHERE type='table' AND name IN ('menu', 'pane', 'resource', 'storyfragment', 'tractstack')`
+    //);
+    //const existingTables = tableCheck.map((row) => row.name as string);
     const queryParts = [];
-
-    if (existingTables.includes("menu")) {
-      queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme as extra 
+    //if (existingTables.includes("menu")) {
+    queryParts.push(`SELECT id, id as slug, title, 'Menu' as type, theme as extra 
                       FROM menu`);
-    }
-
-    if (existingTables.includes("pane")) {
-      queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
+    //}
+    //if (existingTables.includes("pane")) {
+    queryParts.push(`SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
                       FROM pane`);
-    }
-
-    if (existingTables.includes("resource")) {
-      queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug as extra 
+    //}
+    //if (existingTables.includes("resource")) {
+    queryParts.push(`SELECT id, slug, title, 'Resource' as type, category_slug as extra 
                       FROM resource`);
-    }
-
-    if (existingTables.includes("storyfragment")) {
-      queryParts.push(`SELECT id, slug, title, 'StoryFragment' as type, NULL as extra 
+    //}
+    //if (existingTables.includes("storyfragment")) {
+    queryParts.push(`SELECT id, slug, title, 'StoryFragment' as type, NULL as extra 
                       FROM storyfragment`);
-    }
-
-    if (existingTables.includes("tractstack")) {
-      queryParts.push(`SELECT id, slug, title, 'TractStack' as type, NULL as extra 
+    //}
+    //if (existingTables.includes("tractstack")) {
+    queryParts.push(`SELECT id, slug, title, 'TractStack' as type, NULL as extra 
                       FROM tractstack`);
-    }
+    //}
+    //if (queryParts.length === 0) return [];
 
-    // If no tables exist, return empty array
-    if (queryParts.length === 0) return [];
-
-    // Execute combined query
     const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
 
     return rows.map((row) => {
@@ -899,5 +1042,20 @@ export async function initializeContent(): Promise<void> {
       console.error("Content initialization error:", error);
       throw error;
     }
+  }
+}
+
+export async function getAllFileNodes(): Promise<FileNode[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
+      SELECT id, filename, alt_description, url, src_set
+      FROM file
+    `);
+    return getFileNodes(rows);
+  } catch (error) {
+    console.error("Error fetching all file data:", error);
+    throw error;
   }
 }

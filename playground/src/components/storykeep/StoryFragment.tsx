@@ -30,11 +30,6 @@ import DesignNewPane from "./panel/DesignNewPane";
 import { classNames, handleEditorResize, debounce } from "../../utils/common/helpers";
 import type { ViewportKey, Config } from "../../types";
 
-//function getSubstring(str: string) {
-//  const dashIndex = str.indexOf("-");
-//  return dashIndex !== -1 ? str.substring(0, dashIndex) : str;
-//}
-
 function findUniqueSuffix(str: string, arr: string[]): string {
   if (!arr.includes(str)) {
     return str;

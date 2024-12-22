@@ -10,6 +10,11 @@ if (!validation.isValid || !config) {
 }
 ---
 
-<Layout title="Transcribes - Transcripts Board" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <TranscriptsBoard client:visible/>
+<Layout
+  title="Transcribes - Transcripts Board"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <TranscriptsBoard client:visible />
 </Layout>

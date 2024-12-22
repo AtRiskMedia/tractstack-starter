@@ -7,7 +7,7 @@ export interface Chapter {
   index: number;
   start: number;
   end: number;
-  gist: string,
+  gist: string;
   overrideGist: string;
   storyGist: string;
   excluded: boolean;
@@ -28,7 +28,7 @@ export interface Word {
   start: number;
   end: number;
   excluded: boolean;
-  globalIndex: number,
+  globalIndex: number;
 
   getText(): string; // => overrideText || text;
 }
@@ -39,7 +39,7 @@ export interface Sentence {
   chapterIdx: number;
   start: number;
   end: number;
-  rawWords: TranscriptWord[],
+  rawWords: TranscriptWord[];
   wordsMap: Map<string, number[]>;
 }
 
@@ -62,8 +62,8 @@ export interface Highlight {
   transcriptId: string;
   text: string;
   timestamps: {
-    start: number,
-    end: number,
+    start: number;
+    end: number;
   }[];
   excluded: boolean;
 }
@@ -91,13 +91,16 @@ export const ConvertedTranscript_NULL: ConvertedTranscript = {
   selections: [],
   words: [],
   sentences: [],
-  transcript: {duration: 0, title: "", text: "", id: "", slug: "", chapters: 0},
+  transcript: { duration: 0, title: "", text: "", id: "", slug: "", chapters: 0 },
   paragraphs: [],
   highlights: [],
   chapters: [],
-}
+};
 
-const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[], chaptersMap: TreeMap<number, Chapter>, words: Word[]} => {
+const buildChapters = (
+  t: Transcript,
+  s: SentencesResponse
+): { chapters: Chapter[]; chaptersMap: TreeMap<number, Chapter>; words: Word[] } => {
   const chapters: Chapter[] = [];
   const chaptersMap: TreeMap<number, Chapter> = new TreeMap<number, Chapter>();
   const allWords: Word[] = [];
@@ -109,8 +112,8 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
       // parse sentences lowercase
       const sentencesStrings = [];
       const sentences = [];
-      for(let i = 0; i < s.sentences.length; ++i) {
-        if(s.sentences[i].start >= x.start && s.sentences[i].end <= x.end) {
+      for (let i = 0; i < s.sentences.length; ++i) {
+        if (s.sentences[i].start >= x.start && s.sentences[i].end <= x.end) {
           sentencesStrings.push(s.sentences[i].text.toLowerCase());
           sentences.push(s.sentences[i]);
         }
@@ -119,12 +122,11 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
       // parse words with no special characters and lowercase
       const wordsStrSet = new Set<string>();
       const wordsArr: Word[] = [];
-      for(let j = 0; j < sentences.length; j++) {
+      for (let j = 0; j < sentences.length; j++) {
         const words = sentences[j].words;
         for (let k = 0; k < words.length; k++) {
           const wordStr = words[k].text;
-          if(wordStr.length === 0)
-            continue;
+          if (wordStr.length === 0) continue;
 
           const word: Word = {
             text: wordStr,
@@ -135,13 +137,15 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
             transcriptId: t.id,
             overrideText: "",
             globalIndex: globalWordIdx,
-            getText(): string {return this.overrideText || this.text},
+            getText(): string {
+              return this.overrideText || this.text;
+            },
           };
 
           ++globalWordIdx;
           allWords.push(word);
           wordsArr.push(word);
-          const w = stripSpecialCharsEnd(word.getText().toLowerCase())
+          const w = stripSpecialCharsEnd(word.getText().toLowerCase());
           if (w.length > 0 && !wordsStrSet.has(w)) {
             wordsStrSet.add(w);
           }
@@ -161,9 +165,11 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
         rawSentences: [],
         words: wordsStrSet,
         rawWords: wordsArr,
-        wordsMap: new Map<string, number[]>,
+        wordsMap: new Map<string, number[]>(),
 
-        getGist(): string {return this.storyGist || this.overrideGist || this.gist},
+        getGist(): string {
+          return this.storyGist || this.overrideGist || this.gist;
+        },
       };
       chapters.push(chapter);
     }
@@ -172,10 +178,13 @@ const buildChapters = (t: Transcript, s: SentencesResponse): {chapters: Chapter[
       chaptersMap.set(chapters[i].start, chapters[i]);
     }
   }
-  return {chapters, chaptersMap, words: allWords};
-}
+  return { chapters, chaptersMap, words: allWords };
+};
 
-const buildSentences = (sentencesResponse: SentencesResponse, lookup: TreeMap<number, Chapter>): Sentence[] => {
+const buildSentences = (
+  sentencesResponse: SentencesResponse,
+  lookup: TreeMap<number, Chapter>
+): Sentence[] => {
   const sentences: Sentence[] = [];
   if (sentencesResponse !== undefined) {
     const sentencesList = sentencesResponse.sentences;
@@ -184,21 +193,19 @@ const buildSentences = (sentencesResponse: SentencesResponse, lookup: TreeMap<nu
       const chapter = lookup.get(<number>lookup.floorKey(sentence.start));
 
       const wordsMap = new Map<string, number[]>();
-      for(let j = 0; j < sentence.words.length; j++) {
+      for (let j = 0; j < sentence.words.length; j++) {
         const words = sentence.words;
         for (let k = 0; k < words.length; k++) {
           const word = words[k].text;
           const start = words[k].start;
-          if(word.length === 0)
-            continue;
-          const w = stripSpecialCharsEnd(word.toLowerCase())
+          if (word.length === 0) continue;
+          const w = stripSpecialCharsEnd(word.toLowerCase());
           if (w.length > 0) {
-            if(!wordsMap.has(w))
-            {
+            if (!wordsMap.has(w)) {
               wordsMap.set(w, [start]);
             }
             const indices = wordsMap.get(w);
-            if(indices?.findIndex(x => x === start) === -1) {
+            if (indices?.findIndex((x) => x === start) === -1) {
               indices.push(start);
             }
           }
@@ -213,15 +220,15 @@ const buildSentences = (sentencesResponse: SentencesResponse, lookup: TreeMap<nu
         chapterIdx: chapter?.index || -1,
         wordsMap: wordsMap,
         rawWords: sentence.words,
-      }
+      };
       sentences.push(convertedSentence);
       chapter?.rawSentences.push(convertedSentence);
     }
   }
   return sentences;
-}
+};
 
-const buildParagraphs = (p: ParagraphsResponse|undefined): Paragraph[] => {
+const buildParagraphs = (p: ParagraphsResponse | undefined): Paragraph[] => {
   const paragraphs: Paragraph[] = [];
   if (p !== undefined) {
     for (let i = 0; i < p.paragraphs.length; ++i) {
@@ -234,10 +241,14 @@ const buildParagraphs = (p: ParagraphsResponse|undefined): Paragraph[] => {
     }
   }
   return paragraphs;
-}
+};
 
-export const buildTranscript = (t: Transcript, s: SentencesResponse, p: ParagraphsResponse|undefined): ConvertedTranscript => {
-  const {chapters, chaptersMap, words} = buildChapters(t, s);
+export const buildTranscript = (
+  t: Transcript,
+  s: SentencesResponse,
+  p: ParagraphsResponse | undefined
+): ConvertedTranscript => {
+  const { chapters, chaptersMap, words } = buildChapters(t, s);
   const sentences: Sentence[] = buildSentences(s, chaptersMap);
   const paragraphs: Paragraph[] = buildParagraphs(p);
   const highlights: Highlight[] = [];
@@ -259,6 +270,6 @@ export const buildTranscript = (t: Transcript, s: SentencesResponse, p: Paragrap
     selections,
     paragraphs,
     sentences,
-    transcript
+    transcript,
   };
-}
+};

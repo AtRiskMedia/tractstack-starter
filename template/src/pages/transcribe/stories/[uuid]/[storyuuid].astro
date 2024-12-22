@@ -11,6 +11,12 @@ if (!validation.isValid || !config) {
 
 const { uuid, storyuuid } = Astro.params;
 ---
-<Layout title="Transcribes - Story Edit" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <StoryEditor uuid={uuid} storyuuid={storyuuid} client:only="react"/>
+
+<Layout
+  title="Transcribes - Story Edit"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <StoryEditor uuid={uuid} storyuuid={storyuuid} client:only="react" />
 </Layout>

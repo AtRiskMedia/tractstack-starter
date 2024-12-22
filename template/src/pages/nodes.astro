@@ -1,0 +1,7 @@
+---
+import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
+
+const nodes = await getStoryFragmentNodesBySlug(`hello`, false);
+---
+
+{JSON.stringify(nodes)}

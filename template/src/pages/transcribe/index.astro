@@ -1,5 +1,4 @@
 ---
-
 import { TranscribesDashboard } from "../../components/transcribe/dashboard/TranscribesDashboard";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import Layout from "../../layouts/Layout.astro";
@@ -12,5 +11,5 @@ if (!validation.isValid || !config) {
 ---
 
 <Layout title="Transcribes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <TranscribesDashboard client:visible/>
+  <TranscribesDashboard client:visible />
 </Layout>

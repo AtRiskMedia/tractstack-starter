@@ -469,7 +469,6 @@ export interface TursoPane {
   slug: string;
   created: string;
   changed: string | null;
-  markdown_body: string;
   options_payload: string | null;
   is_context_pane: boolean;
   height_offset_desktop: number;
@@ -479,6 +478,8 @@ export interface TursoPane {
   height_ratio_mobile: string;
   height_ratio_tablet: string;
   files: TursoFileNode[];
+  markdown_id?: string;
+  markdown_body?: string;
 }
 
 export interface FileNode {
@@ -1042,10 +1043,10 @@ export interface TranscriptionEntry {
 
 export type StoryChapterOverrides = {
   gist: string;
-}
+};
 
 export interface StoryData {
-  transcriptId: string,
+  transcriptId: string;
   uuid: string;
   title: string;
   status: StoryStatus;
@@ -1054,22 +1055,35 @@ export interface StoryData {
 }
 
 export type TranscriptServerResponse = {
-  transcript: Transcript,
-  sentences: SentencesResponse,
-  paragraphs: ParagraphsResponse
+  transcript: Transcript;
+  sentences: SentencesResponse;
+  paragraphs: ParagraphsResponse;
+};
+
+export enum ProcessState {
+  NONE = -1,
+  QUEUED = 0,
+  PROCESSING = 1,
+  COMPLETED = 2,
+  ERROR = 3,
 }
 
-export enum ProcessState { NONE = -1, QUEUED = 0, PROCESSING = 1, COMPLETED = 2, ERROR = 3 }
-
-export const getProcessState = (status: "queued" | "processing" | "completed" | "error"): ProcessState => {
+export const getProcessState = (
+  status: "queued" | "processing" | "completed" | "error"
+): ProcessState => {
   switch (status) {
-    case "completed": return ProcessState.COMPLETED;
-    case "error": return ProcessState.ERROR;
-    case "processing": return ProcessState.PROCESSING;
-    case "queued": return ProcessState.QUEUED;
-    default: return ProcessState.NONE;
+    case "completed":
+      return ProcessState.COMPLETED;
+    case "error":
+      return ProcessState.ERROR;
+    case "processing":
+      return ProcessState.PROCESSING;
+    case "queued":
+      return ProcessState.QUEUED;
+    default:
+      return ProcessState.NONE;
   }
-}
+};
 
 export enum ActiveView {
   CHAPTERS = 0,
@@ -1101,4 +1115,156 @@ export enum StoryStatus {
   None = -1,
   Draft = 0,
   Published = 1,
+}
+
+export interface TractStackNode {
+  id: string;
+  title: string;
+  slug: string;
+  socialImagePath?: string;
+}
+
+//export interface ImageFileNode {
+//  id: string;
+//  filename: string;
+//  altDescription: string;
+//  src: string;
+//  srcSet: boolean;
+//}
+
+export interface PaneNode {
+  id: string;
+  title: string;
+  slug: string;
+  isContextPane?: boolean;
+  heightOffsetDesktop?: number;
+  heightOffsetMobile?: number;
+  heightOffsetTablet?: number;
+  heightRatioDesktop?: string;
+  heightRatioMobile?: string;
+  heightRatioTablet?: string;
+  codeHookTarget?: string;
+  codeHookPayload?: {
+    [key: string]: string;
+  };
+}
+
+export interface StoryFragmentNode {
+  id: string;
+  title: string;
+  slug: string;
+  parentId: string;
+  hasMenu: boolean;
+  menuId?: string;
+  tailwindBgColour?: string;
+  socialImagePath?: string;
+}
+
+export interface VisualBreakData {
+  collection: string;
+  image: string;
+  svgFill: string;
+}
+
+export interface PaneFragmentNode {
+  id: string;
+  type: "markdown" | "visual-break";
+  hiddenViewportMobile?: boolean;
+  hiddenViewportTablet?: boolean;
+  hiddenViewportDesktop?: boolean;
+}
+
+export interface MarkdownNode extends PaneFragmentNode {
+  type: "markdown";
+  // Add your markdown-specific fields here
+}
+
+export interface VisualBreakNode extends PaneFragmentNode {
+  type: "visual-break";
+  breakDesktop?: VisualBreakData;
+  breakTablet?: VisualBreakData;
+  breakMobile?: VisualBreakData;
+}
+
+export interface StoryKeepNodes {
+  tractstackNode: TractStackNode;
+  storyfragmentNode: StoryFragmentNode;
+  paneNodes: PaneNode[];
+  paneFragmentNodes: PaneFragmentNode[];
+  fileNodes: FileNode[];
+  //menuNodes: MenuNode[];
+}
+
+export interface FlattenedClasses {
+  [key: string]: string;
+}
+
+export interface FlatNode {
+  nodeId: string;
+  parentId: string | null;
+  tagName: string;
+  copy?: string;
+  src?: string;
+  alt?: string;
+  href?: string;
+  text?: string;
+  codeHookParams?: (string | string[])[];
+  overrideClasses?: {
+    mobile?: Record<string, string>;
+    tablet?: Record<string, string>;
+    desktop?: Record<string, string>;
+  };
+  elementCss?: string;
+  buttonPayload?: {
+    buttonClasses: Record<string, string[]>;
+    buttonHoverClasses: Record<string, string[]>;
+    callbackPayload: string;
+    isExternalUrl?: boolean;
+  };
+}
+
+export interface MdxNode {
+  type: string;
+  tagName?: string;
+  properties?: Record<string, any>;
+  children?: MdxNode[];
+  value?: string;
+  position?: {
+    start: { line: number; column: number; offset: number };
+    end: { line: number; column: number; offset: number };
+  };
+}
+
+export type StyleValue = string[];
+
+export type StylesInput = {
+  [key: string]: (StyleValue | null)[];
+};
+
+export interface PaneFragmentNode {
+  id: string;
+  type: "markdown" | "visual-break";
+  hiddenViewportMobile?: boolean;
+  hiddenViewportTablet?: boolean;
+  hiddenViewportDesktop?: boolean;
+}
+
+export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
+  type: "markdown";
+  id: string;
+  markdownId: string;
+  nodes: FlatNode[];
+  defaultClasses?: Record<
+    string,
+    {
+      mobile: Record<string, string>;
+      tablet: Record<string, string>;
+      desktop: Record<string, string>;
+    }
+  >;
+  parentClasses?: Array<{
+    mobile: Record<string, string>;
+    tablet: Record<string, string>;
+    desktop: Record<string, string>;
+  }>;
 }

@@ -9,6 +9,12 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 ---
-<Layout title="Transcribes - Stories Board" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <StoriesBoard client:visible/>
+
+<Layout
+  title="Transcribes - Stories Board"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <StoriesBoard client:visible />
 </Layout>

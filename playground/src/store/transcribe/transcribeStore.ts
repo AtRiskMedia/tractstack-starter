@@ -97,7 +97,7 @@ export const overrideWord = (wordIdx: number, chapterIdx: number, newWord: strin
   $chaptersStore.set([...chaptersCopy]);
 
   // and update the same word reference in global words dictionary
-  const allWords: Word[] = [...$wordStore.get() || []];
+  const allWords: Word[] = [...($wordStore.get() || [])];
   allWords[wordCopy.globalIndex].overrideText = newWord || "";
   $wordStore.set([...allWords]);
 };
@@ -108,7 +108,11 @@ export enum ChapterGistType {
 }
 
 // empty or undefined newGist removes the override
-export const overrideChapterGist = (chapterIdx: number, newGist: string, type: ChapterGistType = ChapterGistType.OVERRIDE) => {
+export const overrideChapterGist = (
+  chapterIdx: number,
+  newGist: string,
+  type: ChapterGistType = ChapterGistType.OVERRIDE
+) => {
   const chapters = $chaptersStore.get();
   if (!chapters) return;
 

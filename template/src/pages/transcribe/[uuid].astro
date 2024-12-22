@@ -12,6 +12,11 @@ if (!validation.isValid || !config) {
 const { uuid } = Astro.params;
 ---
 
-<Layout title="Transcribes - Edit" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <TranscribedVideo uuid={uuid} client:only="react"/>
+<Layout
+  title="Transcribes - Edit"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <TranscribedVideo uuid={uuid} client:only="react" />
 </Layout>
