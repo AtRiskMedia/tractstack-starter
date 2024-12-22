@@ -61,7 +61,11 @@ export function getMarkdownPaneNode(
       ...(typeof parentClasses === `object` ? { parentClasses } : {}),
       ...(defaultCss && Object.keys(defaultCss).length > 0 ? { defaultCss } : {}),
       ...(fragment.optionsPayload?.classNamesParent?.all
-        ? { parentCss: fragment.optionsPayload.classNamesParent.all }
+        ? {
+            parentCss: Array.isArray(fragment.optionsPayload.classNamesParent.all)
+              ? fragment.optionsPayload.classNamesParent.all.filter((css) => css !== "")
+              : fragment.optionsPayload.classNamesParent.all,
+          }
         : {}),
       nodes: elementNodes,
     };
