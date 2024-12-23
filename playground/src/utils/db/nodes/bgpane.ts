@@ -1,8 +1,9 @@
 import { ulid } from "ulid";
 import { getVisualBreak } from "../helpers/visualBreak";
-import type { PaneFragmentNode, BgPaneDatum } from "../../../types";
+import type { BgPaneDatum } from "../../../types";
+import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 
-export function getBgPaneNode(fragment: BgPaneDatum): PaneFragmentNode | null {
+export function getBgPaneNode(fragment: BgPaneDatum): GetPaneFragmentResult {
   if (
     typeof fragment.hiddenViewports === `string` &&
     fragment?.type === `bgPane` &&
@@ -12,14 +13,18 @@ export function getBgPaneNode(fragment: BgPaneDatum): PaneFragmentNode | null {
     const result = getVisualBreak(fragment.optionsPayload.artpack);
     if (result)
       return {
-        id: ulid(),
-        parentId: fragment.id,
-        type: `visual-break`,
-        ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
-        ...(fragment.hiddenViewports.includes(`tablet`) ? { hiddenViewportTablet: true } : {}),
-        ...(fragment.hiddenViewports.includes(`desktop`) ? { hiddenViewportDesktop: true } : {}),
-        ...result,
+        paneFragment: {
+          id: ulid(),
+          nodeType: "BgPane",
+          parentId: fragment.id,
+          type: `visual-break`,
+          ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
+          ...(fragment.hiddenViewports.includes(`tablet`) ? { hiddenViewportTablet: true } : {}),
+          ...(fragment.hiddenViewports.includes(`desktop`) ? { hiddenViewportDesktop: true } : {}),
+          ...result,
+        },
+        nodes: null
       };
   }
-  return null;
+  return {paneFragment: null, nodes: null};
 }

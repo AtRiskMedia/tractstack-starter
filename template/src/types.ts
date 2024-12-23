@@ -1131,7 +1131,7 @@ export interface TractStackNode extends BaseNode {
 //  srcSet: boolean;
 //}
 
-export type NodeType = "Root" | "Pane" | "StoryFragment" | "Element";
+export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Element";
 
 export interface BaseNode {
   id: string;
@@ -1194,6 +1194,7 @@ export interface StoryKeepNodes {
   storyfragmentNode: StoryFragmentNode;
   paneNodes: PaneNode[];
   paneFragmentNodes: PaneFragmentNode[];
+  flatNodes: FlatNode[];
   fileNodes: FileNode[];
   //menuNodes: MenuNode[];
 }
@@ -1252,7 +1253,6 @@ export interface PaneFragmentNode extends BaseNode {
 export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
   type: "markdown";
   markdownId: string;
-  nodes: string[];
   defaultClasses?: Record<
     string,
     {

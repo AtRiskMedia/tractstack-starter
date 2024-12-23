@@ -13,7 +13,7 @@ export const addNode = (data: BaseNode) => {
   allNodes.get().set(data.id, data);
 
   // root node
-  if(data.parentId === null) {
+  if(data.parentId === null && rootNodeId.get().length === 0) {
     rootNodeId.set(data.id);
   } else {
     const parentNode = parentNodes.get();

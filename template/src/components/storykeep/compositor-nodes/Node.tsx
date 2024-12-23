@@ -28,7 +28,6 @@ const getElement = (node: BaseNode): ReactElement => {
 export const Node = (props: NodeProps) => {
   const node = allNodes.get().get(props.id);
   if(node) {
-    console.log("render node: " + node.id);
     return getElement(node);
   } else {
     return <></>;

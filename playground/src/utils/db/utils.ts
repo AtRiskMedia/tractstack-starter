@@ -502,7 +502,8 @@ export async function getStoryFragmentNodesBySlug(
         tractstackNode,
         storyfragmentNode,
         paneNodes,
-        paneFragmentNodes,
+        paneFragmentNodes: paneFragmentNodes.paneFragments || [],
+        flatNodes: paneFragmentNodes.flatNodes || [],
         fileNodes,
         // menuNodes,
       };
