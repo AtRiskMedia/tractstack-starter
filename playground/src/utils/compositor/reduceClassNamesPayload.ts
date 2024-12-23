@@ -84,7 +84,7 @@ const processTupleForViewport = (tuple: Tuple, viewportIndex: number): TupleValu
   return tuple[viewportIndex] ?? tuple[2] ?? tuple[1] ?? tuple[0];
 };
 
-const processClassesForViewports = (
+export const processClassesForViewports = (
   classes: ClassNamesPayloadDatumValue,
   // | ClassNamesPayloadValue,
   override: {
@@ -102,7 +102,7 @@ const processClassesForViewports = (
             const value = overrideTuple
               ? processTupleForViewport(overrideTuple, viewportIndex)
               : processTupleForViewport(tuple, viewportIndex);
-            return reduceClassName(selector, value, -1);
+            return reduceClassName(selector, tuple, -1);
           })
           .filter(Boolean)
           .join(" ")

@@ -6,7 +6,7 @@ export const NodeText = (props: NodeProps) => {
   const node = allNodes.get().get(props.id) as FlatNode;
   return (
     <>
-      {node && node.copy}
+      {node && node.copy + " "}
     </>
   )
 }

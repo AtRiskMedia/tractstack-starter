@@ -16,6 +16,7 @@ import { NodeOl } from "@/components/storykeep/compositor-nodes/nodes/tagElement
 import { NodeUl } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeUl.tsx";
 import { NodeLi } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeLi.tsx";
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
+import { NodeStrong } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeStrong.tsx";
 
 export type NodeProps = {
   id: string;
@@ -45,6 +46,7 @@ const getElement = (node: BaseNode|FlatNode): ReactElement => {
     case "ol": return <NodeOl id={node.id}/>;
     case "ul": return <NodeUl id={node.id}/>;
     case "li": return <NodeLi id={node.id}/>;
+    case "strong": return <NodeStrong id={node.id}/>;
     default:
       return <></>;
   }

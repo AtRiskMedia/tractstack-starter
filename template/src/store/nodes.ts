@@ -1,13 +1,13 @@
 import { atom } from "nanostores";
 import type {
   BaseNode,
-  MarkdownPaneFragmentNode,
+  MarkdownPaneFragmentNode, NodeType,
   PaneFragmentNode,
-  PaneNode,
-  StoryFragmentNode,
+  StoryFragmentNode, Tuple,
   ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
+import { processClassesForViewports } from "@/utils/compositor/reduceClassNamesPayload.ts";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
@@ -48,6 +48,19 @@ export const addNodes = (nodes: BaseNode[]) => {
   }
 }
 
+const getClosestNodeTypeFromId = (startNodeId: string, nodeType: NodeType): string => {
+  const node = allNodes.get().get(startNodeId);
+  if(!node || node.nodeType === "Root") return "";
+
+  let parentId = node.parentId || "";
+  const parentNode = allNodes.get().get(parentId);
+  if(parentNode && parentNode.nodeType === nodeType) {
+    return parentId;
+  } else {
+    return getClosestNodeTypeFromId(parentId, nodeType);
+  }
+}
+
 export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: number = 0): string => {
   const node = allNodes.get().get(nodeId);
   if(!node) return "";
@@ -57,6 +70,26 @@ export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: num
       const markdownFragment = (node as MarkdownPaneFragmentNode);
       if("parentCss" in markdownFragment)
         return (<string[]>markdownFragment.parentCss)[depth];
+    }
+    break;
+
+    case "TagElement": {
+      const closestPaneId = getClosestNodeTypeFromId(nodeId, "Markdown");
+      const paneNode = allNodes.get().get(closestPaneId) as MarkdownPaneFragmentNode;
+      if(paneNode && "tagName" in node) {
+        const tagNameStr = node.tagName as string;
+        const styles = paneNode.defaultClasses![tagNameStr];
+        // todo make a copy if this works
+        if(styles && styles.mobile) {
+          const [all, mobile, tablet, desktop] = processClassesForViewports(
+            // @ts-expect-error fix types
+            styles.mobile,
+            {},
+            1
+          );
+          return desktop[0];
+        }
+      }
     }
     break;
 
