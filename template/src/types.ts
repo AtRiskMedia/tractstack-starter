@@ -1131,7 +1131,7 @@ export interface TractStackNode extends BaseNode {
 //  srcSet: boolean;
 //}
 
-export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Element";
+export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Markdown" | "TagElement";
 
 export interface BaseNode {
   id: string;

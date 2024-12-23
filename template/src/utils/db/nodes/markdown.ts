@@ -53,6 +53,7 @@ export function getMarkdownPaneNode(
       if (el.parentId === null) {
         el.parentId = id;
       }
+      el.nodeType = "TagElement";
     });
     const defaultCss = fragment.optionsPayload?.classNames?.all
       ? processDefaultCss({ default: fragment.optionsPayload.classNames.all })
@@ -62,7 +63,7 @@ export function getMarkdownPaneNode(
       paneFragment: {
         id,
         parentId: row.id,
-        nodeType: "Element",
+        nodeType: "Markdown",
         markdownId: row.markdown_id,
         type: `markdown`,
         ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
