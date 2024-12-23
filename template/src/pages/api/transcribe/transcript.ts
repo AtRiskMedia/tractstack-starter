@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ParagraphsResponse, SentencesResponse, Transcript } from "assemblyai";
 import type { APIRoute } from "astro";
 
@@ -17,7 +18,7 @@ const sendRequest = async (apiKey: string, url: string): Promise<any> => {
   return await response.json();
 };
 
-export const GET: APIRoute = async ({ params, request }): Promise<any> => {
+export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   const url = new URL(request.url);
   const transcriptId = url.searchParams.get("transcript_id"); // Get the transcript ID from the query parameters
   const apiKey = import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY; // Your AssemblyAI API key

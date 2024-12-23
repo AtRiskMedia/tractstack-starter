@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import { createEmptyStory, createNewv4UUID } from "@/utils/transcribe/utils.ts";
 import { tursoClient } from "@/utils/db/client.ts";
 import type { ResultSet } from "@libsql/client";
 
-export const GET: APIRoute = async ({ params, request }): Promise<any> => {
+export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   const url = new URL(request.url);
   const storyId = url.searchParams.get("uuid") || ""; // Get the transcript ID from the query parameters
 
@@ -33,7 +34,7 @@ export const GET: APIRoute = async ({ params, request }): Promise<any> => {
   }
 };
 
-export const POST: APIRoute = async ({ params, request }): Promise<any> => {
+export const POST: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   try {
     const data = await request.json();
     const transcriptId = data.transcript_id;
@@ -61,7 +62,7 @@ export const POST: APIRoute = async ({ params, request }): Promise<any> => {
   }
 };
 
-export const DELETE: APIRoute = async ({ params, request }): Promise<any> => {
+export const DELETE: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   try {
     const data = await request.json();
     const uuid = data.uuid;
@@ -84,7 +85,7 @@ export const DELETE: APIRoute = async ({ params, request }): Promise<any> => {
   }
 };
 
-export const PATCH: APIRoute = async ({ params, request }): Promise<any> => {
+export const PATCH: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   try {
     const data = await request.json();
     const uuid = data.uuid;

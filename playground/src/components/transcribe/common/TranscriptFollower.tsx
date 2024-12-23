@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useStore } from "@nanostores/react";
 import { useEffect, useMemo, useRef, useState, type SetStateAction } from "react";
 import type { SentencesResponse, Transcript, TranscriptSentence } from "assemblyai";

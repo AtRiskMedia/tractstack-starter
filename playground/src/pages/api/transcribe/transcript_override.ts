@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import type { ResultSet } from "@libsql/client";
 import { tursoClient } from "@/utils/db/client.ts";
 
-export const GET: APIRoute = async ({ params, request }): Promise<any> => {
+export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   const url = new URL(request.url);
   const transcriptId = url.searchParams.get("transcript_id"); // Get the transcript ID from the query parameters
 
@@ -35,7 +36,7 @@ export const GET: APIRoute = async ({ params, request }): Promise<any> => {
   }
 };
 
-export const PATCH: APIRoute = async ({ params, request }): Promise<any> => {
+export const PATCH: APIRoute = async ({ /* params, */ request }): Promise<any> => {
   try {
     const data = await request.json();
     const transcriptId = data.transcriptId;

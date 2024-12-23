@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 
-export const GET: APIRoute = async ({ params, request }): Promise<any> => {
+export const GET: APIRoute = async (/* { params, request } */): Promise<any> => {
   const apiKey = import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY; // Your AssemblyAI API key
   console.log("dashboard  get");
 

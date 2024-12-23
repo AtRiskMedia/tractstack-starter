@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { setDataToStore } from "@/store/transcribe/transcribeStore.ts";
 import {
   type StoryData,
@@ -141,7 +141,11 @@ export const StoryEditor = memo((props: StoryEditorProps) => {
               TextSelectionType.HEADLINE,
               TextSelectionType.KEY_POINT,
             ]}
-            availableTextOperations={[TextSelectionOperation.ADD, TextSelectionOperation.REMOVE]}
+            availableTextOperations={[
+              TextSelectionOperation.ADD,
+              TextSelectionOperation.REMOVE,
+              TextSelectionOperation.EDIT,
+            ]}
             defaultTextMode={TextSelectionType.ANECDOTE}
             defaultTextOperation={TextSelectionOperation.ADD}
             showTextSelectionOperations={true}

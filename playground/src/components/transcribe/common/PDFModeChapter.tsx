@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChapterWordsEditor } from "../transcribe/ChapterWordsEditor";
 import type { Chapter } from "@/utils/transcribe/converters.ts";
 import { TextSelectionOperation, type TextSelectionType } from "@/types.ts";

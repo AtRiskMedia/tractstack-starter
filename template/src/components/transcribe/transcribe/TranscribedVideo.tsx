@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { LoadSpinner } from "../helpers/LoadSpinner";
 import { WordsSearcher } from "./WordsSearcher";
 import { WordSearchResultsContainer } from "./WordSearchResultsContainer";
