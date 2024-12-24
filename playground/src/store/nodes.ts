@@ -61,6 +61,25 @@ const getClosestNodeTypeFromId = (startNodeId: string, nodeType: NodeType): stri
   }
 }
 
+export const getStyleByViewport = (
+  defaultClasses: {
+    mobile?: Record<string, string> | undefined;
+    tablet?: Record<string, string> | undefined;
+    desktop?: Record<string, string> | undefined;
+  } | undefined,
+  viewport: ViewportKey
+): Record<string, string> => {
+  switch (viewport) {
+    case "desktop":
+      return defaultClasses?.desktop || {};
+    case "tablet":
+      return defaultClasses?.tablet || {};
+    default:
+    case "mobile":
+      return defaultClasses?.mobile || {};
+  }
+};
+
 export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: number = 0): string => {
   const node = allNodes.get().get(nodeId);
   if(!node) return "";
@@ -83,12 +102,17 @@ export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: num
         // todo make a copy if this works
         if(styles && styles.mobile) {
           const [all, mobile, tablet, desktop] = processClassesForViewports(
-            // @ts-expect-error fix types
-            styles.mobile,
-            (node as FlatNode)?.overrideClasses?.mobile || {},
+            styles,
+            (node as FlatNode)?.overrideClasses || {},
             1
           );
-          return desktop[0];
+          return all[0];
+          // switch (viewport) {
+          //   case "desktop": return desktop[0];
+          //   case "tablet": return tablet[0];
+          //   case "mobile": return mobile[0];
+          //   default: return mobile[0];
+          // }
         }
       }
     }

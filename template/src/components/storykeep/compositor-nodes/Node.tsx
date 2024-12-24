@@ -19,7 +19,7 @@ import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagEle
 import { NodeStrong } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeStrong.tsx";
 
 export type NodeProps = {
-  id: string;
+  nodeId: string;
 }
 
 const getElement = (node: BaseNode|FlatNode): ReactElement => {
@@ -30,30 +30,30 @@ const getElement = (node: BaseNode|FlatNode): ReactElement => {
 
   switch (type) {
     // generic nodes, not tag (html) elements
-    case "Markdown":return <Markdown id={node.id}/>;
-    case "StoryFragment":return <StoryFragment id={node.id}/>;
-    case "Pane":return <Pane id={node.id} />;
-    case "Root":return <Root id={node.id} />;
-    case "TagElement": return <TagElement id={node.id} />;
+    case "Markdown":return <Markdown nodeId={node.id}/>;
+    case "StoryFragment":return <StoryFragment nodeId={node.id}/>;
+    case "Pane":return <Pane nodeId={node.id} />;
+    case "Root":return <Root nodeId={node.id} />;
+    case "TagElement": return <TagElement nodeId={node.id} />;
     // tag elements
-    case "h2":return <NodeH2 id={node.id} />;
-    case "h3":return <NodeH3 id={node.id} />;
-    case "text":return <NodeText id={node.id} />;
-    case "p":return <NodeP id={node.id} />;
-    case "em":return <NodeEm id={node.id} />;
-    case "a":return <NodeA id={node.id} />;
-    case "img":return <NodeImg id={node.id} />;
-    case "ol": return <NodeOl id={node.id}/>;
-    case "ul": return <NodeUl id={node.id}/>;
-    case "li": return <NodeLi id={node.id}/>;
-    case "strong": return <NodeStrong id={node.id}/>;
+    case "h2":return <NodeH2 nodeId={node.id} />;
+    case "h3":return <NodeH3 nodeId={node.id} />;
+    case "text":return <NodeText nodeId={node.id} />;
+    case "p":return <NodeP nodeId={node.id} />;
+    case "em":return <NodeEm nodeId={node.id} />;
+    case "a":return <NodeA nodeId={node.id} />;
+    case "img":return <NodeImg nodeId={node.id} />;
+    case "ol": return <NodeOl nodeId={node.id}/>;
+    case "ul": return <NodeUl nodeId={node.id}/>;
+    case "li": return <NodeLi nodeId={node.id}/>;
+    case "strong": return <NodeStrong nodeId={node.id}/>;
     default:
       return <></>;
   }
 }
 
 export const Node = (props: NodeProps) => {
-  const node = allNodes.get().get(props.id);
+  const node = allNodes.get().get(props.nodeId);
   if(node) {
     return getElement(node);
   } else {

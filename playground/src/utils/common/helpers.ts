@@ -739,6 +739,31 @@ export function getNthFromAstUsingElement(ast: HastRoot, el: RootContent) {
   return -1;
 }
 
+export function deepMerge<T extends object, U extends object>(source: T, target: U): T & U {
+  const result = { ...source } as T & U;
+
+  for (const key in target) {
+    if (
+      Object.prototype.hasOwnProperty.call(target, key) &&
+      typeof target[key] === "object" &&
+      target[key] !== null &&
+      !Array.isArray(target[key]) &&
+      // @ts-expect-error can index
+      typeof source[key] === "object" &&
+      source[key] !== null &&
+      !Array.isArray(source[key])
+    ) {
+      // Recursively merge nested objects
+      result[key] = deepMerge(source[key] as object, target[key] as object) as any;
+    } else {
+      // Overwrite or add the property
+      result[key] = target[key] as any;
+    }
+  }
+
+  return result;
+}
+
 export function mergeObjectKeys(...objects: Record<string, any>[]): string[] {
   const keysSet = new Set<string>();
 

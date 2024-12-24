@@ -4,12 +4,12 @@ import type { FlatNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 
 export const NodeA = (props: NodeProps) => {
-  const node = allNodes.get().get(props.id) as FlatNode;
+  const node = allNodes.get().get(props.nodeId) as FlatNode;
   return (
     <a href={node.href}
-       className={getNodeClasses(props.id, viewportStore.get().value)}>
-      {getChildNodeIDs(props.id).map((id: string) => (
-        <Node id={id} key={id} />
+       className={getNodeClasses(props.nodeId, viewportStore.get().value)}>
+      {getChildNodeIDs(props.nodeId).map((id: string) => (
+        <Node nodeId={id} key={id} />
       ))}
     </a>
   );

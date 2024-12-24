@@ -4,9 +4,9 @@ import { viewportStore } from "@/store/storykeep.ts";
 
 export const NodeUl = (props: NodeProps) => {
   return (
-    <ul className={getNodeClasses(props.id, viewportStore.get().value)}>
-      {getChildNodeIDs(props.id).map((id: string) => (
-        <Node id={id} key={id} />
+    <ul className={getNodeClasses(props.nodeId, viewportStore.get().value)}>
+      {getChildNodeIDs(props.nodeId).map((id: string) => (
+        <Node nodeId={id} key={id} />
       ))}
     </ul>
   )

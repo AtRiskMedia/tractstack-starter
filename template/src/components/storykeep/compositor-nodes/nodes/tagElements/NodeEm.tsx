@@ -4,8 +4,8 @@ import { getChildNodeIDs } from "@/store/nodes.ts";
 export const NodeEm = (props: NodeProps) => {
   return (
     <em>
-      {getChildNodeIDs(props.id).map((id: string) => (
-        <Node id={id} key={id} />
+      {getChildNodeIDs(props.nodeId).map((id: string) => (
+        <Node nodeId={id} key={id} />
       ))}
     </em>
   )

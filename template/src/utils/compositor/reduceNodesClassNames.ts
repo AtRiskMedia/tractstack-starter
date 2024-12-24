@@ -1,7 +1,9 @@
 import { tailwindClasses, tailwindCoreLayoutClasses } from "../tailwind/tailwindClasses";
 import type {
-  TupleValue,
+  TupleValue, ViewportKey,
 } from "../../types";
+import { getStyleByViewport } from "@/store/nodes.ts";
+import { deepMerge, mergeObjects } from "@/utils/common/helpers.ts";
 
 const tailwindModifier = [``, `md:`, `xl:`];
 const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];
@@ -51,42 +53,63 @@ const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number)
   return "";
 };
 export const processClassesForViewports = (
-  classes: Record<string, string>,
+  classes: {
+    mobile: Record<string, string>;
+    tablet: Record<string, string>;
+    desktop: Record<string, string>;
+  },
   // | ClassNamesPayloadValue,
-  override: Record<string, string>,
+  override: {
+    mobile?: Record<string, string> | undefined;
+    tablet?: Record<string, string> | undefined;
+    desktop?: Record<string, string> | undefined;
+  },
   count: number = 1
 ): [string[], string[], string[], string[]] => {
-  const processForViewport = (viewportIndex: number): string[] => {
-    return Array(count)
-      .fill(null)
-      .map((_, i) =>
-        Object.entries(classes)
-          .map(([selector, value]) => {
-            const overrideValue = override?.[selector]?.[i];
-            if(overrideValue) {
-              return reduceClassName(selector, overrideValue, -1);
-            } else {
-              return reduceClassName(selector, value, -1);
-            }
-          })
-          .filter(Boolean)
-          .join(" ")
-      );
+  const processForViewport = (viewport: ViewportKey): string[] => {
+    const results: string[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const classesForViewport: string[] = [];
+
+      for (const [viewportType, viewportVal] of Object.entries(deepMerge(override, classes))) {
+        if (viewportType !== viewport) continue;
+
+        for (const [selector, value] of Object.entries(viewportVal)) {
+          const overrideValue = getStyleByViewport(override, viewport)[selector];
+
+          if (overrideValue) {
+            classesForViewport.push(reduceClassName(selector, overrideValue, -1));
+          } else {
+            classesForViewport.push(reduceClassName(selector, value, -1));
+          }
+        }
+      }
+
+      if (classesForViewport.length > 0) {
+        results.push(classesForViewport.join(" "));
+      } else {
+        results.push(" ");
+      }
+    }
+    return results;
   };
-  const mobile = processForViewport(0);
-  const tablet = processForViewport(1);
-  const desktop = processForViewport(2);
+  const mobile = processForViewport("mobile");
+  const tablet = processForViewport("tablet");
+  const desktop = processForViewport("desktop");
   const all = mobile.map((_, index) => {
     const mobileClasses = mobile[index].split(" ");
     const tabletClasses = tablet[index].split(" ");
     const desktopClasses = desktop[index].split(" ");
     const combinedClasses = new Set(mobileClasses);
     tabletClasses.forEach((cls) => {
-      if (!mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
+      if (cls.length > 0 &&
+        !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
         combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
     });
     desktopClasses.forEach((cls) => {
       if (
+        cls.length > 0 &&
         !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")) &&
         !tabletClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))
       ) {
