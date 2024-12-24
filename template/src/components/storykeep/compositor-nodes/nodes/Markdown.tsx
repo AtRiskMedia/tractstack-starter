@@ -11,13 +11,13 @@ export const Markdown = (props: NodeProps) => {
       <Node nodeId={id} key={id} />
     ))}
   </>;
-  if(node.parentClasses) {
-    for (let i = 0; i < node.parentClasses?.length; ++i) {
+  if("parentCss" in node) {
+    for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
       nodesToRender = <div className={
         getNodeClasses(
           id,
           viewportStore.get().value,
-          node.parentClasses?.length-i
+          i-1
         )
       }>
         {nodesToRender}
