@@ -7,8 +7,8 @@ export const Root = (props: NodeProps) => {
       {/*<span>*/}
       {/*  Root <b>{props.id}</b>*/}
       {/*</span>*/}
-      {getChildNodeIDs(props.id).map((id: string) => (
-        <Node id={id} key={id} />
+      {getChildNodeIDs(props.nodeId).map((id: string) => (
+        <Node nodeId={id} key={id} />
       ))}
     </div>
   );

@@ -4,6 +4,6 @@ import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 export const ReactNodesRenderer = () => {
   const rootId = rootNodeId.get();
   return (
-    <Node id={rootId}/>
+    <Node nodeId={rootId}/>
   );
 }

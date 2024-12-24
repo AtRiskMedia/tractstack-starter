@@ -4,11 +4,11 @@ import type { MarkdownPaneFragmentNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 
 export const Markdown = (props: NodeProps) => {
-  const id = props.id;
-  const node = allNodes.get().get(props.id) as MarkdownPaneFragmentNode;
+  const id = props.nodeId;
+  const node = allNodes.get().get(props.nodeId) as MarkdownPaneFragmentNode;
   let nodesToRender = <>
-    {getChildNodeIDs(props.id).map((id: string) => (
-      <Node id={id} key={id} />
+    {getChildNodeIDs(props.nodeId).map((id: string) => (
+      <Node nodeId={id} key={id} />
     ))}
   </>;
   if(node.parentClasses) {
