@@ -1,13 +1,13 @@
 import { atom } from "nanostores";
 import type {
-  BaseNode,
+  BaseNode, FlatNode,
   MarkdownPaneFragmentNode, NodeType,
   PaneFragmentNode,
-  StoryFragmentNode, Tuple,
+  StoryFragmentNode,
   ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
-import { processClassesForViewports } from "@/utils/compositor/reduceClassNamesPayload.ts";
+import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
@@ -52,7 +52,7 @@ const getClosestNodeTypeFromId = (startNodeId: string, nodeType: NodeType): stri
   const node = allNodes.get().get(startNodeId);
   if(!node || node.nodeType === "Root") return "";
 
-  let parentId = node.parentId || "";
+  const parentId = node.parentId || "";
   const parentNode = allNodes.get().get(parentId);
   if(parentNode && parentNode.nodeType === nodeType) {
     return parentId;
@@ -68,8 +68,9 @@ export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: num
   switch (node.nodeType) {
     case "Markdown": {
       const markdownFragment = (node as MarkdownPaneFragmentNode);
-      if("parentCss" in markdownFragment)
+      if("parentCss" in markdownFragment) {
         return (<string[]>markdownFragment.parentCss)[depth];
+      }
     }
     break;
 
@@ -84,7 +85,7 @@ export const getNodeClasses = (nodeId: string, viewport: ViewportKey, depth: num
           const [all, mobile, tablet, desktop] = processClassesForViewports(
             // @ts-expect-error fix types
             styles.mobile,
-            {},
+            (node as FlatNode)?.overrideClasses?.mobile || {},
             1
           );
           return desktop[0];
