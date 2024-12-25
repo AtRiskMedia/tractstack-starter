@@ -1,0 +1,8 @@
+---
+import { allNodes } from "../../../../../store/nodes";
+import type { FlatNode } from "../../../../../types";
+
+const {nodeId} = Astro.props;
+const node = allNodes.get().get(nodeId) as FlatNode;
+---
+{node.copy + " "}

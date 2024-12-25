@@ -1,0 +1,12 @@
+---
+import { getChildNodeIDs, getNodeClasses, allNodes } from "../../../../../store/nodes";
+import { viewportStore } from "../../../../../store/storykeep.ts";
+import Node from "../../../../storykeep/compositor-nodes/Node.astro";
+
+const {nodeId} = Astro.props;
+---
+<strong class={getNodeClasses(nodeId, viewportStore.get().value)}>
+  {getChildNodeIDs(nodeId).map((id: string) => (
+    <Node nodeId={id} />
+  ))}
+</strong>

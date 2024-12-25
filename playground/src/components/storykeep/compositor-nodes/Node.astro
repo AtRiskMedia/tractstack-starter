@@ -5,6 +5,13 @@ import Root from "./nodes/Root.astro";
 import Pane from "./nodes/Pane.astro";
 import StoryFragment from "./nodes/StoryFragment.astro";
 import Markdown from "./nodes/Markdown.astro";
+import TagElement from "./nodes/TagElement.astro";
+import NodeH2 from "./nodes/tagElements/NodeH2.astro";
+import NodeH3 from "./nodes/tagElements/NodeH3.astro";
+import NodeP from "./nodes/tagElements/NodeP.astro";
+import NodeText from "./nodes/tagElements/NodeText.astro";
+import NodeEm from "./nodes/tagElements/NodeEm.astro";
+import NodeStrong from "./nodes/tagElements/NodeStrong.astro";
 
 const { nodeId } = Astro.props;
 const node = allNodes.get()?.get(nodeId);
@@ -20,9 +27,17 @@ function getElement(node: BaseNode | FlatNode) {
     case "Pane": return Pane;
     case "StoryFragment": return StoryFragment;
     case "Markdown": return Markdown;
-    default: return 'span';
+    case "TagElement": return TagElement;
+    // tag elements
+    case "h2": return NodeH2;
+    case "h3": return NodeH3;
+    case "p": return NodeP;
+    case "text": return NodeText;
+    case "em": return NodeEm;
+    case "strong": return NodeStrong;
+    default: return 'div';
   }
 }
-const RenderElement = node ? getElement(node) : 'span';
+const RenderElement = node ? getElement(node) : 'div';
 ---
 <RenderElement nodeId={nodeId}/>

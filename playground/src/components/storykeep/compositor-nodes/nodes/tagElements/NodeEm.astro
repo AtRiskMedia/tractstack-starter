@@ -1,0 +1,11 @@
+---
+import { allNodes, getChildNodeIDs } from "../../../../../store/nodes";
+import Node from "../../Node.astro";
+
+const {nodeId} = Astro.props;
+---
+<em>
+  {getChildNodeIDs(nodeId).map((id: string) => (
+    <Node nodeId={id} />
+  ))}
+</em>
