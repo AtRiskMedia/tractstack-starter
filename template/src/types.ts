@@ -1266,4 +1266,5 @@ export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
     tablet: Record<string, string>;
     desktop: Record<string, string>;
   }>;
+  parentCss?: string[];
 }

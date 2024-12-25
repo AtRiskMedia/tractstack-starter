@@ -1,3 +1,28 @@
 ---
+import { allNodes } from "../../../store/nodes";
+import type { BaseNode, FlatNode } from "../../../types.ts";
+import Root from "./nodes/Root.astro";
+import Pane from "./nodes/Pane.astro";
+import StoryFragment from "./nodes/StoryFragment.astro";
+import Markdown from "./nodes/Markdown.astro";
 
+const { nodeId } = Astro.props;
+const node = allNodes.get()?.get(nodeId);
+
+function getElement(node: BaseNode | FlatNode) {
+  let type = node.nodeType as string;
+  if ('tagName' in node) {
+    type = node.tagName!;
+  }
+
+  switch (type) {
+    case "Root": return Root;
+    case "Pane": return Pane;
+    case "StoryFragment": return StoryFragment;
+    case "Markdown": return Markdown;
+    default: return 'span';
+  }
+}
+const RenderElement = node ? getElement(node) : 'span';
 ---
+<RenderElement nodeId={nodeId}/>

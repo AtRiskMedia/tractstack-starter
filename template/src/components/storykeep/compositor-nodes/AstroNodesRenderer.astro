@@ -1,3 +1,7 @@
 ---
+import { rootNodeId } from "../../../store/nodes";
+import Node from "../../storykeep/compositor-nodes/Node.astro";
 
+const rootId = rootNodeId.get();
 ---
+<Node nodeId={rootId} />

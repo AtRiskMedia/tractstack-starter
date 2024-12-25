@@ -1,0 +1,23 @@
+---
+import { Node } from "../../../storykeep/compositor-nodes/Node";
+import { allNodes, getChildNodeIDs, getNodeClasses } from "../../../../store/nodes";
+import type { MarkdownPaneFragmentNode } from "../../../../types";
+import { viewportStore } from "../../../../store/storykeep";
+
+const { nodeId, depth = 0 } = Astro.props;
+const node = allNodes.get().get(nodeId) as MarkdownPaneFragmentNode;
+const parentCss = (node?.parentCss as string[]) || [];
+---
+{
+  parentCss.length > 0 && depth < parentCss.length - 1 ? (
+    <div class={getNodeClasses(nodeId, viewportStore.get().value, parentCss.length - depth - 1)}>
+      <Astro.self nodeId={node} depth={depth + 1} />
+    </div>
+  ) : (
+    <>
+      {getChildNodeIDs(Astro.props.nodeId).map((childId: string) => (
+        <Node nodeId={childId} />
+      ))}
+    </>
+  )
+}

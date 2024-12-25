@@ -155,5 +155,14 @@ const getReactNodeStyles = (node: BaseNode|undefined, viewport: ViewportKey): CS
 }
 
 const getStringNodeStyles = (node: BaseNode|undefined, viewport: ViewportKey): string => {
+  if(!node) return "";
+  switch (node?.nodeType) {
+    case "Pane": {
+      const pane = node as PaneFragmentNode;
+      if("bgColour" in pane) {
+        return `background-color: ${<string>pane.bgColour}`;
+      }
+    }
+  }
   return "";
 }
