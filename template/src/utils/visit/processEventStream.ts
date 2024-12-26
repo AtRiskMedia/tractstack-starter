@@ -73,83 +73,87 @@ async function ensureNodesExist(client: Client, contentMap: ContentMap[]): Promi
   const storyFragments = contentMap.filter((node) => node.type === "StoryFragment");
   const panes = contentMap.filter((node) => node.type === "Pane");
 
-  // Process TractStacks first
-  for (const node of tractStacks) {
-    const query = {
-      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
-      args: [ulid(), node.id, node.type, node.title || "Unknown"],
+  // Helper function to get or create corpus entry
+  async function getOrCreateCorpusEntry(node: {
+    id: string;
+    type: string;
+    title: string;
+  }): Promise<string> {
+    const selectQuery = {
+      sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
+      args: [node.id, node.type],
     };
-    if (DEBUG) console.log(query);
-    await client.execute(query);
-  }
+    if (DEBUG) console.log(selectQuery);
+    const { rows } = await client.execute(selectQuery);
 
-  // Then StoryFragments (which may depend on TractStacks)
-  for (const node of storyFragments) {
+    if (rows.length > 0) {
+      return rows[0].id as string;
+    }
+
+    const newId = ulid();
     const insertQuery = {
-      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
-      args: [ulid(), node.id, node.type, node.title || "Unknown"],
+      sql: "INSERT INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
+      args: [newId, node.id, node.type, node.title || "Unknown"],
     };
     if (DEBUG) console.log(insertQuery);
     await client.execute(insertQuery);
 
+    return newId;
+  }
+
+  // Helper function to create parent relationship if it doesn't exist
+  async function ensureParentRelationship(objectId: string, parentId: string): Promise<void> {
+    const checkQuery = {
+      sql: "SELECT id FROM parents WHERE object_id = ? AND parent_id = ?",
+      args: [objectId, parentId],
+    };
+    if (DEBUG) console.log(checkQuery);
+    const { rows } = await client.execute(checkQuery);
+
+    if (rows.length === 0) {
+      const parentQuery = {
+        sql: "INSERT INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
+        args: [ulid(), objectId, parentId],
+      };
+      if (DEBUG) console.log(parentQuery);
+      await client.execute(parentQuery);
+    }
+  }
+
+  // Process TractStacks first
+  for (const node of tractStacks) {
+    await getOrCreateCorpusEntry(node);
+  }
+
+  // Then StoryFragments (which may depend on TractStacks)
+  for (const node of storyFragments) {
+    const nodeCorpusId = await getOrCreateCorpusEntry(node);
+
     if (node.parentId) {
-      const selectNodeQuery = {
-        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
-        args: [node.id, node.type],
-      };
-      if (DEBUG) console.log(selectNodeQuery);
-      const { rows: nodeRows } = await client.execute(selectNodeQuery);
-
-      const selectParentQuery = {
-        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'TractStack'",
-        args: [node.parentId],
-      };
-      if (DEBUG) console.log(selectParentQuery);
-      const { rows: parentRows } = await client.execute(selectParentQuery);
-
-      if (nodeRows.length > 0 && parentRows.length > 0) {
-        const parentQuery = {
-          sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
-          args: [ulid(), nodeRows[0].id, parentRows[0].id],
-        };
-        if (DEBUG) console.log(parentQuery);
-        await client.execute(parentQuery);
-      }
+      // Find parent in contentMap first
+      const parentNode = contentMap.find((n) => n.id === node.parentId);
+      const parentCorpusId = await getOrCreateCorpusEntry({
+        id: node.parentId,
+        type: "TractStack",
+        title: parentNode?.title || "Unknown TractStack",
+      });
+      await ensureParentRelationship(nodeCorpusId, parentCorpusId);
     }
   }
 
   // Finally Panes (which may depend on StoryFragments)
   for (const node of panes) {
-    const insertQuery = {
-      sql: "INSERT OR IGNORE INTO corpus (id, object_id, object_type, object_name) VALUES (?, ?, ?, ?)",
-      args: [ulid(), node.id, node.type, node.title || "Unknown"],
-    };
-    if (DEBUG) console.log(insertQuery);
-    await client.execute(insertQuery);
+    const nodeCorpusId = await getOrCreateCorpusEntry(node);
 
     if (node.parentId) {
-      const selectNodeQuery = {
-        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = ?",
-        args: [node.id, node.type],
-      };
-      if (DEBUG) console.log(selectNodeQuery);
-      const { rows: nodeRows } = await client.execute(selectNodeQuery);
-
-      const selectParentQuery = {
-        sql: "SELECT id FROM corpus WHERE object_id = ? AND object_type = 'StoryFragment'",
-        args: [node.parentId],
-      };
-      if (DEBUG) console.log(selectParentQuery);
-      const { rows: parentRows } = await client.execute(selectParentQuery);
-
-      if (nodeRows.length > 0 && parentRows.length > 0) {
-        const parentQuery = {
-          sql: "INSERT OR IGNORE INTO parents (id, object_id, parent_id) VALUES (?, ?, ?)",
-          args: [ulid(), nodeRows[0].id, parentRows[0].id],
-        };
-        if (DEBUG) console.log(parentQuery);
-        await client.execute(parentQuery);
-      }
+      // Find parent in contentMap first
+      const parentNode = contentMap.find((n) => n.id === node.parentId);
+      const parentCorpusId = await getOrCreateCorpusEntry({
+        id: node.parentId,
+        type: "StoryFragment",
+        title: parentNode?.title || "Unknown StoryFragment",
+      });
+      await ensureParentRelationship(nodeCorpusId, parentCorpusId);
     }
   }
 }
