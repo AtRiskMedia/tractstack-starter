@@ -31,6 +31,7 @@ import type {
   Config,
   StoryKeepNodes,
   FileNode,
+  ImageFileNode,
 } from "../../types.ts";
 import type { ResultSet } from "@libsql/client";
 
@@ -1046,7 +1047,7 @@ export async function initializeContent(): Promise<void> {
   }
 }
 
-export async function getAllFileNodes(): Promise<FileNode[]> {
+export async function getAllFileNodes(): Promise<ImageFileNode[]> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];

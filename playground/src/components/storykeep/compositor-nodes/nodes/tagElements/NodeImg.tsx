@@ -5,9 +5,11 @@ import { viewportStore } from "@/store/storykeep.ts";
 
 export const NodeImg = (props: NodeProps) => {
   const node = allNodes.get().get(props.nodeId) as FlatNode;
+
   return (
     <img
-      src="/static.jpg"
+      src={node.src}
+      {...(node.srcSet ? { srcSet: node.srcSet } : {})}
       className={getNodeClasses(props.nodeId, viewportStore.get().value)}
       alt={node.alt}
     />

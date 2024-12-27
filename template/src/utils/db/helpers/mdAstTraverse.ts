@@ -3,7 +3,7 @@ import { ulid } from "ulid";
 import { processButtonPayload } from "./buttonPayload";
 import { cleanText } from "./cleanText";
 import type { Root, Element, RootContent, Text } from "hast";
-import type { FlatNode, FileNode, Tuple, OptionsPayloadDatum } from "../../../types";
+import type { FlatNode, ImageFileNode, Tuple, OptionsPayloadDatum } from "../../../types";
 
 // Update MdxNode to be a union type that matches HAST types
 type MdxNode = Root | Element | Text | RootContent;
@@ -56,7 +56,7 @@ function resolveResponsiveStylesAtIndex(
 export function mdAstTraverse(
   node: MdxNode,
   parentId: string | null = null,
-  fileNodes: FileNode[],
+  fileNodes: ImageFileNode[],
   optionsPayload: OptionsPayloadDatum,
   elementCounts: Record<string, number> = {},
   slug: string,
@@ -158,7 +158,8 @@ export function mdAstTraverse(
           const imgSrc = node.properties?.src as string;
           const matchingFile = fileNodes.find((file) => file.filename === imgSrc);
           if (matchingFile) {
-            flatNode.src = matchingFile.url;
+            flatNode.src = matchingFile.src;
+            if (matchingFile.srcSet) flatNode.srcSet = matchingFile.srcSet;
             flatNode.alt =
               (node.properties?.alt as string) ||
               matchingFile.altDescription ||

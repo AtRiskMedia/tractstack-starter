@@ -4,7 +4,7 @@ import type { Row } from "@libsql/client";
 import type {
   BgColourDatum,
   BgPaneDatum,
-  FileNode,
+  ImageFileNode,
   FlatNode,
   MarkdownPaneDatum,
   MarkdownPaneFragmentNode,
@@ -14,7 +14,7 @@ import type {
 
 export function getPaneFragmentNodes(
   row: Row,
-  fileNodes: FileNode[],
+  fileNodes: ImageFileNode[],
   slug: string,
   isContext: boolean
 ): { paneFragments: PaneFragmentNode[] | null; flatNodes: FlatNode[] | null } {
