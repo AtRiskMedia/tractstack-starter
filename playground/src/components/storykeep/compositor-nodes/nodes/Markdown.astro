@@ -4,11 +4,9 @@ import { allNodes, getChildNodeIDs, getNodeClasses } from "../../../../store/nod
 import type { MarkdownPaneFragmentNode } from "../../../../types";
 import { viewportStore } from "../../../../store/storykeep";
 
-const { nodeId, depth = 0, childId = -1 } = Astro.props;
+const { nodeId, depth = 0 } = Astro.props;
 const node = allNodes.get().get(nodeId) as MarkdownPaneFragmentNode;
 const parentCss = (node?.parentCss as string[]) || [];
-
-const elements = getChildNodeIDs(nodeId);
 ---
 
 {parentCss.length > 0 && depth < parentCss.length ? (
