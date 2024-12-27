@@ -123,6 +123,14 @@ export const getNodeSlug = (nodeId: string): string => {
   return node.slug;
 };
 
+export const getNodeCodeHookPayload = (nodeId: string): string => {
+  const node = allNodes.get().get(nodeId);
+  const target = node?.codeHookTarget;
+  const payload = node?.codeHookPayload;
+  if (target) return { target, ...(payload ? { params: payload } : {}) };
+  return null;
+};
+
 export const getNodeClasses = (
   nodeId: string,
   viewport: ViewportKey,

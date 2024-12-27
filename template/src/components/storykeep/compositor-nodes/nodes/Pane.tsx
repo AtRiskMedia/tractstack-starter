@@ -1,5 +1,12 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { getNodeSlug, getChildNodeIDs, getNodeClasses, getNodeStyles } from "@/store/nodes.ts";
+//import CodeHookWrapper from "../../compositor/CodeHookWrapper";
+import {
+  getNodeCodeHookPayload,
+  getNodeSlug,
+  getChildNodeIDs,
+  getNodeClasses,
+  getNodeStyles,
+} from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import type { CSSProperties } from "react";
 
@@ -10,6 +17,16 @@ export const Pane = (props: NodeProps) => {
     ...getNodeStyles<CSSProperties>(props.nodeId, viewportStore.get().value),
     gridArea: "1/1/1/1",
   };
+  const codeHookPayload = getNodeCodeHookPayload(props.nodeId);
+
+  if (codeHookPayload) {
+    return (
+      <div id={`pane-${props.nodeId}`}>
+        <em>Code Hook:</em>
+        {JSON.stringify(codeHookPayload, false, 2)}
+      </div>
+    );
+  }
 
   return (
     <div id={`pane-${props.nodeId}`}>

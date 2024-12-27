@@ -1,16 +1,17 @@
 ---
+import CodeHook from "../../../../custom/CodeHook.astro";
 import {
   getNodeSlug,
   getNodeClasses,
   getNodeStyles,
+  getNodeCodeHookPayload,
   getChildNodeIDs,
 } from "../../../../store/nodes";
 import { viewportStore } from "../../../../store/storykeep";
 import Node from "../Node.astro";
 
 const { nodeId } = Astro.props;
-
-// Create wrapper classes combining grid with existing classes
+const codeHookPayload = getNodeCodeHookPayload(nodeId);
 const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
 const contentStyles = {
@@ -19,10 +20,20 @@ const contentStyles = {
 };
 ---
 
-<div id={`pane-${nodeId}`}>
-  <div id={getNodeSlug(nodeId)} class={wrapperClasses}>
-    <div class={contentClasses} style={contentStyles}>
-      {getChildNodeIDs(nodeId).map((childId: string) => <Node nodeId={childId} />)}
+{
+  codeHookPayload ? (
+    <div id={`pane-${nodeId}`}>
+      <CodeHook target={codeHookPayload.target} resources={[]} options={null} />
     </div>
-  </div>
-</div>
+  ) : (
+    <div id={`pane-${nodeId}`}>
+      <div id={getNodeSlug(nodeId)} class={wrapperClasses}>
+        <div class={contentClasses} style={contentStyles}>
+          {getChildNodeIDs(nodeId).map((childId: string) => (
+            <Node nodeId={childId} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
