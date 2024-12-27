@@ -5,18 +5,11 @@ import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
 import { Root } from "@/components/storykeep/compositor-nodes/nodes/Root.tsx";
-import { NodeH2 } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeH2.tsx";
-import { NodeH3 } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeH3.tsx";
 import { NodeText } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeText.tsx";
-import { NodeP } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeP.tsx";
-import { NodeEm } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeEm.tsx";
 import { NodeA } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeA.tsx";
 import { NodeImg } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeImg.tsx";
-import { NodeOl } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeOl.tsx";
-import { NodeUl } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeUl.tsx";
-import { NodeLi } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeLi.tsx";
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
-import { NodeStrong } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeStrong.tsx";
+import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 
 export type NodeProps = {
   nodeId: string;
@@ -36,17 +29,19 @@ const getElement = (node: BaseNode|FlatNode): ReactElement => {
     case "Root":return <Root nodeId={node.id} />;
     case "TagElement": return <TagElement nodeId={node.id} />;
     // tag elements
-    case "h2":return <NodeH2 nodeId={node.id} />;
-    case "h3":return <NodeH3 nodeId={node.id} />;
+    case "em":
+    case "h2":
+    case "h3":
+    case "ol":
+    case "ul":
+    case "li":
+    case "strong":
+    case "p":
+      return <NodeBasicTag tagName={type} nodeId={node.id} />;
+
     case "text":return <NodeText nodeId={node.id} />;
-    case "p":return <NodeP nodeId={node.id} />;
-    case "em":return <NodeEm nodeId={node.id} />;
     case "a":return <NodeA nodeId={node.id} />;
     case "img":return <NodeImg nodeId={node.id} />;
-    case "ol": return <NodeOl nodeId={node.id}/>;
-    case "ul": return <NodeUl nodeId={node.id}/>;
-    case "li": return <NodeLi nodeId={node.id}/>;
-    case "strong": return <NodeStrong nodeId={node.id}/>;
     default:
       return <></>;
   }

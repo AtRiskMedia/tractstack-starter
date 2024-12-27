@@ -6,27 +6,20 @@ import Pane from "./nodes/Pane.astro";
 import StoryFragment from "./nodes/StoryFragment.astro";
 import Markdown from "./nodes/Markdown.astro";
 import TagElement from "./nodes/TagElement.astro";
-import NodeH2 from "./nodes/tagElements/NodeH2.astro";
-import NodeH3 from "./nodes/tagElements/NodeH3.astro";
-import NodeP from "./nodes/tagElements/NodeP.astro";
 import NodeText from "./nodes/tagElements/NodeText.astro";
-import NodeEm from "./nodes/tagElements/NodeEm.astro";
-import NodeStrong from "./nodes/tagElements/NodeStrong.astro";
 import NodeImg from "./nodes/tagElements/NodeImg.astro";
-import NodeLi from "./nodes/tagElements/NodeLi.astro";
-import NodeOl from "./nodes/tagElements/NodeOl.astro";
-import NodeUl from "./nodes/tagElements/NodeUl.astro";
 import NodeA from "./nodes/tagElements/NodeA.astro";
+import NodeBasicTag from "./nodes/tagElements/NodeBasicTag.astro";
+import EmptyNode from "./nodes/tagElements/EmptyNode.astro";
 
 const { nodeId } = Astro.props;
-const node = allNodes.get()?.get(nodeId);
+const node = allNodes.get()?.get(nodeId) as FlatNode;
+let type = node.nodeType as string;
+if ('tagName' in node) {
+  type = node.tagName!;
+}
 
-function getElement(node: BaseNode | FlatNode) {
-  let type = node.nodeType as string;
-  if ('tagName' in node) {
-    type = node.tagName!;
-  }
-
+function getElement(node: BaseNode | FlatNode, type: string) {
   switch (type) {
     case "Root": return Root;
     case "Pane": return Pane;
@@ -34,20 +27,21 @@ function getElement(node: BaseNode | FlatNode) {
     case "Markdown": return Markdown;
     case "TagElement": return TagElement;
     // tag elements
-    case "h2": return NodeH2;
-    case "h3": return NodeH3;
-    case "p": return NodeP;
+    case "h2":
+    case "h3":
+    case "p":
+    case "em":
+    case "strong":
+    case "li":
+    case "ol":
+    case "ul": return NodeBasicTag;
+
     case "text": return NodeText;
-    case "em": return NodeEm;
-    case "strong": return NodeStrong;
     case "img": return NodeImg;
-    case "li": return NodeLi;
-    case "ol": return NodeOl;
-    case "ul": return NodeUl;
     case "a": return NodeA;
-    default: return 'div';
+    default:return EmptyNode;
   }
 }
-const RenderElement = node ? getElement(node) : 'div';
+const RenderElement = node ? getElement(node, type) : EmptyNode;
 ---
-<RenderElement nodeId={nodeId}/>
+<RenderElement tagName={type} nodeId={nodeId}/>

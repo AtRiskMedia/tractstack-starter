@@ -3,10 +3,11 @@ import { getChildNodeIDs, getNodeClasses, allNodes } from "../../../../../store/
 import { viewportStore } from "../../../../../store/storykeep.ts";
 import Node from "../../../../storykeep/compositor-nodes/Node.astro";
 
-const {nodeId} = Astro.props;
+const {nodeId, tagName} = Astro.props;
+const Tag = tagName;
 ---
-<ol class={getNodeClasses(nodeId, viewportStore.get().value)}>
-  {getChildNodeIDs(nodeId).map((id: string) => (
+<Tag class={getNodeClasses(nodeId, viewportStore.get().value)}>
+  {getChildNodeIDs(nodeId).map((id) => (
     <Node nodeId={id} />
   ))}
-</ol>
+</Tag>
