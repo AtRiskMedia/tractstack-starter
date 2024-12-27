@@ -84,7 +84,7 @@ const processTupleForViewport = (tuple: Tuple, viewportIndex: number): TupleValu
   return tuple[viewportIndex] ?? tuple[2] ?? tuple[1] ?? tuple[0];
 };
 
-export const processClassesForViewports = (
+const processClassesForViewports = (
   classes: ClassNamesPayloadDatumValue,
   // | ClassNamesPayloadValue,
   override: {
@@ -102,7 +102,7 @@ export const processClassesForViewports = (
             const value = overrideTuple
               ? processTupleForViewport(overrideTuple, viewportIndex)
               : processTupleForViewport(tuple, viewportIndex);
-            return reduceClassName(selector, tuple, -1);
+            return reduceClassName(selector, value, -1);
           })
           .filter(Boolean)
           .join(" ")
@@ -242,9 +242,9 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
           return regular.map((cls, index) => {
             const hoverCls = hover[index]
               ? hover[index]
-                  .split(" ")
-                  .map((c) => `hover:${c}`)
-                  .join(" ")
+                .split(" ")
+                .map((c) => `hover:${c}`)
+                .join(" ")
               : "";
             return `${cls} ${hoverCls}`.trim();
           });

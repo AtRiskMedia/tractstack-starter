@@ -12,9 +12,15 @@ import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassN
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
 export const rootNodeId = atom<string>("");
+export const clickedNodeId = atom<string>("");
 
 export const getChildNodeIDs = (parentNodeId: string): string[] => {
   return Array.from(parentNodes.get()?.get(parentNodeId) || []);
+}
+
+export const setClickedNode = (nodeId: string) => {
+  clickedNodeId.set(nodeId);
+  console.log("Clicked node: " + nodeId);
 }
 
 export const clearAll = () => {
