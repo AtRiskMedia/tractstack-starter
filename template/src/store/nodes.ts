@@ -6,6 +6,7 @@ import type {
   NodeType,
   PaneFragmentNode,
   StoryFragmentNode,
+  StoryKeepNodes,
   ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
@@ -14,15 +15,47 @@ import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassN
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
 export const rootNodeId = atom<string>("");
+export const clickedNodeId = atom<string>("");
 
 export const getChildNodeIDs = (parentNodeId: string): string[] => {
   return Array.from(parentNodes.get()?.get(parentNodeId) || []);
+};
+
+const blockedClickNodes = new Set<string>(["em", "strong"]);
+
+export const setClickedNodeId = (nodeId: string) => {
+  let node = allNodes.get().get(nodeId) as FlatNode;
+  if (node && "tagName" in node) {
+    // make sure the element we clicked is an actual block element, not a decorator
+    while (node.parentId !== null && blockedClickNodes.has(node.tagName)) {
+      // if not then look for closest suitable element
+      node = allNodes.get().get(node.parentId) as FlatNode;
+    }
+    // only decorators? Tree broken, don't allow any clicks
+    if (!node) {
+      console.error("Cannot find any available element to click, abort");
+      return;
+    }
+  }
+  clickedNodeId.set(node.id);
+  console.log("clickedNodeId: ", node.id);
 };
 
 export const clearAll = () => {
   allNodes.get().clear();
   parentNodes.get().clear();
   rootNodeId.set("");
+};
+
+export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepNodes | null) => {
+  if (nodes !== null) {
+    clearAll();
+    addNode(nodes.tractstackNode);
+    addNode(nodes.storyfragmentNode);
+    addNodes(nodes.paneNodes);
+    addNodes(nodes.paneFragmentNodes);
+    addNodes(nodes.flatNodes);
+  }
 };
 
 export const addNode = (data: BaseNode) => {

@@ -1,6 +1,6 @@
 import { allNodes } from "@/store/nodes.ts";
 import type { BaseNode, FlatNode } from "@/types.ts";
-import type { ReactElement } from "react";
+import { memo, type ReactElement } from "react";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
@@ -16,6 +16,8 @@ export type NodeProps = {
 };
 
 const getElement = (node: BaseNode | FlatNode): ReactElement => {
+  if (node === undefined) return <></>;
+
   let type = node.nodeType as string;
   if ("tagName" in node) {
     type = node.tagName;
@@ -55,11 +57,7 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
   }
 };
 
-export const Node = (props: NodeProps) => {
-  const node = allNodes.get().get(props.nodeId);
-  if (node) {
-    return getElement(node);
-  } else {
-    return <></>;
-  }
-};
+export const Node = memo((props: NodeProps) => {
+  const node = allNodes.get().get(props.nodeId) as FlatNode;
+  return getElement(node);
+});

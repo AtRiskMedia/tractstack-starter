@@ -135,7 +135,7 @@ export function mdAstTraverse(
           copy: textNode.value,
           ...(codeHookParams ? { codeHookParams } : {}),
           ...(overrideClasses ? { overrideClasses } : {}),
-          ...(elementCss ? { elementCss } : {})
+          ...(elementCss ? { elementCss } : {}),
         });
         return results;
       }

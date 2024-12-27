@@ -1,7 +1,7 @@
 ---
-import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
 import { ReactNodesRenderer } from "../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { addNode, addNodes, clearAll } from "../store/nodes";
+import { buildNodesTreeFromFragmentNodes } from "../store/nodes";
+import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
 import AstroNodesRenderer from "../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import { getConfig, validateConfig } from "../utils/core/config";
 import type { AuthStatus } from "../types";
@@ -13,15 +13,8 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-const nodes = await getStoryFragmentNodesBySlug(`hello`, false);
-if (nodes !== null) {
-  clearAll();
-  addNode(nodes.tractstackNode);
-  addNode(nodes.storyfragmentNode);
-  addNodes(nodes.paneNodes);
-  addNodes(nodes.paneFragmentNodes);
-  addNodes(nodes.flatNodes);
-}
+const nodes = await getStoryFragmentNodesBySlug("hello", false);
+buildNodesTreeFromFragmentNodes(nodes);
 ---
 
 <Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
@@ -29,7 +22,7 @@ if (nodes !== null) {
   <AstroNodesRenderer />
 
   <h1>React</h1>
-  <ReactNodesRenderer />
+  <ReactNodesRenderer nodes={nodes} client:only="react" />
 
   <h1>Data</h1>
   <pre class="max-w-screen overflow-hidden">
