@@ -3,7 +3,7 @@ import type {
   TupleValue, ViewportKey,
 } from "../../types";
 import { getStyleByViewport } from "@/store/nodes.ts";
-import { deepMerge, mergeObjects } from "@/utils/common/helpers.ts";
+import { deepMerge } from "@/utils/common/helpers.ts";
 
 const tailwindModifier = [``, `md:`, `xl:`];
 const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];

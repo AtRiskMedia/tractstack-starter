@@ -82,6 +82,7 @@ export function mdAstTraverse(
 
     results.push({
       id: ulid(),
+      nodeType: "TagElement",
       parentId,
       tagName: "text",
       copy: cleanText(node.value || ``),
@@ -127,13 +128,14 @@ export function mdAstTraverse(
         }
 
         results.push({
+          nodeType: "TagElement",
           id: currentNodeId,
           parentId,
           tagName: "code",
           copy: textNode.value,
           ...(codeHookParams ? { codeHookParams } : {}),
           ...(overrideClasses ? { overrideClasses } : {}),
-          ...(elementCss ? { elementCss } : {}),
+          ...(elementCss ? { elementCss } : {})
         });
         return results;
       }
@@ -142,6 +144,7 @@ export function mdAstTraverse(
     // Create the flat node for non-code elements
     const flatNode: FlatNode = {
       id: currentNodeId,
+      nodeType: "TagElement",
       parentId,
       tagName: node.tagName,
       ...(overrideClasses && Object.keys(overrideClasses).length ? { overrideClasses } : {}),
