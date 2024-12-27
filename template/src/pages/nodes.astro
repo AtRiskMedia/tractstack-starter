@@ -5,7 +5,7 @@ import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
 import AstroNodesRenderer from "../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import { getConfig, validateConfig } from "../utils/core/config";
 import type { AuthStatus } from "../types";
-import Layout from "../../src/layouts/Layout.astro";
+import Layout from "../../src/layouts/StoryKeep.astro";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -13,7 +13,7 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-const nodes = await getStoryFragmentNodesBySlug("hello", false);
+const nodes = await getStoryFragmentNodesBySlug("about", false);
 buildNodesTreeFromFragmentNodes(nodes);
 ---
 

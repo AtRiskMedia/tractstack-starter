@@ -1,5 +1,6 @@
 import { lispLexer } from "../../concierge/lispLexer";
 import { preParseAction } from "../../concierge/preParse_Action";
+import { preParseBunny } from "../../concierge/preParse_Bunny";
 import { getConfig } from "../../core/config";
 import { convertToString } from "../../common/helpers";
 import type { ButtonData, FlatNode, ClassNamesPayloadDatumValue } from "../../../types";
@@ -33,6 +34,7 @@ export function processButtonPayload(
   const callbackPayload =
     buttonPayload?.callbackPayload && lispLexer(buttonPayload?.callbackPayload);
   const targetUrl = callbackPayload && preParseAction(callbackPayload, slug, isContext, config);
+  const bunnyPayload = callbackPayload && preParseBunny(callbackPayload);
   const isExternalUrl =
     (typeof targetUrl === "string" && targetUrl.substring(0, 8) === "https://") ||
     (typeof node.href === "string" && node.href.substring(0, 8) === "https://");
@@ -53,6 +55,11 @@ export function processButtonPayload(
       buttonClasses,
       buttonHoverClasses,
       callbackPayload: buttonPayload.callbackPayload,
+      ...(bunnyPayload
+        ? {
+            bunnyPayload,
+          }
+        : {}),
     },
   };
 }

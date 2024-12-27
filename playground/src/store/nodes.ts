@@ -143,6 +143,9 @@ export const getNodeClasses = (
 
     case "TagElement":
       {
+        if ([`button`, `a`].includes(node.tagName)) {
+          return node.elementCss || ``;
+        }
         const closestPaneId = getClosestNodeTypeFromId(nodeId, "Markdown");
         const paneNode = allNodes.get().get(closestPaneId) as MarkdownPaneFragmentNode;
         if (paneNode && "tagName" in node) {

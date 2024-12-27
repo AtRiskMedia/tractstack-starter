@@ -1223,6 +1223,11 @@ export interface FlatNode extends BaseNode {
     buttonHoverClasses: Record<string, string[]>;
     callbackPayload: string;
     isExternalUrl?: boolean;
+    bunnyPayload?: {
+      slug: string;
+      t: string;
+      isContext: boolean;
+    };
   };
 }
 

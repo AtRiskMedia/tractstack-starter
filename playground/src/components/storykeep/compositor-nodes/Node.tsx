@@ -7,6 +7,7 @@ import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/Sto
 import { Root } from "@/components/storykeep/compositor-nodes/nodes/Root.tsx";
 import { NodeText } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeText.tsx";
 import { NodeA } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeA.tsx";
+import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton.tsx";
 import { NodeImg } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeImg.tsx";
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
 import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
@@ -48,6 +49,8 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
 
     case "text":
       return <NodeText nodeId={node.id} />;
+    case "button":
+      return <NodeButton nodeId={node.id} />;
     case "a":
       return <NodeA nodeId={node.id} />;
     case "img":

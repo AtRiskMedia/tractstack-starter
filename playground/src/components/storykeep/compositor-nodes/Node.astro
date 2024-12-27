@@ -9,6 +9,7 @@ import TagElement from "./nodes/TagElement.astro";
 import NodeText from "./nodes/tagElements/NodeText.astro";
 import NodeImg from "./nodes/tagElements/NodeImg.astro";
 import NodeA from "./nodes/tagElements/NodeA.astro";
+import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton.tsx";
 import NodeBasicTag from "./nodes/tagElements/NodeBasicTag.astro";
 import EmptyNode from "./nodes/tagElements/EmptyNode.astro";
 
@@ -55,4 +56,10 @@ function getElement(type: string) {
 const RenderElement = node ? getElement(type) : EmptyNode;
 ---
 
-<RenderElement tagName={type} nodeId={nodeId} />
+{
+  type === "button" ? (
+    <NodeButton nodeId={nodeId} client:visible />
+  ) : (
+    <RenderElement tagName={type} nodeId={nodeId} />
+  )
+}
