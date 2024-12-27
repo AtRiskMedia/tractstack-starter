@@ -1123,13 +1123,13 @@ export interface TractStackNode extends BaseNode {
   socialImagePath?: string;
 }
 
-//export interface ImageFileNode {
-//  id: string;
-//  filename: string;
-//  altDescription: string;
-//  src: string;
-//  srcSet: boolean;
-//}
+export interface ImageFileNode {
+  id: string;
+  filename: string;
+  altDescription: string;
+  src: string;
+  srcSet?: string;
+}
 
 export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Markdown" | "TagElement";
 
@@ -1195,7 +1195,7 @@ export interface StoryKeepNodes {
   paneNodes: PaneNode[];
   paneFragmentNodes: PaneFragmentNode[];
   flatNodes: FlatNode[];
-  fileNodes: FileNode[];
+  fileNodes: ImageFileNode[];
   //menuNodes: MenuNode[];
 }
 
@@ -1207,6 +1207,7 @@ export interface FlatNode extends BaseNode {
   tagName: string;
   copy?: string;
   src?: string;
+  srcSet?: string;
   alt?: string;
   href?: string;
   text?: string;

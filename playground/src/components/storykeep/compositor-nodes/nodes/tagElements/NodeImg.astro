@@ -7,4 +7,9 @@ const { nodeId } = Astro.props;
 const node = allNodes.get().get(nodeId) as FlatNode;
 ---
 
-<img src="/static.jpg" class={getNodeClasses(nodeId, viewportStore.get().value)} alt={node.alt} />
+<img
+  src={node.src}
+  {...node.srcSet ? { srcSet: node.srcSet } : {}}
+  class={getNodeClasses(nodeId, viewportStore.get().value)}
+  alt={node.alt}
+/>

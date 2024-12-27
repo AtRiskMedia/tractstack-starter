@@ -8,7 +8,7 @@ import { processDefaultCss } from "../helpers/processDefaultCss";
 import type { Root } from "hast";
 import type {
   ClassNamesPayload,
-  FileNode,
+  ImageFileNode,
   MarkdownPaneDatum,
   OptionsPayloadDatum,
   TursoPane,
@@ -17,7 +17,7 @@ import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 
 export function getMarkdownPaneNode(
   fragment: MarkdownPaneDatum,
-  fileNodes: FileNode[],
+  fileNodes: ImageFileNode[],
   row: TursoPane,
   slug: string,
   isContext: boolean

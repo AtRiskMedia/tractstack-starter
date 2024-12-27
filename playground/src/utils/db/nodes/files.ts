@@ -1,10 +1,22 @@
 import type { Row } from "@libsql/client";
-import type { FileNode } from "../../../types";
+import type { ImageFileNode } from "../../../types";
 
-export function getFileNodes(rows: Row[]): FileNode[] {
+function createSrcSet(url: string): string {
+  const lastSlashIndex = url.lastIndexOf("/");
+  const basePath = url.substring(0, lastSlashIndex + 1);
+  const filename = url.substring(lastSlashIndex + 1);
+  const nameWithoutExt = filename.substring(0, filename.lastIndexOf("."));
+  const extension = filename.substring(filename.lastIndexOf("."));
+  const mobile = `${basePath}${nameWithoutExt}_600px${extension} 600w`;
+  const tablet = `${basePath}${nameWithoutExt}_1080px${extension} 1080w`;
+  const desktop = `${basePath}${nameWithoutExt}_1920px${extension} 1920w`;
+  return [mobile, tablet, desktop].join(", ");
+}
+
+export function getFileNodes(rows: Row[]): ImageFileNode[] {
   if (!rows.length) return [];
 
-  const payload: FileNode[] = rows
+  return rows
     .map((r: Row) => {
       if (
         typeof r?.id === "string" &&
@@ -13,17 +25,23 @@ export function getFileNodes(rows: Row[]): FileNode[] {
         typeof r?.src_set === "number" &&
         typeof r?.url === "string"
       ) {
-        return {
+        const isSourceSet = r.src_set === 1;
+        const node: ImageFileNode = {
           id: r.id,
           filename: r.filename,
           altDescription: r.alt_description,
-          url: r.url,
-          srcSet: r.src_set === 1,
-        } as FileNode;
+          src: isSourceSet
+            ? `${r.url.substring(0, r.url.lastIndexOf("."))}_600px${r.url.substring(r.url.lastIndexOf("."))}`
+            : r.url,
+        };
+
+        if (isSourceSet) {
+          node.srcSet = createSrcSet(r.url);
+        }
+
+        return node;
       }
       return null;
     })
-    .filter((n): n is FileNode => n !== null);
-
-  return payload;
+    .filter((n): n is ImageFileNode => n !== null);
 }
