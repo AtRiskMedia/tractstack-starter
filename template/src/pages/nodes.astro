@@ -13,7 +13,7 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-const nodes = await getStoryFragmentNodesBySlug("about", false);
+const nodes = await getStoryFragmentNodesBySlug("hello", false);
 buildNodesTreeFromFragmentNodes(nodes);
 ---
 

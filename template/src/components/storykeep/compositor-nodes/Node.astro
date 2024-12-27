@@ -12,12 +12,52 @@ import NodeA from "./nodes/tagElements/NodeA.astro";
 import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton.tsx";
 import NodeBasicTag from "./nodes/tagElements/NodeBasicTag.astro";
 import EmptyNode from "./nodes/tagElements/EmptyNode.astro";
+import Widget from "./nodes/Widget.astro";
 
 const { nodeId } = Astro.props;
 const node = allNodes.get()?.get(nodeId) as FlatNode;
 let type = node.nodeType as string;
 if ("tagName" in node) {
   type = node.tagName!;
+}
+
+// Helper function to parse code hooks
+function parseCodeHook(node: BaseNode | FlatNode) {
+  // First check if we have codeHookParams
+  if ("codeHookParams" in node && Array.isArray(node.codeHookParams)) {
+    const regexpHook =
+      /^(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*)\)$/;
+    const hookMatch = node.copy?.match(regexpHook);
+
+    if (!hookMatch) return null;
+
+    return {
+      hook: hookMatch[1],
+      value1: node.codeHookParams[0] || null,
+      value2: node.codeHookParams[1] || null,
+      value3: node.codeHookParams[2] || "",
+    };
+  }
+
+  // Fallback to checking children if no codeHookParams
+  if (!("children" in node) || !node.children?.[0]?.value) return null;
+
+  const regexpHook =
+    /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*?)\)/;
+  const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
+  const hookMatch = node.children[0].value.match(regexpHook);
+
+  if (!hookMatch) return null;
+
+  const hook = hookMatch[1];
+  const hookValuesRaw = hookMatch[2].match(regexpValues);
+
+  return {
+    hook,
+    value1: hookValuesRaw?.[0] || null,
+    value2: hookValuesRaw?.[1] || null,
+    value3: hookValuesRaw?.[2] || "",
+  };
 }
 
 function getElement(type: string) {
@@ -42,23 +82,29 @@ function getElement(type: string) {
     case "ol":
     case "ul":
       return NodeBasicTag;
-
     case "text":
       return NodeText;
     case "img":
       return NodeImg;
     case "a":
       return NodeA;
+    case "code":
+      const hookData = parseCodeHook(node);
+      return hookData ? Widget : EmptyNode;
     default:
       return EmptyNode;
   }
 }
+
 const RenderElement = node ? getElement(type) : EmptyNode;
+const hookData = type === "code" ? parseCodeHook(node) : null;
 ---
 
 {
   type === "button" ? (
     <NodeButton nodeId={nodeId} client:visible />
+  ) : type === "code" && hookData ? (
+    <RenderElement {...hookData} />
   ) : (
     <RenderElement tagName={type} nodeId={nodeId} />
   )

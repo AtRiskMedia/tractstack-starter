@@ -1,0 +1,83 @@
+---
+import { YouTubeWrapper } from "../../../frontend/widgets/YouTubeWrapper";
+import BunnyVideo from "../../../frontend/widgets/BunnyVideo.astro";
+import { Belief } from "../../../frontend/widgets/Belief";
+import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
+import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
+import { SignUp } from "../../../frontend/widgets/SignUp";
+
+interface Props {
+  hook: string | null;
+  value1: string | null;
+  value2: string | null;
+  value3: string;
+  classNames?: string;
+}
+
+const { hook, value1, value2, value3 = "", classNames = "" } = Astro.props;
+---
+
+{
+  hook === "youtube" && value1 && value2 ? (
+    <div class={classNames}>
+      <YouTubeWrapper client:only="react" embedCode={value1} title={value2} />
+    </div>
+  ) : null
+}
+
+{
+  hook === "bunny" && value1 && value2 ? (
+    <div class={classNames}>
+      <BunnyVideo videoUrl={value1} title={value2} />
+    </div>
+  ) : null
+}
+
+{
+  hook === "signup" && value1 ? (
+    <div class={classNames}>
+      <SignUp
+        client:load
+        persona={value1 ?? "Major Updates Only"}
+        prompt={value2 ?? "Keep in touch!"}
+        clarifyConsent={value3 === "true"}
+      />
+    </div>
+  ) : null
+}
+
+{
+  hook === "belief" && value1 && value2 ? (
+    <div class={classNames}>
+      <Belief client:visible value={{ slug: value1, scale: value2, extra: value3 }} />
+    </div>
+  ) : null
+}
+
+{
+  hook === "identifyAs" && value1 && value2 ? (
+    <IdentifyAs
+      client:visible
+      value={{ slug: value1, target: value2, extra: value3 }}
+      classNames={classNames}
+    />
+  ) : null
+}
+
+{
+  hook === "toggle" && value1 && value2 ? (
+    <div class={classNames}>
+      <ToggleBelief client:visible belief={value1} prompt={value2} />
+    </div>
+  ) : null
+}
+
+{
+  hook === "resource" && value1 ? (
+    <div class={classNames}>
+      <div>
+        <strong>Resource Template (not yet implemented):</strong> {value1}, {value2}
+      </div>
+    </div>
+  ) : null
+}

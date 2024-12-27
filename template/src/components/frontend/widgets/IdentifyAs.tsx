@@ -122,7 +122,8 @@ export const IdentifyAs = ({
   classNames: string;
   readonly?: boolean;
 }) => {
-  const targets = value.target.split(",").map((t) => t.trim());
+  const targets =
+    typeof value.target === `string` ? value.target.split(",").map((t) => t.trim()) : value.target;
   const extra = value && typeof value.extra === `string` ? value.extra : null;
   const noprompt = extra === ``;
 
