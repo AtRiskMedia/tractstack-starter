@@ -1162,6 +1162,8 @@ export interface StoryFragmentNode extends BaseNode {
   menuId?: string;
   tailwindBgColour?: string;
   socialImagePath?: string;
+  created?: number;
+  changed?: number;
 }
 
 export interface VisualBreakData {

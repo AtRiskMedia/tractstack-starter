@@ -18,6 +18,25 @@ buildNodesTreeFromFragmentNodes(nodes);
 ---
 
 <Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
+  <p>
+    <em>
+      menu, resource nodes not included; only the parent tractstack node and storyfragment node is
+      included; only panes associated with this storyfragment are included; no context page is
+      handled yet;
+    </em>
+    <strong
+      >most critically we are generating all the nodes based on old data model from turso; once we
+      save these nodes into turso (panes.optionsPayload.nodes) it becomes our source of truth -- and
+      we can write a helper that loops through the entire db to generate nodes and save them (we use
+      this helper to migrate old db to new)
+    </strong>
+    <em>
+      also -- nodes.astro uses `hello` but we aren't actually rendering with proper layout, etc. as
+      we would in [...slug].astro -- will need to pull storyfragment's node.created and node.changed
+      and ogImage to pass to Layout or StoryKeep
+    </em>
+  </p>
+  <br />
   <h1>Astro</h1>
   <AstroNodesRenderer />
 

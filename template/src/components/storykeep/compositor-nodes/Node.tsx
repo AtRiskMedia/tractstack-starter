@@ -95,9 +95,10 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
       return <NodeA nodeId={node.id} />;
     case "img":
       return <NodeImg nodeId={node.id} />;
-    case "code":
+    case "code": {
       const hookData = parseCodeHook(node);
       return hookData ? <Widget {...hookData} /> : <></>;
+    }
     default:
       return <></>;
   }
