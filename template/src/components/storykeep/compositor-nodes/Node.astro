@@ -19,7 +19,7 @@ if ('tagName' in node) {
   type = node.tagName!;
 }
 
-function getElement(node: BaseNode | FlatNode, type: string) {
+function getElement(type: string) {
   switch (type) {
     case "Root": return Root;
     case "Pane": return Pane;
