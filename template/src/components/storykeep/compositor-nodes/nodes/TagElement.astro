@@ -2,8 +2,7 @@
 import { allNodes, getChildNodeIDs, getNodeClasses } from "../../../../store/nodes";
 import Node from "../../../storykeep/compositor-nodes/Node.astro";
 
-const {nodeId} = Astro.props;
+const { nodeId } = Astro.props;
 ---
-{getChildNodeIDs(nodeId).map((id: string) => (
-  <Node nodeId={id} />
-))}
+
+{getChildNodeIDs(nodeId).map((id: string) => <Node nodeId={id} />)}

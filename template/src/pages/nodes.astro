@@ -25,14 +25,14 @@ if (nodes !== null) {
 ---
 
 <Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <h1>React</h1>
-  <ReactNodesRenderer />
-
   <h1>Astro</h1>
   <AstroNodesRenderer />
 
+  <h1>React</h1>
+  <ReactNodesRenderer />
+
   <h1>Data</h1>
-  <pre>
+  <pre class="max-w-screen overflow-hidden">
   {JSON.stringify(nodes, null, 2)}
 </pre>
 </Layout>

@@ -12,4 +12,4 @@ export const Root = (props: NodeProps) => {
       ))}
     </div>
   );
-}
+};

@@ -1,7 +1,5 @@
 import { tailwindClasses, tailwindCoreLayoutClasses } from "../tailwind/tailwindClasses";
-import type {
-  TupleValue, ViewportKey,
-} from "../../types";
+import type { TupleValue, ViewportKey } from "../../types";
 import { getStyleByViewport } from "@/store/nodes.ts";
 import { deepMerge, mergeObjects } from "@/utils/common/helpers.ts";
 
@@ -103,8 +101,7 @@ export const processClassesForViewports = (
     const desktopClasses = desktop[index].split(" ");
     const combinedClasses = new Set(mobileClasses);
     tabletClasses.forEach((cls) => {
-      if (cls.length > 0 &&
-        !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
+      if (cls.length > 0 && !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
         combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
     });
     desktopClasses.forEach((cls) => {

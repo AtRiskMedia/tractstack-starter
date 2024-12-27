@@ -15,17 +15,22 @@ import EmptyNode from "./nodes/tagElements/EmptyNode.astro";
 const { nodeId } = Astro.props;
 const node = allNodes.get()?.get(nodeId) as FlatNode;
 let type = node.nodeType as string;
-if ('tagName' in node) {
+if ("tagName" in node) {
   type = node.tagName!;
 }
 
 function getElement(type: string) {
   switch (type) {
-    case "Root": return Root;
-    case "Pane": return Pane;
-    case "StoryFragment": return StoryFragment;
-    case "Markdown": return Markdown;
-    case "TagElement": return TagElement;
+    case "Root":
+      return Root;
+    case "Pane":
+      return Pane;
+    case "StoryFragment":
+      return StoryFragment;
+    case "Markdown":
+      return Markdown;
+    case "TagElement":
+      return TagElement;
     // tag elements
     case "h2":
     case "h3":
@@ -34,14 +39,20 @@ function getElement(type: string) {
     case "strong":
     case "li":
     case "ol":
-    case "ul": return NodeBasicTag;
+    case "ul":
+      return NodeBasicTag;
 
-    case "text": return NodeText;
-    case "img": return NodeImg;
-    case "a": return NodeA;
-    default:return EmptyNode;
+    case "text":
+      return NodeText;
+    case "img":
+      return NodeImg;
+    case "a":
+      return NodeA;
+    default:
+      return EmptyNode;
   }
 }
 const RenderElement = node ? getElement(type) : EmptyNode;
 ---
-<RenderElement tagName={type} nodeId={nodeId}/>
+
+<RenderElement tagName={type} nodeId={nodeId} />

@@ -47,7 +47,7 @@ export function getMarkdownPaneNode(
       {},
       slug,
       isContext
-    )
+    );
     elementNodes.forEach((el) => {
       // make sure each flat node has a parent
       if (el.parentId === null) {
