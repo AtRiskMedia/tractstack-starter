@@ -42,6 +42,6 @@ function getElement(type: string) {
     default:return EmptyNode;
   }
 }
-const RenderElement = node ? getElement(node, type) : EmptyNode;
+const RenderElement = node ? getElement(type) : EmptyNode;
 ---
 <RenderElement tagName={type} nodeId={nodeId}/>
