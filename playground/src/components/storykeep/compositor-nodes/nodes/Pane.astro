@@ -9,12 +9,20 @@ import { viewportStore } from "../../../../store/storykeep";
 import Node from "../Node.astro";
 
 const { nodeId } = Astro.props;
+
+// Create wrapper classes combining grid with existing classes
+const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
+const contentClasses = "relative w-full h-auto justify-self-start";
+const contentStyles = {
+  ...getNodeStyles<string>(nodeId, viewportStore.get().value),
+  gridArea: "1/1/1/1",
+};
 ---
 
-<div
-  id={getNodeSlug(nodeId)}
-  class={getNodeClasses(nodeId, viewportStore.get().value)}
-  style={getNodeStyles<string>(nodeId, viewportStore.get().value)}
->
-  {getChildNodeIDs(nodeId).map((childId: string) => <Node nodeId={childId} />)}
+<div id={`pane-${nodeId}`}>
+  <div id={getNodeSlug(nodeId)} class={wrapperClasses}>
+    <div class={contentClasses} style={contentStyles}>
+      {getChildNodeIDs(nodeId).map((childId: string) => <Node nodeId={childId} />)}
+    </div>
+  </div>
 </div>
