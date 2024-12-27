@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import { memo, useState } from "react";
 import { PDFModeChapter } from "./PDFModeChapter";
 import { ToggleButton } from "./ToggleButton";
 import { SelectionStats } from "../story/SelectionStats";

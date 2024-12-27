@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { atom } from "nanostores";
 import { AssemblyAI } from "assemblyai";
 import { $activeStoryUuid, $stories } from "./storiesStore";

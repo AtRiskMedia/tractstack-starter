@@ -23,6 +23,7 @@ playground/config/init.json
 playground/config/turso.json
 
 # public
+template/public/styles/frontend.css
 playground/public/styles/frontend.css
 playground/public/images
 
