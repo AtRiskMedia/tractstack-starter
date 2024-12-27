@@ -1135,7 +1135,7 @@ export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Markdown"
 
 export interface BaseNode {
   id: string;
-  parentId: string|null;
+  parentId: string | null;
   nodeType: NodeType;
 }
 

@@ -242,9 +242,9 @@ export const reduceClassNamesPayload = (optionsPayload: OptionsPayloadDatum) => 
           return regular.map((cls, index) => {
             const hoverCls = hover[index]
               ? hover[index]
-                .split(" ")
-                .map((c) => `hover:${c}`)
-                .join(" ")
+                  .split(" ")
+                  .map((c) => `hover:${c}`)
+                  .join(" ")
               : "";
             return `${cls} ${hoverCls}`.trim();
           });

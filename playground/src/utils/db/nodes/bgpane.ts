@@ -23,8 +23,8 @@ export function getBgPaneNode(fragment: BgPaneDatum): GetPaneFragmentResult {
           ...(fragment.hiddenViewports.includes(`desktop`) ? { hiddenViewportDesktop: true } : {}),
           ...result,
         },
-        nodes: null
+        nodes: null,
       };
   }
-  return {paneFragment: null, nodes: null};
+  return { paneFragment: null, nodes: null };
 }

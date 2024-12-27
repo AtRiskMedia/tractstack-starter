@@ -17,10 +17,10 @@ export function getPaneFragmentNodes(
   fileNodes: FileNode[],
   slug: string,
   isContext: boolean
-): {paneFragments: PaneFragmentNode[]|null, flatNodes: FlatNode[]|null} {
+): { paneFragments: PaneFragmentNode[] | null; flatNodes: FlatNode[] | null } {
   if (typeof row?.panes === `string`) {
     const panesPayloadRaw = JSON.parse(row.panes);
-    if (!panesPayloadRaw) return {paneFragments: [], flatNodes: []};
+    if (!panesPayloadRaw) return { paneFragments: [], flatNodes: [] };
 
     const paneFragmentNodes = panesPayloadRaw
       .map((r: TursoPane) => {
@@ -34,7 +34,7 @@ export function getPaneFragmentNodes(
                 case `bgPane`:
                   return getBgPaneNode(p);
                 case `bgColour`:
-                  return {paneFragment: null, nodes: null};
+                  return { paneFragment: null, nodes: null };
               }
             }
           );
@@ -53,9 +53,9 @@ export function getPaneFragmentNodes(
     return {
       paneFragments: paneFragments,
       flatNodes: nodes,
-    }
+    };
   }
-  return {paneFragments: [], flatNodes: []};
+  return { paneFragments: [], flatNodes: [] };
 }
 
 export type GetPaneFragmentResult = {
