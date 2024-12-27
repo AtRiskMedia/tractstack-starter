@@ -12,6 +12,11 @@ import NodeP from "./nodes/tagElements/NodeP.astro";
 import NodeText from "./nodes/tagElements/NodeText.astro";
 import NodeEm from "./nodes/tagElements/NodeEm.astro";
 import NodeStrong from "./nodes/tagElements/NodeStrong.astro";
+import NodeImg from "./nodes/tagElements/NodeImg.astro";
+import NodeLi from "./nodes/tagElements/NodeLi.astro";
+import NodeOl from "./nodes/tagElements/NodeOl.astro";
+import NodeUl from "./nodes/tagElements/NodeUl.astro";
+import NodeA from "./nodes/tagElements/NodeA.astro";
 
 const { nodeId } = Astro.props;
 const node = allNodes.get()?.get(nodeId);
@@ -35,6 +40,11 @@ function getElement(node: BaseNode | FlatNode) {
     case "text": return NodeText;
     case "em": return NodeEm;
     case "strong": return NodeStrong;
+    case "img": return NodeImg;
+    case "li": return NodeLi;
+    case "ol": return NodeOl;
+    case "ul": return NodeUl;
+    case "a": return NodeA;
     default: return 'div';
   }
 }

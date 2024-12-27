@@ -1,0 +1,9 @@
+---
+import { getChildNodeIDs, getNodeClasses, allNodes } from "../../../../../store/nodes";
+import { viewportStore } from "../../../../../store/storykeep.ts";
+import type { FlatNode } from "../../../../../types";
+
+const {nodeId} = Astro.props;
+const node = allNodes.get().get(nodeId) as FlatNode;
+---
+<img src="/static.jpg" class={getNodeClasses(nodeId, viewportStore.get().value)} alt={node.alt} />
