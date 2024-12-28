@@ -3,6 +3,7 @@ import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../../../store/beliefs";
 import { pageLoadTime } from "../../../store/events";
 import type { BeliefStore, BeliefDatum } from "../../../types";
+import { smoothScrollToPane } from "@/utils/common/domHelpers.ts";
 
 const SCROLL_PREVENTION_PERIOD = 5000;
 const DOM_UPDATE_DELAY = 50;
@@ -106,23 +107,6 @@ export const useFilterPane = (
     }
   };
 
-  const handleScroll = (thisPane: HTMLElement) => {
-    const viewportHeight = window.innerHeight;
-    const viewportTop = window.scrollY;
-    const viewportBottom = viewportTop + viewportHeight;
-    const paneTop = thisPane.offsetTop;
-    const PROXIMITY_THRESHOLD = viewportHeight;
-
-    if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
-      thisPane.classList.add("motion-safe:animate-fadeInUp");
-
-      window.scrollTo({
-        top: paneTop - 20,
-        behavior: "smooth",
-      });
-    }
-  };
-
   useEffect(() => {
     evaluateBeliefs();
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
@@ -149,9 +133,7 @@ export const useFilterPane = (
       !isFirstRender.current &&
       Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD
     ) {
-      scrollTimeoutRef.current = setTimeout(() => {
-        handleScroll(thisPane);
-      }, DOM_UPDATE_DELAY);
+      scrollTimeoutRef.current = smoothScrollToPane(thisPane, 20, DOM_UPDATE_DELAY);
     }
 
     isFirstRender.current = false;
