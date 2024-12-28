@@ -5,12 +5,14 @@ import type {
   MarkdownPaneFragmentNode,
   NodeType,
   PaneFragmentNode,
+  PaneNode,
   StoryFragmentNode,
   StoryKeepAllNodes,
   ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
+import type { BeliefDatum } from "../types.ts";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
@@ -153,6 +155,31 @@ export const getNodeCodeHookPayload = (nodeId: string): string => {
   const payload = node?.codeHookPayload;
   if (target) return { target, ...(payload ? { params: payload } : {}) };
   return null;
+};
+
+export const getPaneBeliefs = (
+  nodeId: string
+): { heldBeliefs: BeliefDatum; withheldBeliefs: BeliefDatum } | null => {
+  const paneNode = allNodes.get().get(nodeId) as PaneNode;
+  if (paneNode.nodeType !== "Pane") {
+    return null;
+  }
+
+  const beliefs: { heldBeliefs: BeliefDatum; withheldBeliefs: BeliefDatum } = {
+    heldBeliefs: {},
+    withheldBeliefs: {},
+  };
+  let anyBeliefs = false;
+  if ("heldBeliefs" in paneNode) {
+    beliefs.heldBeliefs = paneNode.heldBeliefs as BeliefDatum;
+    anyBeliefs = true;
+  }
+  if ("withheldBeliefs" in paneNode) {
+    beliefs.withheldBeliefs = paneNode.withheldBeliefs as BeliefDatum;
+    anyBeliefs = true;
+  }
+
+  return anyBeliefs ? beliefs : null;
 };
 
 export const getNodeClasses = (

@@ -10,7 +10,7 @@ const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
   const baseClasses = {
     mobile: "md:hidden",
     tablet: "hidden md:block xl:hidden",
-    desktop: "hidden xl:block"
+    desktop: "hidden xl:block",
   };
 
   const breakpoints = ["mobile", "tablet", "desktop"] as const;
@@ -24,16 +24,18 @@ const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
           return null;
         }
 
-        const breakData = payload[`break${capitalizedBreakpoint}` as keyof VisualBreakNode] as {
-          collection: string;
-          image: string;
-          svgFill: string;
-        } | undefined;
+        const breakData = payload[`break${capitalizedBreakpoint}` as keyof VisualBreakNode] as
+          | {
+              collection: string;
+              image: string;
+              svgFill: string;
+            }
+          | undefined;
 
         if (!breakData) return null;
 
         return (
-          <div 
+          <div
             key={breakpoint}
             className={baseClasses[breakpoint]}
             style={{ fill: breakData.svgFill || "none" }}

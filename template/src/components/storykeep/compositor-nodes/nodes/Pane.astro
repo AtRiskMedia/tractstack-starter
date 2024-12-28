@@ -6,12 +6,15 @@ import {
   getNodeStyles,
   getNodeCodeHookPayload,
   getChildNodeIDs,
+  getPaneBeliefs,
 } from "../../../../store/nodes";
 import { viewportStore } from "../../../../store/storykeep";
 import Node from "../Node.astro";
+import Filter from "../../../../components/frontend/state/Filter";
 
 const { nodeId } = Astro.props;
 const codeHookPayload = getNodeCodeHookPayload(nodeId);
+const beliefs = getPaneBeliefs(nodeId);
 const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
 const contentStyles = {
@@ -20,6 +23,16 @@ const contentStyles = {
 };
 ---
 
+{
+  beliefs !== null && (
+    <Filter
+      client:load
+      id={nodeId}
+      heldBeliefs={beliefs.heldBeliefs}
+      withheldBeliefs={beliefs.withheldBeliefs}
+    />
+  )
+}
 {
   codeHookPayload ? (
     <div id={`pane-${nodeId}`}>
