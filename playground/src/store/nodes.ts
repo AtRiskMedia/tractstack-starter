@@ -149,6 +149,16 @@ export const getNodeSlug = (nodeId: string): string => {
   return node.slug;
 };
 
+export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | null => {
+  const nodes = Array.from(allNodes.get().values());
+  return (
+    nodes.find(
+      (node): node is StoryFragmentNode =>
+        node.nodeType === "StoryFragment" && "slug" in node && node.slug === slug
+    ) || null
+  );
+};
+
 export const getNodeCodeHookPayload = (nodeId: string): string => {
   const node = allNodes.get().get(nodeId);
   const target = node?.codeHookTarget;

@@ -1,0 +1,122 @@
+---
+import { isValidContentPath } from "../../utils/common/routeValidation";
+import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
+import { getConfig, validateConfig } from "../../utils/core/config";
+import { getStoryFragmentBySlug, getAllMenus, getContentMap } from "../../utils/db/utils";
+import StoryKeep from "../../layouts/StoryKeep.astro";
+import HeaderWidget from "../../custom/HeaderWidget.astro";
+import Header from "../../components/common/Header.astro";
+import Footer from "../../components/common/Footer.astro";
+import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
+import { components } from "../../custom/CodeHook.astro";
+import type { AuthStatus, Current, ContentMap } from "../../types";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const { slug } = Astro.params;
+const lookup = slug || config?.init?.HOME_SLUG;
+console.log("nodes slug: " + lookup);
+if (slug === config.init?.HOME_SLUG) {
+  return Astro.redirect("/");
+}
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const canonicalURL = `/${lookup}`;
+const menus = await getAllMenus();
+const contentMap: ContentMap[] = await getContentMap();
+const contentMapSlugs = contentMap?.map((p: ContentMap) => p.slug) || [];
+
+// Generate nodes and build tree
+const nodes = await getGenerateAllNodes();
+buildNodesTreeFromFragmentNodes(nodes);
+const storyfragmentNode = getStoryFragmentNodeBySlug(lookup);
+
+// Get additional story fragment data
+const storyfragment = await getStoryFragmentBySlug(lookup, config);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+---
+
+<StoryKeep
+  config={config}
+  title={storyfragmentNode.title}
+  pubDatetime={storyfragmentNode.created || new Date()}
+  modDatetime={storyfragmentNode.changed || new Date()}
+  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
+    ? storyfragmentNode.socialImagePath
+    : undefined}
+  canonicalURL={canonicalURL}
+>
+  <div
+    id="storykeep-content"
+    class="m-0 p-0 flex flex-col bg-myblue w-full"
+    style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+  >
+    <header
+      class="z-[9001] sticky top-0 z-10 bg-mywhite flex justify-between items-center w-full"
+      id="main-header"
+    >
+      <Header
+        title={storyfragment.title}
+        menu={storyfragment.menuPayload}
+        slug={lookup}
+        isContext={false}
+        isEditable={true}
+        impressions={storyfragment.impressions}
+        user={user}
+        config={config}
+      />
+    </header>
+
+    <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
+      <main id="website-content" class="overflow-auto w-full">
+        <div class={storyfragment.tailwindBgColour}>
+          <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
+        </div>
+        <div
+          class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
+          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+        >
+        </div>
+      </main>
+
+      {
+        storyfragment.impressions?.length && (
+          <ImpressionWrapper
+            slug={storyfragment.slug}
+            isContext={true}
+            payload={storyfragment.impressions}
+            config={config}
+            client:idle
+          />
+        )
+      }
+
+      <Footer
+        created={storyfragment.created}
+        menu={storyfragment.menuPayload}
+        backToTop={true}
+        slug={lookup}
+        isContext={false}
+        config={config}
+      />
+    </div>
+  </div>
+</StoryKeep>

@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
 import { getVisualBreak } from "../helpers/visualBreak";
-import type { BgPaneDatum, TursoPane } from "../../../types";
+import type { BgPaneDatum } from "../../../types";
 import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 
 export function getBgPaneNode(fragment: BgPaneDatum, parentId: string): GetPaneFragmentResult {

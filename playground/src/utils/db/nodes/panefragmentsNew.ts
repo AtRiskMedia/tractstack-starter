@@ -9,7 +9,6 @@ import type {
   MarkdownPaneDatum,
   MarkdownPaneFragmentNode,
   PaneFragmentNode,
-  TursoPane,
 } from "../../../types";
 
 export function getPaneFragmentNodes(
