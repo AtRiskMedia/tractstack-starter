@@ -7,6 +7,57 @@ import type { BeliefStore, BeliefDatum } from "../../../types";
 const SCROLL_PREVENTION_PERIOD = 5000;
 const DOM_UPDATE_DELAY = 50;
 
+function calculateVisibility(
+  heldBeliefsFilter: Record<string, string | string[]> | undefined,
+  withheldBeliefsFilter: Record<string, string | string[]> | undefined,
+  reveal: boolean,
+  overrideWithhold: boolean
+): boolean {
+  if (heldBeliefsFilter && !withheldBeliefsFilter) {
+    return reveal;
+  }
+  if (!heldBeliefsFilter && withheldBeliefsFilter) {
+    return overrideWithhold;
+  }
+  if (heldBeliefsFilter && withheldBeliefsFilter) {
+    return reveal && overrideWithhold;
+  }
+  return false;
+}
+
+function matchesBelief(belief: BeliefStore, key: string, value: string): boolean {
+  return (
+    belief.slug === key &&
+    (belief.verb === value || value === "*" || belief.object === value)
+  );
+}
+
+// Helper function to process a filter object
+function processFilter(
+  filter: Record<string, string | string[]>,
+  beliefs: BeliefStore[],
+  shouldMatchAll: boolean = true
+): boolean {
+  let match = false;
+  let all = true;
+
+  Object.entries(filter).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      const matchingBelief = beliefs.find((belief) => matchesBelief(belief, key, value));
+      if (matchingBelief) match = true;
+      else all = false;
+    } else {
+      Object.values(value).forEach((v) => {
+        const matchingBelief = beliefs.find((belief) => matchesBelief(belief, key, v));
+        if (matchingBelief) match = true;
+        else all = false;
+      });
+    }
+  });
+
+  return shouldMatchAll ? match && all : match;
+}
+
 export const useFilterPane = (
   id: string,
   heldBeliefsFilter: BeliefDatum,
@@ -22,60 +73,15 @@ export const useFilterPane = (
 
   const evaluateBeliefs = () => {
     if (heldBeliefsFilter && Object.keys(heldBeliefsFilter)?.length) {
-      let match = false;
-      let all = true;
-
-      Object.entries(heldBeliefsFilter).forEach(([key, value]) => {
-        if (typeof value === "string") {
-          const thisMatchingBelief = $heldBeliefsAll.find(
-            (m: BeliefStore) =>
-              m.slug === key && (m.verb === value || value === "*" || m?.object === value)
-          );
-          if (thisMatchingBelief) match = true;
-          else all = false;
-        } else {
-          Object.values(value).forEach((v) => {
-            const thisMatchingBelief = $heldBeliefsAll.find(
-              (m: BeliefStore) =>
-                (m.slug === key && m.verb === v) ||
-                (m.slug === key && m?.object === v) ||
-                (m.slug === key && v === "*")
-            );
-            if (thisMatchingBelief) match = true;
-            else all = false;
-          });
-        }
-      });
-
-      setReveal(match && all);
+      const result = processFilter(heldBeliefsFilter, $heldBeliefsAll);
+      setReveal(result);
     } else {
       setReveal(true);
     }
 
     if (withheldBeliefsFilter && Object.keys(withheldBeliefsFilter)?.length) {
-      let withhold = true;
-
-      Object.entries(withheldBeliefsFilter).forEach(([key, value]) => {
-        if (typeof value === "string") {
-          const thisMatchingBelief = $heldBeliefsAll.find(
-            (m: BeliefStore) =>
-              m.slug === key && (m.verb === value || value === "*" || m?.object === value)
-          );
-          if (thisMatchingBelief) withhold = false;
-        } else {
-          Object.values(value).forEach((v) => {
-            const thisMatchingBelief = $heldBeliefsAll.find(
-              (m: BeliefStore) =>
-                (m.slug === key && m.verb === v) ||
-                (m.slug === key && m?.object === v) ||
-                (m.slug === key && v === "*")
-            );
-            if (thisMatchingBelief) withhold = false;
-          });
-        }
-      });
-
-      setOverrideWithhold(!withhold);
+      const result = !processFilter(withheldBeliefsFilter, $heldBeliefsAll, false);
+      setOverrideWithhold(result);
     } else {
       setOverrideWithhold(true);
     }
@@ -130,10 +136,7 @@ export const useFilterPane = (
 
     paneRef.current = thisPane;
 
-    const isVisible =
-      (heldBeliefsFilter && !withheldBeliefsFilter && reveal) ||
-      (!heldBeliefsFilter && withheldBeliefsFilter && overrideWithhold) ||
-      (heldBeliefsFilter && withheldBeliefsFilter && reveal && overrideWithhold);
+    const isVisible = calculateVisibility(heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold);
 
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
