@@ -3,16 +3,11 @@ import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 
-export type ReactNodesRendererProps = {
-  nodes: StoryKeepAllNodes | null,
-  slug: string,
-}
-
-export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
+export const ReactNodesRenderer = ({ nodes }: { nodes: StoryKeepAllNodes | null }) => {
   const [rootId, setRootId] = useState<string>("");
 
   useEffect(() => {
-    buildNodesTreeFromFragmentNodes(props.nodes);
+    buildNodesTreeFromFragmentNodes(nodes);
     setRootId(rootNodeId.get());
   }, []);
 

@@ -87,6 +87,7 @@ export const addNode = (data: BaseNode) => {
       linkChildToParent(data.id, data.parentId);
 
       storyFragment.paneIds.forEach((paneId: string) => {
+        linkChildToParent(paneId, data.id);
         // pane should already exist by now, tell it where it belongs to
         const pane = allNodes.get().get(paneId);
         if (pane) {
