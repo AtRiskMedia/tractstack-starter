@@ -3,6 +3,7 @@ import type { BaseNode, FlatNode } from "@/types.ts";
 import { memo, type ReactElement } from "react";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
+import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgPaneWrapper.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
 import { Root } from "@/components/storykeep/compositor-nodes/nodes/Root.tsx";
 import { NodeText } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeText.tsx";
@@ -72,6 +73,8 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
       return <StoryFragment nodeId={node.id} />;
     case "Pane":
       return <Pane nodeId={node.id} />;
+    case "BgPane":
+      return <BgPaneWrapper nodeId={node.id} />;
     case "Root":
       return <Root nodeId={node.id} />;
     case "TagElement":
@@ -80,6 +83,7 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
     case "em":
     case "h2":
     case "h3":
+    case "h4":
     case "ol":
     case "ul":
     case "li":
@@ -100,6 +104,7 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
       return hookData ? <Widget {...hookData} /> : <></>;
     }
     default:
+      console.log(`miss on ${type}`);
       return <></>;
   }
 };

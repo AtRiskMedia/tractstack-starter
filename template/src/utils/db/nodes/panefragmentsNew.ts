@@ -1,5 +1,6 @@
 import { getBgPaneNode } from "./bgpane";
 import { getMarkdownPaneNode } from "./markdown";
+import type { Row } from "@libsql/client";
 import type {
   BgColourDatum,
   BgPaneDatum,
@@ -12,7 +13,7 @@ import type {
 } from "../../../types";
 
 export function getPaneFragmentNodes(
-  paneData: any[],
+  paneData: Row[],
   fileNodes: ImageFileNode[],
   slug: string,
   isContext: boolean
@@ -20,9 +21,10 @@ export function getPaneFragmentNodes(
   if (!paneData || !paneData.length) return { paneFragments: [], flatNodes: [] };
 
   const paneFragmentNodes = paneData.flatMap((pane) => {
-    if (!pane?.options_payload) return [];
+    if (!pane?.options_payload || !pane?.id) return [];
 
-    const optionsPayload = JSON.parse(pane.options_payload);
+    const optionsPayload =
+      typeof pane.options_payload === `string` ? JSON.parse(pane.options_payload) : null;
     return (
       optionsPayload?.paneFragmentsPayload?.map(
         (p: BgPaneDatum | BgColourDatum | MarkdownPaneDatum) => {
@@ -30,7 +32,8 @@ export function getPaneFragmentNodes(
             case `markdown`:
               return getMarkdownPaneNode(p, fileNodes, pane, slug, isContext);
             case `bgPane`:
-              return getBgPaneNode(p);
+              if (typeof pane.id !== `string`) return null;
+              return getBgPaneNode(p, pane.id);
             case `bgColour`:
               return { paneFragment: null, nodes: null };
           }

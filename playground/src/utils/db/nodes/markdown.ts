@@ -6,6 +6,7 @@ import { flattenClassNamesPayload } from "../helpers/flattenClassNamesPayload";
 import { mdAstTraverse } from "../helpers/mdAstTraverse";
 import { processDefaultCss } from "../helpers/processDefaultCss";
 import type { Root } from "hast";
+import type { Row } from "@libsql/client";
 import type {
   ClassNamesPayload,
   ImageFileNode,
@@ -18,11 +19,12 @@ import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 export function getMarkdownPaneNode(
   fragment: MarkdownPaneDatum,
   fileNodes: ImageFileNode[],
-  row: TursoPane,
+  row: Row,
   slug: string,
   isContext: boolean
 ): GetPaneFragmentResult {
   if (
+    typeof row.id === `string` &&
     typeof row.markdown_id === `string` &&
     typeof row.markdown_body === `string` &&
     typeof fragment.hiddenViewports === `string` &&

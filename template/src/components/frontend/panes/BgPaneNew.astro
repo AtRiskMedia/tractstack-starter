@@ -1,0 +1,40 @@
+---
+import Svg from "./Svg.astro";
+import { classNames } from "../../../utils/common/helpers";
+import type { VisualBreakNode } from "../../../types";
+
+interface Props {
+  payload: VisualBreakNode;
+}
+
+const { payload } = Astro.props;
+
+const baseClasses = {
+  mobile: `md:hidden`,
+  tablet: `hidden md:block xl:hidden`,
+  desktop: `hidden xl:block`,
+};
+
+const breakpoints = ["mobile", "tablet", "desktop"] as const;
+---
+
+{
+  breakpoints.map((breakpoint) => {
+    if (payload[`hiddenViewport${breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}`]) {
+      return null;
+    }
+
+    const breakData = payload[`break${breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}`];
+    if (!breakData) return null;
+
+    return (
+      <div class={baseClasses[breakpoint]} style={{ fill: breakData.svgFill || "none" }}>
+        <Svg
+          shapeName={`${breakData.collection}${breakData.image}`}
+          viewportKey={breakpoint}
+          id={`${breakpoint}-${breakData.collection}${breakData.image}`}
+        />
+      </div>
+    );
+  })
+}

@@ -1,9 +1,9 @@
 import { ulid } from "ulid";
 import { getVisualBreak } from "../helpers/visualBreak";
-import type { BgPaneDatum } from "../../../types";
+import type { BgPaneDatum, TursoPane } from "../../../types";
 import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 
-export function getBgPaneNode(fragment: BgPaneDatum): GetPaneFragmentResult {
+export function getBgPaneNode(fragment: BgPaneDatum, parentId: string): GetPaneFragmentResult {
   if (
     typeof fragment.hiddenViewports === `string` &&
     fragment?.type === `bgPane` &&
@@ -16,7 +16,7 @@ export function getBgPaneNode(fragment: BgPaneDatum): GetPaneFragmentResult {
         paneFragment: {
           id: ulid(),
           nodeType: "BgPane",
-          parentId: fragment.id,
+          parentId,
           type: `visual-break`,
           ...(fragment.hiddenViewports.includes(`mobile`) ? { hiddenViewportMobile: true } : {}),
           ...(fragment.hiddenViewports.includes(`tablet`) ? { hiddenViewportTablet: true } : {}),

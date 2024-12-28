@@ -1207,6 +1207,9 @@ export interface VisualBreakNode extends PaneFragmentNode {
   breakDesktop?: VisualBreakData;
   breakTablet?: VisualBreakData;
   breakMobile?: VisualBreakData;
+  hiddenViewportDesktop?: boolean;
+  hiddenViewportTablet?: boolean;
+  hiddenViewportMobile?: boolean;
 }
 
 export interface StoryKeepNodes {

@@ -5,6 +5,7 @@ import Root from "./nodes/Root.astro";
 import Pane from "./nodes/Pane.astro";
 import StoryFragment from "./nodes/StoryFragment.astro";
 import Markdown from "./nodes/Markdown.astro";
+import BgPaneWrapper from "./nodes/BgPaneWrapper.astro";
 import TagElement from "./nodes/TagElement.astro";
 import NodeText from "./nodes/tagElements/NodeText.astro";
 import NodeImg from "./nodes/tagElements/NodeImg.astro";
@@ -70,11 +71,14 @@ function getElement(type: string) {
       return StoryFragment;
     case "Markdown":
       return Markdown;
+    case "BgPane":
+      return BgPaneWrapper;
     case "TagElement":
       return TagElement;
     // tag elements
     case "h2":
     case "h3":
+    case "h4":
     case "p":
     case "em":
     case "strong":
@@ -92,6 +96,7 @@ function getElement(type: string) {
       const hookData = parseCodeHook(node);
       return hookData ? Widget : EmptyNode;
     default:
+      console.log(`miss on ${type}`);
       return EmptyNode;
   }
 }

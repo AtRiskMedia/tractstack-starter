@@ -23,7 +23,7 @@ export function getPaneFragmentNodes(
     if (!panesPayloadRaw) return { paneFragments: [], flatNodes: [] };
 
     const paneFragmentNodes = panesPayloadRaw
-      .map((r: TursoPane) => {
+      .map((r: Row) => {
         if (typeof r?.id === `string` && typeof r?.options_payload === `string`) {
           const optionsPayload = JSON.parse(r.options_payload);
           return optionsPayload?.paneFragmentsPayload?.map(
@@ -32,7 +32,8 @@ export function getPaneFragmentNodes(
                 case `markdown`:
                   return getMarkdownPaneNode(p, fileNodes, r, slug, isContext);
                 case `bgPane`:
-                  return getBgPaneNode(p);
+                  if (typeof r.id !== `string`) return null;
+                  return getBgPaneNode(p, r.id);
                 case `bgColour`:
                   return { paneFragment: null, nodes: null };
               }

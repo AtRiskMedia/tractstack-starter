@@ -23,7 +23,7 @@ export const Pane = (props: NodeProps) => {
     return (
       <div id={`pane-${props.nodeId}`}>
         <em>Code Hook:</em>
-        {JSON.stringify(codeHookPayload, false, 2)}
+        {JSON.stringify(codeHookPayload, null, 2)}
       </div>
     );
   }
