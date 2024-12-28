@@ -4,6 +4,7 @@ import { preParseBunny } from "../../../utils/concierge/preParse_Bunny";
 import { events } from "../../../store/events";
 import type { MouseEvent } from "react";
 import type { Config } from "../../../types";
+import { dispatchUpdateVideoEvent } from "@/utils/common/domHelpers.ts";
 
 export const PlayButton = ({ className = "" }) => {
   return (
@@ -50,10 +51,7 @@ export function AstToButton({
       if (videoContainer) {
         videoContainer.scrollIntoView({ behavior: "smooth" });
         // Dispatch custom event to update video start time
-        const event = new CustomEvent("updateVideo", {
-          detail: { startTime: `${bunny.t}s` },
-        });
-        document.dispatchEvent(event);
+        dispatchUpdateVideoEvent(`${bunny.t}s`);
       }
       if (event) events.set([...events.get(), event]);
     }

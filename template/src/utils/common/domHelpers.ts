@@ -22,3 +22,17 @@ export function smoothScrollToPane(
 
   return timeout;
 }
+
+// ================================================
+// Document event dispatching
+// ================================================
+export function dispatchEvent(event: CustomEvent) {
+  document.dispatchEvent(event);
+}
+
+export function dispatchUpdateVideoEvent(startTime: string) {
+  const event = new CustomEvent("updateVideo", {
+    detail: { startTime },
+  });
+  dispatchEvent(event);
+}
