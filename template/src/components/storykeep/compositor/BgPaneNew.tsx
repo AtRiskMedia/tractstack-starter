@@ -1,9 +1,9 @@
 import { Svg } from "../../common/panes/Svg";
-import type { VisualBreakNode, ViewportAuto } from "../../../types";
+import type { VisualBreakNode, ViewportKey } from "../../../types";
 
 interface BgPaneProps {
   payload: VisualBreakNode;
-  viewportKey: ViewportAuto;
+  viewportKey: ViewportKey;
 }
 
 const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
