@@ -12,7 +12,6 @@ import type {
   ImageFileNode,
   MarkdownPaneDatum,
   OptionsPayloadDatum,
-  TursoPane,
 } from "../../../types";
 import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
 

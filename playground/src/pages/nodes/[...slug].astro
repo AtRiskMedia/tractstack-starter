@@ -1,13 +1,18 @@
 ---
 import { isValidContentPath } from "../../utils/common/routeValidation";
-import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../store/nodes";
 import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
-import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import { getConfig, validateConfig } from "../../utils/core/config";
-import type { AuthStatus } from "../types";
+import { getStoryFragmentBySlug } from "../../utils/db/utils";
+import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import Layout from "../../../src/layouts/StoryKeep.astro";
+import HeaderWidget from "../../custom/HeaderWidget.astro";
+import Header from "../../components/common/Header.astro";
+import Footer from "../../components/common/Footer.astro";
+import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
+import type { AuthStatus, Current } from "../../types";
 
+const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
@@ -28,38 +33,82 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
+// Generate nodes and build tree
 const nodes = await getGenerateAllNodes();
 buildNodesTreeFromFragmentNodes(nodes);
+const storyfragmentNode = getStoryFragmentNodeBySlug(lookup);
+
+// Get additional story fragment data
+const storyfragment = await getStoryFragmentBySlug(lookup, config);
+if (!storyfragment) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const current: Current = storyfragment
+  ? {
+      id: storyfragment.id,
+      slug: storyfragment.slug,
+      title: storyfragment.title,
+      parentId: storyfragment.tractStackId,
+      parentSlug: storyfragment.tractStackSlug,
+      parentTitle: storyfragment.tractStackTitle,
+    }
+  : { id: `unknown`, slug: `unknown`, title: `unknown` };
 ---
 
-<Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
-  <p>
-    <em>
-      menu, resource nodes not included; only the parent tractstack node and storyfragment node is
-      included; only panes associated with this storyfragment are included; no context page is
-      handled yet;
-    </em>
-    <strong
-    >most critically we are generating all the nodes based on old data model from turso; once we
-      save these nodes into turso (panes.optionsPayload.nodes) it becomes our source of truth -- and
-      we can write a helper that loops through the entire db to generate nodes and save them (we use
-      this helper to migrate old db to new)
-    </strong>
-    <em>
-      also -- nodes.astro uses `hello` but we aren't actually rendering with proper layout, etc. as
-      we would in [...slug].astro -- will need to pull storyfragment's node.created and node.changed
-      and ogImage to pass to Layout or StoryKeep
-    </em>
-  </p>
-  <br />
-  <h1>Astro</h1>
-  <AstroNodesRenderer slug={lookup} />
+<Layout
+  title={storyfragmentNode.title}
+  pubDatetime={storyfragmentNode.created || new Date()}
+  modDatetime={storyfragmentNode.changed || new Date()}
+  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
+    ? storyfragmentNode.socialImagePath
+    : undefined}
+  config={config}
+>
+  {
+    config?.init?.ENABLE_HEADER_WIDGET && (
+      <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
+    )
+  }
 
-  <h1>React</h1>
-  <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
+  <Header
+    title={storyfragment.title}
+    menu={storyfragment.menuPayload}
+    slug={lookup}
+    isContext={false}
+    isEditable={true}
+    impressions={storyfragment.impressions}
+    user={user}
+    config={config}
+  />
 
-  <h1>Data</h1>
-  <pre class="max-w-screen overflow-hidden">
-  {JSON.stringify(nodes, null, 2)}
-</pre>
+  <main id="main-content" class="w-full overflow-hidden">
+    <div class={storyfragment.tailwindBgColour}>
+      <AstroNodesRenderer slug={lookup} />
+    </div>
+  </main>
+
+  {
+    storyfragment.impressions?.length && (
+      <ImpressionWrapper
+        slug={storyfragment.slug}
+        isContext={true}
+        payload={storyfragment.impressions}
+        config={config}
+        client:idle
+      />
+    )
+  }
+
+  <Footer
+    created={storyfragment.created}
+    menu={storyfragment.menuPayload}
+    backToTop={true}
+    slug={lookup}
+    isContext={false}
+    config={config}
+  />
 </Layout>

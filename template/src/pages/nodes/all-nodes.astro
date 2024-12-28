@@ -1,8 +1,8 @@
 ---
-import { getConfig, validateConfig } from "../utils/core/config";
-import { getGenerateAllNodes } from "../utils/db/nodes/generate";
-import type { AuthStatus } from "../types";
-import Layout from "../../src/layouts/StoryKeep.astro";
+import { getConfig, validateConfig } from "../../utils/core/config";
+import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
+import type { AuthStatus } from "../../types";
+import Layout from "../../../src/layouts/StoryKeep.astro";
 
 const config = await getConfig();
 const validation = await validateConfig(config);

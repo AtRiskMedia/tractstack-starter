@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 
 export type ReactNodesRendererProps = {
-  nodes: StoryKeepAllNodes | null,
-  slug: string,
-}
+  nodes: StoryKeepAllNodes | null;
+  slug: string;
+};
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   const [rootId, setRootId] = useState<string>("");

@@ -1,0 +1,36 @@
+---
+import { isValidContentPath } from "../../utils/common/routeValidation";
+import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
+import { getConfig, validateConfig } from "../../utils/core/config";
+import type { AuthStatus } from "../types";
+import Layout from "../../../src/layouts/StoryKeep.astro";
+
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const { slug } = Astro.params;
+const lookup = slug || config?.init?.HOME_SLUG;
+console.log("nodes slug: " + lookup);
+if (slug === config.init?.HOME_SLUG) {
+  return Astro.redirect("/");
+}
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const nodes = await getGenerateAllNodes();
+buildNodesTreeFromFragmentNodes(nodes);
+---
+
+<Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
+  <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
+</Layout>
