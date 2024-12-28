@@ -482,6 +482,23 @@ export interface TursoPane {
   markdown_body?: string;
 }
 
+export interface ResourceNode {
+  id: string;
+  title: string;
+  slug: string;
+  category: string | null;
+  actionLisp: string;
+  oneliner: string;
+  optionsPayload: any;
+}
+
+export interface MenuNode {
+  id: string;
+  title: string;
+  theme: string;
+  optionsPayload: MenuLink[];
+}
+
 export interface FileNode {
   id: string;
   filename: string;
@@ -1159,6 +1176,7 @@ export interface StoryFragmentNode extends BaseNode {
   title: string;
   slug: string;
   hasMenu: boolean;
+  paneIds: string[];
   menuId?: string;
   tailwindBgColour?: string;
   socialImagePath?: string;
@@ -1199,6 +1217,17 @@ export interface StoryKeepNodes {
   flatNodes: FlatNode[];
   fileNodes: ImageFileNode[];
   //menuNodes: MenuNode[];
+}
+
+export interface StoryKeepAllNodes {
+  tractstackNodes: TractStackNode[];
+  storyfragmentNodes: StoryFragmentNode[];
+  paneNodes: PaneNode[];
+  paneFragmentNodes: PaneFragmentNode[];
+  flatNodes: FlatNode[];
+  fileNodes: ImageFileNode[];
+  menuNodes: MenuNode[];
+  resourceNodes: ResourceNode[];
 }
 
 export interface FlattenedClasses {

@@ -13,6 +13,8 @@ import { getStoryFragmentNodes } from "./nodes/storyfragment";
 import { getPaneNodes } from "./nodes/panes";
 import { getPaneFragmentNodes } from "./nodes/panefragments";
 import { getFileNodes } from "./nodes/files";
+import { getResourceNodes } from "./nodes/resources";
+import { getMenuNodes } from "./nodes/menus";
 import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
 import { tursoClient } from "./client";
 import type {
@@ -31,6 +33,8 @@ import type {
   Config,
   StoryKeepNodes,
   ImageFileNode,
+  MenuNode,
+  ResourceNode,
 } from "../../types.ts";
 import type { ResultSet } from "@libsql/client";
 
@@ -60,6 +64,37 @@ export async function getAllResources(): Promise<ResourceDatum[]> {
     return cleanTursoResource(rows);
   } catch (error) {
     console.error("Error fetching all resources:", error);
+    throw error;
+  }
+}
+
+export async function getAllResourceNodes(): Promise<ResourceNode[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
+      SELECT * FROM resource
+      ORDER BY title ASC
+    `);
+    return getResourceNodes(rows);
+  } catch (error) {
+    console.error("Error fetching all resources:", error);
+    throw error;
+  }
+}
+
+export async function getAllMenuNodes(): Promise<MenuNode[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`
+      SELECT id, title, theme, options_payload
+      FROM menu
+      ORDER BY title
+    `);
+    return getMenuNodes(rows);
+  } catch (error) {
+    console.error("Error fetching all menus:", error);
     throw error;
   }
 }
