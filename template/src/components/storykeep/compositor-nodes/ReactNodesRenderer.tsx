@@ -5,7 +5,7 @@ import type { StoryKeepAllNodes } from "@/types.ts";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
-  slug: string;
+  id: string;
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
@@ -13,7 +13,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
 
   useEffect(() => {
     buildNodesTreeFromFragmentNodes(props.nodes);
-    setRootId(rootNodeId.get());
+    setRootId(props.id || rootNodeId.get());
   }, []);
 
   return <>{rootId.length > 0 && <Node nodeId={rootId} />}</>;

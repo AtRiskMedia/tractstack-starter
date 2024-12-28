@@ -88,7 +88,7 @@ if (!storyfragment) {
     <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
       <main id="website-content" class="overflow-auto w-full">
         <div class={storyfragment.tailwindBgColour}>
-          <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
+          <ReactNodesRenderer id={storyfragmentNode.id} nodes={nodes} client:only="react" />
         </div>
         <div
           class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
