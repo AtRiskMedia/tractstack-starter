@@ -1,12 +1,12 @@
 ---
-import { isValidContentPath } from "../utils/common/routeValidation";
-import { ReactNodesRenderer } from "../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { buildNodesTreeFromFragmentNodes } from "../store/nodes";
-import { getGenerateAllNodes } from "../utils/db/nodes/generate";
-import AstroNodesRenderer from "../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
-import { getConfig, validateConfig } from "../utils/core/config";
+import { isValidContentPath } from "../../utils/common/routeValidation";
+import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
+import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
+import { getConfig, validateConfig } from "../../utils/core/config";
 import type { AuthStatus } from "../types";
-import Layout from "../../src/layouts/StoryKeep.astro";
+import Layout from "../../../src/layouts/StoryKeep.astro";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -16,6 +16,7 @@ if (!validation.isValid || !config) {
 
 const { slug } = Astro.params;
 const lookup = slug || config?.init?.HOME_SLUG;
+console.log("nodes slug: " + lookup);
 if (slug === config.init?.HOME_SLUG) {
   return Astro.redirect("/");
 }
@@ -39,7 +40,7 @@ buildNodesTreeFromFragmentNodes(nodes);
       handled yet;
     </em>
     <strong
-      >most critically we are generating all the nodes based on old data model from turso; once we
+    >most critically we are generating all the nodes based on old data model from turso; once we
       save these nodes into turso (panes.optionsPayload.nodes) it becomes our source of truth -- and
       we can write a helper that loops through the entire db to generate nodes and save them (we use
       this helper to migrate old db to new)
@@ -52,10 +53,10 @@ buildNodesTreeFromFragmentNodes(nodes);
   </p>
   <br />
   <h1>Astro</h1>
-  <AstroNodesRenderer />
+  <AstroNodesRenderer slug={lookup} />
 
   <h1>React</h1>
-  <ReactNodesRenderer nodes={nodes} client:only="react" />
+  <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
 
   <h1>Data</h1>
   <pre class="max-w-screen overflow-hidden">

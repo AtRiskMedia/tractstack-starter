@@ -72,9 +72,9 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
     case "StoryFragment":
       return <StoryFragment nodeId={node.id} key={node.id} />;
     case "Pane":
-      return <Pane nodeId={node.id} />;
+      return <Pane nodeId={node.id} key={node.id} />;
     case "BgPane":
-      return <BgPaneWrapper nodeId={node.id} />;
+      return <BgPaneWrapper nodeId={node.id} key={node.id} />;
     case "Root":
       return <Root nodeId={node.id} key={node.id} />;
     case "TagElement":
