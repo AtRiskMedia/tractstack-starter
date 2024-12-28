@@ -1,20 +1,19 @@
 import { Svg } from "../../common/panes/Svg";
-import type { VisualBreakNode, VisualBreakData, ViewportKey } from "../../../types";
+import type { VisualBreakNode, ViewportAuto } from "../../../types";
 
 interface BgPaneProps {
   payload: VisualBreakNode;
-  viewportKey: ViewportKey;
+  viewportKey: ViewportAuto;
 }
 
 const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
   const baseClasses = {
-    mobile: viewportKey === "mobile" ? "grid" : viewportKey ? "hidden" : "md:hidden",
-    tablet: viewportKey === "tablet" ? "grid" : viewportKey ? "hidden" : "hidden md:grid xl:hidden",
-    desktop: viewportKey === "desktop" ? "grid" : viewportKey ? "hidden" : "hidden xl:grid",
+    mobile: "md:hidden",
+    tablet: "hidden md:block xl:hidden",
+    desktop: "hidden xl:block"
   };
 
-  // Only render the current viewport's break if viewportKey is specified
-  const breakpoints = viewportKey ? [viewportKey] : ["mobile", "tablet", "desktop"];
+  const breakpoints = ["mobile", "tablet", "desktop"] as const;
 
   return (
     <>
@@ -25,13 +24,18 @@ const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
           return null;
         }
 
-        const breakData = payload[`break${capitalizedBreakpoint}` as keyof VisualBreakNode];
-        if (!breakData || typeof breakData !== "object") return null;
+        const breakData = payload[`break${capitalizedBreakpoint}` as keyof VisualBreakNode] as {
+          collection: string;
+          image: string;
+          svgFill: string;
+        } | undefined;
+
+        if (!breakData) return null;
 
         return (
-          <div
+          <div 
             key={breakpoint}
-            className={baseClasses[breakpoint as keyof typeof baseClasses] || ``}
+            className={baseClasses[breakpoint]}
             style={{ fill: breakData.svgFill || "none" }}
           >
             <Svg
