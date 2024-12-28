@@ -67,15 +67,15 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
   switch (type) {
     // generic nodes, not tag (html) elements
     case "Markdown":
-      return <Markdown nodeId={node.id} />;
+      return <Markdown nodeId={node.id} key={node.id} />;
     case "StoryFragment":
-      return <StoryFragment nodeId={node.id} />;
+      return <StoryFragment nodeId={node.id} key={node.id} />;
     case "Pane":
-      return <Pane nodeId={node.id} />;
+      return <Pane nodeId={node.id} key={node.id} />;
     case "Root":
-      return <Root nodeId={node.id} />;
+      return <Root nodeId={node.id} key={node.id} />;
     case "TagElement":
-      return <TagElement nodeId={node.id} />;
+      return <TagElement nodeId={node.id} key={node.id} />;
     // tag elements
     case "em":
     case "h2":
@@ -85,19 +85,19 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
     case "li":
     case "strong":
     case "p":
-      return <NodeBasicTag tagName={type} nodeId={node.id} />;
+      return <NodeBasicTag tagName={type} nodeId={node.id} key={node.id} />;
 
     case "text":
-      return <NodeText nodeId={node.id} />;
+      return <NodeText nodeId={node.id} key={node.id} />;
     case "button":
-      return <NodeButton nodeId={node.id} />;
+      return <NodeButton nodeId={node.id} key={node.id} />;
     case "a":
-      return <NodeA nodeId={node.id} />;
+      return <NodeA nodeId={node.id} key={node.id} />;
     case "img":
-      return <NodeImg nodeId={node.id} />;
+      return <NodeImg nodeId={node.id} key={node.id} />;
     case "code": {
       const hookData = parseCodeHook(node);
-      return hookData ? <Widget {...hookData} /> : <></>;
+      return hookData ? <Widget {...hookData} key={node.id} /> : <></>;
     }
     default:
       return <></>;
