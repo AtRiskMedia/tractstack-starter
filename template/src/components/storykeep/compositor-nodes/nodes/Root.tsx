@@ -5,7 +5,7 @@ export const Root = (props: NodeProps) => {
   return (
     <div>
       {/*<span>*/}
-      {/*  Root <b>{props.id}</b>*/}
+      {/*  Root <b>{props.nodeId}</b>*/}
       {/*</span>*/}
       {getChildNodeIDs(props.nodeId).map((id: string) => (
         <Node nodeId={id} key={id} />

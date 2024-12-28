@@ -6,7 +6,7 @@ import type {
   NodeType,
   PaneFragmentNode,
   StoryFragmentNode,
-  StoryKeepNodes,
+  StoryKeepAllNodes,
   ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
@@ -18,7 +18,8 @@ export const rootNodeId = atom<string>("");
 export const clickedNodeId = atom<string>("");
 
 export const getChildNodeIDs = (parentNodeId: string): string[] => {
-  return Array.from(parentNodes.get()?.get(parentNodeId) || []);
+  const returnVal = parentNodes.get()?.get(parentNodeId) || [];
+  return returnVal;
 };
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
@@ -47,16 +48,26 @@ export const clearAll = () => {
   rootNodeId.set("");
 };
 
-export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepNodes | null) => {
+export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepAllNodes | null) => {
   if (nodes !== null) {
     clearAll();
-    addNode(nodes.tractstackNode);
-    addNode(nodes.storyfragmentNode);
+    addNodes(nodes.tractstackNodes);
     addNodes(nodes.paneNodes);
+    addNodes(nodes.storyfragmentNodes);
     addNodes(nodes.paneFragmentNodes);
     addNodes(nodes.flatNodes);
   }
 };
+
+function linkChildToParent(nodeId: string, parentId: string) {
+  const parentNode = parentNodes.get();
+  if (parentNode.has(parentId)) {
+    parentNode.get(parentId)?.push(nodeId);
+    parentNodes.set(new Map<string, string[]>(parentNode));
+  } else {
+    parentNode.set(parentId, [nodeId]);
+  }
+}
 
 export const addNode = (data: BaseNode) => {
   allNodes.get().set(data.id, data);
@@ -64,15 +75,27 @@ export const addNode = (data: BaseNode) => {
   // root node
   if (data.parentId === null && rootNodeId.get().length === 0) {
     rootNodeId.set(data.id);
-  } else {
-    const parentNode = parentNodes.get();
-    if (data.parentId !== null && parentNode) {
-      if (parentNode.has(data.parentId)) {
-        parentNode.get(data.parentId)?.push(data.id);
-        parentNodes.set(new Map<string, string[]>(parentNode));
-      } else {
-        parentNode.set(data.parentId, [data.id]);
-      }
+    return;
+  }
+  const parentNode = parentNodes.get();
+  if (!parentNode) return;
+
+  if (data.parentId !== null) {
+    // if storyfragment then iterate over its paneIDs
+    if (data.nodeType === "StoryFragment") {
+      const storyFragment = data as StoryFragmentNode;
+      linkChildToParent(data.id, data.parentId);
+
+      storyFragment.paneIds.forEach((paneId: string) => {
+        linkChildToParent(paneId, data.id);
+        // pane should already exist by now, tell it where it belongs to
+        const pane = allNodes.get().get(paneId);
+        if (pane) {
+          pane.parentId = data.id;
+        }
+      });
+    } else {
+      linkChildToParent(data.id, data.parentId);
     }
   }
 };

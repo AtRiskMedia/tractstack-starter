@@ -1,7 +1,7 @@
 ---
 import { ReactNodesRenderer } from "../components/storykeep/compositor-nodes/ReactNodesRenderer";
 import { buildNodesTreeFromFragmentNodes } from "../store/nodes";
-import { getStoryFragmentNodesBySlug } from "../utils/db/utils";
+import { getGenerateAllNodes } from "../utils/db/nodes/generate";
 import AstroNodesRenderer from "../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import { getConfig, validateConfig } from "../utils/core/config";
 import type { AuthStatus } from "../types";
@@ -13,7 +13,7 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-const nodes = await getStoryFragmentNodesBySlug("hello", false);
+const nodes = await getGenerateAllNodes();
 buildNodesTreeFromFragmentNodes(nodes);
 ---
 

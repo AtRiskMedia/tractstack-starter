@@ -9,9 +9,6 @@ export const StoryFragment = (props: NodeProps) => {
       className={getNodeClasses(props.nodeId, viewportStore.get().value)}
       style={getNodeStyles<CSSProperties>(props.nodeId, viewportStore.get().value)}
     >
-      {/*<span>*/}
-      {/*  Story Fragment <b>{props.id}</b>*/}
-      {/*</span>*/}
       {getChildNodeIDs(props.nodeId).map((id: string) => (
         <Node nodeId={id} key={id} />
       ))}
