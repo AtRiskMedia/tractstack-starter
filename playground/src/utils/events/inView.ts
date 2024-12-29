@@ -12,15 +12,12 @@ export function inView() {
 
   elements.on("enter", (event: InViewEvent) => {
     const target = event.target as HTMLElement;
-    if (target.dataset.hidden === `false`) {
       const id = event.target.id.substring(5);
       if (!panesVisible.get()[id]) panesVisible.setKey(id, Date.now());
-    } else console.log(`skipped inView.ts`);
   });
 
   elements.on("exit", (event: InViewEvent) => {
     const target = event.target as HTMLElement;
-    if (target.dataset.hidden === `false`) {
       const id = event.target.id.substring(5);
       const values = panesVisible.get();
       const value = values[id];
@@ -40,7 +37,6 @@ export function inView() {
           events.set([...events.get(), event]);
         }
       }
-    } else console.log(`skipped inView.ts`);
   });
   return true;
 }
