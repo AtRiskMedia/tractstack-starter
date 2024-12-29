@@ -1,9 +1,9 @@
 ---
-import { getConfig, validateConfig } from "../../utils/core/config";
-import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../store/nodes";
-import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
-import StoryKeep from "../../layouts/StoryKeep.astro";
+import { getConfig, validateConfig } from "../../../utils/core/config";
+import { ReactNodesRenderer } from "../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../store/nodes";
+import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
+import StoryKeep from "../../../layouts/StoryKeep.astro";
 
 const { slug } = Astro.params;
 const config = await getConfig();

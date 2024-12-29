@@ -182,6 +182,20 @@ export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | nu
   );
 };
 
+export const getContextPaneNodeBySlug = (slug: string): PaneNode | null => {
+  const nodes = Array.from(allNodes.get().values());
+  return (
+    nodes.find(
+      (node): node is PaneNode =>
+        node.nodeType === "Pane" &&
+        "slug" in node &&
+        node.slug === slug &&
+        "isContextPane" in node &&
+        node.isContextPane === true
+    ) || null
+  );
+};
+
 export const getImpressionNodesForPanes = (paneIds: string[]): ImpressionNode[] => {
   const nodes = Array.from(impressionNodes.get().values());
   return nodes.filter(

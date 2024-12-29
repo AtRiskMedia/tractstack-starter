@@ -1168,6 +1168,8 @@ export interface ImageFileNode extends BaseNode {
 export interface PaneNode extends BaseNode {
   title: string;
   slug: string;
+  created?: Date;
+  changed?: Date;
   isContextPane?: boolean;
   heightOffsetDesktop?: number;
   heightOffsetMobile?: number;

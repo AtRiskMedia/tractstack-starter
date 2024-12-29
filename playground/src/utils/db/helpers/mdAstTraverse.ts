@@ -112,7 +112,6 @@ export function mdAstTraverse(
         const idx = elementCounts[node.tagName] % defaultClasses.length;
         elementCss = defaultClasses[idx];
       }
-
       elementCounts[node.tagName]++;
     }
 
