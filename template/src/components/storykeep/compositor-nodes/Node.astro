@@ -116,7 +116,7 @@ const hookData = type === "code" ? parseCodeHook(node) : null;
   type === "button" ? (
     <NodeButton nodeId={nodeId} client:visible />
   ) : type === "code" && hookData ? (
-    <RenderElement {...hookData} />
+    <RenderElement {...hookData} nodeId={nodeId} />
   ) : (
     <RenderElement tagName={type} nodeId={nodeId} />
   )

@@ -5,16 +5,19 @@ import { Belief } from "../../../frontend/widgets/Belief";
 import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
 import { SignUp } from "../../../frontend/widgets/SignUp";
+import { getNodeClasses } from "../../../../store/nodes";
+import { viewportStore } from "../../../../store/storykeep";
 
 interface Props {
+  nodeId: string;
   hook: string | null;
   value1: string | null;
   value2: string | null;
   value3: string;
-  classNames?: string;
 }
 
-const { hook, value1, value2, value3 = "", classNames = "" } = Astro.props;
+const { nodeId, hook, value1, value2, value3 = "" } = Astro.props;
+const classNames = getNodeClasses(nodeId, viewportStore.get().value);
 ---
 
 {
