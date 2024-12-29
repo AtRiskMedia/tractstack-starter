@@ -1,9 +1,16 @@
 ---
-import { rootNodeId } from "../../../store/nodes";
+import { rootNodeId, allNodes } from "../../../store/nodes";
 import Node from "../../storykeep/compositor-nodes/Node.astro";
+import { addTemplateNode } from "../../../store/nodes";
+import { TemplateH2Node } from "../../../utils/TemplateNodes";
 
 const { id } = Astro.props;
 const rootId = id || rootNodeId.get();
+
+const pane = allNodes.get().values().find(x => x.nodeType === "Pane");
+if(pane) {
+  addTemplateNode(pane.id, TemplateH2Node);
+}
 ---
 
 <Node nodeId={rootId} />

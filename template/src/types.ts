@@ -1248,6 +1248,19 @@ export interface FlattenedClasses {
   [key: string]: string;
 }
 
+export type TemplateNode = FlatNode & {
+  id?: string;
+  parentId?: string;
+  tagName?: string;
+  nodes?: TemplateNode[];
+};
+
+export type TemplatePane = PaneNode & {
+  id?: string;
+  parentId?: string;
+  nodes?: TemplateNode[];
+}
+
 export interface FlatNode extends BaseNode {
   tagName: string;
   copy?: string;

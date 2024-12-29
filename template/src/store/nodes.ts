@@ -11,7 +11,7 @@ import type {
   ViewportKey,
   ImpressionNode,
   TractStackNode,
-  MenuNode,
+  MenuNode, TemplateNode, TemplatePane,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
@@ -110,7 +110,7 @@ export const addNode = (data: BaseNode) => {
     } else if (data.nodeType !== "Pane") {
       linkChildToParent(data.id, data.parentId);
 
-      if(data.nodeType === "Impression") {
+      if (data.nodeType === "Impression") {
         impressionNodes.get().add(data as ImpressionNode);
       }
     }
@@ -339,35 +339,101 @@ const getStringNodeStyles = (node: BaseNode | undefined, viewport: ViewportKey):
   return "";
 };
 
-export const addPaneToStoryFragment = (nodeId: string, pane: PaneNode, location: "before" | "after") => {
-  const node = allNodes.get().get(nodeId) as FlatNode;
-  if(!node
-    || node.nodeType !== "StoryFragment"
-    || node.nodeType !== "Pane"
-  ) {
+export const addPaneToStoryFragment = (
+  nodeId: string,
+  pane: PaneNode,
+  location: "before" | "after"
+) => {
+  const node = allNodes.get().get(nodeId) as BaseNode;
+  if (!node || (node.nodeType !== "StoryFragment" && node.nodeType !== "Pane")) {
     return;
   }
 
   pane.id = ulid();
-  if(node.nodeType === "Pane") {
+  addNode(pane);
+
+  if (node.nodeType === "Pane") {
     const storyFragmentId = getClosestNodeTypeFromId(nodeId, "StoryFragment");
     const storyFragment = allNodes.get().get(storyFragmentId) as StoryFragmentNode;
-    if(storyFragment) {
+    if (storyFragment) {
       pane.parentId = storyFragmentId;
       const originalPaneIndex = storyFragment.paneIds.indexOf(pane.parentId);
       let insertIdx = -1;
-      if(location === "before")
-        insertIdx = Math.max(0, originalPaneIndex-1);
-      else
-        insertIdx = Math.min(storyFragment.paneIds.length-1, originalPaneIndex+1);
-
+      if (location === "before") insertIdx = Math.max(0, originalPaneIndex - 1);
+      else insertIdx = Math.min(storyFragment.paneIds.length - 1, originalPaneIndex + 1);
       storyFragment.paneIds.splice(insertIdx, 0, pane.id);
-      addNode(pane);
     }
-  } else if(node.nodeType !== "StoryFragment") {
+  } else if (node.nodeType !== "StoryFragment") {
     const storyFragment = node as StoryFragmentNode;
-    if(location === "after") {
-      (node as StoryFragmentNode)?.paneIds.push(pane.id);
+    if (storyFragment) {
+      pane.parentId = node.id;
+      if (location === "after") {
+        storyFragment.paneIds.push(pane.id);
+      } else {
+        storyFragment.paneIds.unshift(pane.id);
+      }
     }
   }
+};
+
+export const addTemplatePaneToStoryFragment = (
+  nodeId: string,
+  pane: TemplatePane,
+  location: "before" | "after"
+) => {
+
 }
+
+export const addTemplateNode = (paneNodeId: string, node: TemplateNode, nodeId: string, location: "before" | "after") => {
+  const paneNode = allNodes.get().get(paneNodeId) as PaneNode;
+  if (!paneNode || paneNode.nodeType !== "Pane") {
+    return;
+  }
+
+  const duplicatedNodes = {...node} as TemplateNode;
+  duplicatedNodes.id = ulid();
+  duplicatedNodes.parentId = paneNode.id;
+  const flattenedNodes = setupTemplateNodeRecursively(duplicatedNodes, duplicatedNodes.id);
+  flattenedNodes.forEach(node => delete node.nodes);
+
+  addNodes(flattenedNodes);
+};
+
+const setupTemplateNodeRecursively = (node: TemplateNode, parentId: string) => {
+  let result: TemplateNode[] = [];
+  if(!node) return result;
+
+  node.id = ulid();
+  node.parentId = parentId;
+  result.push(node);
+  if("nodes" in node && node.nodes) {
+    for (let i = 0; i < node.nodes.length; ++i) {
+      result = result.concat(setupTemplateNodeRecursively(node.nodes[i], node.id));
+    }
+  }
+  return result;
+}
+
+export const deleteNode = (nodeId: string) => {
+  const node = allNodes.get().get(nodeId) as BaseNode;
+  if (!node) {
+    return;
+  }
+
+  const parentId = node.parentId;
+  deleteNodesRecursively(node.id);
+  // if this was a pane node then we need to update storyfragment as it tracks panes
+  if (node.nodeType === "Pane" && parentId !== null) {
+    const storyFragment = allNodes.get().get(parentId) as StoryFragmentNode;
+    if (storyFragment) {
+      storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
+    }
+  }
+};
+
+const deleteNodesRecursively = (nodeId: string) => {
+  getChildNodeIDs(nodeId).forEach((id) => {
+    deleteNodesRecursively(id);
+  });
+  allNodes.get().delete(nodeId);
+};
