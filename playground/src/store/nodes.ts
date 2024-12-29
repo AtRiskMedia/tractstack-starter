@@ -18,6 +18,7 @@ import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassN
 import type { BeliefDatum } from "../types.ts";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
+export const impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
 export const rootNodeId = atom<string>("");
 export const clickedNodeId = atom<string>("");
@@ -50,6 +51,7 @@ export const setClickedNodeId = (nodeId: string) => {
 export const clearAll = () => {
   allNodes.get().clear();
   parentNodes.get().clear();
+  impressionNodes.get().clear();
   rootNodeId.set("");
 };
 
@@ -106,6 +108,10 @@ export const addNode = (data: BaseNode) => {
       // skip panes, they get linked along with story fragment
     } else if (data.nodeType !== "Pane") {
       linkChildToParent(data.id, data.parentId);
+
+      if(data.nodeType === "Impression") {
+        impressionNodes.get().add(data as ImpressionNode);
+      }
     }
   }
 };
@@ -177,7 +183,7 @@ export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | nu
 };
 
 export const getImpressionNodesForPanes = (paneIds: string[]): ImpressionNode[] => {
-  const nodes = Array.from(allNodes.get().values());
+  const nodes = Array.from(impressionNodes.get().values());
   return nodes.filter(
     (node): node is ImpressionNode =>
       node.nodeType === "Impression" &&

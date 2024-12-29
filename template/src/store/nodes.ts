@@ -16,8 +16,10 @@ import type {
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
 import type { BeliefDatum } from "../types.ts";
+import { ulid } from "ulid";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
+export const impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
 export const parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
 export const rootNodeId = atom<string>("");
 export const clickedNodeId = atom<string>("");
@@ -50,6 +52,7 @@ export const setClickedNodeId = (nodeId: string) => {
 export const clearAll = () => {
   allNodes.get().clear();
   parentNodes.get().clear();
+  impressionNodes.get().clear();
   rootNodeId.set("");
 };
 
@@ -106,6 +109,10 @@ export const addNode = (data: BaseNode) => {
       // skip panes, they get linked along with story fragment
     } else if (data.nodeType !== "Pane") {
       linkChildToParent(data.id, data.parentId);
+
+      if(data.nodeType === "Impression") {
+        impressionNodes.get().add(data as ImpressionNode);
+      }
     }
   }
 };
@@ -177,7 +184,7 @@ export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | nu
 };
 
 export const getImpressionNodesForPanes = (paneIds: string[]): ImpressionNode[] => {
-  const nodes = Array.from(allNodes.get().values());
+  const nodes = Array.from(impressionNodes.get().values());
   return nodes.filter(
     (node): node is ImpressionNode =>
       node.nodeType === "Impression" &&
@@ -331,3 +338,36 @@ const getStringNodeStyles = (node: BaseNode | undefined, viewport: ViewportKey):
   }
   return "";
 };
+
+export const addPaneToStoryFragment = (nodeId: string, pane: PaneNode, location: "before" | "after") => {
+  const node = allNodes.get().get(nodeId) as FlatNode;
+  if(!node
+    || node.nodeType !== "StoryFragment"
+    || node.nodeType !== "Pane"
+  ) {
+    return;
+  }
+
+  pane.id = ulid();
+  if(node.nodeType === "Pane") {
+    const storyFragmentId = getClosestNodeTypeFromId(nodeId, "StoryFragment");
+    const storyFragment = allNodes.get().get(storyFragmentId) as StoryFragmentNode;
+    if(storyFragment) {
+      pane.parentId = storyFragmentId;
+      const originalPaneIndex = storyFragment.paneIds.indexOf(pane.parentId);
+      let insertIdx = -1;
+      if(location === "before")
+        insertIdx = Math.max(0, originalPaneIndex-1);
+      else
+        insertIdx = Math.min(storyFragment.paneIds.length-1, originalPaneIndex+1);
+
+      storyFragment.paneIds.splice(insertIdx, 0, pane.id);
+      addNode(pane);
+    }
+  } else if(node.nodeType !== "StoryFragment") {
+    const storyFragment = node as StoryFragmentNode;
+    if(location === "after") {
+      (node as StoryFragmentNode)?.paneIds.push(pane.id);
+    }
+  }
+}
