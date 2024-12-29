@@ -9,6 +9,9 @@ import type {
   StoryFragmentNode,
   StoryKeepAllNodes,
   ViewportKey,
+  ImpressionNode,
+  TractStackNode,
+  MenuNode,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
@@ -53,9 +56,13 @@ export const clearAll = () => {
 export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepAllNodes | null) => {
   if (nodes !== null) {
     clearAll();
+    addNodes(nodes.fileNodes);
+    addNodes(nodes.menuNodes);
+    addNodes(nodes.resourceNodes);
     addNodes(nodes.tractstackNodes);
-    addNodes(nodes.paneNodes);
     addNodes(nodes.storyfragmentNodes);
+    addNodes(nodes.paneNodes);
+    addNodes(nodes.impressionNodes);
     addNodes(nodes.paneFragmentNodes);
     addNodes(nodes.flatNodes);
   }
@@ -145,8 +152,18 @@ export const getStyleByViewport = (
 
 export const getNodeSlug = (nodeId: string): string => {
   const node = allNodes.get().get(nodeId);
-  if (!node || typeof node?.slug !== `string`) return "";
+  if (!node || !(`slug` in node) || typeof node.slug !== `string`) return "";
   return node.slug;
+};
+
+export const getMenuNodeById = (id: string): MenuNode | null => {
+  const node = allNodes.get().get(id);
+  return node?.nodeType === "Menu" ? (node as MenuNode) : null;
+};
+
+export const getTractStackNodeById = (id: string): TractStackNode | null => {
+  const node = allNodes.get().get(id);
+  return node?.nodeType === "TractStack" ? (node as TractStackNode) : null;
 };
 
 export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | null => {
@@ -159,11 +176,32 @@ export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | nu
   );
 };
 
-export const getNodeCodeHookPayload = (nodeId: string): string => {
+export const getImpressionNodesForPanes = (paneIds: string[]): ImpressionNode[] => {
+  const nodes = Array.from(allNodes.get().values());
+  return nodes.filter(
+    (node): node is ImpressionNode =>
+      node.nodeType === "Impression" &&
+      typeof node.parentId === `string` &&
+      paneIds.includes(node.parentId)
+  );
+};
+
+export const getNodeCodeHookPayload = (
+  nodeId: string
+): { target: string; params?: Record<string, string> } | null => {
   const node = allNodes.get().get(nodeId);
-  const target = node?.codeHookTarget;
-  const payload = node?.codeHookPayload;
-  if (target) return { target, ...(payload ? { params: payload } : {}) };
+  const target = node && "codeHookTarget" in node ? (node.codeHookTarget as string) : undefined;
+  const payload =
+    node && "codeHookPayload" in node
+      ? (node.codeHookPayload as Record<string, string>)
+      : undefined;
+
+  if (target) {
+    return {
+      target: target,
+      ...(payload && { params: payload }),
+    };
+  }
   return null;
 };
 
@@ -212,8 +250,14 @@ export const getNodeClasses = (
 
     case "TagElement":
       {
-        if ([`button`, `a`].includes(node.tagName)) {
-          return node.elementCss || ``;
+        if (
+          node &&
+          `tagName` in node &&
+          typeof node.tagName === `string` &&
+          [`button`, `a`].includes(node.tagName)
+        ) {
+          if (`elementCss` in node && typeof node.elementCss === `string`) return node.elementCss;
+          return ``;
         }
         const closestPaneId = getClosestNodeTypeFromId(nodeId, "Markdown");
         const paneNode = allNodes.get().get(closestPaneId) as MarkdownPaneFragmentNode;

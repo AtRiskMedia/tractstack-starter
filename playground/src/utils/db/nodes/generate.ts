@@ -2,6 +2,7 @@ import { getAllFileNodes, getAllMenuNodes, getAllResourceNodes } from "../utils"
 import { getTractStackNode } from "./tractstack";
 import { getStoryFragmentNodes } from "./storyfragment";
 import { getPaneNodes } from "./panesNew";
+import { getImpressionNode } from "./paneImpressions";
 import { getPaneFragmentNodes } from "./panefragmentsNew";
 import { tursoClient } from "../client";
 import type {
@@ -9,6 +10,7 @@ import type {
   TractStackNode,
   StoryFragmentNode,
   PaneNode,
+  ImpressionNode,
 } from "../../../types";
 
 export async function getGenerateAllNodes(): Promise<StoryKeepAllNodes | null> {
@@ -101,6 +103,9 @@ export async function getGenerateAllNodes(): Promise<StoryKeepAllNodes | null> {
     const paneNodes = paneRows
       .map((row) => getPaneNodes(row))
       .filter((node): node is PaneNode => node !== null);
+    const impressionNodes = paneRows
+      .map((row) => getImpressionNode(row))
+      .filter((node): node is ImpressionNode => node !== null);
 
     const fragmentResults = getPaneFragmentNodes(paneRows, fileNodes, "all", false);
 
@@ -112,6 +117,7 @@ export async function getGenerateAllNodes(): Promise<StoryKeepAllNodes | null> {
       flatNodes: fragmentResults.flatNodes || [],
       fileNodes,
       menuNodes,
+      impressionNodes,
       resourceNodes,
     };
   } catch (error) {

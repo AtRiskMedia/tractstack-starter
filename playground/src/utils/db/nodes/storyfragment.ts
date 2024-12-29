@@ -22,8 +22,8 @@ export function getStoryFragmentNodes(row: Row): StoryFragmentNode | null {
       ...(typeof row?.tailwind_background_colour === `string` && row.tailwind_background_colour
         ? { tailwindBgColour: row.tailwind_background_colour }
         : {}),
-      ...(typeof row?.created === `string` ? { created: new Date(row.created).getTime() } : {}),
-      ...(typeof row?.changed === `string` ? { changed: new Date(row.changed).getTime() } : {}),
+      ...(typeof row?.created === `string` ? { created: new Date(row.created) } : {}),
+      ...(typeof row?.changed === `string` ? { changed: new Date(row.changed) } : {}),
       hasMenu: !!row.menu_id,
       ...(typeof row?.menu_id === `string` ? { menuId: row.menu_id } : {}),
     };

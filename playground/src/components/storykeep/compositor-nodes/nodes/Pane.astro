@@ -11,9 +11,14 @@ import {
 import { viewportStore } from "../../../../store/storykeep";
 import Node from "../Node.astro";
 import Filter from "../../../../components/frontend/state/Filter";
+import type { CodeHookDatum } from "../../../../types";
 
 const { nodeId } = Astro.props;
-const codeHookPayload = getNodeCodeHookPayload(nodeId);
+const rawPayload = getNodeCodeHookPayload(nodeId);
+const codeHookPayload =
+  rawPayload && typeof rawPayload === "object" && "target" in rawPayload
+    ? (rawPayload as CodeHookDatum)
+    : null;
 const beliefs = getPaneBeliefs(nodeId);
 const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";

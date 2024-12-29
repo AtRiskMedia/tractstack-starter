@@ -27,10 +27,7 @@ function calculateVisibility(
 }
 
 function matchesBelief(belief: BeliefStore, key: string, value: string): boolean {
-  return (
-    belief.slug === key &&
-    (belief.verb === value || value === "*" || belief.object === value)
-  );
+  return belief.slug === key && (belief.verb === value || value === "*" || belief.object === value);
 }
 
 // Helper function to process a filter object
@@ -129,7 +126,12 @@ export const useFilterPane = (
 
     paneRef.current = thisPane;
 
-    const isVisible = calculateVisibility(heldBeliefsFilter, withheldBeliefsFilter, reveal, overrideWithhold);
+    const isVisible = calculateVisibility(
+      heldBeliefsFilter,
+      withheldBeliefsFilter,
+      reveal,
+      overrideWithhold
+    );
 
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);

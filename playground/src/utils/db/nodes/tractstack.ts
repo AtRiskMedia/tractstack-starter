@@ -9,7 +9,7 @@ export function getTractStackNode(row: Row): TractStackNode | null {
   )
     return {
       id: row.tractstack_id,
-      nodeType: "Root",
+      nodeType: "TractStack",
       parentId: null,
       title: row.tractstack_title,
       slug: row.tractstack_slug,

@@ -19,7 +19,7 @@ export type NodeProps = {
 };
 
 // Helper function to parse code hooks
-const parseCodeHook = (node: BaseNode | FlatNode) => {
+function parseCodeHook(node: BaseNode | FlatNode) {
   // First check if we have codeHookParams
   if ("codeHookParams" in node && Array.isArray(node.codeHookParams)) {
     const regexpHook =
@@ -36,26 +36,31 @@ const parseCodeHook = (node: BaseNode | FlatNode) => {
     };
   }
 
-  // Fallback to checking children if no codeHookParams
-  if (!("children" in node) || !node.children?.[0]?.value) return null;
+  // Type guard to check if it's a FlatNode with children
+  if ("children" in node && Array.isArray(node.children)) {
+    const firstChild = node.children[0];
+    if (!firstChild?.value) return null;
 
-  const regexpHook =
-    /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*?)\)/;
-  const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
-  const hookMatch = node.children[0].value.match(regexpHook);
+    const regexpHook =
+      /(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*?)\)/;
+    const regexpValues = /((?:[^\\|]+|\\\|?)+)/g;
+    const hookMatch = firstChild.value.match(regexpHook);
 
-  if (!hookMatch) return null;
+    if (!hookMatch) return null;
 
-  const hook = hookMatch[1];
-  const hookValuesRaw = hookMatch[2].match(regexpValues);
+    const hook = hookMatch[1];
+    const hookValuesRaw = hookMatch[2].match(regexpValues);
 
-  return {
-    hook,
-    value1: hookValuesRaw?.[0] || null,
-    value2: hookValuesRaw?.[1] || null,
-    value3: hookValuesRaw?.[2] || "",
-  };
-};
+    return {
+      hook,
+      value1: hookValuesRaw?.[0] || null,
+      value2: hookValuesRaw?.[1] || null,
+      value3: hookValuesRaw?.[2] || "",
+    };
+  }
+
+  return null;
+}
 
 const getElement = (node: BaseNode | FlatNode): ReactElement => {
   if (node === undefined) return <></>;
@@ -103,8 +108,10 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
       const hookData = parseCodeHook(node);
       return hookData ? <Widget {...hookData} key={node.id} /> : <></>;
     }
+    case "Impression":
+      return <></>;
     default:
-      console.log(`miss on ${type}`);
+      console.log(`Node.tsx miss on ${type}`);
       return <></>;
   }
 };

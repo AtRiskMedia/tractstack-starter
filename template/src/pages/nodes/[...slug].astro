@@ -1,16 +1,19 @@
 ---
 import { isValidContentPath } from "../../utils/common/routeValidation";
-import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import {
+  getStoryFragmentNodeBySlug,
+  getImpressionNodesForPanes,
+  buildNodesTreeFromFragmentNodes,
+} from "../../store/nodes";
 import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
 import { getConfig, validateConfig } from "../../utils/core/config";
-import { getStoryFragmentBySlug } from "../../utils/db/utils";
 import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import Layout from "../../../src/layouts/StoryKeep.astro";
 import HeaderWidget from "../../custom/HeaderWidget.astro";
 import Header from "../../components/common/Header.astro";
 import Footer from "../../components/common/Footer.astro";
 import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
-import type { AuthStatus, Current } from "../../types";
+import type { AuthStatus, ImpressionDatum } from "../../types";
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
@@ -38,25 +41,14 @@ const nodes = await getGenerateAllNodes();
 buildNodesTreeFromFragmentNodes(nodes);
 const storyfragmentNode = getStoryFragmentNodeBySlug(lookup);
 
-// Get additional story fragment data
-const storyfragment = await getStoryFragmentBySlug(lookup, config);
-if (!storyfragment) {
+if (!storyfragmentNode) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
 
-const current: Current = storyfragment
-  ? {
-      id: storyfragment.id,
-      slug: storyfragment.slug,
-      title: storyfragment.title,
-      parentId: storyfragment.tractStackId,
-      parentSlug: storyfragment.tractStackSlug,
-      parentTitle: storyfragment.tractStackTitle,
-    }
-  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+const impressionNodes = getImpressionNodesForPanes(storyfragmentNode.paneIds) as ImpressionDatum[];
 ---
 
 <Layout
@@ -68,35 +60,35 @@ const current: Current = storyfragment
     : undefined}
   config={config}
 >
-  {
-    config?.init?.ENABLE_HEADER_WIDGET && (
-      <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
-    )
-  }
+  {config?.init?.ENABLE_HEADER_WIDGET && <HeaderWidget slug={lookup} resources={[]} />}
 
   <Header
-    title={storyfragment.title}
-    menu={storyfragment.menuPayload}
+    title={storyfragmentNode.title}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
     slug={lookup}
     isContext={false}
     isEditable={true}
-    impressions={storyfragment.impressions}
+    impressions={impressionNodes}
     user={user}
     config={config}
   />
 
   <main id="main-content" class="w-full overflow-hidden">
-    <div class={storyfragment.tailwindBgColour}>
+    <div
+      class={typeof storyfragmentNode.tailwindBgColour === `string`
+        ? `bg-${storyfragmentNode.tailwindBgColour}`
+        : ``}
+    >
       <AstroNodesRenderer id={storyfragmentNode.id} />
     </div>
   </main>
 
   {
-    storyfragment.impressions?.length && (
+    storyfragmentNode.impressions?.length && (
       <ImpressionWrapper
-        slug={storyfragment.slug}
+        slug={storyfragmentNode.slug}
         isContext={true}
-        payload={storyfragment.impressions}
+        payload={impressionNodes}
         config={config}
         client:idle
       />
@@ -104,8 +96,8 @@ const current: Current = storyfragment
   }
 
   <Footer
-    created={storyfragment.created}
-    menu={storyfragment.menuPayload}
+    created={storyfragmentNode.created || new Date()}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
     backToTop={true}
     slug={lookup}
     isContext={false}

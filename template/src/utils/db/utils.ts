@@ -31,7 +31,6 @@ import type {
   FileDatum,
   TursoQuery,
   Config,
-  StoryKeepNodes,
   ImageFileNode,
   MenuNode,
   ResourceNode,
@@ -400,114 +399,114 @@ export async function getStoryFragmentBySlug(
 }
 
 // clone of getStoryFragmentBySlug
-export async function getStoryFragmentNodesBySlug(slug: string): Promise<StoryKeepNodes | null> {
-  try {
-    const client = await tursoClient.getClient();
-    if (!client) return null;
-    const { rows } = await client.execute({
-      sql: `SELECT 
-              sf.id AS id,
-              sf.title AS title,
-              sf.slug AS slug,
-              sf.created AS created,
-              sf.changed AS changed,
-              COALESCE(sf.social_image_path, ts.social_image_path) AS social_image_path,
-              sf.tailwind_background_colour,
-              sf.menu_id,
-              ts.id AS tractstack_id,
-              ts.title AS tractstack_title,
-              ts.slug AS tractstack_slug,
-              (
-                WITH RECURSIVE numbered_rows AS (
-                  SELECT 
-                    p.*,
-                    md.body AS markdown_body,
-                    md.id AS markdown_id,
-                    sp.weight,
-                    ROW_NUMBER() OVER (ORDER BY sp.weight ASC) AS row_num
-                  FROM storyfragment_pane sp
-                  JOIN pane p ON sp.pane_id = p.id
-                  LEFT JOIN markdown md ON p.markdown_id = md.id
-                  WHERE sp.storyfragment_id = sf.id
-                )
-                SELECT json_group_array(
-                  json_object(
-                    'id', id,
-                    'title', title,
-                    'slug', slug,
-                    'created', created,
-                    'changed', changed,
-                    'height_offset_desktop', height_offset_desktop,
-                    'height_offset_mobile', height_offset_mobile,
-                    'height_offset_tablet', height_offset_tablet,
-                    'height_ratio_desktop', height_ratio_desktop,
-                    'height_ratio_mobile', height_ratio_mobile,
-                    'height_ratio_tablet', height_ratio_tablet,
-                    'options_payload', options_payload,
-                    'markdown_body', markdown_body,
-                    'markdown_id', markdown_id,
-                    'files', (
-                      SELECT json_group_array(
-                        json_object(
-                          'id', file_id,
-                          'markdown', CASE 
-                            WHEN EXISTS (
-                              SELECT 1 
-                              FROM file_markdown fm 
-                              WHERE fm.file_id = combined_files.file_id 
-                              AND fm.markdown_id = nr.markdown_id
-                            )
-                            THEN json('true')
-                            ELSE json('false')
-                          END
-                        )
-                      )
-                      FROM (
-                        SELECT fp.file_id
-                        FROM file_pane fp
-                        WHERE fp.pane_id = nr.id
-                        UNION
-                        SELECT fm.file_id
-                        FROM file_markdown fm
-                        WHERE fm.markdown_id = nr.markdown_id
-                      ) AS combined_files
-                    )
-                  )
-                )
-                FROM numbered_rows nr
-                ORDER BY nr.row_num ASC
-              ) AS panes
-            FROM storyfragment sf
-            JOIN tractstack ts ON sf.tractstack_id = ts.id
-            WHERE sf.slug = ?`,
-      args: [slug],
-    });
-
-    const row = rows.length ? rows[0] : null;
-    if (!row) return null;
-
-    const tractstackNode = getTractStackNode(row);
-    const storyfragmentNode = getStoryFragmentNodes(row);
-    const fileNodes = await getAllFileNodes();
-    const paneNodes = getPaneNodes(row);
-    const paneFragmentNodes = getPaneFragmentNodes(row, fileNodes, slug, false);
-
-    if (tractstackNode && storyfragmentNode) {
-      return {
-        tractstackNode,
-        storyfragmentNode,
-        paneNodes,
-        paneFragmentNodes: paneFragmentNodes.paneFragments || [],
-        flatNodes: paneFragmentNodes.flatNodes || [],
-        fileNodes,
-      };
-    }
-  } catch (error) {
-    console.error("Error fetching StoryFragmentBySlug:", error);
-    throw error;
-  }
-  return null;
-}
+//export async function getStoryFragmentNodesBySlug(slug: string): Promise<StoryKeepNodes | null> {
+//  try {
+//    const client = await tursoClient.getClient();
+//    if (!client) return null;
+//    const { rows } = await client.execute({
+//      sql: `SELECT
+//              sf.id AS id,
+//              sf.title AS title,
+//              sf.slug AS slug,
+//              sf.created AS created,
+//              sf.changed AS changed,
+//              COALESCE(sf.social_image_path, ts.social_image_path) AS social_image_path,
+//              sf.tailwind_background_colour,
+//              sf.menu_id,
+//              ts.id AS tractstack_id,
+//              ts.title AS tractstack_title,
+//              ts.slug AS tractstack_slug,
+//              (
+//                WITH RECURSIVE numbered_rows AS (
+//                  SELECT
+//                    p.*,
+//                    md.body AS markdown_body,
+//                    md.id AS markdown_id,
+//                    sp.weight,
+//                    ROW_NUMBER() OVER (ORDER BY sp.weight ASC) AS row_num
+//                  FROM storyfragment_pane sp
+//                  JOIN pane p ON sp.pane_id = p.id
+//                  LEFT JOIN markdown md ON p.markdown_id = md.id
+//                  WHERE sp.storyfragment_id = sf.id
+//                )
+//                SELECT json_group_array(
+//                  json_object(
+//                    'id', id,
+//                    'title', title,
+//                    'slug', slug,
+//                    'created', created,
+//                    'changed', changed,
+//                    'height_offset_desktop', height_offset_desktop,
+//                    'height_offset_mobile', height_offset_mobile,
+//                    'height_offset_tablet', height_offset_tablet,
+//                    'height_ratio_desktop', height_ratio_desktop,
+//                    'height_ratio_mobile', height_ratio_mobile,
+//                    'height_ratio_tablet', height_ratio_tablet,
+//                    'options_payload', options_payload,
+//                    'markdown_body', markdown_body,
+//                    'markdown_id', markdown_id,
+//                    'files', (
+//                      SELECT json_group_array(
+//                        json_object(
+//                          'id', file_id,
+//                          'markdown', CASE
+//                            WHEN EXISTS (
+//                              SELECT 1
+//                              FROM file_markdown fm
+//                              WHERE fm.file_id = combined_files.file_id
+//                              AND fm.markdown_id = nr.markdown_id
+//                            )
+//                            THEN json('true')
+//                            ELSE json('false')
+//                          END
+//                        )
+//                      )
+//                      FROM (
+//                        SELECT fp.file_id
+//                        FROM file_pane fp
+//                        WHERE fp.pane_id = nr.id
+//                        UNION
+//                        SELECT fm.file_id
+//                        FROM file_markdown fm
+//                        WHERE fm.markdown_id = nr.markdown_id
+//                      ) AS combined_files
+//                    )
+//                  )
+//                )
+//                FROM numbered_rows nr
+//                ORDER BY nr.row_num ASC
+//              ) AS panes
+//            FROM storyfragment sf
+//            JOIN tractstack ts ON sf.tractstack_id = ts.id
+//            WHERE sf.slug = ?`,
+//      args: [slug],
+//    });
+//
+//    const row = rows.length ? rows[0] : null;
+//    if (!row) return null;
+//
+//    const tractstackNode = getTractStackNode(row);
+//    const storyfragmentNode = getStoryFragmentNodes(row);
+//    const fileNodes = await getAllFileNodes();
+//    const paneNodes = getPaneNodes(row);
+//    const paneFragmentNodes = getPaneFragmentNodes(row, fileNodes, slug, false);
+//
+//    if (tractstackNode && storyfragmentNode) {
+//      return {
+//        tractstackNode,
+//        storyfragmentNode,
+//        paneNodes,
+//        paneFragmentNodes: paneFragmentNodes.paneFragments || [],
+//        flatNodes: paneFragmentNodes.flatNodes || [],
+//        fileNodes,
+//      };
+//    }
+//  } catch (error) {
+//    console.error("Error fetching StoryFragmentBySlug:", error);
+//    throw error;
+//  }
+//  return null;
+//}
 
 export async function executeQueries(
   queries: TursoQuery[]

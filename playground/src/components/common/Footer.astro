@@ -1,4 +1,5 @@
 ---
+import { getMenuNodeById } from "../../store/nodes";
 import Socials from "./widgets/Socials.astro";
 import FooterMenu from "./nav/FooterMenu.astro";
 import Link from "./nav/Link.astro";
@@ -10,12 +11,28 @@ export interface Props {
   config: Config;
   created?: Date;
   menu?: MenuDatum | null;
+  menuId?: string | null;
   backToTop?: boolean;
 }
 
-const { created = new Date(), backToTop = false, menu, slug, isContext, config } = Astro.props;
+const {
+  created: rawCreated = new Date(),
+  backToTop = false,
+  menu,
+  menuId,
+  slug,
+  isContext,
+  config,
+} = Astro.props;
 const footer = config?.init?.FOOTER || ``;
 const socials = typeof config?.init?.SOCIALS === "string" ? config.init.SOCIALS : "";
+const menuPayload = typeof menuId === `string` ? getMenuNodeById(menuId) : menu;
+const createdDate =
+  typeof rawCreated === "number"
+    ? new Date(rawCreated)
+    : rawCreated instanceof Date
+      ? rawCreated
+      : new Date();
 ---
 
 <div class="w-full h-6 md:h-8 bg-gradient-to-b from-transparent to-white"></div>
@@ -34,11 +51,15 @@ const socials = typeof config?.init?.SOCIALS === "string" ? config.init.SOCIALS 
     }
   </div>
   <div class="pb-6">
-    {menu ? <FooterMenu payload={menu} slug={slug} isContext={isContext} config={config} /> : null}
+    {
+      !!menuPayload ? (
+        <FooterMenu payload={menuPayload} slug={slug} isContext={isContext} config={config} />
+      ) : null
+    }
     <Socials payload={socials} />
     <div class="my-2 flex flex-col items-center justify-center xs:flex-row text-myblue">
       <div class="px-12 text-center text-2xl">
-        Copyright &#169; {created.getFullYear()}
+        Copyright &#169; {createdDate.getFullYear()}
         &nbsp;|&nbsp;
         {footer}
       </div>

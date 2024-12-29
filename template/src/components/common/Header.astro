@@ -1,6 +1,7 @@
 ---
 import { Home } from "./icons/Home";
 import Menu from "./Menu";
+import { getMenuNodeById } from "../../store/nodes";
 import { RememberMe } from "./state/RememberMe";
 import { OpenStoryKeep } from "./nav/OpenStoryKeep";
 import { ConfigureStoryKeep } from "./nav/ConfigureStoryKeep";
@@ -13,6 +14,7 @@ export interface Props {
   user: AuthStatus;
   config: Config;
   menu?: MenuDatum | null;
+  menuId?: string | null;
   impressions?: ImpressionDatum[];
   isContext: boolean;
   isStoryKeep?: boolean;
@@ -25,6 +27,7 @@ const {
   user,
   isContext,
   menu,
+  menuId,
   impressions,
   isStoryKeep = false,
   isEditable = false,
@@ -36,6 +39,7 @@ const logoIsSvg = logo.includes("svg");
 const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
 const wordmarkIsSvg = wordmark.includes("svg");
+const menuPayload = typeof menuId === `string` ? getMenuNodeById(menuId) : menu;
 ---
 
 <header class="relative bg-white shadow-inner">
@@ -84,8 +88,8 @@ const wordmarkIsSvg = wordmark.includes("svg");
       </div>
     </a>
     {
-      !!menu ? (
-        <Menu payload={menu} slug={slug} isContext={isContext} config={config} client:load />
+      !!menuPayload ? (
+        <Menu payload={menuPayload} slug={slug} isContext={isContext} config={config} client:load />
       ) : null
     }
   </div>

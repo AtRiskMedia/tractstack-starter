@@ -13,6 +13,8 @@ export function getMenuNodes(rows: Row[]): MenuNode[] {
     )
       return {
         id: r.id,
+        nodeType: `Menu`,
+        parentId: null,
         title: r.title,
         theme: r.theme,
         optionsPayload:

@@ -482,8 +482,7 @@ export interface TursoPane {
   markdown_body?: string;
 }
 
-export interface ResourceNode {
-  id: string;
+export interface ResourceNode extends BaseNode {
   title: string;
   slug: string;
   category: string | null;
@@ -492,11 +491,11 @@ export interface ResourceNode {
   optionsPayload: any;
 }
 
-export interface MenuNode {
-  id: string;
+export interface MenuNode extends BaseNode {
   title: string;
   theme: string;
   optionsPayload: MenuLink[];
+  nodeType: `Menu`;
 }
 
 export interface FileNode {
@@ -1140,20 +1139,30 @@ export interface TractStackNode extends BaseNode {
   socialImagePath?: string;
 }
 
-export interface ImageFileNode {
-  id: string;
-  filename: string;
-  altDescription: string;
-  src: string;
-  srcSet?: string;
-}
-
-export type NodeType = "Root" | "Pane" | "StoryFragment" | "BgPane" | "Markdown" | "TagElement";
+export type NodeType =
+  | "Root"
+  | "Pane"
+  | "StoryFragment"
+  | "BgPane"
+  | "Markdown"
+  | "TagElement"
+  | "TractStack"
+  | "Menu"
+  | "Impression"
+  | "File";
 
 export interface BaseNode {
   id: string;
   parentId: string | null;
   nodeType: NodeType;
+}
+
+export interface ImageFileNode extends BaseNode {
+  filename: string;
+  altDescription: string;
+  src: string;
+  nodeType: `File`;
+  srcSet?: string;
 }
 
 export interface PaneNode extends BaseNode {
@@ -1180,8 +1189,9 @@ export interface StoryFragmentNode extends BaseNode {
   menuId?: string;
   tailwindBgColour?: string;
   socialImagePath?: string;
-  created?: number;
-  changed?: number;
+  created?: Date;
+  changed?: Date;
+  impressions?: ImpressionDatum[];
 }
 
 export interface VisualBreakData {
@@ -1212,15 +1222,15 @@ export interface VisualBreakNode extends PaneFragmentNode {
   hiddenViewportMobile?: boolean;
 }
 
-export interface StoryKeepNodes {
-  tractstackNode: TractStackNode;
-  storyfragmentNode: StoryFragmentNode;
-  paneNodes: PaneNode[];
-  paneFragmentNodes: PaneFragmentNode[];
-  flatNodes: FlatNode[];
-  fileNodes: ImageFileNode[];
-  //menuNodes: MenuNode[];
-}
+//export interface StoryKeepNodes {
+//  tractstackNode: TractStackNode;
+//  storyfragmentNode: StoryFragmentNode;
+//  paneNodes: PaneNode[];
+//  paneFragmentNodes: PaneFragmentNode[];
+//  flatNodes: FlatNode[];
+//  fileNodes: ImageFileNode[];
+//  //menuNodes: MenuNode[];
+//}
 
 export interface StoryKeepAllNodes {
   tractstackNodes: TractStackNode[];
@@ -1230,6 +1240,7 @@ export interface StoryKeepAllNodes {
   flatNodes: FlatNode[];
   fileNodes: ImageFileNode[];
   menuNodes: MenuNode[];
+  impressionNodes: ImpressionNode[];
   resourceNodes: ResourceNode[];
 }
 
@@ -1307,4 +1318,12 @@ export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
     desktop: Record<string, string>;
   }>;
   parentCss?: string[];
+}
+
+export interface ImpressionNode extends BaseNode {
+  nodeType: "Impression";
+  title: string;
+  body: string;
+  buttonText: string;
+  actionsLisp: string;
 }

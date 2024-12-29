@@ -28,7 +28,9 @@ export function getFileNodes(rows: Row[]): ImageFileNode[] {
         const isSourceSet = r.src_set === 1;
         const node: ImageFileNode = {
           id: r.id,
+          parentId: null,
           filename: r.filename,
+          nodeType: `File`,
           altDescription: r.alt_description,
           src: isSourceSet
             ? `${r.url.substring(0, r.url.lastIndexOf("."))}_600px${r.url.substring(r.url.lastIndexOf("."))}`

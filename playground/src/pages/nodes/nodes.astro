@@ -1,12 +1,11 @@
 ---
 import { isValidContentPath } from "../../utils/common/routeValidation";
 import { ReactNodesRenderer } from "../../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { buildNodesTreeFromFragmentNodes } from "../../store/nodes";
+import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../store/nodes";
 import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
 import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import { getConfig, validateConfig } from "../../utils/core/config";
-import type { AuthStatus } from "../types";
-import Layout from "../../../src/layouts/StoryKeep.astro";
+import Layout from "../../layouts/StoryKeep.astro";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -30,6 +29,14 @@ if (!isValidContentPath(lookup)) {
 
 const nodes = await getGenerateAllNodes();
 buildNodesTreeFromFragmentNodes(nodes);
+
+const storyfragmentNode = getStoryFragmentNodeBySlug(lookup);
+if (!storyfragmentNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 ---
 
 <Layout title="Nodes" pubDatetime={new Date()} modDatetime={new Date()} config={config}>
@@ -37,7 +44,7 @@ buildNodesTreeFromFragmentNodes(nodes);
   <AstroNodesRenderer slug={lookup} />
 
   <h1>React</h1>
-  <ReactNodesRenderer slug={lookup} nodes={nodes} client:only="react" />
+  <ReactNodesRenderer id={storyfragmentNode.id} nodes={nodes} client:only="react" />
 
   <h1>Data</h1>
   <pre class="max-w-screen overflow-hidden">
