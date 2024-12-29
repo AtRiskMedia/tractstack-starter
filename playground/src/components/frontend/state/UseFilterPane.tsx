@@ -5,7 +5,7 @@ import { pageLoadTime } from "../../../store/events";
 import type { BeliefStore, BeliefDatum } from "../../../types";
 import { smoothScrollToPane } from "@/utils/common/domHelpers.ts";
 
-const SCROLL_PREVENTION_PERIOD = 50;
+const SCROLL_PREVENTION_PERIOD = 5000;
 const DOM_UPDATE_DELAY = 50;
 
 function calculateVisibility(
@@ -115,6 +115,12 @@ export const useFilterPane = (
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
   useEffect(() => {
+    if(ready) {
+      setReady(false);
+    }
+  }, [pageLoadTime]);
+
+  useEffect(() => {
     const thisPane = document.querySelector(`#pane-${id}`) as HTMLElement;
     if (!thisPane) {
       console.error(`Pane ${id} not found`);
@@ -136,6 +142,7 @@ export const useFilterPane = (
       !isFirstRender.current &&
       ready
     ) {
+      console.log("smooth scroll: " + Date.now());
       scrollTimeoutRef.current = smoothScrollToPane(thisPane, 20, DOM_UPDATE_DELAY);
     }
 
