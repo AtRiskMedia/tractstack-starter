@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../../../store/beliefs";
 import { pageLoadTime } from "../../../store/events";
 import type { BeliefStore, BeliefDatum } from "../../../types";
 import { smoothScrollToPane } from "@/utils/common/domHelpers.ts";
 
-const SCROLL_PREVENTION_PERIOD = 5000;
+const SCROLL_PREVENTION_PERIOD = 50;
 const DOM_UPDATE_DELAY = 50;
 
 function calculateVisibility(
@@ -65,8 +65,8 @@ export const useFilterPane = (
   withheldBeliefsFilter: BeliefDatum
 ) => {
   const $heldBeliefsAll = useStore(heldBeliefs);
-  const $pageLoadTime = useStore(pageLoadTime);
   const [reveal, setReveal] = useState(false);
+  const [ready, setReady] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
   const isFirstRender = useRef(true);
   const paneRef = useRef<HTMLElement | null>(null);
@@ -86,6 +86,9 @@ export const useFilterPane = (
     } else {
       setOverrideWithhold(true);
     }
+
+    // set ready next event tick
+    setTimeout(() => setReady(true), 1);
   };
 
   const updatePaneVisibility = (thisPane: HTMLElement, isVisible: boolean) => {
@@ -131,7 +134,7 @@ export const useFilterPane = (
     if (
       isVisible &&
       !isFirstRender.current &&
-      Date.now() - $pageLoadTime > SCROLL_PREVENTION_PERIOD
+      ready
     ) {
       scrollTimeoutRef.current = smoothScrollToPane(thisPane, 20, DOM_UPDATE_DELAY);
     }
@@ -143,5 +146,5 @@ export const useFilterPane = (
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [id, reveal, overrideWithhold, $pageLoadTime]);
+  }, [id, reveal, overrideWithhold]);
 };
