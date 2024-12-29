@@ -28,5 +28,6 @@ package/public/styles/storykeep.css
 playground/node_modules
 
 # storykeep css
-**/storykeep.css
+**/storykeep.css*
+**/frontend.css*
 **/tailwindLookup.json

@@ -1261,7 +1261,7 @@ export type TemplatePane = PaneNode & {
   id?: string;
   parentId?: string;
   nodes?: TemplateNode[];
-}
+};
 
 export interface FlatNode extends BaseNode {
   tagName: string;

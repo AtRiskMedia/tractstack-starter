@@ -5,7 +5,6 @@ import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../
 import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 
-const { slug } = Astro.params;
 const config = await getConfig();
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
@@ -13,6 +12,7 @@ if (!validation.isValid || !config) {
 }
 
 // valid storyfragment?
+const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/${slug}`;

@@ -11,7 +11,9 @@ import type {
   ViewportKey,
   ImpressionNode,
   TractStackNode,
-  MenuNode, TemplateNode, TemplatePane,
+  MenuNode,
+  TemplateNode,
+  TemplatePane,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
@@ -394,39 +396,42 @@ export const addTemplatePaneToStoryFragment = (
   nodeId: string,
   pane: TemplatePane,
   location: "before" | "after"
+) => {};
+
+export const addTemplateNode = (
+  paneNodeId: string,
+  node: TemplateNode,
+  nodeId: string,
+  location: "before" | "after"
 ) => {
-
-}
-
-export const addTemplateNode = (paneNodeId: string, node: TemplateNode, nodeId: string, location: "before" | "after") => {
   const paneNode = allNodes.get().get(paneNodeId) as PaneNode;
   if (!paneNode || paneNode.nodeType !== "Pane") {
     return;
   }
 
-  const duplicatedNodes = {...node} as TemplateNode;
+  const duplicatedNodes = { ...node } as TemplateNode;
   duplicatedNodes.id = ulid();
   duplicatedNodes.parentId = paneNode.id;
   const flattenedNodes = setupTemplateNodeRecursively(duplicatedNodes, duplicatedNodes.id);
-  flattenedNodes.forEach(node => delete node.nodes);
+  flattenedNodes.forEach((node) => delete node.nodes);
 
   addNodes(flattenedNodes);
 };
 
 const setupTemplateNodeRecursively = (node: TemplateNode, parentId: string) => {
   let result: TemplateNode[] = [];
-  if(!node) return result;
+  if (!node) return result;
 
   node.id = ulid();
   node.parentId = parentId;
   result.push(node);
-  if("nodes" in node && node.nodes) {
+  if ("nodes" in node && node.nodes) {
     for (let i = 0; i < node.nodes.length; ++i) {
       result = result.concat(setupTemplateNodeRecursively(node.nodes[i], node.id));
     }
   }
   return result;
-}
+};
 
 export const deleteNode = (nodeId: string) => {
   const node = allNodes.get().get(nodeId) as BaseNode;

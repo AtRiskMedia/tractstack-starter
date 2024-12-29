@@ -1,0 +1,64 @@
+---
+import { getConfig, validateConfig } from "../../../../utils/core/config";
+import { ReactNodesRenderer } from "../../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { getContextPaneNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../../store/nodes";
+import { getGenerateAllNodes } from "../../../../utils/db/nodes/generate";
+import StoryKeep from "../../../../layouts/StoryKeep.astro";
+
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// valid context page?
+const { slug } = Astro.params;
+if (!slug) return Astro.redirect("/404");
+
+const canonicalURL = `/context/${slug}`;
+
+// Generate nodes and build tree
+const nodes = await getGenerateAllNodes();
+buildNodesTreeFromFragmentNodes(nodes);
+
+// valid datum?
+const paneNode = getContextPaneNodeBySlug(slug);
+if (!paneNode) {
+  return Astro.redirect("/404");
+}
+---
+
+<StoryKeep
+  title={paneNode?.title}
+  pubDatetime={paneNode?.created}
+  modDatetime={paneNode?.changed}
+  canonicalURL={canonicalURL}
+  config={config}
+>
+  <div
+    id="storykeep-content"
+    class="m-0 p-0 flex flex-col bg-myblack w-full"
+    style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+    ,
+  >
+    <header
+      class="z-[8999] sticky top-0 z-10 bg-mywhite flex justify-between items-center w-full"
+      id="main-header"
+    >
+      <div>StoryKeepHeader goes here</div>
+    </header>
+
+    <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
+      <main id="website-content" class="overflow-auto w-full">
+        <ReactNodesRenderer id={paneNode.id} nodes={nodes} client:only="react" />
+        <div
+          class="h-96 m-0 p-0 flex flex-col bg-mydarkgrey w-full"
+          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+        >
+        </div>
+      </main>
+
+      <div>edit modal goes here</div>
+    </div>
+  </div>
+</StoryKeep>
