@@ -1,14 +1,34 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { allNodes, getChildNodeIDs, getNodeClasses } from "@/store/nodes.ts";
+import {
+  addTemplateNode,
+  allNodes,
+  deleteNode,
+  getChildNodeIDs,
+  getNodeClasses,
+  notifications,
+} from "@/store/nodes.ts";
 import type { MarkdownPaneFragmentNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
+import { TemplateH2Node, TemplateH3Node, TemplatePNode } from "@/utils/TemplateNodes.ts";
+import { useEffect, useState } from "react";
 
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
   const node = allNodes.get().get(props.nodeId) as MarkdownPaneFragmentNode;
+  const [children, setChildren] = useState<string[]>([...getChildNodeIDs(props.nodeId)]);
+
+  useEffect(() => {
+    const unsubscribe = notifications.subscribe(props.nodeId, () => {
+      console.log("notification received data update for markdown node: " + props.nodeId);
+      setChildren([...getChildNodeIDs(props.nodeId)]);
+    });
+    return unsubscribe;
+  }, []);
+
+  console.log("draw markdown: " + props.nodeId);
   let nodesToRender = (
     <>
-      {getChildNodeIDs(props.nodeId).map((id: string) => (
+      {children.map((id: string) => (
         <Node nodeId={id} key={id} />
       ))}
     </>
@@ -20,5 +40,32 @@ export const Markdown = (props: NodeProps) => {
       );
     }
   }
-  return nodesToRender;
+  return (
+    <>
+      {nodesToRender}
+      <div className="flex gap-x-2">
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplateH2Node, children[children.length - 1], "after");
+        }}>
+          Add H2
+        </button>
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplateH3Node, children[children.length - 1], "after");
+        }}>
+          Add H3
+        </button>
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplatePNode, children[children.length - 1], "after");
+        }}>
+          Add P
+        </button>
+        <button className="bg-red-500 rounded-md p-2" onClick={() => {
+          deleteNode(children[children.length - 1]);
+        }}>DELETE LAST</button>
+        <button className="bg-red-500 rounded-md p-2" onClick={() => {
+          deleteNode(children[0]);
+        }}>DELETE FIRST</button>
+      </div>
+    </>
+  );
 };

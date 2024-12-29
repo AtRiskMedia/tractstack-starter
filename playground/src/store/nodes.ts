@@ -2,23 +2,27 @@ import { atom } from "nanostores";
 import type {
   BaseNode,
   FlatNode,
+  ImpressionNode,
   MarkdownPaneFragmentNode,
+  MenuNode,
   NodeType,
   PaneFragmentNode,
   PaneNode,
   StoryFragmentNode,
   StoryKeepAllNodes,
-  ViewportKey,
-  ImpressionNode,
-  TractStackNode,
-  MenuNode,
   TemplateNode,
   TemplatePane,
+  TractStackNode,
+  ViewportKey,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
 import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
+import { NotificationSystem } from "@/store/notificationSystem.ts";
+
+// Export an instance of the notification system
+export const notifications = new NotificationSystem<BaseNode>();
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
@@ -56,6 +60,7 @@ export const clearAll = () => {
   parentNodes.get().clear();
   impressionNodes.get().clear();
   rootNodeId.set("");
+  notifications.clear();
 };
 
 export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepAllNodes | null) => {
@@ -399,23 +404,23 @@ export const addTemplatePaneToStoryFragment = (
 ) => {};
 
 export const addTemplateNode = (
-  paneNodeId: string,
+  markdownId: string,
   node: TemplateNode,
   nodeId: string,
   location: "before" | "after"
 ) => {
-  const paneNode = allNodes.get().get(paneNodeId) as PaneNode;
-  if (!paneNode || paneNode.nodeType !== "Pane") {
+  const markdownNode = allNodes.get().get(markdownId) as MarkdownPaneFragmentNode;
+  if (!markdownNode || markdownNode.nodeType !== "Markdown") {
     return;
   }
 
   const duplicatedNodes = { ...node } as TemplateNode;
   duplicatedNodes.id = ulid();
-  duplicatedNodes.parentId = paneNode.id;
-  const flattenedNodes = setupTemplateNodeRecursively(duplicatedNodes, duplicatedNodes.id);
-  flattenedNodes.forEach((node) => delete node.nodes);
-
+  duplicatedNodes.parentId = markdownNode.id;
+  const flattenedNodes = setupTemplateNodeRecursively(duplicatedNodes, markdownNode.id);
   addNodes(flattenedNodes);
+
+  notifications.notify(markdownId);
 };
 
 const setupTemplateNodeRecursively = (node: TemplateNode, parentId: string) => {
@@ -440,19 +445,34 @@ export const deleteNode = (nodeId: string) => {
   }
 
   const parentId = node.parentId;
-  deleteNodesRecursively(node.id);
+  deleteNodesRecursively(node);
   // if this was a pane node then we need to update storyfragment as it tracks panes
-  if (node.nodeType === "Pane" && parentId !== null) {
-    const storyFragment = allNodes.get().get(parentId) as StoryFragmentNode;
-    if (storyFragment) {
-      storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
+  if(parentId !== null) {
+    notifications.notify(parentId);
+
+    if (node.nodeType === "Pane") {
+      const storyFragment = allNodes.get().get(parentId) as StoryFragmentNode;
+      if (storyFragment) {
+        storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
+      }
     }
   }
 };
 
-const deleteNodesRecursively = (nodeId: string) => {
-  getChildNodeIDs(nodeId).forEach((id) => {
-    deleteNodesRecursively(id);
+const deleteNodesRecursively = (node: BaseNode|undefined) => {
+  if(!node) return;
+
+  getChildNodeIDs(node.id).forEach((id) => {
+    deleteNodesRecursively(allNodes.get().get(id));
   });
-  allNodes.get().delete(nodeId);
+  // remove node
+  allNodes.get().delete(node.id);
+
+  // remove parent link too
+  if(node.parentId !== null) {
+    const parentNode = parentNodes.get().get(node.parentId);
+    if (parentNode) {
+      parentNode.splice(parentNode.indexOf(node.id), 1);
+    }
+  }
 };

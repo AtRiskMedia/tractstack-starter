@@ -1,16 +1,16 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-//import CodeHookWrapper from "../../compositor/CodeHookWrapper";
 import {
   getNodeCodeHookPayload,
   getNodeSlug,
   getChildNodeIDs,
   getNodeClasses,
   getNodeStyles,
-  getPaneBeliefs,
+  getPaneBeliefs, addTemplateNode, notifications,
 } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
-import type { CSSProperties } from "react";
+import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
+import { TemplateH2Node } from "@/utils/TemplateNodes.ts";
 
 export const Pane = (props: NodeProps) => {
   const wrapperClasses = `grid ${getNodeClasses(props.nodeId, viewportStore.get().value)}`;
@@ -20,8 +20,17 @@ export const Pane = (props: NodeProps) => {
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getNodeCodeHookPayload(props.nodeId);
+  const [children, setChildren] = useState<string[]>([...getChildNodeIDs(props.nodeId)]);
 
   const getPaneId = (): string => `pane-${props.nodeId}`;
+
+  useEffect(() => {
+    const unsubscribe = notifications.subscribe(props.nodeId, () => {
+      console.log("notification received data update for page node: " + props.nodeId);
+      setChildren([...getChildNodeIDs(props.nodeId)]);
+    });
+    return unsubscribe;
+  }, []);
 
   if (codeHookPayload) {
     return (
@@ -46,10 +55,18 @@ export const Pane = (props: NodeProps) => {
           />
         )}
         <div className={contentClasses} style={contentStyles}>
-          {getChildNodeIDs(props.nodeId).map((id: string) => (
+          {children.map((id: string) => (
             <Node nodeId={id} key={id} />
           ))}
         </div>
+      </div>
+      <div className="flex">
+        <button className="bg-cyan-500 rounded-md p-2" onClick={() => {
+          const children = getChildNodeIDs(props.nodeId);
+          addTemplateNode(props.nodeId, TemplateH2Node, children[children.length - 1], "after");
+        }}>
+          Add Pane
+        </button>
       </div>
     </div>
   );
