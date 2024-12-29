@@ -183,6 +183,20 @@ export const getStoryFragmentNodeBySlug = (slug: string): StoryFragmentNode | nu
   );
 };
 
+export const getContextPaneNodeBySlug = (slug: string): PaneNode | null => {
+  const nodes = Array.from(allNodes.get().values());
+  return (
+    nodes.find(
+      (node): node is PaneNode =>
+        node.nodeType === "Pane" &&
+        "slug" in node &&
+        node.slug === slug &&
+        "isContextPane" in node &&
+        node.isContextPane === true
+    ) || null
+  );
+};
+
 export const getImpressionNodesForPanes = (paneIds: string[]): ImpressionNode[] => {
   const nodes = Array.from(impressionNodes.get().values());
   return nodes.filter(
@@ -273,7 +287,7 @@ export const getNodeClasses = (
           const styles = paneNode.defaultClasses![tagNameStr];
           // todo make a copy if this works
           if (styles && styles.mobile) {
-            const [all, mobile, tablet, desktop] = processClassesForViewports(
+            const [all /*, mobile, tablet, desktop */] = processClassesForViewports(
               styles,
               (node as FlatNode)?.overrideClasses || {},
               1
@@ -290,12 +304,12 @@ export const getNodeClasses = (
       }
       break;
 
-    case "StoryFragment":
-      {
-        const storyFragment = node as StoryFragmentNode;
-        return storyFragment.tailwindBgColour || "#000";
-      }
-      break;
+    case "StoryFragment": {
+      const storyFragment = node as StoryFragmentNode;
+      return typeof storyFragment?.tailwindBgColour === `string`
+        ? `bg-${storyFragment?.tailwindBgColour}`
+        : ``;
+    }
   }
   return "";
 };

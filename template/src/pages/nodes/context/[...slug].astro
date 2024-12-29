@@ -1,0 +1,83 @@
+---
+import { isValidContentPath } from "../../../utils/common/routeValidation";
+import { getConfig, validateConfig } from "../../../utils/core/config";
+import {
+  getContextPaneNodeBySlug,
+  getImpressionNodesForPanes,
+  buildNodesTreeFromFragmentNodes,
+} from "../../../store/nodes";
+import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
+import AstroNodesRenderer from "../../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
+import ImpressionWrapper from "../../../components/common/widgets/ImpressionWrapper";
+import Layout from "../../../layouts/Layout.astro";
+import Header from "../../../components/common/Header.astro";
+import Footer from "../../../components/common/Footer.astro";
+import type {AuthStatus, ImpressionDatum } from "../../../types";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// validate context pane?
+const { slug } = Astro.params;
+if (!slug || !isValidContentPath(slug)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Generate nodes and build tree
+const nodes = await getGenerateAllNodes();
+buildNodesTreeFromFragmentNodes(nodes);
+const paneNode = getContextPaneNodeBySlug(slug);
+
+if (!paneNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const impressionNodes = getImpressionNodesForPanes([paneNode.id]) as ImpressionDatum[];
+---
+
+<Layout
+  title={paneNode.title}
+  pubDatetime={paneNode.created}
+  modDatetime={paneNode.changed}
+  config={config}
+>
+  <Header
+    title={paneNode.title}
+    slug={paneNode.slug}
+    isContext={true}
+    isEditable={true}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+  <main id="main-content" class="min-h-screen">
+    <AstroNodesRenderer id={paneNode.id} />
+  </main>
+  {
+    impressionNodes && (
+      <ImpressionWrapper
+        payload={impressionNodes}
+        slug={paneNode.slug}
+        isContext={true}
+        config={config}
+        client:load
+      />
+    )
+  }
+  <Footer
+    created={paneNode.created || new Date()}
+    slug={paneNode.slug}
+    isContext={true}
+    config={config}
+  />
+</Layout>

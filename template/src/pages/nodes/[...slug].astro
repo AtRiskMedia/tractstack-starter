@@ -24,7 +24,6 @@ if (!validation.isValid || !config) {
 
 const { slug } = Astro.params;
 const lookup = slug || config?.init?.HOME_SLUG;
-console.log("nodes slug: " + lookup);
 if (slug === config.init?.HOME_SLUG) {
   return Astro.redirect("/");
 }

@@ -49,6 +49,8 @@ export function getPaneNodes(row: Row): PaneNode | null {
         ? { heightRatioMobile: row?.height_ratio_mobile }
         : {}),
       ...(row?.is_context_pane ? { isContextPane: true } : {}),
+      ...(typeof row?.created === `string` ? { created: new Date(row.created) } : {}),
+      ...(typeof row?.changed === `string` ? { changed: new Date(row.changed) } : {}),
       ...(codeHookTarget ? { codeHookTarget: codeHookTarget } : {}),
       ...(codeHookTarget && Object.keys(codeHookPayload).length
         ? { codeHookPayload: codeHookPayload }

@@ -1,5 +1,5 @@
 import type { BeliefDatum } from "../../../types";
-import { useFilterPane } from "@/components/frontend/state/UseFilterPane.tsx";
+import { useFilterPane } from "@/components/frontend/state/UseFilterPane.ts";
 
 const Filter = (props: {
   id: string;
