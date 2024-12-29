@@ -40,11 +40,11 @@ const contentStyles = {
 }
 {
   codeHookPayload ? (
-    <div id={`pane-${nodeId}`}>
+    <div id={`pane-${nodeId}`} class="pane">
       <CodeHook target={codeHookPayload.target} resources={[]} options={null} />
     </div>
   ) : (
-    <div id={`pane-${nodeId}`}>
+    <div id={`pane-${nodeId}`} class="pane">
       <div id={getNodeSlug(nodeId)} class={wrapperClasses}>
         <div class={contentClasses} style={contentStyles}>
           {getChildNodeIDs(nodeId).map((childId: string) => (

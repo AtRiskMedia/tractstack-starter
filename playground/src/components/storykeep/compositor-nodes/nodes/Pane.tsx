@@ -36,7 +36,7 @@ export const Pane = (props: NodeProps) => {
 
   // todo naz - make pane more modular
   return (
-    <div id={getPaneId()}>
+    <div id={getPaneId()} className="pane">
       <div id={getNodeSlug(props.nodeId)} className={wrapperClasses}>
         {beliefs && (
           <Filter

@@ -8,7 +8,7 @@ import {
 import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
-import Layout from "../../../src/layouts/StoryKeep.astro";
+import Layout from "../../../src/layouts/Layout.astro";
 import HeaderWidget from "../../custom/HeaderWidget.astro";
 import Header from "../../components/common/Header.astro";
 import Footer from "../../components/common/Footer.astro";
@@ -84,7 +84,7 @@ const impressionNodes = getImpressionNodesForPanes(storyfragmentNode.paneIds) as
   </main>
 
   {
-    storyfragmentNode.impressions?.length && (
+    impressionNodes && (
       <ImpressionWrapper
         slug={storyfragmentNode.slug}
         isContext={true}

@@ -21,6 +21,7 @@ const ImpressionWrapper = ({
   icon?: boolean;
 }) => {
   const $inView = useStore(panesVisible);
+  console.log($inView);
   const $show = useStore(showImpressions);
   const [offset, setOffset] = useState(0);
   const [activeImpressions, setActiveImpressions] = useState<ImpressionDatum[]>([]);

@@ -112,7 +112,7 @@ export const useFilterPane = (
   }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
 
   useEffect(() => {
-    if(ready) {
+    if (ready) {
       setReady(false);
     }
   }, [pageLoadTime]);
@@ -139,11 +139,7 @@ export const useFilterPane = (
 
     updatePaneVisibility(thisPane, isVisible);
 
-    if (
-      isVisible &&
-      !isFirstRender.current &&
-      ready
-    ) {
+    if (isVisible && !isFirstRender.current && ready) {
       console.log("smooth scroll: " + Date.now());
       scrollTimeoutRef.current = smoothScrollToPane(thisPane, 20, DOM_UPDATE_DELAY);
     }

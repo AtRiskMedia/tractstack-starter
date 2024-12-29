@@ -15,7 +15,7 @@ export function inView() {
     if (target.dataset.hidden === `false`) {
       const id = event.target.id.substring(5);
       if (!panesVisible.get()[id]) panesVisible.setKey(id, Date.now());
-    }
+    } else console.log(`skipped inView.ts`);
   });
 
   elements.on("exit", (event: InViewEvent) => {
@@ -40,7 +40,7 @@ export function inView() {
           events.set([...events.get(), event]);
         }
       }
-    }
+    } else console.log(`skipped inView.ts`);
   });
   return true;
 }
