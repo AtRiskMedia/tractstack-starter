@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
 import { heldBeliefs } from "../../../store/beliefs";
 import { pageLoadTime } from "../../../store/events";
 import type { BeliefStore, BeliefDatum } from "../../../types";
 import { smoothScrollToPane } from "@/utils/common/domHelpers.ts";
 
-const SCROLL_PREVENTION_PERIOD = 5000;
+//const SCROLL_PREVENTION_PERIOD = 5000;
 const DOM_UPDATE_DELAY = 50;
 
 function calculateVisibility(
@@ -56,11 +56,11 @@ function processFilter(
   return shouldMatchAll ? match && all : match;
 }
 
-export const useFilterPane = (
+export function useFilterPane(
   id: string,
   heldBeliefsFilter: BeliefDatum,
   withheldBeliefsFilter: BeliefDatum
-) => {
+) {
   const $heldBeliefsAll = useStore(heldBeliefs);
   const [reveal, setReveal] = useState(false);
   const [ready, setReady] = useState(false);
@@ -152,4 +152,4 @@ export const useFilterPane = (
       }
     };
   }, [id, reveal, overrideWithhold]);
-};
+}

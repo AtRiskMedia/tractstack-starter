@@ -109,7 +109,7 @@ export const addNode = (data: BaseNode) => {
     } else if (data.nodeType !== "Pane") {
       linkChildToParent(data.id, data.parentId);
 
-      if(data.nodeType === "Impression") {
+      if (data.nodeType === "Impression") {
         impressionNodes.get().add(data as ImpressionNode);
       }
     }
@@ -272,7 +272,7 @@ export const getNodeClasses = (
           const styles = paneNode.defaultClasses![tagNameStr];
           // todo make a copy if this works
           if (styles && styles.mobile) {
-            const [all, mobile, tablet, desktop] = processClassesForViewports(
+            const [all /*, mobile, tablet, desktop */] = processClassesForViewports(
               styles,
               (node as FlatNode)?.overrideClasses || {},
               1
@@ -289,12 +289,12 @@ export const getNodeClasses = (
       }
       break;
 
-    case "StoryFragment":
-      {
-        const storyFragment = node as StoryFragmentNode;
-        return storyFragment.tailwindBgColour || "#000";
-      }
-      break;
+    case "StoryFragment": {
+      const storyFragment = node as StoryFragmentNode;
+      return typeof storyFragment?.tailwindBgColour === `string`
+        ? `bg-${storyFragment?.tailwindBgColour}`
+        : ``;
+    }
   }
   return "";
 };

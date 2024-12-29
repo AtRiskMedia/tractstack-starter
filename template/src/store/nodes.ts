@@ -16,7 +16,6 @@ import type {
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
 import type { BeliefDatum } from "../types.ts";
-import { ulid } from "ulid";
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
 export const impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
@@ -110,7 +109,7 @@ export const addNode = (data: BaseNode) => {
     } else if (data.nodeType !== "Pane") {
       linkChildToParent(data.id, data.parentId);
 
-      if(data.nodeType === "Impression") {
+      if (data.nodeType === "Impression") {
         impressionNodes.get().add(data as ImpressionNode);
       }
     }
@@ -273,7 +272,7 @@ export const getNodeClasses = (
           const styles = paneNode.defaultClasses![tagNameStr];
           // todo make a copy if this works
           if (styles && styles.mobile) {
-            const [all, mobile, tablet, desktop] = processClassesForViewports(
+            const [all /*, mobile, tablet, desktop */] = processClassesForViewports(
               styles,
               (node as FlatNode)?.overrideClasses || {},
               1
@@ -290,12 +289,12 @@ export const getNodeClasses = (
       }
       break;
 
-    case "StoryFragment":
-      {
-        const storyFragment = node as StoryFragmentNode;
-        return storyFragment.tailwindBgColour || "#000";
-      }
-      break;
+    case "StoryFragment": {
+      const storyFragment = node as StoryFragmentNode;
+      return typeof storyFragment?.tailwindBgColour === `string`
+        ? `bg-${storyFragment?.tailwindBgColour}`
+        : ``;
+    }
   }
   return "";
 };
@@ -338,36 +337,3 @@ const getStringNodeStyles = (node: BaseNode | undefined, viewport: ViewportKey):
   }
   return "";
 };
-
-export const addPaneToStoryFragment = (nodeId: string, pane: PaneNode, location: "before" | "after") => {
-  const node = allNodes.get().get(nodeId) as FlatNode;
-  if(!node
-    || node.nodeType !== "StoryFragment"
-    || node.nodeType !== "Pane"
-  ) {
-    return;
-  }
-
-  pane.id = ulid();
-  if(node.nodeType === "Pane") {
-    const storyFragmentId = getClosestNodeTypeFromId(nodeId, "StoryFragment");
-    const storyFragment = allNodes.get().get(storyFragmentId) as StoryFragmentNode;
-    if(storyFragment) {
-      pane.parentId = storyFragmentId;
-      const originalPaneIndex = storyFragment.paneIds.indexOf(pane.parentId);
-      let insertIdx = -1;
-      if(location === "before")
-        insertIdx = Math.max(0, originalPaneIndex-1);
-      else
-        insertIdx = Math.min(storyFragment.paneIds.length-1, originalPaneIndex+1);
-
-      storyFragment.paneIds.splice(insertIdx, 0, pane.id);
-      addNode(pane);
-    }
-  } else if(node.nodeType !== "StoryFragment") {
-    const storyFragment = node as StoryFragmentNode;
-    if(location === "after") {
-      (node as StoryFragmentNode)?.paneIds.push(pane.id);
-    }
-  }
-}
