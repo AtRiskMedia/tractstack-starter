@@ -5,7 +5,7 @@ export const TemplateH2Node = {
   tagName: "h2",
   nodes: [
     {
-      text: "H2 node",
+      copy: "H2 node",
       tagName: "text",
     },
   ],
@@ -16,7 +16,7 @@ export const TemplateH3Node = {
   tagName: "h3",
   nodes: [
     {
-      text: "H3 node",
+      copy: "H3 node",
       tagName: "text",
     },
   ],
@@ -27,7 +27,7 @@ export const TemplatePNode = {
   tagName: "p",
   nodes: [
     {
-      text: "P node",
+      copy: "P node",
       tagName: "text",
     },
   ],
@@ -38,7 +38,7 @@ export const TemplateH4Node = {
   tagName: "h4",
   nodes: [
     {
-      text: "h4 node",
+      copy: "h4 node",
       tagName: "text",
     },
   ],
@@ -49,7 +49,7 @@ export const TemplateAsideNode = {
   tagName: "aside",
   nodes: [
     {
-      text: "aside node",
+      copy: "aside node",
       tagName: "text",
     },
   ],

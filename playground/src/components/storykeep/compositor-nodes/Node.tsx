@@ -93,6 +93,7 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
     case "ul":
     case "li":
     case "strong":
+    case "aside":
     case "p":
       return <NodeBasicTag tagName={type} nodeId={node.id} key={node.id} />;
 

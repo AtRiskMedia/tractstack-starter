@@ -9,7 +9,13 @@ import {
 } from "@/store/nodes.ts";
 import type { MarkdownPaneFragmentNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
-import { TemplateH2Node, TemplateH3Node, TemplatePNode } from "@/utils/TemplateNodes.ts";
+import {
+  TemplateAsideNode,
+  TemplateH2Node,
+  TemplateH3Node,
+  TemplateH4Node, TemplateImgNode,
+  TemplatePNode,
+} from "@/utils/TemplateNodes.ts";
 import { useEffect, useState } from "react";
 
 export const Markdown = (props: NodeProps) => {
@@ -58,6 +64,21 @@ export const Markdown = (props: NodeProps) => {
           addTemplateNode(props.nodeId, TemplatePNode, children[children.length - 1], "after");
         }}>
           Add P
+        </button>
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplateH4Node, children[children.length - 1], "after");
+        }}>
+          Add H4
+        </button>
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplateAsideNode, children[children.length - 1], "after");
+        }}>
+          Add Aside
+        </button>
+        <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
+          addTemplateNode(props.nodeId, TemplateImgNode, children[children.length - 1], "after");
+        }}>
+          Add Img
         </button>
         <button className="bg-red-500 rounded-md p-2" onClick={() => {
           deleteNode(children[children.length - 1]);
