@@ -36,43 +36,45 @@ if (!storyfragmentNode) {
   canonicalURL={canonicalURL}
 >
   <!-- Header -->
-  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-blue-500 z-10">
+  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-blue-500 z-50">
     <div class="text-white p-4">Header</div>
   </header>
   <div id="headerSpacer"></div>
 
-  <!-- Mobile Navigation (horizontal) -->
-  <nav class="md:hidden fixed top-16 left-0 right-0 bg-purple-500 z-10">
-    <div class="flex flex-wrap gap-4 justify-around p-3">
+  <!-- Unified Navigation -->
+  <nav
+    id="mainNav"
+    class="fixed bg-purple-500 z-40
+    /* Mobile styles */
+    left-0 right-0
+    /* Desktop styles */
+    md:left-0 md:top-0 md:w-16 md:h-screen md:pt-[var(--header-height)]"
+  >
+    <div
+      class="/* Mobile styles - horizontal layout */
+      flex flex-wrap gap-4 justify-around p-3
+      /* Desktop styles - vertical layout */
+      md:flex-col md:items-center md:space-y-6 md:space-x-0 md:py-4"
+    >
       <div class="w-8 h-8 rounded-full bg-white"></div>
       <div class="w-8 h-8 rounded-full bg-white"></div>
       <div class="w-8 h-8 rounded-full bg-white"></div>
       <div class="w-8 h-8 rounded-full bg-white"></div>
     </div>
   </nav>
-  <div id="mobileNavSpacer" class="md:hidden"></div>
-
-  <!-- Desktop Left Navigation -->
-  <nav
-    class="hidden md:flex fixed left-0 w-16 bg-purple-500 flex-col items-center py-4 space-y-6 z-10 h-screen"
-  >
-    <div class="w-8 h-8 rounded-full bg-white"></div>
-    <div class="w-8 h-8 rounded-full bg-white"></div>
-    <div class="w-8 h-8 rounded-full bg-white"></div>
-    <div class="w-8 h-8 rounded-full bg-white"></div>
-  </nav>
+  <div id="navSpacer" class="md:hidden"></div>
 
   <!-- Main Layout Container -->
-  <div class="flex">
-    <div class="hidden md:block w-16"></div>
+  <div class="flex min-h-screen">
     <!-- Desktop nav spacer -->
+    <div class="hidden md:block w-16 flex-shrink-0"></div>
 
     <!-- Main Content Area -->
-    <main class="flex-1 min-h-screen relative">
+    <main class="flex-1 relative">
       <!-- Tools Panel -->
       <div
         id="toolsPanel"
-        class="fixed top-28 md:top-16 left-0 md:ml-16 w-auto bg-yellow-500 rounded-br-lg shadow-lg z-10"
+        class="fixed left-0 md:ml-16 w-auto bg-yellow-500 rounded-br-lg shadow-lg z-30"
       >
         <div class="flex flex-wrap gap-4 p-4">
           <div class="w-8 h-8 rounded-full bg-white"></div>
@@ -98,7 +100,8 @@ if (!storyfragmentNode) {
     </main>
   </div>
 
-  <!-- Edit Panel 
+  <!-- Edit Panel -->
+  <!-- 
   <div class="z-20 fixed bottom-0 right-0 bg-white shadow-lg w-full md:w-[500px]">
     <div class="overflow-y-auto" style="max-height: 50vh;">
       <div class="p-6">
@@ -118,42 +121,75 @@ if (!storyfragmentNode) {
   </div>
   -->
 
+  <style is:global>
+    :root {
+      --header-height: 0px;
+    }
+  </style>
+
   <script>
-    function updateSpacers() {
-      // Header spacer
+    function updateLayout() {
+      // Get all required elements
       const header = document.getElementById("mainHeader");
       const headerSpacer = document.getElementById("headerSpacer");
-      if (header && headerSpacer) {
-        headerSpacer.style.height = `${header.offsetHeight}px`;
+      const nav = document.getElementById("mainNav");
+      const navSpacer = document.getElementById("navSpacer");
+      const toolsPanel = document.getElementById("toolsPanel");
+
+      // Update header-related elements
+      if (header) {
+        const headerHeight = header.offsetHeight;
+        document.documentElement.style.setProperty("--header-height", `${headerHeight}px`);
+
+        if (headerSpacer) {
+          headerSpacer.style.height = `${headerHeight}px`;
+        }
+
+        // Position nav below header
+        if (nav) {
+          nav.style.top = `${headerHeight}px`;
+        }
       }
 
-      // Mobile nav spacer - only if in mobile view
-      const mobileNav = document.querySelector(".md\\:hidden.fixed");
-      const mobileNavSpacer = document.getElementById("mobileNavSpacer");
-      if (mobileNav && mobileNavSpacer && window.innerWidth < 768) {
-        mobileNavSpacer.style.height = `${mobileNav.offsetHeight}px`;
+      // Update nav spacer and tools panel position
+      if (nav && window.innerWidth < 768) {
+        const navHeight = nav.offsetHeight;
+
+        if (navSpacer) {
+          navSpacer.style.height = `${navHeight}px`;
+        }
+
+        if (toolsPanel) {
+          const headerHeight = header?.offsetHeight || 0;
+          toolsPanel.style.top = `${headerHeight + navHeight}px`;
+        }
+      } else {
+        // On desktop, tools panel sits below header
+        if (toolsPanel && header) {
+          toolsPanel.style.top = `${header.offsetHeight}px`;
+        }
       }
     }
 
     // Initial update
-    updateSpacers();
+    updateLayout();
 
-    // Watch for DOM content to be fully loaded
-    window.addEventListener("DOMContentLoaded", updateSpacers);
+    // Update on DOM content load
+    window.addEventListener("DOMContentLoaded", updateLayout);
 
-    // Watch for any dynamic content updates
-    window.addEventListener("load", updateSpacers);
+    // Update on full page load
+    window.addEventListener("load", updateLayout);
 
-    // Watch for viewport changes
-    window.addEventListener("resize", updateSpacers);
+    // Update on window resize
+    window.addEventListener("resize", updateLayout);
 
-    // Watch for changes in element dimensions
-    const observer = new ResizeObserver(updateSpacers);
-    ["mainHeader", "toolsPanel"].forEach((id) => {
+    // Watch for dynamic content changes
+    const observer = new ResizeObserver(updateLayout);
+    ["mainHeader", "mainNav", "toolsPanel"].forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
         observer.observe(element);
-        // Also observe all children for content changes
+        // Observe all children for content changes
         element.querySelectorAll("*").forEach((child) => {
           observer.observe(child);
         });
