@@ -9,7 +9,7 @@ import type {
   PaneFragmentNode,
   PaneNode,
   StoryFragmentNode,
-  StoryKeepAllNodes,
+  StoryKeepAllNodes, TemplateMarkdown,
   TemplateNode,
   TemplatePane,
   TractStackNode,
@@ -427,23 +427,27 @@ export const addTemplatePane = (
   duplicatedPane.id = duplicatedPaneId;
   duplicatedPane.parentId = ownerNode.id;
 
+  duplicatedPane.markdown = {...pane.markdown} as TemplateMarkdown;
   duplicatedPane.markdown.id = ulid();
   duplicatedPane.markdown.parentId = duplicatedPaneId;
-  const paneNodes: TemplateNode[] = [];
+  const markdownNodes: TemplateNode[] = [];
   // add self
   duplicatedPane.markdown.nodes?.forEach((node) => {
     // retrieve flattened children nodes
     const childrenNodes = setupTemplateNodeRecursively(node, duplicatedPane.markdown.id)
     // flatten children nodes so they're the same level as our pane
-    childrenNodes.forEach((childrenNode) => paneNodes.push(childrenNode))
+    childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode))
   });
 
+  // add pane but manually as addNodes will skip pane addition due to storyfragments rule
   addNode(duplicatedPane as PaneNode);
   linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
 
+  // add markdown now since pane already exists
   addNode(duplicatedPane.markdown as MarkdownPaneFragmentNode);
 
-  addNodes(paneNodes);
+  // add the result of the markdown nodes
+  addNodes(markdownNodes);
   notifyNode(ownerId);
 };
 
