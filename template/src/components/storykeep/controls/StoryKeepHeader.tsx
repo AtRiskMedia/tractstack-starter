@@ -17,9 +17,8 @@ import { useEffect } from "react";
 const scaleOptions = [
   { value: 25, label: "25%" },
   { value: 50, label: "50%" },
+  { value: 75, label: "75%" },
   { value: 100, label: "100%" },
-  { value: 125, label: "125%" },
-  { value: 150, label: "150%" },
 ] as const;
 
 const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" => {

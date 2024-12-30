@@ -47,20 +47,22 @@ if (!storyfragmentNode) {
   <!-- Unified Navigation -->
   <nav
     id="mainNav"
-    class="fixed bg-myoffwhite z-40
+    class="fixed bg-mywhite z-40
     /* Mobile styles */
-    left-0 right-0
+    left-0 right-0 pt-1.5
     /* Desktop styles */
-    md:left-0 md:top-0 md:w-16 md:h-screen pt-4"
+    md:left-0 md:top-0 md:w-16 md:h-screen md:pt-0"
   >
-    <div
-      class="drop-shadow
-               /* Mobile styles - horizontal layout */
-      flex flex-wrap gap-4 justify-around pb-3.5
+    <div class="bg-mygreen/10">
+      <div
+        class="drop-shadow
+      /* Mobile styles - horizontal layout */
+      flex flex-wrap gap-4 justify-around py-3.5
       /* Desktop styles - vertical layout */
-      md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2"
-    >
-      <StoryKeepToolMode client:load />
+      md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2 md:gap-8 md:mt-8"
+      >
+        <StoryKeepToolMode client:load />
+      </div>
     </div>
   </nav>
   <div id="navSpacer" class="md:hidden"></div>
@@ -75,9 +77,9 @@ if (!storyfragmentNode) {
       <!-- Tools Panel -->
       <div
         id="toolsPanel"
-        class="fixed left-0 md:ml-16 w-auto bg-myoffwhite rounded-br-lg shadow-lg z-30"
+        class="fixed left-0 md:ml-16 w-auto bg-mywhite rounded-r-lg mt-0.5 shadow-lg z-30"
       >
-        <div class="flex flex-wrap gap-2 p-2 drop-shadow">
+        <div class="flex flex-wrap gap-x-2 gap-y-1 p-1 drop-shadow">
           <StoryKeepToolBar client:load />
         </div>
       </div>
