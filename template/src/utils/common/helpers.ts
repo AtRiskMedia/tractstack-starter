@@ -705,8 +705,24 @@ declare global {
   interface Array<T> {
     setAt(index: number, value: T): void;
     last(): T;
+    insertBefore(index: number, items: T[]): void;
+    insertAfter(index: number, items: T[]): void;
   }
 }
+
+Array.prototype.insertBefore = function<T>(this: T[], index: number, items: T[]): void {
+  if (index < 0 || index > this.length) {
+    throw new Error('Index out of bounds');
+  }
+  this.splice(index, 0, ...items);
+};
+
+Array.prototype.insertAfter = function<T>(this: T[], index: number, items: T[]): void {
+  if (index < 0 || index >= this.length) {
+    throw new Error('Index out of bounds');
+  }
+  this.splice(index + 1, 0, ...items);
+};
 
 Array.prototype.last = function <T>(): T {
   if (this.length > 0) {

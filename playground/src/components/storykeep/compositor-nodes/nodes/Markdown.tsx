@@ -51,7 +51,7 @@ export const Markdown = (props: NodeProps) => {
       {nodesToRender}
       <div className="flex gap-x-2">
         <button className="bg-yellow-500 rounded-md p-2" onClick={() => {
-          addTemplateNode(props.nodeId, TemplateH2Node, children[children.length - 1], "after");
+          addTemplateNode(props.nodeId, TemplateH2Node);
         }}>
           Add H2
         </button>

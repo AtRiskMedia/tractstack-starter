@@ -398,16 +398,18 @@ export const addPaneToStoryFragment = (
 };
 
 export const addTemplatePaneToStoryFragment = (
-  nodeId: string,
+  storyFragmentId: string,
   pane: TemplatePane,
   location: "before" | "after"
-) => {};
+) => {
+
+};
 
 export const addTemplateNode = (
   markdownId: string,
   node: TemplateNode,
-  nodeId: string,
-  location: "before" | "after"
+  nodeId?: string,
+  location?: "before" | "after"
 ) => {
   const markdownNode = allNodes.get().get(markdownId) as MarkdownPaneFragmentNode;
   if (!markdownNode || markdownNode.nodeType !== "Markdown") {
@@ -418,8 +420,19 @@ export const addTemplateNode = (
   duplicatedNodes.id = ulid();
   duplicatedNodes.parentId = markdownNode.id;
   const flattenedNodes = setupTemplateNodeRecursively(duplicatedNodes, markdownNode.id);
+  // register flattened nodes to all nodes and set up relationship with its parent
   addNodes(flattenedNodes);
 
+  const markdownNodes = parentNodes.get().get(markdownId);
+  // now grab parent nodes, check if we have inner node
+  if(nodeId && markdownNodes && markdownNodes?.indexOf(nodeId) !== -1) {
+    const newNode = markdownNodes.splice(markdownNodes.indexOf(duplicatedNodes.id, 1));
+    if (location === "before") {
+      markdownNodes.insertBefore(markdownNodes.indexOf(nodeId), newNode);
+    } else {
+      markdownNodes.insertAfter(markdownNodes.indexOf(nodeId), newNode);
+    }
+  }
   notifications.notify(markdownId);
 };
 
