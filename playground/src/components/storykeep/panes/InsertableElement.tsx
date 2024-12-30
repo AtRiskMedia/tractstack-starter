@@ -13,7 +13,7 @@ export const InsertableElement = memo((props: DraggableElementProps) => {
   return (
     <InsertDraggableElement el={props.el} onClicked={props.onClicked}>
       <button className="mx-1">
-        <img draggable={false} width={32} height={32} src={`/editor/icons/${iconName}`} />
+        <img draggable={false} width={32} height={32} src={`/icons/${iconName}`} />
       </button>
     </InsertDraggableElement>
   );

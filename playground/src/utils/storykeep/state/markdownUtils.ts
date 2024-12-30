@@ -129,32 +129,32 @@ export function allowTagInsert(
         }
       }
       break;
-    case `aside`: {
-      const parentTag = markdownLookup.nthTag[outerIdx];
-      // is this already ol ?
-      if (typeof idx === `number` && parentTag === `ol`) return { before: true, after: true };
-      if (typeof idx !== `number`) {
-        // check for adjascent ol
-        const parentBeforeTag =
-          outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
-        const parentAfterTag =
-          outerIdx < Object.keys(markdownLookup.nthTag).length &&
-          markdownLookup.nthTag[outerIdx + 1] !== `ol`;
-        return { before: parentBeforeTag, after: parentAfterTag };
-      } else {
-        // nested ul > li, allow insert before and after
-        const siblings = Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
-        const parentBeforeTag =
-          outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
-        const parentAfterTag =
-          outerIdx < Object.keys(markdownLookup.nthTag).length &&
-          markdownLookup.nthTag[outerIdx + 1] !== `ol`;
-        return {
-          before: idx === 0 && parentBeforeTag,
-          after: idx === siblings && parentAfterTag,
-        };
-      }
-    }
+    //case `aside`: {
+    //  const parentTag = markdownLookup.nthTag[outerIdx];
+    //  // is this already ol ?
+    //  if (typeof idx === `number` && parentTag === `ol`) return { before: true, after: true };
+    //  if (typeof idx !== `number`) {
+    //    // check for adjascent ol
+    //    const parentBeforeTag =
+    //      outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
+    //    const parentAfterTag =
+    //      outerIdx < Object.keys(markdownLookup.nthTag).length &&
+    //      markdownLookup.nthTag[outerIdx + 1] !== `ol`;
+    //    return { before: parentBeforeTag, after: parentAfterTag };
+    //  } else {
+    //    // nested ul > li, allow insert before and after
+    //    const siblings = Object.keys(markdownLookup.listItemsLookup[outerIdx]).length - 1;
+    //    const parentBeforeTag =
+    //      outerIdx === 0 || (outerIdx > 0 && markdownLookup.nthTag[outerIdx - 1] !== `ol`);
+    //    const parentAfterTag =
+    //      outerIdx < Object.keys(markdownLookup.nthTag).length &&
+    //      markdownLookup.nthTag[outerIdx + 1] !== `ol`;
+    //    return {
+    //      before: idx === 0 && parentBeforeTag,
+    //      after: idx === siblings && parentAfterTag,
+    //    };
+    //  }
+    //}
   }
 
   return { before: false, after: false };
@@ -492,12 +492,12 @@ export function reconcileOptionsPayload(
       typeof idx !== `number` ||
       (insertedTag && [`p`, `h2`, `h3`, `h4`].includes(insertedTag))
     ) {
-      if (toolAddMode === `aside`) {
+      /* if (toolAddMode === `aside`) {
         const parentNth = getParentNth(`ol`);
         processTag(`ol`, parentNth, true);
         const liNth = getLiNth(outerIdx);
         processTag(`li`, liNth, true);
-      } else if (insertedTag) {
+      } else */ if (insertedTag) {
         const affectedNth = getParentNth(insertedTag);
         processTag(insertedTag, affectedNth, true);
       }
@@ -572,7 +572,7 @@ export function insertElementIntoMarkdown(
       insertedTag = newNode.tagName;
     }
     // override if new aside text container
-    if (toolAddMode === `aside`) insertedTag = "li";
+    //if (toolAddMode === `aside`) insertedTag = "li";
   } else {
     // Insert nested element
     const parentNode = mdast.children[outerIdx];

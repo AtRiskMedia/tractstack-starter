@@ -3,6 +3,9 @@ import { getConfig, validateConfig } from "../../../utils/core/config";
 import { ReactNodesRenderer } from "../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
 import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../store/nodes";
 import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
+import StoryKeepHeader from "../../../components/storykeep/controls/StoryKeepHeader";
+import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepToolBar";
+import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 
 const config = await getConfig();
@@ -36,30 +39,27 @@ if (!storyfragmentNode) {
   canonicalURL={canonicalURL}
 >
   <!-- Header -->
-  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-blue-500 z-50">
-    <div class="text-white p-4">Header</div>
+  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-50">
+    <StoryKeepHeader />
   </header>
   <div id="headerSpacer"></div>
 
   <!-- Unified Navigation -->
   <nav
     id="mainNav"
-    class="fixed bg-purple-500 z-40
+    class="fixed bg-myoffwhite z-40
     /* Mobile styles */
     left-0 right-0
     /* Desktop styles */
-    md:left-0 md:top-0 md:w-16 md:h-screen md:pt-[var(--header-height)]"
+    md:left-0 md:top-0 md:w-16 md:h-screen pt-4"
   >
     <div
       class="/* Mobile styles - horizontal layout */
-      flex flex-wrap gap-4 justify-around p-3
+      flex flex-wrap gap-4 justify-around pb-3.5
       /* Desktop styles - vertical layout */
-      md:flex-col md:items-center md:space-y-6 md:space-x-0 md:py-4"
+      md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2"
     >
-      <div class="w-8 h-8 rounded-full bg-white"></div>
-      <div class="w-8 h-8 rounded-full bg-white"></div>
-      <div class="w-8 h-8 rounded-full bg-white"></div>
-      <div class="w-8 h-8 rounded-full bg-white"></div>
+      <StoryKeepToolMode />
     </div>
   </nav>
   <div id="navSpacer" class="md:hidden"></div>
@@ -74,28 +74,33 @@ if (!storyfragmentNode) {
       <!-- Tools Panel -->
       <div
         id="toolsPanel"
-        class="fixed left-0 md:ml-16 w-auto bg-yellow-500 rounded-br-lg shadow-lg z-30"
+        class="fixed left-0 md:ml-16 w-auto bg-myoffwhite rounded-br-lg shadow-lg z-30"
       >
-        <div class="flex flex-wrap gap-4 p-4">
-          <div class="w-8 h-8 rounded-full bg-white"></div>
-          <div class="w-8 h-8 rounded-full bg-white"></div>
-          <div class="w-8 h-8 rounded-full bg-white"></div>
-          <div class="w-8 h-8 rounded-full bg-white"></div>
+        <div class="flex flex-wrap gap-2 p-2">
+          <StoryKeepToolBar />
         </div>
       </div>
 
       <!-- Actual Content -->
       <div
-        class={typeof storyfragmentNode.tailwindBgColour === `string`
-          ? `bg-${storyfragmentNode.tailwindBgColour}`
-          : ``}
+        class="bg-myblue/20 p-4"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
+        }}
       >
-        <ReactNodesRenderer id={storyfragmentNode.id} nodes={nodes} client:only="react" />
-      </div>
-      <div
-        class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
-        style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
-      >
+        <div
+          class={typeof storyfragmentNode.tailwindBgColour === `string`
+            ? `bg-${storyfragmentNode.tailwindBgColour}`
+            : ``}
+        >
+          <ReactNodesRenderer id={storyfragmentNode.id} nodes={nodes} client:only="react" />
+        </div>
+        <div
+          class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
+          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
+        >
+        </div>
       </div>
     </main>
   </div>

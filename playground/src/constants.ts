@@ -64,7 +64,7 @@ export const toolAddModes = [
   "belief",
   "identify",
   "toggle",
-  "aside",
+  //"aside",
 ] as const;
 
 export const toolAddModeDefaultHeight: number = 60;
@@ -81,12 +81,12 @@ export const toolAddModesSizes: Record<ToolAddMode, number> = {
   signup: 0,
   identify: 0,
   toggle: 0,
-  aside: 0,
   belief: 0,
+  //aside: 0,
 };
 
 export const toolAddModesIcons: Record<ToolAddMode, string> = {
-  p: "paragraph.svg",
+  p: "text.svg",
   h2: "h2.svg",
   h3: "h3.svg",
   h4: "h4.svg",
@@ -96,8 +96,8 @@ export const toolAddModesIcons: Record<ToolAddMode, string> = {
   signup: "",
   identify: "",
   toggle: "",
-  aside: "aside.svg",
   belief: "",
+  //aside: "",
 };
 
 export const toolAddModeTitles: Record<ToolAddMode, string> = {
@@ -112,7 +112,7 @@ export const toolAddModeTitles: Record<ToolAddMode, string> = {
   belief: "Belief Select",
   identify: "Identity As",
   toggle: "Toggle Belief",
-  aside: "Aside Text",
+  //aside: "Aside Text",
 };
 
 export const toolAddModeInsertDefault: Record<ToolAddMode, string> = {
@@ -127,7 +127,7 @@ export const toolAddModeInsertDefault: Record<ToolAddMode, string> = {
   belief: "* `belief(BeliefTag|likert|prompt)`",
   identify: "* `identifyAs(BeliefTag|TARGET_VALUE|prompt)`",
   toggle: "* `toggle(BeliefTag|prompt)`",
-  aside: "...", // on initial insert must wrap in ol
+  //aside: "...", // on initial insert must wrap in ol
 };
 
 export const toolModes: ToolMode[] = ["text", "styles", "insert", "settings", "eraser", "pane"];

@@ -1253,13 +1253,13 @@ export function insertElement(
   const newContent = toolAddModeInsertDefault[toolAddMode];
   const parentTag = isEmpty ? null : markdownLookup.nthTag[outerIdx];
   const newImgContainer = toolAddMode === `img` && parentTag !== `ul`;
-  const newAsideContainer = toolAddMode === `aside` && parentTag !== `ol`;
+  //const newAsideContainer = toolAddMode === `aside` && parentTag !== `ol`;
   const thisNewContent = newImgContainer
     ? `* ${newContent}`
-    : newAsideContainer
-      ? `1. ${newContent}`
-      : newContent;
-  const thisIdx = newAsideContainer ? null : idx;
+    : //  : newAsideContainer
+      //    ? `1. ${newContent}`
+      newContent;
+  const thisIdx = /* newAsideContainer ? null : */ idx;
   const thisOuterIdx = isEmpty ? 0 : outerIdx;
   const thisPosition = isEmpty ? "before" : position;
   const newValue = insertElementIntoMarkdown(
@@ -1287,9 +1287,9 @@ export function insertElement(
       ? `img`
       : [`code`, `img`, `yt`, `bunny`, `belief`, `toggle`, `identify`].includes(toolAddMode)
         ? `code`
-        : toolAddMode === `aside`
-          ? `li`
-          : toolAddMode;
+        : //: toolAddMode === `aside`
+          //  ? `li`
+          toolAddMode;
   const newGlobalNth = getGlobalNth(newTag, newIdx, newOuterIdx, newMarkdownLookup) || 0;
 
   if ([`img`, `code`, `img`, `yt`, `bunny`, `belief`, `toggle`, `identify`].includes(toolAddMode)) {
