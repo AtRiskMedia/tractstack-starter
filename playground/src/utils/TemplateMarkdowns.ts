@@ -12,77 +12,77 @@ export const TemplateSimpleMarkdown = {
         fontWEIGHT: "bold",
         textCOLOR: "mygreen",
         textSIZE: "4xl",
-        fontFACE: "action"
+        fontFACE: "action",
       },
       tablet: {
-        textSIZE: "5xl"
+        textSIZE: "5xl",
       },
       desktop: {
-        textSIZE: "6xl"
-      }
+        textSIZE: "6xl",
+      },
     },
     h3: {
       mobile: {
         fontWEIGHT: "bold",
         textCOLOR: "brand-5",
         textSIZE: "xl",
-        fontFACE: "action"
+        fontFACE: "action",
       },
       tablet: {
-        textSIZE: "3xl"
+        textSIZE: "3xl",
       },
-      desktop: {}
+      desktop: {},
     },
     h4: {
       mobile: {
         textCOLOR: "brand-5",
         textSIZE: "xl",
-        fontFACE: "action"
+        fontFACE: "action",
       },
       tablet: {
-        textSIZE: "2xl"
+        textSIZE: "2xl",
       },
-      desktop: {}
+      desktop: {},
     },
     p: {
       mobile: {
         textCOLOR: "myoffwhite",
         textSIZE: "lg",
         lineHEIGHT: "snug",
-        mt: "2.5"
+        mt: "2.5",
       },
       tablet: {
-        "textSIZE": "xl",
-        mt: "3.5"
+        textSIZE: "xl",
+        mt: "3.5",
       },
-      desktop: {}
-    }
+      desktop: {},
+    },
   },
   parentClasses: [
     {
       mobile: {
         mt: "10",
         mb: "5",
-        mx: "5"
+        mx: "5",
       },
       tablet: {
         mt: "20",
         mb: "10",
-        mx: "10"
+        mx: "10",
       },
-      desktop: {}
+      desktop: {},
     },
     {
       mobile: {
         maxW: "none",
-        mx: "auto"
+        mx: "auto",
       },
       tablet: {
-        maxW: "screen-lg"
+        maxW: "screen-lg",
       },
       desktop: {
-        maxW: "screen-xl"
-      }
+        maxW: "screen-xl",
+      },
     },
     {
       mobile: {
@@ -91,14 +91,14 @@ export const TemplateSimpleMarkdown = {
         pb: "10",
         textALIGN: "left",
         textWRAP: "pretty",
-        maxW: "none"
+        maxW: "none",
       },
       tablet: {
-        px: "14"
+        px: "14",
       },
       desktop: {
-        px: "32"
-      }
-    }
-  ]
+        px: "32",
+      },
+    },
+  ],
 } as TemplateMarkdown;

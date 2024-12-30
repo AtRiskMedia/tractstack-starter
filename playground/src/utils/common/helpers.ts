@@ -710,16 +710,16 @@ declare global {
   }
 }
 
-Array.prototype.insertBefore = function<T>(this: T[], index: number, items: T[]): void {
+Array.prototype.insertBefore = function <T>(this: T[], index: number, items: T[]): void {
   if (index < 0 || index > this.length) {
-    throw new Error('Index out of bounds');
+    throw new Error("Index out of bounds");
   }
   this.splice(index, 0, ...items);
 };
 
-Array.prototype.insertAfter = function<T>(this: T[], index: number, items: T[]): void {
+Array.prototype.insertAfter = function <T>(this: T[], index: number, items: T[]): void {
   if (index < 0 || index >= this.length) {
-    throw new Error('Index out of bounds');
+    throw new Error("Index out of bounds");
   }
   this.splice(index + 1, 0, ...items);
 };

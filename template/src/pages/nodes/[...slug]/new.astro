@@ -70,7 +70,10 @@ if (!storyfragmentNode) {
     <!-- Main Content Area -->
     <main class="flex-1 min-h-screen relative">
       <!-- Tools Panel -->
-      <div id="toolsPanel" class="fixed top-[64px] md:top-16 left-0 md:ml-16 w-auto bg-yellow-500 rounded-br-lg shadow-lg z-10">
+      <div
+        id="toolsPanel"
+        class="fixed top-[64px] md:top-16 left-0 md:ml-16 w-auto bg-yellow-500 rounded-br-lg shadow-lg z-10"
+      >
         <div class="flex flex-wrap gap-4 p-4">
           <div class="w-8 h-8 rounded-full bg-white"></div>
           <div class="w-8 h-8 rounded-full bg-white"></div>
@@ -118,15 +121,15 @@ if (!storyfragmentNode) {
   <script>
     function updateSpacers() {
       // Header spacer
-      const header = document.getElementById('mainHeader');
-      const headerSpacer = document.getElementById('headerSpacer');
+      const header = document.getElementById("mainHeader");
+      const headerSpacer = document.getElementById("headerSpacer");
       if (header && headerSpacer) {
         headerSpacer.style.height = `${header.offsetHeight}px`;
       }
 
       // Mobile nav spacer - only if in mobile view
-      const mobileNav = document.querySelector('.md\\:hidden.fixed');
-      const mobileNavSpacer = document.getElementById('mobileNavSpacer');
+      const mobileNav = document.querySelector(".md\\:hidden.fixed");
+      const mobileNavSpacer = document.getElementById("mobileNavSpacer");
       if (mobileNav && mobileNavSpacer && window.innerWidth < 768) {
         mobileNavSpacer.style.height = `${mobileNav.offsetHeight}px`;
       }
@@ -134,28 +137,27 @@ if (!storyfragmentNode) {
 
     // Initial update
     updateSpacers();
-    
+
     // Watch for DOM content to be fully loaded
-    window.addEventListener('DOMContentLoaded', updateSpacers);
-    
+    window.addEventListener("DOMContentLoaded", updateSpacers);
+
     // Watch for any dynamic content updates
-    window.addEventListener('load', updateSpacers);
-    
+    window.addEventListener("load", updateSpacers);
+
     // Watch for viewport changes
-    window.addEventListener('resize', updateSpacers);
+    window.addEventListener("resize", updateSpacers);
 
     // Watch for changes in element dimensions
     const observer = new ResizeObserver(updateSpacers);
-    ['mainHeader', 'toolsPanel'].forEach(id => {
+    ["mainHeader", "toolsPanel"].forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
         observer.observe(element);
         // Also observe all children for content changes
-        element.querySelectorAll('*').forEach(child => {
+        element.querySelectorAll("*").forEach((child) => {
           observer.observe(child);
         });
       }
     });
   </script>
-
 </StoryKeep>

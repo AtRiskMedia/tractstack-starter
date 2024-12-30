@@ -1,9 +1,5 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import {
-  getChildNodeIDs,
-  notifications,
-  ROOT_NODE_NAME,
-} from "@/store/nodes.ts";
+import { getChildNodeIDs, notifications, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 
 export const Root = (props: NodeProps) => {

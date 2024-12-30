@@ -9,7 +9,8 @@ import type {
   PaneFragmentNode,
   PaneNode,
   StoryFragmentNode,
-  StoryKeepAllNodes, TemplateMarkdown,
+  StoryKeepAllNodes,
+  TemplateMarkdown,
   TemplateNode,
   TemplatePane,
   TractStackNode,
@@ -402,11 +403,11 @@ export const addPaneToStoryFragment = (
 
 const notifyNode = (nodeId: string, payload?: BaseNode) => {
   let notifyNodeId = nodeId;
-  if(notifyNodeId === rootNodeId.get()) {
+  if (notifyNodeId === rootNodeId.get()) {
     notifyNodeId = ROOT_NODE_NAME;
   }
   notifications.notify(notifyNodeId, payload);
-}
+};
 
 export const addTemplatePane = (
   ownerId: string,
@@ -415,10 +416,11 @@ export const addTemplatePane = (
   location?: "before" | "after"
 ) => {
   const ownerNode = allNodes.get().get(ownerId);
-  if(ownerNode?.nodeType !== "StoryFragment"
-    && ownerNode?.nodeType !== "Root"
-    && ownerNode?.nodeType !== "File"
-    && ownerNode?.nodeType !== "TractStack"
+  if (
+    ownerNode?.nodeType !== "StoryFragment" &&
+    ownerNode?.nodeType !== "Root" &&
+    ownerNode?.nodeType !== "File" &&
+    ownerNode?.nodeType !== "TractStack"
   ) {
     return;
   }
@@ -427,16 +429,16 @@ export const addTemplatePane = (
   duplicatedPane.id = duplicatedPaneId;
   duplicatedPane.parentId = ownerNode.id;
 
-  duplicatedPane.markdown = {...pane.markdown} as TemplateMarkdown;
+  duplicatedPane.markdown = { ...pane.markdown } as TemplateMarkdown;
   duplicatedPane.markdown.id = ulid();
   duplicatedPane.markdown.parentId = duplicatedPaneId;
   const markdownNodes: TemplateNode[] = [];
   // add self
   duplicatedPane.markdown.nodes?.forEach((node) => {
     // retrieve flattened children nodes
-    const childrenNodes = setupTemplateNodeRecursively(node, duplicatedPane.markdown.id)
+    const childrenNodes = setupTemplateNodeRecursively(node, duplicatedPane.markdown.id);
     // flatten children nodes so they're the same level as our pane
-    childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode))
+    childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode));
   });
 
   // add pane but manually as addNodes will skip pane addition due to storyfragments rule
@@ -471,7 +473,7 @@ export const addTemplateNode = (
 
   const markdownNodes = parentNodes.get().get(markdownId);
   // now grab parent nodes, check if we have inner node
-  if(insertNodeId && markdownNodes && markdownNodes?.indexOf(insertNodeId) !== -1) {
+  if (insertNodeId && markdownNodes && markdownNodes?.indexOf(insertNodeId) !== -1) {
     const newNode = markdownNodes.splice(markdownNodes.indexOf(duplicatedNodes.id, 1));
     if (location === "before") {
       markdownNodes.insertBefore(markdownNodes.indexOf(insertNodeId), newNode);
@@ -506,7 +508,7 @@ export const deleteNode = (nodeId: string) => {
   const parentId = node.parentId;
   deleteNodesRecursively(node);
   // if this was a pane node then we need to update storyfragment as it tracks panes
-  if(parentId !== null) {
+  if (parentId !== null) {
     notifyNode(parentId);
 
     if (node.nodeType === "Pane") {
@@ -518,7 +520,7 @@ export const deleteNode = (nodeId: string) => {
   } else {
     // we deleted the node without a parent, send a notification to the root and let storykeep handle it
     // it might be safe to refresh the whole page
-    if(nodeId === rootNodeId.get()) {
+    if (nodeId === rootNodeId.get()) {
       // if we actually deleted the root then clear it up
       rootNodeId.set("");
     }
@@ -526,8 +528,8 @@ export const deleteNode = (nodeId: string) => {
   }
 };
 
-const deleteNodesRecursively = (node: BaseNode|undefined) => {
-  if(!node) return;
+const deleteNodesRecursively = (node: BaseNode | undefined) => {
+  if (!node) return;
 
   getChildNodeIDs(node.id).forEach((id) => {
     deleteNodesRecursively(allNodes.get().get(id));
@@ -536,7 +538,7 @@ const deleteNodesRecursively = (node: BaseNode|undefined) => {
   allNodes.get().delete(node.id);
 
   // remove parent link too
-  if(node.parentId !== null) {
+  if (node.parentId !== null) {
     const parentNode = parentNodes.get().get(node.parentId);
     if (parentNode) {
       parentNode.splice(parentNode.indexOf(node.id), 1);

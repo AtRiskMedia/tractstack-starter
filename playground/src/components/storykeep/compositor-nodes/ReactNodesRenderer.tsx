@@ -19,7 +19,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
 
   useEffect(() => {
     buildNodesTreeFromFragmentNodes(props.nodes);
-    if(props.id !== rootNodeId.get()) {
+    if (props.id !== rootNodeId.get()) {
       setRootId(props.id);
     }
     setRootId(props.id || rootNodeId.get());
@@ -33,10 +33,13 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
           <button
             className="bg-cyan-500 rounded-md p-2"
             onClick={() => {
-              const storyFragment = allNodes.get().values().find(x => x.nodeType === "StoryFragment");
-              if(storyFragment && storyFragment.id !== null) {
+              const storyFragment = allNodes
+                .get()
+                .values()
+                .find((x) => x.nodeType === "StoryFragment");
+              if (storyFragment && storyFragment.id !== null) {
                 addTemplatePane(storyFragment.id, TemplateSimplePane);
-                }
+              }
             }}
           >
             Add Pane

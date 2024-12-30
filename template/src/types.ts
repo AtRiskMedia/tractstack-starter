@@ -1259,7 +1259,7 @@ export type TemplateNode = FlatNode & {
 
 export type TemplateMarkdown = MarkdownPaneFragmentNode & {
   nodes?: TemplateNode[];
-}
+};
 
 export type TemplatePane = PaneNode & {
   id?: string;
