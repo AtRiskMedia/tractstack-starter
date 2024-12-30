@@ -40,6 +40,12 @@ export const lastInteractedPaneStore = atom<string | null>(null);
 export const visiblePanesStore = map<Record<string, boolean>>({});
 export const lastInteractedTypeStore = atom<"markdown" | "bgpane" | null>(null);
 
+export const scaleStore = map<{
+  value: number;
+}>({
+  value: 100,
+});
+
 export const knownEnvSettings: EnvSetting[] = Object.entries(settingsMap.settings).map(
   ([name, setting]) => ({
     name,

@@ -12,6 +12,7 @@ import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
   id: string;
+  bgColor: string;
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {

@@ -1,8 +1,11 @@
 ---
 import { getConfig, validateConfig } from "../../../utils/core/config";
-import { ReactNodesRenderer } from "../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
+import { ReactNodesWrapper } from "../../../components/storykeep/compositor-nodes/ReactNodesWrapper";
 import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../store/nodes";
 import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
+import StoryKeepHeader from "../../../components/storykeep/controls/StoryKeepHeader";
+import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepToolBar";
+import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 
 const config = await getConfig();
@@ -11,17 +14,14 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-// valid storyfragment?
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/${slug}`;
 
-// Generate nodes and build tree
 const nodes = await getGenerateAllNodes();
 buildNodesTreeFromFragmentNodes(nodes);
 
-// valid datum?
 const storyfragmentNode = getStoryFragmentNodeBySlug(slug);
 if (!storyfragmentNode) {
   return Astro.redirect("/404");
@@ -38,35 +38,164 @@ if (!storyfragmentNode) {
   config={config}
   canonicalURL={canonicalURL}
 >
-  <div
-    id="storykeep-content"
-    class="m-0 p-0 flex flex-col bg-myblue w-full"
-    style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
-  >
-    <header
-      class="z-[9001] sticky top-0 z-10 bg-mywhite flex justify-between items-center w-full"
-      id="main-header"
-    >
-      <div>StoryKeepHeader goes here</div>
-    </header>
+  <!-- Header -->
+  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-50 drop-shadow">
+    <StoryKeepHeader client:load />
+  </header>
+  <div id="headerSpacer"></div>
 
-    <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
-      <main id="website-content" class="overflow-auto w-full">
-        <div
-          class={typeof storyfragmentNode.tailwindBgColour === `string`
+  <!-- Unified Navigation -->
+  <nav
+    id="mainNav"
+    class="fixed bg-myoffwhite z-40
+    /* Mobile styles */
+    left-0 right-0
+    /* Desktop styles */
+    md:left-0 md:top-0 md:w-16 md:h-screen pt-4"
+  >
+    <div
+      class="drop-shadow
+               /* Mobile styles - horizontal layout */
+      flex flex-wrap gap-4 justify-around pb-3.5
+      /* Desktop styles - vertical layout */
+      md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2"
+    >
+      <StoryKeepToolMode client:load />
+    </div>
+  </nav>
+  <div id="navSpacer" class="md:hidden"></div>
+
+  <!-- Main Layout Container -->
+  <div class="flex min-h-screen">
+    <!-- Desktop nav spacer -->
+    <div class="hidden md:block w-16 flex-shrink-0"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative">
+      <!-- Tools Panel -->
+      <div
+        id="toolsPanel"
+        class="fixed left-0 md:ml-16 w-auto bg-myoffwhite rounded-br-lg shadow-lg z-30"
+      >
+        <div class="flex flex-wrap gap-2 p-2 drop-shadow">
+          <StoryKeepToolBar client:load />
+        </div>
+      </div>
+
+      <!-- Actual Content -->
+      <div
+        class="bg-myblue/20 p-4"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
+        }}
+      >
+        <ReactNodesWrapper
+          bgColor={typeof storyfragmentNode.tailwindBgColour === `string`
             ? `bg-${storyfragmentNode.tailwindBgColour}`
             : ``}
-        >
-          <ReactNodesRenderer id={storyfragmentNode.id} nodes={nodes} client:only="react" />
-        </div>
-        <div
-          class="h-96 m-0 p-0 flex flex-col bg-myblack w-full"
-          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
-        >
-        </div>
-      </main>
+          id={storyfragmentNode.id}
+          nodes={nodes}
+          client:only="react"
+        />
+      </div>
+    </main>
+  </div>
 
-      <div>edit modal goes here</div>
+  <!-- Edit Panel -->
+  <!-- 
+  <div class="z-20 fixed bottom-0 right-0 bg-white shadow-lg w-full md:w-[500px]">
+    <div class="overflow-y-auto" style="max-height: 50vh;">
+      <div class="p-6">
+        <h2 class="text-xl font-bold mb-4">Edit Panel</h2>
+        <div class="space-y-4">
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+          <div class="h-16 bg-gray-200 rounded"></div>
+        </div>
+      </div>
     </div>
   </div>
+  -->
+
+  <style is:global>
+    :root {
+      --header-height: 0px;
+    }
+  </style>
+
+  <script>
+    function updateLayout() {
+      // Get all required elements
+      const header = document.getElementById("mainHeader");
+      const headerSpacer = document.getElementById("headerSpacer");
+      const nav = document.getElementById("mainNav");
+      const navSpacer = document.getElementById("navSpacer");
+      const toolsPanel = document.getElementById("toolsPanel");
+
+      // Update header-related elements
+      if (header) {
+        const headerHeight = header.offsetHeight;
+        document.documentElement.style.setProperty("--header-height", `${headerHeight}px`);
+
+        if (headerSpacer) {
+          headerSpacer.style.height = `${headerHeight}px`;
+        }
+
+        // Position nav below header
+        if (nav) {
+          nav.style.top = `${headerHeight}px`;
+        }
+      }
+
+      // Update nav spacer and tools panel position
+      if (nav && window.innerWidth < 768) {
+        const navHeight = nav.offsetHeight;
+
+        if (navSpacer) {
+          navSpacer.style.height = `${navHeight}px`;
+        }
+
+        if (toolsPanel) {
+          const headerHeight = header?.offsetHeight || 0;
+          toolsPanel.style.top = `${headerHeight + navHeight}px`;
+        }
+      } else {
+        // On desktop, tools panel sits below header
+        if (toolsPanel && header) {
+          toolsPanel.style.top = `${header.offsetHeight}px`;
+        }
+      }
+    }
+
+    // Initial update
+    updateLayout();
+
+    // Update on DOM content load
+    window.addEventListener("DOMContentLoaded", updateLayout);
+
+    // Update on full page load
+    window.addEventListener("load", updateLayout);
+
+    // Update on window resize
+    window.addEventListener("resize", updateLayout);
+
+    // Watch for dynamic content changes
+    const observer = new ResizeObserver(updateLayout);
+    ["mainHeader", "mainNav", "toolsPanel"].forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        observer.observe(element);
+        // Observe all children for content changes
+        element.querySelectorAll("*").forEach((child) => {
+          observer.observe(child);
+        });
+      }
+    });
+  </script>
 </StoryKeep>
