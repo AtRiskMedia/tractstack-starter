@@ -21,7 +21,7 @@ import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
 import { NotificationSystem } from "@/store/notificationSystem.ts";
 
-// Export an instance of the notification system
+export const ROOT_NODE_NAME = "root";
 export const notifications = new NotificationSystem<BaseNode>();
 
 export const allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
@@ -70,8 +70,11 @@ export const buildNodesTreeFromFragmentNodes = (nodes: StoryKeepAllNodes | null)
     addNodes(nodes.menuNodes);
     addNodes(nodes.resourceNodes);
     addNodes(nodes.tractstackNodes);
-    addNodes(nodes.storyfragmentNodes);
+    // IMPORTANT!
+    // pane nodes have to be added BEFORE StoryFragment nodes so they can register in allNodes
     addNodes(nodes.paneNodes);
+    // then storyfragment nodes will link pane nodes from above
+    addNodes(nodes.storyfragmentNodes);
     addNodes(nodes.impressionNodes);
     addNodes(nodes.paneFragmentNodes);
     addNodes(nodes.flatNodes);
@@ -397,18 +400,57 @@ export const addPaneToStoryFragment = (
   }
 };
 
-export const addTemplatePaneToStoryFragment = (
-  storyFragmentId: string,
-  pane: TemplatePane,
-  location: "before" | "after"
-) => {
+const notifyNode = (nodeId: string, payload?: BaseNode) => {
+  let notifyNodeId = nodeId;
+  if(notifyNodeId === rootNodeId.get()) {
+    notifyNodeId = ROOT_NODE_NAME;
+  }
+  notifications.notify(notifyNodeId, payload);
+}
 
+export const addTemplatePane = (
+  ownerId: string,
+  pane: TemplatePane,
+  insertPaneId?: string,
+  location?: "before" | "after"
+) => {
+  const ownerNode = allNodes.get().get(ownerId);
+  if(ownerNode?.nodeType !== "StoryFragment"
+    && ownerNode?.nodeType !== "Root"
+    && ownerNode?.nodeType !== "File"
+    && ownerNode?.nodeType !== "TractStack"
+  ) {
+    return;
+  }
+  const duplicatedPane = { ...pane } as TemplatePane;
+  const duplicatedPaneId = ulid();
+  duplicatedPane.id = duplicatedPaneId;
+  duplicatedPane.parentId = ownerNode.id;
+
+  duplicatedPane.markdown.id = ulid();
+  duplicatedPane.markdown.parentId = duplicatedPaneId;
+  const paneNodes: TemplateNode[] = [];
+  // add self
+  duplicatedPane.markdown.nodes?.forEach((node) => {
+    // retrieve flattened children nodes
+    const childrenNodes = setupTemplateNodeRecursively(node, duplicatedPane.markdown.id)
+    // flatten children nodes so they're the same level as our pane
+    childrenNodes.forEach((childrenNode) => paneNodes.push(childrenNode))
+  });
+
+  addNode(duplicatedPane as PaneNode);
+  linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
+
+  addNode(duplicatedPane.markdown as MarkdownPaneFragmentNode);
+
+  addNodes(paneNodes);
+  notifyNode(ownerId);
 };
 
 export const addTemplateNode = (
   markdownId: string,
   node: TemplateNode,
-  nodeId?: string,
+  insertNodeId?: string,
   location?: "before" | "after"
 ) => {
   const markdownNode = allNodes.get().get(markdownId) as MarkdownPaneFragmentNode;
@@ -425,15 +467,15 @@ export const addTemplateNode = (
 
   const markdownNodes = parentNodes.get().get(markdownId);
   // now grab parent nodes, check if we have inner node
-  if(nodeId && markdownNodes && markdownNodes?.indexOf(nodeId) !== -1) {
+  if(insertNodeId && markdownNodes && markdownNodes?.indexOf(insertNodeId) !== -1) {
     const newNode = markdownNodes.splice(markdownNodes.indexOf(duplicatedNodes.id, 1));
     if (location === "before") {
-      markdownNodes.insertBefore(markdownNodes.indexOf(nodeId), newNode);
+      markdownNodes.insertBefore(markdownNodes.indexOf(insertNodeId), newNode);
     } else {
-      markdownNodes.insertAfter(markdownNodes.indexOf(nodeId), newNode);
+      markdownNodes.insertAfter(markdownNodes.indexOf(insertNodeId), newNode);
     }
   }
-  notifications.notify(markdownId);
+  notifyNode(markdownId);
 };
 
 const setupTemplateNodeRecursively = (node: TemplateNode, parentId: string) => {
@@ -461,7 +503,7 @@ export const deleteNode = (nodeId: string) => {
   deleteNodesRecursively(node);
   // if this was a pane node then we need to update storyfragment as it tracks panes
   if(parentId !== null) {
-    notifications.notify(parentId);
+    notifyNode(parentId);
 
     if (node.nodeType === "Pane") {
       const storyFragment = allNodes.get().get(parentId) as StoryFragmentNode;
@@ -469,6 +511,14 @@ export const deleteNode = (nodeId: string) => {
         storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
       }
     }
+  } else {
+    // we deleted the node without a parent, send a notification to the root and let storykeep handle it
+    // it might be safe to refresh the whole page
+    if(nodeId === rootNodeId.get()) {
+      // if we actually deleted the root then clear it up
+      rootNodeId.set("");
+    }
+    notifyNode(ROOT_NODE_NAME);
   }
 };
 

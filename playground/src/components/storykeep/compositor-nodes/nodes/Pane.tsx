@@ -5,12 +5,13 @@ import {
   getChildNodeIDs,
   getNodeClasses,
   getNodeStyles,
-  getPaneBeliefs, addTemplateNode, notifications,
+  getPaneBeliefs,
+  notifications,
+  deleteNode,
 } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
-import { TemplateH2Node } from "@/utils/TemplateNodes.ts";
 
 export const Pane = (props: NodeProps) => {
   const wrapperClasses = `grid ${getNodeClasses(props.nodeId, viewportStore.get().value)}`;
@@ -60,14 +61,14 @@ export const Pane = (props: NodeProps) => {
           ))}
         </div>
       </div>
-      <div className="flex">
-        <button className="bg-cyan-500 rounded-md p-2" onClick={() => {
-          const children = getChildNodeIDs(props.nodeId);
-          addTemplateNode(props.nodeId, TemplateH2Node, children[children.length - 1], "after");
-        }}>
-          Add Pane
-        </button>
-      </div>
+      <button
+        className="bg-red-500 rounded-md p-2"
+        onClick={() => {
+          deleteNode(props.nodeId);
+        }}
+      >
+        Delete This Pane
+      </button>
     </div>
   );
 };

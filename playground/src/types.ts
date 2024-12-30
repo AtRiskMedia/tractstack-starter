@@ -1257,10 +1257,14 @@ export type TemplateNode = FlatNode & {
   nodes?: TemplateNode[];
 };
 
+export type TemplateMarkdown = MarkdownPaneFragmentNode & {
+  nodes?: TemplateNode[];
+}
+
 export type TemplatePane = PaneNode & {
   id?: string;
   parentId?: string;
-  nodes?: TemplateNode[];
+  markdown: TemplateMarkdown;
 };
 
 export interface FlatNode extends BaseNode {
