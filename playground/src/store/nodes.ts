@@ -325,17 +325,15 @@ export const getNodeClasses = (
   return "";
 };
 
-export const getNodeStyles = <T extends CSSProperties | string>(
-  nodeId: string,
-  viewport: ViewportKey
-): T => {
+export const getNodeStringStyles = (nodeId: string, viewport: ViewportKey): string => {
   const node = allNodes.get().get(nodeId);
-  if (typeof ("" as T) === "string")  {
-    return getStringNodeStyles(node, viewport) as T;
-  } else {
-    return getReactNodeStyles(node, viewport) as T;
-  }
-};
+  return getStringNodeStyles(node, viewport);
+}
+
+export const getNodeCSSPropertiesStyles = (nodeId: string, viewport: ViewportKey): CSSProperties => {
+  const node = allNodes.get().get(nodeId);
+  return getReactNodeStyles(node, viewport);
+}
 
 const getReactNodeStyles = (node: BaseNode | undefined, viewport: ViewportKey): CSSProperties => {
   if (!node) return {};
