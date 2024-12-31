@@ -71,20 +71,20 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     type = node.tagName;
   }
 
-  const sharedProps = { nodeId: node.id, ctx: props.ctx, key: timestampNodeId(node.id) };
+  const sharedProps = { nodeId: node.id, ctx: props.ctx };
 
   switch (type) {
     // generic nodes, not tag (html) elements
     case "Markdown":
-      return <Markdown {...sharedProps} />;
+      return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
     case "StoryFragment":
-      return <StoryFragment {...sharedProps} />;
+      return <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />;
     case "Pane":
-      return <Pane {...sharedProps} />;
+      return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
     case "BgPane":
-      return <BgPaneWrapper {...sharedProps} />;
+      return <BgPaneWrapper {...sharedProps} key={timestampNodeId(node.id)} />;
     case "TagElement":
-      return <TagElement {...sharedProps} />;
+      return <TagElement {...sharedProps} key={timestampNodeId(node.id)} />;
     // tag elements
     case "em":
     case "h2":
@@ -96,20 +96,20 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "strong":
     case "aside":
     case "p":
-      return <NodeBasicTag {...sharedProps} tagName={type} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
 
     case "text":
-      return <NodeText {...sharedProps} />;
+      return <NodeText {...sharedProps} key={timestampNodeId(node.id)} />;
     case "button":
-      return <NodeButton {...sharedProps} />;
+      return <NodeButton {...sharedProps} key={timestampNodeId(node.id)} />;
     case "a":
-      return <NodeA {...sharedProps} />;
+      return <NodeA {...sharedProps} key={timestampNodeId(node.id)} />;
     case "img":
-      return <NodeImg {...sharedProps} />;
+      return <NodeImg {...sharedProps} key={timestampNodeId(node.id)} />;
     case "code": {
       const hookData = parseCodeHook(node);
       return hookData ? (
-        <Widget {...hookData} {...sharedProps} />
+        <Widget {...hookData} {...sharedProps} key={timestampNodeId(node.id)} />
       ) : (
         <></>
       );
