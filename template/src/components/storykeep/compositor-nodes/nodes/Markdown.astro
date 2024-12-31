@@ -17,6 +17,6 @@ const parentCss = (node?.parentCss as string[]) || [];
   ) : (
     getCtx()
       .getChildNodeIDs(nodeId)
-      .map((x) => <Node nodeId={x} ctx={props.ctx} />)
+      .map((x) => <Node nodeId={x} />)
   )
 }

@@ -1,7 +1,6 @@
 ---
 import { getCtx } from "../../../store/nodes";
 import type { BaseNode, FlatNode } from "../../../types.ts";
-import Root from "./nodes/Root.astro";
 import Pane from "./nodes/Pane.astro";
 import StoryFragment from "./nodes/StoryFragment.astro";
 import Markdown from "./nodes/Markdown.astro";
@@ -68,8 +67,6 @@ function parseCodeHook(node: BaseNode | FlatNode) {
 
 function getElement(type: string) {
   switch (type) {
-    case "Root":
-      return Root;
     case "Pane":
       return Pane;
     case "StoryFragment":
