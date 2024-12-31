@@ -1,8 +1,8 @@
 ---
-import { getChildNodeIDs } from "../../../../store/nodes";
+import { getCtx } from "../../../../store/nodes";
 import Node from "../../../storykeep/compositor-nodes/Node.astro";
 
 const { nodeId } = Astro.props;
 ---
 
-{getChildNodeIDs(nodeId).map((id: string) => <Node nodeId={id} />)}
+{getCtx().getChildNodeIDs(nodeId).map((id: string) => <Node nodeId={id} />)}

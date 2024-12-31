@@ -1,4 +1,4 @@
-import { allNodes } from "@/store/nodes.ts";
+import { getCtx, NodesContext } from "@/store/nodes.ts";
 import type { BaseNode, FlatNode } from "@/types.ts";
 import { memo, type ReactElement } from "react";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
@@ -16,7 +16,8 @@ import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx
 
 export type NodeProps = {
   nodeId: string;
-};
+  ctx?: NodesContext;
+}
 
 // Helper function to parse code hooks
 function parseCodeHook(node: BaseNode | FlatNode) {
@@ -118,6 +119,6 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
 };
 
 export const Node = memo((props: NodeProps) => {
-  const node = allNodes.get().get(props.nodeId) as FlatNode;
+  const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   return getElement(node);
 });

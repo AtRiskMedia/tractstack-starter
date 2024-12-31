@@ -1,10 +1,6 @@
 ---
 import { isValidContentPath } from "../../utils/common/routeValidation";
-import {
-  getStoryFragmentNodeBySlug,
-  getImpressionNodesForPanes,
-  buildNodesTreeFromFragmentNodes,
-} from "../../store/nodes";
+import { getCtx } from "../../store/nodes";
 import { getGenerateAllNodes } from "../../utils/db/nodes/generate";
 import { getConfig, validateConfig } from "../../utils/core/config";
 import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
@@ -37,8 +33,8 @@ if (!isValidContentPath(lookup)) {
 
 // Generate nodes and build tree
 const nodes = await getGenerateAllNodes();
-buildNodesTreeFromFragmentNodes(nodes);
-const storyfragmentNode = getStoryFragmentNodeBySlug(lookup);
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
+const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(lookup);
 
 if (!storyfragmentNode) {
   return new Response(null, {
@@ -47,7 +43,7 @@ if (!storyfragmentNode) {
   });
 }
 
-const impressionNodes = getImpressionNodesForPanes(storyfragmentNode.paneIds) as ImpressionDatum[];
+const impressionNodes = getCtx().getImpressionNodesForPanes(storyfragmentNode.paneIds) as ImpressionDatum[];
 ---
 
 <Layout

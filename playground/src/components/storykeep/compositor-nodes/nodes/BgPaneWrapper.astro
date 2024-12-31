@@ -1,10 +1,10 @@
 ---
 import BgPane from "../../../frontend/panes/BgPaneNew.astro";
-import { allNodes } from "../../../../store/nodes";
+import { getCtx } from "../../../../store/nodes";
 import type { VisualBreakNode } from "../../../../types";
 
 const { nodeId } = Astro.props;
-const node = allNodes.get().get(nodeId) as VisualBreakNode;
+const node = getCtx().allNodes.get().get(nodeId) as VisualBreakNode;
 ---
 
 <BgPane payload={node} />

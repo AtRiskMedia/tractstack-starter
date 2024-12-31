@@ -1,6 +1,6 @@
 import { tailwindClasses, tailwindCoreLayoutClasses } from "../tailwind/tailwindClasses";
 import type { TupleValue, ViewportKey } from "../../types";
-import { getStyleByViewport } from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import { deepMerge } from "@/utils/common/helpers.ts";
 
 const tailwindModifier = [``, `md:`, `xl:`];
@@ -74,7 +74,7 @@ export const processClassesForViewports = (
         if (viewportType !== viewport) continue;
 
         for (const [selector, value] of Object.entries(viewportVal)) {
-          const overrideValue = getStyleByViewport(override, viewport)[selector];
+          const overrideValue = getCtx().getStyleByViewport(override, viewport)[selector];
 
           if (overrideValue) {
             classesForViewport.push(reduceClassName(selector, overrideValue, -1));

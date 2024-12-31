@@ -1,15 +1,15 @@
 ---
-import { getNodeClasses, allNodes } from "../../../../../store/nodes";
+import { getCtx } from "../../../../../store/nodes";
 import { viewportStore } from "../../../../../store/storykeep.ts";
 import type { FlatNode } from "../../../../../types";
 
 const { nodeId } = Astro.props;
-const node = allNodes.get().get(nodeId) as FlatNode;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
 ---
 
 <img
   src={node.src}
   {...node.srcSet ? { srcSet: node.srcSet } : {}}
-  class={getNodeClasses(nodeId, viewportStore.get().value)}
+  class={getCtx().getNodeClasses(nodeId, viewportStore.get().value)}
   alt={node.alt}
 />

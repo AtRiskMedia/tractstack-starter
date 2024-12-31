@@ -1,9 +1,9 @@
 ---
-import { allNodes } from "../../../../../store/nodes";
+import { getCtx } from "../../../../../store/nodes";
 import type { FlatNode } from "../../../../../types";
 
 const { nodeId } = Astro.props;
-const node = allNodes.get().get(nodeId) as FlatNode;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
 ---
 
 {node?.copy?.trim() === `` ? "\u00A0 " : (node?.copy || ``) + " "}

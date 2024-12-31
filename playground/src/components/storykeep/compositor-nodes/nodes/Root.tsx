@@ -1,14 +1,14 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { getChildNodeIDs, notifications, ROOT_NODE_NAME } from "@/store/nodes.ts";
+import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 
 export const Root = (props: NodeProps) => {
-  const [children, setChildren] = useState<string[]>(getChildNodeIDs(props.nodeId));
+  const [children, setChildren] = useState<string[]>(getCtx().getChildNodeIDs(props.nodeId));
 
   useEffect(() => {
-    const unsubscribe = notifications.subscribe(ROOT_NODE_NAME, () => {
+    const unsubscribe = getCtx().notifications.subscribe(ROOT_NODE_NAME, () => {
       console.log("notification received data update for root node");
-      setChildren([...getChildNodeIDs(props.nodeId)]);
+      setChildren([...getCtx().getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;
   }, []);

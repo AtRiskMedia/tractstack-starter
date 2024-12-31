@@ -4,7 +4,7 @@ import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
 import { SignUp } from "../../../frontend/widgets/SignUp";
 import { memo } from "react";
-import { getNodeClasses } from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 
 interface WidgetProps {
@@ -18,7 +18,7 @@ interface WidgetProps {
 export const Widget = memo(({ nodeId, hook, value1, value2, value3 }: WidgetProps) => {
   if (!hook || !value1) return null;
 
-  const classNames = getNodeClasses(nodeId, viewportStore.get().value);
+  const classNames = getCtx().getNodeClasses(nodeId, viewportStore.get().value);
   switch (hook) {
     case "youtube":
       if (!value2) return null;

@@ -1,9 +1,4 @@
-import {
-  addTemplatePane,
-  allNodes,
-  buildNodesTreeFromFragmentNodes,
-  rootNodeId,
-} from "@/store/nodes.ts";
+import { getCtx} from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
@@ -19,11 +14,11 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   const [rootId, setRootId] = useState<string>("");
 
   useEffect(() => {
-    buildNodesTreeFromFragmentNodes(props.nodes);
-    if (props.id !== rootNodeId.get()) {
+    getCtx().buildNodesTreeFromFragmentNodes(props.nodes);
+    if (props.id !== getCtx().rootNodeId.get()) {
       setRootId(props.id);
     }
-    setRootId(props.id || rootNodeId.get());
+    setRootId(props.id || getCtx().rootNodeId.get());
   }, []);
 
   return (
@@ -34,12 +29,12 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
           <button
             className="bg-cyan-500 rounded-md p-2"
             onClick={() => {
-              const storyFragment = allNodes
+              const storyFragment = getCtx().allNodes
                 .get()
                 .values()
                 .find((x) => x.nodeType === "StoryFragment");
               if (storyFragment && storyFragment.id !== null) {
-                addTemplatePane(storyFragment.id, TemplateSimplePane);
+                getCtx().addTemplatePane(storyFragment.id, TemplateSimplePane);
               }
             }}
           >

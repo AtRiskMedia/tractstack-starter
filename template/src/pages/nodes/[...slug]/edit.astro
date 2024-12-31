@@ -1,7 +1,7 @@
 ---
 import { getConfig, validateConfig } from "../../../utils/core/config";
 import { ReactNodesWrapper } from "../../../components/storykeep/compositor-nodes/ReactNodesWrapper";
-import { getStoryFragmentNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../store/nodes";
+import { getCtx } from "../../../store/nodes";
 import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
 import StoryKeepHeader from "../../../components/storykeep/controls/StoryKeepHeader";
 import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepToolBar";
@@ -20,9 +20,9 @@ if (!slug) return Astro.redirect("/404");
 const canonicalURL = `/${slug}`;
 
 const nodes = await getGenerateAllNodes();
-buildNodesTreeFromFragmentNodes(nodes);
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
 
-const storyfragmentNode = getStoryFragmentNodeBySlug(slug);
+const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(slug);
 if (!storyfragmentNode) {
   return Astro.redirect("/404");
 }

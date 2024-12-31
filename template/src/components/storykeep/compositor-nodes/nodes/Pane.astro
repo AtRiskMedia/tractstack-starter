@@ -1,28 +1,21 @@
 ---
 import CodeHook from "../../../../custom/CodeHook.astro";
-import {
-  getNodeSlug,
-  getNodeClasses,
-  getNodeStringStyles,
-  getNodeCodeHookPayload,
-  getChildNodeIDs,
-  getPaneBeliefs,
-} from "../../../../store/nodes";
+import { getCtx} from "../../../../store/nodes";
 import { viewportStore } from "../../../../store/storykeep";
 import Node from "../Node.astro";
 import Filter from "../../../../components/frontend/state/Filter";
 import type { CodeHookDatum } from "../../../../types";
 
 const { nodeId } = Astro.props;
-const rawPayload = getNodeCodeHookPayload(nodeId);
+const rawPayload = getCtx().getNodeCodeHookPayload(nodeId);
 const codeHookPayload =
   rawPayload && typeof rawPayload === "object" && "target" in rawPayload
     ? (rawPayload as CodeHookDatum)
     : null;
-const beliefs = getPaneBeliefs(nodeId);
-const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
+const beliefs = getCtx().getPaneBeliefs(nodeId);
+const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
-const contentStyles = getNodeStringStyles(nodeId, viewportStore.get().value) + "; grid-area: 1/1/1/1";
+const contentStyles = getCtx().getNodeStringStyles(nodeId, viewportStore.get().value) + "; grid-area: 1/1/1/1";
 ---
 
 {
@@ -42,9 +35,9 @@ const contentStyles = getNodeStringStyles(nodeId, viewportStore.get().value) + "
     </div>
   ) : (
     <div id={`pane-${nodeId}`} class="pane">
-      <div id={getNodeSlug(nodeId)} class={wrapperClasses}>
+      <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
         <div class={contentClasses} style={contentStyles}>
-          {getChildNodeIDs(nodeId).map((childId: string) => (
+          {getCtx().getChildNodeIDs(nodeId).map((childId: string) => (
             <Node nodeId={childId} />
           ))}
         </div>

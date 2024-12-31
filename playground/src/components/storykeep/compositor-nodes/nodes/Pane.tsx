@@ -1,34 +1,25 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import {
-  getNodeCodeHookPayload,
-  getNodeSlug,
-  getChildNodeIDs,
-  getNodeClasses,
-  getNodeCSSPropertiesStyles,
-  getPaneBeliefs,
-  notifications,
-  deleteNode,
-} from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
 
 export const Pane = (props: NodeProps) => {
-  const wrapperClasses = `grid ${getNodeClasses(props.nodeId, viewportStore.get().value)}`;
+  const wrapperClasses = `grid ${getCtx().getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
-    ...getNodeCSSPropertiesStyles<CSSProperties>(props.nodeId, viewportStore.get().value),
+    ...getCtx().getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value),
     gridArea: "1/1/1/1",
   };
-  const codeHookPayload = getNodeCodeHookPayload(props.nodeId);
-  const [children, setChildren] = useState<string[]>([...getChildNodeIDs(props.nodeId)]);
+  const codeHookPayload = getCtx().getNodeCodeHookPayload(props.nodeId);
+  const [children, setChildren] = useState<string[]>([...getCtx().getChildNodeIDs(props.nodeId)]);
 
   const getPaneId = (): string => `pane-${props.nodeId}`;
 
   useEffect(() => {
-    const unsubscribe = notifications.subscribe(props.nodeId, () => {
+    const unsubscribe = getCtx().notifications.subscribe(props.nodeId, () => {
       console.log("notification received data update for page node: " + props.nodeId);
-      setChildren([...getChildNodeIDs(props.nodeId)]);
+      setChildren([...getCtx().getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;
   }, []);
@@ -42,12 +33,12 @@ export const Pane = (props: NodeProps) => {
     );
   }
 
-  const beliefs = getPaneBeliefs(props.nodeId);
+  const beliefs = getCtx().getPaneBeliefs(props.nodeId);
 
   // todo naz - make pane more modular
   return (
     <div id={getPaneId()} className="pane">
-      <div id={getNodeSlug(props.nodeId)} className={wrapperClasses}>
+      <div id={getCtx().getNodeSlug(props.nodeId)} className={wrapperClasses}>
         {beliefs && (
           <Filter
             id={props.nodeId}
@@ -64,7 +55,7 @@ export const Pane = (props: NodeProps) => {
       <button
         className="bg-red-500 rounded-md p-2"
         onClick={() => {
-          deleteNode(props.nodeId);
+          getCtx().deleteNode(props.nodeId);
         }}
       >
         Delete This Pane

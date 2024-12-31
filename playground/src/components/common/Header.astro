@@ -1,7 +1,7 @@
 ---
 import { Home } from "./icons/Home";
 import Menu from "./Menu";
-import { getMenuNodeById } from "../../store/nodes";
+import { getCtx } from "../../store/nodes";
 import { RememberMe } from "./state/RememberMe";
 import { OpenStoryKeep } from "./nav/OpenStoryKeep";
 import { ConfigureStoryKeep } from "./nav/ConfigureStoryKeep";
@@ -39,7 +39,7 @@ const logoIsSvg = logo.includes("svg");
 const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
 const wordmarkIsSvg = wordmark.includes("svg");
-const menuPayload = typeof menuId === `string` ? getMenuNodeById(menuId) : menu;
+const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
 ---
 
 <header class="relative bg-white shadow-inner">
