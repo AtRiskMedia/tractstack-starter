@@ -5,27 +5,28 @@ import { type JSX, useEffect, useState } from "react";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
-export const NodeBasicTag = ({ tagName, nodeId }: NodeTagProps) => {
-  const [children, setChildren] = useState<string[]>(getCtx().getChildNodeIDs(nodeId));
+export const NodeBasicTag = (props: NodeTagProps) => {
+  const nodeId = props.nodeId;
+  const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
 
-  const Tag = tagName;
+  const Tag = props.tagName;
   useEffect(() => {
-    const unsubscribe = getCtx().notifications.subscribe(nodeId, () => {
+    const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
       console.log("notification received data update for node: " + nodeId);
-      setChildren(getCtx().getChildNodeIDs(nodeId));
+      setChildren(getCtx(props).getChildNodeIDs(nodeId));
     });
     return unsubscribe;
   }, []);
 
   return (
     <Tag
-      className={getCtx().getNodeClasses(nodeId, viewportStore.get().value)}
+      className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
       onClick={() => {
-        getCtx().setClickedNodeId(nodeId);
+        getCtx(props).setClickedNodeId(nodeId);
       }}
     >
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} />
+        <Node nodeId={id} key={id} ctx={props.ctx} />
       ))}
     </Tag>
   );

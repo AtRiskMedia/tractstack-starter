@@ -31,7 +31,7 @@ export const Markdown = (props: NodeProps) => {
   let nodesToRender = (
     <>
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} />
+        <Node nodeId={id} key={id} ctx={props.ctx} />
       ))}
     </>
   );

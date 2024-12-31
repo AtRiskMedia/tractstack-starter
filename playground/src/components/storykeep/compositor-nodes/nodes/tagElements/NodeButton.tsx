@@ -13,7 +13,7 @@ export const NodeButton = (props: NodeProps) => {
       {getCtx(props)
         .getChildNodeIDs(props.nodeId)
         .map((id: string) => (
-          <Node nodeId={id} key={id} />
+          <Node nodeId={id} key={id} ctx={props.ctx} />
         ))}
     </button>
   );

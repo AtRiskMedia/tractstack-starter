@@ -4,23 +4,23 @@ import { viewportStore } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
 
 export const StoryFragment = (props: NodeProps) => {
-  const [children, setChildren] = useState<string[]>([...getCtx().getChildNodeIDs(props.nodeId)]);
+  const [children, setChildren] = useState<string[]>([...getCtx(props).getChildNodeIDs(props.nodeId)]);
 
   useEffect(() => {
-    const unsubscribe = getCtx().notifications.subscribe(props.nodeId, () => {
+    const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
       console.log("notification received data update for storyfragment node: " + props.nodeId);
-      setChildren([...getCtx().getChildNodeIDs(props.nodeId)]);
+      setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;
   }, []);
 
   return (
     <div
-      className={getCtx().getNodeClasses(props.nodeId, viewportStore.get().value)}
-      style={getCtx().getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
+      className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
+      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
     >
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} />
+        <Node nodeId={id} key={id} ctx={props.ctx} />
       ))}
     </div>
   );

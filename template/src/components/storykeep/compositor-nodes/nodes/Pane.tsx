@@ -5,21 +5,21 @@ import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
 
 export const Pane = (props: NodeProps) => {
-  const wrapperClasses = `grid ${getCtx().getNodeClasses(props.nodeId, viewportStore.get().value)}`;
+  const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
-    ...getCtx().getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value),
+    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value),
     gridArea: "1/1/1/1",
   };
-  const codeHookPayload = getCtx().getNodeCodeHookPayload(props.nodeId);
-  const [children, setChildren] = useState<string[]>([...getCtx().getChildNodeIDs(props.nodeId)]);
+  const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);
+  const [children, setChildren] = useState<string[]>([...getCtx(props).getChildNodeIDs(props.nodeId)]);
 
   const getPaneId = (): string => `pane-${props.nodeId}`;
 
   useEffect(() => {
-    const unsubscribe = getCtx().notifications.subscribe(props.nodeId, () => {
+    const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
       console.log("notification received data update for page node: " + props.nodeId);
-      setChildren([...getCtx().getChildNodeIDs(props.nodeId)]);
+      setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;
   }, []);
@@ -33,12 +33,12 @@ export const Pane = (props: NodeProps) => {
     );
   }
 
-  const beliefs = getCtx().getPaneBeliefs(props.nodeId);
+  const beliefs = getCtx(props).getPaneBeliefs(props.nodeId);
 
   // todo naz - make pane more modular
   return (
     <div id={getPaneId()} className="pane">
-      <div id={getCtx().getNodeSlug(props.nodeId)} className={wrapperClasses}>
+      <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
         {beliefs && (
           <Filter
             id={props.nodeId}
@@ -48,14 +48,14 @@ export const Pane = (props: NodeProps) => {
         )}
         <div className={contentClasses} style={contentStyles}>
           {children.map((id: string) => (
-            <Node nodeId={id} key={id} />
+            <Node nodeId={id} key={id} ctx={props.ctx} />
           ))}
         </div>
       </div>
       <button
         className="bg-red-500 rounded-md p-2"
         onClick={() => {
-          getCtx().deleteNode(props.nodeId);
+          getCtx(props).deleteNode(props.nodeId);
         }}
       >
         Delete This Pane

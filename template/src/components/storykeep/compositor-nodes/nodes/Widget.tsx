@@ -4,21 +4,23 @@ import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
 import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
 import { SignUp } from "../../../frontend/widgets/SignUp";
 import { memo } from "react";
-import { getCtx } from "@/store/nodes.ts";
+import { getCtx, NodesContext } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 
-interface WidgetProps {
+export interface WidgetProps {
   nodeId: string;
+  ctx?: NodesContext;
   hook: string | null;
   value1: string | null;
   value2: string | null;
   value3: string;
 }
 
-export const Widget = memo(({ nodeId, hook, value1, value2, value3 }: WidgetProps) => {
+export const Widget = memo((props: WidgetProps) => {
+  const { nodeId, hook, value1, value2, value3 } = props;
   if (!hook || !value1) return null;
 
-  const classNames = getCtx().getNodeClasses(nodeId, viewportStore.get().value);
+  const classNames = getCtx(props).getNodeClasses(nodeId, viewportStore.get().value);
   switch (hook) {
     case "youtube":
       if (!value2) return null;

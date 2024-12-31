@@ -5,7 +5,6 @@ import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgPaneWrapper.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
-import { Root } from "@/components/storykeep/compositor-nodes/nodes/Root.tsx";
 import { NodeText } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeText.tsx";
 import { NodeA } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeA.tsx";
 import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton.tsx";
@@ -63,7 +62,7 @@ function parseCodeHook(node: BaseNode | FlatNode) {
   return null;
 }
 
-const getElement = (node: BaseNode | FlatNode): ReactElement => {
+const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
 
   let type = node.nodeType as string;
@@ -74,17 +73,15 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
   switch (type) {
     // generic nodes, not tag (html) elements
     case "Markdown":
-      return <Markdown nodeId={node.id} key={node.id} />;
+      return <Markdown nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "StoryFragment":
-      return <StoryFragment nodeId={node.id} key={node.id} />;
+      return <StoryFragment nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "Pane":
-      return <Pane nodeId={node.id} key={node.id} />;
+      return <Pane nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "BgPane":
-      return <BgPaneWrapper nodeId={node.id} key={node.id} />;
-    case "Root":
-      return <Root nodeId={node.id} key={node.id} />;
+      return <BgPaneWrapper nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "TagElement":
-      return <TagElement nodeId={node.id} key={node.id} />;
+      return <TagElement nodeId={node.id} ctx={props.ctx} key={node.id} />;
     // tag elements
     case "em":
     case "h2":
@@ -96,19 +93,19 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
     case "strong":
     case "aside":
     case "p":
-      return <NodeBasicTag tagName={type} nodeId={node.id} key={node.id} />;
+      return <NodeBasicTag tagName={type} ctx={props.ctx} nodeId={node.id} key={node.id} />;
 
     case "text":
-      return <NodeText nodeId={node.id} key={node.id} />;
+      return <NodeText nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "button":
-      return <NodeButton nodeId={node.id} key={node.id} />;
+      return <NodeButton nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "a":
-      return <NodeA nodeId={node.id} key={node.id} />;
+      return <NodeA nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "img":
-      return <NodeImg nodeId={node.id} key={node.id} />;
+      return <NodeImg nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "code": {
       const hookData = parseCodeHook(node);
-      return hookData ? <Widget {...hookData} nodeId={node.id} key={node.id} /> : <></>;
+      return hookData ? <Widget {...hookData} ctx={props.ctx} nodeId={node.id} key={node.id} /> : <></>;
     }
     case "Impression":
       return <></>;
@@ -120,5 +117,5 @@ const getElement = (node: BaseNode | FlatNode): ReactElement => {
 
 export const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
-  return getElement(node);
+  return getElement(node, props);
 });

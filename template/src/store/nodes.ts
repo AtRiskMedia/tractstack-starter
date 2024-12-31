@@ -22,6 +22,8 @@ import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
 import { NotificationSystem } from "@/store/notificationSystem.ts";
 import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
+import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -543,6 +545,6 @@ export class NodesContext {
 
 export const globalCtx: NodesContext = new NodesContext();
 
-export const getCtx = (props?: NodeProps): NodesContext => {
+export const getCtx = (props?: NodeProps|ReactNodesRendererProps|WidgetProps): NodesContext => {
   return props?.ctx || globalCtx;
 };

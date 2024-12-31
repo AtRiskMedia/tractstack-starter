@@ -2,6 +2,7 @@ import DevicePhoneMobileIcon from "@heroicons/react/24/outline/DevicePhoneMobile
 import DeviceTabletIcon from "@heroicons/react/24/outline/DeviceTabletIcon";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
 import ViewfinderCircleIcon from "@heroicons/react/24/outline/ViewfinderCircleIcon";
+import { getCtx, ROOT_NODE_NAME} from "@/store/nodes.ts";
 import type { ViewportAuto, ViewportKey } from "../../../types";
 
 interface ViewportSelectorProps {
@@ -61,6 +62,8 @@ const ViewportSelector = ({ viewport, viewportKey, auto, setViewport }: Viewport
             )}
             onClick={() => {
               setViewport(key);
+              getCtx().notifyNode(ROOT_NODE_NAME)
+              console.log(`click`,key,ROOT_NODE_NAME)
             }}
           >
             <span className="sr-only">{key}</span>
