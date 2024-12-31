@@ -1,9 +1,9 @@
-import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const Pane = (props: NodeProps) => {
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
@@ -50,9 +50,7 @@ export const Pane = (props: NodeProps) => {
           />
         )}
         <div className={contentClasses} style={contentStyles}>
-          {children.map((id: string) => (
-            <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
-          ))}
+          <RenderChildren children={children} nodeProps={props}/>
         </div>
       </div>
       <button

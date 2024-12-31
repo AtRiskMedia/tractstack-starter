@@ -11,7 +11,7 @@ import {
   TemplatePNode,
 } from "@/utils/TemplateNodes.ts";
 import { useEffect, useState } from "react";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
@@ -29,13 +29,7 @@ export const Markdown = (props: NodeProps) => {
   }, []);
 
   console.log("draw markdown: " + props.nodeId);
-  let nodesToRender = (
-    <>
-      {children.map((id: string) => (
-        <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
-      ))}
-    </>
-  );
+  let nodesToRender = (<RenderChildren children={children} nodeProps={props}/>);
   if ("parentCss" in node) {
     for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
       nodesToRender = (

@@ -1,8 +1,8 @@
-import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type JSX, useEffect, useState } from "react";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -26,9 +26,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         getCtx(props).setClickedNodeId(nodeId);
       }}
     >
-      {children.map((id: string) => (
-        <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
-      ))}
+      <RenderChildren children={children} nodeProps={props}/>
     </Tag>
   );
 };

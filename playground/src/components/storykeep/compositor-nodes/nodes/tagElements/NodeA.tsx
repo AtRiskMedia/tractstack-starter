@@ -1,8 +1,8 @@
-import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
 import type { FlatNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const NodeA = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
@@ -11,11 +11,8 @@ export const NodeA = (props: NodeProps) => {
       href={node.href}
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
     >
-      {getCtx(props)
-        .getChildNodeIDs(props.nodeId)
-        .map((id: string) => (
-          <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
-        ))}
+      <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)}
+                      nodeProps={props}/>
     </a>
   );
 };
