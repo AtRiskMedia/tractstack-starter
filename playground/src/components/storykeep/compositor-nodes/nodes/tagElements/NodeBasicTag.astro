@@ -11,5 +11,9 @@ const Tag = node.tagName || EmptyNode;
 ---
 
 <Tag class={getCtx().getNodeClasses(nodeId, viewportStore.get().value)}>
-  {getCtx().getChildNodeIDs(nodeId).map((id) => <Node nodeId={id} />)}
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id) => <Node nodeId={id} />)
+  }
 </Tag>

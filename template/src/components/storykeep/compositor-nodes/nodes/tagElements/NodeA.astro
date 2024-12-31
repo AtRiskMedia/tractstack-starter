@@ -9,5 +9,9 @@ const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
 ---
 
 <a class={getCtx().getNodeClasses(nodeId, viewportStore.get().value)} href={node.href}>
-  {getCtx().getChildNodeIDs(nodeId).map((id: string) => <Node nodeId={id} />)}
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
 </a>

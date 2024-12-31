@@ -10,5 +10,9 @@ const { nodeId } = Astro.props;
   class={getCtx().getNodeClasses(nodeId, viewportStore.get().value)}
   style={getCtx().getNodeStringStyles(nodeId, viewportStore.get().value)}
 >
-  {getCtx().getChildNodeIDs(nodeId).map((id: string) => <Node nodeId={id} />)}
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
 </div>

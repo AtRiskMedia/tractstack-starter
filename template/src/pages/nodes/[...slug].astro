@@ -43,7 +43,9 @@ if (!storyfragmentNode) {
   });
 }
 
-const impressionNodes = getCtx().getImpressionNodesForPanes(storyfragmentNode.paneIds) as ImpressionDatum[];
+const impressionNodes = getCtx().getImpressionNodesForPanes(
+  storyfragmentNode.paneIds
+) as ImpressionDatum[];
 ---
 
 <Layout

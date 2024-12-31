@@ -1,7 +1,5 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import {
-  getCtx,
-} from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import type { MarkdownPaneFragmentNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import {
@@ -17,7 +15,9 @@ import { useEffect, useState } from "react";
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
   const node = getCtx(props).allNodes.get().get(props.nodeId) as MarkdownPaneFragmentNode;
-  const [children, setChildren] = useState<string[]>([...getCtx(props).getChildNodeIDs(props.nodeId)]);
+  const [children, setChildren] = useState<string[]>([
+    ...getCtx(props).getChildNodeIDs(props.nodeId),
+  ]);
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
@@ -38,7 +38,9 @@ export const Markdown = (props: NodeProps) => {
   if ("parentCss" in node) {
     for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
       nodesToRender = (
-        <div className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}>{nodesToRender}</div>
+        <div className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}>
+          {nodesToRender}
+        </div>
       );
     }
   }
@@ -57,7 +59,12 @@ export const Markdown = (props: NodeProps) => {
         <button
           className="bg-yellow-500 rounded-md p-2"
           onClick={() => {
-            getCtx(props).addTemplateNode(props.nodeId, TemplateH3Node, children[children.length - 1], "after");
+            getCtx(props).addTemplateNode(
+              props.nodeId,
+              TemplateH3Node,
+              children[children.length - 1],
+              "after"
+            );
           }}
         >
           Add H3
@@ -65,7 +72,12 @@ export const Markdown = (props: NodeProps) => {
         <button
           className="bg-yellow-500 rounded-md p-2"
           onClick={() => {
-            getCtx(props).addTemplateNode(props.nodeId, TemplatePNode, children[children.length - 1], "after");
+            getCtx(props).addTemplateNode(
+              props.nodeId,
+              TemplatePNode,
+              children[children.length - 1],
+              "after"
+            );
           }}
         >
           Add P
@@ -73,7 +85,12 @@ export const Markdown = (props: NodeProps) => {
         <button
           className="bg-yellow-500 rounded-md p-2"
           onClick={() => {
-            getCtx(props).addTemplateNode(props.nodeId, TemplateH4Node, children[children.length - 1], "after");
+            getCtx(props).addTemplateNode(
+              props.nodeId,
+              TemplateH4Node,
+              children[children.length - 1],
+              "after"
+            );
           }}
         >
           Add H4
@@ -94,7 +111,12 @@ export const Markdown = (props: NodeProps) => {
         <button
           className="bg-yellow-500 rounded-md p-2"
           onClick={() => {
-            getCtx(props).addTemplateNode(props.nodeId, TemplateImgNode, children[children.length - 1], "after");
+            getCtx(props).addTemplateNode(
+              props.nodeId,
+              TemplateImgNode,
+              children[children.length - 1],
+              "after"
+            );
           }}
         >
           Add Img

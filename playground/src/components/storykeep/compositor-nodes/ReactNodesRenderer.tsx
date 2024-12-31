@@ -1,4 +1,4 @@
-import { getCtx} from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
@@ -29,8 +29,8 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
           <button
             className="bg-cyan-500 rounded-md p-2"
             onClick={() => {
-              const storyFragment = getCtx().allNodes
-                .get()
+              const storyFragment = getCtx()
+                .allNodes.get()
                 .values()
                 .find((x) => x.nodeType === "StoryFragment");
               if (storyFragment && storyFragment.id !== null) {

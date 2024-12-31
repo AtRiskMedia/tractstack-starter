@@ -17,7 +17,7 @@ import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx
 export type NodeProps = {
   nodeId: string;
   ctx?: NodesContext;
-}
+};
 
 // Helper function to parse code hooks
 function parseCodeHook(node: BaseNode | FlatNode) {

@@ -10,9 +10,11 @@ export const NodeButton = (props: NodeProps) => {
       onClick={() => console.log(`no onClick logic wired up yet`, node)}
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
     >
-      {getCtx(props).getChildNodeIDs(props.nodeId).map((id: string) => (
-        <Node nodeId={id} key={id} />
-      ))}
+      {getCtx(props)
+        .getChildNodeIDs(props.nodeId)
+        .map((id: string) => (
+          <Node nodeId={id} key={id} />
+        ))}
     </button>
   );
 };
