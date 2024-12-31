@@ -315,25 +315,28 @@ export class NodesContext {
         }
         break;
 
-      case "StoryFragment": {
-        const storyFragment = node as StoryFragmentNode;
-        return typeof storyFragment?.tailwindBgColour === `string`
-          ? `bg-${storyFragment?.tailwindBgColour}`
-          : ``;
-      }
+    case "StoryFragment": {
+      const storyFragment = node as StoryFragmentNode;
+      return typeof storyFragment?.tailwindBgColour === `string`
+        ? `bg-${storyFragment?.tailwindBgColour}`
+        : ``;
     }
-    return "";
   }
+  return "";
+};
 
-  getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
-    const node = this.allNodes.get().get(nodeId);
-    return this.getStringNodeStyles(node, viewport);
-  }
+export const getNodeStringStyles = (nodeId: string, viewport: ViewportKey): string => {
+  const node = allNodes.get().get(nodeId);
+  return getStringNodeStyles(node, viewport);
+}
 
-  getNodeCSSPropertiesStyles(nodeId: string, viewport: ViewportKey): CSSProperties {
+  getNodeCSSPropertiesStyles(
+  nodeId: string,
+  viewport: ViewportKey
+): CSSProperties {
     const node = this.allNodes.get().get(nodeId);
     return this.getReactNodeStyles(node, viewport);
-  }
+  };
 
   getReactNodeStyles(node: BaseNode | undefined, viewport: ViewportKey): CSSProperties {
     if (!node) return {};

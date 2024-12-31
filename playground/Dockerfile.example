@@ -19,6 +19,9 @@ RUN pnpm install --frozen-lockfile
 # Copy the rest of the application files
 COPY . .
 
+# Create config directory
+RUN mkdir -p /app/config
+
 # Generate SSL certificates
 RUN openssl genrsa -des3 -passout pass:x -out server.pass.key 2048 && \
     openssl rsa -passin pass:x -in server.pass.key -out server.key && \
@@ -34,6 +37,9 @@ RUN pnpm build
 FROM node:20-slim AS runtime
 WORKDIR /app
 
+# Create config directory in runtime stage
+RUN mkdir -p /app/config
+
 # Copy the build artifacts from the build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server.key ./server.key
@@ -46,6 +52,9 @@ COPY --from=build /app/node_modules ./node_modules
 ENV HOST=0.0.0.0
 ENV PORT=4321
 EXPOSE 4321
+
+# Declare volume for config directory
+VOLUME /app/config
 
 # Command to run the application
 CMD ["node", "./dist/server/entry.mjs"]
