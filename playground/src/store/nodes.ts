@@ -330,7 +330,7 @@ export const getNodeStyles = <T extends CSSProperties | string>(
   viewport: ViewportKey
 ): T => {
   const node = allNodes.get().get(nodeId);
-  if (typeof ({} as T) === "string") {
+  if (typeof ("" as T) === "string")  {
     return getStringNodeStyles(node, viewport) as T;
   } else {
     return getReactNodeStyles(node, viewport) as T;
