@@ -12,6 +12,7 @@ import { NodeImg } from "@/components/storykeep/compositor-nodes/nodes/tagElemen
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
 import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export type NodeProps = {
   nodeId: string;
@@ -70,18 +71,20 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     type = node.tagName;
   }
 
+  const sharedProps = { nodeId: node.id, ctx: props.ctx, key: timestampNodeId(node.id) };
+
   switch (type) {
     // generic nodes, not tag (html) elements
     case "Markdown":
-      return <Markdown nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <Markdown {...sharedProps} />;
     case "StoryFragment":
-      return <StoryFragment nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <StoryFragment {...sharedProps} />;
     case "Pane":
-      return <Pane nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <Pane {...sharedProps} />;
     case "BgPane":
-      return <BgPaneWrapper nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <BgPaneWrapper {...sharedProps} />;
     case "TagElement":
-      return <TagElement nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <TagElement {...sharedProps} />;
     // tag elements
     case "em":
     case "h2":
@@ -93,20 +96,20 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "strong":
     case "aside":
     case "p":
-      return <NodeBasicTag tagName={type} ctx={props.ctx} nodeId={node.id} key={node.id} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} />;
 
     case "text":
-      return <NodeText nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <NodeText {...sharedProps} />;
     case "button":
-      return <NodeButton nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <NodeButton {...sharedProps} />;
     case "a":
-      return <NodeA nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <NodeA {...sharedProps} />;
     case "img":
-      return <NodeImg nodeId={node.id} ctx={props.ctx} key={node.id} />;
+      return <NodeImg {...sharedProps} />;
     case "code": {
       const hookData = parseCodeHook(node);
       return hookData ? (
-        <Widget {...hookData} ctx={props.ctx} nodeId={node.id} key={node.id} />
+        <Widget {...hookData} {...sharedProps} />
       ) : (
         <></>
       );

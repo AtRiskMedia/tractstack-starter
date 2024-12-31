@@ -2,6 +2,7 @@ import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/No
 import { getCtx } from "@/store/nodes.ts";
 import type { FlatNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export const NodeA = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
@@ -13,7 +14,7 @@ export const NodeA = (props: NodeProps) => {
       {getCtx(props)
         .getChildNodeIDs(props.nodeId)
         .map((id: string) => (
-          <Node nodeId={id} key={id} ctx={props.ctx} />
+          <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
         ))}
     </a>
   );

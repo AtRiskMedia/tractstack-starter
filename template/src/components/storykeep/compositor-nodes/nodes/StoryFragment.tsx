@@ -2,6 +2,7 @@ import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/No
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export const StoryFragment = (props: NodeProps) => {
   const [children, setChildren] = useState<string[]>([
@@ -22,7 +23,7 @@ export const StoryFragment = (props: NodeProps) => {
       style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
     >
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} ctx={props.ctx} />
+        <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
       ))}
     </div>
   );

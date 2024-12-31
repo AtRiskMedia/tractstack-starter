@@ -3,6 +3,7 @@ import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export const Pane = (props: NodeProps) => {
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
@@ -50,7 +51,7 @@ export const Pane = (props: NodeProps) => {
         )}
         <div className={contentClasses} style={contentStyles}>
           {children.map((id: string) => (
-            <Node nodeId={id} key={id} ctx={props.ctx} />
+            <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
           ))}
         </div>
       </div>

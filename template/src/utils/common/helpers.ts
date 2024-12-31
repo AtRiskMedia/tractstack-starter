@@ -620,6 +620,8 @@ export async function getOptimizedImages(
   return optimizedImages;
 }
 
+export const timestampNodeId = (id: string): string => `${id}-${Date.now()}`;
+
 export const createNodeIdFromDragNode = (node: DragNode): string => {
   if (!node) return "";
   return createNodeId(node.fragmentId, node.paneId, node.outerIdx, node.idx);

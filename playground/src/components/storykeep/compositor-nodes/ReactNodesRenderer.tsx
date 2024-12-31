@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
@@ -29,7 +30,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   return (
     <>
       {children.length > 0 ? (
-        children.map((id: string) => <Node nodeId={id} key={id} ctx={props.ctx} />)
+        children.map((id: string) => <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />)
       ) : (
         <></>
       )}

@@ -2,6 +2,7 @@ import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/No
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type JSX, useEffect, useState } from "react";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -26,7 +27,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }}
     >
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} ctx={props.ctx} />
+        <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
       ))}
     </Tag>
   );

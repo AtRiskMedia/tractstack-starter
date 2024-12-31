@@ -11,6 +11,7 @@ import {
   TemplatePNode,
 } from "@/utils/TemplateNodes.ts";
 import { useEffect, useState } from "react";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
 
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
@@ -31,7 +32,7 @@ export const Markdown = (props: NodeProps) => {
   let nodesToRender = (
     <>
       {children.map((id: string) => (
-        <Node nodeId={id} key={id} ctx={props.ctx} />
+        <Node nodeId={id} key={timestampNodeId(id)} ctx={props.ctx} />
       ))}
     </>
   );
