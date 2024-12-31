@@ -1,11 +1,7 @@
 ---
 import { isValidContentPath } from "../../../utils/common/routeValidation";
 import { getConfig, validateConfig } from "../../../utils/core/config";
-import {
-  getContextPaneNodeBySlug,
-  getImpressionNodesForPanes,
-  buildNodesTreeFromFragmentNodes,
-} from "../../../store/nodes";
+import { getCtx } from "../../../store/nodes";
 import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
 import AstroNodesRenderer from "../../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
 import ImpressionWrapper from "../../../components/common/widgets/ImpressionWrapper";
@@ -32,8 +28,8 @@ if (!slug || !isValidContentPath(slug)) {
 
 // Generate nodes and build tree
 const nodes = await getGenerateAllNodes();
-buildNodesTreeFromFragmentNodes(nodes);
-const paneNode = getContextPaneNodeBySlug(slug);
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
+const paneNode = getCtx().getContextPaneNodeBySlug(slug);
 
 if (!paneNode) {
   return new Response(null, {
@@ -42,7 +38,7 @@ if (!paneNode) {
   });
 }
 
-const impressionNodes = getImpressionNodesForPanes([paneNode.id]) as ImpressionDatum[];
+const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as ImpressionDatum[];
 ---
 
 <Layout

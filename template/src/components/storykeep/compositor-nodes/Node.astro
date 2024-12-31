@@ -96,8 +96,8 @@ function getElement(type: string) {
     case "a":
       return NodeA;
     case "code":
-      const hookData = parseCodeHook(node);
-      return hookData ? Widget : EmptyNode;
+      // handle code but return nothing as we create Widget explicitly
+      return EmptyNode;
     case "Impression":
       return EmptyNode;
     default:

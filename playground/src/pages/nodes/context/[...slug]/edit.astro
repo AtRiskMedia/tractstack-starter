@@ -1,7 +1,7 @@
 ---
 import { getConfig, validateConfig } from "../../../../utils/core/config";
 import { ReactNodesRenderer } from "../../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { getContextPaneNodeBySlug, buildNodesTreeFromFragmentNodes } from "../../../../store/nodes";
+import { getCtx } from "../../../../store/nodes";
 import { getGenerateAllNodes } from "../../../../utils/db/nodes/generate";
 import StoryKeep from "../../../../layouts/StoryKeep.astro";
 
@@ -19,10 +19,10 @@ const canonicalURL = `/context/${slug}`;
 
 // Generate nodes and build tree
 const nodes = await getGenerateAllNodes();
-buildNodesTreeFromFragmentNodes(nodes);
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
 
 // valid datum?
-const paneNode = getContextPaneNodeBySlug(slug);
+const paneNode = getCtx().getContextPaneNodeBySlug(slug);
 if (!paneNode) {
   return Astro.redirect("/404");
 }
