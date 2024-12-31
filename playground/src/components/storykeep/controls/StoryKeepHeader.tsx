@@ -57,7 +57,6 @@ const StoryKeepHeader = () => {
     viewportStore.set({ value: newViewport });
 
     const newViewportKey = isAuto ? getViewportFromWidth(window.innerWidth) : newViewport;
-
     viewportKeyStore.set({ value: newViewportKey });
   };
 
@@ -65,8 +64,11 @@ const StoryKeepHeader = () => {
     scaleStore.set({ value: option.value });
   };
 
+  const iconClassName =
+    "w-6 h-6 text-myblue hover:text-white hover:bg-myblue/50 rounded-xl bg-white";
+
   return (
-    <div className="p-4 flex flex-wrap justify-center items-start gap-y-2 gap-x-6">
+    <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
       <ViewportSelector
         viewport={$viewport.value}
         viewportKey={$viewportKey.value}
@@ -74,15 +76,9 @@ const StoryKeepHeader = () => {
         setViewport={setViewport}
       />
 
-      <div className="p-2 flex items-center gap-2">
-        <ArrowUturnLeftIcon
-          title="Undo"
-          className="w-6 h-6 rounded-xl bg-white text-myblue hover:bg-myblue/50 hover:text-white"
-        />
-        <ArrowUturnRightIcon
-          title="Redo"
-          className="w-6 h-6 rounded-xl bg-white text-myblue hover:bg-myblue/50 hover:text-white"
-        />
+      <div className="flex items-center gap-2">
+        <ArrowUturnLeftIcon title="Undo" className={iconClassName} />
+        <ArrowUturnRightIcon title="Redo" className={iconClassName} />
       </div>
 
       <div className="relative w-24">
@@ -109,17 +105,17 @@ const StoryKeepHeader = () => {
         </Listbox>
       </div>
 
-      <div className="bg-white text-myblue hover:underline font-action font-bold">Save</div>
-      <div className="bg-white text-myblue hover:underline font-action font-bold">Cancel</div>
+      <div className="flex items-center gap-4">
+        <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
+        <button className="bg-white text-myblue hover:underline font-action font-bold">
+          Cancel
+        </button>
+      </div>
 
-      <CogIcon
-        title="Advanced Settings"
-        className="w-6 h-6 rounded-xl bg-white text-myblue hover:bg-myblue hover:text-white"
-      />
-      <PresentationChartBarIcon
-        title="Toggle Interaction Analytics"
-        className="w-6 h-6 rounded-xl bg-white text-myblue hover:bg-myblue hover:text-white"
-      />
+      <div className="flex items-center gap-2">
+        <CogIcon title="Advanced Settings" className={iconClassName} />
+        <PresentationChartBarIcon title="Toggle Interaction Analytics" className={iconClassName} />
+      </div>
     </div>
   );
 };

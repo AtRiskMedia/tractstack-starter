@@ -22,7 +22,8 @@ const codeHookPayload =
 const beliefs = getPaneBeliefs(nodeId);
 const wrapperClasses = `grid ${getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
-const contentStyles = getNodeStringStyles(nodeId, viewportStore.get().value) + "; grid-area: 1/1/1/1";
+const contentStyles =
+  getNodeStringStyles(nodeId, viewportStore.get().value) + "; grid-area: 1/1/1/1";
 ---
 
 {

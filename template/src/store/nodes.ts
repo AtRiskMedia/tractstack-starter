@@ -328,12 +328,15 @@ export const getNodeClasses = (
 export const getNodeStringStyles = (nodeId: string, viewport: ViewportKey): string => {
   const node = allNodes.get().get(nodeId);
   return getStringNodeStyles(node, viewport);
-}
+};
 
-export const getNodeCSSPropertiesStyles = (nodeId: string, viewport: ViewportKey): CSSProperties => {
+export const getNodeCSSPropertiesStyles = (
+  nodeId: string,
+  viewport: ViewportKey
+): CSSProperties => {
   const node = allNodes.get().get(nodeId);
   return getReactNodeStyles(node, viewport);
-}
+};
 
 const getReactNodeStyles = (node: BaseNode | undefined, viewport: ViewportKey): CSSProperties => {
   if (!node) return {};

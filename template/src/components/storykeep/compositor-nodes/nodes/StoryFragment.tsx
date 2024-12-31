@@ -1,5 +1,10 @@
 import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { getChildNodeIDs, getNodeClasses, getNodeCSSPropertiesStyles, notifications } from "@/store/nodes.ts";
+import {
+  getChildNodeIDs,
+  getNodeClasses,
+  getNodeCSSPropertiesStyles,
+  notifications,
+} from "@/store/nodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 
