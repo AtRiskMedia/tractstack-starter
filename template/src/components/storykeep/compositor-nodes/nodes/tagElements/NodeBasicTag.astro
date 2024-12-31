@@ -4,10 +4,11 @@ import { viewportStore } from "../../../../../store/storykeep.ts";
 import Node from "../../../../storykeep/compositor-nodes/Node.astro";
 import { allNodes } from "../../../../../store/nodes";
 import type { FlatNode } from "../../../../../types";
+import EmptyNode from "./EmptyNode.astro";
 
 const { nodeId } = Astro.props;
 const node = allNodes.get().get(nodeId) as FlatNode;
-const Tag = node.tagName;
+const Tag = node.tagName || EmptyNode;
 ---
 
 <Tag class={getNodeClasses(nodeId, viewportStore.get().value)}>

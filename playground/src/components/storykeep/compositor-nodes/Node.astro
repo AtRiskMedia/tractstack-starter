@@ -98,9 +98,6 @@ function getElement(type: string) {
       return NodeImg;
     case "a":
       return NodeA;
-    case "code":
-      const hookData = parseCodeHook(node);
-      return hookData ? Widget : EmptyNode;
     case "Impression":
       return EmptyNode;
     default:
@@ -117,8 +114,8 @@ const hookData = type === "code" ? parseCodeHook(node) : null;
   type === "button" ? (
     <NodeButton nodeId={nodeId} client:visible />
   ) : type === "code" && hookData ? (
-    <RenderElement {...hookData} nodeId={nodeId} />
+    <Widget {...hookData} nodeId={nodeId} />
   ) : (
-    <RenderElement tagName={type} nodeId={nodeId} />
+    <RenderElement nodeId={nodeId} />
   )
 }
