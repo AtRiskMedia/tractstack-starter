@@ -98,6 +98,9 @@ function getElement(type: string) {
       return NodeImg;
     case "a":
       return NodeA;
+    case "code":
+      const hookData = parseCodeHook(node);
+      return hookData ? Widget : EmptyNode;
     case "Impression":
       return EmptyNode;
     default:
