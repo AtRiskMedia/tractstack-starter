@@ -105,7 +105,11 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       return <NodeImg nodeId={node.id} ctx={props.ctx} key={node.id} />;
     case "code": {
       const hookData = parseCodeHook(node);
-      return hookData ? <Widget {...hookData} ctx={props.ctx} nodeId={node.id} key={node.id} /> : <></>;
+      return hookData ? (
+        <Widget {...hookData} ctx={props.ctx} nodeId={node.id} key={node.id} />
+      ) : (
+        <></>
+      );
     }
     case "Impression":
       return <></>;

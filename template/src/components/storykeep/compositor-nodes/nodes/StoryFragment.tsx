@@ -4,7 +4,9 @@ import { viewportStore } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
 
 export const StoryFragment = (props: NodeProps) => {
-  const [children, setChildren] = useState<string[]>([...getCtx(props).getChildNodeIDs(props.nodeId)]);
+  const [children, setChildren] = useState<string[]>([
+    ...getCtx(props).getChildNodeIDs(props.nodeId),
+  ]);
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {

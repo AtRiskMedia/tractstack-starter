@@ -300,18 +300,27 @@ export class NodesContext {
             const styles = paneNode.defaultClasses![tagNameStr];
             // todo make a copy if this works
             if (styles && styles.mobile) {
-              const [all /*, mobile, tablet, desktop */] = processClassesForViewports(
+              const [all, mobile, tablet, desktop] = processClassesForViewports(
                 styles,
                 (node as FlatNode)?.overrideClasses || {},
                 1
               );
-              return all[0];
-              // switch (viewport) {
-              //   case "desktop": return desktop[0];
-              //   case "tablet": return tablet[0];
-              //   case "mobile": return mobile[0];
-              //   default: return mobile[0];
-              // }
+              //console.log(`all`,all)
+              //console.log(`mobile`,mobile)
+              //console.log(`tablet`,tablet)
+              //console.log(`desktop`,desktop)
+              //console.log(``)
+              //return all[0];
+              switch (viewport) {
+                case "desktop":
+                  return desktop[0];
+                case "tablet":
+                  return tablet[0];
+                case "mobile":
+                  return mobile[0];
+                default:
+                  return all[0];
+              }
             }
           }
         }
@@ -545,6 +554,6 @@ export class NodesContext {
 
 export const globalCtx: NodesContext = new NodesContext();
 
-export const getCtx = (props?: NodeProps|ReactNodesRendererProps|WidgetProps): NodesContext => {
+export const getCtx = (props?: NodeProps | ReactNodesRendererProps | WidgetProps): NodesContext => {
   return props?.ctx || globalCtx;
 };

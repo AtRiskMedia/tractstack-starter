@@ -12,7 +12,9 @@ export const Pane = (props: NodeProps) => {
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);
-  const [children, setChildren] = useState<string[]>([...getCtx(props).getChildNodeIDs(props.nodeId)]);
+  const [children, setChildren] = useState<string[]>([
+    ...getCtx(props).getChildNodeIDs(props.nodeId),
+  ]);
 
   const getPaneId = (): string => `pane-${props.nodeId}`;
 

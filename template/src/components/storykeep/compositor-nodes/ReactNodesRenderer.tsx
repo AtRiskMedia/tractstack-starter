@@ -6,7 +6,7 @@ import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
-  ctx?: NodesContext
+  ctx?: NodesContext;
   id: string;
   bgColor: string;
 };

@@ -66,29 +66,40 @@ export const processClassesForViewports = (
 ): [string[], string[], string[], string[]] => {
   const processForViewport = (viewport: ViewportKey): string[] => {
     const results: string[] = [];
+    const viewportOrder: ViewportKey[] = ["mobile", "tablet", "desktop"];
+    const viewportIndex = viewportOrder.indexOf(viewport);
 
     for (let i = 0; i < count; i++) {
-      const classesForViewport: string[] = [];
+      const accumulatedStyles: Record<string, string> = {};
 
-      for (const [viewportType, viewportVal] of Object.entries(deepMerge(override, classes))) {
-        if (viewportType !== viewport) continue;
+      // Accumulate styles up to current viewport
+      for (let j = 0; j <= viewportIndex; j++) {
+        const currentViewport: ViewportKey = viewportOrder[j];
+        const merged = deepMerge(override, classes) as {
+          [K in ViewportKey]: Record<string, string>;
+        };
+        const viewportStyles = merged[currentViewport];
 
-        for (const [selector, value] of Object.entries(viewportVal)) {
-          const overrideValue = getCtx().getStyleByViewport(override, viewport)[selector];
-
-          if (overrideValue) {
-            classesForViewport.push(reduceClassName(selector, overrideValue, -1));
-          } else {
-            classesForViewport.push(reduceClassName(selector, value, -1));
-          }
+        if (viewportStyles) {
+          Object.entries(viewportStyles).forEach(([selector, value]) => {
+            if (typeof value === "string") {
+              accumulatedStyles[selector] = value;
+            }
+          });
         }
       }
 
-      if (classesForViewport.length > 0) {
-        results.push(classesForViewport.join(" "));
-      } else {
-        results.push(" ");
+      const classesForViewport: string[] = [];
+      for (const [selector, value] of Object.entries(accumulatedStyles)) {
+        const overrideValue = getCtx().getStyleByViewport(override, viewport)[selector];
+        if (overrideValue) {
+          classesForViewport.push(reduceClassName(selector, overrideValue, -1));
+        } else {
+          classesForViewport.push(reduceClassName(selector, value, -1));
+        }
       }
+
+      results.push(classesForViewport.length > 0 ? classesForViewport.join(" ") : " ");
     }
     return results;
   };
@@ -115,6 +126,12 @@ export const processClassesForViewports = (
     });
     return Array.from(combinedClasses).join(" ");
   });
+  console.log(
+    all,
+    stripViewportPrefixes(mobile),
+    stripViewportPrefixes(tablet),
+    stripViewportPrefixes(desktop)
+  );
   return [
     all,
     stripViewportPrefixes(mobile),
