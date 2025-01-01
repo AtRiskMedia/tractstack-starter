@@ -1,9 +1,7 @@
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { Listbox } from "@headlessui/react";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
-import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
 import { viewportStore, viewportKeyStore, viewportSetStore } from "../../../store/storykeep";
