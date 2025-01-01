@@ -9,7 +9,9 @@ export const NodeA = (props: NodeProps) => {
   return (
     <a
       href={node.href}
-      className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
+      onclick="return false;"
+      aria-disabled="true"
+      className={`pointer-events-none ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`}
     >
       <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
     </a>

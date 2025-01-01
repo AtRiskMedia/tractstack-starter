@@ -8,8 +8,9 @@ export const NodeButton = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   return (
     <button
-      onClick={() => console.log(`no onClick logic wired up yet`, node)}
-      className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
+      onclick="return false;"
+      aria-disabled="true"
+      className={`pointer-events-none ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`}
     >
       <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
     </button>
