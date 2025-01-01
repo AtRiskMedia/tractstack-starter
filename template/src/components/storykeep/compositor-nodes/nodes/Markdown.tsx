@@ -1,4 +1,4 @@
-import { Node, type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
 import type { MarkdownPaneFragmentNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
@@ -29,9 +29,15 @@ export const Markdown = (props: NodeProps) => {
   }, []);
 
   console.log("draw markdown: " + props.nodeId);
-  let nodesToRender = (<RenderChildren children={children} nodeProps={props}/>);
+  let nodesToRender = <RenderChildren children={children} nodeProps={props} />;
   if ("parentCss" in node) {
     for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
+      console.log(
+        `parentClasses need some love`,
+        viewportStore.get().value,
+        i,
+        getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)
+      );
       nodesToRender = (
         <div className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}>
           {nodesToRender}

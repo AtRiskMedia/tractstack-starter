@@ -1,10 +1,8 @@
 import { tailwindClasses, tailwindCoreLayoutClasses } from "../tailwind/tailwindClasses";
 import type { TupleValue, ViewportKey } from "../../types";
-import { getCtx } from "@/store/nodes.ts";
-import { deepMerge } from "@/utils/common/helpers.ts";
 
-const tailwindModifier = [``, `md:`, `xl:`];
-const tailwindCoreModifier = [`xs:`, `md:`, `xl:`];
+const tailwindModifier = ["", "md:", "xl:"];
+const tailwindCoreModifier = ["xs:", "md:", "xl:"];
 
 const stripViewportPrefixes = (classes: string[]): string[] => {
   return classes.map((classStr) =>
@@ -13,6 +11,39 @@ const stripViewportPrefixes = (classes: string[]): string[] => {
       .map((cls) => cls.replace(/^(xs:|md:|xl:)/, ""))
       .join(" ")
   );
+};
+
+const mergeWithCascade = (
+  baseStyles: Partial<Record<ViewportKey, Record<string, string>>>,
+  overrideStyles: Partial<Record<ViewportKey, Record<string, string>>>,
+  viewport: ViewportKey
+): Record<string, string> => {
+  // Skip 'auto' viewport as it's handled elsewhere
+  if (viewport === 'auto') {
+    return {};
+  }
+
+  const viewportOrder: ViewportKey[] = ["mobile", "tablet", "desktop"];
+  const viewportIndex = viewportOrder.indexOf(viewport);
+  let result: Record<string, string> = {};
+
+  // First, cascade the base styles
+  for (let i = 0; i <= viewportIndex; i++) {
+    const currentViewport = viewportOrder[i];
+    if (baseStyles[currentViewport]) {
+      result = { ...result, ...baseStyles[currentViewport] };
+    }
+  }
+
+  // Then, cascade the override styles
+  for (let i = 0; i <= viewportIndex; i++) {
+    const currentViewport = viewportOrder[i];
+    if (overrideStyles[currentViewport]) {
+      result = { ...result, ...overrideStyles[currentViewport] };
+    }
+  }
+
+  return result;
 };
 
 const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number): string => {
@@ -26,7 +57,6 @@ const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number)
   const { className, prefix, useKeyAsClass } = getTailwindClassInfo(selector);
   const thisSelector = useKeyAsClass ? selector : className;
   const applyPrefix = (value: string) => {
-    // If the value already starts with the prefix, don't add it again
     return value.startsWith(prefix) ? value : `${prefix}${value}`;
   };
 
@@ -41,7 +71,6 @@ const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number)
     return `motion-safe:${modifier}${applyPrefix(`${thisSelector}-${v}`)}`;
   if (useKeyAsClass && typeof v === "string") return `${modifier}${applyPrefix(v)}`;
   if (typeof v === "string" || typeof v === "number") {
-    // Handle negative values
     if (typeof v === "string" && v.startsWith("-")) {
       return `${modifier}-${applyPrefix(`${thisSelector}${v}`)}`;
     }
@@ -50,88 +79,76 @@ const reduceClassName = (selector: string, v: TupleValue, viewportIndex: number)
 
   return "";
 };
+
 export const processClassesForViewports = (
   classes: {
     mobile: Record<string, string>;
     tablet: Record<string, string>;
     desktop: Record<string, string>;
   },
-  // | ClassNamesPayloadValue,
   override: {
-    mobile?: Record<string, string> | undefined;
-    tablet?: Record<string, string> | undefined;
-    desktop?: Record<string, string> | undefined;
+    mobile?: Record<string, string>;
+    tablet?: Record<string, string>;
+    desktop?: Record<string, string>;
   },
   count: number = 1
 ): [string[], string[], string[], string[]] => {
   const processForViewport = (viewport: ViewportKey): string[] => {
+    console.log(`must apply viewport to parentClasses to regen parentCss`)
     const results: string[] = [];
-    const viewportOrder: ViewportKey[] = ["mobile", "tablet", "desktop"];
-    const viewportIndex = viewportOrder.indexOf(viewport);
+    //const viewportOrder: ViewportKey[] = ["mobile", "tablet", "desktop"];
+    //const viewportIndex = viewportOrder.indexOf(viewport);
 
     for (let i = 0; i < count; i++) {
-      const accumulatedStyles: Record<string, string> = {};
-
-      // Accumulate styles up to current viewport
-      for (let j = 0; j <= viewportIndex; j++) {
-        const currentViewport: ViewportKey = viewportOrder[j];
-        const merged = deepMerge(override, classes) as {
-          [K in ViewportKey]: Record<string, string>;
-        };
-        const viewportStyles = merged[currentViewport];
-
-        if (viewportStyles) {
-          Object.entries(viewportStyles).forEach(([selector, value]) => {
-            if (typeof value === "string") {
-              accumulatedStyles[selector] = value;
-            }
-          });
-        }
-      }
+      // Get cascaded styles for this viewport
+      const cascadedStyles = mergeWithCascade(
+        classes,
+        override as Record<ViewportKey, Record<string, string>>,
+        viewport
+      );
 
       const classesForViewport: string[] = [];
-      for (const [selector, value] of Object.entries(accumulatedStyles)) {
-        const overrideValue = getCtx().getStyleByViewport(override, viewport)[selector];
-        if (overrideValue) {
-          classesForViewport.push(reduceClassName(selector, overrideValue, -1));
-        } else {
-          classesForViewport.push(reduceClassName(selector, value, -1));
-        }
+      for (const [selector, value] of Object.entries(cascadedStyles)) {
+        classesForViewport.push(reduceClassName(selector, value, -1));
       }
 
       results.push(classesForViewport.length > 0 ? classesForViewport.join(" ") : " ");
     }
     return results;
   };
+
   const mobile = processForViewport("mobile");
   const tablet = processForViewport("tablet");
   const desktop = processForViewport("desktop");
+
+  // Generate the 'all' classes with proper viewport prefixes
   const all = mobile.map((_, index) => {
     const mobileClasses = mobile[index].split(" ");
     const tabletClasses = tablet[index].split(" ");
     const desktopClasses = desktop[index].split(" ");
+
     const combinedClasses = new Set(mobileClasses);
+
     tabletClasses.forEach((cls) => {
-      if (cls.length > 0 && !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")))
-        combinedClasses.add(`md:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
-    });
-    desktopClasses.forEach((cls) => {
-      if (
-        cls.length > 0 &&
-        !mobileClasses.includes(cls.replace(/(xs:|md:|xl:)/g, "")) &&
-        !tabletClasses.includes(cls.replace(/(xs:|md:|xl:)/g, ""))
-      ) {
-        combinedClasses.add(`xl:${cls.replace(/(xs:|md:|xl:)/g, "")}`);
+      const baseClass = cls.replace(/(xs:|md:|xl:)/g, "");
+      if (cls.length > 0 && !mobileClasses.includes(baseClass)) {
+        combinedClasses.add(`md:${baseClass}`);
       }
     });
+
+    desktopClasses.forEach((cls) => {
+      const baseClass = cls.replace(/(xs:|md:|xl:)/g, "");
+      if (
+        cls.length > 0 &&
+        !mobileClasses.includes(baseClass) &&
+        !tabletClasses.includes(baseClass)
+      ) {
+        combinedClasses.add(`xl:${baseClass}`);
+      }
+    });
+
     return Array.from(combinedClasses).join(" ");
   });
-  console.log(
-    all,
-    stripViewportPrefixes(mobile),
-    stripViewportPrefixes(tablet),
-    stripViewportPrefixes(desktop)
-  );
   return [
     all,
     stripViewportPrefixes(mobile),

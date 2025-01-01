@@ -11,8 +11,7 @@ export const NodeA = (props: NodeProps) => {
       href={node.href}
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
     >
-      <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)}
-                      nodeProps={props}/>
+      <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
     </a>
   );
 };

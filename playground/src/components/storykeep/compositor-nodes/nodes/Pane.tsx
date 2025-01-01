@@ -50,7 +50,7 @@ export const Pane = (props: NodeProps) => {
           />
         )}
         <div className={contentClasses} style={contentStyles}>
-          <RenderChildren children={children} nodeProps={props}/>
+          <RenderChildren children={children} nodeProps={props} />
         </div>
       </div>
       <button

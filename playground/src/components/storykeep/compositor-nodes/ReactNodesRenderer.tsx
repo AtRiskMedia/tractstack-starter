@@ -2,8 +2,6 @@ import { getCtx, NodesContext, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
-import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export type ReactNodesRendererProps = {
@@ -30,11 +28,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
 
   return (
     <>
-      {children.length > 0 ? (
-        <RenderChildren children={children} nodeProps={props}/>
-      ) : (
-        <></>
-      )}
+      {children.length > 0 ? <RenderChildren children={children} nodeProps={props} /> : <></>}
       <>
         <div className="flex gap-x-2">
           <button

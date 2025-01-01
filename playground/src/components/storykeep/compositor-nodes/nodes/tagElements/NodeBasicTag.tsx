@@ -26,7 +26,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         getCtx(props).setClickedNodeId(nodeId);
       }}
     >
-      <RenderChildren children={children} nodeProps={props}/>
+      <RenderChildren children={children} nodeProps={props} />
     </Tag>
   );
 };

@@ -277,6 +277,7 @@ export class NodesContext {
         {
           const markdownFragment = node as MarkdownPaneFragmentNode;
           if ("parentCss" in markdownFragment) {
+            console.log(`must apply viewport to parentClasses to regen parentCss`)
             return (<string[]>markdownFragment.parentCss)[depth];
           }
         }
@@ -298,7 +299,6 @@ export class NodesContext {
           if (paneNode && "tagName" in node) {
             const tagNameStr = node.tagName as string;
             const styles = paneNode.defaultClasses![tagNameStr];
-            // todo make a copy if this works
             if (styles && styles.mobile) {
               const [all, mobile, tablet, desktop] = processClassesForViewports(
                 styles,
