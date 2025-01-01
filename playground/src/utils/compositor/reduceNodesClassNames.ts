@@ -19,7 +19,7 @@ const mergeWithCascade = (
   viewport: ViewportKey
 ): Record<string, string> => {
   // Skip 'auto' viewport as it's handled elsewhere
-  if (viewport === 'auto') {
+  if (viewport === "auto") {
     return {};
   }
 
@@ -94,7 +94,6 @@ export const processClassesForViewports = (
   count: number = 1
 ): [string[], string[], string[], string[]] => {
   const processForViewport = (viewport: ViewportKey): string[] => {
-    console.log(`must apply viewport to parentClasses to regen parentCss`)
     const results: string[] = [];
     //const viewportOrder: ViewportKey[] = ["mobile", "tablet", "desktop"];
     //const viewportIndex = viewportOrder.indexOf(viewport);

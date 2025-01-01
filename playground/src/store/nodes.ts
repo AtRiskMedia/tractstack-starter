@@ -276,8 +276,26 @@ export class NodesContext {
       case "Markdown":
         {
           const markdownFragment = node as MarkdownPaneFragmentNode;
+          if (markdownFragment.parentClasses) {
+            const [all, mobile, tablet, desktop] = processClassesForViewports(
+              markdownFragment.parentClasses[depth],
+              {}, // No override classes for Markdown parent case
+              1
+            );
+
+            switch (viewport) {
+              case "desktop":
+                return desktop[0];
+              case "tablet":
+                return tablet[0];
+              case "mobile":
+                return mobile[0];
+              default:
+                return all[0];
+            }
+          }
+          // Fallback to existing parentCss if needed
           if ("parentCss" in markdownFragment) {
-            console.log(`must apply viewport to parentClasses to regen parentCss`)
             return (<string[]>markdownFragment.parentCss)[depth];
           }
         }
