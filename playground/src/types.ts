@@ -652,6 +652,14 @@ export interface MarkdownLookupObj {
   [key: string | number]: { nth: number };
 }
 
+export type ToolModeVal =
+  | "default"
+  | "insert"
+  | "eraser"
+  | "pane"
+  | "settings"
+  | "layout"
+  | "markdown";
 export type ToolMode = "insert" | "text" | "styles" | "settings" | "pane" | "eraser";
 export type StoreKey =
   | "envSettings"

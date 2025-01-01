@@ -26,6 +26,9 @@ const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(slug);
 if (!storyfragmentNode) {
   return Astro.redirect("/404");
 }
+
+/* Responsive Layout Whitelist - Core responsive overrides for xs/md/xl breakpoints */
+// xs:flex-row xs:flex-col md:flex-row md:flex-col xl:flex-row xl:flex-col xs:hidden xs:block xs:flex xs:grid md:hidden md:block md:flex md:grid xl:hidden xl:block xl:flex xl:grid xs:grid-cols-1 xs:grid-cols-2 xs:grid-cols-3 xs:grid-cols-4 md:grid-cols-1 md:grid-cols-2 md:grid-cols-3 md:grid-cols-4 xl:grid-cols-1 xl:grid-cols-2 xl:grid-cols-3 xl:grid-cols-4 xs:text-left xs:text-center xs:text-right md:text-left md:text-center md:text-right xl:text-left xl:text-center xl:text-right
 ---
 
 <StoryKeep
@@ -38,17 +41,10 @@ if (!storyfragmentNode) {
   config={config}
   canonicalURL={canonicalURL}
 >
-  <!-- Header -->
   <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-50 drop-shadow">
     <StoryKeepHeader client:load />
   </header>
   <div id="headerSpacer"></div>
-
-  <!-- Unified Navigation -->
-  <!-- 
-  /* Responsive Layout Whitelist - Core responsive overrides for xs/md/xl breakpoints */
-  xs:flex-row xs:flex-col md:flex-row md:flex-col xl:flex-row xl:flex-col xs:hidden xs:block xs:flex xs:grid md:hidden md:block md:flex md:grid xl:hidden xl:block xl:flex xl:grid xs:grid-cols-1 xs:grid-cols-2 xs:grid-cols-3 xs:grid-cols-4 md:grid-cols-1 md:grid-cols-2 md:grid-cols-3 md:grid-cols-4 xl:grid-cols-1 xl:grid-cols-2 xl:grid-cols-3 xl:grid-cols-4 xs:text-left xs:text-center xs:text-right md:text-left md:text-center md:text-right xl:text-left xl:text-center xl:text-right
-  -->
 
   <nav
     id="mainNav"
@@ -68,26 +64,12 @@ if (!storyfragmentNode) {
   </nav>
   <div id="navSpacer" class="md:hidden"></div>
 
-  <!-- Main Layout Container -->
   <div class="flex min-h-screen">
-    <!-- Desktop nav spacer -->
     <div class="hidden md:block w-16 flex-shrink-0"></div>
 
-    <!-- Main Content Area -->
     <main class="flex-1 relative">
-      <!-- Tools Panel -->
-      <div
-        id="toolsPanel"
-        class="fixed left-0 md:ml-16 w-auto bg-mywhite rounded-r-lg mt-0.5 shadow-lg z-30"
-      >
-        <div class="bg-mygreen/10">
-          <div class="flex flex-wrap gap-x-2 gap-y-1 p-1 drop-shadow">
-            <StoryKeepToolBar client:load />
-          </div>
-        </div>
-      </div>
+      <StoryKeepToolBar client:load />
 
-      <!-- Actual Content -->
       <div
         class="bg-myblue/20 p-4"
         style={{
@@ -136,67 +118,45 @@ if (!storyfragmentNode) {
 
   <script>
     function updateLayout() {
-      // Get all required elements
       const header = document.getElementById("mainHeader");
       const headerSpacer = document.getElementById("headerSpacer");
       const nav = document.getElementById("mainNav");
       const navSpacer = document.getElementById("navSpacer");
       const toolsPanel = document.getElementById("toolsPanel");
-
-      // Update header-related elements
       if (header) {
         const headerHeight = header.offsetHeight;
         document.documentElement.style.setProperty("--header-height", `${headerHeight}px`);
-
         if (headerSpacer) {
           headerSpacer.style.height = `${headerHeight}px`;
         }
-
-        // Position nav below header
         if (nav) {
           nav.style.top = `${headerHeight}px`;
         }
       }
-
-      // Update nav spacer and tools panel position
       if (nav && window.innerWidth < 768) {
         const navHeight = nav.offsetHeight;
-
         if (navSpacer) {
           navSpacer.style.height = `${navHeight}px`;
         }
-
         if (toolsPanel) {
           const headerHeight = header?.offsetHeight || 0;
           toolsPanel.style.top = `${headerHeight + navHeight}px`;
         }
       } else {
-        // On desktop, tools panel sits below header
         if (toolsPanel && header) {
           toolsPanel.style.top = `${header.offsetHeight}px`;
         }
       }
     }
-
-    // Initial update
     updateLayout();
-
-    // Update on DOM content load
     window.addEventListener("DOMContentLoaded", updateLayout);
-
-    // Update on full page load
     window.addEventListener("load", updateLayout);
-
-    // Update on window resize
     window.addEventListener("resize", updateLayout);
-
-    // Watch for dynamic content changes
     const observer = new ResizeObserver(updateLayout);
     ["mainHeader", "mainNav", "toolsPanel"].forEach((id) => {
       const element = document.getElementById(id);
       if (element) {
         observer.observe(element);
-        // Observe all children for content changes
         element.querySelectorAll("*").forEach((child) => {
           observer.observe(child);
         });

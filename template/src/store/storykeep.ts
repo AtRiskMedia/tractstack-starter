@@ -18,6 +18,7 @@ import type {
   MarkdownLookup,
   StoreKey,
   ToolMode,
+  ToolModeVal,
   ToolAddMode,
   EditModeValue,
   StylesMemory,
@@ -86,6 +87,9 @@ export const viewportStore = map<{
   value: "auto",
 });
 export const viewportSetStore = atom<boolean>(false);
+export const toolModeValStore = map<{ value: ToolModeVal }>({
+  value: "default",
+});
 export const toolModeStore = map<{ value: ToolMode }>({
   value: "text",
 });
