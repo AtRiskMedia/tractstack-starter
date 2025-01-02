@@ -297,7 +297,7 @@ export const SaveProcessModal = ({
   @tailwind utilities;
       `, frontendHtmlContent);
 
-      console.log(frontendCss);
+      //console.log(frontendCss);
 
       const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
       const appCss = await tailwindCss.generateStylesFromContent(`
@@ -306,7 +306,19 @@ export const SaveProcessModal = ({
   @tailwind utilities;
       `, appHtmlContent);
 
-      console.log(appCss);
+      //console.log(appCss);
+
+      await fetch("/api/fs/writeAppWhitelist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          frontendCss: frontendCss,
+          appCss: appCss
+        })
+      });
+
       const result = await response.json();
       if (firstPage) console.log(`INIT now`);
       if (result.success)

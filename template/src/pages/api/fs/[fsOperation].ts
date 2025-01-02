@@ -149,6 +149,21 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "writeAppWhitelist": {
+        try {
+          const { frontendCss, appCss } = await request.json();
+          const stylesDir = path.join(process.cwd(), "public", "styles");
+
+          await fs.writeFile(path.join(stylesDir, "frontend.css"), frontendCss);
+          await fs.writeFile(path.join(stylesDir, "app.css"), appCss);
+        } catch (err) {
+          throw new Error(
+            `Failed to writeAppWhiteList: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+        }
+        break;
+      }
+
       case "saveImage": {
         const { path: imagePath, filename, data } = await request.json();
         const publicDir = path.join(process.cwd(), "public");
