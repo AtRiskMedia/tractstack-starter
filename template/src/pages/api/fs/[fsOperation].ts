@@ -5,7 +5,7 @@ import path from "path";
 import { getConfig } from "../../../utils/core/config";
 import { getUniqueTailwindClasses } from "../../../utils/db/utils";
 import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
-import { createRequire } from 'module';
+import { createRequire } from "module";
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
 const ENV_FILE = path.join(process.cwd(), ".env");
@@ -112,7 +112,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
       case "tailwindConfig": {
         try {
-          const tailwindConfigPath = path.join(process.cwd(), 'tailwind.config.cjs');
+          const tailwindConfigPath = path.join(process.cwd(), "tailwind.config.cjs");
 
           const require = createRequire(import.meta.url);
           const tailwindConfig = require(tailwindConfigPath);
@@ -126,14 +126,14 @@ export const POST: APIRoute = async ({ request, params }) => {
               data: themeJson,
             };
           } else {
-            throw new Error('Theme object not found in Tailwind config.');
+            throw new Error("Theme object not found in Tailwind config.");
           }
         } catch (error) {
-          console.error('Error reading Tailwind config:', error);
+          console.error("Error reading Tailwind config:", error);
 
           result = {
             success: false,
-            message: 'Failed to read Tailwind config',
+            message: "Failed to read Tailwind config",
           };
         }
         break;
