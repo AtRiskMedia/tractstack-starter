@@ -11,7 +11,7 @@ import type {
   ContextPaneQueries,
   TursoQuery,
 } from "../../../types";
-import { createTailwindcss, type TailwindConfig } from "@mhsdesign/jit-browser-tailwindcss";
+import { createTailwindcss } from "@mhsdesign/jit-browser-tailwindcss";
 
 type SaveStage =
   | "RECONCILING"
@@ -224,7 +224,10 @@ export const SaveProcessModal = ({
     runSaveProcess();
   }, [id, isContext]);
 
-  const generateTailwindWhitedlistStyles = async (newWhitelistItems: any[], existingClasses: any[]) => {
+  const generateTailwindWhitedlistStyles = async (
+    newWhitelistItems: any[],
+    existingClasses: any[]
+  ) => {
     try {
       // Fetch tailwind config
       const tailwindConfigResponse = await fetch("/api/fs/tailwindConfig", {
@@ -255,24 +258,30 @@ export const SaveProcessModal = ({
       const storykeepWhitelistArr = storykeepWhitelistJson?.data || [];
 
       // Create the whitelist
-      const fullWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr])];
+      const fullWhitelist = [
+        ...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr]),
+      ];
 
       // Generate Tailwind CSS styles
       const tailwindCss = createTailwindcss({ tailwindConfig });
       const frontendHtmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
-      const frontendCss = await tailwindCss.generateStylesFromContent(`
+      const frontendCss = await tailwindCss.generateStylesFromContent(
+        `
       @tailwind base;
-      @tailwind components;
       @tailwind utilities;
-    `, frontendHtmlContent);
+    `,
+        frontendHtmlContent
+      );
 
       // Generate app CSS styles
       const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
-      const appCss = await tailwindCss.generateStylesFromContent(`
+      const appCss = await tailwindCss.generateStylesFromContent(
+        `
       @tailwind base;
-      @tailwind components;
       @tailwind utilities;
-    `, appHtmlContent);
+    `,
+        appHtmlContent
+      );
 
       // Write to the API endpoint
       await fetch("/api/fs/writeAppWhitelist", {
@@ -285,12 +294,10 @@ export const SaveProcessModal = ({
           appCss: appCss,
         }),
       });
-
     } catch (error) {
       console.error("Error generating Tailwind styles:", error);
     }
   };
-
 
   const updateCustomStyles = async (payload: ReconciledData): Promise<boolean> => {
     try {
