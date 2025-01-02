@@ -7,9 +7,11 @@ import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationCh
 import { viewportStore, viewportKeyStore, viewportSetStore } from "../../../store/storykeep";
 import ViewportSelector from "../header/ViewportSelector";
 
+const offset = 64 + 16 + 16
 const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" => {
-  if (width >= 1368) return "desktop";
-  if (width >= 801) return "tablet";
+console.log(width, offset)
+  if (width >= 1368+offset) return "desktop";
+  if (width >= 801+offset) return "tablet";
   return "mobile";
 };
 

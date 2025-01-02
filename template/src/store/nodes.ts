@@ -60,6 +60,7 @@ export class NodesContext {
     }
     this.clickedNodeId.set(node.id);
     console.log("this.clickedNodeId: ", node.id);
+    console.log(node)
   }
 
   clearAll() {
