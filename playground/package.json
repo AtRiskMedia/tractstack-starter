@@ -23,6 +23,7 @@
     "@headlessui/react": "1.7.19",
     "@heroicons/react": "2.1.5",
     "@libsql/client": "0.7.0",
+    "@mhsdesign/jit-browser-tailwindcss": "^0.4.2",
     "@nanostores/persistent": "0.10.2",
     "@nanostores/react": "0.7.3",
     "@nivo/core": "0.87.0",

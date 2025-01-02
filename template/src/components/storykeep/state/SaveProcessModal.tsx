@@ -11,6 +11,7 @@ import type {
   ContextPaneQueries,
   TursoQuery,
 } from "../../../types";
+import { createTailwindcss, type TailwindConfig } from "@mhsdesign/jit-browser-tailwindcss";
 
 type SaveStage =
   | "RECONCILING"
@@ -262,6 +263,41 @@ export const SaveProcessModal = ({
         throw new Error(`Failed to update styles: ${response.statusText}`);
       }
 
+      const tailwindConfigResponse = await fetch("/api/fs/tailwindConfig", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!tailwindConfigResponse.ok) {
+        throw new Error(`Failed to fetch tailwind config: ${tailwindConfigResponse.statusText}`);
+      }
+
+      const storykeepWhitelist = await fetch("/api/fs/storykeepWhitelist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+      if (!storykeepWhitelist.ok) {
+        throw new Error(`Failed to fetch storykeep whitelist : ${storykeepWhitelist.statusText}`);
+      }
+
+      const tailwindConfigJson = await tailwindConfigResponse.json();
+      const tailwindConfig = { theme: JSON.parse(tailwindConfigJson?.data || {}) };
+      const storykeepWhitelistJson = await storykeepWhitelist.json();
+      const storykeepWhitelistArr = storykeepWhitelistJson?.data || [];
+
+      const fullWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr])];
+      const tailwindCss = createTailwindcss({ tailwindConfig });
+      const htmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
+      const frontendCss = await tailwindCss.generateStylesFromContent(`
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+      `, htmlContent);
+
+      console.log(frontendCss);
       const result = await response.json();
       if (firstPage) console.log(`INIT now`);
       if (result.success)

@@ -5,6 +5,7 @@ import path from "path";
 import { getConfig } from "../../../utils/core/config";
 import { getUniqueTailwindClasses } from "../../../utils/db/utils";
 import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
+import { createRequire } from 'module';
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
 const ENV_FILE = path.join(process.cwd(), ".env");
@@ -109,6 +110,35 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "tailwindConfig": {
+        try {
+          const tailwindConfigPath = path.join(process.cwd(), 'tailwind.config.cjs');
+
+          const require = createRequire(import.meta.url);
+          const tailwindConfig = require(tailwindConfigPath);
+          const theme = tailwindConfig.theme;
+
+          if (theme) {
+            // Extract the theme part and clean it up for JSON parsing
+            const themeJson = JSON.stringify(theme);
+            result = {
+              success: true,
+              data: themeJson,
+            };
+          } else {
+            throw new Error('Theme object not found in Tailwind config.');
+          }
+        } catch (error) {
+          console.error('Error reading Tailwind config:', error);
+
+          result = {
+            success: false,
+            message: 'Failed to read Tailwind config',
+          };
+        }
+        break;
+      }
+
       case "generateTailwind": {
         const whitelistedClasses = await getUniqueTailwindClasses("");
         await generateOptimizedCss(whitelistedClasses);
@@ -180,6 +210,15 @@ export const POST: APIRoute = async ({ request, params }) => {
             `Failed to save brand image: ${err instanceof Error ? err.message : "Unknown error"}`
           );
         }
+        break;
+      }
+
+      case "storykeepWhitelist": {
+        const fileContent = await readConfigFile("tailwindWhitelist.json");
+        result = {
+          success: true,
+          data: fileContent?.safelist || [],
+        };
         break;
       }
 
