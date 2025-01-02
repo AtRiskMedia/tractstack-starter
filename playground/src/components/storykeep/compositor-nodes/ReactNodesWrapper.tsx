@@ -1,19 +1,13 @@
 import { useStore } from "@nanostores/react";
-import { viewportStore } from "@/store/storykeep";
+import { viewportKeyStore } from "@/store/storykeep";
 import { ReactNodesRenderer, type ReactNodesRendererProps } from "./ReactNodesRenderer";
 
 export const ReactNodesWrapper = (props: ReactNodesRendererProps) => {
-  const $viewport = useStore(viewportStore);
+  const $viewportKey = useStore(viewportKeyStore);
   const viewportMaxWidth =
-    $viewport.value === `mobile`
-      ? 600
-      : $viewport.value === `tablet`
-        ? 1000
-        : $viewport.value === `desktop`
-          ? 1500
-          : 1920;
+    $viewportKey.value === `mobile` ? 600 : $viewportKey.value === `tablet` ? 1000 : 1500;
   const viewportMinWidth =
-    $viewport.value === `mobile` ? null : $viewport.value === `tablet` ? 801 : 1368;
+    $viewportKey.value === `mobile` ? null : $viewportKey.value === `tablet` ? 801 : 1368;
 
   return (
     <div
