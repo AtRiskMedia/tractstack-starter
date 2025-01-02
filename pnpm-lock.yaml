@@ -57,9 +57,6 @@ importers:
       '@astrojs/react':
         specifier: 3.6.2
         version: 3.6.2(@types/react-dom@18.3.1)(@types/react@18.3.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vite@5.4.10(@types/node@22.9.0)(lightningcss@1.28.1)(terser@5.36.0))
-      '@astrojs/tailwind':
-        specifier: 5.1.2
-        version: 5.1.2(astro@4.16.8(@types/node@22.9.0)(lightningcss@1.28.1)(rollup@4.25.0)(terser@5.36.0)(typescript@5.6.3))(tailwindcss@3.4.13)
       '@egjs/hammerjs':
         specifier: 2.0.17
         version: 2.0.17
@@ -99,9 +96,6 @@ importers:
       '@opuu/inview':
         specifier: 2.0.1
         version: 2.0.1
-      '@tailwindcss/forms':
-        specifier: 0.5.9
-        version: 0.5.9(tailwindcss@3.4.13)
       assemblyai:
         specifier: 4.7.1
         version: 4.7.1
@@ -250,9 +244,6 @@ importers:
       sharp:
         specifier: 0.33.5
         version: 0.33.5
-      tailwindcss:
-        specifier: 3.4.13
-        version: 3.4.13
       typescript:
         specifier: 5.6.3
         version: 5.6.3

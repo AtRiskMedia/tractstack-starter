@@ -28,7 +28,11 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
 
   return (
     <>
-      {renderTime > 0 ? <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} /> : <></>}
+      {renderTime > 0 ? (
+        <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
+      ) : (
+        <></>
+      )}
       <>
         <div className="flex gap-x-2">
           <button

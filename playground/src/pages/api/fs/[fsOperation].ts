@@ -3,8 +3,8 @@ import type { APIRoute } from "astro";
 import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "../../../utils/core/config";
-import { getUniqueTailwindClasses } from "../../../utils/db/utils";
-import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
+//import { getUniqueTailwindClasses } from "../../../utils/db/utils";
+//import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
 import { createRequire } from "module";
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
@@ -139,15 +139,15 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
-      case "generateTailwind": {
-        const whitelistedClasses = await getUniqueTailwindClasses("");
-        await generateOptimizedCss(whitelistedClasses);
-        result = {
-          success: true,
-          message: "CSS generated successfully",
-        };
-        break;
-      }
+      //case "generateTailwind": {
+      //  const whitelistedClasses = await getUniqueTailwindClasses("");
+      //  await generateOptimizedCss(whitelistedClasses);
+      //  result = {
+      //    success: true,
+      //    message: "CSS generated successfully",
+      //  };
+      //  break;
+      //}
 
       case "writeAppWhitelist": {
         try {
@@ -238,9 +238,10 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
 
       case "generateTailwindWhitelist": {
-        const { whitelist } = (await request.json()) as { whitelist?: string[] };
-        const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));
-        await generateOptimizedCss(whitelistedClasses);
+        console.log(`this step is triggering the old way`)
+        //const { whitelist } = (await request.json()) as { whitelist?: string[] };
+        //const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));
+        //await generateOptimizedCss(whitelistedClasses);
         result = {
           success: true,
           message: "CSS generated successfully",

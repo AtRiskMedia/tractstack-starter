@@ -225,8 +225,8 @@ export const SaveProcessModal = ({
   }, [id, isContext]);
 
   const generateTailwindWhitedlistStyles = async (
-    newWhitelistItems: any[],
-    existingClasses: any[]
+    newWhitelistItems: string[],
+    existingClasses: string[]
   ) => {
     try {
       // Fetch tailwind config
@@ -321,47 +321,47 @@ export const SaveProcessModal = ({
       }
       const result2 = await existing.json();
       const existingClasses = result2.data || [];
-      // Merge all classes without duplicates
-      const newWhitelist = [...new Set([...newWhitelistItems, ...existingClasses])];
 
-      const response = await fetch("/api/fs/generateTailwindWhitelist", {
+      // Merge all classes without duplicates
+      //const newWhitelist = [...new Set([...newWhitelistItems, ...existingClasses])];
+      //const response = await fetch("/api/fs/generateTailwindWhitelist", {
+      //  method: "POST",
+      //  headers: {
+      //    "Content-Type": "application/json",
+      //  },
+      //  body: JSON.stringify({
+      //    whitelist: newWhitelist,
+      //  }),
+      //});
+      //if (!response.ok) {
+      //  throw new Error(`Failed to update styles: ${response.statusText}`);
+      //}
+      //const result = await response.json();
+
+      await generateTailwindWhitedlistStyles(newWhitelistItems, existingClasses);
+
+      //if (firstPage) console.log(`INIT now`);
+      //if (result.success)
+      await fetch("/api/fs/update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          whitelist: newWhitelist,
+          file: "init",
+          updates: {
+            STYLES_VER: Date.now(),
+            ...(firstPage
+              ? {
+                  HOME_SLUG: `hello`,
+                  SITE_INIT: true,
+                }
+              : {}),
+          },
         }),
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update styles: ${response.statusText}`);
-      }
-
-      await generateTailwindWhitedlistStyles(newWhitelistItems, existingClasses);
-
-      const result = await response.json();
-      if (firstPage) console.log(`INIT now`);
-      if (result.success)
-        await fetch("/api/fs/update", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            file: "init",
-            updates: {
-              STYLES_VER: Date.now(),
-              ...(firstPage
-                ? {
-                    HOME_SLUG: `hello`,
-                    SITE_INIT: true,
-                  }
-                : {}),
-            },
-          }),
-        });
-      return result.success;
+      //return result.success;
+      return true
     } catch (err) {
       setStage("ERROR");
       setError(
