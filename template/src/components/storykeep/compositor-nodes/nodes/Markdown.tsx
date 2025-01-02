@@ -35,8 +35,8 @@ export const Markdown = (props: NodeProps) => {
       nodesToRender = (
         <div
           onClick={(e) => {
-            getCtx(props).setClickedNodeId(props.nodeId);
             getCtx(props).setClickedParentLayer(i);
+            getCtx(props).setClickedNodeId(props.nodeId);
             e.stopPropagation();
           }}
           className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}

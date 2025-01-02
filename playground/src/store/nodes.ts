@@ -1,4 +1,5 @@
 import { atom } from "nanostores";
+import { toolModeValStore } from "./storykeep.ts";
 import type {
   BaseNode,
   FlatNode,
@@ -25,7 +26,7 @@ import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx
 import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import { handleClickEvent } from "@/utils/nodes/handleClickEvent.ts";
+import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -47,18 +48,33 @@ export class NodesContext {
     return returnVal;
   }
 
-  setClickedParentLayer(layer: number) {
+  setClickedParentLayer(layer: number | null) {
     this.clickedParentLayer.set(layer);
-    console.log("this.clickedParentLayer: ", layer);
   }
 
   handleClickEvent() {
+    const toolModeVal = toolModeValStore.get().value;
     let node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
-    console.log(`handling event click on: `, node, this.clickedNodeId.get());
-    console.log(
-      `____MUST do check for special cases, e.g. Pane when Markdown, treat as parentLayer 0`
-    );
-    handleClickEvent(node);
+    let childNode = null;
+    if (!node) return;
+    console.log(`handling event click on: `, this.clickedNodeId.get());
+
+    // check for special case
+    if (node.nodeType === `Pane`) {
+      const children = this.getChildNodeIDs(node.id);
+      if (children.length) childNode = this.allNodes.get().get(children[0]) as FlatNode;
+    }
+
+    // click handler based on toolModeVal
+    switch (toolModeVal) {
+      case `default`:
+        handleClickEventDefault(childNode || node, childNode ? 1 : this.clickedParentLayer.get());
+        break;
+      default:
+        console.log(`this mode isn't wired up yet`, toolModeVal);
+    }
+    // reset on parentLayer
+    this.setClickedParentLayer(null);
   }
 
   setClickedNodeId(nodeId: string) {
@@ -77,7 +93,7 @@ export class NodesContext {
     }
     this.clickedNodeId.set(node.id);
     console.log("this.clickedNodeId: ", node.id);
-    console.log(node);
+    //console.log(node);
     this.handleClickEvent();
   }
 
