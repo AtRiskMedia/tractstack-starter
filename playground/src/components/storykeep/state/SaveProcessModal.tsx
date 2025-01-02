@@ -224,6 +224,74 @@ export const SaveProcessModal = ({
     runSaveProcess();
   }, [id, isContext]);
 
+  const generateTailwindWhitedlistStyles = async (newWhitelistItems: any[], existingClasses: any[]) => {
+    try {
+      // Fetch tailwind config
+      const tailwindConfigResponse = await fetch("/api/fs/tailwindConfig", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!tailwindConfigResponse.ok) {
+        throw new Error(`Failed to fetch tailwind config: ${tailwindConfigResponse.statusText}`);
+      }
+
+      // Fetch storykeep whitelist
+      const storykeepWhitelist = await fetch("/api/fs/storykeepWhitelist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!storykeepWhitelist.ok) {
+        throw new Error(`Failed to fetch storykeep whitelist: ${storykeepWhitelist.statusText}`);
+      }
+
+      // Parse the tailwind config and storykeep whitelist JSON data
+      const tailwindConfigJson = await tailwindConfigResponse.json();
+      const tailwindConfig = { theme: JSON.parse(tailwindConfigJson?.data || "{}") };
+      const storykeepWhitelistJson = await storykeepWhitelist.json();
+      const storykeepWhitelistArr = storykeepWhitelistJson?.data || [];
+
+      // Create the whitelist
+      const fullWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr])];
+
+      // Generate Tailwind CSS styles
+      const tailwindCss = createTailwindcss({ tailwindConfig });
+      const frontendHtmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
+      const frontendCss = await tailwindCss.generateStylesFromContent(`
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+    `, frontendHtmlContent);
+
+      // Generate app CSS styles
+      const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
+      const appCss = await tailwindCss.generateStylesFromContent(`
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+    `, appHtmlContent);
+
+      // Write to the API endpoint
+      await fetch("/api/fs/writeAppWhitelist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          frontendCss: frontendCss,
+          appCss: appCss,
+        }),
+      });
+
+    } catch (error) {
+      console.error("Error generating Tailwind styles:", error);
+    }
+  };
+
+
   const updateCustomStyles = async (payload: ReconciledData): Promise<boolean> => {
     try {
       const panes =
@@ -263,61 +331,7 @@ export const SaveProcessModal = ({
         throw new Error(`Failed to update styles: ${response.statusText}`);
       }
 
-      const tailwindConfigResponse = await fetch("/api/fs/tailwindConfig", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!tailwindConfigResponse.ok) {
-        throw new Error(`Failed to fetch tailwind config: ${tailwindConfigResponse.statusText}`);
-      }
-
-      const storykeepWhitelist = await fetch("/api/fs/storykeepWhitelist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        }
-      })
-      if (!storykeepWhitelist.ok) {
-        throw new Error(`Failed to fetch storykeep whitelist : ${storykeepWhitelist.statusText}`);
-      }
-
-      const tailwindConfigJson = await tailwindConfigResponse.json();
-      const tailwindConfig = { theme: JSON.parse(tailwindConfigJson?.data || {}) };
-      const storykeepWhitelistJson = await storykeepWhitelist.json();
-      const storykeepWhitelistArr = storykeepWhitelistJson?.data || [];
-
-      const fullWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr])];
-      const tailwindCss = createTailwindcss({ tailwindConfig });
-      const frontendHtmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
-      const frontendCss = await tailwindCss.generateStylesFromContent(`
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-      `, frontendHtmlContent);
-
-      //console.log(frontendCss);
-
-      const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
-      const appCss = await tailwindCss.generateStylesFromContent(`
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-      `, appHtmlContent);
-
-      //console.log(appCss);
-
-      await fetch("/api/fs/writeAppWhitelist", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          frontendCss: frontendCss,
-          appCss: appCss
-        })
-      });
+      await generateTailwindWhitedlistStyles(newWhitelistItems, existingClasses);
 
       const result = await response.json();
       if (firstPage) console.log(`INIT now`);
