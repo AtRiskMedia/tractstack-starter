@@ -9,7 +9,6 @@ import ViewportSelector from "../header/ViewportSelector";
 
 const offset = 64 + 16 + 16;
 const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" => {
-  console.log(width, offset);
   if (width >= 1368 + offset) return "desktop";
   if (width >= 801 + offset) return "tablet";
   return "mobile";
