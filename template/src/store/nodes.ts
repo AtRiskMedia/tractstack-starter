@@ -24,6 +24,7 @@ import { NotificationSystem } from "@/store/notificationSystem.ts";
 import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -430,7 +431,7 @@ export class NodesContext {
     if (notifyNodeId === this.rootNodeId.get()) {
       notifyNodeId = ROOT_NODE_NAME;
     }
-    this.notifications.notify(notifyNodeId, payload);
+    setTimeout(() => this.notifications.notify(notifyNodeId, payload), 1);
   }
 
   addTemplatePane(
@@ -448,12 +449,12 @@ export class NodesContext {
     ) {
       return;
     }
-    const duplicatedPane = { ...pane } as TemplatePane;
+    const duplicatedPane = cloneDeep(pane) as TemplatePane;
     const duplicatedPaneId = ulid();
     duplicatedPane.id = duplicatedPaneId;
     duplicatedPane.parentId = ownerNode.id;
 
-    duplicatedPane.markdown = { ...pane.markdown } as TemplateMarkdown;
+    duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
     duplicatedPane.markdown.id = ulid();
     duplicatedPane.markdown.parentId = duplicatedPaneId;
     const markdownNodes: TemplateNode[] = [];
@@ -488,9 +489,7 @@ export class NodesContext {
       return;
     }
 
-    const duplicatedNodes = { ...node } as TemplateNode;
-    duplicatedNodes.id = ulid();
-    duplicatedNodes.parentId = markdownNode.id;
+    const duplicatedNodes = cloneDeep(node) as TemplateNode;
     const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, markdownNode.id);
     // register flattened nodes to all nodes and set up relationship with its parent
     this.addNodes(flattenedNodes);
