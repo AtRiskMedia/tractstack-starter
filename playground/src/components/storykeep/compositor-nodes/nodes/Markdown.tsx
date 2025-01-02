@@ -41,7 +41,14 @@ export const Markdown = (props: NodeProps) => {
   }
   return (
     <>
-      {nodesToRender}
+      <div
+        onClick={(e) => {
+          getCtx(props).setClickedNodeId(id);
+          e.stopPropagation();
+        }}
+      >
+        {nodesToRender}
+      </div>
       <div className="flex gap-x-2">
         <button
           className="bg-yellow-500 rounded-md p-2"
