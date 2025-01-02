@@ -290,14 +290,23 @@ export const SaveProcessModal = ({
 
       const fullWhitelist = [...new Set([...newWhitelistItems, ...existingClasses, ...storykeepWhitelistArr])];
       const tailwindCss = createTailwindcss({ tailwindConfig });
-      const htmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
+      const frontendHtmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
       const frontendCss = await tailwindCss.generateStylesFromContent(`
   @tailwind base;
   @tailwind components;
   @tailwind utilities;
-      `, htmlContent);
+      `, frontendHtmlContent);
 
       console.log(frontendCss);
+
+      const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
+      const appCss = await tailwindCss.generateStylesFromContent(`
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+      `, appHtmlContent);
+
+      console.log(appCss);
       const result = await response.json();
       if (firstPage) console.log(`INIT now`);
       if (result.success)
