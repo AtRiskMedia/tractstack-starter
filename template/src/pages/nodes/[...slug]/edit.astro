@@ -6,6 +6,7 @@ import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
 import StoryKeepHeader from "../../../components/storykeep/controls/StoryKeepHeader";
 import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepToolBar";
 import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
+import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 
 const config = await getConfig();
@@ -89,26 +90,7 @@ if (!storyfragmentNode) {
     </main>
   </div>
 
-  <!-- Edit Panel -->
-  <!-- 
-  <div class="z-20 fixed bottom-0 right-0 bg-white shadow-lg w-full md:w-[500px]">
-    <div class="overflow-y-auto" style="max-height: 50vh;">
-      <div class="p-6">
-        <h2 class="text-xl font-bold mb-4">Edit Panel</h2>
-        <div class="space-y-4">
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-          <div class="h-16 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  -->
+  <SettingsPanel />
 
   <style is:global>
     :root {

@@ -29,7 +29,12 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   return (
     <>
       {renderTime > 0 ? (
-        <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
+        <>
+          <div className="bg-cyan-500">
+            story fragment or context page settings conditionally rendered here
+          </div>
+          <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
+        </>
       ) : (
         <></>
       )}

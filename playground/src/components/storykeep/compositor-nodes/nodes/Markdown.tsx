@@ -33,7 +33,14 @@ export const Markdown = (props: NodeProps) => {
   if ("parentCss" in node) {
     for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
       nodesToRender = (
-        <div className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}>
+        <div
+          onClick={(e) => {
+            getCtx(props).setClickedNodeId(props.nodeId);
+            getCtx(props).setClickedParentLayer(i);
+            e.stopPropagation();
+          }}
+          className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}
+        >
           {nodesToRender}
         </div>
       );
@@ -41,14 +48,7 @@ export const Markdown = (props: NodeProps) => {
   }
   return (
     <>
-      <div
-        onClick={(e) => {
-          getCtx(props).setClickedNodeId(id);
-          e.stopPropagation();
-        }}
-      >
-        {nodesToRender}
-      </div>
+      {nodesToRender}
       <div className="flex gap-x-2">
         <button
           className="bg-yellow-500 rounded-md p-2"

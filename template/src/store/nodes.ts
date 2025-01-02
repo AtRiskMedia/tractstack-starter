@@ -25,6 +25,7 @@ import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx
 import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { handleClickEvent } from "@/utils/nodes/handleClickEvent.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -39,10 +40,25 @@ export class NodesContext {
   parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
+  clickedParentLayer = atom<number | null>(null);
 
   getChildNodeIDs(parentNodeId: string): string[] {
     const returnVal = this.parentNodes.get()?.get(parentNodeId) || [];
     return returnVal;
+  }
+
+  setClickedParentLayer(layer: number) {
+    this.clickedParentLayer.set(layer);
+    console.log("this.clickedParentLayer: ", layer);
+  }
+
+  handleClickEvent() {
+    let node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
+    console.log(`handling event click on: `, node, this.clickedNodeId.get());
+    console.log(
+      `____MUST do check for special cases, e.g. Pane when Markdown, treat as parentLayer 0`
+    );
+    handleClickEvent(node);
   }
 
   setClickedNodeId(nodeId: string) {
@@ -62,6 +78,7 @@ export class NodesContext {
     this.clickedNodeId.set(node.id);
     console.log("this.clickedNodeId: ", node.id);
     console.log(node);
+    this.handleClickEvent();
   }
 
   clearAll() {

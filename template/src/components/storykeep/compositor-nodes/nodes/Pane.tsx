@@ -29,7 +29,13 @@ export const Pane = (props: NodeProps) => {
 
   if (codeHookPayload) {
     return (
-      <div id={getPaneId()}>
+      <div
+        onClick={(e) => {
+          getCtx(props).setClickedNodeId(props.nodeId);
+          e.stopPropagation();
+        }}
+        id={getPaneId()}
+      >
         <em>Code Hook:</em>
         {JSON.stringify(codeHookPayload, null, 2)}
       </div>
@@ -49,7 +55,15 @@ export const Pane = (props: NodeProps) => {
             withheldBeliefsFilter={beliefs.withheldBeliefs}
           />
         )}
-        <div className={contentClasses} style={contentStyles}>
+        <div
+          className={contentClasses}
+          style={contentStyles}
+          onClick={(e) => {
+            getCtx(props).setClickedNodeId(props.nodeId);
+            e.stopPropagation();
+          }}
+        >
+          <div className="bg-red-500">pane wrapper conditionally rendered here</div>
           <RenderChildren children={children} nodeProps={props} />
         </div>
       </div>

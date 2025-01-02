@@ -361,7 +361,7 @@ export const SaveProcessModal = ({
         }),
       });
       //return result.success;
-      return true
+      return true;
     } catch (err) {
       setStage("ERROR");
       setError(
