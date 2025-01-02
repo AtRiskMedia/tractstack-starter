@@ -12,6 +12,10 @@ export const NodeImg = (props: NodeProps) => {
       {...(node.srcSet ? { srcSet: node.srcSet } : {})}
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
       alt={node.alt}
+      onClick={(e) => {
+        getCtx(props).setClickedNodeId(props.nodeId);
+        e.stopPropagation();
+      }}
     />
   );
 };

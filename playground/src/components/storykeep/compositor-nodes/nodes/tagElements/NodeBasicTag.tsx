@@ -22,8 +22,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   return (
     <Tag
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      onClick={() => {
+      onClick={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
+        e.stopPropagation();
       }}
     >
       <RenderChildren children={children} nodeProps={props} />
