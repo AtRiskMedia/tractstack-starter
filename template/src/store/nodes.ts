@@ -431,7 +431,7 @@ export class NodesContext {
     if (notifyNodeId === this.rootNodeId.get()) {
       notifyNodeId = ROOT_NODE_NAME;
     }
-    setTimeout(() => this.notifications.notify(notifyNodeId, payload), 1);
+    this.notifications.notify(notifyNodeId, payload);
   }
 
   addTemplatePane(
@@ -532,14 +532,14 @@ export class NodesContext {
     this.deleteNodesRecursively(node);
     // if this was a pane node then we need to update storyfragment as it tracks panes
     if (parentId !== null) {
-      this.notifyNode(parentId);
-
       if (node.nodeType === "Pane") {
         const storyFragment = this.allNodes.get().get(parentId) as StoryFragmentNode;
         if (storyFragment) {
           storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
         }
       }
+
+      this.notifyNode(parentId);
     } else {
       // we deleted the node without a parent, send a notification to the root and let storykeep handle it
       // it might be safe to refresh the whole page

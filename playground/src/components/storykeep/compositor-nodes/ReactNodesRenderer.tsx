@@ -2,7 +2,8 @@ import { getCtx, NodesContext, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
-import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
@@ -12,23 +13,22 @@ export type ReactNodesRendererProps = {
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
-  const [children, setChildren] = useState<string[]>([]);
+  const [renderTime, setRenderTime] = useState<number>(0);
 
   useEffect(() => {
     getCtx(props).buildNodesTreeFromFragmentNodes(props.nodes);
-    const rootId = props.id || getCtx(props).rootNodeId.get();
-    setChildren(getCtx(props).getChildNodeIDs(rootId));
+    setRenderTime(Date.now());
 
     const unsubscribe = getCtx(props).notifications.subscribe(ROOT_NODE_NAME, () => {
       console.log("notification received data update for root node");
-      setChildren([...getCtx(props).getChildNodeIDs(rootId)]);
+      setRenderTime(Date.now());
     });
     return unsubscribe;
   }, []);
 
   return (
     <>
-      {children.length > 0 ? <RenderChildren children={children} nodeProps={props} /> : <></>}
+      {renderTime > 0 ? <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} /> : <></>}
       <>
         <div className="flex gap-x-2">
           <button
