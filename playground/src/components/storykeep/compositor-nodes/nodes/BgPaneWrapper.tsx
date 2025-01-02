@@ -8,5 +8,14 @@ export const BgPaneWrapper = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as VisualBreakNode;
   const viewport = viewportStore.get().value;
 
-  return <BgPane payload={node} viewportKey={viewport} />;
+  return (
+    <div
+      onClick={(e) => {
+        getCtx(props).setClickedNodeId(props.nodeId);
+        e.stopPropagation();
+      }}
+    >
+      <BgPane payload={node} viewportKey={viewport} />
+    </div>
+  );
 };
