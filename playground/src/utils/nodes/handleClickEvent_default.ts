@@ -18,7 +18,7 @@ export function handleClickEventDefault(
     case "BgPane": {
       // Use type assertion after checking properties exist
       if (isVisualBreakNode(node)) {
-        settingsPanelStore.set({ action: `style-break`, node });
+        settingsPanelStore.set({ action: `style-break`, node, parentNode });
       } else {
         console.log(`unhandled BgPane type`);
       }

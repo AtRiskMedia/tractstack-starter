@@ -23,12 +23,12 @@ const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
 };
 
 // Individual panel components
-const StyleBreakPanel = ({ node }: BasePanelProps) => {
+const StyleBreakPanel = ({ node, parentNode }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Visual Break Settings</h2>
       <div className="p-4 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify(node, null, 2)}</pre>
+        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
     </div>
   );
