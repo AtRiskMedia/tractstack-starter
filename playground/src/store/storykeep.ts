@@ -29,6 +29,7 @@ import type {
   CreationState,
   Theme,
   DesignType,
+  SettingsPanelSignal,
 } from "../types";
 import { PUBLIC_THEME, toolAddModes } from "../constants";
 import type { ControlPosition } from "react-draggable";
@@ -98,6 +99,7 @@ export const toolAddModeStore = map<{ value: ToolAddMode }>({
 });
 
 export const editModeStore = atom<EditModeValue | null>(null);
+export const settingsPanelStore = atom<SettingsPanelSignal | null>(null);
 
 // ==========================
 // Drag n Drop

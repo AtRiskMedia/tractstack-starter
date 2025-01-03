@@ -1,3 +1,4 @@
+import { useEffect } from "react"; // Add this import
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
@@ -6,7 +7,7 @@ import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
-import { toolModeValStore } from "../../../store/storykeep";
+import { toolModeValStore, settingsPanelStore } from "../../../store/storykeep";
 import type { ToolModeVal } from "../../../types";
 
 export const toolModes = [
@@ -55,7 +56,22 @@ const StoryKeepToolMode = () => {
 
   const handleClick = (mode: ToolModeVal) => {
     toolModeValStore.set({ value: mode });
+    settingsPanelStore.set(null);
   };
+
+  // Add escape key listener
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        toolModeValStore.set({ value: "default" });
+        settingsPanelStore.set(null);
+      }
+    };
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, []);
 
   return (
     <>

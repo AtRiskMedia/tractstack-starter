@@ -1,11 +1,13 @@
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { useStore } from "@nanostores/react";
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import Filter from "@/components/frontend/state/Filter.tsx";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const Pane = (props: NodeProps) => {
+  const $showAnalytics = useStore(showAnalytics);
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
@@ -65,6 +67,9 @@ export const Pane = (props: NodeProps) => {
         >
           <div className="bg-red-500">pane wrapper conditionally rendered here</div>
           <RenderChildren children={children} nodeProps={props} />
+          {$showAnalytics ? (
+            <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
+          ) : null}
         </div>
       </div>
       <button

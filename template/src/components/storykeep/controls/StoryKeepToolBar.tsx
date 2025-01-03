@@ -1,5 +1,5 @@
 import {
-  editModeStore,
+  settingsPanelStore,
   toolModeStore,
   toolAddModeStore,
   toolModeValStore,
@@ -11,7 +11,7 @@ import type { ToolMode, ToolAddMode } from "../../../types";
 const StoryKeepToolBar = () => {
   const { value: toolModeVal } = useStore(toolModeValStore);
   const setToolMode = (newToolMode: ToolMode) => {
-    editModeStore.set(null);
+    settingsPanelStore.set(null);
     toolModeStore.set({ value: newToolMode });
   };
   const setToolAddMode = (newToolAddMode: ToolAddMode) => {

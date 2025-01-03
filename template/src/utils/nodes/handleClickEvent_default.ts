@@ -1,63 +1,72 @@
-import type { BaseNode, PaneFragmentNode, FlatNode } from "@/types.ts";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { PaneFragmentNode, FlatNode } from "@/types.ts";
+import { settingsPanelStore } from "../../store/storykeep";
 
-export function handleClickEventDefault(node: BaseNode, parentLayer: number | null) {
-  console.log(`event on:`, node);
+// Type guard to check if a node is a visual break
+function isVisualBreakNode(node: any): node is PaneFragmentNode {
+  return node.nodeType === "BgPane" && "type" in node && node.type === "visual-break";
+}
 
-  if (!node.nodeType) return;
+export function handleClickEventDefault(
+  node: FlatNode,
+  parentNode?: FlatNode,
+  parentLayer?: number | null
+) {
+  if (!node?.nodeType) return;
 
   switch (node.nodeType) {
     case "BgPane": {
-      const bgPaneNode = node as PaneFragmentNode;
-      if (!("type" in bgPaneNode)) return;
-
-      switch (bgPaneNode.type) {
-        case "visual-break":
-          console.log(`visual-break`);
-          break;
-        default:
-          console.log(`also missed on: ${bgPaneNode.type}`);
+      // Use type assertion after checking properties exist
+      if (isVisualBreakNode(node)) {
+        settingsPanelStore.set({ action: `style-break`, node, parentNode });
+      } else {
+        console.log(`unhandled BgPane type`);
       }
       break;
     }
 
     case "Pane":
-      console.log(
-        node.nodeType,
-        ` ** before calling this fn we need to reverse traverse to confirm if Markdown; if Markdown pass that node instead along with parentLayer; else pass the Pane, e.g. could be code hook`
-      );
+      settingsPanelStore.set({
+        action: `setup-codehook`,
+        node: node,
+      });
       break;
 
     case "Markdown":
-      console.log(`parent layer: `, parentLayer);
+      settingsPanelStore.set({
+        action: `style-parent`,
+        node: node,
+        parentNode,
+        ...(parentLayer ? { layer: parentLayer } : {}),
+      });
       break;
 
     case "TagElement": {
-      const tagNode = node as FlatNode;
-      if (!("tagName" in tagNode)) return;
+      if (!("tagName" in node)) return;
 
-      switch (tagNode.tagName) {
+      switch (node.tagName) {
         case "code":
-          console.log(`special: widget`);
+          settingsPanelStore.set({ action: `style-widget`, node, parentNode });
           break;
         case "p":
         case "h2":
         case "h3":
         case "h4":
         case "h5":
-          console.log(`standard element ${tagNode.tagName}`);
+          settingsPanelStore.set({ action: `style-element`, node, parentNode });
           break;
         case "img":
-          console.log(`special element ${tagNode.tagName}`);
+          settingsPanelStore.set({ action: `style-image`, node, parentNode });
           break;
         case "li":
-          console.log(`special element ${tagNode.tagName}`);
+          settingsPanelStore.set({ action: `style-element`, node, parentNode });
           break;
         case "a":
         case "button":
-          console.log(`action link`);
+          settingsPanelStore.set({ action: `style-link`, node, parentNode });
           break;
         default:
-          console.log(`also missed on: ${tagNode.tagName}`);
+          console.log(`also missed on: ${node.tagName}`);
       }
       break;
     }
@@ -65,7 +74,4 @@ export function handleClickEventDefault(node: BaseNode, parentLayer: number | nu
     default:
       console.log(`missed on: ${node.nodeType}`, node);
   }
-
-  console.log(``);
-  console.log(``);
 }
