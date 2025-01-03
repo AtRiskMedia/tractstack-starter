@@ -25,6 +25,13 @@ export function handleClickEventDefault(
       break;
     }
 
+    case "Pane":
+      settingsPanelStore.set({
+        action: `setup-codehook`,
+        node: node,
+      });
+      break;
+
     case "Markdown":
       settingsPanelStore.set({
         action: `style-parent`,
