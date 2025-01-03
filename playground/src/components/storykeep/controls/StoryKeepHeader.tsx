@@ -1,3 +1,4 @@
+// Update to StoryKeepHeader.tsx
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
@@ -6,6 +7,7 @@ import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
 import {
   showAnalytics,
+  showSettings,
   viewportStore,
   viewportKeyStore,
   viewportSetStore,
@@ -24,6 +26,7 @@ const StoryKeepHeader = () => {
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
   const $showAnalytics = useStore(showAnalytics);
+  const $showSettings = useStore(showSettings);
 
   useEffect(() => {
     const updateViewportKey = () => {
@@ -75,7 +78,9 @@ const StoryKeepHeader = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <CogIcon title="Advanced Settings" className={iconClassName} />
+        <button onClick={() => showSettings.set(!$showSettings)} title="Advanced Settings">
+          <CogIcon className={`${$showSettings ? iconActiveClassName : iconClassName}`} />
+        </button>
         <button
           onClick={() => showAnalytics.set(!$showAnalytics)}
           title="Toggle Interaction Analytics"
