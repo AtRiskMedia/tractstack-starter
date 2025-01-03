@@ -8,6 +8,7 @@ import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepTo
 import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
 import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
+import { NodesSerializer_Json } from "../../../store/nodesSerializer_Json";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -27,6 +28,10 @@ const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(slug);
 if (!storyfragmentNode) {
   return Astro.redirect("/404");
 }
+
+getCtx().rootNodeId.set(storyfragmentNode.id);
+const s = new NodesSerializer_Json();
+s.save(getCtx());
 
 /* Responsive Layout Whitelist - Core responsive overrides for xs/md/xl breakpoints */
 // xs:flex-row xs:flex-col md:flex-row md:flex-col xl:flex-row xl:flex-col xs:hidden xs:block xs:flex xs:grid md:hidden md:block md:flex md:grid xl:hidden xl:block xl:flex xl:grid xs:grid-cols-1 xs:grid-cols-2 xs:grid-cols-3 xs:grid-cols-4 md:grid-cols-1 md:grid-cols-2 md:grid-cols-3 md:grid-cols-4 xl:grid-cols-1 xl:grid-cols-2 xl:grid-cols-3 xl:grid-cols-4 xs:text-left xs:text-center xs:text-right md:text-left md:text-center md:text-right xl:text-left xl:text-center xl:text-right
