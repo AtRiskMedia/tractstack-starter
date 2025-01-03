@@ -44,7 +44,7 @@ const StoryKeepHeader = () => {
   };
 
   const iconClassName =
-    "w-6 h-6 text-myblue hover:text-white hover:bg-myblue/50 rounded-xl bg-white";
+    "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
 
   return (
     <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
