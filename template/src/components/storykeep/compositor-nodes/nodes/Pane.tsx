@@ -65,6 +65,7 @@ export const Pane = (props: NodeProps) => {
         >
           <div className="bg-red-500">pane wrapper conditionally rendered here</div>
           <RenderChildren children={children} nodeProps={props} />
+          <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
         </div>
       </div>
       <button

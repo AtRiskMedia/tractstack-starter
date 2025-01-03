@@ -935,6 +935,11 @@ export type EditModeValue = {
   payload?: any;
 };
 
+export type SettingsPanelSignal = {
+  node: FlatNode;
+  mode: string;
+};
+
 export interface EventNode {
   type: string;
   slug?: string;

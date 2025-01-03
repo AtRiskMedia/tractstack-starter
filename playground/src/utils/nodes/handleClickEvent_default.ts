@@ -1,41 +1,37 @@
-import type { BaseNode, PaneFragmentNode, FlatNode } from "@/types.ts";
+import type { PaneFragmentNode, FlatNode } from "@/types.ts";
+import { settingsPanelStore } from "../../store/storykeep";
 
-export function handleClickEventDefault(node: BaseNode, parentLayer: number | null) {
+const mode = `default`;
+
+// Type guard to check if a node is a visual break
+function isVisualBreakNode(node: any): node is PaneFragmentNode {
+  return node.nodeType === "BgPane" && "type" in node && node.type === "visual-break";
+}
+
+export function handleClickEventDefault(node: FlatNode, parentLayer: number | null) {
   console.log(`event on:`, node);
 
   if (!node.nodeType) return;
 
   switch (node.nodeType) {
     case "BgPane": {
-      const bgPaneNode = node as PaneFragmentNode;
-      if (!("type" in bgPaneNode)) return;
-
-      switch (bgPaneNode.type) {
-        case "visual-break":
-          console.log(`visual-break`);
-          break;
-        default:
-          console.log(`also missed on: ${bgPaneNode.type}`);
+      // Use type assertion after checking properties exist
+      if (isVisualBreakNode(node)) {
+        console.log(`visual-break`);
+      } else {
+        console.log(`unhandled BgPane type`);
       }
       break;
     }
 
-    case "Pane":
-      console.log(
-        node.nodeType,
-        ` ** before calling this fn we need to reverse traverse to confirm if Markdown; if Markdown pass that node instead along with parentLayer; else pass the Pane, e.g. could be code hook`
-      );
-      break;
-
     case "Markdown":
-      console.log(`parent layer: `, parentLayer);
+      console.log(`markdown pane. parent layer: `, parentLayer);
       break;
 
     case "TagElement": {
-      const tagNode = node as FlatNode;
-      if (!("tagName" in tagNode)) return;
+      if (!("tagName" in node)) return;
 
-      switch (tagNode.tagName) {
+      switch (node.tagName) {
         case "code":
           console.log(`special: widget`);
           break;
@@ -44,20 +40,20 @@ export function handleClickEventDefault(node: BaseNode, parentLayer: number | nu
         case "h3":
         case "h4":
         case "h5":
-          console.log(`standard element ${tagNode.tagName}`);
+          console.log(`standard element ${node.tagName}`);
           break;
         case "img":
-          console.log(`special element ${tagNode.tagName}`);
+          console.log(`special element ${node.tagName}`);
           break;
         case "li":
-          console.log(`special element ${tagNode.tagName}`);
+          console.log(`special element ${node.tagName}`);
           break;
         case "a":
         case "button":
-          console.log(`action link`);
+          settingsPanelStore.set({ node, mode });
           break;
         default:
-          console.log(`also missed on: ${tagNode.tagName}`);
+          console.log(`also missed on: ${node.tagName}`);
       }
       break;
     }
@@ -65,7 +61,4 @@ export function handleClickEventDefault(node: BaseNode, parentLayer: number | nu
     default:
       console.log(`missed on: ${node.nodeType}`, node);
   }
-
-  console.log(``);
-  console.log(``);
 }

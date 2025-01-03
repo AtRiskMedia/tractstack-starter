@@ -54,7 +54,7 @@ export class NodesContext {
 
   handleClickEvent() {
     const toolModeVal = toolModeValStore.get().value;
-    let node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
+    const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
     let childNode = null;
     if (!node) return;
     console.log(`handling event click on: `, this.clickedNodeId.get());
