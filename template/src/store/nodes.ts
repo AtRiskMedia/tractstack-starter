@@ -55,20 +55,27 @@ export class NodesContext {
   handleClickEvent() {
     const toolModeVal = toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
-    let childNode = null;
+    let childNode: FlatNode | undefined = undefined;
+    let parentNode: FlatNode | undefined = undefined;
     if (!node) return;
     console.log(`handling event click on: `, this.clickedNodeId.get());
 
-    // check for special case
+    // pass adjacent nodes
     if (node.nodeType === `Pane`) {
       const children = this.getChildNodeIDs(node.id);
       if (children.length) childNode = this.allNodes.get().get(children[0]) as FlatNode;
+    } else if (node.parentId) {
+      parentNode = this.allNodes.get().get(node.parentId) as FlatNode;
     }
 
     // click handler based on toolModeVal
     switch (toolModeVal) {
       case `default`:
-        handleClickEventDefault(childNode || node, childNode ? 1 : this.clickedParentLayer.get());
+        if (node && !childNode && !parentNode) handleClickEventDefault(node);
+        else if (node && childNode)
+          handleClickEventDefault(childNode, node, this.clickedParentLayer.get());
+        else if (node && parentNode)
+          handleClickEventDefault(node, parentNode, this.clickedParentLayer.get());
         break;
       default:
         console.log(`this mode isn't wired up yet`, toolModeVal);

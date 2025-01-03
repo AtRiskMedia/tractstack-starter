@@ -11,14 +11,9 @@ const SettingsPanel = () => {
         <div className="p-6">
           <h2 className="text-xl font-bold mb-4">Edit Panel conditionally rendered here</h2>
           <div className="space-y-4">
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
-            <div className="h-16 bg-gray-200 rounded"></div>
+            <div className="h-auto p-2 bg-gray-200 rounded">
+              {JSON.stringify($settingsPanelSignal, null, 2)}
+            </div>
           </div>
         </div>
       </div>

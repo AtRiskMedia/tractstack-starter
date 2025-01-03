@@ -937,7 +937,9 @@ export type EditModeValue = {
 
 export type SettingsPanelSignal = {
   node: FlatNode;
-  mode: string;
+  action: string;
+  parentNode?: FlatNode;
+  layer?: number;
 };
 
 export interface EventNode {

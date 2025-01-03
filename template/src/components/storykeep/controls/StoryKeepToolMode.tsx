@@ -6,7 +6,7 @@ import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
-import { toolModeValStore } from "../../../store/storykeep";
+import { toolModeValStore,settingsPanelStore } from "../../../store/storykeep";
 import type { ToolModeVal } from "../../../types";
 
 export const toolModes = [
@@ -55,6 +55,7 @@ const StoryKeepToolMode = () => {
 
   const handleClick = (mode: ToolModeVal) => {
     toolModeValStore.set({ value: mode });
+    settingsPanelStore.set(null)
   };
 
   return (

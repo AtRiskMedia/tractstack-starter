@@ -1,23 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PaneFragmentNode, FlatNode } from "@/types.ts";
 import { settingsPanelStore } from "../../store/storykeep";
-
-const mode = `default`;
 
 // Type guard to check if a node is a visual break
 function isVisualBreakNode(node: any): node is PaneFragmentNode {
   return node.nodeType === "BgPane" && "type" in node && node.type === "visual-break";
 }
 
-export function handleClickEventDefault(node: FlatNode, parentLayer: number | null) {
-  console.log(`event on:`, node);
-
-  if (!node.nodeType) return;
+export function handleClickEventDefault(
+  node: FlatNode,
+  parentNode?: FlatNode,
+  parentLayer?: number | null
+) {
+  if (!node?.nodeType) return;
 
   switch (node.nodeType) {
     case "BgPane": {
       // Use type assertion after checking properties exist
       if (isVisualBreakNode(node)) {
-        console.log(`visual-break`);
+        settingsPanelStore.set({ action: `style-break`, node });
       } else {
         console.log(`unhandled BgPane type`);
       }
@@ -25,7 +26,12 @@ export function handleClickEventDefault(node: FlatNode, parentLayer: number | nu
     }
 
     case "Markdown":
-      console.log(`markdown pane. parent layer: `, parentLayer);
+      settingsPanelStore.set({
+        action: `style-parent`,
+        node: node,
+        parentNode,
+        ...(parentLayer ? { layer: parentLayer } : {}),
+      });
       break;
 
     case "TagElement": {
@@ -33,24 +39,24 @@ export function handleClickEventDefault(node: FlatNode, parentLayer: number | nu
 
       switch (node.tagName) {
         case "code":
-          console.log(`special: widget`);
+          settingsPanelStore.set({ action: `style-widget`, node, parentNode });
           break;
         case "p":
         case "h2":
         case "h3":
         case "h4":
         case "h5":
-          console.log(`standard element ${node.tagName}`);
+          settingsPanelStore.set({ action: `style-element`, node, parentNode });
           break;
         case "img":
-          console.log(`special element ${node.tagName}`);
+          settingsPanelStore.set({ action: `style-image`, node, parentNode });
           break;
         case "li":
-          console.log(`special element ${node.tagName}`);
+          settingsPanelStore.set({ action: `style-element`, node, parentNode });
           break;
         case "a":
         case "button":
-          settingsPanelStore.set({ node, mode });
+          settingsPanelStore.set({ action: `style-link`, node, parentNode });
           break;
         default:
           console.log(`also missed on: ${node.tagName}`);
