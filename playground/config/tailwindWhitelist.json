@@ -30,6 +30,7 @@
     "-pane",
     "-right--",
     "-right-4",
+    "-rotate-6",
     "-space-x-px",
     ".${fileExtension",
     ".tractstack",
