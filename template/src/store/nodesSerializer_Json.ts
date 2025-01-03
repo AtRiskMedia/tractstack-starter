@@ -2,7 +2,10 @@ import { NodesContext } from "@/store/nodes.ts";
 import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
-  ImageFileNode, MarkdownDatum, MarkdownNode, MarkdownPaneDatum,
+  ImageFileNode,
+  MarkdownDatum,
+  MarkdownNode,
+  MarkdownPaneDatum,
   MarkdownPaneFragmentNode,
   MenuNode,
   PaneNode,
@@ -19,15 +22,15 @@ export class NodesSerializer_Json implements NodesSerializer {
       resources: [],
       panes: [],
       storyFragments: [],
-      tractStack: {id: "1", slug: "/", title: "", social_image_path: null}
+      tractStack: { id: "1", slug: "/", title: "", social_image_path: null },
     };
     this.processNode(ctx, rootNode, saveData);
     console.log("Save data:", saveData);
     return saveData;
   }
 
-  getMarkdownPayload(markdownNode: MarkdownNode) : string {
-    if(!markdownNode) return "";
+  getMarkdownPayload(markdownNode: MarkdownNode): string {
+    if (!markdownNode) return "";
 
     const markdownDatum: MarkdownPaneDatum = {
       id: markdownNode.id,
@@ -43,22 +46,22 @@ export class NodesSerializer_Json implements NodesSerializer {
       optionsPayload: {
         classNamesPayload: {},
         classNames: {
-          all: {}
+          all: {},
         },
-      }
-    }
+      },
+    };
     return JSON.stringify(markdownDatum);
   }
 
-  processNode(ctx: NodesContext, node: BaseNode|undefined, saveData: SaveData) {
-    if(!node) return;
+  processNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
 
     switch (node.nodeType) {
       case "Pane": {
         const paneNode = node as PaneNode;
         ctx.getChildNodeIDs(node.id).forEach((childId) => {
           const childNode = ctx.allNodes.get().get(childId);
-          if(childNode?.nodeType === "Markdown") {
+          if (childNode?.nodeType === "Markdown") {
             const markdownNode = childNode as MarkdownNode;
             saveData.panes.push({
               id: paneNode.id,
@@ -77,7 +80,7 @@ export class NodesSerializer_Json implements NodesSerializer {
               markdown_body: "", // todo
               options_payload: this.getMarkdownPayload(markdownNode), // todo
               markdown_id: "",
-            })
+            });
           }
         });
         break;
@@ -105,7 +108,7 @@ export class NodesSerializer_Json implements NodesSerializer {
           alt_description: fileData.altDescription,
           filename: fileData.filename,
           url: fileData.src,
-          src_set: fileData.srcSet || null
+          src_set: fileData.srcSet || null,
         });
         break;
       }
@@ -121,7 +124,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       }
     }
     ctx.getChildNodeIDs(node.id).forEach((childId) => {
-      this.processNode(ctx, ctx.allNodes.get().get(childId), saveData)
+      this.processNode(ctx, ctx.allNodes.get().get(childId), saveData);
     });
   }
 }

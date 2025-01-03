@@ -4,21 +4,21 @@ export type TractStackRowData = {
   id: string;
   title: string;
   slug: string;
-  social_image_path: string|null;
-}
+  social_image_path: string | null;
+};
 
 export type StoryFragmentRowData = {
   id: string;
   title: string;
   slug: string;
   trackstack_id: string;
-  social_image_path: string|null;
+  social_image_path: string | null;
   tailwind_background_colour: string;
   created: string;
   changed: string;
   menu_id: string;
   pane_ids: string[];
-}
+};
 
 export type FileObjectRowData = {
   id: string;
@@ -45,14 +45,14 @@ export type PaneRowData = {
   height_ratio_tablet: string;
   markdown_body: string;
   files: string;
-}
+};
 
 export type MenuRowData = {
   id: string;
   title: string;
   theme: string;
   options_payload: string;
-}
+};
 
 export type ResourceRowData = {
   id: string;
@@ -62,7 +62,7 @@ export type ResourceRowData = {
   actionLisp: string;
   oneliner: string;
   optionsPayload: string;
-}
+};
 
 export type SaveData = {
   files: FileObjectRowData[];
@@ -72,7 +72,7 @@ export type SaveData = {
   tractStack: TractStackRowData;
   storyFragments: StoryFragmentRowData[];
   panes: PaneRowData[];
-}
+};
 
 export abstract class NodesSerializer {
   abstract save(ctx: NodesContext): SaveData;
