@@ -1,3 +1,4 @@
+import { useEffect } from "react"; // Add this import
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
@@ -57,6 +58,20 @@ const StoryKeepToolMode = () => {
     toolModeValStore.set({ value: mode });
     settingsPanelStore.set(null);
   };
+
+  // Add escape key listener
+  useEffect(() => {
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        toolModeValStore.set({ value: "default" });
+        settingsPanelStore.set(null);
+      }
+    };
+    document.addEventListener("keydown", handleEscapeKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscapeKey);
+    };
+  }, []);
 
   return (
     <>
