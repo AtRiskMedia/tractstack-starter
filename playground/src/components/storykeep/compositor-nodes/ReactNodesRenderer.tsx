@@ -1,5 +1,7 @@
 import { getCtx, NodesContext, ROOT_NODE_NAME } from "@/store/nodes.ts";
+import { showAnalytics } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
+import { useStore } from "@nanostores/react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
@@ -13,6 +15,7 @@ export type ReactNodesRendererProps = {
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
+  const $showAnalytics = useStore(showAnalytics);
   const [renderTime, setRenderTime] = useState<number>(0);
 
   useEffect(() => {
@@ -33,9 +36,9 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
           <div className="bg-cyan-500">
             story fragment or context page settings conditionally rendered here
           </div>
-          <div className="bg-mygreen">
-            story fragment or context page analytics conditionally rendered here
-          </div>
+          {$showAnalytics && !getCtx(props).getIsContextPane(props.id) ? (
+            <div className="bg-mygreen">story fragment analytics conditionally rendered here</div>
+          ) : null}
           <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
         </>
       ) : (

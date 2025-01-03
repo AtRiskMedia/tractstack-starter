@@ -222,6 +222,12 @@ export class NodesContext {
     return node.slug;
   }
 
+  getIsContextPane(nodeId: string): boolean {
+    const node = this.allNodes.get().get(nodeId);
+    if (!node || !(`isContextPane` in node)) return false;
+    return !!node.isContextPane;
+  }
+
   getMenuNodeById(id: string): MenuNode | null {
     const node = this.allNodes.get().get(id);
     return node?.nodeType === "Menu" ? (node as MenuNode) : null;

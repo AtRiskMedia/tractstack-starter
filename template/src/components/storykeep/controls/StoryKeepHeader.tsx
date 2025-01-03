@@ -4,7 +4,12 @@ import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
 import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
-import { viewportStore, viewportKeyStore, viewportSetStore } from "../../../store/storykeep";
+import {
+  showAnalytics,
+  viewportStore,
+  viewportKeyStore,
+  viewportSetStore,
+} from "../../../store/storykeep";
 import ViewportSelector from "../header/ViewportSelector";
 
 const offset = 64 + 16 + 16;
@@ -18,6 +23,7 @@ const StoryKeepHeader = () => {
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
+  const $showAnalytics = useStore(showAnalytics);
 
   useEffect(() => {
     const updateViewportKey = () => {
@@ -45,6 +51,7 @@ const StoryKeepHeader = () => {
 
   const iconClassName =
     "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
+  const iconActiveClassName = "w-6 h-6 text-white rounded bg-myblue";
 
   return (
     <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
@@ -69,7 +76,14 @@ const StoryKeepHeader = () => {
 
       <div className="flex items-center gap-2">
         <CogIcon title="Advanced Settings" className={iconClassName} />
-        <PresentationChartBarIcon title="Toggle Interaction Analytics" className={iconClassName} />
+        <button
+          onClick={() => showAnalytics.set(!$showAnalytics)}
+          title="Toggle Interaction Analytics"
+        >
+          <PresentationChartBarIcon
+            className={`${$showAnalytics ? iconActiveClassName : iconClassName}`}
+          />
+        </button>
       </div>
     </div>
   );
