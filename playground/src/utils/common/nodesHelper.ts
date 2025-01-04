@@ -2,7 +2,7 @@ import type { NodesContext } from "@/store/nodes.ts";
 import type { FlatNode, MarkdownNode } from "@/types.ts";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
-  const node = ctx.allNodes.get().get(nodeId) as MarkdownNode;
+  const node = ctx.allNodes.get().get(nodeId) as FlatNode;
   if(!node) return false;
 
   let hasWidgets = "tagName" in node && node?.tagName === "code";
@@ -13,6 +13,20 @@ export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean =>
     }
   });
   return hasWidgets;
+}
+
+export const hasImgChildren = (nodeId: string, ctx: NodesContext): boolean => {
+  const node = ctx.allNodes.get().get(nodeId) as FlatNode;
+  if(!node) return false;
+
+  let hasImgs = "tagName" in node && node?.tagName === "img";
+  ctx.getChildNodeIDs(nodeId).forEach(childNodeId => {
+    const hasAny = hasImgChildren(childNodeId, ctx);
+    if(hasAny) {
+      hasImgs = hasAny;
+    }
+  });
+  return hasImgs;
 }
 
 export class MarkdownGenerator {
@@ -78,8 +92,10 @@ export class MarkdownGenerator {
       case "ol":
         this._listIdx = 0;
         return childrenMarkdown;
+      case "img":
+        return `* ![${(node as FlatNode)?.alt}](${(node as FlatNode)?.src})`;
       case "li": {
-        if(hasWidgetChildren(nodeId, this._ctx)) {
+        if(hasWidgetChildren(nodeId, this._ctx) || hasImgChildren(nodeId, this._ctx)) {
           return childrenMarkdown;
         }
         this._listIdx++;
