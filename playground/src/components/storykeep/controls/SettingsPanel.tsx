@@ -211,7 +211,6 @@ const SettingsPanel = () => {
 
   // Get the clicked node
   const clickedNode = allNodes.get(signal.nodeId) as FlatNode | undefined;
-  console.log(signal);
   if (!clickedNode && signal.action !== `debug`) return null;
 
   let panel;

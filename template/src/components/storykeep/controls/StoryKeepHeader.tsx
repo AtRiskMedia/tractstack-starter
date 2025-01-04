@@ -55,7 +55,6 @@ const StoryKeepHeader = () => {
   };
 
   const showDebugPanel = () => {
-    console.log(`set`);
     settingsPanelStore.set({ nodeId: ``, action: `debug` });
   };
 
