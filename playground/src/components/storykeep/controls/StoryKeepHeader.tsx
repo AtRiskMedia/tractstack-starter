@@ -5,12 +5,14 @@ import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
 import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
+import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
 import {
   showAnalytics,
   showSettings,
   viewportStore,
   viewportKeyStore,
   viewportSetStore,
+  settingsPanelStore,
 } from "../../../store/storykeep";
 import ViewportSelector from "../header/ViewportSelector";
 
@@ -52,6 +54,11 @@ const StoryKeepHeader = () => {
     viewportKeyStore.set({ value: newViewportKey });
   };
 
+  const showDebugPanel = () => {
+    console.log(`set`);
+    settingsPanelStore.set({ nodeId: ``, action: `debug` });
+  };
+
   const iconClassName =
     "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
   const iconActiveClassName = "-rotate-6 w-6 h-6 text-white rounded bg-myblue";
@@ -88,6 +95,9 @@ const StoryKeepHeader = () => {
           <PresentationChartBarIcon
             className={`${$showAnalytics ? iconActiveClassName : iconClassName}`}
           />
+        </button>
+        <button onClick={() => showDebugPanel()} title="Reveal Debug Panel">
+          <BugAntIcon className={iconClassName} />
         </button>
       </div>
     </div>

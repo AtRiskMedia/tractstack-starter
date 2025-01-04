@@ -1,13 +1,17 @@
 import { useStore } from "@nanostores/react";
-import { settingsPanelStore } from "@/store/storykeep";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import { settingsPanelStore } from "@/store/storykeep";
+import DebugPanel from "./DebugPanel";
 import { type ReactElement } from "react";
 import type { FlatNode } from "@/types";
+import { getCtx } from "../../../store/nodes";
 
 // Panel type interfaces
 interface BasePanelProps {
-  node: FlatNode;
+  node: FlatNode | null;
   parentNode?: FlatNode;
+  containerNode?: FlatNode;
+  outerContainerNode?: FlatNode;
   layer?: number;
 }
 
@@ -46,12 +50,37 @@ const StyleParentPanel = ({ node, parentNode, layer }: BasePanelProps) => {
   );
 };
 
-const StyleWidgetPanel = ({ node, parentNode }: BasePanelProps) => {
+const StyleWidgetPanel = ({
+  node,
+  containerNode,
+  outerContainerNode,
+  parentNode,
+}: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Widget Settings</h2>
       <div className="p-4 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
+        <pre className="whitespace-pre-wrap">
+          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+const StyleLiElementPanel = ({
+  node,
+  containerNode,
+  outerContainerNode,
+  parentNode,
+}: BasePanelProps) => {
+  return (
+    <div className="space-y-4">
+      <h2 className="text-xl font-bold">List Item Style Settings</h2>
+      <div className="p-4 bg-gray-100 rounded-lg">
+        <pre className="whitespace-pre-wrap">
+          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
+        </pre>
       </div>
     </div>
   );
@@ -68,45 +97,105 @@ const StyleElementPanel = ({ node, parentNode }: BasePanelProps) => {
   );
 };
 
-const StyleImagePanel = ({ node, parentNode }: BasePanelProps) => {
+const StyleLinkPanel = ({ node }: BasePanelProps) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">Image Settings</h2>
+      <h2 className="text-xl font-bold">Style Link</h2>
       <div className="p-4 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
+        <pre className="whitespace-pre-wrap">{JSON.stringify({ node }, null, 2)}</pre>
       </div>
     </div>
   );
 };
 
-const StyleLinkPanel = ({ node, parentNode }: BasePanelProps) => {
+const StyleImagePanel = ({
+  node,
+  containerNode,
+  outerContainerNode,
+  parentNode,
+}: BasePanelProps) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">Link Settings</h2>
+      <h2 className="text-xl font-bold">Image Settings</h2>
       <div className="p-4 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
+        <pre className="whitespace-pre-wrap">
+          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
+        </pre>
       </div>
     </div>
   );
 };
 
 // Factory function to get the appropriate panel
-const getPanel = (action: string, props: BasePanelProps): ReactElement | null => {
+const getPanel = (
+  action: string,
+  clickedNode: FlatNode | null,
+  paneNode?: FlatNode,
+  childNodes: FlatNode[] = [],
+  layer?: number
+): ReactElement | null => {
+  // Find Markdown child node if it exists
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+  const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
+
   switch (action) {
+    case "debug":
+      return <DebugPanel />;
     case "style-break":
-      return <StyleBreakPanel {...props} />;
+      return clickedNode ? <StyleBreakPanel node={clickedNode} parentNode={paneNode} /> : null;
     case "style-parent":
-      return <StyleParentPanel {...props} />;
-    case "style-widget":
-      return <StyleWidgetPanel {...props} />;
-    case "style-element":
-      return <StyleElementPanel {...props} />;
-    case "style-image":
-      return <StyleImagePanel {...props} />;
+      return markdownNode ? (
+        <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} />
+      ) : null;
     case "style-link":
-      return <StyleLinkPanel {...props} />;
+      return clickedNode ? <StyleLinkPanel node={clickedNode} /> : null;
+    case "style-element":
+      return clickedNode && markdownNode ? (
+        <StyleElementPanel node={clickedNode} parentNode={markdownNode} />
+      ) : null;
+    case "style-li-element":
+    case "style-widget":
+    case "style-image": {
+      if (!clickedNode?.parentId) return null;
+      const containerNode = allNodes.get(clickedNode.parentId);
+      if (!containerNode?.parentId) return null;
+      const outerContainerNode = allNodes.get(containerNode.parentId);
+
+      if (!containerNode || !outerContainerNode) return null;
+
+      if (markdownNode && action === "style-widget") {
+        return (
+          <StyleWidgetPanel
+            node={clickedNode}
+            parentNode={markdownNode}
+            containerNode={containerNode as FlatNode}
+            outerContainerNode={outerContainerNode as FlatNode}
+          />
+        );
+      } else if (markdownNode && action === "style-image") {
+        return (
+          <StyleImagePanel
+            node={clickedNode}
+            parentNode={markdownNode}
+            containerNode={containerNode as FlatNode}
+            outerContainerNode={outerContainerNode as FlatNode}
+          />
+        );
+      }
+      return (
+        <StyleLiElementPanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          containerNode={containerNode as FlatNode}
+          outerContainerNode={outerContainerNode as FlatNode}
+        />
+      );
+    }
     case "setup-codehook":
-      return <CodeHookPanel {...props} />;
+      return clickedNode && markdownNode ? (
+        <CodeHookPanel node={clickedNode} parentNode={markdownNode} />
+      ) : null;
     default:
       console.log(`SettingsPanel miss on ${action}`);
       return null;
@@ -115,14 +204,45 @@ const getPanel = (action: string, props: BasePanelProps): ReactElement | null =>
 
 const SettingsPanel = () => {
   const signal = useStore(settingsPanelStore);
-
   if (!signal) return null;
 
-  const panel = getPanel(signal.action, {
-    node: signal.node,
-    parentNode: signal.parentNode,
-    layer: signal.layer,
-  });
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+
+  // Get the clicked node
+  const clickedNode = allNodes.get(signal.nodeId) as FlatNode | undefined;
+  console.log(signal);
+  if (!clickedNode && signal.action !== `debug`) return null;
+
+  let panel;
+  // Special Case (click wasn't registered on markdown due to margins)
+  if (signal.action === "debug") {
+    panel = getPanel("debug", null);
+  } else if (clickedNode) {
+    // Get the closest pane node
+    const paneId =
+      clickedNode.nodeType === "Pane"
+        ? clickedNode.id
+        : ctx.getClosestNodeTypeFromId(signal.nodeId, "Pane");
+    const paneNode =
+      clickedNode.nodeType === "Pane"
+        ? clickedNode
+        : paneId
+          ? (allNodes.get(paneId) as FlatNode)
+          : undefined;
+
+    // Get child pane nodes if we're on a pane
+    const childNodeIds = paneNode ? ctx.getChildNodeIDs(paneId) : [];
+    const childNodes = childNodeIds
+      .map((id) => allNodes.get(id))
+      .filter((node): node is FlatNode => !!node);
+
+    if (clickedNode.nodeType === "Pane") {
+      panel = getPanel(signal.action, null, paneNode, childNodes, 1);
+    } else {
+      panel = getPanel(signal.action, clickedNode, paneNode, childNodes, signal.layer);
+    }
+  }
 
   if (!panel) return null;
 
