@@ -3,15 +3,13 @@ import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
   ImageFileNode,
-  MarkdownDatum,
   MarkdownNode,
   MarkdownPaneDatum,
-  MarkdownPaneFragmentNode,
   MenuNode,
   PaneNode,
   StoryFragmentNode,
 } from "@/types.ts";
-import { markdownFragmentToMarkdown } from "@/utils/common/nodesHelper.ts";
+import { MarkdownGenerator } from "@/utils/common/nodesHelper.ts";
 
 export class NodesSerializer_Json implements NodesSerializer {
   save(ctx: NodesContext): SaveData {
@@ -64,7 +62,7 @@ export class NodesSerializer_Json implements NodesSerializer {
           const childNode = ctx.allNodes.get().get(childId);
           if (childNode?.nodeType === "Markdown") {
             const markdownNode = childNode as MarkdownNode;
-            markdownFragmentToMarkdown(markdownNode.id, ctx);
+            const markdownGen = new MarkdownGenerator(ctx);
             saveData.panes.push({
               id: paneNode.id,
               title: paneNode.title,
@@ -79,7 +77,7 @@ export class NodesSerializer_Json implements NodesSerializer {
               height_ratio_tablet: paneNode.heightRatioTablet || "0.00",
               height_ratio_mobile: paneNode.heightRatioMobile || "0.00",
               is_context_pane: paneNode.isContextPane ? 1 : 0,
-              markdown_body: "", // todo
+              markdown_body: markdownGen.markdownFragmentToMarkdown(markdownNode.id), // todo
               options_payload: this.getMarkdownPayload(markdownNode), // todo
               markdown_id: "",
             });
