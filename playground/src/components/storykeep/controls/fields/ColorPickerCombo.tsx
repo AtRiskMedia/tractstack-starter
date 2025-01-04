@@ -12,6 +12,7 @@ import { getComputedColor } from "../../../../utils/common/helpers";
 import type { Config } from "../../../../types";
 
 export interface ColorPickerProps {
+  title: string;
   config: Config;
   defaultColor: string;
   onColorChange: (color: string) => void;
@@ -19,6 +20,7 @@ export interface ColorPickerProps {
 }
 
 const ColorPickerCombo = ({
+  title,
   defaultColor,
   onColorChange,
   config,
@@ -86,7 +88,7 @@ const ColorPickerCombo = ({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm text-mydarkgrey">Color</label>
+      <label className="block text-sm text-mydarkgrey">{title}</label>
       <div className="flex items-center space-x-2">
         <input
           type="color"
