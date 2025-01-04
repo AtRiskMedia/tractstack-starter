@@ -2,12 +2,12 @@ import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
+import StyleBreakPanel from "./panels/StyleBreakPanel";
 import { type ReactElement } from "react";
 import type { FlatNode } from "@/types";
 import { getCtx } from "../../../store/nodes";
 
-// Panel type interfaces
-interface BasePanelProps {
+export interface BasePanelProps {
   node: FlatNode | null;
   parentNode?: FlatNode;
   containerNode?: FlatNode;
@@ -19,18 +19,6 @@ const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Code Hook Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
-
-// Individual panel components
-const StyleBreakPanel = ({ node, parentNode }: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Visual Break Settings</h2>
       <div className="p-4 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
