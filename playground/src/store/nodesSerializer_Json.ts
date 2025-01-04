@@ -11,6 +11,7 @@ import type {
   PaneNode,
   StoryFragmentNode,
 } from "@/types.ts";
+import { markdownFragmentToMarkdown } from "@/utils/common/nodesHelper.ts";
 
 export class NodesSerializer_Json implements NodesSerializer {
   save(ctx: NodesContext): SaveData {
@@ -63,6 +64,7 @@ export class NodesSerializer_Json implements NodesSerializer {
           const childNode = ctx.allNodes.get().get(childId);
           if (childNode?.nodeType === "Markdown") {
             const markdownNode = childNode as MarkdownNode;
+            markdownFragmentToMarkdown(markdownNode.id, ctx);
             saveData.panes.push({
               id: paneNode.id,
               title: paneNode.title,
