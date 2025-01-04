@@ -145,7 +145,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
       )}
 
       <div className="space-y-2">
-        <label className="block text-sm text-mydarkgrey">Shapes</label>
+        <label className="block text-sm text-mydarkgrey">Shapes (for each screen size)</label>
         <div className="space-y-1">
           <PaneBreakShapeSelector
             viewport="mobile"
@@ -165,19 +165,21 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
         </div>
       </div>
 
-      <div className="space-y-2 grid grid-cols-2 gap-4">
-        <ColorPickerCombo
-          title="Shape Color"
-          defaultColor={settings.svgFill}
-          onColorChange={(color: string) => setSettings((prev) => ({ ...prev, svgFill: color }))}
-          config={config!}
-        />
-        <ColorPickerCombo
-          title="Background Color"
-          defaultColor={settings.bgColor}
-          onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
-          config={config!}
-        />
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <ColorPickerCombo
+            title="Shape Color"
+            defaultColor={settings.svgFill}
+            onColorChange={(color: string) => setSettings((prev) => ({ ...prev, svgFill: color }))}
+            config={config!}
+          />
+          <ColorPickerCombo
+            title="Background Color"
+            defaultColor={settings.bgColor}
+            onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
+            config={config!}
+          />
+        </div>
       </div>
     </div>
   );
