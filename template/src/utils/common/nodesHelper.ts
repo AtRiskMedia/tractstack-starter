@@ -3,31 +3,31 @@ import type { FlatNode, MarkdownNode } from "@/types.ts";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
-  if(!node) return false;
+  if (!node) return false;
 
   let hasWidgets = "tagName" in node && node?.tagName === "code";
-  ctx.getChildNodeIDs(nodeId).forEach(childNodeId => {
+  ctx.getChildNodeIDs(nodeId).forEach((childNodeId) => {
     const hasAny = hasWidgetChildren(childNodeId, ctx);
-    if(hasAny) {
+    if (hasAny) {
       hasWidgets = hasAny;
     }
   });
   return hasWidgets;
-}
+};
 
 export const hasImgChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
-  if(!node) return false;
+  if (!node) return false;
 
   let hasImgs = "tagName" in node && node?.tagName === "img";
-  ctx.getChildNodeIDs(nodeId).forEach(childNodeId => {
+  ctx.getChildNodeIDs(nodeId).forEach((childNodeId) => {
     const hasAny = hasImgChildren(childNodeId, ctx);
-    if(hasAny) {
+    if (hasAny) {
       hasImgs = hasAny;
     }
   });
   return hasImgs;
-}
+};
 
 export class MarkdownGenerator {
   protected _ctx: NodesContext;
@@ -95,7 +95,7 @@ export class MarkdownGenerator {
       case "img":
         return `* ![${(node as FlatNode)?.alt}](${(node as FlatNode)?.src})\n\n`;
       case "li": {
-        if(hasWidgetChildren(nodeId, this._ctx) || hasImgChildren(nodeId, this._ctx)) {
+        if (hasWidgetChildren(nodeId, this._ctx) || hasImgChildren(nodeId, this._ctx)) {
           return childrenMarkdown;
         }
         this._listIdx++;

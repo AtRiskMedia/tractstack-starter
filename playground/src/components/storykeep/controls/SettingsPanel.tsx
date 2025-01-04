@@ -4,11 +4,12 @@ import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import { type ReactElement } from "react";
-import type { FlatNode } from "@/types";
+import type { FlatNode, Config } from "@/types";
 import { getCtx } from "../../../store/nodes";
 
 export interface BasePanelProps {
   node: FlatNode | null;
+  config?: Config | null;
   parentNode?: FlatNode;
   containerNode?: FlatNode;
   outerContainerNode?: FlatNode;
@@ -116,6 +117,7 @@ const StyleImagePanel = ({
 
 // Factory function to get the appropriate panel
 const getPanel = (
+  config: Config | null,
   action: string,
   clickedNode: FlatNode | null,
   paneNode?: FlatNode,
@@ -131,7 +133,9 @@ const getPanel = (
     case "debug":
       return <DebugPanel />;
     case "style-break":
-      return clickedNode ? <StyleBreakPanel node={clickedNode} parentNode={paneNode} /> : null;
+      return clickedNode ? (
+        <StyleBreakPanel config={config} node={clickedNode} parentNode={paneNode} />
+      ) : null;
     case "style-parent":
       return markdownNode ? (
         <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} />
@@ -190,7 +194,7 @@ const getPanel = (
   }
 };
 
-const SettingsPanel = () => {
+const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
   const signal = useStore(settingsPanelStore);
   if (!signal) return null;
 
@@ -204,7 +208,7 @@ const SettingsPanel = () => {
   let panel;
   // Special Case (click wasn't registered on markdown due to margins)
   if (signal.action === "debug") {
-    panel = getPanel("debug", null);
+    panel = getPanel(config, "debug", null);
   } else if (clickedNode) {
     // Get the closest pane node
     const paneId =
@@ -225,9 +229,9 @@ const SettingsPanel = () => {
       .filter((node): node is FlatNode => !!node);
 
     if (clickedNode.nodeType === "Pane") {
-      panel = getPanel(signal.action, null, paneNode, childNodes, 1);
+      panel = getPanel(config, signal.action, null, paneNode, childNodes, 1);
     } else {
-      panel = getPanel(signal.action, clickedNode, paneNode, childNodes, signal.layer);
+      panel = getPanel(config, signal.action, clickedNode, paneNode, childNodes, signal.layer);
     }
   }
 

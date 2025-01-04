@@ -4,7 +4,6 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import DevicePhoneMobileIcon from "@heroicons/react/24/outline/DevicePhoneMobileIcon";
 import DeviceTabletIcon from "@heroicons/react/24/outline/DeviceTabletIcon";
 import ComputerDesktopIcon from "@heroicons/react/24/outline/ComputerDesktopIcon";
-import { useLayoutEffect, useState } from "react";
 import { SvgBreaks } from "../../../../utils/designs/shapes";
 
 interface Props {
@@ -14,8 +13,6 @@ interface Props {
 }
 
 export default function PaneBreakShapeSelector({ viewport, selectedImage, onChange }: Props) {
-  const normalizedSelectedImage = selectedImage === "none" ? "none" : `kCz${selectedImage}`;
-
   const availableShapes = ["none", ...Object.keys(SvgBreaks).map((key) => key.replace("kCz", ""))];
 
   const Icon =
