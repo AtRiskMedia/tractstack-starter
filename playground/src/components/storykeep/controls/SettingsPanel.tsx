@@ -1,6 +1,7 @@
 import { useStore } from "@nanostores/react";
-import { settingsPanelStore } from "@/store/storykeep";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import { settingsPanelStore } from "@/store/storykeep";
+import DebugPanel from "./DebugPanel";
 import { type ReactElement } from "react";
 import type { FlatNode } from "@/types";
 import { getCtx } from "../../../store/nodes";
@@ -138,10 +139,9 @@ const getPanel = (
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
 
-  // Early return if we don't have required nodes
-  if (!clickedNode && action !== "style-parent") return null;
-
   switch (action) {
+    case "debug":
+      return <DebugPanel />;
     case "style-break":
       return clickedNode ? <StyleBreakPanel node={clickedNode} parentNode={paneNode} /> : null;
     case "style-parent":
@@ -211,32 +211,37 @@ const SettingsPanel = () => {
 
   // Get the clicked node
   const clickedNode = allNodes.get(signal.nodeId) as FlatNode | undefined;
-  if (!clickedNode) return null;
-
-  // Get the closest pane node
-  const paneId =
-    clickedNode.nodeType === "Pane"
-      ? clickedNode.id
-      : ctx.getClosestNodeTypeFromId(signal.nodeId, "Pane");
-  const paneNode =
-    clickedNode.nodeType === "Pane"
-      ? clickedNode
-      : paneId
-        ? (allNodes.get(paneId) as FlatNode)
-        : undefined;
-
-  // Get child pane nodes if we're on a pane
-  const childNodeIds = paneNode ? ctx.getChildNodeIDs(paneId) : [];
-  const childNodes = childNodeIds
-    .map((id) => allNodes.get(id))
-    .filter((node): node is FlatNode => !!node);
+  console.log(signal);
+  if (!clickedNode && signal.action !== `debug`) return null;
 
   let panel;
   // Special Case (click wasn't registered on markdown due to margins)
-  if (clickedNode.nodeType === "Pane") {
-    panel = getPanel(signal.action, null, paneNode, childNodes, 1);
-  } else {
-    panel = getPanel(signal.action, clickedNode, paneNode, childNodes, signal.layer);
+  if (signal.action === "debug") {
+    panel = getPanel("debug",null);
+  } else if( clickedNode) {
+    // Get the closest pane node
+    const paneId =
+      clickedNode.nodeType === "Pane"
+        ? clickedNode.id
+        : ctx.getClosestNodeTypeFromId(signal.nodeId, "Pane");
+    const paneNode =
+      clickedNode.nodeType === "Pane"
+        ? clickedNode
+        : paneId
+          ? (allNodes.get(paneId) as FlatNode)
+          : undefined;
+
+    // Get child pane nodes if we're on a pane
+    const childNodeIds = paneNode ? ctx.getChildNodeIDs(paneId) : [];
+    const childNodes = childNodeIds
+      .map((id) => allNodes.get(id))
+      .filter((node): node is FlatNode => !!node);
+
+    if (clickedNode.nodeType === "Pane") {
+      panel = getPanel(signal.action, null, paneNode, childNodes, 1);
+    } else {
+      panel = getPanel(signal.action, clickedNode, paneNode, childNodes, signal.layer);
+    }
   }
 
   if (!panel) return null;

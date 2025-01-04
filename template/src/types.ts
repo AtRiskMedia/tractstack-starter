@@ -936,8 +936,8 @@ export type EditModeValue = {
 };
 
 export type SettingsPanelSignal = {
-  nodeId: string;
   action: string;
+  nodeId: string;
   layer?: number;
 };
 
