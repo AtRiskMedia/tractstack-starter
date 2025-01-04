@@ -20,7 +20,7 @@ const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Code Hook Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
     </div>
@@ -31,7 +31,7 @@ const StyleParentPanel = ({ node, parentNode, layer }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Parent Style Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <div>Layer: {layer}</div>
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
@@ -48,7 +48,7 @@ const StyleWidgetPanel = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Widget Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">
           {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
         </pre>
@@ -66,7 +66,7 @@ const StyleLiElementPanel = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">List Item Style Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">
           {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
         </pre>
@@ -79,7 +79,7 @@ const StyleElementPanel = ({ node, parentNode }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Element Style Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
     </div>
@@ -90,7 +90,7 @@ const StyleLinkPanel = ({ node }: BasePanelProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Style Link</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node }, null, 2)}</pre>
       </div>
     </div>
@@ -106,7 +106,7 @@ const StyleImagePanel = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Image Settings</h2>
-      <div className="p-4 bg-gray-100 rounded-lg">
+      <div className="p-2 bg-gray-100 rounded-lg">
         <pre className="whitespace-pre-wrap">
           {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
         </pre>
@@ -241,15 +241,16 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
     <div className="fixed bottom-0 right-0 flex flex-col items-start">
       <button
         onClick={() => settingsPanelStore.set(null)}
-        className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+        className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors"
         aria-label="Close settings panel"
+        title="Close settings panel"
       >
         <XMarkIcon className="w-6 h-6" />
       </button>
 
-      <div className="bg-white shadow-lg w-full md:w-[500px] rounded-t-xl">
+      <div className="bg-white shadow-lg w-full md:w-[500px] rounded-tl-xl">
         <div className="overflow-y-auto" style={{ maxHeight: "50vh" }}>
-          <div className="p-6">{panel}</div>
+          <div className="p-4">{panel}</div>
         </div>
       </div>
     </div>

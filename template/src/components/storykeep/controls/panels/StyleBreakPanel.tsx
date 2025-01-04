@@ -5,6 +5,7 @@ import ColorPickerCombo from "../fields/ColorPickerCombo";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { BaseNode, FlatNode } from "../../../../types";
 import { getCtx } from "../../../../store/nodes";
+import { collections } from "../../../../constants";
 
 interface BreakData {
   collection: string;
@@ -50,7 +51,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
   const allNodes = ctx.allNodes.get();
 
   const [settings, setSettings] = useState<BreakSettings>({
-    collection: node.breakDesktop?.collection ?? "kCz",
+    collection: node.breakDesktop?.collection ?? collections[0] ?? `kCz`,
     desktopImage: node.breakDesktop?.image ?? "none",
     tabletImage: node.breakTablet?.image ?? "none",
     mobileImage: node.breakMobile?.image ?? "none",
@@ -63,7 +64,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
     if (!node || !parentNode) return;
 
     const prevSettings = {
-      collection: node.breakDesktop?.collection ?? "kCz",
+      collection: node.breakDesktop?.collection ?? collections[0] ?? `kCz`,
       desktopImage: node.breakDesktop?.image ?? "none",
       tabletImage: node.breakTablet?.image ?? "none",
       mobileImage: node.breakMobile?.image ?? "none",
@@ -133,13 +134,15 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Visual Break Settings</h2>
 
-      <div className="space-y-2">
-        <label className="block text-sm text-mydarkgrey">Collection</label>
-        <PaneBreakCollectionSelector
-          selectedCollection={settings.collection}
-          onChange={(collection) => setSettings((prev) => ({ ...prev, collection }))}
-        />
-      </div>
+      {collections.length > 1 && (
+        <div className="space-y-2">
+          <label className="block text-sm text-mydarkgrey">Collection</label>
+          <PaneBreakCollectionSelector
+            selectedCollection={settings.collection}
+            onChange={(collection) => setSettings((prev) => ({ ...prev, collection }))}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <label className="block text-sm text-mydarkgrey">Shapes</label>
@@ -162,19 +165,20 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
         </div>
       </div>
 
-      <ColorPickerCombo
-        title="Shape Color"
-        defaultColor={settings.svgFill}
-        onColorChange={(color: string) => setSettings((prev) => ({ ...prev, svgFill: color }))}
-        config={config!}
-      />
-
-      <ColorPickerCombo
-        title="Background Color"
-        defaultColor={settings.bgColor}
-        onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
-        config={config!}
-      />
+      <div className="space-y-2 grid grid-cols-2 gap-4">
+        <ColorPickerCombo
+          title="Shape Color"
+          defaultColor={settings.svgFill}
+          onColorChange={(color: string) => setSettings((prev) => ({ ...prev, svgFill: color }))}
+          config={config!}
+        />
+        <ColorPickerCombo
+          title="Background Color"
+          defaultColor={settings.bgColor}
+          onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
+          config={config!}
+        />
+      </div>
     </div>
   );
 };

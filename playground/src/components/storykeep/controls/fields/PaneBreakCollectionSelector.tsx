@@ -1,6 +1,7 @@
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import { collections } from "../../../../constants";
 
 interface Props {
   selectedCollection: string;
@@ -8,8 +9,6 @@ interface Props {
 }
 
 export default function PaneBreakCollectionSelector({ selectedCollection, onChange }: Props) {
-  const collections = ["kCz"];
-
   return (
     <div className="relative">
       <Combobox value={selectedCollection} onChange={onChange}>
