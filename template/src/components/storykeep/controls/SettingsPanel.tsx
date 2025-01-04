@@ -3,6 +3,7 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
+import StyleParentPanel from "./panels/StyleParentPanel";
 import { type ReactElement } from "react";
 import type { FlatNode, Config } from "@/types";
 import { getCtx } from "../../../store/nodes";
@@ -21,18 +22,6 @@ const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Code Hook Settings</h2>
       <div className="p-2 bg-gray-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
-
-const StyleParentPanel = ({ node, parentNode, layer }: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Parent Style Settings</h2>
-      <div className="p-2 bg-gray-100 rounded-lg">
-        <div>Layer: {layer}</div>
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
       </div>
     </div>
