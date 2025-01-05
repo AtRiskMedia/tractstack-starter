@@ -27,9 +27,12 @@ import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
+import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
+import { string } from "zod";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
+export const UNDO_REDO_HISTORY_CAPACITY = 500;
 
 export class NodesContext {
   constructor() {}
@@ -42,6 +45,8 @@ export class NodesContext {
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
+
+  history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
   getChildNodeIDs(parentNodeId: string): string[] {
     const returnVal = this.parentNodes.get()?.get(parentNodeId) || [];
@@ -126,7 +131,7 @@ export class NodesContext {
 
   addNode(data: BaseNode) {
     this.allNodes.get().set(data.id, data);
-
+    
     // root node
     if (data.parentId === null && this.rootNodeId.get().length === 0) {
       this.rootNodeId.set(data.id);
@@ -523,6 +528,11 @@ export class NodesContext {
     const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, markdownNode.id);
     // register flattened nodes to all nodes and set up relationship with its parent
     this.addNodes(flattenedNodes);
+    this.history.addPatch({
+      op: PatchOp.ADD,
+      undo: (ctx) => ctx.deleteNodes(flattenedNodes),
+      redo: (ctx) => ctx.addNodes(flattenedNodes),
+    });
 
     const markdownNodes = this.parentNodes.get().get(markdownId);
     // now grab parent nodes, check if we have inner node
@@ -559,7 +569,14 @@ export class NodesContext {
     }
 
     const parentId = node.parentId;
-    this.deleteNodesRecursively(node);
+    const toDelete = this.getNodesToDeleteRecursively(node);
+    this.deleteNodes(toDelete);
+    this.history.addPatch({
+      op: PatchOp.REMOVE,
+      undo: ctx => ctx.addNodes(toDelete),
+      redo: ctx => ctx.deleteNodes(toDelete),
+    });
+
     // if this was a pane node then we need to update storyfragment as it tracks panes
     if (parentId !== null) {
       if (node.nodeType === "Pane") {
@@ -581,22 +598,35 @@ export class NodesContext {
     }
   }
 
-  deleteNodesRecursively(node: BaseNode | undefined) {
-    if (!node) return;
+  getNodesToDeleteRecursively(node: BaseNode | undefined): BaseNode[] {
+    let nodes: BaseNode[] = [];
+    if (!node) return nodes;
 
     this.getChildNodeIDs(node.id).forEach((id) => {
-      this.deleteNodesRecursively(this.allNodes.get().get(id));
+      const toDelete = this.getNodesToDeleteRecursively(this.allNodes.get().get(id));
+      nodes = toDelete.concat(nodes);
     });
-    // remove node
-    this.allNodes.get().delete(node.id);
 
-    // remove parent link too
-    if (node.parentId !== null) {
-      const parentNode = this.parentNodes.get().get(node.parentId);
-      if (parentNode) {
-        parentNode.splice(parentNode.indexOf(node.id), 1);
+    nodes.push(node);
+    return nodes;
+  }
+
+  private deleteNodes(nodesList: BaseNode[]) {
+    nodesList.forEach(node => {
+      if(!node) return;
+      // remove node
+      this.allNodes.get().delete(node.id);
+
+      // remove parent link too
+      if (node?.parentId !== null) {
+        const parentNodes = this.parentNodes.get();
+        const parentNode = parentNodes.get(node.parentId);
+        if (parentNode) {
+          parentNode.splice(parentNode.indexOf(node.id), 1);
+          this.parentNodes.set(new Map<string, string[]>(parentNodes));
+        }
       }
-    }
+    });
   }
 }
 

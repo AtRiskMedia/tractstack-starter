@@ -15,6 +15,7 @@ import {
   settingsPanelStore,
 } from "../../../store/storykeep";
 import ViewportSelector from "../header/ViewportSelector";
+import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
 
 const offset = 64 + 16 + 16;
 const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" => {
@@ -72,8 +73,14 @@ const StoryKeepHeader = () => {
       />
 
       <div className="flex items-center gap-2">
-        <ArrowUturnLeftIcon title="Undo" className={iconClassName} />
-        <ArrowUturnRightIcon title="Redo" className={iconClassName} />
+        <ArrowUturnLeftIcon title="Undo" className={iconClassName} onClick={() => {
+          getCtx().history.undo();
+          getCtx().notifyNode(ROOT_NODE_NAME);
+        }} />
+        <ArrowUturnRightIcon title="Redo" className={iconClassName} onClick={() => {
+          getCtx().history.redo();
+          getCtx().notifyNode(ROOT_NODE_NAME);
+        }} />
       </div>
 
       <div className="flex items-center gap-4">
