@@ -7,7 +7,7 @@ import {
   tailwindToHex,
   getTailwindColorOptions,
 } from "../../../../utils/tailwind/tailwindColors";
-import { findClosestTailwindColor } from "../../widgets/ColorPicker";
+import { findClosestTailwindColor } from "./ColorPicker";
 import { getComputedColor } from "../../../../utils/common/helpers";
 import type { Config } from "../../../../types";
 

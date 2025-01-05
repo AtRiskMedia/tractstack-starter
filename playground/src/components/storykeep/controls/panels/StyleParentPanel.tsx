@@ -148,20 +148,24 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             <em>Actions:</em>
           </li>
           <li>
-            <button className="hover:text-black underline font-bold">Add Style</button>
+            <button className="text-myblue hover:text-black underline font-bold">Add Style</button>
           </li>
           <li>
-            <button className="hover:text-black underline font-bold">Delete Layer</button>
+            <button className="text-myblue hover:text-black underline font-bold">
+              Delete Layer
+            </button>
           </li>
           <li>
             {settings.parentClasses.length === 1 ? (
-              <button className="hover:text-black underline font-bold">Add Layer</button>
+              <button className="text-myblue hover:text-black underline font-bold">
+                Add Layer
+              </button>
             ) : (
               <>
                 {`Add Layer:`}{" "}
-                <button className="hover:text-black underline font-bold">Before</button>
+                <button className="text-myblue hover:text-black underline font-bold">Before</button>
                 {`, `}
-                <button className="hover:text-black underline font-bold">After</button>
+                <button className="text-myblue hover:text-black underline font-bold">After</button>
               </>
             )}
           </li>

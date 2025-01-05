@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { settingsPanelStore } from "@/store/storykeep";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import ViewportComboBox from "../../fields/ViewportComboBox";
+import ViewportComboBox from "../fields/ViewportComboBox";
 import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { MarkdownPaneFragmentNode, FlatNode } from "../../../../types";
@@ -98,8 +98,8 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
         <h2 className="text-xl font-bold">
           <span className="font-bold">{friendlyName}</span> (Layer {layer})
         </h2>
-        <button title="Cancel Styles Edit" onClick={() => handleCancel()}>
-          Cancel
+        <button title="Return to preview pane" onClick={() => handleCancel()}>
+          Go Back
         </button>
       </div>
       <div className="flex flex-col gap-y-2.5 my-3 text-mydarkgrey text-xl">

@@ -107,7 +107,6 @@ const StyleImagePanel = ({
   );
 };
 
-// Factory function to get the appropriate panel
 const getPanel = (
   config: Config | null,
   action: string,
@@ -117,11 +116,10 @@ const getPanel = (
   layer?: number,
   className?: string
 ): ReactElement | null => {
-  // Find Markdown child node if it exists
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
-  console.log(clickedNode);
+
   switch (action) {
     case "debug":
       return <DebugPanel />;
