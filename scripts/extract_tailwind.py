@@ -7,45 +7,59 @@ def find_classes(content):
     """Find anything that looks like a Tailwind class."""
     classes = set()
     
-    # Match any string that looks like a class definition
     patterns = [
-        # className assignments
         r'className=["\']([^"\']+)["\']',
         r'className={["\']([^"\']+)["\']',
         r'className={`([^`]+)`}',
-        # class attributes
         r'class=["\']([^"\']+)["\']',
-        # const/let/var assignments
         r'(?:const|let|var)\s+\w+\s*=\s*["\']([^"\']+)["\']',
         r'(?:const|let|var)\s+\w+\s*=\s*`([^`]+)`',
-        # @apply directives
         r'@apply\s+([^;]+);'
     ]
     
     for pattern in patterns:
         matches = re.finditer(pattern, content)
         for match in matches:
-            # Split on whitespace and ${
             parts = re.split(r'\s+|\$\{[^}]+\}', match.group(1))
             for part in parts:
-                # Basic cleaning
                 part = part.strip('"\';,`{}>')
                 if part:
                     classes.add(part)
     
     return classes
 
+def is_valid_tailwind_class(cls):
+    """Check if a string looks like a valid Tailwind class."""
+    # Valid breakpoint prefixes that can contain capitals
+    VALID_PREFIXES = ['sm:', 'md:', 'lg:', 'xl:', '2xl:', 'xs:']
+    
+    # If it starts with a valid prefix, check the rest of the string
+    for prefix in VALID_PREFIXES:
+        if cls.startswith(prefix):
+            return not bool(re.search(r'[A-Z]', cls[len(prefix):]))
+    
+    # Special cases for specific Tailwind patterns that might contain brackets
+    if cls.startswith(('after:', 'before:', 'hover:', 'focus:', 'active:', 'group-hover:', 'peer-hover:')):
+        return not bool(re.search(r'[A-Z]', cls))
+        
+    # Check for any capitals in the string
+    return not bool(re.search(r'[A-Z]', cls))
+
 def clean_classes(classes):
     """Clean up the class list."""
     clean = set()
     
     for cls in classes:
+        # Skip strings containing capital letters
+        if any(c.isupper() for c in cls):
+            continue
+            
         # Skip obvious non-classes
         if any(x in cls for x in ['<', '>', 'http', 'src=', '.js', '.ts', '.css']):
             continue
             
         # Skip if it looks like a file path
-        if '/' in cls and not any(x in cls for x in ['bg-', 'text-', 'border-', '/10', '/20', '/30', '/40', '/50', '/60', '/70', '/80', '/90', '/100']):
+        if '/' in cls and not any(x in cls for x in ['-', '/']):
             continue
             
         # Skip if it's clearly a React/HTML attribute
