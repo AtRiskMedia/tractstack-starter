@@ -95,9 +95,11 @@ const StoryKeepHeader = () => {
             className={`${$showAnalytics ? iconActiveClassName : iconClassName}`}
           />
         </button>
-        <button onClick={() => showDebugPanel()} title="Reveal Debug Panel">
-          <BugAntIcon className={iconClassName} />
-        </button>
+        {import.meta.env.DEV ? (
+          <button onClick={() => showDebugPanel()} title="Reveal Debug Panel">
+            <BugAntIcon className={iconClassName} />
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -257,7 +257,9 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
 
       <div className="bg-white shadow-xl w-full md:w-[500px] rounded-tl-xl">
         <div id="settings-panel" className="overflow-y-auto" style={{ maxHeight: "50vh" }}>
-          <div key={clickedNode?.id ||`debug`} className="p-4">{panel}</div>
+          <div key={clickedNode?.id || `debug`} className="p-4">
+            {panel}
+          </div>
         </div>
       </div>
     </div>
