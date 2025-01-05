@@ -131,7 +131,7 @@ export class NodesContext {
 
   addNode(data: BaseNode) {
     this.allNodes.get().set(data.id, data);
-    
+
     // root node
     if (data.parentId === null && this.rootNodeId.get().length === 0) {
       this.rootNodeId.set(data.id);
@@ -573,8 +573,8 @@ export class NodesContext {
     this.deleteNodes(toDelete);
     this.history.addPatch({
       op: PatchOp.REMOVE,
-      undo: ctx => ctx.addNodes(toDelete),
-      redo: ctx => ctx.deleteNodes(toDelete),
+      undo: (ctx) => ctx.addNodes(toDelete),
+      redo: (ctx) => ctx.deleteNodes(toDelete),
     });
 
     // if this was a pane node then we need to update storyfragment as it tracks panes
@@ -612,8 +612,8 @@ export class NodesContext {
   }
 
   private deleteNodes(nodesList: BaseNode[]) {
-    nodesList.forEach(node => {
-      if(!node) return;
+    nodesList.forEach((node) => {
+      if (!node) return;
       // remove node
       this.allNodes.get().delete(node.id);
 

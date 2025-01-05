@@ -5,6 +5,7 @@ import DebugPanel from "./DebugPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
+import StyleParentAddPanel from "./panels/StyleParentPanel_add";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
 import { type ReactElement } from "react";
 import type { FlatNode, Config } from "@/types";
@@ -130,6 +131,10 @@ const getPanel = (
     case "style-parent":
       return markdownNode ? (
         <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} />
+      ) : null;
+    case "style-parent-add":
+      return markdownNode ? (
+        <StyleParentAddPanel node={markdownNode} layer={layer} className={className} />
       ) : null;
     case "style-parent-remove":
       return markdownNode ? (

@@ -73,14 +73,22 @@ const StoryKeepHeader = () => {
       />
 
       <div className="flex items-center gap-2">
-        <ArrowUturnLeftIcon title="Undo" className={iconClassName} onClick={() => {
-          getCtx().history.undo();
-          getCtx().notifyNode(ROOT_NODE_NAME);
-        }} />
-        <ArrowUturnRightIcon title="Redo" className={iconClassName} onClick={() => {
-          getCtx().history.redo();
-          getCtx().notifyNode(ROOT_NODE_NAME);
-        }} />
+        <ArrowUturnLeftIcon
+          title="Undo"
+          className={iconClassName}
+          onClick={() => {
+            getCtx().history.undo();
+            getCtx().notifyNode(ROOT_NODE_NAME);
+          }}
+        />
+        <ArrowUturnRightIcon
+          title="Redo"
+          className={iconClassName}
+          onClick={() => {
+            getCtx().history.redo();
+            getCtx().notifyNode(ROOT_NODE_NAME);
+          }}
+        />
       </div>
 
       <div className="flex items-center gap-4">

@@ -3,27 +3,26 @@ import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { settingsPanelStore } from "@/store/storykeep";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { BaseNode, FlatNode } from "../../../../types";
-import { getCtx } from "../../../../store/nodes";
+import type { MarkdownPaneFragmentNode, BaseNode, FlatNode, PaneNode } from "../../../../types";
+import { getCtx } from "@/store/nodes";
 
-interface PaneNodeWithBg extends BaseNode {
-  nodeType: "Pane";
-  bgColour: string;
-}
-
-interface NodeWithParentClasses extends FlatNode {
+const hasParentClasses = (
+  node: BaseNode | FlatNode | MarkdownPaneFragmentNode | undefined
+): node is MarkdownPaneFragmentNode & {
   parentClasses?: {
     mobile: Record<string, string>;
     tablet: Record<string, string>;
     desktop: Record<string, string>;
   }[];
-}
-
-const hasParentClasses = (node: BaseNode | undefined): node is NodeWithParentClasses => {
+} => {
   return node !== undefined && "parentClasses" in node;
 };
 
-const isPaneNodeWithBg = (node: BaseNode | undefined): node is PaneNodeWithBg => {
+const isPaneNodeWithBg = (
+  node: BaseNode | undefined
+): node is PaneNode & {
+  bgColour: string;
+} => {
   return node?.nodeType === "Pane" && "bgColour" in node;
 };
 
@@ -37,18 +36,29 @@ interface ParentStyles {
 }
 
 const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) => {
-  if (!parentNode || !node || !isPaneNodeWithBg(parentNode) || !hasParentClasses(node)) {
+  if (
+    !parentNode ||
+    !node ||
+    !hasParentClasses(node) ||
+    !isPaneNodeWithBg(parentNode) ||
+    !hasParentClasses(node)
+  ) {
     return null;
   }
+
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
 
-  const layerCount = node?.parentClasses?.length;
+  const layerCount = node.parentClasses?.length || 0;
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
   const [settings, setSettings] = useState<ParentStyles>({
     bgColor: parentNode.bgColour || "#FFFFFF",
     parentClasses: node.parentClasses || [],
   });
+
+  const handleLayerAdd = (position: "before" | "after", layerNum: number) => {
+    console.log(`Adding layer ${position} layer ${layerNum}`);
+  };
 
   useEffect(() => {
     setCurrentLayer(layer || 1);
@@ -63,7 +73,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     };
 
     // Get mutable copy of the parent node
-    const paneNode = allNodes.get(parentNode.id) as PaneNodeWithBg;
+    const paneNode = allNodes.get(parentNode.id);
     if (!paneNode || !isPaneNodeWithBg(paneNode)) return;
 
     if (settings.bgColor !== prevSettings.bgColor) {
@@ -77,7 +87,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       // Notify parent of changes
       ctx.notifyNode(parentNode.id);
     }
-  }, [settings, parentNode, ctx, allNodes]);
+  }, [settings, parentNode, ctx, allNodes, node.parentClasses]);
 
   const currentClasses = settings.parentClasses[currentLayer - 1];
 
@@ -89,12 +99,20 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       action: `style-parent-remove`,
     });
   };
+
   const handleClickUpdate = (name: string) => {
     settingsPanelStore.set({
       nodeId: node.id,
       layer: currentLayer,
       className: name,
       action: `style-parent-update`,
+    });
+  };
+  const handleClickAdd = () => {
+    settingsPanelStore.set({
+      nodeId: node.id,
+      layer: currentLayer,
+      action: `style-parent-add`,
     });
   };
 
@@ -111,19 +129,42 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
       <div className="flex gap-2 items-center mb-4 bg-slate-50 p-2 rounded-md">
         <span className="text-sm text-mydarkgrey">Layer:</span>
-        <div className="flex gap-1">
+        <div className="flex items-center">
+          <button
+            key="first-add"
+            className="px-1 py-1 text-sm rounded-md hover:bg-mydarkgrey hover:text-white transition-colors"
+            title="Add Layer"
+            onClick={() => handleLayerAdd("before", 1)}
+          >
+            +
+          </button>
           {[...Array(layerCount).keys()]
             .map((i) => i + 1)
-            .map((num) => (
-              <button
-                key={num}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  currentLayer === num ? "bg-myblue text-white" : "hover:bg-slate-100"
-                }`}
-                onClick={() => setCurrentLayer(num)}
-              >
-                {num}
-              </button>
+            .map((num, index) => (
+              <div key={`layer-group-${num}`} className="flex items-center gap-0.5">
+                <button
+                  className={`px-2.5 py-1 text-sm rounded-md transition-colors ${
+                    currentLayer === num
+                      ? "bg-myblue text-white"
+                      : "hover:bg-mydarkgrey hover:text-white"
+                  }`}
+                  onClick={() => setCurrentLayer(num)}
+                >
+                  {num}
+                </button>
+                <button
+                  className="px-1 py-1 text-sm rounded-md hover:bg-mydarkgrey hover:text-white transition-colors"
+                  title="Add Layer"
+                  onClick={() =>
+                    handleLayerAdd(
+                      index === layerCount - 1 ? "after" : "before",
+                      index === layerCount - 1 ? num : num + 1
+                    )
+                  }
+                >
+                  +
+                </button>
+              </div>
             ))}
         </div>
       </div>
@@ -152,26 +193,17 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             <em>Actions:</em>
           </li>
           <li>
-            <button className="text-myblue hover:text-black underline font-bold">Add Style</button>
+            <button
+              onClick={() => handleClickAdd()}
+              className="text-myblue hover:text-black underline font-bold"
+            >
+              Add Style
+            </button>
           </li>
           <li>
             <button className="text-myblue hover:text-black underline font-bold">
               Delete Layer
             </button>
-          </li>
-          <li>
-            {settings.parentClasses.length === 1 ? (
-              <button className="text-myblue hover:text-black underline font-bold">
-                Add Layer
-              </button>
-            ) : (
-              <>
-                {`Add Layer:`}{" "}
-                <button className="text-myblue hover:text-black underline font-bold">Before</button>
-                {`, `}
-                <button className="text-myblue hover:text-black underline font-bold">After</button>
-              </>
-            )}
           </li>
         </ul>
       </div>
