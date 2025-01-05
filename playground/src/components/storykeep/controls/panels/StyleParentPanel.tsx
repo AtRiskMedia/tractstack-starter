@@ -43,6 +43,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
 
+  const layerCount = node?.parentClasses?.length;
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
   const [settings, setSettings] = useState<ParentStyles>({
     bgColor: parentNode.bgColour || "#FFFFFF",
@@ -58,6 +59,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
     const prevSettings = {
       bgColor: parentNode.bgColour || "#FFFFFF",
+      parentClasses: node.parentClasses || [],
     };
 
     // Get mutable copy of the parent node
@@ -110,17 +112,19 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       <div className="flex gap-2 items-center mb-4 bg-slate-50 p-2 rounded-md">
         <span className="text-sm text-mydarkgrey">Layer:</span>
         <div className="flex gap-1">
-          {[1, 2, 3].map((num) => (
-            <button
-              key={num}
-              className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                currentLayer === num ? "bg-myblue text-white" : "hover:bg-slate-100"
-              }`}
-              onClick={() => setCurrentLayer(num)}
-            >
-              {num}
-            </button>
-          ))}
+          {[...Array(layerCount).keys()]
+            .map((i) => i + 1)
+            .map((num) => (
+              <button
+                key={num}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  currentLayer === num ? "bg-myblue text-white" : "hover:bg-slate-100"
+                }`}
+                onClick={() => setCurrentLayer(num)}
+              >
+                {num}
+              </button>
+            ))}
         </div>
       </div>
 
