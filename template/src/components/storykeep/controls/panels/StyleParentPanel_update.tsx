@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { settingsPanelStore } from "@/store/storykeep";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import ViewportComboBox from "../../fields/ViewportComboBox";
 import { getCtx } from "../../../../store/nodes";
@@ -21,6 +22,19 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
 
   const friendlyName = tailwindClasses[className]?.title || className;
   const values = tailwindClasses[className]?.values || [];
+
+  const resetStore = () => {
+    if (node?.id)
+      settingsPanelStore.set({
+        nodeId: node.id,
+        layer: layer,
+        action: `style-parent`,
+      });
+  };
+
+  const handleCancel = () => {
+    resetStore();
+  };
 
   const handleFinalChange = useCallback(
     (value: string, viewport: "mobile" | "tablet" | "desktop") => {
@@ -71,44 +85,47 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
     if (!node?.parentClasses?.[layer - 1]) return;
 
     const layerClasses = node.parentClasses[layer - 1];
-    if (layerClasses && className in layerClasses.mobile) {
-      setMobileValue(layerClasses.mobile[className]?.[0] || "");
-      setTabletValue(layerClasses.tablet[className]?.[1] || "");
-      setDesktopValue(layerClasses.desktop[className]?.[2] || "");
+    if (layerClasses) {
+      setMobileValue(layerClasses.mobile[className] || "");
+      setTabletValue(layerClasses.tablet[className] || "");
+      setDesktopValue(layerClasses.desktop[className] || "");
     }
   }, [node, layer, className]);
 
   return (
-    <div className="space-y-4 z-[9999] isolate">
-      <h2 className="text-xl font-bold">
-        Style <span className="font-bold">{friendlyName}</span>
-      </h2>
-      <div className="space-y-4 rounded p-6 bg-slate-50">
-        <div className="flex flex-col gap-y-2.5 my-3 text-mydarkgrey text-xl">
-          <ViewportComboBox
-            value={mobileValue}
-            onFinalChange={handleFinalChange}
-            values={values}
-            viewport="mobile"
-            config={config!}
-          />
-          <ViewportComboBox
-            value={tabletValue}
-            onFinalChange={handleFinalChange}
-            values={values}
-            viewport="tablet"
-            isInferred={tabletValue === mobileValue}
-            config={config!}
-          />
-          <ViewportComboBox
-            value={desktopValue}
-            onFinalChange={handleFinalChange}
-            values={values}
-            viewport="desktop"
-            isInferred={desktopValue === tabletValue}
-            config={config!}
-          />
-        </div>
+    <div className="space-y-4 z-50 isolate">
+      <div className="flex flex-row flex-nowrap justify-between">
+        <h2 className="text-xl font-bold">
+          <span className="font-bold">{friendlyName}</span> (Layer {layer})
+        </h2>
+        <button title="Cancel Styles Edit" onClick={() => handleCancel()}>
+          Cancel
+        </button>
+      </div>
+      <div className="flex flex-col gap-y-2.5 my-3 text-mydarkgrey text-xl">
+        <ViewportComboBox
+          value={mobileValue}
+          onFinalChange={handleFinalChange}
+          values={values}
+          viewport="mobile"
+          config={config!}
+        />
+        <ViewportComboBox
+          value={tabletValue}
+          onFinalChange={handleFinalChange}
+          values={values}
+          viewport="tablet"
+          isInferred={tabletValue === mobileValue}
+          config={config!}
+        />
+        <ViewportComboBox
+          value={desktopValue}
+          onFinalChange={handleFinalChange}
+          values={values}
+          viewport="desktop"
+          isInferred={desktopValue === tabletValue}
+          config={config!}
+        />
       </div>
     </div>
   );

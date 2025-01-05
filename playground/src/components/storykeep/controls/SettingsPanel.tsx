@@ -121,7 +121,7 @@ const getPanel = (
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
-
+  console.log(clickedNode);
   switch (action) {
     case "debug":
       return <DebugPanel />;
