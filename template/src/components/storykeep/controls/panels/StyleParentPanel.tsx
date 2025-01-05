@@ -37,12 +37,9 @@ interface ParentStyles {
 }
 
 const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) => {
-  const signal = settingsPanelStore.get() as SettingsPanelSignal;
   if (!parentNode || !node || !isPaneNodeWithBg(parentNode) || !hasParentClasses(node)) {
     return null;
   }
-  console.log(signal, node, parentNode);
-
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
 
@@ -84,7 +81,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
   const handleClickRemove = (name: string) => {
     settingsPanelStore.set({
-      ...signal,
+      nodeId: node.id,
       layer: currentLayer,
       className: name,
       action: `style-parent-remove`,
