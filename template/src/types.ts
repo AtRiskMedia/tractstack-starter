@@ -939,6 +939,7 @@ export type SettingsPanelSignal = {
   action: string;
   nodeId: string;
   layer?: number;
+  className?: string;
 };
 
 export interface EventNode {

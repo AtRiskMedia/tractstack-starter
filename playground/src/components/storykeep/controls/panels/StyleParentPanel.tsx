@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
+import { settingsPanelStore } from "@/store/storykeep";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { BaseNode, FlatNode } from "../../../../types";
+import type { BaseNode, FlatNode, SettingsPanelSignal } from "../../../../types";
 import { getCtx } from "../../../../store/nodes";
 
 interface PaneNodeWithBg extends BaseNode {
@@ -36,9 +37,11 @@ interface ParentStyles {
 }
 
 const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) => {
+  const signal = settingsPanelStore.get() as SettingsPanelSignal;
   if (!parentNode || !node || !isPaneNodeWithBg(parentNode) || !hasParentClasses(node)) {
     return null;
   }
+  console.log(signal, node, parentNode);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
@@ -79,6 +82,15 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
   const currentClasses = settings.parentClasses[currentLayer - 1];
 
+  const handleClickRemove = (name: string) => {
+    settingsPanelStore.set({
+      ...signal,
+      layer: currentLayer,
+      className: name,
+      action: `style-parent-remove`,
+    });
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Pane Outer Styles</h2>
@@ -118,14 +130,36 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
                 tablet: currentClasses.tablet?.[className],
                 desktop: currentClasses.desktop?.[className],
               }}
+              onRemove={handleClickRemove}
             />
           ))}
         </div>
       )}
 
-      <div className="p-4 bg-gray-100 rounded-lg">
-        <div>Layer: {layer}</div>
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
+      <div className="space-y-4">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
+          <li>
+            <em>Actions:</em>
+          </li>
+          <li>
+            <button className="hover:text-black underline font-bold">Add Style</button>
+          </li>
+          <li>
+            <button className="hover:text-black underline font-bold">Delete Layer</button>
+          </li>
+          <li>
+            {settings.parentClasses.length === 1 ? (
+              <button className="hover:text-black underline font-bold">Add Layer</button>
+            ) : (
+              <>
+                {`Add Layer:`}{" "}
+                <button className="hover:text-black underline font-bold">Before</button>
+                {`, `}
+                <button className="hover:text-black underline font-bold">After</button>
+              </>
+            )}
+          </li>
+        </ul>
       </div>
     </div>
   );

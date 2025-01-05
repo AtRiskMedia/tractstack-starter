@@ -4,6 +4,7 @@ import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleParentPanel from "./panels/StyleParentPanel";
+import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import { type ReactElement } from "react";
 import type { FlatNode, Config } from "@/types";
 import { getCtx } from "../../../store/nodes";
@@ -15,6 +16,7 @@ export interface BasePanelProps {
   containerNode?: FlatNode;
   outerContainerNode?: FlatNode;
   layer?: number;
+  className?: string;
 }
 
 const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
@@ -111,7 +113,8 @@ const getPanel = (
   clickedNode: FlatNode | null,
   paneNode?: FlatNode,
   childNodes: FlatNode[] = [],
-  layer?: number
+  layer?: number,
+  className?: string
 ): ReactElement | null => {
   // Find Markdown child node if it exists
   const ctx = getCtx();
@@ -128,6 +131,15 @@ const getPanel = (
     case "style-parent":
       return markdownNode ? (
         <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} />
+      ) : null;
+    case "style-parent-remove":
+      return markdownNode ? (
+        <StyleParentRemovePanel
+          node={markdownNode}
+          parentNode={paneNode}
+          layer={layer}
+          className={className}
+        />
       ) : null;
     case "style-link":
       return clickedNode ? <StyleLinkPanel node={clickedNode} /> : null;
@@ -237,7 +249,7 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
         <XMarkIcon className="w-6 h-6" />
       </button>
 
-      <div className="bg-white shadow-lg w-full md:w-[500px] rounded-tl-xl">
+      <div className="bg-white shadow-xl w-full md:w-[500px] rounded-tl-xl">
         <div className="overflow-y-auto" style={{ maxHeight: "50vh" }}>
           <div className="p-4">{panel}</div>
         </div>
