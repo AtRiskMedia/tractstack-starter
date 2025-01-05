@@ -24,6 +24,7 @@ interface ViewportComboBoxProps {
   isNegative?: boolean;
   isInferred?: boolean;
   config: Config;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 const ViewportComboBox = ({
@@ -35,6 +36,7 @@ const ViewportComboBox = ({
   isNegative = false,
   isInferred = false,
   config,
+  onOpenChange,
 }: ViewportComboBoxProps) => {
   const [internalValue, setInternalValue] = useState(value);
   const [query, setQuery] = useState("");
@@ -102,6 +104,18 @@ const ViewportComboBox = ({
     setQuery(""); // Clear query on blur
   }, [internalValue, value, values, onFinalChange, viewport, isNowNegative]);
 
+  // Handle dropdown open/close to manage overflow
+  const handleOpenChange = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+    // Manage overflow-y of the settings panel
+    const settingsPanel = document.getElementById("settings-panel");
+    if (settingsPanel) {
+      settingsPanel.style.overflowY = open ? "visible" : "auto";
+    }
+  };
+
   return (
     <div className="flex flex-nowrap items-center" title={`Value on ${viewport} Screens`}>
       <Icon className="h-8 w-8 mr-2" aria-hidden="true" />
@@ -109,72 +123,80 @@ const ViewportComboBox = ({
         <div className="flex items-center">
           <div className="relative flex-grow">
             <Combobox value={internalValue} onChange={handleSelect}>
-              <div className="relative">
-                <Combobox.Input
-                  ref={inputRef}
-                  className={classNames(
-                    "w-full border border-mydarkgrey rounded-md py-2 pl-3 pr-16 text-xl leading-5 focus:ring-1 focus:ring-myorange focus:border-myorange",
-                    isInferred ? "text-black/20" : "text-black"
-                  )}
-                  onChange={(event) => handleChange(event.target.value)}
-                  onBlur={handleBlur}
-                  displayValue={(v: string) => v}
-                  autoComplete="off"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                  <Combobox.Button ref={comboboxButtonRef} className="flex items-center pl-2">
-                    <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                  </Combobox.Button>
-                </div>
-              </div>
-              <Combobox.Options
-                className={`absolute z-10 left-0 right-0 w-full overflow-auto rounded-md bg-white py-1 text-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${
-                  openAbove ? "bottom-full mb-1" : "top-full mt-1"
-                }`}
-                style={{ maxHeight: `${maxHeight}px` }}
-              >
-                {filteredValues.map((item) => (
-                  <Combobox.Option
-                    key={item}
-                    value={item}
-                    className={({ active }) =>
-                      `relative cursor-default select-none py-2 ${colorValues.includes(item) ? `pl-12` : `pl-6`} pr-9 ${
-                        active ? "bg-myorange text-white" : "text-black"
-                      }`
-                    }
+              {({ open }) => (
+                <>
+                  <div className="relative">
+                    <Combobox.Input
+                      ref={inputRef}
+                      className={classNames(
+                        "w-full border border-mydarkgrey rounded-md py-2 pl-3 pr-16 text-xl leading-5 focus:ring-1 focus:ring-myorange focus:border-myorange",
+                        isInferred ? "text-black/20" : "text-black"
+                      )}
+                      onChange={(event) => handleChange(event.target.value)}
+                      onBlur={handleBlur}
+                      displayValue={(v: string) => v}
+                      autoComplete="off"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                      <Combobox.Button
+                        ref={comboboxButtonRef}
+                        className="flex items-center pl-2"
+                        onClick={() => handleOpenChange(!open)}
+                      >
+                        <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
+                      </Combobox.Button>
+                    </div>
+                  </div>
+                  <Combobox.Options
+                    className={`absolute z-50 left-0 right-0 w-full overflow-auto rounded-md bg-white py-1 text-xl shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none ${
+                      openAbove ? "bottom-full mb-1" : "top-full mt-1"
+                    }`}
+                    style={{ maxHeight: `${maxHeight}px` }}
                   >
-                    {({ selected, active }) => (
-                      <>
-                        {colorValues.includes(item) && (
-                          <div
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
-                            style={{
-                              backgroundColor: tailwindToHex(
-                                item,
-                                config?.init?.BRAND_COLOURS || null
-                              ),
-                            }}
-                          />
+                    {filteredValues.map((item) => (
+                      <Combobox.Option
+                        key={item}
+                        value={item}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 ${colorValues.includes(item) ? `pl-12` : `pl-6`} pr-9 ${
+                            active ? "bg-myorange text-white" : "text-black"
+                          }`
+                        }
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            {colorValues.includes(item) && (
+                              <div
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
+                                style={{
+                                  backgroundColor: tailwindToHex(
+                                    item,
+                                    config?.init?.BRAND_COLOURS || null
+                                  ),
+                                }}
+                              />
+                            )}
+                            <span
+                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
+                            >
+                              {item}
+                            </span>
+                            {selected && (
+                              <span
+                                className={`absolute inset-y-0 right-0 flex items-center pr-4 ${
+                                  active ? "text-white" : "text-myorange"
+                                }`}
+                              >
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            )}
+                          </>
                         )}
-                        <span
-                          className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                        >
-                          {item}
-                        </span>
-                        {selected && (
-                          <span
-                            className={`absolute inset-y-0 right-0 flex items-center pr-4 ${
-                              active ? "text-white" : "text-myorange"
-                            }`}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
+                      </Combobox.Option>
+                    ))}
+                  </Combobox.Options>
+                </>
+              )}
             </Combobox>
           </div>
           {allowNegative && (

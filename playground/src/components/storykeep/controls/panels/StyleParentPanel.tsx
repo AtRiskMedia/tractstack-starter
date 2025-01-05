@@ -3,7 +3,7 @@ import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { settingsPanelStore } from "@/store/storykeep";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { BaseNode, FlatNode, SettingsPanelSignal } from "../../../../types";
+import type { BaseNode, FlatNode } from "../../../../types";
 import { getCtx } from "../../../../store/nodes";
 
 interface PaneNodeWithBg extends BaseNode {
@@ -87,6 +87,14 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       action: `style-parent-remove`,
     });
   };
+  const handleClickUpdate = (name: string) => {
+    settingsPanelStore.set({
+      nodeId: node.id,
+      layer: currentLayer,
+      className: name,
+      action: `style-parent-update`,
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -106,7 +114,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             <button
               key={num}
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                currentLayer === num ? "bg-myblue text-white" : "hover:bg-gray-100"
+                currentLayer === num ? "bg-myblue text-white" : "hover:bg-slate-100"
               }`}
               onClick={() => setCurrentLayer(num)}
             >
@@ -128,6 +136,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
                 desktop: currentClasses.desktop?.[className],
               }}
               onRemove={handleClickRemove}
+              onUpdate={handleClickUpdate}
             />
           ))}
         </div>
