@@ -7,6 +7,10 @@ import StyleElementPanel from "./panels/StyleElementPanel";
 import StyleElementAddPanel from "./panels/StyleElementPanel_add";
 import StyleElementRemovePanel from "./panels/StyleElementPanel_remove";
 import StyleElementUpdatePanel from "./panels/StyleElementPanel_update";
+import StyleLiElementPanel from "./panels/StyleLiElementPanel";
+import StyleLiElementAddPanel from "./panels/StyleLiElementPanel_add";
+import StyleLiElementUpdatePanel from "./panels/StyleLiElementPanel_update";
+import StyleLiElementRemovePanel from "./panels/StyleLiElementPanel_remove";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
@@ -25,6 +29,7 @@ export interface BasePanelProps {
   outerContainerNode?: FlatNode;
   layer?: number;
   className?: string;
+  childId?: string;
 }
 
 const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
@@ -47,24 +52,6 @@ const StyleWidgetPanel = ({
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Widget Settings</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">
-          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
-        </pre>
-      </div>
-    </div>
-  );
-};
-
-const StyleLiElementPanel = ({
-  node,
-  containerNode,
-  outerContainerNode,
-  parentNode,
-}: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">List Item Style Settings</h2>
       <div className="p-2 bg-slate-100 rounded-lg">
         <pre className="whitespace-pre-wrap">
           {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
@@ -110,13 +97,14 @@ const getPanel = (
   paneNode?: FlatNode,
   childNodes: FlatNode[] = [],
   layer?: number,
-  className?: string
+  className?: string,
+  childId?: string
 ): ReactElement | null => {
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
-  if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
 
+  if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
   switch (action) {
     case "debug":
       return <DebugPanel />;
@@ -179,7 +167,6 @@ const getPanel = (
           config={config}
         />
       ) : null;
-    case "style-li-element":
     case "style-widget":
     case "style-image": {
       if (!clickedNode?.parentId) return null;
@@ -187,9 +174,7 @@ const getPanel = (
       if (!containerNode?.parentId) return null;
       const outerContainerNode = allNodes.get(containerNode.parentId);
 
-      if (!containerNode || !outerContainerNode) return null;
-
-      if (markdownNode && action === "style-widget") {
+      if (markdownNode && containerNode && outerContainerNode && action === "style-widget") {
         return (
           <StyleWidgetPanel
             node={clickedNode}
@@ -198,7 +183,7 @@ const getPanel = (
             outerContainerNode={outerContainerNode as FlatNode}
           />
         );
-      } else if (markdownNode && action === "style-image") {
+      } else if (markdownNode && containerNode && outerContainerNode && action === "style-image") {
         return (
           <StyleImagePanel
             node={clickedNode}
@@ -208,15 +193,48 @@ const getPanel = (
           />
         );
       }
+      return null;
+    }
+    case "style-li-element": {
+      if (!clickedNode?.parentId) return null;
+      const outerContainerNode = allNodes.get(clickedNode.parentId);
+      if (markdownNode && outerContainerNode && action === "style-li-element") {
+        return (
+          <StyleLiElementPanel
+            node={clickedNode}
+            parentNode={markdownNode}
+            outerContainerNode={outerContainerNode as FlatNode}
+          />
+        );
+      }
+      return null;
+    }
+    case "style-li-element-add":
+    case "style-li-container-add":
       return (
-        <StyleLiElementPanel
+        <StyleLiElementAddPanel node={clickedNode} parentNode={markdownNode} childId={childId} />
+      );
+    case "style-li-element-update":
+    case "style-li-container-update":
+      return (
+        <StyleLiElementUpdatePanel
           node={clickedNode}
           parentNode={markdownNode}
-          containerNode={containerNode as FlatNode}
-          outerContainerNode={outerContainerNode as FlatNode}
+          className={className}
+          childId={childId}
+          config={config}
         />
       );
-    }
+    case "style-li-element-remove":
+    case "style-li-container-remove":
+      return (
+        <StyleLiElementRemovePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+          childId={childId}
+        />
+      );
     case "setup-codehook":
       return clickedNode && markdownNode ? (
         <CodeHookPanel node={clickedNode} parentNode={markdownNode} />
@@ -229,6 +247,7 @@ const getPanel = (
 
 const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
   const signal = useStore(settingsPanelStore);
+  console.log(signal);
   if (!signal) return null;
 
   const ctx = getCtx();
@@ -271,7 +290,8 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
         paneNode,
         childNodes,
         signal.layer,
-        signal.className
+        signal.className,
+        signal.childId
       );
     }
   }
@@ -290,7 +310,7 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
       </button>
 
       <div className="bg-white shadow-xl w-full md:w-[500px] rounded-tl-xl">
-        <div id="settings-panel" className="overflow-y-auto" style={{ maxHeight: "50vh" }}>
+        <div id="settings-panel" className="overflow-y-auto" style={{ maxHeight: "60vh" }}>
           <div key={clickedNode?.id || `debug`} className="p-4">
             {panel}
           </div>
