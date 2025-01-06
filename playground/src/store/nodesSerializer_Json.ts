@@ -3,7 +3,7 @@ import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
   ImageFileNode,
-  MarkdownNode,
+  MarkdownPaneFragmentNode,
   MarkdownPaneDatum,
   MenuNode,
   PaneNode,
@@ -28,7 +28,7 @@ export class NodesSerializer_Json implements NodesSerializer {
     return saveData;
   }
 
-  getMarkdownPayload(markdownNode: MarkdownNode): string {
+  getMarkdownPayload(markdownNode: MarkdownPaneFragmentNode): string {
     if (!markdownNode) return "";
 
     const markdownDatum: MarkdownPaneDatum = {
@@ -61,7 +61,7 @@ export class NodesSerializer_Json implements NodesSerializer {
         ctx.getChildNodeIDs(node.id).forEach((childId) => {
           const childNode = ctx.allNodes.get().get(childId);
           if (childNode?.nodeType === "Markdown") {
-            const markdownNode = childNode as MarkdownNode;
+            const markdownNode = childNode as MarkdownPaneFragmentNode;
             const markdownGen = new MarkdownGenerator(ctx);
             saveData.panes.push({
               id: paneNode.id,

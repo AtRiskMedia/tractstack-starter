@@ -1170,6 +1170,7 @@ export interface BaseNode {
   id: string;
   parentId: string | null;
   nodeType: NodeType;
+  isChanged?: boolean;
 }
 
 export interface ImageFileNode extends BaseNode {
@@ -1224,10 +1225,10 @@ export interface PaneFragmentNode extends BaseNode {
   hiddenViewportDesktop?: boolean;
 }
 
-export interface MarkdownNode extends PaneFragmentNode {
-  type: "markdown";
-  // Add your markdown-specific fields here
-}
+//export interface MarkdownNode extends PaneFragmentNode {
+//  type: "markdown";
+//  // Add your markdown-specific fields here
+//}
 
 export interface VisualBreakNode extends PaneFragmentNode {
   type: "visual-break";

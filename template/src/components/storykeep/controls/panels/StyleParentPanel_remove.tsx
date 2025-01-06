@@ -36,7 +36,7 @@ const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
     if (className in layerClasses.desktop) delete layerClasses.desktop[className];
     // Update the node in the store
     const newNodes = new Map(allNodes);
-    newNodes.set(node.id, markdownNode);
+    newNodes.set(node.id, { ...markdownNode, isChanged: true });
     ctx.allNodes.set(newNodes);
     // Notify parent of changes
     if (node.parentId) {

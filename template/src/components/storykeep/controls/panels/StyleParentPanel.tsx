@@ -81,7 +81,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
       // Update the node in the store
       const newNodes = new Map(allNodes);
-      newNodes.set(parentNode.id, paneNode);
+      newNodes.set(parentNode.id, { ...paneNode, isChanged: true });
       ctx.allNodes.set(newNodes);
 
       // Notify parent of changes

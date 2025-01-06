@@ -28,7 +28,7 @@ import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
-import { string } from "zod";
+//import { string } from "zod";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";

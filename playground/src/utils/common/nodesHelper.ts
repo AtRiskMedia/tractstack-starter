@@ -1,5 +1,5 @@
 import type { NodesContext } from "@/store/nodes.ts";
-import type { FlatNode, MarkdownNode } from "@/types.ts";
+import type { FlatNode, MarkdownPaneFragmentNode } from "@/types.ts";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
@@ -42,7 +42,7 @@ export class MarkdownGenerator {
   }
 
   markdownFragmentToMarkdown(nodeId: string): string {
-    const node = this._ctx.allNodes.get().get(nodeId) as MarkdownNode;
+    const node = this._ctx.allNodes.get().get(nodeId) as MarkdownPaneFragmentNode;
     if (!node || node.nodeType !== "Markdown") return "";
 
     // Process children

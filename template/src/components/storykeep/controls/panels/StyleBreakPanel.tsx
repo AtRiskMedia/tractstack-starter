@@ -120,8 +120,8 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
 
     // Update the nodes in the store
     const newNodes = new Map(allNodes);
-    newNodes.set(node.id, breakNode);
-    newNodes.set(parentNode.id, paneNode);
+    newNodes.set(node.id, { ...breakNode, isChanged: true });
+    newNodes.set(parentNode.id, { ...paneNode, isChanged: true });
     ctx.allNodes.set(newNodes);
 
     // Notify parent of changes
