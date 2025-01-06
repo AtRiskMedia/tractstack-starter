@@ -119,10 +119,14 @@ export class NodesContext {
     }
   }
 
-  linkChildToParent(nodeId: string, parentId: string) {
+  linkChildToParent(nodeId: string, parentId: string, specificIndex: number = -1) {
     const parentNode = this.parentNodes.get();
     if (parentNode.has(parentId)) {
-      parentNode.get(parentId)?.push(nodeId);
+      if(specificIndex === -1) {
+        parentNode.get(parentId)?.push(nodeId);
+      } else {
+        parentNode.get(parentId)?.insertBefore(Math.max(0, specificIndex), [nodeId]);
+      }
       this.parentNodes.set(new Map<string, string[]>(parentNode));
     } else {
       parentNode.set(parentId, [nodeId]);
@@ -511,6 +515,19 @@ export class NodesContext {
     // add the result of the markdown nodes
     this.addNodes(markdownNodes);
     this.notifyNode(ownerId);
+
+    this.history.addPatch({
+      op: PatchOp.ADD,
+      undo: (ctx) => {
+        ctx.deleteNodes(markdownNodes);
+        ctx.deleteNodes([duplicatedPane.markdown, duplicatedPane]);
+      },
+      redo: (ctx) => {
+        ctx.addNodes(markdownNodes);
+        ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
+        ctx.addNodes([duplicatedPane, duplicatedPane.markdown]);
+      },
+    });
   }
 
   addTemplateNode(
@@ -569,20 +586,17 @@ export class NodesContext {
     }
 
     const parentId = node.parentId;
-    const toDelete = this.getNodesToDeleteRecursively(node);
+    const toDelete = this.getNodesToDeleteRecursively(node).reverse();
     this.deleteNodes(toDelete);
-    this.history.addPatch({
-      op: PatchOp.REMOVE,
-      undo: (ctx) => ctx.addNodes(toDelete),
-      redo: (ctx) => ctx.deleteNodes(toDelete),
-    });
+    let paneIdx: number = -1;
 
     // if this was a pane node then we need to update storyfragment as it tracks panes
     if (parentId !== null) {
       if (node.nodeType === "Pane") {
         const storyFragment = this.allNodes.get().get(parentId) as StoryFragmentNode;
         if (storyFragment) {
-          storyFragment.paneIds.splice(storyFragment.paneIds.indexOf(nodeId), 1);
+          paneIdx = storyFragment.paneIds.indexOf(nodeId);
+          storyFragment.paneIds.splice(paneIdx, 1);
         }
       }
 
@@ -596,6 +610,21 @@ export class NodesContext {
       }
       this.notifyNode(ROOT_NODE_NAME);
     }
+
+    this.history.addPatch({
+      op: PatchOp.REMOVE,
+      undo: (ctx) => {
+        ctx.addNodes(toDelete);
+        if (node.nodeType === "Pane" && parentId !== null) {
+          const storyFragment = this.allNodes.get().get(parentId) as StoryFragmentNode;
+          if (storyFragment) {
+            storyFragment.paneIds.insertBefore(paneIdx, [parentId]);
+            this.linkChildToParent(nodeId, parentId, paneIdx);
+          }
+        }
+      },
+      redo: (ctx) => ctx.deleteNodes(toDelete),
+    });
   }
 
   getNodesToDeleteRecursively(node: BaseNode | undefined): BaseNode[] {

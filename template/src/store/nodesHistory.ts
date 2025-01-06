@@ -23,6 +23,14 @@ export class NodesHistory {
     this._maxBuffer = maxBuffer;
   }
 
+  canUndo(): boolean {
+    return this._history.length > 0 && this._headIndex < this._history.length;
+  }
+
+  canRedo(): boolean {
+    return this._history.length > 0 && this._headIndex > 0;
+  }
+
   addPatch(patch: HistoryPatch) {
     while (this._headIndex !== 0) {
       this._history.shift();
