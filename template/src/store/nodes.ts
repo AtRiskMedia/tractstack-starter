@@ -122,7 +122,7 @@ export class NodesContext {
   linkChildToParent(nodeId: string, parentId: string, specificIndex: number = -1) {
     const parentNode = this.parentNodes.get();
     if (parentNode.has(parentId)) {
-      if(specificIndex === -1) {
+      if (specificIndex === -1) {
         parentNode.get(parentId)?.push(nodeId);
       } else {
         parentNode.get(parentId)?.insertBefore(Math.max(0, specificIndex), [nodeId]);

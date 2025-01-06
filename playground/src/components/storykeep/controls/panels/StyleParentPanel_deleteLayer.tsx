@@ -7,7 +7,7 @@ import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards"
 const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
   if (!layer) return null;
   if (!node || !isMarkdownPaneFragmentNode(node)) return null;
-  if (!node.parentClasses ) return null;
+  if (!node.parentClasses) return null;
 
   const layerIndex = layer - 1;
   if (layerIndex >= node.parentClasses.length) return null;
@@ -33,7 +33,7 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
     const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
 
     if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
-    if (!markdownNode.parentClasses ) return;
+    if (!markdownNode.parentClasses) return;
 
     // If this is the last layer, replace with empty classes instead of removing
     if (markdownNode.parentClasses.length === 1) {

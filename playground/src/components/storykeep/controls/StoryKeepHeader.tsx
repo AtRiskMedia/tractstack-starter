@@ -38,14 +38,13 @@ const StoryKeepHeader = () => {
       setCanUndo(getCtx().history.canUndo());
       setCanRedo(getCtx().history.canRedo());
       console.log("undo/redo update");
-    }
+    };
 
-    const history = getCtx().history;
-    getCtx().history.headIndex.listen((value, oldValue) => {
-      updateUndoRedo()
+    getCtx().history.headIndex.listen(() => {
+      updateUndoRedo();
     });
-    getCtx().history.history.listen((value, oldValue) => {
-      updateUndoRedo()
+    getCtx().history.history.listen(() => {
+      updateUndoRedo();
     });
   }, []);
 
@@ -93,7 +92,7 @@ const StoryKeepHeader = () => {
       <div className="flex items-center gap-2">
         <ArrowUturnLeftIcon
           title="Undo"
-          style={{visibility: canUndo ? "visible" : "hidden"}}
+          style={{ visibility: canUndo ? "visible" : "hidden" }}
           className={iconClassName}
           onClick={() => {
             getCtx().history.undo();
@@ -102,7 +101,7 @@ const StoryKeepHeader = () => {
         />
         <ArrowUturnRightIcon
           title="Redo"
-          style={{visibility: canRedo ? "visible" : "hidden"}}
+          style={{ visibility: canRedo ? "visible" : "hidden" }}
           className={iconClassName}
           onClick={() => {
             getCtx().history.redo();

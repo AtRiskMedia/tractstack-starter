@@ -36,7 +36,7 @@ export class NodesHistory {
   addPatch(patch: HistoryPatch) {
     while (this.headIndex.get() !== 0) {
       this.history.get().shift();
-      this.headIndex.set(this.headIndex.get()-1);
+      this.headIndex.set(this.headIndex.get() - 1);
     }
 
     this.history.get().unshift(patch);
@@ -49,14 +49,14 @@ export class NodesHistory {
   undo() {
     if (this.headIndex.get() < this.history.get().length) {
       this.history.get()[this.headIndex.get()].undo(this._ctx);
-      this.headIndex.set(this.headIndex.get()+1);
+      this.headIndex.set(this.headIndex.get() + 1);
     }
   }
 
   redo() {
     if (this.headIndex.get() > 0) {
       this.history.get()[this.headIndex.get() - 1].redo(this._ctx);
-      this.headIndex.set(this.headIndex.get()-1);
+      this.headIndex.set(this.headIndex.get() - 1);
     }
   }
 }
