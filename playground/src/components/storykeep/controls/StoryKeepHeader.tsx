@@ -1,5 +1,5 @@
 // Update to StoryKeepHeader.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
@@ -30,6 +30,24 @@ const StoryKeepHeader = () => {
   const $viewportKey = useStore(viewportKeyStore);
   const $showAnalytics = useStore(showAnalytics);
   const $showSettings = useStore(showSettings);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  useEffect(() => {
+    const updateUndoRedo = () => {
+      setCanUndo(getCtx().history.canUndo());
+      setCanRedo(getCtx().history.canRedo());
+      console.log("undo/redo update");
+    }
+
+    const history = getCtx().history;
+    getCtx().history.headIndex.listen((value, oldValue) => {
+      updateUndoRedo()
+    });
+    getCtx().history.history.listen((value, oldValue) => {
+      updateUndoRedo()
+    });
+  }, []);
 
   useEffect(() => {
     const updateViewportKey = () => {
@@ -75,6 +93,7 @@ const StoryKeepHeader = () => {
       <div className="flex items-center gap-2">
         <ArrowUturnLeftIcon
           title="Undo"
+          style={{visibility: canUndo ? "visible" : "hidden"}}
           className={iconClassName}
           onClick={() => {
             getCtx().history.undo();
@@ -83,6 +102,7 @@ const StoryKeepHeader = () => {
         />
         <ArrowUturnRightIcon
           title="Redo"
+          style={{visibility: canRedo ? "visible" : "hidden"}}
           className={iconClassName}
           onClick={() => {
             getCtx().history.redo();

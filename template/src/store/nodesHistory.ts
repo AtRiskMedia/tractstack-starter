@@ -1,4 +1,5 @@
 import type { NodesContext } from "@/store/nodes.ts";
+import { atom, type WritableAtom } from "nanostores";
 
 export enum PatchOp {
   ADD,
@@ -13,10 +14,11 @@ export type HistoryPatch = {
 };
 
 export class NodesHistory {
+  public history: WritableAtom<HistoryPatch[]> = atom([]);
+  public headIndex: WritableAtom<number> = atom(0);
+
   protected _ctx: NodesContext;
   protected _maxBuffer: number;
-  protected _history: HistoryPatch[] = [];
-  protected _headIndex: number = 0;
 
   constructor(ctx: NodesContext, maxBuffer: number) {
     this._ctx = ctx;
@@ -24,36 +26,37 @@ export class NodesHistory {
   }
 
   canUndo(): boolean {
-    return this._history.length > 0 && this._headIndex < this._history.length;
+    return this.history.get().length > 0 && this.headIndex.get() < this.history.get().length;
   }
 
   canRedo(): boolean {
-    return this._history.length > 0 && this._headIndex > 0;
+    return this.history.get().length > 0 && this.headIndex.get() > 0;
   }
 
   addPatch(patch: HistoryPatch) {
-    while (this._headIndex !== 0) {
-      this._history.shift();
-      this._headIndex--;
+    while (this.headIndex.get() !== 0) {
+      this.history.get().shift();
+      this.headIndex.set(this.headIndex.get()-1);
     }
 
-    this._history.unshift(patch);
-    if (this._history.length > this._maxBuffer) {
-      this._history.pop();
+    this.history.get().unshift(patch);
+    if (this.history.get().length > this._maxBuffer) {
+      this.history.get().pop();
     }
+    this.history.set([...this.history.get()]);
   }
 
   undo() {
-    if (this._headIndex < this._history.length) {
-      this._history[this._headIndex].undo(this._ctx);
-      this._headIndex++;
+    if (this.headIndex.get() < this.history.get().length) {
+      this.history.get()[this.headIndex.get()].undo(this._ctx);
+      this.headIndex.set(this.headIndex.get()+1);
     }
   }
 
   redo() {
-    if (this._headIndex > 0) {
-      this._history[this._headIndex - 1].redo(this._ctx);
-      this._headIndex--;
+    if (this.headIndex.get() > 0) {
+      this.history.get()[this.headIndex.get() - 1].redo(this._ctx);
+      this.headIndex.set(this.headIndex.get()-1);
     }
   }
 }
