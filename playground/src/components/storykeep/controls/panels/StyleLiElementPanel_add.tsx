@@ -18,8 +18,6 @@ const LIST_ITEM_STYLES = [
   { key: "py", title: "Padding Y" },
   { key: "mx", title: "Margin X" },
   { key: "my", title: "Margin Y" },
-  { key: "listSTYLE", title: "List Style" },
-  { key: "marker", title: "List Marker" },
   { key: "fontWEIGHT", title: "Font Weight" },
   { key: "fontFACE", title: "Font Family" },
 ];
@@ -39,8 +37,6 @@ const LIST_CONTAINER_STYLES = [
   { key: "m", title: "Margin" },
   { key: "mx", title: "Margin X" },
   { key: "my", title: "Margin Y" },
-  { key: "listSTYLE", title: "List Style" },
-  { key: "listPOSITION", title: "List Position" },
 ];
 
 const getFilteredStyles = (showAdvanced: boolean, existingClasses: Set<string>) => {

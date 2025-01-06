@@ -16,6 +16,7 @@ type ViewportOverrides = {
 type Viewport = "mobile" | "tablet" | "desktop";
 
 const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePanelProps) => {
+  console.log(node, parentNode, className);
   if (!node || !className || !parentNode || !isMarkdownPaneFragmentNode(parentNode)) return null;
 
   const [isOverridden, setIsOverridden] = useState(false);
@@ -156,10 +157,25 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
         }
       } else {
         const markdownNode = { ...allNodes.get(parentNode.id) } as MarkdownPaneFragmentNode;
-        if (!markdownNode?.defaultClasses?.[node.tagName]) return;
+        if (!markdownNode) return;
+
+        // Initialize defaultClasses structure if it doesn't exist
+        if (!markdownNode.defaultClasses) {
+          markdownNode.defaultClasses = {};
+        }
+
+        // Initialize tag structure if it doesn't exist
+        if (!markdownNode.defaultClasses[node.tagName]) {
+          markdownNode.defaultClasses[node.tagName] = {
+            mobile: {},
+            tablet: {},
+            desktop: {},
+          };
+        }
 
         const defaults = markdownNode.defaultClasses[node.tagName];
 
+        // Ensure viewport objects exist
         if (viewport !== "mobile") {
           defaults[viewport] = defaults[viewport] || {};
         }
@@ -186,7 +202,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
     },
     [node, parentNode, className, isOverridden]
   );
-  console.log(2, config);
+
   return (
     <div className="space-y-4 z-50 isolate">
       <div className="flex flex-row flex-nowrap justify-between">

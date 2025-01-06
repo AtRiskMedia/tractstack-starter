@@ -63,6 +63,7 @@ export function handleClickEventDefault(node: FlatNode, parentLayer?: number | n
         case "h3":
         case "h4":
         case "h5":
+        case "ol":
           settingsPanelStore.set({ action: "style-element", nodeId: node.id });
           break;
         case "img":

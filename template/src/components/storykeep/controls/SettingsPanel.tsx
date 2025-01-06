@@ -247,7 +247,7 @@ const getPanel = (
 
 const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
   const signal = useStore(settingsPanelStore);
-  console.log(signal);
+  if (signal) console.log(signal);
   if (!signal) return null;
 
   const ctx = getCtx();

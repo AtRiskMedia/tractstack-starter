@@ -48,6 +48,36 @@ const RECOMMENDED_STYLES: { [key: string]: Array<{ key: string; title: string }>
     { key: "fontFACE", title: "Font Family" },
     { key: "mt", title: "Margin Top" },
   ],
+  ul: [
+    { key: "bgCOLOR", title: "Background Color" },
+    { key: "borderCOLOR", title: "Border Color" },
+    { key: "borderSTYLE", title: "Border Style" },
+    { key: "borderWIDTH", title: "Border Width" },
+    { key: "rounded", title: "Border Radius" },
+    { key: "shadow", title: "Box Shadow" },
+    { key: "maxW", title: "Max Width" },
+    { key: "p", title: "Padding" },
+    { key: "px", title: "Padding X" },
+    { key: "py", title: "Padding Y" },
+    { key: "m", title: "Margin" },
+    { key: "mx", title: "Margin X" },
+    { key: "my", title: "Margin Y" },
+  ],
+  ol: [
+    { key: "bgCOLOR", title: "Background Color" },
+    { key: "borderCOLOR", title: "Border Color" },
+    { key: "borderSTYLE", title: "Border Style" },
+    { key: "borderWIDTH", title: "Border Width" },
+    { key: "rounded", title: "Border Radius" },
+    { key: "shadow", title: "Box Shadow" },
+    { key: "maxW", title: "Max Width" },
+    { key: "p", title: "Padding" },
+    { key: "px", title: "Padding X" },
+    { key: "py", title: "Padding Y" },
+    { key: "m", title: "Margin" },
+    { key: "mx", title: "Margin X" },
+    { key: "my", title: "Margin Y" },
+  ],
 };
 
 const getFilteredStyles = (showAdvanced: boolean, existingClasses: Set<string>) => {
@@ -66,6 +96,7 @@ const getFilteredStyles = (showAdvanced: boolean, existingClasses: Set<string>) 
 };
 
 const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
+  console.log(node, parentNode);
   const [query, setQuery] = useState("");
   const showAdvanced = false;
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
