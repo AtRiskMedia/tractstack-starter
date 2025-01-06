@@ -138,7 +138,12 @@ const getPanel = (
       ) : null;
     case "style-parent-update":
       return markdownNode ? (
-        <StyleParentUpdatePanel node={markdownNode} layer={layer} className={className} />
+        <StyleParentUpdatePanel
+          node={markdownNode}
+          layer={layer}
+          className={className}
+          config={config}
+        />
       ) : null;
     case "style-parent-delete-layer":
       return markdownNode ? (
@@ -171,6 +176,7 @@ const getPanel = (
           node={clickedNode}
           parentNode={markdownNode}
           className={className}
+          config={config}
         />
       ) : null;
     case "style-li-element":

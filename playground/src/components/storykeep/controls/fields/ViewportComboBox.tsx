@@ -90,14 +90,15 @@ const ViewportComboBox = ({
   );
 
   const handleBlur = useCallback(() => {
-    // Only update if the value is valid
     if (values.includes(internalValue)) {
       onFinalChange(internalValue, viewport, isNowNegative);
     } else {
-      setInternalValue(value); // Reset to last valid value
+      setInternalValue(value);
     }
-    setQuery(""); // Clear query on blur
+    setQuery("");
   }, [internalValue, value, values, onFinalChange, viewport, isNowNegative]);
+
+  const isColorValue = colorValues.includes(internalValue);
 
   return (
     <div className="flex flex-nowrap items-center relative" title={`Value on ${viewport} Screens`}>
@@ -109,17 +110,32 @@ const ViewportComboBox = ({
               {() => (
                 <>
                   <div className="relative">
-                    <Combobox.Input
-                      ref={inputRef}
-                      className={classNames(
-                        "w-full border border-mydarkgrey rounded-md py-2 pl-3 pr-16 text-xl leading-5 focus:ring-1 focus:ring-myorange focus:border-myorange",
-                        isInferred ? "text-black/20" : "text-black"
+                    <div className="relative flex items-center">
+                      {isColorValue && (
+                        <div
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 border border-black/10 rounded shadow-sm"
+                          style={{
+                            backgroundColor: tailwindToHex(
+                              internalValue,
+                              config?.init?.BRAND_COLOURS || null
+                            ),
+                          }}
+                        />
                       )}
-                      onChange={(event) => handleChange(event.target.value)}
-                      onBlur={handleBlur}
-                      displayValue={(v: string) => v}
-                      autoComplete="off"
-                    />
+                      <Combobox.Input
+                        ref={inputRef}
+                        className={classNames(
+                          "w-full border border-mydarkgrey rounded-md py-2 text-xl leading-5 focus:ring-1 focus:ring-myorange focus:border-myorange",
+                          isInferred ? "text-black/20" : "text-black",
+                          isColorValue ? "pl-12" : "pl-3",
+                          "pr-16"
+                        )}
+                        onChange={(event) => handleChange(event.target.value)}
+                        onBlur={handleBlur}
+                        displayValue={(v: string) => v}
+                        autoComplete="off"
+                      />
+                    </div>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                       <Combobox.Button className="flex items-center pl-2">
                         <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
@@ -137,9 +153,9 @@ const ViewportComboBox = ({
                           key={item}
                           value={item}
                           className={({ active }) =>
-                            `relative cursor-default select-none py-2 ${colorValues.includes(item) ? `pl-12` : `pl-6`} pr-9 ${
-                              active ? "bg-myorange text-white" : "text-black"
-                            }`
+                            `relative cursor-default select-none py-2 ${
+                              colorValues.includes(item) ? `pl-12` : `pl-6`
+                            } pr-9 ${active ? "bg-myorange text-white" : "text-black"}`
                           }
                         >
                           {({ selected, active }) => (

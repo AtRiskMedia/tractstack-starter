@@ -59,43 +59,49 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
       if (!elementNode) return;
 
       if (checked) {
+        // When toggling ON override mode:
+        // 1. Create empty override structure
         const newOverrides: ViewportOverrides = {
           mobile: {},
           tablet: {},
           desktop: {},
         };
+        // 2. Set empty values for this className
+        newOverrides.mobile[className] = "";
+        newOverrides.tablet[className] = "";
+        newOverrides.desktop[className] = "";
+        elementNode.overrideClasses = newOverrides;
+        setMobileValue("");
+        setTabletValue("");
+        setDesktopValue("");
+      } else {
+        // When toggling OFF override mode:
+        // 1. Remove this className from overrides
+        if (elementNode.overrideClasses) {
+          const mobileClasses = { ...(elementNode.overrideClasses?.mobile ?? {}) };
+          const tabletClasses = { ...(elementNode.overrideClasses?.tablet ?? {}) };
+          const desktopClasses = { ...(elementNode.overrideClasses?.desktop ?? {}) };
 
+          delete mobileClasses[className];
+          delete tabletClasses[className];
+          delete desktopClasses[className];
+
+          const hasClasses =
+            Object.keys(mobileClasses).length > 0 ||
+            Object.keys(tabletClasses).length > 0 ||
+            Object.keys(desktopClasses).length > 0;
+
+          elementNode.overrideClasses = hasClasses
+            ? { mobile: mobileClasses, tablet: tabletClasses, desktop: desktopClasses }
+            : undefined;
+        }
+        // 2. Reset values to parent's defaultClasses
         const defaults = parentNode.defaultClasses?.[node.tagName];
         if (defaults) {
-          newOverrides.mobile[className] = defaults.mobile?.[className] ?? "";
-          newOverrides.tablet[className] = defaults.tablet?.[className] ?? "";
-          newOverrides.desktop[className] = defaults.desktop?.[className] ?? "";
+          setMobileValue(defaults.mobile[className] || "");
+          setTabletValue(defaults.tablet?.[className] || "");
+          setDesktopValue(defaults.desktop?.[className] || "");
         }
-
-        elementNode.overrideClasses = newOverrides;
-      } else if (elementNode.overrideClasses) {
-        const mobileClasses: Record<string, string> = {
-          ...(elementNode.overrideClasses?.mobile ?? {}),
-        };
-        const tabletClasses: Record<string, string> = {
-          ...(elementNode.overrideClasses?.tablet ?? {}),
-        };
-        const desktopClasses: Record<string, string> = {
-          ...(elementNode.overrideClasses?.desktop ?? {}),
-        };
-
-        delete mobileClasses[className];
-        delete tabletClasses[className];
-        delete desktopClasses[className];
-
-        const hasClasses =
-          Object.keys(mobileClasses).length > 0 ||
-          Object.keys(tabletClasses).length > 0 ||
-          Object.keys(desktopClasses).length > 0;
-
-        elementNode.overrideClasses = hasClasses
-          ? { mobile: mobileClasses, tablet: tabletClasses, desktop: desktopClasses }
-          : undefined;
       }
 
       const newNodes = new Map(allNodes);
@@ -180,7 +186,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
     },
     [node, parentNode, className, isOverridden]
   );
-
+  console.log(2, config);
   return (
     <div className="space-y-4 z-50 isolate">
       <div className="flex flex-row flex-nowrap justify-between">
