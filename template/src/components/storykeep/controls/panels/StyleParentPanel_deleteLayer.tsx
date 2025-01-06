@@ -7,7 +7,7 @@ import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards"
 const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
   if (!layer) return null;
   if (!node || !isMarkdownPaneFragmentNode(node)) return null;
-  if (!node.parentClasses || !node.parentCss) return null;
+  if (!node.parentClasses ) return null;
 
   const layerIndex = layer - 1;
   if (layerIndex >= node.parentClasses.length) return null;
@@ -33,7 +33,7 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
     const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
 
     if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
-    if (!markdownNode.parentClasses || !markdownNode.parentCss) return;
+    if (!markdownNode.parentClasses ) return;
 
     // If this is the last layer, replace with empty classes instead of removing
     if (markdownNode.parentClasses.length === 1) {
@@ -46,7 +46,6 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
       const updatedNode: MarkdownPaneFragmentNode = {
         ...markdownNode,
         parentClasses: [emptyLayer],
-        parentCss: [""],
         isChanged: true,
       };
 
@@ -67,15 +66,9 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
       ...markdownNode.parentClasses.slice(layerIndex + 1),
     ];
 
-    const newParentCss = [
-      ...markdownNode.parentCss.slice(0, layerIndex),
-      ...markdownNode.parentCss.slice(layerIndex + 1),
-    ];
-
     const updatedNode: MarkdownPaneFragmentNode = {
       ...markdownNode,
       parentClasses: newParentClasses,
-      parentCss: newParentCss,
       isChanged: true,
     };
 
