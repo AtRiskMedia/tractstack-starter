@@ -4,13 +4,8 @@ import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import ViewportComboBox from "../fields/ViewportComboBox";
 import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { MarkdownPaneFragmentNode, FlatNode } from "../../../../types";
-
-const isMarkdownPaneFragmentNode = (
-  node: FlatNode | MarkdownPaneFragmentNode
-): node is MarkdownPaneFragmentNode => {
-  return "type" in node && node.type === "markdown";
-};
+import type { MarkdownPaneFragmentNode } from "../../../../types";
+import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 
 const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelProps) => {
   if (!node || !className || !layer) return null;
@@ -43,11 +38,11 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
 
       // Get mutable copy of the node
       const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
-      if (!markdownNode || !markdownNode.parentClasses) return;
+      if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
 
       // Layer is 1-based but array is 0-based
       const layerIndex = layer - 1;
-      const layerClasses = markdownNode.parentClasses[layerIndex];
+      const layerClasses = markdownNode?.parentClasses?.[layerIndex];
       if (!layerClasses) return;
 
       switch (viewport) {
@@ -98,7 +93,11 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
         <h2 className="text-xl font-bold">
           <span className="font-bold">{friendlyName}</span> (Layer {layer})
         </h2>
-        <button title="Return to preview pane" onClick={() => handleCancel()}>
+        <button
+          className="text-myblue hover:text-black"
+          title="Return to preview pane"
+          onClick={() => handleCancel()}
+        >
           Go Back
         </button>
       </div>

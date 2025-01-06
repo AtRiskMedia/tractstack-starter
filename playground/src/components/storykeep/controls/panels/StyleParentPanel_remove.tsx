@@ -3,6 +3,7 @@ import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
+import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 
 const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
   if (!className) return null;
@@ -26,9 +27,9 @@ const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
     const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
-    if (!markdownNode || !markdownNode.parentClasses) return;
+    if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
     const layerIndex = layer - 1;
-    const layerClasses = markdownNode.parentClasses[layerIndex];
+    const layerClasses = markdownNode?.parentClasses?.[layerIndex];
     if (!layerClasses) return;
     // Remove the class from each viewport if it exists
     if (className in layerClasses.mobile) delete layerClasses.mobile[className];

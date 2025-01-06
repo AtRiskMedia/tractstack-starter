@@ -4,9 +4,9 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { PaneFragmentNode } from "../../../../types";
+import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 
 const RECOMMENDED_STYLES = [
   { key: "bgCOLOR", title: "Background Color" },

@@ -1186,6 +1186,7 @@ export interface PaneNode extends BaseNode {
   slug: string;
   created?: Date;
   changed?: Date;
+  bgColour?: string;
   isContextPane?: boolean;
   heightOffsetDesktop?: number;
   heightOffsetMobile?: number;

@@ -2,29 +2,9 @@ import { useState, useEffect } from "react";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { settingsPanelStore } from "@/store/storykeep";
-import type { BasePanelProps } from "../SettingsPanel";
-import type { MarkdownPaneFragmentNode, BaseNode, FlatNode, PaneNode } from "../../../../types";
 import { getCtx } from "@/store/nodes";
-
-const hasParentClasses = (
-  node: BaseNode | FlatNode | MarkdownPaneFragmentNode | undefined
-): node is MarkdownPaneFragmentNode & {
-  parentClasses?: {
-    mobile: Record<string, string>;
-    tablet: Record<string, string>;
-    desktop: Record<string, string>;
-  }[];
-} => {
-  return node !== undefined && "parentClasses" in node;
-};
-
-const isPaneNodeWithBg = (
-  node: BaseNode | undefined
-): node is PaneNode & {
-  bgColour: string;
-} => {
-  return node?.nodeType === "Pane" && "bgColour" in node;
-};
+import { isMarkdownPaneFragmentNode, isPaneNode } from "../../../../utils/nodes/type-guards";
+import type { BasePanelProps } from "../SettingsPanel";
 
 interface ParentStyles {
   bgColor: string;
@@ -39,9 +19,9 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   if (
     !parentNode ||
     !node ||
-    !hasParentClasses(node) ||
-    !isPaneNodeWithBg(parentNode) ||
-    !hasParentClasses(node)
+    !isMarkdownPaneFragmentNode(node) ||
+    !isPaneNode(parentNode) ||
+    !isMarkdownPaneFragmentNode(node)
   ) {
     return null;
   }
@@ -74,7 +54,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
 
     // Get mutable copy of the parent node
     const paneNode = allNodes.get(parentNode.id);
-    if (!paneNode || !isPaneNodeWithBg(paneNode)) return;
+    if (!paneNode || !isPaneNode(paneNode)) return;
 
     if (settings.bgColor !== prevSettings.bgColor) {
       paneNode.bgColour = settings.bgColor;
@@ -90,6 +70,17 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   }, [settings, parentNode, ctx, allNodes, node.parentClasses]);
 
   const currentClasses = settings.parentClasses[currentLayer - 1];
+  const hasNoClasses = !Object.values(currentClasses).some(
+    (breakpoint) => Object.keys(breakpoint).length > 0
+  );
+
+  const handleClickDeleteLayer = () => {
+    settingsPanelStore.set({
+      nodeId: node.id,
+      layer: currentLayer,
+      action: `style-parent-delete-layer`,
+    });
+  };
 
   const handleClickRemove = (name: string) => {
     settingsPanelStore.set({
@@ -169,7 +160,11 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
         </div>
       </div>
 
-      {currentClasses && (
+      {hasNoClasses ? (
+        <div className="space-y-4">
+          <em>No styles.</em>
+        </div>
+      ) : currentClasses ? (
         <div className="flex flex-wrap gap-2">
           {Object.entries(currentClasses.mobile).map(([className]) => (
             <SelectedTailwindClass
@@ -185,7 +180,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             />
           ))}
         </div>
-      )}
+      ) : null}
 
       <div className="space-y-4">
         <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
@@ -200,11 +195,16 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
               Add Style
             </button>
           </li>
-          <li>
-            <button className="text-myblue hover:text-black underline font-bold">
-              Delete Layer
-            </button>
-          </li>
+          {currentLayer === 1 && hasNoClasses ? null : (
+            <li>
+              <button
+                onClick={() => handleClickDeleteLayer()}
+                className="text-myblue hover:text-black underline font-bold"
+              >
+                Delete Layer
+              </button>
+            </li>
+          )}
         </ul>
       </div>
     </div>

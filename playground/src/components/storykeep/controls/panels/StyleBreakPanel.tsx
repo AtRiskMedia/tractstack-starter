@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import PaneBreakCollectionSelector from "../fields/PaneBreakCollectionSelector";
 import PaneBreakShapeSelector from "../fields/PaneBreakShapeSelector";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
-import type { BasePanelProps } from "../SettingsPanel";
-import type { BaseNode, FlatNode } from "../../../../types";
 import { getCtx } from "../../../../store/nodes";
 import { collections } from "../../../../constants";
+import { isBreakNode, isPaneNode } from "../../../../utils/nodes/type-guards";
+import type { BasePanelProps } from "../SettingsPanel";
+import type { FlatNode, PaneNode } from "../../../../types";
 
 interface BreakData {
   collection: string;
@@ -29,21 +30,8 @@ interface BreakNode extends FlatNode {
   bgColor: string;
 }
 
-interface PaneNodeWithBg extends BaseNode {
-  nodeType: "Pane";
-  bgColour: string;
-}
-
-const isBreakNode = (node: FlatNode | null): node is BreakNode => {
-  return node?.nodeType === "BgPane" && "breakDesktop" in node;
-};
-
-const isPaneNodeWithBg = (node: BaseNode | undefined): node is PaneNodeWithBg => {
-  return node?.nodeType === "Pane" && "bgColour" in node;
-};
-
 const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
-  if (!node || !isBreakNode(node) || !parentNode || !isPaneNodeWithBg(parentNode)) {
+  if (!node || !isBreakNode(node) || !parentNode || !isPaneNode(parentNode)) {
     return null;
   }
 
@@ -74,9 +62,9 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
 
     // Get mutable copies of the nodes
     const breakNode = allNodes.get(node.id) as BreakNode;
-    const paneNode = allNodes.get(parentNode.id) as PaneNodeWithBg;
+    const paneNode = allNodes.get(parentNode.id) as PaneNode;
 
-    if (!breakNode || !paneNode || !isPaneNodeWithBg(paneNode)) return;
+    if (!breakNode || !paneNode || !isPaneNode(paneNode)) return;
 
     Object.entries(settings).forEach(([key, value]) => {
       if (value !== prevSettings[key as keyof BreakSettings]) {

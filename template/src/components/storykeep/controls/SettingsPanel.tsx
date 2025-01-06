@@ -6,6 +6,7 @@ import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
+import StyleParentDeleteLayerPanel from "./panels/StyleParentPanel_deleteLayer";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
 import { type ReactElement } from "react";
 import type { FlatNode, Config } from "@/types";
@@ -143,6 +144,10 @@ const getPanel = (
     case "style-parent-update":
       return markdownNode ? (
         <StyleParentUpdatePanel node={markdownNode} layer={layer} className={className} />
+      ) : null;
+    case "style-parent-delete-layer":
+      return markdownNode ? (
+        <StyleParentDeleteLayerPanel node={markdownNode} layer={layer} className={className} />
       ) : null;
     case "style-link":
       return clickedNode ? <StyleLinkPanel node={clickedNode} /> : null;
