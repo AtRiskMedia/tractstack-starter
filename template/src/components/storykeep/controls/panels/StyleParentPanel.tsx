@@ -64,9 +64,8 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       desktop: {},
     };
 
-    // Create new arrays for both parentClasses and parentCss
+    // Create new arrays for both parentClasses
     let newParentClasses = [...(markdownNode.parentClasses || [])];
-    let newParentCss = [...(markdownNode.parentCss || [""])];
 
     // Calculate the insert index based on position and layerNum
     const insertIndex = position === "before" ? layerNum - 1 : layerNum;
@@ -78,15 +77,11 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       ...newParentClasses.slice(insertIndex),
     ];
 
-    // Insert an empty CSS string at the same index
-    newParentCss = [...newParentCss.slice(0, insertIndex), "", ...newParentCss.slice(insertIndex)];
-
     // Update the node in the store
     const newNodes = new Map(allNodes);
     newNodes.set(node.id, {
       ...markdownNode,
       parentClasses: newParentClasses,
-      parentCss: newParentCss,
       isChanged: true,
     } as MarkdownPaneFragmentNode);
 

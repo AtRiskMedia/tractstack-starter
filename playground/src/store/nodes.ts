@@ -28,7 +28,6 @@ import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
-//import { string } from "zod";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -38,14 +37,12 @@ export class NodesContext {
   constructor() {}
 
   notifications = new NotificationSystem<BaseNode>();
-
   allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
   impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
   parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
-
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
   getChildNodeIDs(parentNodeId: string): string[] {

@@ -1,9 +1,9 @@
-import type { BasePanelProps } from "../SettingsPanel";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import type { MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import type { MarkdownPaneFragmentNode } from "../../../../types";
+import type { BasePanelProps } from "../SettingsPanel";
 
 const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
   if (!className) return null;

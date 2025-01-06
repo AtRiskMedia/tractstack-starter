@@ -3,14 +3,19 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
+import StyleElementPanel from "./panels/StyleElementPanel";
+import StyleElementAddPanel from "./panels/StyleElementPanel_add";
+import StyleElementRemovePanel from "./panels/StyleElementPanel_remove";
+import StyleElementUpdatePanel from "./panels/StyleElementPanel_update";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
 import StyleParentDeleteLayerPanel from "./panels/StyleParentPanel_deleteLayer";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
-import { type ReactElement } from "react";
-import type { FlatNode, Config } from "@/types";
 import { getCtx } from "../../../store/nodes";
+import { isMarkdownPaneFragmentNode } from "../../../utils/nodes/type-guards";
+import { type ReactElement } from "react";
+import type { MarkdownPaneFragmentNode, FlatNode, Config } from "@/types";
 
 export interface BasePanelProps {
   node: FlatNode | null;
@@ -69,17 +74,6 @@ const StyleLiElementPanel = ({
   );
 };
 
-const StyleElementPanel = ({ node, parentNode }: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Element Style Settings</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
-
 const StyleLinkPanel = ({ node }: BasePanelProps) => {
   return (
     <div className="space-y-4">
@@ -121,6 +115,7 @@ const getPanel = (
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
+  if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
 
   switch (action) {
     case "debug":
@@ -147,13 +142,36 @@ const getPanel = (
       ) : null;
     case "style-parent-delete-layer":
       return markdownNode ? (
-        <StyleParentDeleteLayerPanel node={markdownNode} layer={layer} className={className} />
+        <StyleParentDeleteLayerPanel node={markdownNode} layer={layer} />
       ) : null;
     case "style-link":
       return clickedNode ? <StyleLinkPanel node={clickedNode} /> : null;
     case "style-element":
       return clickedNode && markdownNode ? (
-        <StyleElementPanel node={clickedNode} parentNode={markdownNode} />
+        <StyleElementPanel
+          node={clickedNode}
+          parentNode={markdownNode as MarkdownPaneFragmentNode}
+        />
+      ) : null;
+    case "style-element-add":
+      return clickedNode && markdownNode ? (
+        <StyleElementAddPanel node={clickedNode} parentNode={markdownNode} className={className} />
+      ) : null;
+    case "style-element-remove":
+      return clickedNode && markdownNode ? (
+        <StyleElementRemovePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+        />
+      ) : null;
+    case "style-element-update":
+      return clickedNode && markdownNode ? (
+        <StyleElementUpdatePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+        />
       ) : null;
     case "style-li-element":
     case "style-widget":
