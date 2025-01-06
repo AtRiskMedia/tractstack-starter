@@ -1,7 +1,5 @@
-import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import type { MarkdownPaneFragmentNode } from "@/types.ts";
-import { viewportStore } from "@/store/storykeep.ts";
 import {
   TemplateAsideNode,
   TemplateH2Node,
@@ -10,8 +8,10 @@ import {
   TemplateImgNode,
   TemplatePNode,
 } from "@/utils/TemplateNodes.ts";
-import { useEffect, useState } from "react";
+import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import type { MarkdownPaneFragmentNode, ParentClassesPayload } from "@/types.ts";
 
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
@@ -30,8 +30,8 @@ export const Markdown = (props: NodeProps) => {
 
   console.log("draw markdown: " + props.nodeId);
   let nodesToRender = <RenderChildren children={children} nodeProps={props} />;
-  if ("parentCss" in node) {
-    for (let i = (node.parentCss as string[])?.length; i > 0; --i) {
+  if ("parentClasses" in node) {
+    for (let i = (node.parentClasses as ParentClassesPayload)?.length; i > 0; --i) {
       nodesToRender = (
         <div
           onClick={(e) => {

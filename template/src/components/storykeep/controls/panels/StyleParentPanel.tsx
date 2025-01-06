@@ -189,7 +189,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
         config={config!}
       />
 
-<div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
+      <div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
         <span className="text-sm font-medium text-mydarkgrey">Layer:</span>
         <div className="flex items-center gap-2">
           <button

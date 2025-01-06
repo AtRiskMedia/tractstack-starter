@@ -1337,6 +1337,12 @@ export interface PaneFragmentNode extends BaseNode {
   hiddenViewportDesktop?: boolean;
 }
 
+export type ParentClassesPayload = Array<{
+  mobile: Record<string, string>;
+  tablet: Record<string, string>;
+  desktop: Record<string, string>;
+}>;
+
 export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
   type: "markdown";
   markdownId: string;
@@ -1348,11 +1354,7 @@ export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
       desktop: Record<string, string>;
     }
   >;
-  parentClasses?: Array<{
-    mobile: Record<string, string>;
-    tablet: Record<string, string>;
-    desktop: Record<string, string>;
-  }>;
+  parentClasses?: ParentClassesPayload;
   parentCss?: string[];
 }
 
