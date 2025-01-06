@@ -205,9 +205,6 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
                          transition-colors duration-200"
               >
                 <span className="font-medium">{style.title}</span>
-                <span className="ml-2 text-xs text-mydarkgrey">
-                  {tailwindClasses[style.key]?.className}
-                </span>
               </button>
             ))}
           </div>
