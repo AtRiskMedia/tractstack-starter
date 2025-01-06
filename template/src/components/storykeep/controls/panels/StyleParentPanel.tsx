@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { isMarkdownPaneFragmentNode, isPaneNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
+import type { MarkdownPaneFragmentNode } from "../../../../types";
 
 interface ParentStyles {
   bgColor: string;
@@ -29,20 +31,83 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
 
-  const layerCount = node.parentClasses?.length || 0;
+  const [layerCount, setLayerCount] = useState(node.parentClasses?.length || 0);
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
   const [settings, setSettings] = useState<ParentStyles>({
     bgColor: parentNode.bgColour || "#FFFFFF",
     parentClasses: node.parentClasses || [],
   });
 
-  const handleLayerAdd = (position: "before" | "after", layerNum: number) => {
-    console.log(`Adding layer ${position} layer ${layerNum}`);
-  };
+  // Update state when node changes
+  useEffect(() => {
+    setLayerCount(node.parentClasses?.length || 0);
+    setSettings({
+      bgColor: parentNode.bgColour || "#FFFFFF",
+      parentClasses: node.parentClasses || [],
+    });
+  }, [node, parentNode.bgColour]);
 
   useEffect(() => {
     setCurrentLayer(layer || 1);
   }, [layer]);
+
+  const handleLayerAdd = (position: "before" | "after", layerNum: number) => {
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const markdownNode = allNodes.get(node.id);
+    if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
+
+    // Create an empty layer
+    const emptyLayer = {
+      mobile: {},
+      tablet: {},
+      desktop: {},
+    };
+
+    // Create new arrays for both parentClasses and parentCss
+    let newParentClasses = [...(markdownNode.parentClasses || [])];
+    let newParentCss = [...(markdownNode.parentCss || [""])];
+
+    // Calculate the insert index based on position and layerNum
+    const insertIndex = position === "before" ? layerNum - 1 : layerNum;
+
+    // Insert the empty layer at the calculated index
+    newParentClasses = [
+      ...newParentClasses.slice(0, insertIndex),
+      emptyLayer,
+      ...newParentClasses.slice(insertIndex),
+    ];
+
+    // Insert an empty CSS string at the same index
+    newParentCss = [...newParentCss.slice(0, insertIndex), "", ...newParentCss.slice(insertIndex)];
+
+    // Update the node in the store
+    const newNodes = new Map(allNodes);
+    newNodes.set(node.id, {
+      ...markdownNode,
+      parentClasses: newParentClasses,
+      parentCss: newParentCss,
+      isChanged: true,
+    } as MarkdownPaneFragmentNode);
+
+    ctx.allNodes.set(newNodes);
+
+    // Update local state
+    setSettings((prev) => ({
+      ...prev,
+      parentClasses: newParentClasses,
+    }));
+    setLayerCount(newParentClasses.length);
+
+    // Set the current layer to the newly added layer
+    const newLayer = position === "before" ? layerNum : layerNum + 1;
+    setCurrentLayer(newLayer);
+
+    // Notify parent of changes
+    if (node.parentId) {
+      ctx.notifyNode(node.parentId);
+    }
+  };
 
   useEffect(() => {
     if (!parentNode) return;
@@ -69,7 +134,12 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     }
   }, [settings, parentNode, ctx, allNodes, node.parentClasses]);
 
-  const currentClasses = settings.parentClasses[currentLayer - 1];
+  // Safely get current classes
+  const currentClasses = settings.parentClasses?.[currentLayer - 1] || {
+    mobile: {},
+    tablet: {},
+    desktop: {},
+  };
   const hasNoClasses = !Object.values(currentClasses).some(
     (breakpoint) => Object.keys(breakpoint).length > 0
   );
@@ -99,6 +169,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       action: `style-parent-update`,
     });
   };
+
   const handleClickAdd = () => {
     settingsPanelStore.set({
       nodeId: node.id,
@@ -118,34 +189,34 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
         config={config!}
       />
 
-      <div className="flex gap-2 items-center mb-4 bg-slate-50 p-2 rounded-md">
-        <span className="text-sm text-mydarkgrey">Layer:</span>
-        <div className="flex items-center">
+<div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
+        <span className="text-sm font-medium text-mydarkgrey">Layer:</span>
+        <div className="flex items-center gap-2">
           <button
             key="first-add"
-            className="px-1 py-1 text-sm rounded-md hover:bg-mydarkgrey hover:text-white transition-colors"
-            title="Add Layer"
+            className="p-1.5 text-sm rounded-md hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black transition-colors"
+            title="Add Layer Before First"
             onClick={() => handleLayerAdd("before", 1)}
           >
-            +
+            <PlusIcon className="w-4 h-4" />
           </button>
           {[...Array(layerCount).keys()]
             .map((i) => i + 1)
             .map((num, index) => (
-              <div key={`layer-group-${num}`} className="flex items-center gap-0.5">
+              <div key={`layer-group-${num}`} className="flex items-center gap-2">
                 <button
-                  className={`px-2.5 py-1 text-sm rounded-md transition-colors ${
+                  className={`min-w-[32px] px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     currentLayer === num
-                      ? "bg-myblue text-white"
-                      : "hover:bg-mydarkgrey hover:text-white"
+                      ? "bg-myblue text-white shadow-sm"
+                      : "bg-white hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black"
                   }`}
                   onClick={() => setCurrentLayer(num)}
                 >
                   {num}
                 </button>
                 <button
-                  className="px-1 py-1 text-sm rounded-md hover:bg-mydarkgrey hover:text-white transition-colors"
-                  title="Add Layer"
+                  className="p-1.5 text-sm rounded-md hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black transition-colors"
+                  title={index === layerCount - 1 ? "Add Layer After" : "Add Layer Before Next"}
                   onClick={() =>
                     handleLayerAdd(
                       index === layerCount - 1 ? "after" : "before",
@@ -153,7 +224,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
                     )
                   }
                 >
-                  +
+                  <PlusIcon className="w-4 h-4" />
                 </button>
               </div>
             ))}
@@ -195,16 +266,14 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
               Add Style
             </button>
           </li>
-          {currentLayer === 1 && hasNoClasses ? null : (
-            <li>
-              <button
-                onClick={() => handleClickDeleteLayer()}
-                className="text-myblue hover:text-black underline font-bold"
-              >
-                Delete Layer
-              </button>
-            </li>
-          )}
+          <li>
+            <button
+              onClick={() => handleClickDeleteLayer()}
+              className="text-myblue hover:text-black underline font-bold"
+            >
+              Delete Layer
+            </button>
+          </li>
         </ul>
       </div>
     </div>
