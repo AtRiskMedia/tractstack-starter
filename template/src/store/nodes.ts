@@ -393,6 +393,9 @@ export class NodesContext {
   }
 
   modifyNodes(newData: BaseNode[]) {
+    // all nodes are the same, skip
+    if (!this.checkAnyNodeDifferent(newData)) return;
+
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
     for (let i = 0; i < newData.length; i++) {
@@ -435,6 +438,18 @@ export class NodesContext {
         redoList.forEach((fn) => fn(ctx));
       },
     });
+  }
+
+  private checkAnyNodeDifferent(newData: BaseNode[]) {
+    let isAnyNodeDifferent = false;
+    newData.forEach((nodeData) => {
+      const node = nodeData;
+      const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
+      if (!isDeepEqual(currentNodeData, node, ["isChanged"])) {
+        isAnyNodeDifferent = true;
+      }
+    });
+    return isAnyNodeDifferent;
   }
 
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
