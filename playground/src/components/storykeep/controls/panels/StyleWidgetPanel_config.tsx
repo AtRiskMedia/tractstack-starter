@@ -66,7 +66,7 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
     const newParams = meta.valueLabels.map((label) => newValues[label]);
 
     // Create the widget copy string
-    const paramStrings = meta.valueLabels.map((label ) => {
+    const paramStrings = meta.valueLabels.map((label) => {
       const value = newValues[label];
       return Array.isArray(value) ? value.join(",") : value;
     });
