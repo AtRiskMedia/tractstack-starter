@@ -137,7 +137,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
       markdownNode.defaultClasses[node.tagName].desktop[styleKey] = "";
 
       // Update the nodes in the store
-      ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
       // Notify parent of changes
       if (parentNode.id) {
         ctx.notifyNode(parentNode.id);

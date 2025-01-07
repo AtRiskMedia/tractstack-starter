@@ -59,8 +59,8 @@ const StyleLiElementRemovePanel = ({ node, parentNode, className, childId }: Bas
 
     // Update both nodes in the store
     ctx.modifyNodes([
-      {...elementNode, isChanged: true},
-      {...markdownNode, isChanged: true},
+      { ...elementNode, isChanged: true },
+      { ...markdownNode, isChanged: true },
     ]);
     // Notify parent of changes
     if (parentNode.id) {

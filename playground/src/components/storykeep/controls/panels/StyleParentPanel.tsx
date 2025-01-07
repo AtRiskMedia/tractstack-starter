@@ -79,7 +79,13 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     ];
 
     // Update the node in the store
-    ctx.modifyNodes([{...markdownNode, parentClasses: newParentClasses, isChanged: true} as MarkdownPaneFragmentNode]);
+    ctx.modifyNodes([
+      {
+        ...markdownNode,
+        parentClasses: newParentClasses,
+        isChanged: true,
+      } as MarkdownPaneFragmentNode,
+    ]);
 
     // Update local state
     setSettings((prev) => ({
@@ -113,7 +119,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     if (settings.bgColor !== prevSettings.bgColor) {
       paneNode.bgColour = settings.bgColor;
 
-      ctx.modifyNodes([{...paneNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
       // Notify parent of changes
       if (parentNode.id) {
         ctx.notifyNode(parentNode.id);

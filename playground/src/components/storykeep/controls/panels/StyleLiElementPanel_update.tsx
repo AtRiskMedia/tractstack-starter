@@ -173,7 +173,7 @@ const StyleLiElementUpdatePanel = ({
             break;
         }
 
-        ctx.modifyNodes([{...targetNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
         // Notify parent of changes
         if (parentNode.id) {
           ctx.notifyNode(parentNode.id);
@@ -213,7 +213,7 @@ const StyleLiElementUpdatePanel = ({
             break;
         }
 
-        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
         // Notify parent of changes
         if (parentNode.id) {
           ctx.notifyNode(parentNode.id);
