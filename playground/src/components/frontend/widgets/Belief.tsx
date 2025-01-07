@@ -9,7 +9,7 @@ import { heldBeliefs } from "../../../store/beliefs";
 import { events } from "../../../store/events";
 import type { BeliefOptionDatum, BeliefDatum, EventStream } from "../../../types";
 
-// whitelist: bg-teal-400 bg-lime-400 bg-slate-200 bg-amber-400 bg-red-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400
+// whitelist: className="bg-teal-400 bg-lime-400 bg-slate-200 bg-amber-400 bg-red-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400 bg-lime-400 bg-amber-400"
 
 export const Belief = ({
   value,
