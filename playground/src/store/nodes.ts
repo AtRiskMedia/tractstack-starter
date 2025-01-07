@@ -414,16 +414,16 @@ export class NodesContext {
         const newNodes = new Map(ctx.allNodes.get());
         newNodes.set(node.id, currentNodeData);
         ctx.allNodes.set(newNodes);
-        this.notifyNode(currentNodeData.parentId || node.id);
+        this.notifyNode(ctx.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
       });
       redoList.push((ctx: NodesContext) => {
         const newNodes = new Map(ctx.allNodes.get());
         newNodes.set(node.id, node);
         ctx.allNodes.set(newNodes);
-        this.notifyNode(currentNodeData.parentId || node.id);
+        this.notifyNode(ctx.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
       });
 
-      this.notifyNode(currentNodeData.parentId || node.id);
+      this.notifyNode(this.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
     }
 
     this.history.addPatch({

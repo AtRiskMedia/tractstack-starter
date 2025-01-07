@@ -89,6 +89,10 @@ const StyleImageRemovePanel = ({ node, parentNode, className, childId }: BasePan
       {...targetNode, isChanged: true},
       {...parentNodeClone, isChanged: true}
     ]);
+    // Notify parent of changes
+    if (parentNode.id) {
+      ctx.notifyNode(parentNode.id);
+    }
     resetStore();
   };
 

@@ -73,6 +73,10 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
     const newCopy = `${widgetId}(${paramStrings.join("|")})`;
 
     ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
+    // Notify parent of changes
+    if (parentId) {
+      ctx.notifyNode(parentId);
+    }
   };
 
   const handleCloseConfig = () => {

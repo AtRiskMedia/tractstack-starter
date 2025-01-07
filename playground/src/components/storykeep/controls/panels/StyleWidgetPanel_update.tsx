@@ -187,6 +187,10 @@ const StyleWidgetUpdatePanel = ({
 
         // Update nodes
         ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        // Notify parent of changes
+        if (parentNode.id) {
+          ctx.notifyNode(parentNode.id);
+        }
       }
     },
     [node, parentNode, className, isOverridden]

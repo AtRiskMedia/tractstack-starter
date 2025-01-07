@@ -89,6 +89,10 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
       {...targetNode, isChanged: true},
       {...deepParentClone, isChanged: true}
     ]);
+    // Notify parent of changes
+    if (parentNode.id) {
+      ctx.notifyNode(parentNode.id);
+    }
     resetStore();
   };
 

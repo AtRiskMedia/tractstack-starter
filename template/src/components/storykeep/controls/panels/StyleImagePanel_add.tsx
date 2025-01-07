@@ -151,6 +151,10 @@ const StyleImagePanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
 
       // Update the nodes in the store
       ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+      // Notify parent of changes
+      if (parentNode.id) {
+        ctx.notifyNode(parentNode.id);
+      }
 
       // When selecting styles for container/outer container, keep childId for context
       const nextAction = {

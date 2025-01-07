@@ -114,7 +114,10 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       paneNode.bgColour = settings.bgColor;
 
       ctx.modifyNodes([{...paneNode, isChanged: true}]);
-      ctx.notifyNode(parentNode.id);
+      // Notify parent of changes
+      if (parentNode.id) {
+        ctx.notifyNode(parentNode.id);
+      }
     }
   }, [settings, parentNode, ctx, allNodes, node.parentClasses]);
 

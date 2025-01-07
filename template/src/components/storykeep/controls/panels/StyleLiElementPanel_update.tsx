@@ -174,6 +174,10 @@ const StyleLiElementUpdatePanel = ({
         }
 
         ctx.modifyNodes([{...targetNode, isChanged: true}]);
+        // Notify parent of changes
+        if (parentNode.id) {
+          ctx.notifyNode(parentNode.id);
+        }
       } else {
         // Update default classes
         const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
@@ -210,6 +214,10 @@ const StyleLiElementUpdatePanel = ({
         }
 
         ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        // Notify parent of changes
+        if (parentNode.id) {
+          ctx.notifyNode(parentNode.id);
+        }
       }
     },
     [node, parentNode, className, isOverridden, childId, isContainer]
