@@ -1,4 +1,5 @@
 ---
+import { components as codeHookComponents } from "../../../custom/CodeHook.astro";
 import { getConfig, validateConfig } from "../../../utils/core/config";
 import { ReactNodesWrapper } from "../../../components/storykeep/compositor-nodes/ReactNodesWrapper";
 import { getCtx } from "../../../store/nodes";
@@ -15,7 +16,7 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-
+console.log(codeHookComponents);
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
@@ -93,7 +94,11 @@ s.save(getCtx());
     </main>
   </div>
 
-  <SettingsPanel config={config} client:only="react" />
+  <SettingsPanel
+    config={config}
+    availableCodeHooks={Object.keys(codeHookComponents)}
+    client:only="react"
+  />
 
   <style is:global>
     :root {

@@ -131,7 +131,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 export const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   if (showGuids.get()) {
-    return (<NodeWithGuid {...props} element={getElement(node, props)}/>);
+    return <NodeWithGuid {...props} element={getElement(node, props)} />;
   }
   return getElement(node, props);
 });

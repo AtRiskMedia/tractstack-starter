@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
+import StyleCodeHookPanel from "./panels/StyleCodeHookPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleElementPanel from "./panels/StyleElementPanel";
 import StyleElementAddPanel from "./panels/StyleElementPanel_add";
@@ -39,18 +40,8 @@ export interface BasePanelProps {
   layer?: number;
   className?: string;
   childId?: string;
+  availableCodeHooks?: string[];
 }
-
-const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Code Hook Settings</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
 
 const StyleLinkPanel = ({ node }: BasePanelProps) => {
   return (
@@ -67,6 +58,7 @@ const getPanel = (
   config: Config | null,
   action: string,
   clickedNode: FlatNode | null,
+  availableCodeHooks: string[],
   paneNode?: FlatNode,
   childNodes: FlatNode[] = [],
   layer?: number,
@@ -274,8 +266,8 @@ const getPanel = (
         />
       );
     case "setup-codehook":
-      return clickedNode && markdownNode ? (
-        <CodeHookPanel node={clickedNode} parentNode={markdownNode} />
+      return paneNode ? (
+        <StyleCodeHookPanel node={paneNode} availableCodeHooks={availableCodeHooks} />
       ) : null;
     default:
       console.log(`SettingsPanel miss on ${action}`);
@@ -283,7 +275,13 @@ const getPanel = (
   }
 };
 
-const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
+const SettingsPanel = ({
+  config = null,
+  availableCodeHooks = [],
+}: {
+  config?: Config | null;
+  availableCodeHooks?: string[];
+}) => {
   const signal = useStore(settingsPanelStore);
   if (signal) console.log(signal);
   if (!signal) return null;
@@ -298,7 +296,7 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
   let panel;
   // Special Case (click wasn't registered on markdown due to margins)
   if (signal.action === "debug") {
-    panel = getPanel(config, "debug", null);
+    panel = getPanel(config, "debug", null, availableCodeHooks);
   } else if (clickedNode) {
     // Get the closest pane node
     const paneId =
@@ -319,12 +317,13 @@ const SettingsPanel = ({ config = null }: { config?: Config | null }) => {
       .filter((node): node is FlatNode => !!node);
 
     if (clickedNode.nodeType === "Pane") {
-      panel = getPanel(config, signal.action, null, paneNode, childNodes, 1);
+      panel = getPanel(config, signal.action, null, availableCodeHooks, paneNode, childNodes, 1);
     } else {
       panel = getPanel(
         config,
         signal.action,
         clickedNode,
+        availableCodeHooks,
         paneNode,
         childNodes,
         signal.layer,
