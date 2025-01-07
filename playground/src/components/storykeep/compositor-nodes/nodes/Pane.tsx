@@ -3,7 +3,6 @@ import { useStore } from "@nanostores/react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
-import Filter from "@/components/frontend/state/Filter.tsx";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const Pane = (props: NodeProps) => {
@@ -44,19 +43,10 @@ export const Pane = (props: NodeProps) => {
     );
   }
 
-  const beliefs = getCtx(props).getPaneBeliefs(props.nodeId);
-
   // todo naz - make pane more modular
   return (
     <div id={getPaneId()} className="pane">
       <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
-        {beliefs && (
-          <Filter
-            id={props.nodeId}
-            heldBeliefsFilter={beliefs.heldBeliefs}
-            withheldBeliefsFilter={beliefs.withheldBeliefs}
-          />
-        )}
         <div
           className={contentClasses}
           style={contentStyles}
