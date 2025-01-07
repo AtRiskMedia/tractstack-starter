@@ -15,6 +15,10 @@ import StyleImagePanel from "./panels/StyleImagePanel";
 import StyleImageAddPanel from "./panels/StyleImagePanel_add";
 import StyleImageUpdatePanel from "./panels/StyleImagePanel_update";
 import StyleImageRemovePanel from "./panels/StyleImagePanel_remove";
+import StyleWidgetPanel from "./panels/StyleWidgetPanel";
+import StyleWidgetAddPanel from "./panels/StyleWidgetPanel_add";
+import StyleWidgetUpdatePanel from "./panels/StyleWidgetPanel_update";
+import StyleWidgetRemovePanel from "./panels/StyleWidgetPanel_remove";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
@@ -42,24 +46,6 @@ const CodeHookPanel = ({ node, parentNode }: BasePanelProps) => {
       <h2 className="text-xl font-bold">Code Hook Settings</h2>
       <div className="p-2 bg-slate-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node, parentNode }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
-
-const StyleWidgetPanel = ({
-  node,
-  containerNode,
-  outerContainerNode,
-  parentNode,
-}: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Widget Settings</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">
-          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
-        </pre>
       </div>
     </div>
   );
@@ -204,7 +190,7 @@ const getPanel = (
       if (!containerNode?.parentId) return null;
       const outerContainerNode = allNodes.get(containerNode.parentId);
 
-      if (markdownNode && containerNode && outerContainerNode && action === "style-widget") {
+      if (markdownNode && containerNode && outerContainerNode) {
         return (
           <StyleWidgetPanel
             node={clickedNode}
@@ -216,6 +202,33 @@ const getPanel = (
       }
       return null;
     }
+    case "style-code-add":
+    case "style-code-container-add":
+    case "style-code-outer-add":
+      return <StyleWidgetAddPanel node={clickedNode} parentNode={markdownNode} childId={childId} />;
+    case "style-code-update":
+    case "style-code-container-update":
+    case "style-code-outer-update":
+      return (
+        <StyleWidgetUpdatePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+          childId={childId}
+          config={config}
+        />
+      );
+    case "style-code-remove":
+    case "style-code-container-remove":
+    case "style-code-outer-remove":
+      return (
+        <StyleWidgetRemovePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+          childId={childId}
+        />
+      );
     case "style-li-element": {
       if (!clickedNode?.parentId) return null;
       const outerContainerNode = allNodes.get(clickedNode.parentId);
