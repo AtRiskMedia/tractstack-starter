@@ -37,51 +37,42 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
   if (!meta) return null;
 
   // Initialize state from codeHookParams
-  const [values, setValues] = useState({
-    beliefTag: node.codeHookParams[0] || meta.valueDefaults[0],
-    matchingValues: Array.isArray(node.codeHookParams[1])
-      ? node.codeHookParams[1]
-      : [meta.valueDefaults[1]],
-    prompt: node.codeHookParams[2] || meta.valueDefaults[2],
+  const [values, setValues] = useState(() => {
+    // Create an object to hold all values
+    const initialValues: { [key: string]: string | string[] } = {};
+
+    // Map each parameter to its corresponding value
+    meta.valueLabels.forEach((label, index) => {
+      // Handle array values based on multi flag
+      if (meta.multi[index]) {
+        initialValues[label] = Array.isArray(node.codeHookParams[index])
+          ? node.codeHookParams[index]
+          : [node.codeHookParams[index] || meta.valueDefaults[index]];
+      } else {
+        initialValues[label] = node.codeHookParams[index] || meta.valueDefaults[index];
+      }
+    });
+
+    return initialValues;
   });
 
   const updateStore = (newValues: typeof values) => {
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
     const widgetNode = allNodes.get(node.id);
-    if (!widgetNode || !isWidgetNode(widgetNode)) return;
+    if (!widgetNode || !isWidgetNode(widgetNode) || !widgetId) return;
 
-    const newParams = [newValues.beliefTag, newValues.matchingValues, newValues.prompt];
+    // Convert values object back to params array
+    const newParams = meta.valueLabels.map((label) => newValues[label]);
 
-    const newCopy = `${widgetId}(${[
-      newValues.beliefTag,
-      newValues.matchingValues.join(","),
-      newValues.prompt,
-    ].join("|")})`;
+    // Create the widget copy string
+    const paramStrings = meta.valueLabels.map((label) => {
+      const value = newValues[label];
+      return Array.isArray(value) ? value.join(",") : value;
+    });
+    const newCopy = `${widgetId}(${paramStrings.join("|")})`;
 
     ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
-  };
-
-  const addMatchingValue = () => {
-    setValues((prev) => {
-      const newValues = {
-        ...prev,
-        matchingValues: [...prev.matchingValues, ""],
-      };
-      updateStore(newValues);
-      return newValues;
-    });
-  };
-
-  const removeMatchingValue = (index: number) => {
-    setValues((prev) => {
-      const newValues = {
-        ...prev,
-        matchingValues: prev.matchingValues.filter((_, i) => i !== index),
-      };
-      updateStore(newValues);
-      return newValues;
-    });
   };
 
   const handleCloseConfig = () => {
@@ -105,91 +96,94 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
           </button>
         </div>
 
-        <div className="space-y-1">
-          <label className="block text-sm text-mydarkgrey">Belief Tag</label>
-          <div
-            contentEditable
-            onBlur={(e) => {
-              const newValues = {
-                ...values,
-                beliefTag: e.currentTarget.textContent || "",
-              };
-              setValues(newValues);
-              updateStore(newValues);
-            }}
-            className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
-            style={{ minHeight: "1em", pointerEvents: "auto" }}
-            data-placeholder="Enter Belief Tag"
-            suppressContentEditableWarning
-          >
-            {values.beliefTag}
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="block text-sm text-mydarkgrey">Belief Matching Value(s)</label>
-          <div className="space-y-1">
-            {values.matchingValues.map((value, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div
-                  contentEditable
-                  onBlur={(e) => {
-                    const newValues = {
-                      ...values,
-                      matchingValues: values.matchingValues.map((v, i) =>
-                        i === index ? e.currentTarget.textContent || "" : v
-                      ),
-                    };
+        {meta.valueLabels.map((label, index) => (
+          <div key={label} className="space-y-1">
+            <label className="block text-sm text-mydarkgrey">{label}</label>
+            {meta.multi[index] ? (
+              <div className="space-y-1">
+                {(values[label] as string[]).map((value, valueIndex) => (
+                  <div key={valueIndex} className="flex items-center space-x-2">
+                    <div
+                      contentEditable
+                      onBlur={(e) => {
+                        const newArray = [...(values[label] as string[])];
+                        newArray[valueIndex] = e.currentTarget.textContent || "";
+                        const newValues = { ...values, [label]: newArray };
+                        setValues(newValues);
+                        updateStore(newValues);
+                      }}
+                      className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6 flex-1"
+                      style={{ minHeight: "1em", pointerEvents: "auto" }}
+                      data-placeholder={`Enter ${label}`}
+                      suppressContentEditableWarning
+                    >
+                      {value}
+                    </div>
+                    <button
+                      onClick={() => {
+                        const newArray = (values[label] as string[]).filter(
+                          (_, i) => i !== valueIndex
+                        );
+                        const newValues = { ...values, [label]: newArray };
+                        setValues(newValues);
+                        updateStore(newValues);
+                      }}
+                      className="text-myorange hover:text-black"
+                      title="Remove value"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => {
+                    const newArray = [...(values[label] as string[]), ""];
+                    const newValues = { ...values, [label]: newArray };
                     setValues(newValues);
                     updateStore(newValues);
                   }}
-                  className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
-                  style={{ minHeight: "1em", pointerEvents: "auto" }}
-                  data-placeholder="Enter Belief Matching Value"
-                  suppressContentEditableWarning
+                  className="text-myblue hover:text-black flex items-center"
+                  title={`Add ${label}`}
                 >
-                  {value}
-                </div>
-                <button
-                  onClick={() => removeMatchingValue(index)}
-                  className="text-myorange hover:text-black"
-                  title="Remove value"
-                >
-                  <XMarkIcon className="h-5 w-5" />
+                  <PlusIcon className="h-5 w-5 mr-1" />
+                  <span>Add {label}</span>
                 </button>
               </div>
-            ))}
-            <button
-              onClick={addMatchingValue}
-              className="text-myblue hover:text-black flex items-center"
-              title="Add value"
-            >
-              <PlusIcon className="h-5 w-5 mr-1" />
-              <span>Add Belief Matching Value(s)</span>
-            </button>
+            ) : meta.isScale[index] ? (
+              <select
+                value={values[label] as string}
+                onChange={(e) => {
+                  const newValues = { ...values, [label]: e.target.value };
+                  setValues(newValues);
+                  updateStore(newValues);
+                }}
+                className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6 w-full"
+              >
+                <option value="yn">Yes/No</option>
+                <option value="likert">Likert Scale</option>
+                <option value="10pt">10-point Scale</option>
+              </select>
+            ) : (
+              <div
+                contentEditable
+                onBlur={(e) => {
+                  const newValues = {
+                    ...values,
+                    [label]: e.currentTarget.textContent || "",
+                  };
+                  setValues(newValues);
+                  updateStore(newValues);
+                }}
+                className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
+                style={{ minHeight: "1em", pointerEvents: "auto" }}
+                data-placeholder={`Enter ${label}`}
+                suppressContentEditableWarning
+              >
+                {values[label]}
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="space-y-1">
-          <label className="block text-sm text-mydarkgrey">Question Prompt</label>
-          <div
-            contentEditable
-            onBlur={(e) => {
-              const newValues = {
-                ...values,
-                prompt: e.currentTarget.textContent || "",
-              };
-              setValues(newValues);
-              updateStore(newValues);
-            }}
-            className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
-            style={{ minHeight: "1em", pointerEvents: "auto" }}
-            data-placeholder="Enter Question Prompt"
-            suppressContentEditableWarning
-          >
-            {values.prompt}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
