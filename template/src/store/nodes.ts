@@ -392,8 +392,6 @@ export class NodesContext {
     return "";
   }
 
-  modifyNode(nodeId: string, )
-
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
     const node = this.allNodes.get().get(nodeId);
     return this.getStringNodeStyles(node, viewport);
