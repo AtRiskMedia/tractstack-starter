@@ -68,6 +68,7 @@ const StoryKeepToolMode = () => {
       if (event.key === "Escape") {
         toolModeValStore.set({ value: "default" });
         settingsPanelStore.set(null);
+        ctx.notifyNode(`root`);
       }
     };
     document.addEventListener("keydown", handleEscapeKey);
