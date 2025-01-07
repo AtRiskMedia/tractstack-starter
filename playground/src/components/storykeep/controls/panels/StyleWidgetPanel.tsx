@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
-import { tagTitles, widgetMeta } from "../../../../constants";
+import { widgetMeta } from "../../../../constants";
 import { settingsPanelStore } from "@/store/storykeep";
-import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 
 interface StyleWidgetPanelProps {
   node: FlatNode;
@@ -258,6 +259,7 @@ const StyleWidgetPanel = ({
         <div className="pb-2">
           <div className="text-myblack text-sm p-2 border border-slate-200 rounded w-fit hover:bg-mygreen/20">
             <div title="Configure this Widget" className="font-bold flex items-center gap-2">
+              <Cog6ToothIcon className="w-4 h-4" />
               <button onClick={() => handleWidgetConfig()}>Configure this Widget</button>
             </div>
           </div>
