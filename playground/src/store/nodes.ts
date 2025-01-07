@@ -395,7 +395,7 @@ export class NodesContext {
   modifyNodes(newData: BaseNode[]) {
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
-    for(let i = 0; i < newData.length; i++) {
+    for (let i = 0; i < newData.length; i++) {
       const node = newData[i];
       const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
       if (!currentNodeData) {
@@ -429,10 +429,10 @@ export class NodesContext {
     this.history.addPatch({
       op: PatchOp.REPLACE,
       undo: (ctx) => {
-        undoList.forEach(fn => fn(ctx));
+        undoList.forEach((fn) => fn(ctx));
       },
       redo: (ctx) => {
-        redoList.forEach(fn => fn(ctx));
+        redoList.forEach((fn) => fn(ctx));
       },
     });
   }

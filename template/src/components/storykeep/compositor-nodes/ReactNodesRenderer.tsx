@@ -35,7 +35,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
       {renderTime > 0 ? (
         <>
           {$showSettings ? (
-            <div className="bg-cyan-500">
+            <div id="page-settings" className="bg-cyan-500">
               story fragment or context page settings conditionally rendered here
             </div>
           ) : null}

@@ -250,7 +250,7 @@ const StyleImagePanel = ({
     if (!imgNode) return;
 
     imgNode.alt = newAlt;
-    ctx.modifyNodes([{...imgNode, isChanged: true}]);
+    ctx.modifyNodes([{ ...imgNode, isChanged: true }]);
   };
 
   return (
