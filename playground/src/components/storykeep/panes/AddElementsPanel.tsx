@@ -7,6 +7,7 @@ import { MiscElementsDropdown } from "@/components/storykeep/panes/MiscElementsD
 export type AddElementsPanelProps = {
   setToolMode: (toolMode: ToolMode) => void;
   setToolAddMode: (newToolAddMode: ToolAddMode) => void;
+  currentToolAddMode: ToolAddMode;
 };
 
 export const AddElementsPanel = memo((props: AddElementsPanelProps) => {
@@ -31,7 +32,12 @@ export const AddElementsPanel = memo((props: AddElementsPanelProps) => {
   return (
     <div className="ml-3 flex items-center">
       {toolAddModes.filter(canSpawnIcon).map((mode, idx) => (
-        <InsertableElement el={mode} key={idx} onClicked={onInsertableModeClicked} />
+        <InsertableElement
+          el={mode}
+          key={idx}
+          onClicked={onInsertableModeClicked}
+          currentToolAddMode={props.currentToolAddMode}
+        />
       ))}
 
       <MiscElementsDropdown onClickedOption={onInsertableModeClicked} />

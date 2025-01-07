@@ -128,6 +128,7 @@ export const StoryKeepHeader = memo(
     const viewport = $viewport.value;
     const viewportKey = $viewportKey.value;
     const { value: toolMode } = useStore(toolModeStore);
+    const { value: toolAddMode } = useStore(toolAddModeStore);
     const toolAddModeRef = useRef<HTMLSelectElement>(null);
     const $uncleanData = useStore(uncleanDataStore, { keys: [thisId] });
     const $paneInit = useStore(paneInit, { keys: [thisId] });
@@ -369,7 +370,11 @@ export const StoryKeepHeader = memo(
                 setToolMode={setToolMode}
                 isContext={isContext}
               />
-              <AddElementsPanel setToolAddMode={setToolAddMode} setToolMode={setToolMode} />
+              <AddElementsPanel
+                setToolAddMode={setToolAddMode}
+                setToolMode={setToolMode}
+                currentToolAddMode={toolAddMode}
+              />
               {/*{toolMode === `insert` ? (*/}
               {/*  <div className="ml-4">*/}
               {/*    <ToolAddModeSelector*/}
