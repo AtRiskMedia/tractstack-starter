@@ -11,6 +11,10 @@ import StyleLiElementPanel from "./panels/StyleLiElementPanel";
 import StyleLiElementAddPanel from "./panels/StyleLiElementPanel_add";
 import StyleLiElementUpdatePanel from "./panels/StyleLiElementPanel_update";
 import StyleLiElementRemovePanel from "./panels/StyleLiElementPanel_remove";
+import StyleImagePanel from "./panels/StyleImagePanel";
+import StyleImageAddPanel from "./panels/StyleImagePanel_add";
+import StyleImageUpdatePanel from "./panels/StyleImagePanel_update";
+import StyleImageRemovePanel from "./panels/StyleImagePanel_remove";
 import StyleParentPanel from "./panels/StyleParentPanel";
 import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
@@ -67,24 +71,6 @@ const StyleLinkPanel = ({ node }: BasePanelProps) => {
       <h2 className="text-xl font-bold">Style Link</h2>
       <div className="p-2 bg-slate-100 rounded-lg">
         <pre className="whitespace-pre-wrap">{JSON.stringify({ node }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
-
-const StyleImagePanel = ({
-  node,
-  containerNode,
-  outerContainerNode,
-  parentNode,
-}: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Image Settings</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">
-          {JSON.stringify({ node, containerNode, outerContainerNode, parentNode }, null, 2)}
-        </pre>
       </div>
     </div>
   );
@@ -167,8 +153,52 @@ const getPanel = (
           config={config}
         />
       ) : null;
-    case "style-widget":
     case "style-image": {
+      if (!clickedNode?.parentId) return null;
+      const containerNode = allNodes.get(clickedNode.parentId);
+      if (!containerNode?.parentId) return null;
+      const outerContainerNode = allNodes.get(containerNode.parentId);
+
+      if (markdownNode && containerNode && outerContainerNode) {
+        return (
+          <StyleImagePanel
+            node={clickedNode}
+            parentNode={markdownNode}
+            containerNode={containerNode as FlatNode}
+            outerContainerNode={outerContainerNode as FlatNode}
+          />
+        );
+      }
+      return null;
+    }
+    case "style-img-add":
+    case "style-img-container-add":
+    case "style-img-outer-add":
+      return <StyleImageAddPanel node={clickedNode} parentNode={markdownNode} childId={childId} />;
+    case "style-img-update":
+    case "style-img-container-update":
+    case "style-img-outer-update":
+      return (
+        <StyleImageUpdatePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+          childId={childId}
+          config={config}
+        />
+      );
+    case "style-img-remove":
+    case "style-img-container-remove":
+    case "style-img-outer-remove":
+      return (
+        <StyleImageRemovePanel
+          node={clickedNode}
+          parentNode={markdownNode}
+          className={className}
+          childId={childId}
+        />
+      );
+    case "style-widget": {
       if (!clickedNode?.parentId) return null;
       const containerNode = allNodes.get(clickedNode.parentId);
       if (!containerNode?.parentId) return null;
@@ -177,15 +207,6 @@ const getPanel = (
       if (markdownNode && containerNode && outerContainerNode && action === "style-widget") {
         return (
           <StyleWidgetPanel
-            node={clickedNode}
-            parentNode={markdownNode}
-            containerNode={containerNode as FlatNode}
-            outerContainerNode={outerContainerNode as FlatNode}
-          />
-        );
-      } else if (markdownNode && containerNode && outerContainerNode && action === "style-image") {
-        return (
-          <StyleImagePanel
             node={clickedNode}
             parentNode={markdownNode}
             containerNode={containerNode as FlatNode}
