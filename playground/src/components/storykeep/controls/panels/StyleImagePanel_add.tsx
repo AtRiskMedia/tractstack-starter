@@ -150,7 +150,7 @@ const StyleImagePanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
       markdownNode.defaultClasses[node.tagName].desktop[styleKey] = "";
 
       // Update the nodes in the store
-      ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
 
       // When selecting styles for container/outer container, keep childId for context
       const nextAction = {

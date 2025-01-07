@@ -128,7 +128,7 @@ const StyleWidgetUpdatePanel = ({
         }
       }
 
-      ctx.modifyNodes([{...targetNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
       setIsOverridden(checked);
 
       if (parentNode.id) {
@@ -186,7 +186,7 @@ const StyleWidgetUpdatePanel = ({
         }
 
         // Update nodes
-        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
       }
     },
     [node, parentNode, className, isOverridden]

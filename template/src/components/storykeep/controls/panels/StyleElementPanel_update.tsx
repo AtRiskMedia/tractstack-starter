@@ -106,7 +106,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
         }
       }
 
-      ctx.modifyNodes([{...elementNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...elementNode, isChanged: true }]);
       setIsOverridden(checked);
     },
     [node, className, parentNode]
@@ -142,7 +142,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
             break;
         }
 
-        ctx.modifyNodes([{...elementNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...elementNode, isChanged: true }]);
       } else {
         const markdownNode = cloneDeep(allNodes.get(parentNode.id)) as MarkdownPaneFragmentNode;
         if (!markdownNode) return;
@@ -182,7 +182,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
             break;
         }
 
-        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
       }
     },
     [node, parentNode, className, isOverridden]

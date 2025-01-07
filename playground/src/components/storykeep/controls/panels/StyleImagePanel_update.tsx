@@ -128,7 +128,7 @@ const StyleImageUpdatePanel = ({
         }
       }
 
-      ctx.modifyNodes([{...targetNode, isChanged: true}]);
+      ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
       setIsOverridden(checked);
     },
     [node, className, parentNode, childId, isImage]
@@ -182,7 +182,7 @@ const StyleImageUpdatePanel = ({
         }
 
         // Update nodes
-        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
+        ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
       }
     },
     [node, parentNode, className, isOverridden]

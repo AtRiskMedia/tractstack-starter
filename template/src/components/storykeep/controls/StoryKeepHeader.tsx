@@ -118,7 +118,27 @@ const StoryKeepHeader = () => {
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={() => showSettings.set(!$showSettings)} title="Advanced Settings">
+        <button
+          onClick={() => {
+            setTimeout(() => {
+              const pageSettings = document.getElementById("page-settings");
+              if (!pageSettings) return;
+              const rect = pageSettings.getBoundingClientRect();
+              const viewportHeight = window.innerHeight;
+              const isInView = rect.top >= 0 && rect.bottom <= viewportHeight;
+              if (!isInView) {
+                const scrollTop =
+                  window.scrollY + rect.top - (viewportHeight - rect.height) / 2;
+                window.scrollTo({
+                  top: scrollTop,
+                  behavior: "smooth",
+                });
+              }
+            }, 500);
+            showSettings.set(!$showSettings);
+          }}
+          title="Advanced Settings"
+        >
           <CogIcon className={`${$showSettings ? iconActiveClassName : iconClassName}`} />
         </button>
         <button
