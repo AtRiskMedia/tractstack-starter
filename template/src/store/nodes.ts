@@ -400,10 +400,10 @@ export class NodesContext {
       const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
       if (!currentNodeData) {
         console.warn("Trying to modify node that doesn't exist", node.id);
-        return;
+        continue;
       }
       if (isDeepEqual(currentNodeData, node, ["isChanged"])) {
-        return; // data is the same
+        continue; // data is the same
       }
 
       const newNodes = new Map(this.allNodes.get());
