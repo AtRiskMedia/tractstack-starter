@@ -14,6 +14,7 @@ import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagE
 import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { showGuids } from "@/store/development.ts";
+import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
 
 export type NodeProps = {
   nodeId: string;
@@ -64,17 +65,16 @@ function parseCodeHook(node: BaseNode | FlatNode) {
   return null;
 }
 
-const getType = (node: BaseNode|FlatNode): string => {
+export const getType = (node: BaseNode | FlatNode): string => {
   let type = node.nodeType as string;
   if ("tagName" in node) {
     type = node.tagName;
   }
   return type;
-}
+};
 
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
-
 
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
 
@@ -130,13 +130,8 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
 export const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
-  if(showGuids.get()) {
-    return (
-      <>
-        <span className="relative text-sm block w-fit" style={{color: "black", backgroundColor: "darkcyan"}}>{props.nodeId} - {getType(node)}</span>
-        {getElement(node, props)}
-      </>
-    );
+  if (showGuids.get()) {
+    return (<NodeWithGuid {...props} element={getElement(node, props)}/>);
   }
   return getElement(node, props);
 });
