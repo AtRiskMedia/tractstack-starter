@@ -133,7 +133,7 @@ export const Node = memo((props: NodeProps) => {
   if(showGuids.get()) {
     return (
       <>
-        <span className="relative text-sm block bg-cyan-200 text-black-500 w-fit">{props.nodeId} - {getType(node)}</span>
+        <span className="relative text-sm block w-fit" style={{color: "black", backgroundColor: "darkcyan"}}>{props.nodeId} - {getType(node)}</span>
         {getElement(node, props)}
       </>
     );
