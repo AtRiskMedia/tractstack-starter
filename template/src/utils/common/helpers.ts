@@ -356,16 +356,26 @@ export function cloneDeep<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-export function isDeepEqual(obj1: any, obj2: any): boolean {
-  if (obj1 === obj2) return true;
-  if (typeof obj1 !== "object" || obj1 === null || typeof obj2 !== "object" || obj2 === null) {
+export function isDeepEqual(obj1: any, obj2: any, excludeKeys: string[] = []) {
+  // Check if both are the same type and are objects
+  if (typeof obj1 !== "object" || typeof obj2 !== "object" || obj1 === null || obj2 === null) {
     return obj1 === obj2;
   }
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
-  if (keys1.length !== keys2.length) return false;
+
+  // Get the keys of both objects
+  const keys1 = Object.keys(obj1).filter(key => !excludeKeys.includes(key));
+  const keys2 = Object.keys(obj2).filter(key => !excludeKeys.includes(key));
+
+  // Check if the number of keys is the same
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+
+  // Check if all keys and their values are equal
   for (const key of keys1) {
-    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key])) return false;
+    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key], excludeKeys)) {
+      return false;
+    }
   }
   return true;
 }
