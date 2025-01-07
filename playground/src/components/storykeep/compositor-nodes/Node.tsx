@@ -13,6 +13,7 @@ import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagEle
 import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { showGuids } from "@/store/development.ts";
 
 export type NodeProps = {
   nodeId: string;
@@ -63,16 +64,21 @@ function parseCodeHook(node: BaseNode | FlatNode) {
   return null;
 }
 
-const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
-  if (node === undefined) return <></>;
-
+const getType = (node: BaseNode|FlatNode): string => {
   let type = node.nodeType as string;
   if ("tagName" in node) {
     type = node.tagName;
   }
+  return type;
+}
+
+const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
+  if (node === undefined) return <></>;
+
 
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
 
+  const type = getType(node);
   switch (type) {
     // generic nodes, not tag (html) elements
     case "Markdown":
@@ -124,5 +130,13 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
 export const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
+  if(showGuids.get()) {
+    return (
+      <>
+        <span className="relative text-sm block bg-cyan-200 text-black-500 w-fit">{props.nodeId} - {getType(node)}</span>
+        {getElement(node, props)}
+      </>
+    );
+  }
   return getElement(node, props);
 });
