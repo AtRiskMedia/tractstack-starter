@@ -83,10 +83,10 @@ async function prepareTemplate() {
     console.log("Copying app.css to frontend.css...");
     const stylesSrc = path.join(PLAYGROUND_DIR, "public", "styles", "app.css");
     const stylesDest = path.join(TEMPLATE_DIR, "public", "styles", "frontend.css");
-    
+
     // Ensure the destination directory exists
     await fs.ensureDir(path.dirname(stylesDest));
-    
+
     if (fs.existsSync(stylesSrc)) {
       await fs.copy(stylesSrc, stylesDest);
       console.log("Copied app.css to frontend.css");

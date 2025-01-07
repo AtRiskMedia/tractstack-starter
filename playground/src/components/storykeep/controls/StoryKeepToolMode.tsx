@@ -8,6 +8,7 @@ import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
 import { toolModeValStore, settingsPanelStore } from "../../../store/storykeep";
+import { getCtx } from "../../../store/nodes";
 import type { ToolModeVal } from "../../../types";
 
 export const toolModes = [
@@ -49,6 +50,7 @@ export const toolModes = [
 ] as const;
 
 const StoryKeepToolMode = () => {
+  const ctx = getCtx();
   const { value: toolModeVal } = useStore(toolModeValStore);
   const className =
     "w-8 h-8 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
@@ -57,6 +59,7 @@ const StoryKeepToolMode = () => {
   const handleClick = (mode: ToolModeVal) => {
     toolModeValStore.set({ value: mode });
     settingsPanelStore.set(null);
+    ctx.notifyNode(`root`);
   };
 
   // Add escape key listener
