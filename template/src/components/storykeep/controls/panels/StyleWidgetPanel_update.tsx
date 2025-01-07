@@ -6,6 +6,7 @@ import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleWidgetUpdatePanel = ({
   node,
@@ -68,7 +69,7 @@ const StyleWidgetUpdatePanel = ({
 
       // Get the correct target node based on what we're styling
       const targetNodeId = isWidget ? node.id : childId || node.id;
-      const targetNode = allNodes.get(targetNodeId) as FlatNode;
+      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
 
       if (!targetNode) return;
 
@@ -127,10 +128,7 @@ const StyleWidgetUpdatePanel = ({
         }
       }
 
-      const newNodes = new Map(allNodes);
-      newNodes.set(targetNodeId, { ...targetNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
+      ctx.modifyNodes([{...targetNode, isChanged: true}]);
       setIsOverridden(checked);
 
       if (parentNode.id) {
@@ -151,7 +149,7 @@ const StyleWidgetUpdatePanel = ({
 
       if (!targetNode) return;
 
-      const markdownNode = { ...allNodes.get(parentNode.id) } as MarkdownPaneFragmentNode;
+      const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
       if (!markdownNode?.defaultClasses) {
         markdownNode.defaultClasses = {};
       }
@@ -188,13 +186,7 @@ const StyleWidgetUpdatePanel = ({
         }
 
         // Update nodes
-        const newNodes = new Map(allNodes);
-        newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
+        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
       }
     },
     [node, parentNode, className, isOverridden]

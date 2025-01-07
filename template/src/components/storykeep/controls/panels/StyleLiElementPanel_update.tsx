@@ -6,6 +6,7 @@ import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleLiElementUpdatePanel = ({
   node,
@@ -145,7 +146,7 @@ const StyleLiElementUpdatePanel = ({
 
       // Get the correct target node based on whether we're styling container or list item
       const targetNodeId = isContainer ? node.id : childId || node.id;
-      const targetNode = allNodes.get(targetNodeId) as FlatNode;
+      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
 
       if (!targetNode) return;
 
@@ -172,16 +173,10 @@ const StyleLiElementUpdatePanel = ({
             break;
         }
 
-        const newNodes = new Map(allNodes);
-        newNodes.set(targetNodeId, { ...targetNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
+        ctx.modifyNodes([{...targetNode, isChanged: true}]);
       } else {
         // Update default classes
-        const markdownNode = { ...allNodes.get(parentNode.id) } as MarkdownPaneFragmentNode;
+        const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
         if (!markdownNode?.defaultClasses?.[targetNode.tagName]) {
           // Initialize defaultClasses structure if it doesn't exist
           if (!markdownNode.defaultClasses) {
@@ -214,13 +209,7 @@ const StyleLiElementUpdatePanel = ({
             break;
         }
 
-        const newNodes = new Map(allNodes);
-        newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
+        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
       }
     },
     [node, parentNode, className, isOverridden, childId, isContainer]

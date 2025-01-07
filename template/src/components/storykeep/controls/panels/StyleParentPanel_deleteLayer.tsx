@@ -3,6 +3,7 @@ import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
   if (!layer) return null;
@@ -43,19 +44,13 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
         desktop: {},
       };
 
-      const updatedNode: MarkdownPaneFragmentNode = {
+      const updatedNode: MarkdownPaneFragmentNode = cloneDeep({
         ...markdownNode,
         parentClasses: [emptyLayer],
         isChanged: true,
-      };
+      });
 
-      const newNodes = new Map(allNodes);
-      newNodes.set(node.id, updatedNode);
-      ctx.allNodes.set(newNodes);
-
-      if (node.parentId) {
-        ctx.notifyNode(node.parentId);
-      }
+      ctx.modifyNodes([updatedNode]);
       resetStore();
       return;
     }
@@ -66,19 +61,13 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
       ...markdownNode.parentClasses.slice(layerIndex + 1),
     ];
 
-    const updatedNode: MarkdownPaneFragmentNode = {
+    const updatedNode: MarkdownPaneFragmentNode = cloneDeep({
       ...markdownNode,
       parentClasses: newParentClasses,
       isChanged: true,
-    };
+    });
 
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, updatedNode);
-    ctx.allNodes.set(newNodes);
-
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
-    }
+    ctx.modifyNodes([updatedNode]);
     resetStore();
   };
 

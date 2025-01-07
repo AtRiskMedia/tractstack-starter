@@ -4,6 +4,7 @@ import { getCtx } from "@/store/nodes";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import type { FlatNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePanelProps) => {
   if (!className || !node?.tagName || !parentNode || !isMarkdownPaneFragmentNode(parentNode)) {
@@ -36,7 +37,7 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
 
-    const targetNode = allNodes.get(node.id) as FlatNode;
+    const targetNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
     const targetNodeId = node.id;
 
     if (!targetNode) return;
@@ -82,17 +83,12 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
       }
     }
 
+    const deepParentClone = cloneDeep(parentNode);
     // Update both nodes in the store
-    const newNodes = new Map(allNodes);
-    newNodes.set(targetNodeId, { ...targetNode, isChanged: true });
-    newNodes.set(parentNode.id, { ...parentNode, isChanged: true });
-    ctx.allNodes.set(newNodes);
-
-    // Notify parent of changes
-    if (parentNode.id) {
-      ctx.notifyNode(parentNode.id);
-    }
-
+    ctx.modifyNodes([
+      {...targetNode, isChanged: true},
+      {...deepParentClone, isChanged: true}
+    ]);
     resetStore();
   };
 

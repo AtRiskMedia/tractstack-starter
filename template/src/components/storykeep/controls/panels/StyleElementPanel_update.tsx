@@ -6,6 +6,7 @@ import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 type ViewportOverrides = {
   mobile: Record<string, string>;
@@ -55,7 +56,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
     (checked: boolean) => {
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
-      const elementNode = { ...allNodes.get(node.id) } as FlatNode;
+      const elementNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
 
       if (!elementNode) return;
 
@@ -105,15 +106,8 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
         }
       }
 
-      const newNodes = new Map(allNodes);
-      newNodes.set(node.id, { ...elementNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
+      ctx.modifyNodes([{...elementNode, isChanged: true}]);
       setIsOverridden(checked);
-
-      if (node.parentId) {
-        ctx.notifyNode(node.parentId);
-      }
     },
     [node, className, parentNode]
   );
@@ -124,7 +118,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
       const allNodes = ctx.allNodes.get();
 
       if (isOverridden) {
-        const elementNode = { ...allNodes.get(node.id) } as FlatNode;
+        const elementNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
         if (!elementNode) return;
 
         const newOverrides: ViewportOverrides = {
@@ -148,15 +142,9 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
             break;
         }
 
-        const newNodes = new Map(allNodes);
-        newNodes.set(node.id, { ...elementNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-
-        if (node.parentId) {
-          ctx.notifyNode(node.parentId);
-        }
+        ctx.modifyNodes([{...elementNode, isChanged: true}]);
       } else {
-        const markdownNode = { ...allNodes.get(parentNode.id) } as MarkdownPaneFragmentNode;
+        const markdownNode = cloneDeep(allNodes.get(parentNode.id)) as MarkdownPaneFragmentNode;
         if (!markdownNode) return;
 
         // Initialize defaultClasses structure if it doesn't exist
@@ -194,10 +182,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
             break;
         }
 
-        const newNodes = new Map(allNodes);
-        newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-        ctx.notifyNode(parentNode.id);
+        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
       }
     },
     [node, parentNode, className, isOverridden]

@@ -5,6 +5,7 @@ import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards"
 import { tagTitles } from "../../../../constants";
 import { settingsPanelStore } from "@/store/storykeep";
 import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface StyleImagePanelProps {
   node: FlatNode;
@@ -245,18 +246,11 @@ const StyleImagePanel = ({
   const handleAltUpdate = (newAlt: string) => {
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
-    const imgNode = allNodes.get(node.id) as FlatNode;
+    const imgNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
     if (!imgNode) return;
 
     imgNode.alt = newAlt;
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, { ...imgNode, isChanged: true });
-    ctx.allNodes.set(newNodes);
-
-    // Notify parent of changes
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
-    }
+    ctx.modifyNodes([{...imgNode, isChanged: true}]);
   };
 
   return (

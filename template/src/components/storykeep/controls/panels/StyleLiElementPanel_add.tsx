@@ -8,6 +8,7 @@ import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 // Recommended styles for list items
 const LIST_ITEM_STYLES = [
@@ -114,7 +115,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
       const allNodes = ctx.allNodes.get();
 
       const elementNode = allNodes.get(targetNodeId) as FlatNode;
-      const markdownNode = allNodes.get(parentNode.id) as MarkdownPaneFragmentNode;
+      const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
 
       if (!elementNode || !markdownNode) return;
 
@@ -136,14 +137,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
       markdownNode.defaultClasses[elementNode.tagName].desktop[styleKey] = "";
 
       // Update the nodes in the store
-      const newNodes = new Map(allNodes);
-      newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
-      // Notify parent of changes
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
+      ctx.modifyNodes([{...markdownNode, isChanged: true}]);
 
       // Switch to the update panel for the newly added style
       settingsPanelStore.set({

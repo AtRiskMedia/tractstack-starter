@@ -392,37 +392,49 @@ export class NodesContext {
     return "";
   }
 
-  modifyNode(nodeId: string, newData: BaseNode) {
-    const oldData = this.allNodes.get().get(nodeId) as BaseNode;
-    if (!oldData) {
-      console.warn("Trying to modify node that doesn't exist", nodeId);
-      return;
-    }
-    if (isDeepEqual(oldData, newData, ["isChanged"])) {
-      return; // data is the same
-    }
+  modifyNodes(newData: BaseNode[]) {
+    const undoList: ((ctx: NodesContext) => void)[] = [];
+    const redoList: ((ctx: NodesContext) => void)[] = [];
+    for(let i = 0; i < newData.length; i++) {
+      const node = newData[i];
+      const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
+      if (!currentNodeData) {
+        console.warn("Trying to modify node that doesn't exist", node.id);
+        return;
+      }
+      if (isDeepEqual(currentNodeData, node, ["isChanged"])) {
+        return; // data is the same
+      }
 
-    const newNodes = new Map(this.allNodes.get());
-    newNodes.set(nodeId, newData);
-    this.allNodes.set(newNodes);
+      const newNodes = new Map(this.allNodes.get());
+      newNodes.set(node.id, node);
+      this.allNodes.set(newNodes);
+
+      undoList.push((ctx: NodesContext) => {
+        const newNodes = new Map(ctx.allNodes.get());
+        newNodes.set(node.id, currentNodeData);
+        ctx.allNodes.set(newNodes);
+        this.notifyNode(currentNodeData.parentId || node.id);
+      });
+      redoList.push((ctx: NodesContext) => {
+        const newNodes = new Map(ctx.allNodes.get());
+        newNodes.set(node.id, node);
+        ctx.allNodes.set(newNodes);
+        this.notifyNode(currentNodeData.parentId || node.id);
+      });
+
+      this.notifyNode(currentNodeData.parentId || node.id);
+    }
 
     this.history.addPatch({
       op: PatchOp.REPLACE,
       undo: (ctx) => {
-        const newNodes = new Map(ctx.allNodes.get());
-        newNodes.set(nodeId, oldData);
-        ctx.allNodes.set(newNodes);
-        this.notifyNode(nodeId);
+        undoList.forEach(fn => fn(ctx));
       },
       redo: (ctx) => {
-        const newNodes = new Map(ctx.allNodes.get());
-        newNodes.set(nodeId, newData);
-        ctx.allNodes.set(newNodes);
-        this.notifyNode(nodeId);
+        redoList.forEach(fn => fn(ctx));
       },
     });
-
-    this.notifyNode(nodeId);
   }
 
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {

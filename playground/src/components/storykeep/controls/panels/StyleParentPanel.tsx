@@ -7,6 +7,7 @@ import { getCtx } from "@/store/nodes";
 import { isMarkdownPaneFragmentNode, isPaneNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface ParentStyles {
   bgColor: string;
@@ -54,7 +55,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   const handleLayerAdd = (position: "before" | "after", layerNum: number) => {
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
-    const markdownNode = allNodes.get(node.id);
+    const markdownNode = cloneDeep(allNodes.get(node.id));
     if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
 
     // Create an empty layer
@@ -78,14 +79,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     ];
 
     // Update the node in the store
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, {
-      ...markdownNode,
-      parentClasses: newParentClasses,
-      isChanged: true,
-    } as MarkdownPaneFragmentNode);
-
-    ctx.allNodes.set(newNodes);
+    ctx.modifyNodes([{...markdownNode, parentClasses: newParentClasses, isChanged: true} as MarkdownPaneFragmentNode]);
 
     // Update local state
     setSettings((prev) => ({
@@ -119,12 +113,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     if (settings.bgColor !== prevSettings.bgColor) {
       paneNode.bgColour = settings.bgColor;
 
-      // Update the node in the store
-      const newNodes = new Map(allNodes);
-      newNodes.set(parentNode.id, { ...paneNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
-      // Notify parent of changes
+      ctx.modifyNodes([{...paneNode, isChanged: true}]);
       ctx.notifyNode(parentNode.id);
     }
   }, [settings, parentNode, ctx, allNodes, node.parentClasses]);

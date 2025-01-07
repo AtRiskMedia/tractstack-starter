@@ -4,6 +4,7 @@ import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
 import type { BasePanelProps } from "../SettingsPanel";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
   if (!className) return null;
@@ -26,7 +27,7 @@ const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
     }
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
-    const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
+    const markdownNode = cloneDeep(allNodes.get(node.id) as MarkdownPaneFragmentNode);
     if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
     const layerIndex = layer - 1;
     const layerClasses = markdownNode?.parentClasses?.[layerIndex];
@@ -36,13 +37,8 @@ const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
     if (className in layerClasses.tablet) delete layerClasses.tablet[className];
     if (className in layerClasses.desktop) delete layerClasses.desktop[className];
     // Update the node in the store
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, { ...markdownNode, isChanged: true });
-    ctx.allNodes.set(newNodes);
-    // Notify parent of changes
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
-    }
+    const newData = { ...markdownNode, isChanged: true };
+    ctx.modifyNodes([newData]);
     resetStore();
   };
 

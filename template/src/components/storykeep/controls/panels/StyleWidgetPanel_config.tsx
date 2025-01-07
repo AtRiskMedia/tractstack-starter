@@ -59,13 +59,7 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
       newValues.prompt,
     ].join("|")})`;
 
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, createUpdatedWidget(widgetNode, newCopy, newParams));
-    ctx.allNodes.set(newNodes);
-
-    if (parentId) {
-      ctx.notifyNode(parentId);
-    }
+    ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
   };
 
   const addMatchingValue = () => {

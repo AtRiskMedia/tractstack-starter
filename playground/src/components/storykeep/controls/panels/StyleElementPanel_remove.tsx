@@ -4,6 +4,7 @@ import { getCtx } from "@/store/nodes";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps) => {
   if (!className || !node?.tagName) return null;
@@ -29,7 +30,7 @@ const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps
 
     // Get mutable copies of both nodes
     const elementNode = allNodes.get(node.id) as FlatNode;
-    const markdownNode = allNodes.get(parentNode.id) as MarkdownPaneFragmentNode;
+    const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
 
     if (!elementNode || !markdownNode) return;
 
@@ -55,16 +56,10 @@ const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps
     }
 
     // Update both nodes in the store
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, { ...elementNode, isChanged: true });
-    newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-    ctx.allNodes.set(newNodes);
-
-    // Notify parent of changes
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
-    }
-
+    ctx.modifyNodes([
+      {...elementNode, isChanged: true},
+      {...markdownNode, isChanged: true}
+    ]);
     resetStore();
   };
 

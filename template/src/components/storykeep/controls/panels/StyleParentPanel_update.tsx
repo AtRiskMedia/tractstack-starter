@@ -65,8 +65,7 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
 
       // Update the node in the store
       const updateNode = { ...markdownNode, isChanged: true };
-      ctx.modifyNode(node.id, updateNode);
-      console.log("parent panel update");
+      ctx.modifyNodes([updateNode]);
     },
     [node, layer, className]
   );

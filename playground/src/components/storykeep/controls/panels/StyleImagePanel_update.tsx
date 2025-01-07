@@ -6,6 +6,7 @@ import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleImageUpdatePanel = ({
   node,
@@ -42,7 +43,7 @@ const StyleImageUpdatePanel = ({
   useEffect(() => {
     const ctx = getCtx();
     const allNodes = ctx.allNodes.get();
-    const targetNode = allNodes.get(node.id) as FlatNode;
+    const targetNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
     if (!targetNode) return;
 
     const hasOverride = targetNode.overrideClasses?.mobile?.[className] !== undefined;
@@ -127,15 +128,8 @@ const StyleImageUpdatePanel = ({
         }
       }
 
-      const newNodes = new Map(allNodes);
-      newNodes.set(targetNodeId, { ...targetNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
+      ctx.modifyNodes([{...targetNode, isChanged: true}]);
       setIsOverridden(checked);
-
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
     },
     [node, className, parentNode, childId, isImage]
   );
@@ -147,7 +141,7 @@ const StyleImageUpdatePanel = ({
 
       // Get the correct target node based on what we're styling
       const targetNodeId = node.id; // We already have the correct node based on the action
-      const targetNode = allNodes.get(targetNodeId) as FlatNode;
+      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
 
       if (!targetNode) return;
 
@@ -188,13 +182,7 @@ const StyleImageUpdatePanel = ({
         }
 
         // Update nodes
-        const newNodes = new Map(allNodes);
-        newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-        ctx.allNodes.set(newNodes);
-
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
+        ctx.modifyNodes([{...markdownNode, isChanged: true}]);
       }
     },
     [node, parentNode, className, isOverridden]

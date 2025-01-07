@@ -8,6 +8,7 @@ import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 // Recommended styles for widget containers (li)
 const CONTAINER_STYLES = [
@@ -114,7 +115,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
 
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
-      const markdownNode = allNodes.get(parentNode.id) as MarkdownPaneFragmentNode;
+      const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
 
       if (!markdownNode) return;
 
@@ -136,14 +137,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
       markdownNode.defaultClasses[node.tagName].desktop[styleKey] = "";
 
       // Update the nodes in the store
-      const newNodes = new Map(allNodes);
-      newNodes.set(parentNode.id, { ...markdownNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
-      // Notify parent of changes
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
+      ctx.modifyNodes([{...markdownNode, isChanged: true}]);
 
       // When selecting styles for container/outer container, keep childId for context
       const nextAction = {
