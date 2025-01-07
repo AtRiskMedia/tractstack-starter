@@ -11,10 +11,13 @@ import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagEle
 import { NodeImg } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeImg.tsx";
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
 import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
+import { NodeBasicTagInsert } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_insert.tsx";
+import { NodeBasicTagEraser } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_eraser.tsx";
 import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
+import { toolModeValStore } from "@/store/storykeep.ts";
 
 export type NodeProps = {
   nodeId: string;
@@ -92,16 +95,28 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "TagElement":
       return <TagElement {...sharedProps} key={timestampNodeId(node.id)} />;
     // tag elements
-    case "em":
     case "h2":
     case "h3":
     case "h4":
     case "ol":
     case "ul":
     case "li":
-    case "strong":
     case "aside":
-    case "p":
+    case "p": {
+      const toolModeVal = toolModeValStore.get().value;
+      if (toolModeVal === `insert`)
+        return (
+          <NodeBasicTagInsert {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
+        );
+      else if (toolModeVal === `eraser`)
+        return (
+          <NodeBasicTagEraser {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
+        );
+      return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
+    }
+
+    case "strong":
+    case "em":
       return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
 
     case "text":

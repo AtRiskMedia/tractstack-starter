@@ -20,6 +20,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     return unsubscribe;
   }, []);
 
+  // showGuids means each node has a dotted outline and must render as div (can't be p, e.g.)
   if (showGuids.get())
     return (
       <div

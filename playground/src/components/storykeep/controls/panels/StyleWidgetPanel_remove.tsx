@@ -38,7 +38,6 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
     const allNodes = ctx.allNodes.get();
 
     const targetNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
-    const targetNodeId = node.id;
 
     if (!targetNode) return;
 
