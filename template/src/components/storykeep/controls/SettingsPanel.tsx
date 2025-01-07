@@ -16,6 +16,7 @@ import StyleImageAddPanel from "./panels/StyleImagePanel_add";
 import StyleImageUpdatePanel from "./panels/StyleImagePanel_update";
 import StyleImageRemovePanel from "./panels/StyleImagePanel_remove";
 import StyleWidgetPanel from "./panels/StyleWidgetPanel";
+import StyleWidgetConfigPanel from "./panels/StyleWidgetConfigPanel";
 import StyleWidgetAddPanel from "./panels/StyleWidgetPanel_add";
 import StyleWidgetUpdatePanel from "./panels/StyleWidgetPanel_update";
 import StyleWidgetRemovePanel from "./panels/StyleWidgetPanel_remove";
@@ -199,6 +200,17 @@ const getPanel = (
             outerContainerNode={outerContainerNode as FlatNode}
           />
         );
+      }
+      return null;
+    }
+    case "style-code-config": {
+      if (!clickedNode?.parentId) return null;
+      const containerNode = allNodes.get(clickedNode.parentId);
+      if (!containerNode?.parentId) return null;
+      const outerContainerNode = allNodes.get(containerNode.parentId);
+
+      if (markdownNode && containerNode && outerContainerNode) {
+        return <StyleWidgetConfigPanel node={clickedNode} />;
       }
       return null;
     }

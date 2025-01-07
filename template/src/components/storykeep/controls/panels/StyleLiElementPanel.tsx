@@ -197,7 +197,7 @@ const StyleLiElementPanel = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Container Styles</h2>
+        <h3 className="text-sm font-bold">Container Styles</h3>
 
         {Object.keys(mergedContainerClasses).length > 0 ? (
           <div className="flex flex-wrap gap-2">

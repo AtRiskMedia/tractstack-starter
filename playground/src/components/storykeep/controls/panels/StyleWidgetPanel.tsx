@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
-import { tagTitles } from "../../../../constants";
+import { tagTitles, widgetMeta } from "../../../../constants";
 import { settingsPanelStore } from "@/store/storykeep";
 import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
 
@@ -32,6 +32,9 @@ const StyleWidgetPanel = ({
   const containerOverrideClasses = containerNode.overrideClasses;
   const outerDefaultClasses = parentNode.defaultClasses?.[outerContainerNode.tagName];
   const outerOverrideClasses = outerContainerNode.overrideClasses;
+
+  const widgetId = "identifyAs(someValue)".substring(0, "identifyAs(someValue)".indexOf("("));
+  const widgetName = widgetMeta[widgetId].title || `Widget`;
 
   // Merge classes for widget
   const mergedImgClasses = useMemo(() => {
@@ -240,48 +243,66 @@ const StyleWidgetPanel = ({
     });
   };
 
+  const handleWidgetConfig = () => {
+    settingsPanelStore.set({
+      action: `style-code-config`,
+      nodeId: node.id,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Style this {tagTitles[node.tagName as Tag]}</h2>
+        <h2 className="text-xl font-bold">{widgetName}</h2>
 
-        {Object.keys(mergedImgClasses).length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(mergedImgClasses).map(([className, values]) => (
-              <SelectedTailwindClass
-                key={className}
-                name={className}
-                values={values}
-                onRemove={handleImgRemove}
-                onUpdate={handleImgUpdate}
-              />
-            ))}
+        <div className="pb-2">
+          <div className="text-myblack text-sm p-2 border border-slate-200 rounded w-fit hover:bg-mygreen/20">
+            <div title="Configure this Widget" className="font-bold flex items-center gap-2">
+              <button onClick={() => handleWidgetConfig()}>Configure this Widget</button>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <em>No styles.</em>
-          </div>
-        )}
+        </div>
 
         <div className="space-y-4">
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
-            <li>
-              <em>Actions:</em>
-            </li>
-            <li>
-              <button
-                onClick={handleImgAdd}
-                className="text-myblue hover:text-black underline font-bold"
-              >
-                Add Style
-              </button>
-            </li>
-          </ul>
+          <h3 className="text-sm font-bold">Widget Styles</h3>
+          {Object.keys(mergedImgClasses).length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(mergedImgClasses).map(([className, values]) => (
+                <SelectedTailwindClass
+                  key={className}
+                  name={className}
+                  values={values}
+                  onRemove={handleImgRemove}
+                  onUpdate={handleImgUpdate}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <em>No styles.</em>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
+              <li>
+                <em>Actions:</em>
+              </li>
+              <li>
+                <button
+                  onClick={handleImgAdd}
+                  className="text-myblue hover:text-black underline font-bold"
+                >
+                  Add Style
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Container Styles</h2>
+        <h3 className="text-sm font-bold">Container Styles</h3>
 
         {Object.keys(mergedContainerClasses).length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -319,7 +340,7 @@ const StyleWidgetPanel = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Outer Container Styles</h2>
+        <h3 className="text-sm font-bold">Outer Container Styles</h3>
 
         {Object.keys(mergedOuterClasses).length > 0 ? (
           <div className="flex flex-wrap gap-2">

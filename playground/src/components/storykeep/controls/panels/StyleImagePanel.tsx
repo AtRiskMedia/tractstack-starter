@@ -317,7 +317,7 @@ const StyleImagePanel = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Container Styles</h2>
+        <h3 className="text-sm font-bold">Container Styles</h3>
 
         {Object.keys(mergedContainerClasses).length > 0 ? (
           <div className="flex flex-wrap gap-2">
@@ -355,7 +355,7 @@ const StyleImagePanel = ({
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">Outer Container Styles</h2>
+        <h3 className="text-sm font-bold">Outer Container Styles</h3>
 
         {Object.keys(mergedOuterClasses).length > 0 ? (
           <div className="flex flex-wrap gap-2">
