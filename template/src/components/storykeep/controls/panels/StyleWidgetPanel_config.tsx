@@ -40,7 +40,7 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
   const [values, setValues] = useState(() => {
     // Create an object to hold all values
     const initialValues: { [key: string]: string | string[] } = {};
-    
+
     // Map each parameter to its corresponding value
     meta.valueLabels.forEach((label, index) => {
       // Handle array values based on multi flag
