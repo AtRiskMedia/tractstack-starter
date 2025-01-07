@@ -10,7 +10,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
 
-  const Tag = props.tagName;
+  //const Tag = props.tagName;
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
       console.log("notification received data update for node: " + nodeId);
@@ -20,7 +20,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   }, []);
 
   return (
-    <Tag
+    <div
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
       onClick={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
@@ -28,6 +28,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }}
     >
       <RenderChildren children={children} nodeProps={props} />
-    </Tag>
+    </div>
   );
 };
