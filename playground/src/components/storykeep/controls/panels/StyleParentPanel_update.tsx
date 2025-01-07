@@ -6,6 +6,7 @@ import { getCtx } from "../../../../store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { MarkdownPaneFragmentNode } from "../../../../types";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelProps) => {
   if (!node || !className || !layer) return null;
@@ -37,7 +38,7 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
       const allNodes = ctx.allNodes.get();
 
       // Get mutable copy of the node
-      const markdownNode = allNodes.get(node.id) as MarkdownPaneFragmentNode;
+      const markdownNode = cloneDeep(allNodes.get(node.id) as MarkdownPaneFragmentNode);
       if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
 
       // Layer is 1-based but array is 0-based
@@ -63,14 +64,9 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
       }
 
       // Update the node in the store
-      const newNodes = new Map(allNodes);
-      newNodes.set(node.id, { ...markdownNode, isChanged: true });
-      ctx.allNodes.set(newNodes);
-
-      // Notify parent of changes
-      if (node.parentId) {
-        ctx.notifyNode(node.parentId);
-      }
+      const updateNode = { ...markdownNode, isChanged: true };
+      ctx.modifyNode(node.id, updateNode);
+      console.log("parent panel update");
     },
     [node, layer, className]
   );

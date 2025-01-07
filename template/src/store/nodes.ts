@@ -25,7 +25,7 @@ import { NotificationSystem } from "@/store/notificationSystem.ts";
 import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
-import { cloneDeep } from "@/utils/common/helpers.ts";
+import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
 
@@ -390,6 +390,39 @@ export class NodesContext {
       }
     }
     return "";
+  }
+
+  modifyNode(nodeId: string, newData: BaseNode) {
+    const oldData = this.allNodes.get().get(nodeId) as BaseNode;
+    if (!oldData) {
+      console.warn("Trying to modify node that doesn't exist", nodeId);
+      return;
+    }
+    if (isDeepEqual(oldData, newData, ["isChanged"])) {
+      return; // data is the same
+    }
+
+    const newNodes = new Map(this.allNodes.get());
+    newNodes.set(nodeId, newData);
+    this.allNodes.set(newNodes);
+
+    this.history.addPatch({
+      op: PatchOp.REPLACE,
+      undo: (ctx) => {
+        const newNodes = new Map(ctx.allNodes.get());
+        newNodes.set(nodeId, oldData);
+        ctx.allNodes.set(newNodes);
+        this.notifyNode(nodeId);
+      },
+      redo: (ctx) => {
+        const newNodes = new Map(ctx.allNodes.get());
+        newNodes.set(nodeId, newData);
+        ctx.allNodes.set(newNodes);
+        this.notifyNode(nodeId);
+      },
+    });
+
+    this.notifyNode(nodeId);
   }
 
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
