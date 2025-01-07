@@ -394,11 +394,11 @@ export class NodesContext {
 
   modifyNode(nodeId: string, newData: BaseNode) {
     const oldData = this.allNodes.get().get(nodeId) as BaseNode;
-    if(!oldData) {
+    if (!oldData) {
       console.warn("Trying to modify node that doesn't exist", nodeId);
       return;
     }
-    if(isDeepEqual(oldData, newData, ["isChanged"])) {
+    if (isDeepEqual(oldData, newData, ["isChanged"])) {
       return; // data is the same
     }
 
@@ -419,7 +419,7 @@ export class NodesContext {
         newNodes.set(nodeId, newData);
         ctx.allNodes.set(newNodes);
         this.notifyNode(nodeId);
-      }
+      },
     });
 
     this.notifyNode(nodeId);

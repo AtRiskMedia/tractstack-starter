@@ -363,8 +363,8 @@ export function isDeepEqual(obj1: any, obj2: any, excludeKeys: string[] = []) {
   }
 
   // Get the keys of both objects
-  const keys1 = Object.keys(obj1).filter(key => !excludeKeys.includes(key));
-  const keys2 = Object.keys(obj2).filter(key => !excludeKeys.includes(key));
+  const keys1 = Object.keys(obj1).filter((key) => !excludeKeys.includes(key));
+  const keys2 = Object.keys(obj2).filter((key) => !excludeKeys.includes(key));
 
   // Check if the number of keys is the same
   if (keys1.length !== keys2.length) {
