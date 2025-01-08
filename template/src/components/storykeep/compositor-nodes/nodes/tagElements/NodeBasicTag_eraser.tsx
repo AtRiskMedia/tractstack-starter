@@ -37,7 +37,7 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
         </div>
         <button
           onClick={handleClick}
-          className="px-2 py-1 bg-white text-red-700 text-sm rounded hover:bg-red-700 hover:text-white shadow-sm transition-colors font-medium flex items-center gap-1"
+          className="px-2 py-1 bg-white text-red-700 text-sm rounded group-hover:bg-red-700 group-hover:text-white shadow-sm transition-colors flex items-center gap-1"
         >
           <TrashIcon className="h-4 w-4" />
           Delete Element

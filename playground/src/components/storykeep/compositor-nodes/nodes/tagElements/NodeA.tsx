@@ -4,7 +4,6 @@ import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const NodeA = (props: NodeProps) => {
-  //const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   return (
     <button
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}

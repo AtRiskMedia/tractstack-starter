@@ -7,7 +7,9 @@ import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgP
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
 import { NodeText } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeText.tsx";
 import { NodeA } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeA.tsx";
+import { NodeAEraser } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeA_eraser.tsx";
 import { NodeButton } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton.tsx";
+import { NodeButtonEraser } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeButton_eraser.tsx";
 import { NodeImg } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeImg.tsx";
 import { TagElement } from "@/components/storykeep/compositor-nodes/nodes/TagElement.tsx";
 import { NodeBasicTag } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
@@ -121,10 +123,18 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
     case "text":
       return <NodeText {...sharedProps} key={timestampNodeId(node.id)} />;
-    case "button":
+    case "button": {
+      const toolModeVal = toolModeValStore.get().value;
+      if (toolModeVal === `eraser`)
+        return <NodeButtonEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       return <NodeButton {...sharedProps} key={timestampNodeId(node.id)} />;
-    case "a":
+    }
+    case "a": {
+      const toolModeVal = toolModeValStore.get().value;
+      if (toolModeVal === `eraser`)
+        return <NodeAEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       return <NodeA {...sharedProps} key={timestampNodeId(node.id)} />;
+    }
     case "img":
       return <NodeImg {...sharedProps} key={timestampNodeId(node.id)} />;
     case "code": {
