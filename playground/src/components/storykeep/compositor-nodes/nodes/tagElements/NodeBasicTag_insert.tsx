@@ -1,6 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
 import { useStore } from "@nanostores/react";
-import { viewportStore, toolAddModeStore } from "@/store/storykeep.ts";
+import { viewportStore, toolAddModeStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -42,16 +42,18 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   };
 
   const InsertButtons = () => (
-    <div className="absolute top-2 left-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+    <div
+      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity z-50`}
+    >
       {(allowInsertBefore || allowInsertAfter) && (
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full ">
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full">
           Insert {newTagTitle}
         </div>
       )}
       {allowInsertBefore && (
         <button
           onClick={handleInsertAbove}
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors "
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
         >
           + Above
         </button>
@@ -59,14 +61,14 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
       {allowInsertAfter && (
         <button
           onClick={handleInsertBelow}
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors "
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
         >
           + Below
         </button>
       )}
       {!allowInsertBefore && !allowInsertAfter && (
         <button
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded shadow-sm transition-colors "
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded shadow-sm transition-colors"
           disabled={true}
         >
           + Can't Insert {newTagTitle} Here
@@ -79,7 +81,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         <div className="absolute inset-0">
-          <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600" />
+          <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
         <InsertButtons />
         <div className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
@@ -97,7 +99,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         <div className="absolute inset-0">
-          <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600" />
+          <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
         <InsertButtons />
         <Tag className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>

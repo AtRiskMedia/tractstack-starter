@@ -6,7 +6,9 @@ import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon
 import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
 import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
+import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import {
+  keyboardAccessible,
   showAnalytics,
   showSettings,
   viewportStore,
@@ -30,6 +32,7 @@ const StoryKeepHeader = () => {
   const $viewportKey = useStore(viewportKeyStore);
   const $showAnalytics = useStore(showAnalytics);
   const $showSettings = useStore(showSettings);
+  const $keyboardAccessible = useStore(keyboardAccessible);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -153,6 +156,17 @@ const StoryKeepHeader = () => {
             <BugAntIcon className={iconClassName} />
           </button>
         ) : null}
+        <button
+          onClick={() => {
+            keyboardAccessible.set(!$keyboardAccessible);
+            getCtx().notifyNode(ROOT_NODE_NAME);
+          }}
+          title="Toggle Keyboard Accessibility"
+        >
+          <CursorArrowRaysIcon
+            className={`${$keyboardAccessible ? iconActiveClassName : iconClassName}`}
+          />
+        </button>
       </div>
     </div>
   );

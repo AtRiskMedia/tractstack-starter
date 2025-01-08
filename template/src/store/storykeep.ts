@@ -68,6 +68,7 @@ export const creationStateStore = atom<CreationState>({
 // all look-ups by ulid
 //
 
+export const keyboardAccessible = atom<boolean>(false);
 export const showSettings = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();

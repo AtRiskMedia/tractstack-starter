@@ -1,7 +1,8 @@
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node";
 import { getCtx } from "@/store/nodes";
-import { viewportStore } from "@/store/storykeep";
+import { viewportStore} from "@/store/storykeep";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 
 export const NodeButtonEraser = (props: NodeProps) => {
   return (
@@ -10,6 +11,7 @@ export const NodeButtonEraser = (props: NodeProps) => {
         ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
         relative
         eraser-child
+        group
         before:absolute
         before:inset-0
         before:outline
@@ -17,10 +19,11 @@ export const NodeButtonEraser = (props: NodeProps) => {
         before:outline-dashed
         before:outline-red-700
         before:pointer-events-none
-        before:opacity-0
+        before:opacity-50
         hover:before:opacity-100
-        before:bg-red-600/50
+        focus:before:opacity-100
         hover:before:bg-red-600/50
+        focus:before:bg-red-600/50
         transition-all
       `}
       title="Delete Link"
@@ -29,6 +32,9 @@ export const NodeButtonEraser = (props: NodeProps) => {
         e.stopPropagation();
       }}
     >
+      <div className="absolute top-2 right-2 p-0.5 bg-red-700 rounded-full">
+        <TrashIcon className="h-5 w-5 text-white" />
+      </div>
       <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
     </button>
   );

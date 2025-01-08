@@ -40,7 +40,10 @@ export const AddElementsPanel = memo((props: AddElementsPanelProps) => {
         />
       ))}
 
-      <MiscElementsDropdown onClickedOption={onInsertableModeClicked} />
+      <MiscElementsDropdown
+        onClickedOption={onInsertableModeClicked}
+        currentToolAddMode={props.currentToolAddMode}
+      />
     </div>
   );
 });

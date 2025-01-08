@@ -17,23 +17,14 @@ def find_classes(content):
         r'@apply\s+([^;]+);'
     ]
     
-    # Added more granular pattern for group-hover variants
-    group_hover_pattern = r'group-hover/[a-z]+:[a-z]+-\d+'
-    
     for pattern in patterns:
         matches = re.finditer(pattern, content)
         for match in matches:
-            # Handle standard class patterns
             parts = re.split(r'\s+|\$\{[^}]+\}', match.group(1))
             for part in parts:
                 part = part.strip('"\';,`{}>')
                 if part:
                     classes.add(part)
-                    
-            # Specifically look for group-hover variants
-            group_hovers = re.finditer(group_hover_pattern, match.group(1))
-            for gh in group_hovers:
-                classes.add(gh.group(0))
     
     return classes
 
@@ -42,21 +33,15 @@ def is_valid_tailwind_class(cls):
     # Valid breakpoint prefixes that can contain capitals
     VALID_PREFIXES = ['sm:', 'md:', 'lg:', 'xl:', '2xl:', 'xs:']
     
-    # Extended valid prefixes to include group-hover variants
-    EXTENDED_PREFIXES = [
-        'group-hover/inner:', 
-        'group-hover/outer:', 
-        'group-hover/parent:',
-        'after:', 'before:', 'hover:', 
-        'focus:', 'active:', 
-        'group-hover:', 'peer-hover:'
-    ]
-    
     # If it starts with a valid prefix, check the rest of the string
-    for prefix in VALID_PREFIXES + EXTENDED_PREFIXES:
+    for prefix in VALID_PREFIXES:
         if cls.startswith(prefix):
             return not bool(re.search(r'[A-Z]', cls[len(prefix):]))
     
+    # Special cases for specific Tailwind patterns that might contain brackets
+    if cls.startswith(('after:', 'before:', 'hover:', 'focus:', 'active:', 'group-hover:', 'peer-hover:')):
+        return not bool(re.search(r'[A-Z]', cls))
+        
     # Check for any capitals in the string
     return not bool(re.search(r'[A-Z]', cls))
 
@@ -65,8 +50,8 @@ def clean_classes(classes):
     clean = set()
     
     for cls in classes:
-        # Skip strings containing capital letters unless they're in valid patterns
-        if not is_valid_tailwind_class(cls):
+        # Skip strings containing capital letters
+        if any(c.isupper() for c in cls):
             continue
             
         # Skip obvious non-classes
@@ -74,7 +59,7 @@ def clean_classes(classes):
             continue
             
         # Skip if it looks like a file path
-        if '/' in cls and not any(x in cls for x in ['-', '/', 'group-hover']):
+        if '/' in cls and not any(x in cls for x in ['-', '/']):
             continue
             
         # Skip if it's clearly a React/HTML attribute
