@@ -15,7 +15,9 @@ export const InsertableElement = memo((props: InsertableElementProps) => {
   return (
     <InsertDraggableElement el={props.el} onClicked={props.onClicked}>
       <button
-        className={`mx-1 p-1 rounded ${isActive ? "bg-slate-200 shadow-inner" : "hover:bg-gray-100"}`}
+        className={`mx-1 p-1 rounded ${
+          isActive ? "bg-white shadow-xl outline outline-2 outline-black" : "hover:bg-gray-100"
+        }`}
       >
         <img draggable={false} width={32} height={32} src={`/icons/${iconName}`} />
       </button>

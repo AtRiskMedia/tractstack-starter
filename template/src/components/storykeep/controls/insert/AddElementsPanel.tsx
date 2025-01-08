@@ -30,20 +30,23 @@ export const AddElementsPanel = memo((props: AddElementsPanelProps) => {
   };
 
   return (
-    <div className="ml-3 flex items-center">
-      {toolAddModes.filter(canSpawnIcon).map((mode, idx) => (
-        <InsertableElement
-          el={mode}
-          key={idx}
-          onClicked={onInsertableModeClicked}
+    <div className="flex flex-col ml-3 p-2.5 z-20">
+      <div className="flex items-center">
+        {toolAddModes.filter(canSpawnIcon).map((mode, idx) => (
+          <InsertableElement
+            el={mode}
+            key={idx}
+            onClicked={onInsertableModeClicked}
+            currentToolAddMode={props.currentToolAddMode}
+          />
+        ))}
+
+        <MiscElementsDropdown
+          onClickedOption={onInsertableModeClicked}
           currentToolAddMode={props.currentToolAddMode}
         />
-      ))}
-
-      <MiscElementsDropdown
-        onClickedOption={onInsertableModeClicked}
-        currentToolAddMode={props.currentToolAddMode}
-      />
+      </div>
+      <p className="text-sm mt-1.5 text-mydarkgrey"><em>Drag and drop enabled.</em></p>
     </div>
   );
 });

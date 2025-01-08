@@ -4,7 +4,7 @@ import { viewportStore, toolAddModeStore, keyboardAccessible } from "@/store/sto
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, type MouseEvent, useEffect, useState } from "react";
 import { tagTitles } from "@/constants";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
@@ -13,7 +13,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const { value: toolAddMode } = useStore(toolAddModeStore);
   const nodeId = props.nodeId;
   const { allowInsertBefore, allowInsertAfter } =
-    props.tagName !== `li`
+    props.tagName !== 'li'
       ? getCtx(props).allowInsert(nodeId, toolAddMode)
       : getCtx(props).allowInsertLi(nodeId, toolAddMode);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
@@ -23,27 +23,31 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      console.log("notification received data update for node: " + nodeId);
       setChildren(getCtx(props).getChildNodeIDs(nodeId));
     });
     return unsubscribe;
   }, []);
 
-  const handleInsertAbove = (e: React.MouseEvent) => {
+  const handleInsertAbove = (e: MouseEvent) => {
     e.stopPropagation();
+    console.log(`above`);
     getCtx(props).setClickedNodeId(nodeId);
-    // Add your insert above logic here
   };
 
-  const handleInsertBelow = (e: React.MouseEvent) => {
+  const handleInsertBelow = (e: MouseEvent) => {
     e.stopPropagation();
+    console.log(`below`);
     getCtx(props).setClickedNodeId(nodeId);
-    // Add your insert below logic here
+  };
+
+  const handleClickIntercept = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const InsertButtons = () => (
     <div
-      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity z-50`}
+      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity z-10`}
     >
       {(allowInsertBefore || allowInsertAfter) && (
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full">
@@ -53,7 +57,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
       {allowInsertBefore && (
         <button
           onClick={handleInsertAbove}
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
         >
           + Above
         </button>
@@ -61,14 +65,14 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
       {allowInsertAfter && (
         <button
           onClick={handleInsertBelow}
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
         >
           + Below
         </button>
       )}
       {!allowInsertBefore && !allowInsertAfter && (
         <button
-          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded shadow-sm transition-colors"
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded shadow-sm transition-colors opacity-50"
           disabled={true}
         >
           + Can't Insert {newTagTitle} Here
@@ -80,6 +84,13 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const baseComponent = (
     <div className="relative group">
       <div className="relative">
+        {/* Click interceptor layer */}
+        <div 
+          className="absolute inset-0 z-10"
+          onClick={handleClickIntercept}
+          onMouseDown={handleClickIntercept}
+          onMouseUp={handleClickIntercept}
+        />
         <div className="absolute inset-0">
           <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
@@ -91,13 +102,18 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     </div>
   );
 
-  // When showGuids is true, we just return the base component
   if (showGuids.get()) return baseComponent;
 
-  // When showGuids is false, we wrap the content in the specified tag
   return (
     <div className="relative group">
       <div className="relative">
+        {/* Click interceptor layer */}
+        <div 
+          className="absolute inset-0 z-10"
+          onClick={handleClickIntercept}
+          onMouseDown={handleClickIntercept}
+          onMouseUp={handleClickIntercept}
+        />
         <div className="absolute inset-0">
           <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>

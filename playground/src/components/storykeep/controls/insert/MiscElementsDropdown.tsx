@@ -19,14 +19,12 @@ export const MiscElementsDropdown = memo((props: MiscElementsDropdownProps) => {
   const filteredModes = toolAddModes.filter(missingIcon);
   const showPill = filteredModes.includes(props.currentToolAddMode);
 
-  console.log("Current mode:", props.currentToolAddMode, "Show pill:", showPill);
-
   if (showPill) {
     return (
       <>
         <span className="text-sm">Add:</span>
         <InsertDraggableElement el={props.currentToolAddMode} onClicked={props.onClickedOption}>
-          <button className="mx-1 rounded bg-slate-200 shadow-inner py-2 px-4">
+          <button className="mx-1 rounded bg-white shadow-xl outline outline-2 outline-black py-2 px-4">
             <div className="flex items-center gap-1 h-5">
               <span className="text-sm text-black">
                 {toolAddModeTitles[props.currentToolAddMode]}

@@ -4,7 +4,7 @@ import { viewportStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, type MouseEvent, type KeyboardEvent, useEffect, useState } from "react";
 import { tagTitles } from "@/constants";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
@@ -18,38 +18,41 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      console.log("notification received data update for node: " + nodeId);
       setChildren(getCtx(props).getChildNodeIDs(nodeId));
     });
     return unsubscribe;
   }, []);
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: MouseEvent) => {
     e.stopPropagation();
     getCtx(props).setClickedNodeId(nodeId);
   };
 
-  console.log(keyboardAccessible.get());
-
   const EraserUI = () => (
-    <>
-      <div
-        className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? `opacity-20 group-hover:opacity-100 group-focus-within:opacity-100` : ``} transition-opacity z-50`}
-      >
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full">{tagTitle}</div>
-        <button
-          onClick={handleClick}
-          className="px-2 py-1 bg-white text-red-700 text-sm rounded group-hover:bg-red-700 group-hover:text-white focus:bg-red-700 focus:text-white shadow-sm transition-colors flex items-center gap-1"
-        >
-          <TrashIcon className="h-4 w-4" />
-          Click anywhere to delete
-        </button>
+    <div
+      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? 'opacity-20 group-hover:opacity-100 group-focus-within:opacity-100' : ''} transition-opacity z-50 pointer-events-none`}
+    >
+      <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full">{tagTitle}</div>
+      <div className="px-2 py-1 bg-white group-hover:bg-red-700 group-hover:text-white group-focus-within:bg-red-700 group-focus-within:text-white text-red-700 text-sm rounded shadow-sm transition-colors flex items-center gap-1">
+        <TrashIcon className="h-4 w-4" />
+        Click anywhere to delete
       </div>
-    </>
+    </div>
   );
 
   const baseComponent = (
-    <div className="relative group">
+    <div 
+      className="relative group cursor-pointer"
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick(e as unknown as MouseEvent);
+        }
+      }}
+    >
       <div className="absolute inset-0">
         <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-red-700 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
       </div>
@@ -60,13 +63,22 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
     </div>
   );
 
-  // When showGuids is true, we just return the base component
   if (showGuids.get()) return baseComponent;
 
-  // When showGuids is false, we wrap the content in the specified tag
   return (
-    <div className="relative group">
-      <div className="absolute inset-0 group-hover:cursor-pointer focus:cursor-pointer">
+    <div 
+      className="relative group cursor-pointer"
+      onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick(e as unknown as MouseEvent);
+        }
+      }}
+    >
+      <div className="absolute inset-0">
         <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-red-700 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
       </div>
       <EraserUI />
