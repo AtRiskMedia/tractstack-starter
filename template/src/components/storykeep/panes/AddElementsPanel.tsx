@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { toolAddModes, toolAddModesIcons } from "@/constants.ts";
 import type { ToolAddMode, ToolMode } from "@/types.ts";
-import { InsertableElement } from "@/components/storykeep/panes/InsertableElement.tsx";
-import { MiscElementsDropdown } from "@/components/storykeep/panes/MiscElementsDropdown.tsx";
+import { InsertableElement } from "./InsertableElement.tsx";
+import { MiscElementsDropdown } from "./MiscElementsDropdown.tsx";
 
 export type AddElementsPanelProps = {
   setToolMode: (toolMode: ToolMode) => void;

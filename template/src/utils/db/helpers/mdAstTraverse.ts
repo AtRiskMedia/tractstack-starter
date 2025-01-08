@@ -187,12 +187,11 @@ export function mdAstTraverse(
       }
     }
 
-    results.push(flatNode);
-
+    let childNodes: FlatNode[] = [];
     // Recurse through children (except for code elements)
     if ("children" in node && Array.isArray(node.children) && node.tagName !== "code") {
       node.children.forEach((child) => {
-        const childNodes = mdAstTraverse(
+        childNodes = mdAstTraverse(
           child,
           currentNodeId,
           fileNodes,
@@ -204,6 +203,34 @@ export function mdAstTraverse(
         results.push(...childNodes);
       });
     }
+
+    if (flatNode.tagName === `li`) {
+      // now check for special cases
+      const childTagName = childNodes.length && childNodes[0].tagName;
+      switch (childTagName) {
+        case "img":
+          flatNode.tagNameCustom = `img`;
+          break;
+
+        case "code":
+          flatNode.tagNameCustom = `widget`;
+          break;
+
+        case "text":
+          if (childNodes.length === 1) {
+            if (childNodes?.[0]?.copy && childNodes[0].copy.length > 80)
+              flatNode.tagNameCustom = `p`;
+            else flatNode.tagNameCustom = `h3`;
+          } else {
+            flatNode.tagNameCustom = `p`;
+          }
+          break;
+        default:
+          console.log(`miss on`, childTagName, flatNode);
+      }
+    }
+
+    results.push(flatNode);
   }
 
   // Handle root nodes

@@ -4,7 +4,7 @@ import {
   toolAddModeStore,
   toolModeValStore,
 } from "../../../store/storykeep";
-import { AddElementsPanel } from "@/components/storykeep/panes/AddElementsPanel.tsx";
+import { AddElementsPanel } from "./insert/AddElementsPanel.tsx";
 import { useStore } from "@nanostores/react";
 import type { ToolMode, ToolAddMode } from "../../../types";
 

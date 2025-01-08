@@ -567,11 +567,18 @@ export const tagNames = {
   h2: `heading 2`,
   h3: `heading 3`,
   h4: `heading 4`,
+  h5: `heading 5`,
   img: `image`,
   li: `list item`,
   ol: `aside text container`,
   ul: `container`,
   code: `widget`,
+  yt: `youtube widget`,
+  bunny: `bunny video`,
+  belief: `belief widget`,
+  signup: `email signup widget`,
+  toggle: `belief toggle widget`,
+  identify: `identify as widget`,
 };
 
 export type Tag =
@@ -581,10 +588,17 @@ export type Tag =
   | "h2"
   | "h3"
   | "h4"
+  | "h5"
   | "img"
   | "li"
   | "ol"
   | "ul"
+  | "signup"
+  | "yt"
+  | "bunny"
+  | "belief"
+  | "identify"
+  | "toggle"
   | "code";
 
 export type AllTag = Tag | "button" | "hover";
@@ -1287,6 +1301,7 @@ export type TemplatePane = PaneNode & {
 
 export interface FlatNode extends BaseNode {
   tagName: string;
+  tagNameCustom?: string;
   copy?: string;
   src?: string;
   srcSet?: string;

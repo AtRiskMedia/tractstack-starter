@@ -1,5 +1,6 @@
 import { atom } from "nanostores";
 import { toolModeValStore } from "./storykeep.ts";
+import { hasTagName, isDefined, isValidTag, toTag } from "../utils/nodes/type-guards";
 import type {
   BaseNode,
   FlatNode,
@@ -16,6 +17,7 @@ import type {
   TemplatePane,
   TractStackNode,
   ViewportKey,
+  Tag,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
@@ -27,6 +29,7 @@ import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-
 import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
+import allowInsert from "@/utils/nodes/allowInsert.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
@@ -172,6 +175,86 @@ export class NodesContext {
     }
   }
 
+  allowInsert(
+    nodeId: string,
+    tagNameStr: string
+  ): {
+    allowInsertBefore: boolean;
+    allowInsertAfter: boolean;
+  } {
+    const node = this.allNodes.get().get(nodeId);
+    if (!isDefined(node) || !hasTagName(node)) {
+      return { allowInsertBefore: false, allowInsertAfter: false };
+    }
+    const markdownId = this.getClosestNodeTypeFromId(nodeId, "Markdown");
+    const tagNameIds = this.getChildNodeIDs(markdownId);
+    const tagNames = tagNameIds
+      .map((id) => {
+        const name = this.getNodeTagName(id);
+        return toTag(name);
+      })
+      .filter((name): name is Tag => name !== null);
+
+    const offset = tagNameIds.indexOf(nodeId);
+    const tagName = toTag(tagNameStr);
+
+    if (!tagName || !isValidTag(node.tagName)) {
+      return { allowInsertBefore: false, allowInsertAfter: false };
+    }
+
+    const allowInsertBefore =
+      offset > -1
+        ? allowInsert(node, node.tagName as Tag, tagName, tagNames[offset])
+        : allowInsert(node, node.tagName as Tag, tagName);
+
+    const allowInsertAfter =
+      tagNames.length > offset
+        ? allowInsert(node, node.tagName as Tag, tagName, tagNames[offset + 1])
+        : allowInsert(node, node.tagName as Tag, tagName);
+
+    return { allowInsertBefore, allowInsertAfter };
+  }
+
+  allowInsertLi(
+    nodeId: string,
+    tagNameStr: string
+  ): {
+    allowInsertBefore: boolean;
+    allowInsertAfter: boolean;
+  } {
+    const node = this.allNodes.get().get(nodeId);
+    if (!isDefined(node) || !hasTagName(node) || !node.parentId) {
+      return { allowInsertBefore: false, allowInsertAfter: false };
+    }
+
+    const tagNameIds = this.getChildNodeIDs(node.parentId);
+    const tagNames = tagNameIds
+      .map((id) => {
+        const name = this.getNodeTagName(id);
+        return toTag(name);
+      })
+      .filter((name): name is Tag => name !== null);
+
+    const offset = tagNameIds.indexOf(nodeId);
+    const tagName = toTag(tagNameStr);
+
+    if (!tagName || !isValidTag(node.tagName)) {
+      return { allowInsertBefore: false, allowInsertAfter: false };
+    }
+
+    const allowInsertBefore =
+      offset > 0
+        ? allowInsert(node, node.tagName as Tag, tagName, tagNames[offset - 1])
+        : allowInsert(node, node.tagName as Tag, tagName);
+
+    const allowInsertAfter =
+      tagNames.length < offset
+        ? allowInsert(node, node.tagName as Tag, tagName, tagNames[offset + 1])
+        : allowInsert(node, node.tagName as Tag, tagName);
+
+    return { allowInsertBefore, allowInsertAfter };
+  }
+
   getClosestNodeTypeFromId(startNodeId: string, nodeType: NodeType): string {
     const node = this.allNodes.get().get(startNodeId);
     if (!node || node.nodeType === "Root") return "";
@@ -210,6 +293,12 @@ export class NodesContext {
     const node = this.allNodes.get().get(nodeId);
     if (!node || !(`slug` in node) || typeof node.slug !== `string`) return "";
     return node.slug;
+  }
+
+  getNodeTagName(nodeId: string): string {
+    const node = this.allNodes.get().get(nodeId);
+    if (!node || !(`tagName` in node) || typeof node.tagName !== `string`) return "";
+    return node.tagName;
   }
 
   getIsContextPane(nodeId: string): boolean {

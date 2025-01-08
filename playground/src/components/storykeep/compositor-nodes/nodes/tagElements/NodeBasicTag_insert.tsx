@@ -1,5 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { useStore } from "@nanostores/react";
+import { viewportStore, toolAddModeStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -9,11 +10,16 @@ import { tagTitles } from "@/constants";
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTagInsert = (props: NodeTagProps) => {
+  const { value: toolAddMode } = useStore(toolAddModeStore);
   const nodeId = props.nodeId;
+  const { allowInsertBefore, allowInsertAfter } =
+    props.tagName !== `li`
+      ? getCtx(props).allowInsert(nodeId, toolAddMode)
+      : getCtx(props).allowInsertLi(nodeId, toolAddMode);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
 
   const Tag = props.tagName;
-  const tagTitle = tagTitles[props.tagName as keyof typeof tagTitles] || props.tagName;
+  const newTagTitle = tagTitles[toolAddMode];
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
@@ -36,22 +42,36 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   };
 
   const InsertButtons = () => (
-    <div className="absolute top-2 left-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-      <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full font-medium">
-        {tagTitle}
-      </div>
-      <button
-        onClick={handleInsertAbove}
-        className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors font-medium"
-      >
-        + Above
-      </button>
-      <button
-        onClick={handleInsertBelow}
-        className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors font-medium"
-      >
-        + Below
-      </button>
+    <div className="absolute top-2 left-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+      {(allowInsertBefore || allowInsertAfter) && (
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full ">
+          Insert {newTagTitle}
+        </div>
+      )}
+      {allowInsertBefore && (
+        <button
+          onClick={handleInsertAbove}
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors "
+        >
+          + Above
+        </button>
+      )}
+      {allowInsertAfter && (
+        <button
+          onClick={handleInsertBelow}
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white shadow-sm transition-colors "
+        >
+          + Below
+        </button>
+      )}
+      {!allowInsertBefore && !allowInsertAfter && (
+        <button
+          className="px-2 py-1 bg-white text-cyan-700 text-sm rounded shadow-sm transition-colors "
+          disabled={true}
+        >
+          + Can't Insert {newTagTitle} Here
+        </button>
+      )}
     </div>
   );
 

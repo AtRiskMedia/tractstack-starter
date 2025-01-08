@@ -4,6 +4,7 @@ import type {
   PaneFragmentNode,
   MarkdownPaneFragmentNode,
   FlatNode,
+  Tag,
 } from "../../types";
 
 interface BreakData {
@@ -49,3 +50,47 @@ export const isWidgetNode = (node: BaseNode | FlatNode | null): node is WidgetNo
     Array.isArray(node.codeHookParams)
   );
 };
+
+// Type guard to check if a node has a tagName property
+export function hasTagName(node: BaseNode | null | undefined): node is FlatNode {
+  return node !== null && node !== undefined && "tagName" in node;
+}
+
+// Type guard for checking if a node is defined
+export function isDefined<T>(node: T | null | undefined): node is T {
+  return node !== null && node !== undefined;
+}
+
+// Helper function to ensure string is a valid Tag
+export function isValidTag(tagName: string): tagName is Tag {
+  const validTags: Tag[] = [
+    "modal",
+    "parent",
+    "p",
+    "h2",
+    "h3",
+    "h4",
+    "img",
+    "li",
+    "ol",
+    "ul",
+    "signup",
+    "yt",
+    "bunny",
+    "belief",
+    "identify",
+    "toggle",
+    "code",
+  ];
+  return validTags.includes(tagName as Tag);
+}
+
+// Helper function to convert string to Tag (with runtime validation)
+export function toTag(str: string): Tag | null {
+  return isValidTag(str) ? str : null;
+}
+
+// Type guard for node with specific tag
+export function hasSpecificTag(node: BaseNode | null | undefined, tag: Tag): node is FlatNode {
+  return hasTagName(node) && node.tagName === tag;
+}

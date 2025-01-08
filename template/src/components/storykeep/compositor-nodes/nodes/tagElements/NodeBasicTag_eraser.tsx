@@ -32,15 +32,13 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
   const EraserUI = () => (
     <>
       <div className="absolute top-2 left-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full font-medium">
-          {tagTitle}
-        </div>
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full ">{tagTitle}</div>
         <button
           onClick={handleClick}
           className="px-2 py-1 bg-white text-red-700 text-sm rounded group-hover:bg-red-700 group-hover:text-white shadow-sm transition-colors flex items-center gap-1"
         >
           <TrashIcon className="h-4 w-4" />
-          Delete Element
+          Click anywhere to delete
         </button>
       </div>
     </>
@@ -64,7 +62,7 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
   // When showGuids is false, we wrap the content in the specified tag
   return (
     <div className="relative group">
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 group-hover:cursor-pointer">
         <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-red-700" />
       </div>
       <EraserUI />

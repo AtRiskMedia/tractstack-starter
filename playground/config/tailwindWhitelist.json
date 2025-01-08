@@ -359,6 +359,7 @@
     "group-hover:bg-black",
     "group-hover:bg-red-700",
     "group-hover:block",
+    "group-hover:cursor-pointer",
     "group-hover:fill-transparent",
     "group-hover:opacity-100",
     "group-hover:text-white",

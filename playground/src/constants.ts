@@ -45,6 +45,7 @@ export const tagTitles: Record<Tag, string> = {
   h2: "Heading 2",
   h3: "Heading 3",
   h4: "Heading 4",
+  h5: "Heading 5",
   img: "Image",
   code: "Widget",
   li: `List Item`,
@@ -52,6 +53,12 @@ export const tagTitles: Record<Tag, string> = {
   ul: "Outer Container",
   parent: "Pane Styles",
   modal: "Modal Styles",
+  signup: "Email Signup Widget",
+  yt: "YouTube Widget",
+  bunny: "Bunny Video Widget",
+  belief: "Belief Select Widget",
+  toggle: "Belief Toggle Widget",
+  identify: "Identify As Widget",
 };
 
 export const toolAddModes = [
