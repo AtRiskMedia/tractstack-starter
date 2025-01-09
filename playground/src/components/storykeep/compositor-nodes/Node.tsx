@@ -103,7 +103,13 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           .get(storyFragmentId) as StoryFragmentNode;
         const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
         if (storyFragment)
-          return <PaneAdd {...sharedProps} first={!!firstPane} key={timestampNodeId(node.id)} />;
+          return (
+            <PaneAdd
+              {...sharedProps}
+              first={firstPane === node.id}
+              key={timestampNodeId(node.id)}
+            />
+          );
       }
       return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
     }
