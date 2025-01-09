@@ -1,11 +1,16 @@
 import type { TemplateNode, ToolAddMode } from "@/types.ts";
 import {
-  TemplateBeliefNode, TemplateBunnyNode, TemplateEmailSignUpNode,
+  TemplateBeliefNode,
+  TemplateBunnyNode,
+  TemplateEmailSignUpNode,
   TemplateH2Node,
   TemplateH3Node,
-  TemplateH4Node, TemplateIdentifyAsNode,
+  TemplateH4Node,
+  TemplateIdentifyAsNode,
   TemplateImgNode,
-  TemplatePNode, TemplateToggleNode, TemplateYoutubeNode,
+  TemplatePNode,
+  TemplateToggleNode,
+  TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
 
 export const getTemplateNode = (value: ToolAddMode): TemplateNode => {

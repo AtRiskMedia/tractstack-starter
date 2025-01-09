@@ -46,9 +46,5 @@ export const Markdown = (props: NodeProps) => {
       );
     }
   }
-  return (
-    <>
-      {nodesToRender}
-    </>
-  );
+  return <>{nodesToRender}</>;
 };
