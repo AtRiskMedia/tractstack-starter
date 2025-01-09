@@ -187,16 +187,16 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
         <div className="flex items-center gap-2">
           <button
             key="first-add"
-            className="p-1.5 text-sm rounded-md hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black transition-colors"
-            title="Add Layer Before First"
+            className="p-1 text-xs rounded border border-dashed border-mydarkgrey/30 hover:bg-white/50 text-mydarkgrey hover:text-black transition-colors"
+            title="Add Layer Here"
             onClick={() => handleLayerAdd("before", 1)}
           >
-            <PlusIcon className="w-4 h-4" />
+            <PlusIcon className="w-3 h-3" />
           </button>
           {[...Array(layerCount).keys()]
             .map((i) => i + 1)
             .map((num, index) => (
-              <div key={`layer-group-${num}`} className="flex items-center gap-2">
+              <div key={`layer-group-${num}`} className="flex items-center gap-1">
                 <button
                   className={`min-w-[32px] px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
                     currentLayer === num
@@ -208,8 +208,8 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
                   {num}
                 </button>
                 <button
-                  className="p-1.5 text-sm rounded-md hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black transition-colors"
-                  title={index === layerCount - 1 ? "Add Layer After" : "Add Layer Before Next"}
+                  className="p-1 text-xs rounded border border-dashed border-mydarkgrey/30 hover:bg-white/50 text-mydarkgrey hover:text-black transition-colors"
+                  title="Add Layer Here"
                   onClick={() =>
                     handleLayerAdd(
                       index === layerCount - 1 ? "after" : "before",
@@ -217,7 +217,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
                     )
                   }
                 >
-                  <PlusIcon className="w-4 h-4" />
+                  <PlusIcon className="w-3 h-3" />
                 </button>
               </div>
             ))}
