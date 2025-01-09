@@ -161,7 +161,7 @@ const StoryKeepHeader = () => {
             keyboardAccessible.set(!$keyboardAccessible);
             getCtx().notifyNode(ROOT_NODE_NAME);
           }}
-          title="Toggle Keyboard Accessibility"
+          title="Toggle Mobile/Keyboard Accessibility"
         >
           <CursorArrowRaysIcon
             className={`${$keyboardAccessible ? iconActiveClassName : iconClassName}`}
