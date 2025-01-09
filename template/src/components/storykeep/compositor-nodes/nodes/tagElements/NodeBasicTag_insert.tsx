@@ -32,19 +32,17 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const handleInsertAbove = (e: MouseEvent) => {
     e.stopPropagation();
     console.log(`above`);
-    const markdownId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Markdown");
     const templateNode = getTemplateNode(toolAddModeStore.get().value);
 
-    getCtx(props).addTemplateNode(markdownId, templateNode, props.nodeId, "before");
+    getCtx(props).addTemplateNode(props.nodeId, templateNode, props.nodeId, "before");
   };
 
   const handleInsertBelow = (e: MouseEvent) => {
     e.stopPropagation();
     console.log(`below`);
-    const markdownId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Markdown");
     const templateNode = getTemplateNode(toolAddModeStore.get().value);
 
-    getCtx(props).addTemplateNode(markdownId, templateNode, props.nodeId, "after");
+    getCtx(props).addTemplateNode(props.nodeId, templateNode, props.nodeId, "after");
   };
 
   const handleClickIntercept = (e: MouseEvent) => {

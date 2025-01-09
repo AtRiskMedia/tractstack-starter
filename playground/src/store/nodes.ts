@@ -287,6 +287,19 @@ export class NodesContext {
     }
   }
 
+  getClosestNodeByTagNames(startNodeId: string, tagNames: string[]): string {
+    const node = this.allNodes.get().get(startNodeId);
+    if (!node || node.nodeType === "Root") return "";
+
+    const parentId = node.parentId || "";
+    const parentNode = this.allNodes.get().get(parentId);
+    if(parentNode && "tagName" in parentNode && tagNames.includes(parentNode.tagName as string)) {
+      return parentId;
+    } else {
+      return this.getClosestNodeByTagNames(parentId, tagNames);
+    }
+  }
+
   //getStyleByViewport(
   //  defaultClasses:
   //    | {
@@ -710,19 +723,35 @@ export class NodesContext {
   }
 
   addTemplateNode(
-    markdownId: string,
+    targetId: string,
     node: TemplateNode,
     insertNodeId?: string,
     location?: "before" | "after"
   ) {
-    const markdownNode = this.allNodes.get().get(markdownId) as MarkdownPaneFragmentNode;
-    if (!markdownNode || markdownNode.nodeType !== "Markdown") {
+    const targetNode = this.allNodes.get().get(targetId) as BaseNode;
+    if (!targetNode
+      || (targetNode.nodeType !== "Markdown"
+      && targetNode.nodeType !== "TagElement")
+    ) {
       return;
     }
 
+    let closestListNode = "";
+    if("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
+      closestListNode = targetId;
+    } else {
+      closestListNode = this.getClosestNodeByTagNames(targetId, ["ol", "ul"]);
+    }
+
+    const parentId = closestListNode || this.getClosestNodeTypeFromId(targetId, "Markdown");
     const duplicatedNodes = cloneDeep(node) as TemplateNode;
-    const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, markdownNode.id);
     // register flattened nodes to all nodes and set up relationship with its parent
+    const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
+    // this is a list node so make it an "li" but save original tag name
+    if(closestListNode.length > 0 && flattenedNodes.length > 0) {
+      flattenedNodes[0].tagNameCustom = flattenedNodes[0].tagName;
+      flattenedNodes[0].tagName = "li";
+    }
     this.addNodes(flattenedNodes);
     this.history.addPatch({
       op: PatchOp.ADD,
@@ -730,17 +759,17 @@ export class NodesContext {
       redo: (ctx) => ctx.addNodes(flattenedNodes),
     });
 
-    const markdownNodes = this.parentNodes.get().get(markdownId);
+    const parentNodes = this.parentNodes.get().get(parentId);
     // now grab parent nodes, check if we have inner node
-    if (insertNodeId && markdownNodes && markdownNodes?.indexOf(insertNodeId) !== -1) {
-      const newNode = markdownNodes.splice(markdownNodes.indexOf(duplicatedNodes.id, 1));
+    if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
+      const newNode = parentNodes.splice(parentNodes.indexOf(duplicatedNodes.id, 1));
       if (location === "before") {
-        markdownNodes.insertBefore(markdownNodes.indexOf(insertNodeId), newNode);
+        parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), newNode);
       } else {
-        markdownNodes.insertAfter(markdownNodes.indexOf(insertNodeId), newNode);
+        parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), newNode);
       }
     }
-    this.notifyNode(markdownId);
+    this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
   }
 
   setupTemplateNodeRecursively(node: TemplateNode, parentId: string) {
