@@ -1,4 +1,4 @@
-import type { TemplateNode, ToolAddMode } from "@/types.ts";
+import type { FlatNode, TemplateNode, ToolAddMode } from "@/types.ts";
 import {
   TemplateBeliefNode,
   TemplateBunnyNode,
@@ -12,6 +12,8 @@ import {
   TemplateToggleNode,
   TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
+import { getCtx } from "@/store/nodes.ts";
+import type { NodeTagProps } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 
 export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
   switch (value) {
@@ -40,4 +42,22 @@ export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
     default:
       return TemplatePNode;
   }
+};
+
+const forbiddenEditTags = new Set<string>(["em", "strong", "ol", "ul"]);
+
+export const canEditText = (props: NodeTagProps): boolean => {
+  const nodeId = props.nodeId;
+
+  const self = getCtx(props).allNodes.get().get(nodeId) as FlatNode;
+  if (self.tagName === "a") return false;
+
+  const childButton = getCtx(props).getChildNodeByTagNames(nodeId, ["a"]);
+  if (childButton?.length > 0) return false;
+
+  const parentIsButton = getCtx(props).getParentNodeByTagNames(nodeId, ["a"]);
+  if (parentIsButton?.length > 0) return false;
+
+  if (forbiddenEditTags.has(props.tagName)) return false;
+  return true;
 };

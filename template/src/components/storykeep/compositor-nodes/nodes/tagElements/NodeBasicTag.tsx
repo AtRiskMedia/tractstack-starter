@@ -5,27 +5,13 @@ import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { type JSX, useEffect, useState } from "react";
 import type { FlatNode } from "@/types.ts";
+import { canEditText } from "@/utils/common/nodesHelper.ts";
 
-type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
+export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
-
-  const canEditText = (): boolean => {
-    const self = getCtx(props).allNodes.get().get(nodeId) as FlatNode;
-    if (self.tagName === "a") return false;
-
-    const childButton = getCtx(props).getChildNodeByTagNames(nodeId, ["a"]);
-    if (childButton?.length > 0) return false;
-
-    const parentIsButton = getCtx(props).getParentNodeByTagNames(nodeId, ["a"]);
-    if (parentIsButton?.length > 0) return false;
-
-    const isListParent = ["ol", "ul"].includes(props.tagName);
-    if (isListParent) return false;
-    return true;
-  };
 
   const Tag = props.tagName;
   useEffect(() => {
@@ -53,10 +39,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   return (
     <Tag
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      contentEditable={toolModeValStore.get().value === "default" && canEditText()}
+      contentEditable={toolModeValStore.get().value === "default" && canEditText(props)}
       suppressContentEditableWarning
       onBlur={(e) => {
-        if (!canEditText()) return;
+        if (!canEditText(props)) return;
         const newText = e.currentTarget.textContent?.trimEnd();
 
         getCtx(props)
