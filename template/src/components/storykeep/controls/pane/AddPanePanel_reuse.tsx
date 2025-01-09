@@ -11,7 +11,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
   console.log(nodeId,first)
   return (
     <div className="p-0.5 shadow-inner">
-      <div className="flex flex-col gap-2 mb-1">
+      <div className="flex flex-col gap-2 mb-1.5">
         <div className="p-1.5 bg-white rounded-md flex gap-1 w-full">
           <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
             Re-use Existing Pane
