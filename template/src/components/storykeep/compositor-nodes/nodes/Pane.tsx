@@ -1,6 +1,7 @@
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import PaneAnalyticsPanel from "../../controls/pane/PaneAnalyticsPanel";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
@@ -47,9 +48,7 @@ export const Pane = (props: NodeProps) => {
           ) : (
             <RenderChildren children={children} nodeProps={props} />
           )}
-          {$showAnalytics ? (
-            <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
-          ) : null}
+          {$showAnalytics ? <PaneAnalyticsPanel nodeId={props.nodeId} /> : null}
         </div>
       </div>
     </div>

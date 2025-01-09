@@ -1,7 +1,9 @@
 import { getCtx, NodesContext } from "@/store/nodes.ts";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { PaneAdd } from "@/components/storykeep/compositor-nodes/nodes/Pane_add.tsx";
+import { PaneConfig } from "@/components/storykeep/compositor-nodes/nodes/Pane_config.tsx";
 import { PaneEraser } from "@/components/storykeep/compositor-nodes/nodes/Pane_eraser.tsx";
+import { PaneLayout } from "@/components/storykeep/compositor-nodes/nodes/Pane_layout.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgPaneWrapper.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
@@ -83,7 +85,6 @@ export const getType = (node: BaseNode | FlatNode): string => {
 
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
-
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
@@ -96,6 +97,10 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const toolModeVal = toolModeValStore.get().value;
       if (toolModeVal === `eraser`)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
+      if (toolModeVal === `layout`)
+        return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
+      else if (toolModeVal === `settings`)
+        return <PaneConfig {...sharedProps} key={timestampNodeId(node.id)} />;
       else if (toolModeVal === `pane`) {
         const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
         const storyFragment = getCtx(props)

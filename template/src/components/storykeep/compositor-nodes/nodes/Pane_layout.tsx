@@ -1,11 +1,11 @@
-import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
-export const PaneEraser = (props: NodeProps) => {
+export const PaneLayout = (props: NodeProps) => {
   const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
@@ -41,14 +41,14 @@ export const PaneEraser = (props: NodeProps) => {
           }}
         >
           <button
-            title="Delete Pane"
+            title="Apply New Layout"
             onClick={(e) => {
               getCtx(props).setClickedNodeId(props.nodeId);
               e.stopPropagation();
             }}
-            className="z-10 absolute top-2 right-2 p-1.5 bg-red-700 rounded-full hover:bg-black"
+            className="z-10 absolute top-2 right-2 p-1.5 bg-cyan-700 rounded-full hover:bg-black"
           >
-            <TrashIcon className="h-10 w-10 text-white" />
+            <PuzzlePieceIcon className="h-10 w-10 text-white" />
           </button>
           {codeHookPayload ? (
             <>

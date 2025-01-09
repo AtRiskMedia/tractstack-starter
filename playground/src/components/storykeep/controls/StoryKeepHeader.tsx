@@ -130,9 +130,11 @@ const StoryKeepHeader = () => {
               const viewportHeight = window.innerHeight;
               const isInView = rect.top >= 0 && rect.bottom <= viewportHeight;
               if (!isInView) {
-                const scrollTop = window.scrollY + rect.top - (viewportHeight - rect.height) / 2;
+                const idealScrollTop =
+                  window.scrollY + rect.top - (viewportHeight - rect.height) / 2;
+                const finalScrollTop = Math.max(0, idealScrollTop);
                 window.scrollTo({
-                  top: scrollTop,
+                  top: finalScrollTop,
                   behavior: "smooth",
                 });
               }

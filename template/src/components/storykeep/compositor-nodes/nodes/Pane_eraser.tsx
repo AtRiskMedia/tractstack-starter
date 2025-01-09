@@ -30,7 +30,7 @@ export const PaneEraser = (props: NodeProps) => {
 
   // todo naz - make pane more modular
   return (
-    <div id={getPaneId()} className="pane">
+    <div id={getPaneId()} className="pane min-h-16">
       <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
         <div
           className={contentClasses}
@@ -46,7 +46,7 @@ export const PaneEraser = (props: NodeProps) => {
               getCtx(props).setClickedNodeId(props.nodeId);
               e.stopPropagation();
             }}
-            className="absolute top-2 right-2 p-1.5 bg-red-700 rounded-full hover:bg-black"
+            className="z-10 absolute top-2 right-2 p-1.5 bg-red-700 rounded-full hover:bg-black"
           >
             <TrashIcon className="h-10 w-10 text-white" />
           </button>
