@@ -30,7 +30,7 @@ export const toolModes = [
   {
     key: "pane" as const,
     Icon: Square3Stack3DIcon,
-    title: "Insert Pane",
+    title: "Insert Pane here",
   },
   {
     key: "settings" as const,

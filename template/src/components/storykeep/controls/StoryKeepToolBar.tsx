@@ -24,11 +24,8 @@ const StoryKeepToolBar = () => {
   }
 
   return (
-    <div
-      id="toolsPanel"
-      className="fixed left-0 md:ml-16 w-auto bg-mywhite rounded-r-lg mt-0.5 shadow-lg z-30"
-    >
-      <div className="flex flex-wrap gap-x-2 gap-y-1 p-1 drop-shadow">
+    <div className="w-auto bg-mywhite rounded-tr-md shadow-lg">
+      <div className="flex flex-wrap gap-x-2 gap-y-1 p-0.5 drop-shadow">
         <AddElementsPanel
           setToolAddMode={setToolAddMode}
           setToolMode={setToolMode}
