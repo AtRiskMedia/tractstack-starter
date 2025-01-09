@@ -50,7 +50,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           .forEach((childId) => {
             const childNode = getCtx(props).allNodes.get().get(childId) as FlatNode;
             if (childNode && childNode.tagName === "text") {
-              if(childNode.copy?.trimEnd() == newText) {
+              if (childNode.copy?.trimEnd() == newText) {
                 return;
               }
               getCtx(props).modifyNodes([

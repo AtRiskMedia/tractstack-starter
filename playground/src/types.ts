@@ -1396,3 +1396,60 @@ export interface LinkNode extends FlatNode {
     };
   };
 }
+
+interface BaseTarget {
+  name: string;
+  description: string;
+}
+
+interface SimpleTarget extends BaseTarget {
+  subcommands?: never;
+  requiresParam?: never;
+  paramLabel?: never;
+  requiresSecondParam?: never;
+  param2Label?: never;
+  placeholder?: never;
+}
+
+interface SubcommandTarget extends BaseTarget {
+  subcommands: string[];
+  requiresParam?: never;
+  paramLabel?: never;
+  requiresSecondParam?: never;
+  param2Label?: never;
+  placeholder?: never;
+}
+
+interface SingleParamTarget extends BaseTarget {
+  subcommands?: never;
+  requiresParam: true;
+  paramLabel: string;
+  requiresSecondParam?: never;
+  param2Label?: never;
+  placeholder?: string;
+}
+
+interface DoubleParamTarget extends BaseTarget {
+  subcommands?: never;
+  requiresParam: true;
+  paramLabel: string;
+  requiresSecondParam: true;
+  param2Label: string;
+  placeholder?: never;
+}
+
+type TargetConfig = SimpleTarget | SubcommandTarget | SingleParamTarget | DoubleParamTarget;
+
+type GotoTargets = {
+  [key: string]: TargetConfig;
+};
+
+export type {
+  BaseTarget,
+  SimpleTarget,
+  SubcommandTarget,
+  SingleParamTarget,
+  DoubleParamTarget,
+  TargetConfig,
+  GotoTargets,
+};

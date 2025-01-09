@@ -1,6 +1,8 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import type { Config } from "../types";
+import SetContentMap from "../components/frontend/state/SetContentMap";
+import { getContentMap } from "../utils/db/utils";
+import type { ContentMap, Config } from "../types";
 
 export interface Props {
   config: Config;
@@ -29,6 +31,8 @@ const defaultSocialDesc = `No-code website builder and content marketing platfor
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
+
+const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>
@@ -119,6 +123,7 @@ const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
       });
     </script>
 
+    <SetContentMap payload={contentMap} client:only="react" />
     <ViewTransitions />
   </head>
   <body class="w-full">
