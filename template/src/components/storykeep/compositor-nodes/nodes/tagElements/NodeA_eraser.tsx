@@ -1,6 +1,6 @@
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node";
 import { getCtx } from "@/store/nodes";
-import { viewportStore} from "@/store/storykeep";
+import { viewportStore } from "@/store/storykeep";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 

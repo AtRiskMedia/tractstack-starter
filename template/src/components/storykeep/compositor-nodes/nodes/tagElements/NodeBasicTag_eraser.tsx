@@ -30,7 +30,7 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
 
   const EraserUI = () => (
     <div
-      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? 'opacity-20 group-hover:opacity-100 group-focus-within:opacity-100' : ''} transition-opacity z-50 pointer-events-none`}
+      className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity z-50 pointer-events-none`}
     >
       <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-full">{tagTitle}</div>
       <div className="px-2 py-1 bg-white group-hover:bg-red-700 group-hover:text-white group-focus-within:bg-red-700 group-focus-within:text-white text-red-700 text-sm rounded shadow-sm transition-colors flex items-center gap-1">
@@ -41,13 +41,13 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
   );
 
   const baseComponent = (
-    <div 
+    <div
       className="relative group cursor-pointer"
       onClick={handleClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e: KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           handleClick(e as unknown as MouseEvent);
         }
@@ -66,13 +66,13 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
   if (showGuids.get()) return baseComponent;
 
   return (
-    <div 
+    <div
       className="relative group cursor-pointer"
       onClick={handleClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e: KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           handleClick(e as unknown as MouseEvent);
         }

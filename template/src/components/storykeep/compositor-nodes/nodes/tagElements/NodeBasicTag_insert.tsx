@@ -13,7 +13,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const { value: toolAddMode } = useStore(toolAddModeStore);
   const nodeId = props.nodeId;
   const { allowInsertBefore, allowInsertAfter } =
-    props.tagName !== 'li'
+    props.tagName !== "li"
       ? getCtx(props).allowInsert(nodeId, toolAddMode)
       : getCtx(props).allowInsertLi(nodeId, toolAddMode);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
@@ -85,7 +85,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         {/* Click interceptor layer */}
-        <div 
+        <div
           className="absolute inset-0 z-10"
           onClick={handleClickIntercept}
           onMouseDown={handleClickIntercept}
@@ -108,7 +108,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         {/* Click interceptor layer */}
-        <div 
+        <div
           className="absolute inset-0 z-10"
           onClick={handleClickIntercept}
           onMouseDown={handleClickIntercept}

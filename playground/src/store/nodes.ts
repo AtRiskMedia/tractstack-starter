@@ -1,6 +1,12 @@
 import { atom } from "nanostores";
 import { toolModeValStore } from "./storykeep.ts";
-import { hasTagName, isDefined, isValidTag, toTag } from "../utils/nodes/type-guards";
+import {
+  hasButtonPayload,
+  hasTagName,
+  isDefined,
+  isValidTag,
+  toTag,
+} from "../utils/nodes/type-guards";
 import type {
   BaseNode,
   FlatNode,
@@ -20,7 +26,7 @@ import type {
   Tag,
 } from "@/types.ts";
 import type { CSSProperties } from "react";
-import { processClassesForViewports } from "@/utils/compositor/reduceNodesClassNames.ts";
+import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames.ts";
 import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
 import { NotificationSystem } from "@/store/notificationSystem.ts";
@@ -35,6 +41,16 @@ import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
 export const UNDO_REDO_HISTORY_CAPACITY = 500;
+
+function strippedStyles(obj: Record<string, string[]>) {
+  return Object.fromEntries(Object.entries(obj).map(([key, value]) => [key, value[0]]));
+}
+function addHoverPrefix(str: string): string {
+  return str
+    .split(" ")
+    .map((word) => `hover:${word}`)
+    .join(" ");
+}
 
 export class NodesContext {
   constructor() {}
@@ -268,26 +284,26 @@ export class NodesContext {
     }
   }
 
-  getStyleByViewport(
-    defaultClasses:
-      | {
-          mobile?: Record<string, string> | undefined;
-          tablet?: Record<string, string> | undefined;
-          desktop?: Record<string, string> | undefined;
-        }
-      | undefined,
-    viewport: ViewportKey
-  ): Record<string, string> {
-    switch (viewport) {
-      case "desktop":
-        return defaultClasses?.desktop || {};
-      case "tablet":
-        return defaultClasses?.tablet || {};
-      default:
-      case "mobile":
-        return defaultClasses?.mobile || {};
-    }
-  }
+  //getStyleByViewport(
+  //  defaultClasses:
+  //    | {
+  //        mobile?: Record<string, string> | undefined;
+  //        tablet?: Record<string, string> | undefined;
+  //        desktop?: Record<string, string> | undefined;
+  //      }
+  //    | undefined,
+  //  viewport: ViewportKey
+  //): Record<string, string> {
+  //  switch (viewport) {
+  //    case "desktop":
+  //      return defaultClasses?.desktop || {};
+  //    case "tablet":
+  //      return defaultClasses?.tablet || {};
+  //    default:
+  //    case "mobile":
+  //      return defaultClasses?.mobile || {};
+  //  }
+  //}
 
   getNodeSlug(nodeId: string): string {
     const node = this.allNodes.get().get(nodeId);
@@ -430,14 +446,28 @@ export class NodesContext {
 
       case "TagElement":
         {
-          if (
-            node &&
-            `tagName` in node &&
-            typeof node.tagName === `string` &&
-            [`button`, `a`].includes(node.tagName)
-          ) {
-            if (`elementCss` in node && typeof node.elementCss === `string`) return node.elementCss;
-            return ``;
+          const getButtonClasses = (node: FlatNode) => {
+            return {
+              mobile: strippedStyles(node.buttonPayload?.buttonClasses || {}),
+              tablet: {},
+              desktop: {},
+            };
+          };
+
+          const getHoverClasses = (node: FlatNode) => {
+            return {
+              mobile: strippedStyles(node.buttonPayload?.buttonHoverClasses || {}),
+              tablet: {},
+              desktop: {},
+            };
+          };
+
+          if (hasButtonPayload(node)) {
+            const [classesPayload] = processClassesForViewports(getButtonClasses(node), {}, 1);
+            const [classesHoverPayload] = processClassesForViewports(getHoverClasses(node), {}, 1);
+            return `${classesPayload?.length ? classesPayload[0] : ``} ${
+              classesHoverPayload?.length ? addHoverPrefix(classesHoverPayload[0]) : ``
+            }`;
           }
           const closestPaneId = this.getClosestNodeTypeFromId(nodeId, "Markdown");
           const paneNode = this.allNodes.get().get(closestPaneId) as MarkdownPaneFragmentNode;

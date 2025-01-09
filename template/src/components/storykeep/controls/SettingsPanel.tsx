@@ -4,6 +4,11 @@ import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleCodeHookPanel from "./panels/StyleCodeHookPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
+import StyleLinkPanel from "./panels/StyleLinkPanel";
+import StyleLinkAddPanel from "./panels/StyleLinkPanel_add";
+import StyleLinkUpdatePanel from "./panels/StyleLinkPanel_update";
+import StyleLinkRemovePanel from "./panels/StyleLinkPanel_remove";
+import StyleLinkConfigPanel from "./panels/StyleLinkPanel_config";
 import StyleElementPanel from "./panels/StyleElementPanel";
 import StyleElementAddPanel from "./panels/StyleElementPanel_add";
 import StyleElementRemovePanel from "./panels/StyleElementPanel_remove";
@@ -42,17 +47,6 @@ export interface BasePanelProps {
   childId?: string;
   availableCodeHooks?: string[];
 }
-
-const StyleLinkPanel = ({ node }: BasePanelProps) => {
-  return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Style Link</h2>
-      <div className="p-2 bg-slate-100 rounded-lg">
-        <pre className="whitespace-pre-wrap">{JSON.stringify({ node }, null, 2)}</pre>
-      </div>
-    </div>
-  );
-};
 
 const getPanel = (
   config: Config | null,
@@ -103,7 +97,22 @@ const getPanel = (
         <StyleParentDeleteLayerPanel node={markdownNode} layer={layer} />
       ) : null;
     case "style-link":
-      return clickedNode ? <StyleLinkPanel node={clickedNode} /> : null;
+      return clickedNode && markdownNode ? <StyleLinkPanel node={clickedNode} /> : null;
+    case "style-link-add":
+    case "style-link-add-hover":
+      return clickedNode && markdownNode ? <StyleLinkAddPanel node={clickedNode} /> : null;
+    case "style-link-update":
+    case "style-link-update-hover":
+      return clickedNode ? (
+        <StyleLinkUpdatePanel node={clickedNode} className={className} config={config} />
+      ) : null;
+    case "style-link-remove":
+    case "style-link-remove-hover":
+      return clickedNode ? <StyleLinkRemovePanel node={clickedNode} className={className} /> : null;
+    case "style-link-config":
+      return clickedNode && config ? (
+        <StyleLinkConfigPanel node={clickedNode} config={config} />
+      ) : null;
     case "style-element":
       return clickedNode && markdownNode ? (
         <StyleElementPanel
@@ -124,7 +133,7 @@ const getPanel = (
         />
       ) : null;
     case "style-element-update":
-      return clickedNode && markdownNode ? (
+      return clickedNode && markdownNode && className && config ? (
         <StyleElementUpdatePanel
           node={clickedNode}
           parentNode={markdownNode}
@@ -157,7 +166,7 @@ const getPanel = (
     case "style-img-update":
     case "style-img-container-update":
     case "style-img-outer-update":
-      return (
+      return clickedNode && markdownNode && className && childId && config ? (
         <StyleImageUpdatePanel
           node={clickedNode}
           parentNode={markdownNode}
@@ -165,18 +174,18 @@ const getPanel = (
           childId={childId}
           config={config}
         />
-      );
+      ) : null;
     case "style-img-remove":
     case "style-img-container-remove":
     case "style-img-outer-remove":
-      return (
+      return clickedNode && markdownNode && className && childId ? (
         <StyleImageRemovePanel
           node={clickedNode}
           parentNode={markdownNode}
           className={className}
           childId={childId}
         />
-      );
+      ) : null;
     case "style-widget": {
       if (!clickedNode?.parentId) return null;
       const containerNode = allNodes.get(clickedNode.parentId);
@@ -347,7 +356,11 @@ const SettingsPanel = ({
       </button>
 
       <div className="bg-white shadow-xl w-full md:w-[500px] rounded-tl-xl">
-        <div id="settings-panel" className="overflow-y-auto" style={{ maxHeight: "60vh" }}>
+        <div
+          id="settings-panel"
+          className="overflow-y-auto"
+          style={{ minHeight: "280px", maxHeight: "60vh" }}
+        >
           <div key={clickedNode?.id || `debug`} className="p-4">
             {panel}
           </div>
