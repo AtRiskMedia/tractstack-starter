@@ -67,6 +67,9 @@ export class NodesContext {
       case `default`:
         handleClickEventDefault(node, this.clickedParentLayer.get());
         break;
+      case `eraser`:
+        this.deleteNode(node.id);
+        break;
       default:
         console.log(`this mode isn't wired up yet`, toolModeVal);
     }

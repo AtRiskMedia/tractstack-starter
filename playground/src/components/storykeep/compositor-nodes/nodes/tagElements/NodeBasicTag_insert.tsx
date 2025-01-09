@@ -6,6 +6,7 @@ import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { type JSX, type MouseEvent, useEffect, useState } from "react";
 import { tagTitles } from "@/constants";
+import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -13,7 +14,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const { value: toolAddMode } = useStore(toolAddModeStore);
   const nodeId = props.nodeId;
   const { allowInsertBefore, allowInsertAfter } =
-    props.tagName !== 'li'
+    props.tagName !== "li"
       ? getCtx(props).allowInsert(nodeId, toolAddMode)
       : getCtx(props).allowInsertLi(nodeId, toolAddMode);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
@@ -31,13 +32,19 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const handleInsertAbove = (e: MouseEvent) => {
     e.stopPropagation();
     console.log(`above`);
-    getCtx(props).setClickedNodeId(nodeId);
+    const markdownId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Markdown");
+    const templateNode = getTemplateNode(toolAddModeStore.get().value);
+
+    getCtx(props).addTemplateNode(markdownId, templateNode, props.nodeId, "before");
   };
 
   const handleInsertBelow = (e: MouseEvent) => {
     e.stopPropagation();
     console.log(`below`);
-    getCtx(props).setClickedNodeId(nodeId);
+    const markdownId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Markdown");
+    const templateNode = getTemplateNode(toolAddModeStore.get().value);
+
+    getCtx(props).addTemplateNode(markdownId, templateNode, props.nodeId, "after");
   };
 
   const handleClickIntercept = (e: MouseEvent) => {
@@ -85,7 +92,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         {/* Click interceptor layer */}
-        <div 
+        <div
           className="absolute inset-0 z-10"
           onClick={handleClickIntercept}
           onMouseDown={handleClickIntercept}
@@ -108,7 +115,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     <div className="relative group">
       <div className="relative">
         {/* Click interceptor layer */}
-        <div 
+        <div
           className="absolute inset-0 z-10"
           onClick={handleClickIntercept}
           onMouseDown={handleClickIntercept}

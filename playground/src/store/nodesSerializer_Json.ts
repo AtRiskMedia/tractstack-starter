@@ -9,7 +9,7 @@ import type {
   PaneNode,
   StoryFragmentNode,
 } from "@/types.ts";
-import { MarkdownGenerator } from "@/utils/common/nodesHelper.ts";
+import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export class NodesSerializer_Json implements NodesSerializer {
   save(ctx: NodesContext): SaveData {
