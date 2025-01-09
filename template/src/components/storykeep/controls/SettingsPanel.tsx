@@ -343,7 +343,7 @@ const SettingsPanel = ({
   }
 
   if (!panel) return null;
-return (
+  return (
     <div className="fixed bottom-0 right-0 flex flex-col items-start">
       <button
         onClick={() => settingsPanelStore.set(null)}
