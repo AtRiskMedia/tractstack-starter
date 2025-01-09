@@ -1,12 +1,11 @@
-import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { useStore } from "@nanostores/react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
-import { type CSSProperties, useEffect, useState } from "react";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import { type CSSProperties, useEffect, useState } from "react";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export const Pane = (props: NodeProps) => {
-  const $showAnalytics = useStore(showAnalytics);
+  const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {

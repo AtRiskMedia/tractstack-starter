@@ -1,10 +1,11 @@
-import { getCtx } from "@/store/nodes.ts";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
+import { getCtx } from "@/store/nodes.ts";
+import AddPanePanel from "@/components/storykeep/controls/add/AddPanePanel.tsx";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
-export const Pane = (props: NodeProps) => {
+export const PaneAdd = (props: NodeProps) => {
   const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
@@ -27,39 +28,42 @@ export const Pane = (props: NodeProps) => {
     return unsubscribe;
   }, []);
 
-  // todo naz - make pane more modular
   return (
-    <div id={getPaneId()} className="pane">
-      <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
-        <div
-          className={contentClasses}
-          style={contentStyles}
-          onClick={(e) => {
-            getCtx(props).setClickedNodeId(props.nodeId);
-            e.stopPropagation();
+    <>
+      {props?.first && <AddPanePanel nodeId={props.nodeId} />}
+      <div id={getPaneId()} className="pane">
+        <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
+          <div
+            className={contentClasses}
+            style={contentStyles}
+            onClick={(e) => {
+              getCtx(props).setClickedNodeId(props.nodeId);
+              e.stopPropagation();
+            }}
+          >
+            {codeHookPayload ? (
+              <>
+                <em>Code Hook:</em>
+                {JSON.stringify(codeHookPayload, null, 2)}
+              </>
+            ) : (
+              <RenderChildren children={children} nodeProps={props} />
+            )}
+            {$showAnalytics ? (
+              <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
+            ) : null}
+          </div>
+        </div>
+        <button
+          className="bg-red-500 rounded-md p-2"
+          onClick={() => {
+            getCtx(props).deleteNode(props.nodeId);
           }}
         >
-          {codeHookPayload ? (
-            <>
-              <em>Code Hook:</em>
-              {JSON.stringify(codeHookPayload, null, 2)}
-            </>
-          ) : (
-            <RenderChildren children={children} nodeProps={props} />
-          )}
-          {$showAnalytics ? (
-            <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
-          ) : null}
-        </div>
+          Delete This Pane
+        </button>
       </div>
-      <button
-        className="bg-red-500 rounded-md p-2"
-        onClick={() => {
-          getCtx(props).deleteNode(props.nodeId);
-        }}
-      >
-        Delete This Pane
-      </button>
-    </div>
+      <AddPanePanel nodeId={props.nodeId} />
+    </>
   );
 };
