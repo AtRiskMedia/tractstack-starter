@@ -293,7 +293,7 @@ export class NodesContext {
 
     const parentId = node.parentId || "";
     const parentNode = this.allNodes.get().get(parentId);
-    if(parentNode && "tagName" in parentNode && tagNames.includes(parentNode.tagName as string)) {
+    if (parentNode && "tagName" in parentNode && tagNames.includes(parentNode.tagName as string)) {
       return parentId;
     } else {
       return this.getClosestNodeByTagNames(parentId, tagNames);
@@ -729,15 +729,15 @@ export class NodesContext {
     location?: "before" | "after"
   ) {
     const targetNode = this.allNodes.get().get(targetId) as BaseNode;
-    if (!targetNode
-      || (targetNode.nodeType !== "Markdown"
-      && targetNode.nodeType !== "TagElement")
+    if (
+      !targetNode ||
+      (targetNode.nodeType !== "Markdown" && targetNode.nodeType !== "TagElement")
     ) {
       return;
     }
 
     let closestListNode = "";
-    if("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
+    if ("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
       closestListNode = targetId;
     } else {
       closestListNode = this.getClosestNodeByTagNames(targetId, ["ol", "ul"]);
@@ -748,7 +748,7 @@ export class NodesContext {
     // register flattened nodes to all nodes and set up relationship with its parent
     const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
     // this is a list node so make it an "li" but save original tag name
-    if(closestListNode.length > 0 && flattenedNodes.length > 0) {
+    if (closestListNode.length > 0 && flattenedNodes.length > 0) {
       flattenedNodes[0].tagNameCustom = flattenedNodes[0].tagName;
       flattenedNodes[0].tagName = "li";
     }
@@ -810,7 +810,7 @@ export class NodesContext {
         }
         // let pane notify to it's parent for updates (likely storyfragment)
         this.notifyNode(parentId);
-      } else if(node.nodeType === "TagElement") {
+      } else if (node.nodeType === "TagElement") {
         // regular nodes should notify closest markdown
         this.notifyNode(closestMarkdownId);
       } else {

@@ -1,5 +1,4 @@
 import { getCtx } from "@/store/nodes.ts";
-import { useStore } from "@nanostores/react";
 import { viewportStore, toolAddModeStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
@@ -11,7 +10,7 @@ import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTagInsert = (props: NodeTagProps) => {
-  const { value: toolAddMode } = useStore(toolAddModeStore);
+  const { value: toolAddMode } = toolAddModeStore.get();
   const nodeId = props.nodeId;
   const { allowInsertBefore, allowInsertAfter } =
     props.tagName !== "li"

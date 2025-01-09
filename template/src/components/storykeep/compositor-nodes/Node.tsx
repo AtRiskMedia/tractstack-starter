@@ -1,7 +1,6 @@
 import { getCtx, NodesContext } from "@/store/nodes.ts";
-import type { BaseNode, FlatNode } from "@/types.ts";
-import { memo, type ReactElement } from "react";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
+import { PaneAdd } from "@/components/storykeep/compositor-nodes/nodes/Pane_add.tsx";
 import { PaneEraser } from "@/components/storykeep/compositor-nodes/nodes/Pane_eraser.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgPaneWrapper.tsx";
@@ -21,10 +20,13 @@ import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
 import { toolModeValStore } from "@/store/storykeep.ts";
+import { memo, type ReactElement } from "react";
+import type { StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
 
 export type NodeProps = {
   nodeId: string;
   ctx?: NodesContext;
+  first?: boolean;
 };
 
 // Helper function to parse code hooks
@@ -83,7 +85,6 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   if (node === undefined) return <></>;
 
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
-
   const type = getType(node);
   switch (type) {
     // generic nodes, not tag (html) elements
@@ -95,6 +96,21 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const toolModeVal = toolModeValStore.get().value;
       if (toolModeVal === `eraser`)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
+      else if (toolModeVal === `pane`) {
+        const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
+        const storyFragment = getCtx(props)
+          .allNodes.get()
+          .get(storyFragmentId) as StoryFragmentNode;
+        const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
+        if (storyFragment)
+          return (
+            <PaneAdd
+              {...sharedProps}
+              first={firstPane === node.id}
+              key={timestampNodeId(node.id)}
+            />
+          );
+      }
       return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
     }
     case "BgPane":
