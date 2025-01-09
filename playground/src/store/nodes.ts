@@ -766,6 +766,8 @@ export class NodesContext {
 
     const parentId = node.parentId;
     const toDelete = this.getNodesToDeleteRecursively(node).reverse();
+    const closestMarkdownId = this.getClosestNodeTypeFromId(node.id, "Markdown");
+
     this.deleteNodes(toDelete);
     let paneIdx: number = -1;
 
@@ -777,9 +779,14 @@ export class NodesContext {
           paneIdx = storyFragment.paneIds.indexOf(nodeId);
           storyFragment.paneIds.splice(paneIdx, 1);
         }
+        // let pane notify to it's parent for updates (likely storyfragment)
+        this.notifyNode(parentId);
+      } else if(node.nodeType === "TagElement") {
+        // regular nodes should notify closest markdown
+        this.notifyNode(closestMarkdownId);
+      } else {
+        this.notifyNode(parentId);
       }
-
-      this.notifyNode(parentId);
     } else {
       // we deleted the node without a parent, send a notification to the root and let storykeep handle it
       // it might be safe to refresh the whole page
