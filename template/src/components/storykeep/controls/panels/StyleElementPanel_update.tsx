@@ -17,7 +17,6 @@ type ViewportOverrides = {
 type Viewport = "mobile" | "tablet" | "desktop";
 
 const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePanelProps) => {
-  console.log(node, parentNode, className);
   if (!node || !className || !parentNode || !isMarkdownPaneFragmentNode(parentNode)) return null;
 
   const [isOverridden, setIsOverridden] = useState(false);

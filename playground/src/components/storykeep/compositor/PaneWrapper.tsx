@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import {
   editModeStore,
   lastInteractedPaneStore,
@@ -28,7 +29,6 @@ import {
   useStoryKeepUtils,
 } from "@/utils/storykeep/StoryKeep_utils.ts";
 import { classNames } from "@/utils/common/helpers.ts";
-import { TrashIcon } from "@heroicons/react/24/outline";
 import ChangeLayoutModal from "@/components/storykeep/panes/ChangeLayoutModal.tsx";
 import ConfirmationModal from "@/components/storykeep/panes/ConfirmationModal.tsx";
 import ChangeMarkdownModal from "@/components/storykeep/panes/ChangeMarkdownModal.tsx";
