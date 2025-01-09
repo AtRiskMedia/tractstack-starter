@@ -1,10 +1,11 @@
 import type { TemplateNode, ToolAddMode } from "@/types.ts";
 import {
+  TemplateBeliefNode, TemplateBunnyNode, TemplateEmailSignUpNode,
   TemplateH2Node,
   TemplateH3Node,
-  TemplateH4Node,
+  TemplateH4Node, TemplateIdentifyAsNode,
   TemplateImgNode,
-  TemplatePNode,
+  TemplatePNode, TemplateToggleNode, TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
 
 export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
@@ -17,6 +18,18 @@ export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
       return TemplateH4Node;
     case "img":
       return TemplateImgNode;
+    case "toggle":
+      return TemplateToggleNode;
+    case "yt":
+      return TemplateYoutubeNode;
+    case "belief":
+      return TemplateBeliefNode;
+    case "bunny":
+      return TemplateBunnyNode;
+    case "signup":
+      return TemplateEmailSignUpNode;
+    case "identify":
+      return TemplateIdentifyAsNode;
 
     case "p":
     default:
