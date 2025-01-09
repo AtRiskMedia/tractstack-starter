@@ -64,14 +64,6 @@ export const PaneEraser = (props: NodeProps) => {
           ) : null}
         </div>
       </div>
-      <button
-        className="bg-red-500 rounded-md p-2"
-        onClick={() => {
-          getCtx(props).deleteNode(props.nodeId);
-        }}
-      >
-        Delete This Pane
-      </button>
     </div>
   );
 };
