@@ -43,12 +43,16 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       suppressContentEditableWarning
       onBlur={(e) => {
         if (isListParent) return;
+        const newText = e.currentTarget.textContent?.trimEnd();
 
         getCtx(props)
           .getChildNodeIDs(nodeId)
           .forEach((childId) => {
             const childNode = getCtx(props).allNodes.get().get(childId) as FlatNode;
             if (childNode && childNode.tagName === "text") {
+              if(childNode.copy == newText) {
+                return;
+              }
               getCtx(props).modifyNodes([
                 { ...childNode, copy: e.currentTarget.textContent } as FlatNode,
               ]);
