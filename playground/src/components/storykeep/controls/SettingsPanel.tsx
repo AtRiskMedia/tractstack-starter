@@ -343,19 +343,18 @@ const SettingsPanel = ({
   }
 
   if (!panel) return null;
-
-  return (
+return (
     <div className="fixed bottom-0 right-0 flex flex-col items-start">
       <button
         onClick={() => settingsPanelStore.set(null)}
-        className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors"
+        className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
         aria-label="Close settings panel"
         title="Close settings panel"
       >
-        <XMarkIcon className="w-6 h-6" />
+        <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
       </button>
 
-      <div className="bg-white shadow-xl w-full md:w-[500px] rounded-tl-xl">
+      <div className="bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
         <div
           id="settings-panel"
           className="overflow-y-auto"
