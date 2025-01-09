@@ -770,7 +770,6 @@ export async function getContentMap(): Promise<ContentMap[]> {
          LEFT JOIN storyfragment sf ON sp.storyfragment_id = sf.id`
       ),
     ]);
-
     const [tractStacks, storyFragments, panes] = results;
 
     // Combine and transform all results

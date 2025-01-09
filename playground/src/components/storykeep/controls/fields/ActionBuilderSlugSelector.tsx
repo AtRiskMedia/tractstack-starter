@@ -37,12 +37,18 @@ const ActionBuilderSlugSelector = ({
         items = contentMap.filter((item) => item.type === "Pane" && item.isContextPane);
         break;
       case "pane":
-        items = contentMap.filter(
-          (item) =>
-            item.type === "Pane" &&
-            !item.isContextPane &&
-            (!parentSlug || item.parentSlug === parentSlug)
+        // Get the story fragment that matches the parentSlug
+        const parentFragment = contentMap.find(
+          (item) => item.type === "StoryFragment" && item.slug === parentSlug
         );
+
+        if (parentFragment) {
+          // Filter panes that belong to this story fragment using parentId
+          items = contentMap.filter(
+            (item) =>
+              item.type === "Pane" && !item.isContextPane && item.parentId === parentFragment.id
+          );
+        }
         break;
     }
 
