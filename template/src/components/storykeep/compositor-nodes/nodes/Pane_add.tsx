@@ -1,6 +1,6 @@
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
-import AddPanePanel from "@/components/storykeep/controls/add/AddPanePanel.tsx";
+import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel.tsx";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -30,7 +30,7 @@ export const PaneAdd = (props: NodeProps) => {
 
   return (
     <>
-      {props?.first && <AddPanePanel nodeId={props.nodeId} />}
+      {props?.first && <AddPanePanel nodeId={props.nodeId} first={true} />}
       <div id={getPaneId()} className="pane">
         <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
           <div
