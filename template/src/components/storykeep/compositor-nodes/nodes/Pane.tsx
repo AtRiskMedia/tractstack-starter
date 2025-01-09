@@ -28,21 +28,6 @@ export const Pane = (props: NodeProps) => {
     return unsubscribe;
   }, []);
 
-  if (codeHookPayload) {
-    return (
-      <div
-        onClick={(e) => {
-          getCtx(props).setClickedNodeId(props.nodeId);
-          e.stopPropagation();
-        }}
-        id={getPaneId()}
-      >
-        <em>Code Hook:</em>
-        {JSON.stringify(codeHookPayload, null, 2)}
-      </div>
-    );
-  }
-
   // todo naz - make pane more modular
   return (
     <div id={getPaneId()} className="pane">
@@ -55,8 +40,14 @@ export const Pane = (props: NodeProps) => {
             e.stopPropagation();
           }}
         >
-          <div className="bg-red-500">pane wrapper conditionally rendered here</div>
-          <RenderChildren children={children} nodeProps={props} />
+          {codeHookPayload ? (
+            <>
+              <em>Code Hook:</em>
+              {JSON.stringify(codeHookPayload, null, 2)}
+            </>
+          ) : (
+            <RenderChildren children={children} nodeProps={props} />
+          )}
           {$showAnalytics ? (
             <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
           ) : null}

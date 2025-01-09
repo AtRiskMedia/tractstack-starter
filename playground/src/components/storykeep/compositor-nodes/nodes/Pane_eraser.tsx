@@ -1,11 +1,12 @@
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { useStore } from "@nanostores/react";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
 import { type CSSProperties, useEffect, useState } from "react";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
-export const Pane = (props: NodeProps) => {
+export const PaneEraser = (props: NodeProps) => {
   const $showAnalytics = useStore(showAnalytics);
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
@@ -40,6 +41,16 @@ export const Pane = (props: NodeProps) => {
             e.stopPropagation();
           }}
         >
+          <button
+            title="Delete Pane"
+            onClick={(e) => {
+              getCtx(props).setClickedNodeId(props.nodeId);
+              e.stopPropagation();
+            }}
+            className="absolute top-2 right-2 p-1.5 bg-red-700 rounded-full hover:bg-black"
+          >
+            <TrashIcon className="h-10 w-10 text-white" />
+          </button>
           {codeHookPayload ? (
             <>
               <em>Code Hook:</em>

@@ -54,7 +54,7 @@ const StoryKeepToolMode = () => {
   const { value: toolModeVal } = useStore(toolModeValStore);
   const className =
     "w-8 h-8 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
-  const classNameActive = "w-8 h-8 rounded-md bg-myblue text-white";
+  const classNameActive = "w-8 h-8 py-1.5 rounded-md bg-myblue text-white";
 
   const handleClick = (mode: ToolModeVal) => {
     toolModeValStore.set({ value: mode });

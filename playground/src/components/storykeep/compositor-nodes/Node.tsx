@@ -2,6 +2,7 @@ import { getCtx, NodesContext } from "@/store/nodes.ts";
 import type { BaseNode, FlatNode } from "@/types.ts";
 import { memo, type ReactElement } from "react";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
+import { PaneEraser } from "@/components/storykeep/compositor-nodes/nodes/Pane_eraser.tsx";
 import { Markdown } from "@/components/storykeep/compositor-nodes/nodes/Markdown.tsx";
 import { BgPaneWrapper } from "@/components/storykeep/compositor-nodes/nodes/BgPaneWrapper.tsx";
 import { StoryFragment } from "@/components/storykeep/compositor-nodes/nodes/StoryFragment.tsx";
@@ -90,8 +91,12 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
     case "StoryFragment":
       return <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />;
-    case "Pane":
+    case "Pane": {
+      const toolModeVal = toolModeValStore.get().value;
+      if (toolModeVal === `eraser`)
+        return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
+    }
     case "BgPane":
       return <BgPaneWrapper {...sharedProps} key={timestampNodeId(node.id)} />;
     case "TagElement":
