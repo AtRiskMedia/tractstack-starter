@@ -358,7 +358,7 @@ const SettingsPanel = ({
         <div
           id="settings-panel"
           className="overflow-y-auto"
-          style={{ minHeight: "280px", maxHeight: "60vh" }}
+          style={{ minHeight: "280px", maxHeight: "50vh" }}
         >
           <div key={clickedNode?.id || `debug`} className="p-4">
             {panel}
