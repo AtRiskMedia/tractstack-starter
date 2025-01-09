@@ -287,7 +287,25 @@ export class NodesContext {
     }
   }
 
-  getClosestNodeByTagNames(startNodeId: string, tagNames: string[]): string {
+  getChildNodeByTagNames(startNodeId: string, tagNames: string[]): string {
+    const node = this.allNodes.get().get(startNodeId);
+    if (!node || node.nodeType === "Root") return "";
+
+    let firstChildId = "";
+    if ("tagName" in node && tagNames.includes(node.tagName as string)) {
+      firstChildId = node.id;
+      return firstChildId;
+    }
+    this.getChildNodeIDs(node.id).forEach((childId) => {
+      const foundId = this.getChildNodeByTagNames(childId, tagNames);
+      if (foundId.length > 0 && firstChildId.length === 0) {
+        firstChildId = foundId;
+      }
+    });
+    return firstChildId;
+  }
+
+  getParentNodeByTagNames(startNodeId: string, tagNames: string[]): string {
     const node = this.allNodes.get().get(startNodeId);
     if (!node || node.nodeType === "Root") return "";
 
@@ -296,7 +314,7 @@ export class NodesContext {
     if (parentNode && "tagName" in parentNode && tagNames.includes(parentNode.tagName as string)) {
       return parentId;
     } else {
-      return this.getClosestNodeByTagNames(parentId, tagNames);
+      return this.getParentNodeByTagNames(parentId, tagNames);
     }
   }
 
@@ -740,7 +758,7 @@ export class NodesContext {
     if ("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
       closestListNode = targetId;
     } else {
-      closestListNode = this.getClosestNodeByTagNames(targetId, ["ol", "ul"]);
+      closestListNode = this.getParentNodeByTagNames(targetId, ["ol", "ul"]);
     }
 
     const parentId = closestListNode || this.getClosestNodeTypeFromId(targetId, "Markdown");
