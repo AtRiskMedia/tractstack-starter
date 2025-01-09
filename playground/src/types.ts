@@ -1381,3 +1381,18 @@ export interface ImpressionNode extends BaseNode {
   buttonText: string;
   actionsLisp: string;
 }
+
+export interface LinkNode extends FlatNode {
+  tagName: "a" | "button";
+  buttonPayload?: {
+    buttonClasses: Record<string, string[]>;
+    buttonHoverClasses: Record<string, string[]>;
+    callbackPayload: string;
+    isExternalUrl?: boolean;
+    bunnyPayload?: {
+      slug: string;
+      t: string;
+      isContext: boolean;
+    };
+  };
+}
