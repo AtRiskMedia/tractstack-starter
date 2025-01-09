@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { settingsPanelStore } from "@/store/storykeep";
+import { contentMap } from "@/store/events";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { lispLexer } from "@/utils/concierge/lispLexer";
 import { preParseAction } from "@/utils/concierge/preParse_Action";
 import { preParseBunny } from "@/utils/concierge/preParse_Bunny";
-import type { FlatNode, Config } from "../../../../types";
+import ActionBuilderField from "../fields/ActionBuilderField";
+import type { FlatNode, Config } from "@/types";
 
 interface StyleLinkConfigPanelProps {
   node: FlatNode;
@@ -46,8 +48,8 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
     linkNode.buttonPayload = {
       ...linkNode.buttonPayload,
       callbackPayload,
-      buttonClasses: linkNode.buttonPayload?.buttonClasses ?? {}, // Ensure buttonClasses exists
-      buttonHoverClasses: linkNode.buttonPayload?.buttonHoverClasses ?? {}, // Ensure buttonHoverClasses exists
+      buttonClasses: linkNode.buttonPayload?.buttonClasses ?? {},
+      buttonHoverClasses: linkNode.buttonPayload?.buttonHoverClasses ?? {},
       ...(isExternalUrl ? { isExternalUrl: true } : {}),
       ...(bunnyPayload ? { bunnyPayload } : {}),
     };
@@ -64,8 +66,8 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
   }, [callbackPayload]);
 
   return (
-    <div className="my-4 flex flex-wrap gap-x-1.5 gap-y-3.5">
-      <div className="space-y-4 max-w-md min-w-80">
+    <div className="relative">
+      <div className="space-y-4 max-w-md w-full">
         <div className="flex flex-row flex-nowrap justify-between">
           <h2 className="text-xl font-bold">Link Settings</h2>
           <button
@@ -78,23 +80,21 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm text-mydarkgrey">Callback Payload</label>
-          <div
-            contentEditable
-            onBlur={(e) => {
-              const newPayload = e.currentTarget.textContent || "";
-              setCallbackPayload(newPayload);
-            }}
-            className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
-            style={{ minHeight: "1em", pointerEvents: "auto" }}
-            suppressContentEditableWarning
-          >
-            {callbackPayload}
+          {/* The parent container that will scroll */}
+          <div className="relative min-h-[400px] max-h-[60vh] overflow-y-auto">
+            <div className="absolute inset-x-0">
+              <label className="block text-sm text-mydarkgrey mb-2">Callback Payload</label>
+              <ActionBuilderField
+                value={callbackPayload}
+                onChange={setCallbackPayload}
+                contentMap={contentMap.get()}
+              />
+              <p className="text-sm text-mydarkgrey mt-2">
+                Use a lisp expression like (goto (storyFragmentPane hello why-choose)) or an
+                https:// URL
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-mydarkgrey mt-1">
-            Use a lisp expression like (goto (storyFragmentPane hello why-choose)) or an https://
-            URL
-          </p>
         </div>
       </div>
     </div>

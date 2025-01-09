@@ -5,7 +5,7 @@ import {
   TrashIcon,
   Square3Stack3DIcon,
 } from "@heroicons/react/24/outline";
-import type { ResourceSetting, EnvSetting, Tag, ToolMode, ToolAddMode } from "./types";
+import type { ResourceSetting, EnvSetting, Tag, ToolMode, ToolAddMode, GotoTargets } from "./types";
 import type { SubmitParams } from "assemblyai";
 
 export const AUTH_COOKIE_NAME = "auth_token";
@@ -734,4 +734,57 @@ export const DOUBLE_CLICK_THRESHOLD = 200;
 export const transcribeParams: Partial<SubmitParams> = {
   auto_highlights: true,
   auto_chapters: true,
+};
+
+export const GOTO_TARGETS: GotoTargets = {
+  storykeep: {
+    name: "StoryKeep",
+    subcommands: ["dashboard", "settings", "login", "logout"],
+    description: "Navigate to StoryKeep sections",
+  },
+  home: {
+    name: "Home Page",
+    description: "Navigate to the home page",
+  },
+  concierge: {
+    name: "Concierge",
+    requiresParam: true,
+    paramLabel: "Concierge Slug",
+    description: "Navigate to a concierge page",
+  },
+  context: {
+    name: "Context",
+    requiresParam: true,
+    paramLabel: "Context Slug",
+    description: "Navigate to a context page",
+  },
+  storyFragment: {
+    name: "Story Fragment",
+    requiresParam: true,
+    paramLabel: "StoryFragment Slug",
+    description: "Navigate to a story fragment",
+  },
+  storyFragmentPane: {
+    name: "Story Fragment Pane",
+    requiresParam: true,
+    requiresSecondParam: true,
+    paramLabel: "StoryFragment Slug",
+    param2Label: "Pane Slug",
+    description: "Navigate to specific pane in a story fragment",
+  },
+  bunny: {
+    name: "Bunny Video",
+    requiresParam: true,
+    requiresSecondParam: true,
+    paramLabel: "StoryFragment Slug",
+    param2Label: "Time (seconds)",
+    description: "Play a Bunny video at specified time",
+  },
+  url: {
+    name: "External URL",
+    requiresParam: true,
+    paramLabel: "URL",
+    description: "Navigate to external URL",
+    placeholder: "https://...",
+  },
 };
