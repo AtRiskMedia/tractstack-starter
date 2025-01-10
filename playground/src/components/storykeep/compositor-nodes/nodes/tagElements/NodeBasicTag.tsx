@@ -44,7 +44,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       contentEditable={toolModeValStore.get().value === "default" && canEditText(props)}
       suppressContentEditableWarning
       onBlur={(e) => {
-        if (!canEditText(props)) return;
+        if (!canEditText(props) || e.target.tagName === "BUTTON") return;
+
         const newText = e.currentTarget.textContent?.trimEnd();
         if(newText === originalTextRef.current) {
           const node = getCtx(props).allNodes.get().get(nodeId);
@@ -63,6 +64,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }}
       onFocus={(e) => {
+        if (!canEditText(props) || e.target.tagName === "BUTTON") return;
+
         if("isContentEditable" in e.target && e.target.isContentEditable) {
           const node = getCtx(props).allNodes.get().get(nodeId);
           const childNodes = getCtx(props).getNodesRecursively(node)

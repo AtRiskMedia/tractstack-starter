@@ -52,8 +52,8 @@ export const canEditText = (props: NodeTagProps): boolean => {
   const self = getCtx(props).allNodes.get().get(nodeId) as FlatNode;
   if (self.tagName === "a") return false;
 
-  const forbiddenChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["a"]);
-  if (forbiddenChildren?.length > 0) return false;
+  //const forbiddenChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["a"]);
+  //if (forbiddenChildren?.length > 0) return false;
 
   const parentIsButton = getCtx(props).getParentNodeByTagNames(nodeId, ["a"]);
   if (parentIsButton?.length > 0) return false;
