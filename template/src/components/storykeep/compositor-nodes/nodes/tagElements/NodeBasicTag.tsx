@@ -54,9 +54,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
                 return;
               }
               getCtx(props).modifyNodes([
-                { ...childNode, copy: e.currentTarget.textContent } as FlatNode,
+                { ...childNode, copy: newText } as FlatNode,
               ]);
-              console.log(`updating node [${childId}] copy : ${e.currentTarget.textContent}`);
+              console.log(`updating node [${childId}] copy : ${newText}`);
             }
           });
       }}

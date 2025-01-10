@@ -1,5 +1,6 @@
 import type { NodesContext } from "@/store/nodes.ts";
 import type { FlatNode, MarkdownPaneFragmentNode } from "@/types.ts";
+import { ulid } from "ulid";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
@@ -106,4 +107,86 @@ export class MarkdownGenerator {
         return childrenMarkdown; // Default case for unhandled typeNames
     }
   }
+}
+
+export function nodesToMarkdownText(nodes: FlatNode[]): string {
+  // Build a map to organize children by parentId
+  const nodeMap: Record<string, FlatNode[]> = {};
+  nodes.forEach(node => {
+    const parentId = node.parentId || "";
+    if (!nodeMap[parentId]) {
+      nodeMap[parentId] = [];
+    }
+    nodeMap[parentId].push(node);
+  });
+
+  // Helper function to recursively generate markdown
+  function generateMarkdown(nodeId: string): string {
+    const children = nodeMap[nodeId] || [];
+    return children
+      .map(node => {
+        let content = '';
+
+        // Handle copy text directly
+        if (node.copy) {
+          content = node.copy;
+        }
+
+        // Wrap content in appropriate markdown tags based on tagName
+        switch (node.tagName) {
+          case 'em':
+            content = `*${generateMarkdown(node.id)}*`;
+            break;
+          case 'strong':
+            content = `**${generateMarkdown(node.id)}**`;
+            break;
+          case 'text':
+            content += generateMarkdown(node.id);
+            break;
+          default:
+            content += generateMarkdown(node.id);
+            break;
+        }
+
+        return content;
+      })
+      .join(' ');
+  }
+
+  // Start from the first node
+  return generateMarkdown(nodes[0].id).trim();
+}
+
+export function markdownToNodes(markdown: string, parentId: string): FlatNode[] {
+  let nodeIdCounter = 1;
+
+  function createNode(tagName: string, copy: string | null, parentId: string): FlatNode {
+    return {
+      id: ulid(),
+      nodeType: 'TagElement',
+      parentId,
+      tagName: tagName !== 'text' ? tagName : "text",
+      copy: tagName === 'text' ? copy : undefined,
+    } as FlatNode;
+  }
+
+  const nodes: FlatNode[] = [];
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|([^*]+))/g;
+
+  let match;
+  while ((match = pattern.exec(markdown)) !== null) {
+    if (match[2]) {
+      const strongNode = createNode('strong', null, parentId);
+      nodes.push(strongNode);
+      nodes.push(createNode('text', match[2], strongNode.id));
+    } else if (match[3]) {
+      const emNode = createNode('em', null, parentId);
+      nodes.push(emNode);
+      nodes.push(createNode('text', match[3], emNode.id));
+    } else if (match[4] && match[4].trim()) {
+      nodes.push(createNode('text', match[4].trim(), parentId));
+    }
+  }
+
+  return nodes;
 }

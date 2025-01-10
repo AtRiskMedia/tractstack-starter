@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import {
-  TemplateAsideNode,
-  TemplateH2Node,
-  TemplateH3Node,
-  TemplateH4Node,
-  TemplateImgNode,
-  TemplatePNode,
-} from "@/utils/TemplateNodes.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
