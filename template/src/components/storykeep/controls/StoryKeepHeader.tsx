@@ -93,7 +93,8 @@ const StoryKeepHeader = () => {
         setViewport={setViewport}
       />
 
-      <div className="flex items-center gap-2">
+      {(canUndo || canRedo) && (
+      <div className="flex flex-wrap justify-center items-center gap-2">
         <ArrowUturnLeftIcon
           title="Undo"
           style={{ visibility: canUndo ? "visible" : "hidden" }}
@@ -112,16 +113,13 @@ const StoryKeepHeader = () => {
             getCtx().notifyNode(ROOT_NODE_NAME);
           }}
         />
-      </div>
+        </div>
+      )}
 
-      <div className="flex items-center gap-4">
-        <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
-        <button className="bg-white text-myblue hover:underline font-action font-bold">
-          Cancel
-        </button>
-      </div>
+      <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
+      <button className="bg-white text-myblue hover:underline font-action font-bold">Cancel</button>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap justify-center items-center gap-2">
         <button
           onClick={() => {
             setTimeout(() => {
