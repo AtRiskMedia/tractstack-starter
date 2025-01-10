@@ -1,5 +1,5 @@
 import { useStore } from "@nanostores/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, type MouseEvent } from "react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 import { classNames } from "@/utils/common/helpers";
 import { analyticsDuration, showAnalytics, storedAnalytics } from "@/store/storykeep";
@@ -26,8 +26,8 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
     showAnalytics.set(false);
   };
 
-  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    event.stopPropagation(); // This prevents the click event from bubbling up to parent elements
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation();
   };
 
   if (!isDataReady) {
@@ -41,7 +41,7 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
   }
 
   return (
-    <div className="p-0.5 shadow-inner">
+    <div className="p-0.5 shadow-inner" onClick={handleClick}>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           <ArrowUpIcon className="w-6 h-6 inline-block" /> Activity on this Pane
