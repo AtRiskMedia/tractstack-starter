@@ -8,6 +8,7 @@ import { timestampNodeId } from "@/utils/common/helpers.ts";
 import StoryFragmentConfigPanel from "../controls/storyfragment/StoryFragmentConfigPanel";
 import StoryFragmentAnalyticsPanel from "../controls/storyfragment/StoryFragmentAnalyticsPanel.tsx";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
+import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
@@ -24,6 +25,9 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   useEffect(() => {
     getCtx(props).buildNodesTreeFromFragmentNodes(props.nodes);
     setRenderTime(Date.now());
+
+    const markdown = "make an *engaging* [awesome website](https://example.com), **very-very** fast!!";
+    console.log(markdownToNodes(markdown, "test-parent-id"));
 
     const unsubscribe = getCtx(props).notifications.subscribe(ROOT_NODE_NAME, () => {
       console.log("notification received data update for root node");

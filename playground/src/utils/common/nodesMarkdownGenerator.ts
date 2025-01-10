@@ -110,7 +110,6 @@ export class MarkdownGenerator {
 }
 
 export function nodesToMarkdownText(nodes: FlatNode[]): string {
-  // Build a map to organize children by parentId
   const nodeMap: Record<string, FlatNode[]> = {};
   nodes.forEach(node => {
     const parentId = node.parentId || "";
@@ -120,19 +119,11 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
     nodeMap[parentId].push(node);
   });
 
-  // Helper function to recursively generate markdown
   function generateMarkdown(nodeId: string): string {
     const children = nodeMap[nodeId] || [];
     return children
       .map(node => {
-        let content = '';
-
-        // Handle copy text directly
-        if (node.copy) {
-          content = node.copy;
-        }
-
-        // Wrap content in appropriate markdown tags based on tagName
+        let content = node.copy || '';
         switch (node.tagName) {
           case 'em':
             content = `*${generateMarkdown(node.id)}*`;
@@ -140,17 +131,15 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
           case 'strong':
             content = `**${generateMarkdown(node.id)}**`;
             break;
-          case 'text':
-            content += generateMarkdown(node.id);
+          case 'a':
+            content = `[${generateMarkdown(node.id)}](${node.href}) `;
             break;
           default:
             content += generateMarkdown(node.id);
-            break;
         }
-
         return content;
       })
-      .join(' ');
+      .join('');
   }
 
   // Start from the first node
@@ -158,20 +147,19 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
 }
 
 export function markdownToNodes(markdown: string, parentId: string): FlatNode[] {
-  let nodeIdCounter = 1;
-
-  function createNode(tagName: string, copy: string | null, parentId: string): FlatNode {
+  function createNode(tagName: string, copy: string | null, parentId: string, href?: string): FlatNode {
     return {
       id: ulid(),
       nodeType: 'TagElement',
       parentId,
       tagName: tagName !== 'text' ? tagName : "text",
       copy: tagName === 'text' ? copy : undefined,
+      href: href
     } as FlatNode;
   }
 
   const nodes: FlatNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|([^*]+))/g;
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)]\(([^)]+)\)|([^*[]+))/g;
 
   let match;
   while ((match = pattern.exec(markdown)) !== null) {
@@ -183,8 +171,12 @@ export function markdownToNodes(markdown: string, parentId: string): FlatNode[] 
       const emNode = createNode('em', null, parentId);
       nodes.push(emNode);
       nodes.push(createNode('text', match[3], emNode.id));
-    } else if (match[4] && match[4].trim()) {
-      nodes.push(createNode('text', match[4].trim(), parentId));
+    } else if (match[4] && match[5]) {
+      const linkNode = createNode('a', null, parentId, match[5]);
+      nodes.push(linkNode);
+      nodes.push(createNode('text', match[4], linkNode.id));
+    } else if (match[6] && match[6].trim()) {
+      nodes.push(createNode('text', match[6].trim(), parentId));
     }
   }
 

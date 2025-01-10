@@ -26,7 +26,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
     getCtx(props).buildNodesTreeFromFragmentNodes(props.nodes);
     setRenderTime(Date.now());
 
-    const markdown = "make an *engaging* website, **very-very** fast!!";
+    const markdown = "make an *engaging* [awesome website](https://example.com), **very-very** fast!!";
     console.log(markdownToNodes(markdown, "test-parent-id"));
 
     const unsubscribe = getCtx(props).notifications.subscribe(ROOT_NODE_NAME, () => {

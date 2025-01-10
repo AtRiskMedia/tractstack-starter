@@ -805,6 +805,16 @@ export class NodesContext {
     return result;
   }
 
+  deleteChildren(nodeId: string) {
+    const node = this.allNodes.get().get(nodeId);
+    if(!node) return;
+
+    const children = this.getNodesRecursively(node).reverse();
+    children.shift();
+    this.deleteNodes(children);
+    this.notifyNode(node.parentId || "");
+  }
+
   deleteNode(nodeId: string) {
     const node = this.allNodes.get().get(nodeId) as BaseNode;
     if (!node) {
@@ -812,7 +822,7 @@ export class NodesContext {
     }
 
     const parentId = node.parentId;
-    const toDelete = this.getNodesToDeleteRecursively(node).reverse();
+    const toDelete = this.getNodesRecursively(node).reverse();
     const closestMarkdownId = this.getClosestNodeTypeFromId(node.id, "Markdown");
 
     this.deleteNodes(toDelete);
@@ -860,13 +870,13 @@ export class NodesContext {
     });
   }
 
-  getNodesToDeleteRecursively(node: BaseNode | undefined): BaseNode[] {
+  getNodesRecursively(node: BaseNode | undefined): BaseNode[] {
     let nodes: BaseNode[] = [];
     if (!node) return nodes;
 
     this.getChildNodeIDs(node.id).forEach((id) => {
-      const toDelete = this.getNodesToDeleteRecursively(this.allNodes.get().get(id));
-      nodes = toDelete.concat(nodes);
+      const collectedNodes = this.getNodesRecursively(this.allNodes.get().get(id));
+      nodes = collectedNodes.concat(nodes);
     });
 
     nodes.push(node);
