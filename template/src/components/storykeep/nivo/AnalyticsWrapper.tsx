@@ -8,6 +8,7 @@ import type { ProcessedAnalytics } from "../../../types";
 
 const AnalyticsWrapper = (props: { title: string; isPane: boolean; data: ProcessedAnalytics }) => {
   const { title, data, isPane } = props;
+  console.log(title, data, isPane);
   const $analyticsDuration = useStore(analyticsDuration);
   const duration = $analyticsDuration;
 

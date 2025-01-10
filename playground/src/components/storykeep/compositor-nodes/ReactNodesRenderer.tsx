@@ -6,7 +6,7 @@ import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
 import StoryFragmentConfigPanel from "../controls/storyfragment/StoryFragmentConfigPanel";
-import StoryFragmentAnalyticsPanel from "../controls/storyfragment/StoryFragmentAnalyticsPanel.tsx";
+import AnalyticsPanel from "../controls/nivo/AnalyticsPanel.tsx";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export type ReactNodesRendererProps = {
@@ -38,7 +38,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
         <>
           {$showSettings ? <StoryFragmentConfigPanel nodeId={props.id} /> : null}
           {$showAnalytics && !getCtx(props).getIsContextPane(props.id) ? (
-            <StoryFragmentAnalyticsPanel nodeId={props.id} />
+            <AnalyticsPanel nodeId={props.id} />
           ) : null}
           <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
         </>

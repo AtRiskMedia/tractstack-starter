@@ -36,7 +36,7 @@ const ActionBuilderSlugSelector = ({
       case "context":
         items = contentMap.filter((item) => item.type === "Pane" && item.isContextPane);
         break;
-      case "pane":
+      case "pane": {
         // Get the story fragment that matches the parentSlug
         const parentFragment = contentMap.find(
           (item) => item.type === "StoryFragment" && item.slug === parentSlug
@@ -50,6 +50,7 @@ const ActionBuilderSlugSelector = ({
           );
         }
         break;
+      }
     }
 
     return items.filter(

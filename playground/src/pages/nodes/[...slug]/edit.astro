@@ -9,6 +9,7 @@ import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepTo
 import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
 import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
+import PullAnalytics from "@/components/storykeep/controls/nivo/PullAnalytics.tsx";
 import { NodesSerializer_Json } from "../../../store/nodesSerializer_Json";
 
 const config = await getConfig();
@@ -46,6 +47,7 @@ s.save(getCtx());
 >
   <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-[8999] drop-shadow">
     <StoryKeepHeader client:load />
+    <PullAnalytics id={storyfragmentNode.id} client:load />
   </header>
   <div id="headerSpacer"></div>
 

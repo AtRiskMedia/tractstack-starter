@@ -17,6 +17,7 @@ interface StoryFragmentPanelProps {
 
 const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
   const [mode, setMode] = useState<StoryFragmentMode>(StoryFragmentMode.DEFAULT);
+  console.log(mode);
 
   useEffect(() => {
     setMode(StoryFragmentMode.DEFAULT);
