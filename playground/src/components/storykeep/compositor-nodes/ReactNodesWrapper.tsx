@@ -16,7 +16,6 @@ export const ReactNodesWrapper = (props: ReactNodesRendererProps) => {
         maxWidth: `${viewportMaxWidth}px`,
         margin: "0 auto",
       }}
-      className={props.bgColor}
     >
       <ReactNodesRenderer {...props} />
     </div>

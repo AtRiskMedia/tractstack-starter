@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
 import { storedDashboardAnalytics, analyticsDuration } from "../../../store/storykeep";
 import { classNames } from "../../../utils/common/helpers";
-import Line from "./Line";
 
 const DashboardActivity = () => {
   const [isClient, setIsClient] = useState(false);
@@ -43,7 +42,7 @@ const DashboardActivity = () => {
     <div>
       <h3 className="text-black font-action font-bold my-4">Recent Activity</h3>
       <div className="bg-mywhite rounded-lg shadow p-4" style={{ height: "400px" }}>
-        <Line data={processedData} duration={duration} />
+        Line {JSON.stringify(processedData)}
         <div className="flex flex-wrap gap-x-2 text-md my-8">
           <span className="font-action">Stats for past:</span>
           {["daily", "weekly", "monthly"].map((period) => (

@@ -44,7 +44,7 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
     <div className="p-0.5 shadow-inner" onClick={handleClick}>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
-          <ArrowUpIcon className="w-6 h-6 inline-block" /> Activity on this Pane
+          <ArrowUpIcon className="w-6 h-6 inline-block" /> Recent activity on this Pane
           <div className="inline-flex px-4 gap-2">
             <span className="font-action">Duration:</span>
             {["daily", "weekly", "monthly"].map((period) => (

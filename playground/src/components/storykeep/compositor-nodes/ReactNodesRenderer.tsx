@@ -1,12 +1,8 @@
 import { getCtx, NodesContext, ROOT_NODE_NAME } from "@/store/nodes.ts";
-import { showAnalytics, showSettings } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
-import { useStore } from "@nanostores/react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
-import StoryFragmentConfigPanel from "../controls/storyfragment/StoryFragmentConfigPanel";
-import AnalyticsPanel from "../controls/nivo/AnalyticsPanel.tsx";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
 
@@ -14,12 +10,9 @@ export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
   ctx?: NodesContext;
   id: string;
-  bgColor: string;
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
-  const $showSettings = useStore(showSettings);
-  const $showAnalytics = useStore(showAnalytics);
   const [renderTime, setRenderTime] = useState<number>(0);
 
   useEffect(() => {
@@ -40,13 +33,7 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   return (
     <>
       {renderTime > 0 ? (
-        <>
-          {$showSettings ? <StoryFragmentConfigPanel nodeId={props.id} /> : null}
-          {$showAnalytics && !getCtx(props).getIsContextPane(props.id) ? (
-            <AnalyticsPanel nodeId={props.id} />
-          ) : null}
-          <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
-        </>
+        <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
       ) : (
         <></>
       )}

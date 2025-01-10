@@ -7,6 +7,7 @@ interface PaneCodeHookPanelProps {
 }
 
 const PaneCodeHookPanel = ({ nodeId, setMode }: PaneCodeHookPanelProps) => {
+  console.log(nodeId);
   return (
     <div className="p-0.5 shadow-inner">
       <div className="flex flex-col gap-2 mb-1.5">

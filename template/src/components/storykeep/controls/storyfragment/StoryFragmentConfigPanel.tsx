@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { keyboardAccessible } from "@/store/storykeep.ts";
-import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
+//import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import { getCtx } from "@/store/nodes.ts";
 import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentBgPanel from "./StoryFragmentPanel_bg";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
+import type { StoryFragmentNode } from "@/types.ts";
 
 export enum StoryFragmentMode {
   DEFAULT = "DEFAULT",
@@ -27,6 +28,12 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
     setMode(StoryFragmentMode.DEFAULT);
   }, [nodeId]);
 
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+  const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
+  if (!storyfragmentNode) return;
+  console.log(storyfragmentNode);
+
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.SLUG) {
@@ -41,24 +48,19 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
 
   return (
     <div className="p-0.5 shadow-inner">
-      <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
-          <ArrowDownIcon className="w-6 h-6 inline-block" /> Configure Story Fragment
-        </div>
-        <div
-          className={`flex gap-1 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
-        >
+      <div className="p-1.5 bg-white rounded-md w-full group">
+        <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => setMode(StoryFragmentMode.TITLE)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 truncate max-w-full"
           >
-            Title
+            <span className="font-bold">Page Title:</span> {storyfragmentNode.title}
           </button>
           <button
             onClick={() => setMode(StoryFragmentMode.SLUG)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
-            URL Slug
+            <span className="font-bold">Slug:</span> {storyfragmentNode.slug}
           </button>
           <button
             onClick={() => setMode(StoryFragmentMode.BG)}

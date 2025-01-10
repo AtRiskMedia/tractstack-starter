@@ -1,7 +1,5 @@
 import { useStore } from "@nanostores/react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-import Pie from "./Pie";
-import Line from "./Line";
 import { analyticsDuration, showAnalytics } from "../../../store/storykeep";
 import { classNames } from "../../../utils/common/helpers";
 import type { ProcessedAnalytics } from "../../../types";
@@ -61,7 +59,7 @@ const AnalyticsWrapper = (props: { title: string; isPane: boolean; data: Process
           className="rounded-xl bg-mywhite shadow-inner flex-shrink-0 mr-4 mb-4"
           style={{ width: "400px", height: "200px" }}
         >
-          <Pie data={data.pie} />
+          Pie
         </div>
       )}
       {data?.line?.length > 0 && (
@@ -69,7 +67,7 @@ const AnalyticsWrapper = (props: { title: string; isPane: boolean; data: Process
           className="rounded-xl bg-mywhite shadow-inner flex-grow mb-4"
           style={{ minWidth: "400px", height: "256px" }}
         >
-          <Line data={data.line} duration={duration} />
+          Line
         </div>
       )}
     </div>

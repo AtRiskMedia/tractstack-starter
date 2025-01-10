@@ -1,10 +1,12 @@
-import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
 import { useEffect, useState } from "react";
+import { getCtx } from "@/store/nodes.ts";
+import { viewportStore, showSettings } from "@/store/storykeep.ts";
+import StoryFragmentConfigPanel from "../../controls/storyfragment/StoryFragmentConfigPanel";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export const StoryFragment = (props: NodeProps) => {
+  const showSettingsVal = showSettings.get();
   const [children, setChildren] = useState<string[]>([
     ...getCtx(props).getChildNodeIDs(props.nodeId),
   ]);
@@ -18,11 +20,18 @@ export const StoryFragment = (props: NodeProps) => {
   }, []);
 
   return (
-    <div
-      className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
-      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
-    >
-      <RenderChildren children={children} nodeProps={props} />
-    </div>
+    <>
+      {showSettingsVal ? (
+        <div className="mb-1.5">
+          <StoryFragmentConfigPanel nodeId={props.nodeId} />
+        </div>
+      ) : null}
+      <div
+        className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
+        style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
+      >
+        <RenderChildren children={children} nodeProps={props} />
+      </div>
+    </>
   );
 };

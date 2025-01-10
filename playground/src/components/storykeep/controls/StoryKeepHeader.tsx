@@ -94,30 +94,34 @@ const StoryKeepHeader = () => {
       />
 
       {(canUndo || canRedo) && (
-      <div className="flex flex-wrap justify-center items-center gap-2">
-        <ArrowUturnLeftIcon
-          title="Undo"
-          style={{ visibility: canUndo ? "visible" : "hidden" }}
-          className={iconClassName}
-          onClick={() => {
-            getCtx().history.undo();
-            getCtx().notifyNode(ROOT_NODE_NAME);
-          }}
-        />
-        <ArrowUturnRightIcon
-          title="Redo"
-          style={{ visibility: canRedo ? "visible" : "hidden" }}
-          className={iconClassName}
-          onClick={() => {
-            getCtx().history.redo();
-            getCtx().notifyNode(ROOT_NODE_NAME);
-          }}
-        />
+        <div className="flex flex-wrap justify-center items-center gap-2">
+          <ArrowUturnLeftIcon
+            title="Undo"
+            style={{ visibility: canUndo ? "visible" : "hidden" }}
+            className={iconClassName}
+            onClick={() => {
+              getCtx().history.undo();
+              getCtx().notifyNode(ROOT_NODE_NAME);
+            }}
+          />
+          <ArrowUturnRightIcon
+            title="Redo"
+            style={{ visibility: canRedo ? "visible" : "hidden" }}
+            className={iconClassName}
+            onClick={() => {
+              getCtx().history.redo();
+              getCtx().notifyNode(ROOT_NODE_NAME);
+            }}
+          />
         </div>
       )}
 
-      <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
-      <button className="bg-white text-myblue hover:underline font-action font-bold">Cancel</button>
+      <div className="flex flex-wrap justify-center items-center gap-2">
+        <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
+        <button className="bg-white text-myblue hover:underline font-action font-bold">
+          Cancel
+        </button>
+      </div>
 
       <div className="flex flex-wrap justify-center items-center gap-2">
         <button
@@ -130,6 +134,7 @@ const StoryKeepHeader = () => {
                 });
             }, 500);
             showSettings.set(!$showSettings);
+            getCtx().notifyNode(ROOT_NODE_NAME);
           }}
           title="Advanced Settings"
         >
@@ -140,6 +145,7 @@ const StoryKeepHeader = () => {
             showAnalytics.set(!$showAnalytics);
             toolModeValStore.set({ value: "default" });
             settingsPanelStore.set(null);
+            getCtx().notifyNode(ROOT_NODE_NAME);
           }}
           title="Toggle Interaction Analytics"
         >

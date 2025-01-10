@@ -9,7 +9,8 @@ import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepTo
 import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
 import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
-import PullAnalytics from "@/components/storykeep/controls/nivo/PullAnalytics.tsx";
+import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
+import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
 import { NodesSerializer_Json } from "../../../store/nodesSerializer_Json";
 
 const config = await getConfig();
@@ -47,7 +48,7 @@ s.save(getCtx());
 >
   <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-[8999] drop-shadow">
     <StoryKeepHeader client:load />
-    <PullAnalytics id={storyfragmentNode.id} client:load />
+    <PullAnalytics id={storyfragmentNode.id} client:only="react" />
   </header>
   <div id="headerSpacer"></div>
 
@@ -81,14 +82,8 @@ s.save(getCtx());
             "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
         }}
       >
-        <ReactNodesWrapper
-          bgColor={typeof storyfragmentNode.tailwindBgColour === `string`
-            ? `bg-${storyfragmentNode.tailwindBgColour}`
-            : ``}
-          id={storyfragmentNode.id}
-          nodes={nodes}
-          client:only="react"
-        />
+        <AnalyticsPanel nodeId={storyfragmentNode.id} client:only="react" />
+        <ReactNodesWrapper id={storyfragmentNode.id} nodes={nodes} client:only="react" />
       </div>
     </main>
   </div>

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
-import type { RawAnalytics } from "../../../types";
+import type { LineDataSeries, LineDataPoint, PieDataItem, RawAnalytics } from "@/types.ts";
 
 function getDateFilter(duration: string): string {
   switch (duration) {
@@ -12,6 +12,72 @@ function getDateFilter(duration: string): string {
     default:
       return "datetime('now', '-28 days')";
   }
+}
+
+const isLineDataSeries = (verb: PieDataItem | LineDataSeries): verb is LineDataSeries => {
+  return "data" in verb;
+};
+
+function mergePaneDataIntoStoryFragment(data: RawAnalytics): RawAnalytics {
+  const result: RawAnalytics = {
+    pie: [],
+    line: [],
+  };
+
+  // Helper function to merge verbs
+  const mergeVerbs = (target: any, source: any) => {
+    source.verbs.forEach((verb: any) => {
+      const existingVerb = target.verbs.find((v: any) => v.id === verb.id);
+      if (existingVerb) {
+        existingVerb.value += verb.value; // Assuming 'value' is the count for verbs
+      } else {
+        target.verbs.push({ ...verb });
+      }
+    });
+    target.total_actions += source.total_actions;
+  };
+
+  // Merge for pie data
+  const storyFragment = data.pie.find((item) => item.object_type === "StoryFragment");
+  if (storyFragment) {
+    data.pie.forEach((item) => {
+      if (item.object_type === "Pane") {
+        mergeVerbs(storyFragment, item);
+      }
+    });
+    result.pie.push(storyFragment);
+  }
+
+  // Merge for line data
+  const lineStoryFragment = data.line.find((item) => item.object_type === "StoryFragment");
+  if (lineStoryFragment) {
+    data.line.forEach((item) => {
+      if (item.object_type === "Pane") {
+        item.verbs.forEach((verb: any) => {
+          const existingVerb = lineStoryFragment.verbs.find((v: any) => v.id === verb.id);
+          if (existingVerb && isLineDataSeries(verb)) {
+            // Check verb is LineDataSeries
+            // Merge data points for each verb
+            verb.data.forEach((d: LineDataPoint) => {
+              if (isLineDataSeries(existingVerb)) {
+                // Check existingVerb is LineDataSeries
+                const dataPoint = existingVerb.data.find((dp: LineDataPoint) => dp.x === d.x);
+                if (dataPoint) {
+                  dataPoint.y += d.y;
+                }
+              }
+            });
+            lineStoryFragment.total_actions += item.total_actions;
+          } else {
+            lineStoryFragment.verbs.push({ ...verb });
+          }
+        });
+      }
+    });
+    result.line.push(lineStoryFragment);
+  }
+
+  return result;
 }
 
 export async function getAnalytics(
@@ -157,8 +223,8 @@ export async function getAnalytics(
       obj.verbs = Object.values(obj.verbs);
     });
     analytics.line = Object.values(lineByObject);
-
-    return analytics;
+    const processedData = mergePaneDataIntoStoryFragment(analytics);
+    return processedData;
   } catch (error) {
     console.error("Error getting analytics:", error);
     throw error;
