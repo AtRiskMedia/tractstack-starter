@@ -132,14 +132,14 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
             content = `**${generateMarkdown(node.id)}**`;
             break;
           case 'a':
-            content = `[${generateMarkdown(node.id)}](${node.href}) `;
+            content = `[[${generateMarkdown(node.id)}]](${node.href})`;
             break;
           default:
             content += generateMarkdown(node.id);
         }
         return content;
       })
-      .join('');
+      .join(' ');
   }
 
   // Start from the first node
@@ -153,13 +153,13 @@ export function markdownToNodes(markdown: string, parentId: string): FlatNode[] 
       nodeType: 'TagElement',
       parentId,
       tagName: tagName !== 'text' ? tagName : "text",
-      copy: tagName === 'text' ? copy : undefined,
+      copy: tagName === 'text' ? copy : ' ',
       href: href
     } as FlatNode;
   }
 
   const nodes: FlatNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)]\(([^)]+)\)|([^*[]+))/g;
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[\[([^\]]+)\]\]\(([^)]+)\)|([^*\[]+))/g;
 
   let match;
   while ((match = pattern.exec(markdown)) !== null) {
