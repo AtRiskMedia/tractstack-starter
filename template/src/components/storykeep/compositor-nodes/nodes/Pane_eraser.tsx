@@ -1,12 +1,11 @@
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
+import { viewportStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export const PaneEraser = (props: NodeProps) => {
-  const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
@@ -58,9 +57,6 @@ export const PaneEraser = (props: NodeProps) => {
           ) : (
             <RenderChildren children={children} nodeProps={props} />
           )}
-          {$showAnalytics ? (
-            <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
-          ) : null}
         </div>
       </div>
     </div>

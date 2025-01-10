@@ -14,6 +14,7 @@ import {
   viewportStore,
   viewportKeyStore,
   viewportSetStore,
+  toolModeValStore,
   settingsPanelStore,
 } from "../../../store/storykeep";
 import ViewportSelector from "../header/ViewportSelector";
@@ -124,20 +125,11 @@ const StoryKeepHeader = () => {
         <button
           onClick={() => {
             setTimeout(() => {
-              const pageSettings = document.getElementById("page-settings");
-              if (!pageSettings) return;
-              const rect = pageSettings.getBoundingClientRect();
-              const viewportHeight = window.innerHeight;
-              const isInView = rect.top >= 0 && rect.bottom <= viewportHeight;
-              if (!isInView) {
-                const idealScrollTop =
-                  window.scrollY + rect.top - (viewportHeight - rect.height) / 2;
-                const finalScrollTop = Math.max(0, idealScrollTop);
+              if (!$showSettings)
                 window.scrollTo({
-                  top: finalScrollTop,
+                  top: 0,
                   behavior: "smooth",
                 });
-              }
             }, 500);
             showSettings.set(!$showSettings);
           }}
@@ -146,7 +138,11 @@ const StoryKeepHeader = () => {
           <CogIcon className={`${$showSettings ? iconActiveClassName : iconClassName}`} />
         </button>
         <button
-          onClick={() => showAnalytics.set(!$showAnalytics)}
+          onClick={() => {
+            showAnalytics.set(!$showAnalytics);
+            toolModeValStore.set({ value: "default" });
+            settingsPanelStore.set(null);
+          }}
           title="Toggle Interaction Analytics"
         >
           <PresentationChartBarIcon
