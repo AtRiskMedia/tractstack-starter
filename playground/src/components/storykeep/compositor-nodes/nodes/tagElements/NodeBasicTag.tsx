@@ -47,14 +47,14 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         if (!canEditText(props) || e.target.tagName === "BUTTON") return;
 
         const newText = e.currentTarget.textContent?.trimEnd();
-        if(newText === originalTextRef.current) {
+        if (newText === originalTextRef.current) {
           const node = getCtx(props).allNodes.get().get(nodeId);
           // no changes, redraw self to remove the markdown
           getCtx(props).notifyNode(node?.parentId || "");
           return;
         }
 
-        if(newText) {
+        if (newText) {
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
 
@@ -66,16 +66,17 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       onFocus={(e) => {
         if (!canEditText(props) || e.target.tagName === "BUTTON") return;
 
-        if("isContentEditable" in e.target && e.target.isContentEditable) {
+        if ("isContentEditable" in e.target && e.target.isContentEditable) {
           const node = getCtx(props).allNodes.get().get(nodeId);
-          const childNodes = getCtx(props).getNodesRecursively(node)
-            .filter(x => "tagName" in x)
+          const childNodes = getCtx(props)
+            .getNodesRecursively(node)
+            .filter((x) => "tagName" in x)
             .reverse() as FlatNode[];
           console.log(childNodes);
 
           const markdown = nodesToMarkdownText(childNodes);
           // save original markdown text in ref, no state so we don't trigger redraw
-          if("textContent" in e.target) {
+          if ("textContent" in e.target) {
             e.target.textContent = markdown;
             originalTextRef.current = markdown;
           }

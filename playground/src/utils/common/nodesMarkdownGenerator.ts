@@ -111,7 +111,7 @@ export class MarkdownGenerator {
 
 export function nodesToMarkdownText(nodes: FlatNode[]): string {
   const nodeMap: Record<string, FlatNode[]> = {};
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     const parentId = node.parentId || "";
     if (!nodeMap[parentId]) {
       nodeMap[parentId] = [];
@@ -122,16 +122,16 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
   function generateMarkdown(nodeId: string): string {
     const children = nodeMap[nodeId] || [];
     return children
-      .map(node => {
-        let content = node.copy || '';
+      .map((node) => {
+        let content = node.copy || "";
         switch (node.tagName) {
-          case 'em':
+          case "em":
             content = `*${generateMarkdown(node.id)}*`;
             break;
-          case 'strong':
+          case "strong":
             content = `**${generateMarkdown(node.id)}**`;
             break;
-          case 'a':
+          case "a":
             content = `[[${generateMarkdown(node.id)}]](${node.href})`;
             break;
           default:
@@ -139,7 +139,7 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
         }
         return content;
       })
-      .join(' ');
+      .join(" ");
   }
 
   // Start from the first node
@@ -147,14 +147,19 @@ export function nodesToMarkdownText(nodes: FlatNode[]): string {
 }
 
 export function markdownToNodes(markdown: string, parentId: string): FlatNode[] {
-  function createNode(tagName: string, copy: string | null, parentId: string, href?: string): FlatNode {
+  function createNode(
+    tagName: string,
+    copy: string | null,
+    parentId: string,
+    href?: string
+  ): FlatNode {
     return {
       id: ulid(),
-      nodeType: 'TagElement',
+      nodeType: "TagElement",
       parentId,
-      tagName: tagName !== 'text' ? tagName : "text",
-      copy: tagName === 'text' ? copy : ' ',
-      href: href
+      tagName: tagName !== "text" ? tagName : "text",
+      copy: tagName === "text" ? copy : " ",
+      href: href,
     } as FlatNode;
   }
 
@@ -164,19 +169,19 @@ export function markdownToNodes(markdown: string, parentId: string): FlatNode[] 
   let match;
   while ((match = pattern.exec(markdown)) !== null) {
     if (match[2]) {
-      const strongNode = createNode('strong', null, parentId);
+      const strongNode = createNode("strong", null, parentId);
       nodes.push(strongNode);
-      nodes.push(createNode('text', match[2], strongNode.id));
+      nodes.push(createNode("text", match[2], strongNode.id));
     } else if (match[3]) {
-      const emNode = createNode('em', null, parentId);
+      const emNode = createNode("em", null, parentId);
       nodes.push(emNode);
-      nodes.push(createNode('text', match[3], emNode.id));
+      nodes.push(createNode("text", match[3], emNode.id));
     } else if (match[4] && match[5]) {
-      const linkNode = createNode('a', null, parentId, match[5]);
+      const linkNode = createNode("a", null, parentId, match[5]);
       nodes.push(linkNode);
-      nodes.push(createNode('text', match[4], linkNode.id));
+      nodes.push(createNode("text", match[4], linkNode.id));
     } else if (match[6] && match[6].trim()) {
-      nodes.push(createNode('text', match[6].trim(), parentId));
+      nodes.push(createNode("text", match[6].trim(), parentId));
     }
   }
 

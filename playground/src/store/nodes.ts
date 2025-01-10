@@ -807,7 +807,7 @@ export class NodesContext {
 
   deleteChildren(nodeId: string) {
     const node = this.allNodes.get().get(nodeId);
-    if(!node) return;
+    if (!node) return;
 
     const children = this.getNodesRecursively(node).reverse();
     children.shift();
