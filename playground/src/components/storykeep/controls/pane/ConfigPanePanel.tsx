@@ -17,6 +17,7 @@ interface ConfigPanePanelProps {
 
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const [mode, setMode] = useState<PaneMode>(PaneMode.DEFAULT);
+  console.log(mode);
 
   useEffect(() => {
     setMode(PaneMode.DEFAULT);

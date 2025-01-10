@@ -1,4 +1,4 @@
-import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
+import { viewportStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel.tsx";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
@@ -6,7 +6,6 @@ import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export const PaneAdd = (props: NodeProps) => {
-  const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
@@ -49,9 +48,6 @@ export const PaneAdd = (props: NodeProps) => {
             ) : (
               <RenderChildren children={children} nodeProps={props} />
             )}
-            {$showAnalytics ? (
-              <div className="bg-cyan-500">pane analytics conditionally rendered here</div>
-            ) : null}
           </div>
         </div>
       </div>
