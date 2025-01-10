@@ -26,6 +26,10 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
     showAnalytics.set(false);
   };
 
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    event.stopPropagation(); // This prevents the click event from bubbling up to parent elements
+  };
+
   if (!isDataReady) {
     return (
       <div className="bg-myblack/90 px-3.5 py-1.5">
@@ -37,34 +41,40 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
   }
 
   return (
-    <div className="bg-mywhite shadow-inner px-3.5 py-1.5 flex flex-wrap items-start">
-      <div className="flex gap-4 w-full">
-        <div className="px-2 py-1 text-gray-800 text-sm">
-          {" "}
+    <div className="p-0.5 shadow-inner">
+      <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           <ArrowUpIcon className="w-6 h-6 inline-block" /> Activity on this Pane
           <div className="inline-flex px-4 gap-2">
-            <span className="font-action">Stats for past:</span>
+            <span className="font-action">Duration:</span>
             {["daily", "weekly", "monthly"].map((period) => (
               <button
                 key={period}
-                onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
+                onClick={(e) => {
+                  e.stopPropagation(); // Also stop propagation for child elements if needed
+                  updateDuration(period as "daily" | "weekly" | "monthly");
+                }}
                 className={classNames(
                   duration === period
                     ? "font-bold text-myblue"
-                    : "underline text-mydarkgrey/80 hover:bg-myorange"
+                    : "underline text-mydarkgrey/80 hover:text-myorange"
                 )}
               >
                 {period === `daily` ? `24 hours` : period === `weekly` ? `7 days` : `4 weeks`}
               </button>
             ))}
             <button
-              onClick={toggleAnalytics}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleAnalytics();
+              }}
               className="underline text-mydarkgrey/80 hover:text-myorange"
             >
               hide
             </button>
           </div>
         </div>
+
         <div className="flex gap-1">
           {data.pie.map((verb) => (
             <span key={verb.id} className="px-2 py-1 text-cyan-700 text-sm rounded shadow-inner">
