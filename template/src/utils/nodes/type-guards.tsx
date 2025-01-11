@@ -2,6 +2,7 @@ import type {
   BaseNode,
   PaneNode,
   LinkNode,
+  StoryFragmentNode,
   PaneFragmentNode,
   MarkdownPaneFragmentNode,
   FlatNode,
@@ -26,6 +27,10 @@ export const isBreakNode = (node: FlatNode | null): node is BreakNode => {
 
 export const isPaneNode = (node: BaseNode | undefined): node is PaneNode => {
   return node?.nodeType === "Pane";
+};
+
+export const isStoryFragmentNode = (node: BaseNode | null): node is StoryFragmentNode => {
+  return node?.nodeType === "StoryFragment";
 };
 
 export const isMarkdownPaneFragmentNode = (

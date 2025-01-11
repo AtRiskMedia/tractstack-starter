@@ -53,7 +53,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(nodeId) as PaneNode;
   if (!paneNode) return null;
-  console.log(paneNode);
 
   return (
     <div className="p-0.5 shadow-inner">

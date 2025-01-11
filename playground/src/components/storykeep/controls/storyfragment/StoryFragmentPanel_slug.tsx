@@ -68,8 +68,7 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode }: StoryFragmentSlugPanelProps
   };
 
   return (
-    <div className="mb-4">
-      <div className="p-1.5 bg-white rounded-b-md w-full group">
+      <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
         <div className="px-3.5">
           <div className="flex justify-between mb-4">
             <h3 className="text-lg font-bold">Slug (url)</h3>
@@ -121,7 +120,7 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode }: StoryFragmentSlugPanelProps
               </span>
             </div>
           </div>
-          <div className="mt-4 text-lg space-y-4">
+          <div className="mt-4 text-lg">
             <div className="text-gray-600">
               Create a clean, descriptive URL slug that helps users and search engines understand
               the page content.
@@ -162,7 +161,6 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode }: StoryFragmentSlugPanelProps
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

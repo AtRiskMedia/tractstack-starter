@@ -8,8 +8,7 @@ interface StoryFragmentMenuPanelProps {
 
 const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps) => {
   return (
-    <div className="mb-4">
-      <div className="p-1.5 bg-white rounded-b-md w-full group">
+      <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
         <div className="px-3.5">
           <div className="flex justify-between mb-4">
             <h3 className="text-lg font-bold">Configure Web Page</h3>
@@ -23,7 +22,6 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
           Story Fragment Menu
         </div>
       </div>
-    </div>
   );
 };
 

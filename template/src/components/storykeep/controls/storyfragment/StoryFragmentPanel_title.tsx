@@ -52,8 +52,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   };
 
   return (
-    <div className="mb-4">
-      <div className="p-1.5 bg-white rounded-b-md w-full group">
+      <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
         <div className="px-3.5">
           <div className="flex justify-between mb-4">
             <h3 className="text-lg font-bold">Page Title</h3>
@@ -105,7 +104,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
               </span>
             </div>
           </div>
-          <div className="mt-4 text-lg space-y-4">
+          <div className="mt-4 text-lg">
             <div className="text-gray-600">
               Write a clear, descriptive title that accurately represents your page content.
               <ul className="ml-4 mt-1">
@@ -136,7 +135,6 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
