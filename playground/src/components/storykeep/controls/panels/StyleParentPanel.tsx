@@ -99,8 +99,8 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     setCurrentLayer(newLayer);
 
     // Notify parent of changes
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
+    if (markdownNode.parentId) {
+      ctx.notifyNode(markdownNode.parentId);
     }
   };
 

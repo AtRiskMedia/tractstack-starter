@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
+import { getCtx } from "@/store/nodes.ts";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import PaneTitlePanel from "./PanePanel_title";
 import PaneSlugPanel from "./PanePanel_slug";
@@ -8,6 +9,7 @@ import PaneBgPanel from "./PanePanel_bg";
 import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
+import type { PaneNode } from "@/types.ts";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
@@ -47,10 +49,16 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     return <PaneImpressionPanel nodeId={nodeId} setMode={setMode} />;
   }
 
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+  const paneNode = allNodes.get(nodeId) as PaneNode;
+  if (!paneNode) return null;
+  console.log(paneNode);
+
   return (
     <div className="p-0.5 shadow-inner">
-      <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
+      <div className="p-1.5 bg-white rounded-b-md flex gap-1 w-full group">
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md">
           <ArrowDownIcon className="w-6 h-6 inline-block" /> This Pane
         </div>
         <div
@@ -60,13 +68,14 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
             onClick={() => setMode(PaneMode.TITLE)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
-            Title
+            Pane Title:
+            <strong>{paneNode.title}</strong>
           </button>
           <button
             onClick={() => setMode(PaneMode.SLUG)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
-            URL Slug
+            Slug: <strong>{paneNode.slug}</strong>
           </button>
           <button
             onClick={() => setMode(PaneMode.ADV)}

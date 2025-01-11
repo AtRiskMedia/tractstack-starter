@@ -1,27 +1,27 @@
 import type { Dispatch, SetStateAction } from "react";
-import { StoryFragmentMode } from "./StoryFragmentConfigPanel";
+import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
 interface StoryFragmentOgPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<StoryFragmentMode>>;
+  setMode: Dispatch<SetStateAction<StoryFragmentModeType>>;
 }
 
 const StoryFragmentOgPanel = ({ nodeId, setMode }: StoryFragmentOgPanelProps) => {
-  console.log(nodeId);
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="flex flex-col gap-2 mb-1.5">
-        <div className="p-1.5 bg-white rounded-md flex gap-1 w-full">
-          <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
-            Story Fragment Social Image
+    <div className="p-3.5 mb-4">
+      <div className="p-1.5 bg-white rounded-md w-full group">
+        <div className="px-3.5">
+          <div className="flex justify-between">
+            <h3 className="text-lg font-bold mb-4">Configure Web Page</h3>
+            <button
+              onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+              className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
+            >
+              ← Go Back
+            </button>
           </div>
+          OG Image
         </div>
-        <button
-          onClick={() => setMode(StoryFragmentMode.DEFAULT)}
-          className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
-        >
-          ← Go Back
-        </button>
       </div>
     </div>
   );

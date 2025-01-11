@@ -1199,6 +1199,7 @@ export interface ImageFileNode extends BaseNode {
 export interface PaneNode extends BaseNode {
   title: string;
   slug: string;
+  isDecorative: boolean;
   created?: Date;
   changed?: Date;
   bgColour?: string;
@@ -1453,3 +1454,13 @@ export type {
   TargetConfig,
   GotoTargets,
 };
+
+export const StoryFragmentMode = {
+  DEFAULT: "DEFAULT",
+  TITLE: "TITLE",
+  SLUG: "SLUG",
+  MENU: "MENU",
+  OG: "OG",
+} as const;
+
+export type StoryFragmentModeType = (typeof StoryFragmentMode)[keyof typeof StoryFragmentMode];

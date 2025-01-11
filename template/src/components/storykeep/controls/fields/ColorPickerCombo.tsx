@@ -8,8 +8,8 @@ import {
   getTailwindColorOptions,
 } from "../../../../utils/tailwind/tailwindColors";
 import { findClosestTailwindColor } from "./ColorPicker";
-import { getComputedColor } from "../../../../utils/common/helpers";
-import type { Config } from "../../../../types";
+import { getComputedColor, debounce } from "@/utils/common/helpers.ts";
+import type { Config } from "@/types.ts";
 
 export interface ColorPickerProps {
   title: string;
@@ -40,18 +40,16 @@ const ColorPickerCombo = ({
 
   // Handle hex color picker changes
   const handleHexColorChange = useCallback(
-    (newHexColor: string) => {
+    debounce((newHexColor: string) => {
       const computedColor = getComputedColor(newHexColor);
       setHexColor(computedColor);
 
       if (!skipTailwind) {
-        // Try exact match first
         const exactTailwindColor = hexToTailwind(computedColor);
         if (exactTailwindColor) {
           setSelectedTailwindColor(exactTailwindColor);
           setQuery(exactTailwindColor);
         } else {
-          // Find closest matching Tailwind color
           const closestColor = findClosestTailwindColor(computedColor);
           if (closestColor) {
             const tailwindClass = `${closestColor.name}-${closestColor.shade}`;
@@ -65,7 +63,7 @@ const ColorPickerCombo = ({
       }
 
       onColorChange(computedColor);
-    },
+    }, 16),
     [onColorChange, skipTailwind]
   );
 

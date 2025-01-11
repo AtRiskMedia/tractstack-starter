@@ -10,6 +10,7 @@ import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepT
 import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
 import StoryKeep from "../../../layouts/StoryKeep.astro";
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
+import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
 import { NodesSerializer_Json } from "../../../store/nodesSerializer_Json";
 
@@ -82,6 +83,7 @@ s.save(getCtx());
             "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
         }}
       >
+        <StoryFragmentConfigPanel nodeId={storyfragmentNode.id} config={config} client:load />
         <AnalyticsPanel nodeId={storyfragmentNode.id} client:only="react" />
         <ReactNodesWrapper id={storyfragmentNode.id} nodes={nodes} client:only="react" />
       </div>

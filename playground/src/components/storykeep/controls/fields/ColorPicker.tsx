@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { HexColorPicker } from "react-colorful";
 import tinycolor from "tinycolor2";
-import { tailwindColors } from "../../../../utils/tailwind/tailwindColors";
-import { getComputedColor } from "../../../../utils/common/helpers";
-import { useDropdownDirection } from "../../../../utils/storykeep/useDropdownDirection";
+import { tailwindColors } from "@/utils/tailwind/tailwindColors";
+import { getComputedColor, debounce } from "@/utils/common/helpers";
+import { useDropdownDirection } from "@/utils/storykeep/useDropdownDirection";
 
 export interface ColorPickerProps {
   id: string;
@@ -142,7 +142,7 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
 
   // Handle clicking outside to close
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = debounce((event: MouseEvent) => {
       if (
         colorPickerRef.current &&
         !colorPickerRef.current.contains(event.target as Node) &&
@@ -150,7 +150,7 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
       ) {
         handleConfirmColor();
       }
-    };
+    }, 100);
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -159,23 +159,29 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
   // Adjust picker position to ensure it's visible
   useEffect(() => {
     if (isOpen && pickerPopoverRef.current) {
-      const picker = pickerPopoverRef.current;
-      const rect = picker.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const adjustPickerPosition = debounce(() => {
+        const picker = pickerPopoverRef.current;
+        if (!picker) return;
 
-      if (rect.right > viewportWidth) {
-        const overflow = rect.right - viewportWidth;
-        picker.style.left = `${-overflow - 10}px`;
-      }
+        const rect = picker.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-      if (!openAbove && rect.bottom > viewportHeight) {
-        picker.style.top = "auto";
-        picker.style.bottom = "calc(100% + 10px)";
-      } else if (openAbove && rect.top < 0) {
-        picker.style.bottom = "auto";
-        picker.style.top = "calc(100% + 10px)";
-      }
+        if (rect.right > viewportWidth) {
+          const overflow = rect.right - viewportWidth;
+          picker.style.left = `${-overflow - 10}px`;
+        }
+
+        if (!openAbove && rect.bottom > viewportHeight) {
+          picker.style.top = "auto";
+          picker.style.bottom = "calc(100% + 10px)";
+        } else if (openAbove && rect.top < 0) {
+          picker.style.bottom = "auto";
+          picker.style.top = "calc(100% + 10px)";
+        }
+      }, 16);
+
+      adjustPickerPosition();
     }
   }, [isOpen, openAbove]);
 
@@ -207,9 +213,12 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
     }
   }, [previewColor, onColorChange, skipTailwind]);
 
-  const handlePreviewChange = useCallback((newColor: string) => {
-    setPreviewColor(newColor);
-  }, []);
+  const handlePreviewChange = useCallback(
+    debounce((newColor: string) => {
+      setPreviewColor(newColor);
+    }, 16),
+    []
+  );
 
   return (
     <div className="relative" ref={colorPickerRef}>

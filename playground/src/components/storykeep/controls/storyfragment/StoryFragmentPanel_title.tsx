@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import { StoryFragmentMode } from "./StoryFragmentConfigPanel";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import type { StoryFragmentNode } from "@/types";
+import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
 interface StoryFragmentTitlePanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<StoryFragmentMode>>;
+  setMode: Dispatch<SetStateAction<StoryFragmentModeType>>;
 }
 
 const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelProps) => {
@@ -52,11 +52,20 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   };
 
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="flex flex-col gap-2 mb-1.5">
-        <div className="p-1.5 bg-white rounded-md w-full">
-          <h3 className="py-2 font-bold text-mydarkgrey">Page Title</h3>
-          <div className="relative">
+    <div className="p-3.5 mb-4">
+      <div className="p-1.5 bg-white rounded-md w-full group">
+        <div className="px-3.5">
+          <div className="flex justify-between">
+            <h3 className="text-lg font-bold mb-4">Page Title</h3>
+            <button
+              onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+              className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
+            >
+              ← Go Back
+            </button>
+          </div>
+
+          <div className="relative md:mr-48 md:pr-48">
             <input
               type="text"
               value={title}
@@ -126,12 +135,6 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             </div>
           </div>
         </div>
-        <button
-          onClick={() => setMode(StoryFragmentMode.DEFAULT)}
-          className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
-        >
-          ← Go Back
-        </button>
       </div>
     </div>
   );

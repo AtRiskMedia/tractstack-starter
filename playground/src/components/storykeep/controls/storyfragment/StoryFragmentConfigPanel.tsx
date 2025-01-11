@@ -2,44 +2,51 @@ import { useState, useEffect } from "react";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { getCtx } from "@/store/nodes.ts";
+import ColorPickerCombo from "../fields/ColorPickerCombo";
 import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
-import StoryFragmentBgPanel from "./StoryFragmentPanel_bg";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
-import type { StoryFragmentNode } from "@/types.ts";
-
-export enum StoryFragmentMode {
-  DEFAULT = "DEFAULT",
-  TITLE = "TITLE",
-  SLUG = "SLUG",
-  BG = "BG",
-  MENU = "MENU",
-  OG = "OG",
-}
+import { tailwindToHex } from "@/utils/tailwind/tailwindColors.ts";
+import type { StoryFragmentNode, Config } from "@/types.ts";
+import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
 interface StoryFragmentPanelProps {
   nodeId: string;
+  config?: Config;
 }
 
-const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
-  const [mode, setMode] = useState<StoryFragmentMode>(StoryFragmentMode.DEFAULT);
+const StoryFragmentConfigPanel = ({ nodeId, config }: StoryFragmentPanelProps) => {
+  const [mode, setMode] = useState<StoryFragmentModeType>(StoryFragmentMode.DEFAULT);
+
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+  const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
 
   useEffect(() => {
     setMode(StoryFragmentMode.DEFAULT);
   }, [nodeId]);
 
-  const ctx = getCtx();
-  const allNodes = ctx.allNodes.get();
-  const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
-  if (!storyfragmentNode) return;
+  if (!storyfragmentNode) return null;
+
+  const handleBgColorChange = (newColor: string) => {
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const updatedNode = {
+      ...storyfragmentNode,
+      tailwindBgColour: newColor,
+      isChanged: true,
+    };
+    const newNodes = new Map(allNodes);
+    newNodes.set(nodeId, updatedNode);
+    ctx.allNodes.set(newNodes);
+    ctx.notifyNode(nodeId);
+  };
 
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.SLUG) {
     return <StoryFragmentSlugPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === StoryFragmentMode.BG) {
-    return <StoryFragmentBgPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.MENU) {
     return <StoryFragmentMenuPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.OG) {
@@ -47,57 +54,62 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
   }
 
   return (
-    <div className="p-0.5 shadow-inner">
+    <div className="p-3.5 mb-4">
       <div className="p-1.5 bg-white rounded-md w-full group">
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={() => setMode(StoryFragmentMode.TITLE)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 truncate max-w-full"
-          >
-            <span className="font-bold">Page Title:</span> {storyfragmentNode.title}
-          </button>
-          <button
-            onClick={() => setMode(StoryFragmentMode.SLUG)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
-          >
-            <span className="font-bold">Slug:</span> {storyfragmentNode.slug}
-          </button>
-          <button
-            onClick={() => setMode(StoryFragmentMode.BG)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
-          >
-            {!!storyfragmentNode.tailwindBgColour ? (
-              <CheckIcon className="w-4 h-4 inline" />
-            ) : (
-              <XMarkIcon className="w-4 h-4 inline" />
-            )}
-            {` `}
-            Background Colour
-          </button>
-          <button
-            onClick={() => setMode(StoryFragmentMode.MENU)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
-          >
-            {storyfragmentNode.hasMenu ? (
-              <CheckIcon className="w-4 h-4 inline" />
-            ) : (
-              <XMarkIcon className="w-4 h-4 inline" />
-            )}
-            {` `}
-            Menu
-          </button>
-          <button
-            onClick={() => setMode(StoryFragmentMode.OG)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
-          >
-            {!!storyfragmentNode.socialImagePath ? (
-              <CheckIcon className="w-4 h-4 inline" />
-            ) : (
-              <XMarkIcon className="w-4 h-4 inline" />
-            )}
-            {` `}
-            Social Image
-          </button>
+        <div className="px-3.5">
+          <h3 className="text-lg font-bold mb-4">Configure Web Page</h3>
+
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setMode(StoryFragmentMode.TITLE)}
+                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 truncate max-w-full"
+              >
+                Title: <strong>{storyfragmentNode.title}</strong>
+              </button>
+              <button
+                onClick={() => setMode(StoryFragmentMode.SLUG)}
+                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+              >
+                Slug: <strong>{storyfragmentNode.slug}</strong>
+              </button>
+              <button
+                onClick={() => setMode(StoryFragmentMode.MENU)}
+                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+              >
+                {storyfragmentNode.hasMenu ? (
+                  <CheckIcon className="w-4 h-4 inline" />
+                ) : (
+                  <XMarkIcon className="w-4 h-4 inline" />
+                )}{" "}
+                Menu
+              </button>
+              <button
+                onClick={() => setMode(StoryFragmentMode.OG)}
+                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+              >
+                {storyfragmentNode.socialImagePath ? (
+                  <CheckIcon className="w-4 h-4 inline" />
+                ) : (
+                  <XMarkIcon className="w-4 h-4 inline" />
+                )}{" "}
+                Social Image
+              </button>
+            </div>
+            <div className="space-y-2 max-w-80">
+              {config && (
+                <ColorPickerCombo
+                  title="Background Color"
+                  defaultColor={tailwindToHex(
+                    storyfragmentNode.tailwindBgColour || "#ffffff",
+                    config?.init?.BRAND_COLOURS || null
+                  )}
+                  onColorChange={handleBgColorChange}
+                  config={config}
+                />
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
