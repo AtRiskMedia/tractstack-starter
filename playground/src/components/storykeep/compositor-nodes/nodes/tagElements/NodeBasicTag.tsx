@@ -12,6 +12,7 @@ export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
+  const wasFocused = useRef<boolean>(false);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
   const originalTextRef = useRef<string>("");
 
@@ -44,8 +45,17 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       contentEditable={toolModeValStore.get().value === "default" && canEditText(props)}
       suppressContentEditableWarning
       onBlur={(e) => {
-        if (!canEditText(props) || e.target.tagName === "BUTTON") return;
+        function reset() { wasFocused.current = false; }
 
+        if (!canEditText(props)
+          || e.target.tagName === "BUTTON"
+          || !wasFocused.current
+        ) {
+          reset();
+          return;
+        }
+
+        reset();
         const newText = e.currentTarget.textContent?.trimEnd();
         if (newText === originalTextRef.current) {
           const node = getCtx(props).allNodes.get().get(nodeId);
@@ -70,16 +80,23 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           const nodesFromMarkdown = markdownToNodes(newText, nodeId);
           let stylesIdx = 0;
           nodesFromMarkdown.forEach((node: FlatNode) => {
-            if(node.tagName === "a") {
+            if (node.tagName === "a") {
               node.buttonPayload = originalLinksStyles[stylesIdx++];
             }
-          })
+          });
           getCtx(props).addNodes(nodesFromMarkdown);
         }
-      }}
+      }
+      }
       onFocus={(e) => {
-        if (!canEditText(props) || e.target.tagName === "BUTTON") return;
+        if (!canEditText(props)
+          || e.target.tagName === "BUTTON"
+          || nodeId !== getCtx(props).clickedNodeId.get()) {
+          return;
+        }
 
+        wasFocused.current = true;
+        console.log("tag element focus");
         if ("isContentEditable" in e.target && e.target.isContentEditable) {
           const node = getCtx(props).allNodes.get().get(nodeId);
           const childNodes = getCtx(props)
@@ -97,7 +114,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           console.log(markdown);
         }
       }}
-      onClick={(e) => {
+      onMouseDown={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
       }}
