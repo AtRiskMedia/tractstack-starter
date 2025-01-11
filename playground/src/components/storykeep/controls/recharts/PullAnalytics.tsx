@@ -45,7 +45,6 @@ const PullAnalytics = ({ id, type = `storyfragment` }: PullAnalyticsProps) => {
             };
           });
           storedAnalytics.set(analyticsMap);
-          console.log(analyticsMap);
         }
       } catch (error) {
         console.error("Error fetching analytics data:", error);
