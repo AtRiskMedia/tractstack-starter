@@ -13,6 +13,7 @@ const codeHookPayload =
     ? (rawPayload as CodeHookDatum)
     : null;
 const beliefs = getCtx().getPaneBeliefs(nodeId);
+const isDecorative = getCtx().getPaneIsDecorative(nodeId);
 const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, viewportStore.get().value)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
 const contentStyles =
@@ -31,11 +32,11 @@ const contentStyles =
 }
 {
   codeHookPayload ? (
-    <div id={`pane-${nodeId}`} class="pane">
+    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
       <CodeHook target={codeHookPayload.target} resources={[]} options={null} />
     </div>
   ) : (
-    <div id={`pane-${nodeId}`} class="pane">
+    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
       <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
         <div class={contentClasses} style={contentStyles}>
           {getCtx()
