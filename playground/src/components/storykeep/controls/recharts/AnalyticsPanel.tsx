@@ -31,16 +31,7 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
     showAnalytics.set(false);
   };
 
-  if (!$showAnalytics) return null;
-  if (!isDataReady) {
-    return (
-      <div className="px-3.5 py-1.5">
-        <div className="rounded-md w-64 bg-mywhite p-3.5">
-          <p className="text-mydarkgrey">Loading analytics...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!$showAnalytics || !isDataReady) return null;
 
   return (
     <div className="w-full mb-6 overflow-hidden">

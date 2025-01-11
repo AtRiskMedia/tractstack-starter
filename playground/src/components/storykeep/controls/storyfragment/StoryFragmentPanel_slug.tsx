@@ -68,7 +68,7 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode }: StoryFragmentSlugPanelProps
   };
 
   return (
-    <div className="p-3.5 mb-4">
+    <div className="mb-4">
       <div className="p-1.5 bg-white rounded-b-md w-full group">
         <div className="px-3.5">
           <div className="flex justify-between mb-4">

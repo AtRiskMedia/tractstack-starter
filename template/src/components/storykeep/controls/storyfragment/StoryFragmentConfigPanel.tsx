@@ -11,12 +11,7 @@ import { tailwindToHex } from "@/utils/tailwind/tailwindColors.ts";
 import type { StoryFragmentNode, Config } from "@/types.ts";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
-interface StoryFragmentPanelProps {
-  nodeId: string;
-  config?: Config;
-}
-
-const StoryFragmentConfigPanel = ({ nodeId, config }: StoryFragmentPanelProps) => {
+const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?: Config }) => {
   const [mode, setMode] = useState<StoryFragmentModeType>(StoryFragmentMode.DEFAULT);
 
   const ctx = getCtx();
@@ -54,7 +49,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: StoryFragmentPanelProps) =
   }
 
   return (
-    <div className="p-3.5 mb-4">
+    <div className="mb-4">
       <div className="p-1.5 bg-white rounded-b-md w-full group">
         <div className="px-3.5">
           <h3 className="text-lg font-bold mb-4">Configure Web Page</h3>
