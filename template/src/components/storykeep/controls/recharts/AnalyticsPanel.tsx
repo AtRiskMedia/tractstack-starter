@@ -1,6 +1,6 @@
 import { useStore } from "@nanostores/react";
 import { useState, useEffect } from "react";
-import { analyticsDuration, showAnalytics, storedAnalytics } from "@/store/storykeep";
+import { analyticsDuration, showAnalytics, storedAnalytics, showSettings } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 import ResponsiveLine from "./ResponsiveLine";
 
@@ -12,6 +12,7 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
   const $analyticsDuration = useStore(analyticsDuration);
   const $storedAnalytics = useStore(storedAnalytics);
   const $showAnalytics = useStore(showAnalytics);
+  const $showSettings = useStore(showSettings);
   const duration = $analyticsDuration;
   const [isDataReady, setIsDataReady] = useState(false);
 
@@ -31,7 +32,7 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
     showAnalytics.set(false);
   };
 
-  if (!$showAnalytics) return null;
+  if (!$showAnalytics || $showSettings) return null;
   if (!isDataReady) {
     return (
       <div className="px-3.5 py-1.5">

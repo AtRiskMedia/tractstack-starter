@@ -32,7 +32,6 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
   const allNodes = ctx.allNodes.get();
   const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
   if (!storyfragmentNode) return;
-  console.log(storyfragmentNode);
 
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
