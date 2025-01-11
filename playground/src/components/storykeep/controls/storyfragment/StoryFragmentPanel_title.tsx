@@ -53,13 +53,13 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
 
   return (
     <div className="p-3.5 mb-4">
-      <div className="p-1.5 bg-white rounded-md w-full group">
+      <div className="p-1.5 bg-white rounded-b-md w-full group">
         <div className="px-3.5">
-          <div className="flex justify-between">
-            <h3 className="text-lg font-bold mb-4">Page Title</h3>
+          <div className="flex justify-between mb-4">
+            <h3 className="text-lg font-bold">Page Title</h3>
             <button
               onClick={() => setMode(StoryFragmentMode.DEFAULT)}
-              className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
+              className="text-myblue hover:text-black"
             >
               ← Go Back
             </button>

@@ -55,7 +55,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: StoryFragmentPanelProps) =
 
   return (
     <div className="p-3.5 mb-4">
-      <div className="p-1.5 bg-white rounded-md w-full group">
+      <div className="p-1.5 bg-white rounded-b-md w-full group">
         <div className="px-3.5">
           <h3 className="text-lg font-bold mb-4">Configure Web Page</h3>
 
@@ -63,7 +63,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: StoryFragmentPanelProps) =
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => setMode(StoryFragmentMode.TITLE)}
-                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 truncate max-w-full"
+                className="px-2 py-1 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
               >
                 Title: <strong>{storyfragmentNode.title}</strong>
               </button>

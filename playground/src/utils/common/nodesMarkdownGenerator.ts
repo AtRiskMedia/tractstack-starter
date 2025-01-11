@@ -169,19 +169,19 @@ export function markdownToNodes(markdown: string, parentId: string): FlatNode[] 
   let match;
   while ((match = pattern.exec(markdown)) !== null) {
     if (match[2]) {
-      const strongNode = createNode('strong', null, parentId);
+      const strongNode = createNode("strong", null, parentId);
       nodes.push(strongNode);
-      nodes.push(createNode('text', match[2], strongNode.id));
+      nodes.push(createNode("text", match[2], strongNode.id));
     } else if (match[3]) {
-      const emNode = createNode('em', null, parentId);
+      const emNode = createNode("em", null, parentId);
       nodes.push(emNode);
-      nodes.push(createNode('text', match[3], emNode.id));
+      nodes.push(createNode("text", match[3], emNode.id));
     } else if (match[4] && match[5]) {
-      const linkNode = createNode('a', null, parentId, match[5]);
+      const linkNode = createNode("a", null, parentId, match[5]);
       nodes.push(linkNode);
-      nodes.push(createNode('text', match[4], linkNode.id));
+      nodes.push(createNode("text", match[4], linkNode.id));
     } else if (match[6]) {
-      nodes.push(createNode('text', match[6], parentId));
+      nodes.push(createNode("text", match[6], parentId));
     }
   }
 

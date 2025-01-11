@@ -42,37 +42,35 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   return (
     <Tag
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      contentEditable={toolModeValStore.get().value === "default"}
+      contentEditable={toolModeValStore.get().value === "default" && canEditText(props)}
       suppressContentEditableWarning
       onBlur={(e) => {
-        function reset() { wasFocused.current = false; }
+        function reset() {
+          wasFocused.current = false;
+        }
 
-        if (!canEditText(props)
-          || e.target.tagName === "BUTTON"
-          || !wasFocused.current
-        ) {
+        if (!canEditText(props) || e.target.tagName === "BUTTON" || !wasFocused.current) {
           reset();
           return;
         }
 
-        const node = getCtx(props).allNodes.get().get(nodeId);
-
         reset();
-        const markdown = markdownToNodes(e.currentTarget?.textContent?.trimEnd() || "", node?.id || "");
-        markdown.unshift(node as FlatNode);
-        const newText = nodesToMarkdownText(markdown);
+        const newText = e.currentTarget.textContent?.trimEnd();
         if (newText === originalTextRef.current) {
+          const node = getCtx(props).allNodes.get().get(nodeId);
           // no changes, redraw self to remove the markdown
           getCtx(props).notifyNode(node?.parentId || "");
           return;
         }
 
         if (newText) {
+          const node = getCtx(props).allNodes.get().get(nodeId);
+
           // should get styles from text not "a"
           const originalLinksStyles = getCtx(props)
             .getNodesRecursively(node)
-            .filter(childNode => "tagName" in childNode && childNode?.tagName === "a")
-            .map(childNode => (childNode as FlatNode).buttonPayload)
+            .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
+            .map((childNode) => (childNode as FlatNode).buttonPayload)
             .reverse();
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
@@ -87,12 +85,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           });
           getCtx(props).addNodes(nodesFromMarkdown);
         }
-      }
-      }
+      }}
       onFocus={(e) => {
-        if (!canEditText(props)
-          || e.target.tagName === "BUTTON"
-          || nodeId !== getCtx(props).clickedNodeId.get()) {
+        if (
+          !canEditText(props) ||
+          e.target.tagName === "BUTTON" ||
+          nodeId !== getCtx(props).clickedNodeId.get()
+        ) {
           return;
         }
 
@@ -109,6 +108,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           const markdown = nodesToMarkdownText(childNodes);
           // save original markdown text in ref, no state so we don't trigger redraw
           if ("textContent" in e.target) {
+            e.target.textContent = markdown;
             originalTextRef.current = markdown;
           }
           console.log(markdown);
