@@ -6,7 +6,7 @@ import {
   hexToTailwind,
   tailwindToHex,
   getTailwindColorOptions,
-} from "../../../../utils/tailwind/tailwindColors";
+} from "@/utils/tailwind/tailwindColors.ts";
 import { findClosestTailwindColor } from "./ColorPicker";
 import { getComputedColor, debounce } from "@/utils/common/helpers.ts";
 import type { Config } from "@/types.ts";

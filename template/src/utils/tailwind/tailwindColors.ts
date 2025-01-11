@@ -50,7 +50,7 @@ export const tailwindToHex = (tailwindColor: string, brand: string | null): stri
   if (tailwindColor.startsWith("bg-brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor.slice(3)})`, brand);
     if (brandColor) {
-      return brandColor;
+      return `#${brandColor}`;
     }
   }
   if (tailwindColor.startsWith("brand-")) {
