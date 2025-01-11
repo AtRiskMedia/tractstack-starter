@@ -28,7 +28,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
       const node = allNodes.get(nodeId) as StoryFragmentNode;
-      
+
       if (node) {
         setStoryfragmentNode(node);
         setIsNodeAvailable(true);
@@ -110,12 +110,12 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             {storyfragmentNode.hasMenu ? (
               <>
                 <CheckIcon className="w-4 h-4" />
-                <span className="font-semibold">Menu</span>
+                <span className="font-semibold">Has Menu</span>
               </>
             ) : (
               <>
                 <XMarkIcon className="w-4 h-4" />
-                <span>Menu</span>
+                <span>No Menu</span>
               </>
             )}
           </button>

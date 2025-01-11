@@ -52,89 +52,89 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   };
 
   return (
-      <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
-        <div className="px-3.5">
-          <div className="flex justify-between mb-4">
-            <h3 className="text-lg font-bold">Page Title</h3>
-            <button
-              onClick={() => setMode(StoryFragmentMode.DEFAULT)}
-              className="text-myblue hover:text-black"
-            >
-              ← Go Back
-            </button>
-          </div>
+    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
+      <div className="px-3.5">
+        <div className="flex justify-between mb-4">
+          <h3 className="text-lg font-bold">Page Title</h3>
+          <button
+            onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+            className="text-myblue hover:text-black"
+          >
+            ← Go Back
+          </button>
+        </div>
 
-          <div className="relative md:mr-48 md:pr-48">
-            <input
-              type="text"
-              value={title}
-              onChange={handleTitleChange}
-              onBlur={handleTitleBlur}
-              className={`w-full px-2 py-1 pr-16 rounded-md border ${
+        <div className="relative md:mr-48 md:pr-48">
+          <input
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            onBlur={handleTitleBlur}
+            className={`w-full px-2 py-1 pr-16 rounded-md border ${
+              charCount < 30
+                ? "border-red-500 bg-red-50"
+                : isValid
+                  ? "border-green-500 bg-green-50"
+                  : warning
+                    ? "border-yellow-500 bg-yellow-50"
+                    : "border-gray-300"
+            }`}
+            placeholder="Enter story fragment title (50-60 characters recommended)"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {charCount < 30 ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+            ) : isValid ? (
+              <CheckIcon className="h-5 w-5 text-green-500" />
+            ) : warning ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+            ) : null}
+            <span
+              className={`text-sm ${
                 charCount < 30
-                  ? "border-red-500 bg-red-50"
+                  ? "text-red-500"
                   : isValid
-                    ? "border-green-500 bg-green-50"
+                    ? "text-green-500"
                     : warning
-                      ? "border-yellow-500 bg-yellow-50"
-                      : "border-gray-300"
+                      ? "text-yellow-500"
+                      : "text-gray-500"
               }`}
-              placeholder="Enter story fragment title (50-60 characters recommended)"
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {charCount < 30 ? (
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-              ) : isValid ? (
-                <CheckIcon className="h-5 w-5 text-green-500" />
-              ) : warning ? (
-                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
-              ) : null}
-              <span
-                className={`text-sm ${
-                  charCount < 30
-                    ? "text-red-500"
-                    : isValid
-                      ? "text-green-500"
-                      : warning
-                        ? "text-yellow-500"
-                        : "text-gray-500"
-                }`}
-              >
-                {charCount}/70
-              </span>
-            </div>
+            >
+              {charCount}/70
+            </span>
           </div>
-          <div className="mt-4 text-lg">
-            <div className="text-gray-600">
-              Write a clear, descriptive title that accurately represents your page content.
-              <ul className="ml-4 mt-1">
-                <li>
-                  <CheckIcon className="h-4 w-4 inline" /> Include relevant keywords
-                </li>
-                <li>
-                  <CheckIcon className="h-4 w-4 inline" /> Avoid unnecessary words like "welcome to"
-                  or "the"
-                </li>
-                <li>
-                  <CheckIcon className="h-4 w-4 inline" /> Unique titles across your website
-                </li>
-              </ul>
-            </div>
-            <div className="py-4">
-              {charCount < 30 && (
-                <span className="text-red-500">Title must be at least 30 characters</span>
-              )}
-              {charCount >= 30 && charCount < 50 && (
-                <span className="text-gray-500">
-                  Add {50 - charCount} more characters for optimal length
-                </span>
-              )}
-              {warning && <span className="text-yellow-500">Title is getting long</span>}
-              {isValid && <span className="text-green-500">Perfect title length!</span>}
-            </div>
+        </div>
+        <div className="mt-4 text-lg">
+          <div className="text-gray-600">
+            Write a clear, descriptive title that accurately represents your page content.
+            <ul className="ml-4 mt-1">
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Include relevant keywords
+              </li>
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Avoid unnecessary words like "welcome to"
+                or "the"
+              </li>
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Unique titles across your website
+              </li>
+            </ul>
+          </div>
+          <div className="py-4">
+            {charCount < 30 && (
+              <span className="text-red-500">Title must be at least 30 characters</span>
+            )}
+            {charCount >= 30 && charCount < 50 && (
+              <span className="text-gray-500">
+                Add {50 - charCount} more characters for optimal length
+              </span>
+            )}
+            {warning && <span className="text-yellow-500">Title is getting long</span>}
+            {isValid && <span className="text-green-500">Perfect title length!</span>}
           </div>
         </div>
       </div>
+    </div>
   );
 };
 
