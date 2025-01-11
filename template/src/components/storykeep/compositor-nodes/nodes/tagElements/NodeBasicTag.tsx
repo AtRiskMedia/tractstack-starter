@@ -42,7 +42,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   return (
     <Tag
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      contentEditable={toolModeValStore.get().value === "default" && canEditText(props)}
+      contentEditable={toolModeValStore.get().value === "default"}
       suppressContentEditableWarning
       onBlur={(e) => {
         function reset() { wasFocused.current = false; }
@@ -55,18 +55,19 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           return;
         }
 
+        const node = getCtx(props).allNodes.get().get(nodeId);
+
         reset();
-        const newText = e.currentTarget.textContent?.trimEnd();
+        const markdown = markdownToNodes(e.currentTarget?.textContent?.trimEnd() || "", node?.id || "");
+        markdown.unshift(node as FlatNode);
+        const newText = nodesToMarkdownText(markdown);
         if (newText === originalTextRef.current) {
-          const node = getCtx(props).allNodes.get().get(nodeId);
           // no changes, redraw self to remove the markdown
           getCtx(props).notifyNode(node?.parentId || "");
           return;
         }
 
         if (newText) {
-          const node = getCtx(props).allNodes.get().get(nodeId);
-
           // should get styles from text not "a"
           const originalLinksStyles = getCtx(props)
             .getNodesRecursively(node)
@@ -108,7 +109,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           const markdown = nodesToMarkdownText(childNodes);
           // save original markdown text in ref, no state so we don't trigger redraw
           if ("textContent" in e.target) {
-            e.target.textContent = markdown;
             originalTextRef.current = markdown;
           }
           console.log(markdown);

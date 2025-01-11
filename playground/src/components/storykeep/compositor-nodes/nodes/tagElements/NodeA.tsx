@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export const NodeA = (props: NodeProps) => {
-  const textRef = useRef<HTMLParagraphElement|null>(null);
+  const textRef = useRef<HTMLParagraphElement | null>(null);
   const originalTextRef = useRef<string>("");
 
   return (
@@ -16,16 +16,18 @@ export const NodeA = (props: NodeProps) => {
         getCtx(props).setClickedNodeId(props.nodeId);
         e.stopPropagation();
       }}
-      onMouseDown={e => {
-        textRef.current?.focus()
+      onMouseDown={(e) => {
+        textRef.current?.focus();
         e.stopPropagation();
       }}
-      onBlur={e=>e.stopPropagation()}
+      onBlur={(e) => e.stopPropagation()}
     >
-      <span ref={textRef}
+      <span
+        ref={textRef}
         contentEditable={toolModeValStore.get().value === "default"}
+        suppressContentEditableWarning
         tabIndex={0}
-        style={{display: "block", outline: "none"}}
+        style={{ display: "block", outline: "none" }}
         onFocus={(e) => {
           console.log("A got focus");
           e.stopPropagation();
@@ -48,7 +50,7 @@ export const NodeA = (props: NodeProps) => {
           const nodesFromMarkdown = markdownToNodes(newText, props.nodeId);
           getCtx(props).addNodes(nodesFromMarkdown);
         }}
-        onMouseDown={e => {
+        onMouseDown={(e) => {
           const range = document.createRange();
           range.setStart(e.currentTarget, 0);
           range.collapse(false); // Places caret at the end
