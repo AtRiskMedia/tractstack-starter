@@ -14,53 +14,47 @@ function getDateFilter(duration: string): string {
   }
 }
 
+const isPieDataItem = (verb: PieDataItem | LineDataSeries): verb is PieDataItem => {
+  return 'value' in verb;
+};
+
 const isLineDataSeries = (verb: PieDataItem | LineDataSeries): verb is LineDataSeries => {
   return "data" in verb;
 };
 
 function mergePaneDataIntoStoryFragment(data: RawAnalytics): RawAnalytics {
   const result: RawAnalytics = {
-    pie: [],
-    line: [],
+    pie: [...data.pie],
+    line: [...data.line]
   };
 
-  // Helper function to merge verbs
-  const mergeVerbs = (target: any, source: any) => {
-    source.verbs.forEach((verb: any) => {
-      const existingVerb = target.verbs.find((v: any) => v.id === verb.id);
-      if (existingVerb) {
-        existingVerb.value += verb.value; // Assuming 'value' is the count for verbs
-      } else {
-        target.verbs.push({ ...verb });
-      }
-    });
-    target.total_actions += source.total_actions;
-  };
-
-  // Merge for pie data
   const storyFragment = data.pie.find((item) => item.object_type === "StoryFragment");
+  const lineStoryFragment = data.line.find((item) => item.object_type === "StoryFragment");
+
   if (storyFragment) {
     data.pie.forEach((item) => {
       if (item.object_type === "Pane") {
-        mergeVerbs(storyFragment, item);
+        item.verbs.forEach((verb: any) => {
+          const existingVerb = storyFragment.verbs.find((v: any) => v.id === verb.id);
+          if (existingVerb && isPieDataItem(existingVerb) && isPieDataItem(verb)) {
+            existingVerb.value += verb.value;
+          } else {
+            storyFragment.verbs.push({ ...verb });
+          }
+        });
+        storyFragment.total_actions += item.total_actions;
       }
     });
-    result.pie.push(storyFragment);
   }
 
-  // Merge for line data
-  const lineStoryFragment = data.line.find((item) => item.object_type === "StoryFragment");
   if (lineStoryFragment) {
     data.line.forEach((item) => {
       if (item.object_type === "Pane") {
         item.verbs.forEach((verb: any) => {
           const existingVerb = lineStoryFragment.verbs.find((v: any) => v.id === verb.id);
           if (existingVerb && isLineDataSeries(verb)) {
-            // Check verb is LineDataSeries
-            // Merge data points for each verb
             verb.data.forEach((d: LineDataPoint) => {
               if (isLineDataSeries(existingVerb)) {
-                // Check existingVerb is LineDataSeries
                 const dataPoint = existingVerb.data.find((dp: LineDataPoint) => dp.x === d.x);
                 if (dataPoint) {
                   dataPoint.y += d.y;
@@ -74,7 +68,6 @@ function mergePaneDataIntoStoryFragment(data: RawAnalytics): RawAnalytics {
         });
       }
     });
-    result.line.push(lineStoryFragment);
   }
 
   return result;

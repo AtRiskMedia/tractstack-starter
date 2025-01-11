@@ -1,13 +1,10 @@
 import { useStore } from "@nanostores/react";
 import { useState, useEffect, type MouseEvent } from "react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-import { classNames } from "@/utils/common/helpers";
-import { analyticsDuration, showAnalytics, storedAnalytics } from "@/store/storykeep";
+import { storedAnalytics } from "@/store/storykeep";
 
 const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
-  const $analyticsDuration = useStore(analyticsDuration);
   const $storedAnalytics = useStore(storedAnalytics);
-  const duration = $analyticsDuration;
   const [isDataReady, setIsDataReady] = useState(false);
 
   const data = $storedAnalytics[nodeId] || { pie: [], line: [] };
@@ -18,21 +15,13 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
     }
   }, [$storedAnalytics, nodeId]);
 
-  const updateDuration = (newValue: `daily` | `weekly` | `monthly`) => {
-    analyticsDuration.set(newValue);
-  };
-
-  const toggleAnalytics = () => {
-    showAnalytics.set(false);
-  };
-
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
   };
 
   if (!isDataReady) {
     return (
-      <div className="bg-myblack/90 px-3.5 py-1.5">
+      <div className="p-1.5" onClick={handleClick}>
         <div className="rounded-xl w-64 bg-mywhite p-3.5">
           <p className="text-mydarkgrey">Loading analytics...</p>
         </div>
@@ -41,38 +30,10 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
   }
 
   return (
-    <div className="p-0.5 shadow-inner" onClick={handleClick}>
+    <div className="px-1.5" onClick={handleClick}>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           <ArrowUpIcon className="w-6 h-6 inline-block" /> Recent activity on this Pane
-          <div className="inline-flex px-4 gap-2">
-            <span className="font-action">Duration:</span>
-            {["daily", "weekly", "monthly"].map((period) => (
-              <button
-                key={period}
-                onClick={(e) => {
-                  e.stopPropagation(); // Also stop propagation for child elements if needed
-                  updateDuration(period as "daily" | "weekly" | "monthly");
-                }}
-                className={classNames(
-                  duration === period
-                    ? "font-bold text-myblue"
-                    : "underline text-mydarkgrey/80 hover:text-myorange"
-                )}
-              >
-                {period === `daily` ? `24 hours` : period === `weekly` ? `7 days` : `4 weeks`}
-              </button>
-            ))}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleAnalytics();
-              }}
-              className="underline text-mydarkgrey/80 hover:text-myorange"
-            >
-              hide
-            </button>
-          </div>
         </div>
 
         <div className="flex gap-1">
