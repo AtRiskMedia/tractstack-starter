@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { getCtx } from "@/store/nodes.ts";
+import { findClosestTailwindColor } from "../fields/ColorPicker";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
 import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
-import { tailwindToHex } from "@/utils/tailwind/tailwindColors.ts";
+import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import type { StoryFragmentNode, Config } from "@/types.ts";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
@@ -58,18 +59,23 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   }
 
   const handleBgColorChange = (newColor: string) => {
-    const ctx = getCtx();
-    const allNodes = ctx.allNodes.get();
-    const updatedNode = {
-      ...storyfragmentNode,
-      tailwindBgColour: newColor,
-      isChanged: true,
-    };
-    const newNodes = new Map(allNodes);
-    newNodes.set(nodeId, updatedNode);
-    ctx.allNodes.set(newNodes);
-    ctx.notifyNode(nodeId);
-    setStoryfragmentNode(updatedNode);
+    const val = hexToTailwind(newColor);
+    const exactValPayload = val ? null : findClosestTailwindColor(newColor);
+    const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
+    if (exactVal || val) {
+      const ctx = getCtx();
+      const allNodes = ctx.allNodes.get();
+      const updatedNode = {
+        ...storyfragmentNode,
+        tailwindBgColour: exactVal || val || `#ffffff`,
+        isChanged: true,
+      };
+      const newNodes = new Map(allNodes);
+      newNodes.set(nodeId, updatedNode);
+      ctx.allNodes.set(newNodes);
+      ctx.notifyNode(nodeId);
+      setStoryfragmentNode(updatedNode);
+    }
   };
 
   if (mode === StoryFragmentMode.TITLE) {

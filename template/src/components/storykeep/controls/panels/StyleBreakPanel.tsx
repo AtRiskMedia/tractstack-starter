@@ -166,6 +166,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
             defaultColor={settings.bgColor}
             onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
             config={config!}
+            allowNull={true}
           />
         </div>
       </div>
