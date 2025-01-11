@@ -19,26 +19,21 @@ const PaneAnalyticsPanel = ({ nodeId }: { nodeId: string }) => {
     event.stopPropagation();
   };
 
-  if (!isDataReady) {
-    return (
-      <div className="p-1.5" onClick={handleClick}>
-        <div className="rounded-xl w-64 bg-mywhite p-3.5">
-          <p className="text-mydarkgrey">Loading analytics...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!isDataReady) return null;
 
   return (
-    <div className="px-1.5" onClick={handleClick}>
-      <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
+    <div className="" onClick={handleClick}>
+      <div className="p-0.5 flex gap-1 w-full group">
+        <div className="px-2 py-1 bg-gray-100 text-gray-800 text-sm rounded-b-md">
           <ArrowUpIcon className="w-6 h-6 inline-block" /> Recent activity on this Pane
         </div>
 
         <div className="flex gap-1">
           {data.pie.map((verb) => (
-            <span key={verb.id} className="px-2 py-1 text-cyan-700 text-sm rounded shadow-inner">
+            <span
+              key={verb.id}
+              className="px-2 py-1 text-cyan-700 text-sm rounded shadow-inner bg-white"
+            >
               {verb.id}: {verb.value}
             </span>
           ))}

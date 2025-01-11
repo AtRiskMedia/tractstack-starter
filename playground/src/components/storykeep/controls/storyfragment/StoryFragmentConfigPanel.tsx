@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-//import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { getCtx } from "@/store/nodes.ts";
 import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
@@ -32,7 +33,6 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
   const allNodes = ctx.allNodes.get();
   const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
   if (!storyfragmentNode) return;
-  console.log(storyfragmentNode);
 
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
@@ -66,18 +66,36 @@ const StoryFragmentConfigPanel = ({ nodeId }: StoryFragmentPanelProps) => {
             onClick={() => setMode(StoryFragmentMode.BG)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
-            Background
+            {!!storyfragmentNode.tailwindBgColour ? (
+              <CheckIcon className="w-4 h-4 inline" />
+            ) : (
+              <XMarkIcon className="w-4 h-4 inline" />
+            )}
+            {` `}
+            Background Colour
           </button>
           <button
             onClick={() => setMode(StoryFragmentMode.MENU)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
+            {storyfragmentNode.hasMenu ? (
+              <CheckIcon className="w-4 h-4 inline" />
+            ) : (
+              <XMarkIcon className="w-4 h-4 inline" />
+            )}
+            {` `}
             Menu
           </button>
           <button
             onClick={() => setMode(StoryFragmentMode.OG)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
+            {!!storyfragmentNode.socialImagePath ? (
+              <CheckIcon className="w-4 h-4 inline" />
+            ) : (
+              <XMarkIcon className="w-4 h-4 inline" />
+            )}
+            {` `}
             Social Image
           </button>
         </div>
