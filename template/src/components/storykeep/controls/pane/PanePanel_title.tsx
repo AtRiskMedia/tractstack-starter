@@ -52,75 +52,76 @@ const PaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
   };
 
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="flex flex-col gap-2 mb-1.5">
-        <div className="p-1.5 bg-white rounded-md w-full">
-          <h3 className="py-2 font-bold text-mydarkgrey">Page Title</h3>
-          <div className="relative">
-            <input
-              type="text"
-              value={title}
-              onChange={handleTitleChange}
-              onBlur={handleTitleBlur}
-              className={`w-full px-2 py-1 pr-16 rounded-md border ${
+    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
+      <div className="px-3.5">
+        <div className="flex justify-between mb-4">
+          <h3 className="text-lg font-bold">Pane Title</h3>
+          <button
+            onClick={() => setMode(PaneMode.DEFAULT)}
+            className="text-myblue hover:text-black"
+          >
+            ← Go Back
+          </button>
+        </div>
+
+        <div className="relative">
+          <input
+            type="text"
+            value={title}
+            onChange={handleTitleChange}
+            onBlur={handleTitleBlur}
+            className={`w-full px-2 py-1 pr-16 rounded-md border ${
+              charCount < 5
+                ? "border-red-500 bg-red-50"
+                : isValid
+                  ? "border-green-500 bg-green-50"
+                  : warning
+                    ? "border-yellow-500 bg-yellow-50"
+                    : "border-gray-300"
+            }`}
+            placeholder="Enter story fragment title (50-60 characters recommended)"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {charCount < 5 ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+            ) : isValid ? (
+              <CheckIcon className="h-5 w-5 text-green-500" />
+            ) : warning ? (
+              <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+            ) : null}
+            <span
+              className={`text-sm ${
                 charCount < 5
-                  ? "border-red-500 bg-red-50"
+                  ? "text-red-500"
                   : isValid
-                    ? "border-green-500 bg-green-50"
+                    ? "text-green-500"
                     : warning
-                      ? "border-yellow-500 bg-yellow-50"
-                      : "border-gray-300"
+                      ? "text-yellow-500"
+                      : "text-gray-500"
               }`}
-              placeholder="Enter story fragment title (50-60 characters recommended)"
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {charCount < 5 ? (
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-              ) : isValid ? (
-                <CheckIcon className="h-5 w-5 text-green-500" />
-              ) : warning ? (
-                <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
-              ) : null}
-              <span
-                className={`text-sm ${
-                  charCount < 5
-                    ? "text-red-500"
-                    : isValid
-                      ? "text-green-500"
-                      : warning
-                        ? "text-yellow-500"
-                        : "text-gray-500"
-                }`}
-              >
-                {charCount}/50
-              </span>
-            </div>
-          </div>
-          <div className="mt-4 text-lg space-y-4">
-            <div className="text-gray-600">
-              Write a clear, descriptive title for this piece of content. This is used for your own
-              internal analytics.
-            </div>
-            <div className="py-4">
-              {charCount < 5 && (
-                <span className="text-red-500">Title must be at least 30 characters</span>
-              )}
-              {charCount >= 5 && charCount < 10 && (
-                <span className="text-gray-500">
-                  Add {10 - charCount} more characters for optimal length
-                </span>
-              )}
-              {warning && <span className="text-yellow-500">Title is getting long</span>}
-              {isValid && <span className="text-green-500">Perfect title length!</span>}
-            </div>
+            >
+              {charCount}/50
+            </span>
           </div>
         </div>
-        <button
-          onClick={() => setMode(PaneMode.DEFAULT)}
-          className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
-        >
-          ← Go Back
-        </button>
+        <div className="mt-4 text-lg space-y-4">
+          <div className="text-gray-600">
+            Write a clear, descriptive title for this piece of content. This is used for your own
+            internal analytics.
+          </div>
+          <div className="py-4">
+            {charCount < 5 && (
+              <span className="text-red-500">Title must be at least 30 characters</span>
+            )}
+            {charCount >= 5 && charCount < 10 && (
+              <span className="text-gray-500">
+                Add {10 - charCount} more characters for optimal length
+              </span>
+            )}
+            {warning && <span className="text-yellow-500">Title is getting long</span>}
+            {isValid && <span className="text-green-500">Perfect title length!</span>}
+          </div>
+        </div>
       </div>
     </div>
   );

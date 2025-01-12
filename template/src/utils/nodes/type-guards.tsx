@@ -29,6 +29,10 @@ export const isPaneNode = (node: BaseNode | undefined): node is PaneNode => {
   return node?.nodeType === "Pane";
 };
 
+export const isCodeHookPaneNode = (node: BaseNode | undefined): node is PaneNode => {
+  return node?.nodeType === "Pane" && `codeHookTarget` in node;
+};
+
 export const isStoryFragmentNode = (node: BaseNode | null): node is StoryFragmentNode => {
   return node?.nodeType === "StoryFragment";
 };
