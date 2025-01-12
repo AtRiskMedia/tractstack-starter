@@ -1,6 +1,5 @@
 import type { NodesContext } from "@/store/nodes.ts";
 import type { FlatNode, MarkdownPaneFragmentNode } from "@/types.ts";
-import { ulid } from "ulid";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
@@ -107,83 +106,4 @@ export class MarkdownGenerator {
         return childrenMarkdown; // Default case for unhandled typeNames
     }
   }
-}
-
-export function nodesToMarkdownText(nodes: FlatNode[]): string {
-  const nodeMap: Record<string, FlatNode[]> = {};
-  nodes.forEach((node) => {
-    const parentId = node.parentId || "";
-    if (!nodeMap[parentId]) {
-      nodeMap[parentId] = [];
-    }
-    nodeMap[parentId].push(node);
-  });
-
-  function generateMarkdown(nodeId: string): string {
-    const children = nodeMap[nodeId] || [];
-    return children
-      .map((node) => {
-        let content = node.copy || "";
-        switch (node.tagName) {
-          case "em":
-            content = `*${generateMarkdown(node.id)}*`;
-            break;
-          case "strong":
-            content = `**${generateMarkdown(node.id)}**`;
-            break;
-          case "a":
-            content = `[[${generateMarkdown(node.id)}]](${node.href})`;
-            break;
-          default:
-            content += generateMarkdown(node.id);
-        }
-        return content;
-      })
-      .join(" ");
-  }
-
-  // Start from the first node
-  return generateMarkdown(nodes[0].id).trim();
-}
-
-export function markdownToNodes(markdown: string, parentId: string): FlatNode[] {
-  function createNode(
-    tagName: string,
-    copy: string | null,
-    parentId: string,
-    href?: string
-  ): FlatNode {
-    return {
-      id: ulid(),
-      nodeType: "TagElement",
-      parentId,
-      tagName: tagName !== "text" ? tagName : "text",
-      copy: tagName === "text" ? copy : " ",
-      href: href,
-    } as FlatNode;
-  }
-
-  const nodes: FlatNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[\[([^\]]+)\]\]\(([^)]+)\)|([^*\[\]]+|\s+))/g;
-
-  let match;
-  while ((match = pattern.exec(markdown)) !== null) {
-    if (match[2]) {
-      const strongNode = createNode('strong', null, parentId);
-      nodes.push(strongNode);
-      nodes.push(createNode('text', match[2], strongNode.id));
-    } else if (match[3]) {
-      const emNode = createNode('em', null, parentId);
-      nodes.push(emNode);
-      nodes.push(createNode('text', match[3], emNode.id));
-    } else if (match[4] && match[5]) {
-      const linkNode = createNode('a', null, parentId, match[5]);
-      nodes.push(linkNode);
-      nodes.push(createNode('text', match[4], linkNode.id));
-    } else if (match[6]) {
-      nodes.push(createNode('text', match[6], parentId));
-    }
-  }
-
-  return nodes;
 }

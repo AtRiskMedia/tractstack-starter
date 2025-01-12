@@ -3,7 +3,6 @@ import { getCtx } from "@/store/nodes.ts";
 import { toolModeValStore, viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { useRef } from "react";
-import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export const NodeA = (props: NodeProps) => {
   const textRef = useRef<HTMLParagraphElement | null>(null);
@@ -47,8 +46,8 @@ export const NodeA = (props: NodeProps) => {
           getCtx(props).deleteChildren(props.nodeId);
 
           // convert markdown to children nodes
-          const nodesFromMarkdown = markdownToNodes(newText, props.nodeId);
-          getCtx(props).addNodes(nodesFromMarkdown);
+          //const nodesFromMarkdown = markdownToNodes(newText, props.nodeId);
+          //getCtx(props).addNodes(nodesFromMarkdown);
         }}
         onMouseDown={(e) => {
           const range = document.createRange();
