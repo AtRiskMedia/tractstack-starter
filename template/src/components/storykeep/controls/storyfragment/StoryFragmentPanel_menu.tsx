@@ -5,6 +5,8 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { getCtx } from "@/store/nodes";
+import ActionBuilderField from "../fields/ActionBuilderField";
+import { contentMap } from "@/store/events";
 import type { StoryFragmentNode, MenuNode, MenuLink } from "@/types";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types";
 
@@ -229,11 +231,10 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
 
                       <div>
                         <label className="block text-sm font-medium text-mydarkgrey">Action</label>
-                        <input
-                          type="text"
+                        <ActionBuilderField
                           value={link.actionLisp}
-                          onChange={(e) => handleLinkChange(index, "actionLisp", e.target.value)}
-                          className="mt-1 block w-full rounded-md border-mydarkgrey shadow-sm focus:border-myblue focus:ring-myblue sm:text-sm"
+                          onChange={(value) => handleLinkChange(index, "actionLisp", value)}
+                          contentMap={contentMap.get()}
                         />
                       </div>
 

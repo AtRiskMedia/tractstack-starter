@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import PaneTitlePanel from "./PanePanel_title";
 import PaneSlugPanel from "./PanePanel_slug";
@@ -10,7 +11,7 @@ import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isCodeHookPaneNode } from "@/utils/nodes/type-guards.tsx";
-import type { PaneNode } from "@/types.ts";
+import type { PaneNode, StoryFragmentNode } from "@/types.ts";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
@@ -51,6 +52,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(nodeId) as PaneNode;
   if (!paneNode) return null;
+  const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
   const isCodeHook = isCodeHookPaneNode(paneNode);
 
   const buttonClass =
@@ -81,7 +83,19 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                   Slug: <strong>{paneNode.slug}</strong>
                 </button>
                 <button onClick={() => setMode(PaneMode.IMPRESSION)} className={buttonClass}>
-                  Impression
+                  {impressionNodes.length ? (
+                    <>
+                      <CheckIcon className="w-4 h-4 inline" />
+                      {` `}
+                      <span className="font-semibold">Has Impression</span>
+                    </>
+                  ) : (
+                    <>
+                      <XMarkIcon className="w-4 h-4 inline" />
+                      {` `}
+                      <span>No Impression</span>
+                    </>
+                  )}
                 </button>
               </>
             )}

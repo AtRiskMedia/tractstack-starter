@@ -1226,7 +1226,7 @@ export interface StoryFragmentNode extends BaseNode {
   socialImagePath?: string;
   created?: Date;
   changed?: Date;
-  impressions?: ImpressionDatum[];
+  impressions?: ImpressionNode[];
 }
 
 export interface VisualBreakData {
