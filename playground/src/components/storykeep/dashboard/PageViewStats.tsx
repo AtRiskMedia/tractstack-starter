@@ -18,15 +18,15 @@ export default function PageViewStats() {
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const stats: Stat[] = [
     {
-      name: "Daily Page Views",
+      name: "Last 24 hours",
       value: $storedDashboardAnalytics?.stats?.daily ?? 0,
     },
     {
-      name: "Weekly Page Views",
+      name: "Past 7 days",
       value: $storedDashboardAnalytics?.stats?.weekly ?? 0,
     },
     {
-      name: "Monthly Page Views",
+      name: "Last 28 days",
       value: $storedDashboardAnalytics?.stats?.monthly ?? 0,
     },
   ];

@@ -33,11 +33,11 @@ export const isCodeHookPaneNode = (node: BaseNode | undefined): node is PaneNode
   return node?.nodeType === "Pane" && `codeHookTarget` in node;
 };
 
-export const isContextPaneNode = (node: BaseNode | undefined): node is PaneNode & { isContextPane: boolean } => {
+export const isContextPaneNode = (
+  node: BaseNode | undefined
+): node is PaneNode & { isContextPane: boolean } => {
   return Boolean(
-    node?.nodeType === "Pane" && 
-    'isContextPane' in node && 
-    typeof node.isContextPane === 'boolean'
+    node?.nodeType === "Pane" && "isContextPane" in node && typeof node.isContextPane === "boolean"
   );
 };
 

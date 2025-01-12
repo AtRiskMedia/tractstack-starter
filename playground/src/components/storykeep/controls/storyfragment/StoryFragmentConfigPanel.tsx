@@ -134,12 +134,12 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             {storyfragmentNode.socialImagePath ? (
               <>
                 <CheckIcon className="w-4 h-4" />
-                <span className="font-bold">Social Share</span>
+                <span className="font-bold">Social Share Image</span>
               </>
             ) : (
               <>
                 <XMarkIcon className="w-4 h-4" />
-                <span>Social Share</span>
+                <span>Social Share Image</span>
               </>
             )}
           </button>
