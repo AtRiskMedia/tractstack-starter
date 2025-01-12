@@ -208,7 +208,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
 
                     <div className="grid gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-mydarkgrey">Name</label>
+                        <label className="block text-sm font-bold text-mydarkgrey">Name</label>
                         <input
                           type="text"
                           value={link.name}
@@ -218,7 +218,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-mydarkgrey">
+                        <label className="block text-sm font-bold text-mydarkgrey">
                           Description
                         </label>
                         <input
@@ -230,7 +230,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-mydarkgrey">Action</label>
+                        <label className="block text-sm font-bold text-mydarkgrey">Action</label>
                         <ActionBuilderField
                           value={link.actionLisp}
                           onChange={(value) => handleLinkChange(index, "actionLisp", value)}

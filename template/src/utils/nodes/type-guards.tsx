@@ -112,3 +112,7 @@ export function hasButtonPayload(node: BaseNode): node is LinkNode {
     node.buttonPayload !== undefined
   );
 }
+
+export const hasBeliefPayload = (node: BaseNode): boolean =>
+  ("heldBeliefs" in node && Object.keys(node.heldBeliefs || {}).length > 0) ||
+  ("withheldBeliefs" in node && Object.keys(node.withheldBeliefs || {}).length > 0);

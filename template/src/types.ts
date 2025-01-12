@@ -1214,6 +1214,8 @@ export interface PaneNode extends BaseNode {
   codeHookPayload?: {
     [key: string]: string;
   };
+  heldBeliefs?: BeliefDatum;
+  withheldBeliefs?: BeliefDatum;
 }
 
 export interface StoryFragmentNode extends BaseNode {

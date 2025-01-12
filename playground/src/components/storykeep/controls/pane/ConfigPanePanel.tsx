@@ -9,7 +9,7 @@ import PaneSlugPanel from "./PanePanel_slug";
 import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
-import { isCodeHookPaneNode } from "@/utils/nodes/type-guards.tsx";
+import { isCodeHookPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
 import type { PaneNode } from "@/types.ts";
 
 export enum PaneMode {
@@ -83,7 +83,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                     <>
                       <CheckIcon className="w-4 h-4 inline" />
                       {` `}
-                      <span className="font-semibold">Has Impression</span>
+                      <span className="font-bold">Has Impression</span>
                     </>
                   ) : (
                     <>
@@ -103,7 +103,19 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </button>
             )}
             <button onClick={() => setMode(PaneMode.PATH)} className={buttonClass}>
-              Magic Paths
+              {hasBeliefPayload(paneNode) ? (
+                <>
+                  <CheckIcon className="w-4 h-4 inline" />
+                  {` `}
+                  <span className="font-bold">Has Magic Path</span>
+                </>
+              ) : (
+                <>
+                  <XMarkIcon className="w-4 h-4 inline" />
+                  {` `}
+                  <span>No Magic Path</span>
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -181,7 +181,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
                       {({ selected, active }) => (
                         <>
                           <span
-                            className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                           >
                             {hook}
                           </span>

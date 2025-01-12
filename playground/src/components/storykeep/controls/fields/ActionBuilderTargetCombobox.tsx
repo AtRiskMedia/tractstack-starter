@@ -122,7 +122,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
             >
               {({ selected, active }) => (
                 <>
-                  <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
+                  <span className={`block truncate ${selected ? "font-bold" : "font-normal"}`}>
                     {item.title}
                     <span className="ml-2 text-sm opacity-60">({item.slug})</span>
                   </span>
@@ -266,9 +266,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
                 >
                   {({ selected, active }) => (
                     <>
-                      <span
-                        className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
-                      >
+                      <span className={`block truncate ${selected ? "font-bold" : "font-normal"}`}>
                         {data.name}
                       </span>
                       {selected ? (
@@ -332,7 +330,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
                     {({ selected, active }) => (
                       <>
                         <span
-                          className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                          className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                         >
                           {cmd}
                         </span>

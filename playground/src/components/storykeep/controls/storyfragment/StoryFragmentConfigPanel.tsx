@@ -97,7 +97,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             onClick={() => setMode(StoryFragmentMode.TITLE)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
           >
-            Title: <span className="font-semibold">{storyfragmentNode.title}</span>
+            Title: <span className="font-bold">{storyfragmentNode.title}</span>
           </button>
 
           {/* Slug control */}
@@ -105,7 +105,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             onClick={() => setMode(StoryFragmentMode.SLUG)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
           >
-            Slug: <span className="font-semibold">{storyfragmentNode.slug}</span>
+            Slug: <span className="font-bold">{storyfragmentNode.slug}</span>
           </button>
 
           {/* Menu control */}
@@ -116,7 +116,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             {storyfragmentNode.hasMenu ? (
               <>
                 <CheckIcon className="w-4 h-4" />
-                <span className="font-semibold">Has Menu</span>
+                <span className="font-bold">Has Menu</span>
               </>
             ) : (
               <>
@@ -134,7 +134,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             {storyfragmentNode.socialImagePath ? (
               <>
                 <CheckIcon className="w-4 h-4" />
-                <span className="font-semibold">Social Share</span>
+                <span className="font-bold">Social Share</span>
               </>
             ) : (
               <>

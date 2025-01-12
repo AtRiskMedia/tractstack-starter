@@ -32,7 +32,7 @@ export const Switch = (props: SwitchProps) => {
           onChange={handleCheckboxChange}
           className="sr-only"
         />
-        <span className="label flex items-center text-sm font-medium text-black">
+        <span className="label flex items-center text-sm font-bold text-black">
           {props.leftText}
         </span>
         <span
@@ -46,7 +46,7 @@ export const Switch = (props: SwitchProps) => {
             }`}
           ></span>
         </span>
-        <span className="label flex items-center text-sm font-medium text-black">
+        <span className="label flex items-center text-sm font-bold text-black">
           {props.rightText}
         </span>
       </label>

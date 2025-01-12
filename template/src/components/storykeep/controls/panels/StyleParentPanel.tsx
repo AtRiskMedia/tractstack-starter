@@ -183,7 +183,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       />
 
       <div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
-        <span className="text-sm font-medium text-mydarkgrey">Layer:</span>
+        <span className="text-sm font-bold text-mydarkgrey">Layer:</span>
         <div className="flex items-center gap-2">
           <button
             key="first-add"
@@ -198,7 +198,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             .map((num, index) => (
               <div key={`layer-group-${num}`} className="flex items-center gap-1">
                 <button
-                  className={`min-w-[32px] px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`min-w-[32px] px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                     currentLayer === num
                       ? "bg-myblue text-white shadow-sm"
                       : "bg-white hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black"

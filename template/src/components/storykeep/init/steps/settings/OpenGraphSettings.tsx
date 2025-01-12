@@ -16,14 +16,14 @@ export default function OpenGraphSettings({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-mydarkgrey">Open Graph Settings</h3>
+      <h3 className="text-lg font-bold text-mydarkgrey">Open Graph Settings</h3>
       <p className="text-sm text-mydarkgrey">
         Configure default social sharing metadata for your site
       </p>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-mydarkgrey mb-1">Default Title</label>
+          <label className="block text-sm font-bold text-mydarkgrey mb-1">Default Title</label>
           <input
             type="text"
             value={title}
@@ -34,7 +34,7 @@ export default function OpenGraphSettings({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-mydarkgrey mb-1">Default Author</label>
+          <label className="block text-sm font-bold text-mydarkgrey mb-1">Default Author</label>
           <input
             type="text"
             value={author}
@@ -45,7 +45,7 @@ export default function OpenGraphSettings({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-mydarkgrey mb-1">
+          <label className="block text-sm font-bold text-mydarkgrey mb-1">
             Default Description
           </label>
           <textarea
