@@ -64,7 +64,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
           </button>
         </div>
 
-        <div className="relative md:mr-48 md:pr-48">
+        <div className="relative">
           <input
             type="text"
             value={title}

@@ -49,8 +49,9 @@ const WhatsHot = ({ contentMap }: { contentMap: FullContentMap[] }) => {
               key={period}
               onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
               className={classNames(
-                $analyticsDuration === period ? "font-bold" : "underline",
-                "text-mydarkgrey/80 hover:text-myorange"
+                $analyticsDuration === period
+                  ? "font-bold text-myblue"
+                  : "underline text-mydarkgrey/80 hover:text-myorange"
               )}
             >
               {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}

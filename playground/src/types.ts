@@ -1466,3 +1466,11 @@ export const StoryFragmentMode = {
 } as const;
 
 export type StoryFragmentModeType = (typeof StoryFragmentMode)[keyof typeof StoryFragmentMode];
+
+export const ContextPaneMode = {
+  DEFAULT: "DEFAULT",
+  TITLE: "TITLE",
+  SLUG: "SLUG",
+} as const;
+
+export type ContextPaneModeType = (typeof ContextPaneMode)[keyof typeof ContextPaneMode];

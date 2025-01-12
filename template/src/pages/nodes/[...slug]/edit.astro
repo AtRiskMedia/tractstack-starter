@@ -1,18 +1,18 @@
 ---
-import { components as codeHookComponents } from "../../../custom/CodeHook.astro";
-import { getConfig, validateConfig } from "../../../utils/core/config";
-import { ReactNodesWrapper } from "../../../components/storykeep/compositor-nodes/ReactNodesWrapper";
-import { getCtx } from "../../../store/nodes";
-import { getGenerateAllNodes } from "../../../utils/db/nodes/generate";
-import StoryKeepHeader from "../../../components/storykeep/controls/StoryKeepHeader";
-import StoryKeepToolBar from "../../../components/storykeep/controls/StoryKeepToolBar";
-import StoryKeepToolMode from "../../../components/storykeep/controls/StoryKeepToolMode";
-import SettingsPanel from "../../../components/storykeep/controls/SettingsPanel";
-import StoryKeep from "../../../layouts/StoryKeep.astro";
+import { components as codeHookComponents } from "@/custom/CodeHook.astro";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import { ReactNodesWrapper } from "@/components/storykeep/compositor-nodes/ReactNodesWrapper";
+import { getCtx } from "@/store/nodes";
+import { getGenerateAllNodes } from "@/utils/db/nodes/generate";
+import StoryKeepHeader from "@/components/storykeep/controls/StoryKeepHeader";
+import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar";
+import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode";
+import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
+import StoryKeep from "@/layouts/StoryKeep.astro";
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
-import { NodesSerializer_Json } from "../../../store/nodesSerializer_Json";
+import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -102,61 +102,9 @@ s.save(getCtx());
     client:only="react"
   />
 
-  <style is:global>
-    :root {
-      --header-height: 0px;
-    }
-  </style>
-
   <script>
-    function updateLayout() {
-      const header = document.getElementById("mainHeader");
-      const headerSpacer = document.getElementById("headerSpacer");
-      const nav = document.getElementById("mainNav");
-      const navSpacer = document.getElementById("navSpacer");
-      const toolbarNav = document.getElementById("toolbarNav");
-
-      if (header) {
-        const headerHeight = header.offsetHeight;
-        document.documentElement.style.setProperty("--header-height", `${headerHeight}px`);
-        if (headerSpacer) {
-          headerSpacer.style.height = `${headerHeight}px`;
-        }
-      }
-
-      if (nav) {
-        const navHeight = nav.offsetHeight;
-        if (navSpacer) {
-          navSpacer.style.height = `${navHeight}px`;
-        }
-
-        if (window.innerWidth >= 768) {
-          nav.style.top = header?.offsetHeight + "px";
-        } else {
-          nav.style.top = "auto";
-        }
-      }
-
-      if (toolbarNav) {
-        toolbarNav.style.bottom = window.innerWidth < 768 ? nav?.offsetHeight + "px" : "0";
-        toolbarNav.style.left = window.innerWidth < 768 ? "0" : "4rem";
-      }
-    }
-
-    updateLayout();
-    window.addEventListener("DOMContentLoaded", updateLayout);
-    window.addEventListener("load", updateLayout);
-    window.addEventListener("resize", updateLayout);
-
-    const observer = new ResizeObserver(updateLayout);
-    ["mainHeader", "mainNav", "toolbarNav"].forEach((id) => {
-      const element = document.getElementById(id);
-      if (element) {
-        observer.observe(element);
-        element.querySelectorAll("*").forEach((child) => {
-          observer.observe(child);
-        });
-      }
-    });
+    import { setupLayoutObservers, setupLayoutStyles } from "../../../utils/storykeep/layout";
+    setupLayoutStyles();
+    setupLayoutObservers();
   </script>
 </StoryKeep>

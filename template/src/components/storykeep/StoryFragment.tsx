@@ -23,7 +23,6 @@ import {
   creationStateStore,
 } from "../../store/storykeep";
 import { contentMap } from "../../store/events";
-import AnalyticsWrapper from "./nivo/AnalyticsWrapper";
 import { useStoryKeepUtils } from "../../utils/storykeep/StoryKeep_utils";
 import PaneWrapper from "./compositor/PaneWrapper";
 import DesignNewPane from "./panel/DesignNewPane";
@@ -365,13 +364,7 @@ export const StoryFragment = (props: {
 
   return (
     <>
-      {$showAnalytics && $storedAnalytics[thisId] && (
-        <AnalyticsWrapper
-          data={$storedAnalytics[thisId]}
-          title={$storyFragmentTitle[thisId].current}
-          isPane={false}
-        />
-      )}
+      {$showAnalytics && $storedAnalytics[thisId] && <div>analytics</div>}
       {$editMode?.mode === `insert` && <div className="fixed inset-0 bg-black/95 z-[8999]"></div>}
       <div
         id="storykeep-preview"

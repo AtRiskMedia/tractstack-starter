@@ -95,7 +95,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
           {/* Title control */}
           <button
             onClick={() => setMode(StoryFragmentMode.TITLE)}
-            className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
+            className="min-h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
           >
             Title: <span className="font-bold">{storyfragmentNode.title}</span>
           </button>

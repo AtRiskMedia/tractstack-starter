@@ -3,15 +3,15 @@ import type { Dispatch, SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import type { StoryFragmentNode } from "@/types";
-import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
+import type { PaneNode } from "@/types";
+import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
 
-interface StoryFragmentTitlePanelProps {
+interface PaneTitlePanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<StoryFragmentModeType>>;
+  setMode: Dispatch<SetStateAction<ContextPaneModeType>>;
 }
 
-const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelProps) => {
+const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
   const [title, setTitle] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -19,13 +19,13 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
-  const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
-  if (!storyfragmentNode) return null;
+  const paneNode = allNodes.get(nodeId) as PaneNode;
+  if (!paneNode) return null;
 
   useEffect(() => {
-    setTitle(storyfragmentNode.title);
-    setCharCount(storyfragmentNode.title.length);
-  }, [storyfragmentNode.title]);
+    setTitle(paneNode.title);
+    setCharCount(paneNode.title.length);
+  }, [paneNode.title]);
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
@@ -43,7 +43,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
       // Only update if meets minimum length
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
-      const updatedNode = { ...storyfragmentNode, title, isChanged: true };
+      const updatedNode = { ...paneNode, title, isChanged: true };
       const newNodes = new Map(allNodes);
       newNodes.set(nodeId, updatedNode);
       ctx.allNodes.set(newNodes);
@@ -57,7 +57,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Page Title</h3>
           <button
-            onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+            onClick={() => setMode(ContextPaneMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
             ← Go Back
@@ -138,4 +138,4 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   );
 };
 
-export default StoryFragmentTitlePanel;
+export default ContextPaneTitlePanel;

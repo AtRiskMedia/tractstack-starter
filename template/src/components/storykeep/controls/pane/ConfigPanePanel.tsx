@@ -9,7 +9,11 @@ import PaneSlugPanel from "./PanePanel_slug";
 import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
-import { isCodeHookPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
+import {
+  isContextPaneNode,
+  isCodeHookPaneNode,
+  hasBeliefPayload,
+} from "@/utils/nodes/type-guards.tsx";
 import type { PaneNode } from "@/types.ts";
 
 export enum PaneMode {
@@ -50,6 +54,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   if (!paneNode) return null;
   const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
   const isCodeHook = isCodeHookPaneNode(paneNode);
+  const isContextPane = isContextPaneNode(paneNode);
 
   const buttonClass =
     "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
@@ -102,21 +107,23 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                 <strong>Code Hook</strong>
               </button>
             )}
-            <button onClick={() => setMode(PaneMode.PATH)} className={buttonClass}>
-              {hasBeliefPayload(paneNode) ? (
-                <>
-                  <CheckIcon className="w-4 h-4 inline" />
-                  {` `}
-                  <span className="font-bold">Has Magic Path</span>
-                </>
-              ) : (
-                <>
-                  <XMarkIcon className="w-4 h-4 inline" />
-                  {` `}
-                  <span>No Magic Path</span>
-                </>
-              )}
-            </button>
+            {!isContextPane && (
+              <button onClick={() => setMode(PaneMode.PATH)} className={buttonClass}>
+                {hasBeliefPayload(paneNode) ? (
+                  <>
+                    <CheckIcon className="w-4 h-4 inline" />
+                    {` `}
+                    <span className="font-bold">Has Magic Path</span>
+                  </>
+                ) : (
+                  <>
+                    <XMarkIcon className="w-4 h-4 inline" />
+                    {` `}
+                    <span>No Magic Path</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

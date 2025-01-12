@@ -1,9 +1,17 @@
 ---
-import { getConfig, validateConfig } from "../../../../utils/core/config";
-import { ReactNodesRenderer } from "../../../../components/storykeep/compositor-nodes/ReactNodesRenderer";
-import { getCtx } from "../../../../store/nodes";
-import { getGenerateAllNodes } from "../../../../utils/db/nodes/generate";
-import StoryKeep from "../../../../layouts/StoryKeep.astro";
+import { components as codeHookComponents } from "@/custom/CodeHook.astro";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getGenerateAllNodes } from "@/utils/db/nodes/generate.ts";
+import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
+import StoryKeepHeader from "@/components/storykeep/controls/StoryKeepHeader.tsx";
+import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar.tsx";
+import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode.tsx";
+import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
+import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
+import { ReactNodesWrapper } from "@/components/storykeep/compositor-nodes/ReactNodesWrapper.tsx";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import SettingsPanel from "@/components/storykeep/controls/SettingsPanel.tsx";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -30,35 +38,65 @@ if (!paneNode) {
 
 <StoryKeep
   title={paneNode?.title}
-  pubDatetime={paneNode?.created}
-  modDatetime={paneNode?.changed}
-  canonicalURL={canonicalURL}
+  pubDatetime={paneNode.created || new Date()}
+  modDatetime={paneNode.changed || new Date()}
   config={config}
+  canonicalURL={canonicalURL}
 >
-  <div
-    id="storykeep-content"
-    class="m-0 p-0 flex flex-col bg-myblack w-full"
-    style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
-    ,
-  >
-    <header
-      class="z-[8999] sticky top-0 z-10 bg-mywhite flex justify-between items-center w-full"
-      id="main-header"
+  <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-[8999] drop-shadow">
+    <StoryKeepHeader client:load />
+    <PullAnalytics id={paneNode.id} type="pane" client:only="react" />
+  </header>
+  <div id="headerSpacer"></div>
+
+  <div class="flex min-h-screen">
+    <nav
+      id="mainNav"
+      class="fixed bg-mywhite z-40 bottom-0
+      left-0 right-0 pt-1.5
+      md:bottom-auto md:left-0 md:top-0 md:w-16 md:h-screen md:pt-0"
     >
-      <div>StoryKeepHeader goes here</div>
-    </header>
+      <div
+        class="drop-shadow
+        flex flex-wrap gap-4 justify-around py-3.5
+        md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2 md:gap-8 md:mt-8"
+      >
+        <StoryKeepToolMode client:load />
+      </div>
+    </nav>
 
-    <div id="storykeep" class="bg-white overflow-auto mx-auto w-full">
-      <main id="website-content" class="overflow-auto w-full">
-        <ReactNodesRenderer id={paneNode.id} nodes={nodes} client:only="react" />
-        <div
-          class="h-96 m-0 p-0 flex flex-col bg-mydarkgrey w-full"
-          style="background-image:repeating-linear-gradient( 45deg, transparent, transparent 10px, rgba(0,0,0, 0.1) 10px, rgba(0,0,0, 0.1) 20px )"
-        >
-        </div>
-      </main>
+    <nav id="toolbarNav" class="fixed z-30 w-full md:w-auto">
+      <StoryKeepToolBar client:load />
+    </nav>
 
-      <div>edit modal goes here</div>
-    </div>
+    <div class="hidden md:block w-16 flex-shrink-0"></div>
+
+    <main class="flex-1 relative">
+      <div
+        class="bg-myblue/20 px-4 pb-28"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
+        }}
+      >
+        <ContextPaneConfig nodeId={paneNode.id} client:only="react" />
+        <AnalyticsPanel nodeId={paneNode.id} client:only="react" />
+        <ReactNodesWrapper id={paneNode.id} nodes={nodes} client:only="react" />
+      </div>
+    </main>
   </div>
+
+  <div id="navSpacer" class="md:hidden h-32"></div>
+
+  <SettingsPanel
+    config={config}
+    availableCodeHooks={Object.keys(codeHookComponents)}
+    client:only="react"
+  />
+
+  <script>
+    import { setupLayoutObservers, setupLayoutStyles } from "@/utils/storykeep/layout";
+    setupLayoutStyles();
+    setupLayoutObservers();
+  </script>
 </StoryKeep>

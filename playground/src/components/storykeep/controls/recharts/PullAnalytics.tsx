@@ -10,7 +10,7 @@ type PullAnalyticsProps = {
 
 const PullAnalytics = ({ id, type = `storyfragment` }: PullAnalyticsProps) => {
   const $analyticsDuration = useStore(analyticsDuration);
-
+  console.log(id, type);
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
