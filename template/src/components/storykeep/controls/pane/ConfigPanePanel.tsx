@@ -11,7 +11,7 @@ import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isCodeHookPaneNode } from "@/utils/nodes/type-guards.tsx";
-import type { PaneNode, StoryFragmentNode } from "@/types.ts";
+import type { PaneNode} from "@/types.ts";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",

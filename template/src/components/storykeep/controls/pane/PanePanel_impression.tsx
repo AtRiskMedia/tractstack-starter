@@ -4,7 +4,6 @@ import { type Dispatch, type SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneMode } from "./ConfigPanePanel";
 import type { ImpressionNode, PaneNode } from "@/types";
-import { cloneDeep } from "@/utils/common/helpers.ts";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ActionBuilderField from "../fields/ActionBuilderField";

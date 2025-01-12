@@ -124,7 +124,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
 
       {collections.length > 1 && (
         <div className="space-y-2">
-          <label className="block text-sm text-mydarkgrey">Collection</label>
+          <span className="block text-sm text-mydarkgrey">Collection</span>
           <PaneBreakCollectionSelector
             selectedCollection={settings.collection}
             onChange={(collection) => setSettings((prev) => ({ ...prev, collection }))}
@@ -133,7 +133,7 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
       )}
 
       <div className="space-y-2">
-        <label className="block text-sm text-mydarkgrey">Shapes (for each screen size)</label>
+        <span className="block text-sm text-mydarkgrey">Shapes (for each screen size)</span>
         <div className="space-y-1">
           <PaneBreakShapeSelector
             viewport="mobile"

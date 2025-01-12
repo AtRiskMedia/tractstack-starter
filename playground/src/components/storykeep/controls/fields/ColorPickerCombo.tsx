@@ -97,7 +97,7 @@ const ColorPickerCombo = ({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm text-mydarkgrey">{title}</label>
+      <span className="block text-sm text-mydarkgrey">{title}</span>
       <div className="flex items-center space-x-2">
         <input
           type="color"
@@ -116,7 +116,7 @@ const ColorPickerCombo = ({
         {!skipTailwind && (
           <div className="flex-grow">
             <Combobox value={selectedTailwindColor} onChange={handleTailwindColorChange}>
-              <div className="relative">
+              <div className="relative max-w-48">
                 <Combobox.Input
                   className="w-full border-mydarkgrey rounded-md py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue xs:text-sm"
                   displayValue={(color: string) => color}

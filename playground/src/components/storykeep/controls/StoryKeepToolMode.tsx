@@ -5,7 +5,7 @@ import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
 import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
-import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
+//import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
 import { toolModeValStore, settingsPanelStore } from "../../../store/storykeep";
 import { getCtx } from "../../../store/nodes";
@@ -42,11 +42,11 @@ export const toolModes = [
     Icon: PuzzlePieceIcon,
     title: "Auto-layout design",
   },
-  {
-    key: "markdown" as const,
-    Icon: BoltIcon,
-    title: "Edit plain text",
-  },
+  //{
+  //  key: "markdown" as const,
+  //  Icon: BoltIcon,
+  //  title: "Edit plain text",
+  //},
 ] as const;
 
 const StoryKeepToolMode = () => {
