@@ -150,87 +150,83 @@ const PaneCodeHookPanel = ({ nodeId, setMode }: PaneCodeHookPanelProps) => {
     "block w-full rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-sm xs:leading-6";
 
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="flex flex-col gap-2 mb-1.5">
-        <div className="p-1.5 bg-white rounded-md w-full">
-          <div className="px-3.5">
-            <div className="flex justify-between mb-4">
-              <h3 className="text-lg font-bold">Code Hook Settings</h3>
-              <button
-                onClick={() => setMode(PaneMode.DEFAULT)}
-                className="text-myblue hover:text-black"
-              >
-                ← Go Back
-              </button>
-            </div>
+    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4 shadow-inner">
+      <div className="px-3.5">
+        <div className="flex justify-between mb-4">
+          <h3 className="text-lg font-bold">Code Hook Settings</h3>
+          <button
+            onClick={() => setMode(PaneMode.DEFAULT)}
+            className="text-myblue hover:text-black"
+          >
+            ← Go Back
+          </button>
+        </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-mydarkgrey">Target</label>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-mydarkgrey">Target</label>
+            <input
+              type="text"
+              value={target}
+              onChange={handleTargetChange}
+              onBlur={handleTargetBlur}
+              placeholder="Enter target"
+              className={commonInputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-mydarkgrey">Options</label>
+            {Object.entries(options).map(([key, value]) => (
+              <div key={key} className="flex items-center space-x-2 mt-2">
                 <input
                   type="text"
-                  value={target}
-                  onChange={handleTargetChange}
-                  onBlur={handleTargetBlur}
-                  placeholder="Enter target"
-                  className={commonInputClass}
+                  value={optionKeysMap[key] || key}
+                  onChange={(e) => handleOptionKeyChange(key, e.target.value)}
+                  onBlur={() => handleOptionBlur(key)}
+                  placeholder="Key"
+                  className={`w-1/3 ${commonInputClass}`}
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm text-mydarkgrey">Options</label>
-                {Object.entries(options).map(([key, value]) => (
-                  <div key={key} className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="text"
-                      value={optionKeysMap[key] || key}
-                      onChange={(e) => handleOptionKeyChange(key, e.target.value)}
-                      onBlur={() => handleOptionBlur(key)}
-                      placeholder="Key"
-                      className={`w-1/3 ${commonInputClass}`}
+                {value === "true" || value === "false" ? (
+                  <Switch
+                    checked={value === "true"}
+                    onChange={() => toggleBooleanOption(key)}
+                    className={`${
+                      value === "true" ? "bg-myorange" : "bg-mydarkgrey"
+                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`}
+                  >
+                    <span
+                      className={`${
+                        value === "true" ? "translate-x-6" : "translate-x-1"
+                      } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                     />
-                    {value === "true" || value === "false" ? (
-                      <Switch
-                        checked={value === "true"}
-                        onChange={() => toggleBooleanOption(key)}
-                        className={`${
-                          value === "true" ? "bg-myorange" : "bg-mydarkgrey"
-                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`}
-                      >
-                        <span
-                          className={`${
-                            value === "true" ? "translate-x-6" : "translate-x-1"
-                          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                        />
-                      </Switch>
-                    ) : (
-                      <input
-                        type="text"
-                        value={value}
-                        onChange={(e) => handleOptionValueChange(key, e.target.value)}
-                        onBlur={() => handleOptionValueBlur(key)}
-                        placeholder="Value"
-                        className={`w-1/2 ${commonInputClass}`}
-                      />
-                    )}
-                    <button
-                      onClick={() => removeOption(key)}
-                      className="text-myorange hover:text-black"
-                      title="Remove option"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                ))}
+                  </Switch>
+                ) : (
+                  <input
+                    type="text"
+                    value={value}
+                    onChange={(e) => handleOptionValueChange(key, e.target.value)}
+                    onBlur={() => handleOptionValueBlur(key)}
+                    placeholder="Value"
+                    className={`w-1/2 ${commonInputClass}`}
+                  />
+                )}
                 <button
-                  onClick={addOption}
-                  className="mt-2 flex items-center text-myblue hover:text-myorange"
+                  onClick={() => removeOption(key)}
+                  className="text-myorange hover:text-black"
+                  title="Remove option"
                 >
-                  <PlusIcon className="h-5 w-5 mr-1" />
-                  Add Option
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               </div>
-            </div>
+            ))}
+            <button
+              onClick={addOption}
+              className="mt-2 flex items-center text-myblue hover:text-myorange"
+            >
+              <PlusIcon className="h-5 w-5 mr-1" />
+              Add Option
+            </button>
           </div>
         </div>
       </div>

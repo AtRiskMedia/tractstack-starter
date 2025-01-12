@@ -111,7 +111,7 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
   const isValid = validateImpression(formData);
 
   return (
-    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
+    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4 shadow-inner">
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Impression Settings</h3>

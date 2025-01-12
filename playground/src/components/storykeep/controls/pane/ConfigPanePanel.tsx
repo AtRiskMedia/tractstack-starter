@@ -6,18 +6,16 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import PaneTitlePanel from "./PanePanel_title";
 import PaneSlugPanel from "./PanePanel_slug";
-import PaneAdvPanel from "./PanePanel_adv";
 import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isCodeHookPaneNode } from "@/utils/nodes/type-guards.tsx";
-import type { PaneNode} from "@/types.ts";
+import type { PaneNode } from "@/types.ts";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
   TITLE = "TITLE",
   SLUG = "SLUG",
-  ADV = "ADV",
   CODEHOOK = "CODEHOOK",
   PATH = "PATH",
   IMPRESSION = "IMPRESSION",
@@ -38,8 +36,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     return <PaneTitlePanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.SLUG) {
     return <PaneSlugPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === PaneMode.ADV) {
-    return <PaneAdvPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.CODEHOOK) {
     return <PaneCodeHookPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.PATH) {
@@ -99,9 +95,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                 </button>
               </>
             )}
-            <button onClick={() => setMode(PaneMode.ADV)} className={buttonClass}>
-              Advanced Settings
-            </button>
             {isCodeHook && (
               <button onClick={() => setMode(PaneMode.CODEHOOK)} className={buttonClass}>
                 <CheckIcon className="w-4 h-4 inline" />
