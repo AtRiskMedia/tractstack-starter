@@ -65,6 +65,7 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
           isChanged: true,
         } as ImpressionNode;
         ctx.addTemplateImpressionNode(nodeId, node);
+        ctx.notifyNode(nodeId);
       }
     },
     [nodeId, impressionNode]
@@ -95,10 +96,10 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
   };
 
   const handleRemove = () => {
-    if (impressionNode?.id) {
+    if (impressionNode?.id && impressionNode?.parentId) {
       const ctx = getCtx();
       ctx.deleteNode(impressionNode.id);
-      ctx.notifyNode(`root`);
+      ctx.notifyNode(impressionNode.parentId);
       setMode(PaneMode.DEFAULT);
     }
   };

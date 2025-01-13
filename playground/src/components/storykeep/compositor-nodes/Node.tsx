@@ -201,7 +201,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
         <></>
       );
     }
-    case "Impression":
+    case "impression":
       return <></>;
     default:
       console.log(`Node.tsx miss on ${type}`);
