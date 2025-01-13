@@ -7,9 +7,9 @@ import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 //import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
-import { toolModeValStore, settingsPanelStore } from "../../../store/storykeep";
-import { getCtx } from "../../../store/nodes";
-import type { ToolModeVal } from "../../../types";
+import { toolModeValStore, settingsPanelStore } from "@/store/storykeep.ts";
+import { getCtx } from "@/store/nodes.ts";
+import type { ToolModeVal } from "@/types.ts";
 
 export const toolModes = [
   {

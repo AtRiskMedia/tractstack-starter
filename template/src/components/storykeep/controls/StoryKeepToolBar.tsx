@@ -1,22 +1,26 @@
+import { useStore } from "@nanostores/react";
 import {
   settingsPanelStore,
   toolModeStore,
   toolAddModeStore,
   toolModeValStore,
-} from "../../../store/storykeep";
+} from "@/store/storykeep.ts";
 import { AddElementsPanel } from "./insert/AddElementsPanel.tsx";
-import { useStore } from "@nanostores/react";
-import type { ToolMode, ToolAddMode } from "../../../types";
+import { getCtx } from "@/store/nodes.ts";
+import type { ToolMode, ToolAddMode } from "@/types.ts";
 
 const StoryKeepToolBar = () => {
+  const ctx = getCtx();
   const { value: toolModeVal } = useStore(toolModeValStore);
   const { value: toolAddModeVal } = useStore(toolAddModeStore);
   const setToolMode = (newToolMode: ToolMode) => {
     settingsPanelStore.set(null);
     toolModeStore.set({ value: newToolMode });
+    ctx.notifyNode(`root`);
   };
   const setToolAddMode = (newToolAddMode: ToolAddMode) => {
     toolAddModeStore.set({ value: newToolAddMode });
+    ctx.notifyNode(`root`);
   };
 
   if (toolModeVal !== "insert") {

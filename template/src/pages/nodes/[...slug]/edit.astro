@@ -10,7 +10,7 @@ import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode
 import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
-import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+//import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -30,9 +30,9 @@ if (!storyfragmentNode) {
   return Astro.redirect("/404");
 }
 
-getCtx().rootNodeId.set(storyfragmentNode.id);
-const s = new NodesSerializer_Json();
-s.save(getCtx());
+//getCtx().rootNodeId.set(storyfragmentNode.id);
+//const s = new NodesSerializer_Json();
+//s.save(getCtx());
 ---
 
 <StoryKeep
@@ -48,6 +48,7 @@ s.save(getCtx());
   <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-[8999] drop-shadow">
     <StoryKeepHeader
       keyboardAccessibleEnabled={config.init?.KEYBOARD_ACCESSIBLE || false}
+      nodeId={storyfragmentNode.id}
       client:load
     />
     <PullAnalytics id={storyfragmentNode.id} client:only="react" />

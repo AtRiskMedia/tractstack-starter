@@ -24,7 +24,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       tractStack: { id: "1", slug: "/", title: "", social_image_path: null },
     };
     this.processNode(ctx, rootNode, saveData);
-    //console.log("Save data:", saveData);
+    console.log("Save data:", saveData);
     return saveData;
   }
 

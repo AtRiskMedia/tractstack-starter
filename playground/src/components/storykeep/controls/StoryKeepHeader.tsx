@@ -15,6 +15,7 @@ import {
   toolModeValStore,
   settingsPanelStore,
 } from "../../../store/storykeep";
+import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import ViewportSelector from "../header/ViewportSelector";
 import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
 
@@ -25,7 +26,7 @@ const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" =>
   return "mobile";
 };
 
-const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean }) => {
+const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: string }) => {
   const keyboardAccessibleEnabled = props.keyboardAccessibleEnabled;
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
@@ -82,6 +83,14 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean }) => {
     settingsPanelStore.set({ nodeId: ``, action: `debug` });
   };
 
+  const handleSave = () => {
+    console.log(`serializing nodes`);
+    getCtx().rootNodeId.set(props.nodeId);
+    const s = new NodesSerializer_Json();
+    s.save(getCtx());
+    console.log(`serializing nodes complete.`);
+  };
+
   const iconClassName =
     "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
   const iconActiveClassName = "-rotate-6 w-6 h-6 text-white rounded bg-myblue p-0.5";
@@ -119,7 +128,12 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean }) => {
       )}
 
       <div className="flex flex-wrap justify-center items-center gap-2">
-        <button className="bg-white text-myblue hover:underline font-action font-bold">Save</button>
+        <button
+          onClick={() => handleSave()}
+          className="bg-white text-myblue hover:underline font-action font-bold"
+        >
+          Save
+        </button>
         <button className="bg-white text-myblue hover:underline font-action font-bold">
           Cancel
         </button>
