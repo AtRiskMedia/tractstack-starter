@@ -4,7 +4,7 @@ import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/Re
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { type JSX, useEffect, useRef, useState } from "react";
-import { canEditText, innerHtmlToNodes } from "@/utils/common/nodesHelper.ts";
+import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -64,7 +64,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           return;
         }
 
-        const textToNodes = innerHtmlToNodes(newText, nodeId);
+        const textToNodes = parseMarkdownToNodes(newText, nodeId);
         console.log("on blur nodes: ", textToNodes);
         if (textToNodes?.length > 0) {
 
@@ -101,7 +101,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           return;
         }
 
-        // replicate: http://localhost:4321/hello/edit
+        // http://localhost:4321/hello/edit
         wasFocused.current = true;
         // Ensure the element is content-editable and fetch its innerHTML
         originalTextRef.current = e.currentTarget.innerHTML;

@@ -63,115 +63,106 @@ export const canEditText = (props: NodeTagProps): boolean => {
   return true;
 };
 
-type NodeObject = { tag: "text" | "em" | "strong" | string; text: string };
+export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
+  text = text
+    .replace("&nbsp;", "")
+    .replace(/(?<!<[^>]*)\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(?<!<[^>]*)\*(.+?)\*/g, "<em>$1</em>");
 
-export const parseInnerHtmlToNodeObjects = (htmlString: string): NodeObject[] => {
-  const container = document.createElement("div");
-  container.innerHTML = htmlString;
+  const nodes = extractNodes(text, parentId);
 
-  const result: NodeObject[] = [];
+  const mergedNodes = mergeConsecutiveNodes(parentId, nodes);
+  const finalNodes = extractTextIntoSeparateNodes(mergedNodes);
+  return finalNodes;
+}
 
-  container.childNodes.forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      // Handle plain text nodes
-      if (node.textContent?.trim()) {
-        result.push({ tag: "text", text: node.textContent.trim() });
+function extractNodes(inputString: string, parentId: string): FlatNode[] {
+  const result: FlatNode[] = [];
+  const parentsStack: string[] = [];
+  let buffer = "";
+
+  for(let i = 0; i < inputString.length; ++i) {
+    buffer += inputString[i];
+    if(inputString[i] === "<") {
+      const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
+      buffer = buffer.replace("<", "").trim();
+      result.push({
+        id: ulid(),
+        copy: buffer,
+        tagName: parentType,
+        nodeType: "TagElement",
+        parentId,
+      });
+
+      if(i + 1 < inputString.length && inputString[i+1] == "/") {
+        parentsStack.pop();
       }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const elementNode = node as HTMLElement;
-      const tagName = elementNode.tagName.toLowerCase();
-      if (["em", "strong"].includes(tagName)) {
-        result.push({ tag: tagName, text: elementNode.textContent?.trim() || "" });
-      } else {
-        // Handle other element types if necessary
-        result.push({ tag: tagName, text: elementNode.outerHTML });
+
+      if(inputString.startsWith("<em", i)) {
+        parentsStack.push("em");
+      } else if(inputString.startsWith("<strong", i)) {
+        parentsStack.push("strong");
       }
+      buffer = "";
+    } else if(inputString[i] === ">") {
+      buffer = "";
     }
+  }
+
+  const parentType = parentsStack.length === 0 ? "text" : parentsStack.pop();
+  buffer = buffer.replace("<", "").trim();
+  result.push({
+    id: ulid(),
+    copy: buffer,
+    tagName: parentType || "text",
+    nodeType: "TagElement",
+    parentId,
   });
+
   return result;
-};
+}
 
-function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
-  function createNode(
-    tagName: string,
-    copy: string | undefined,
-    parentId: string
-  ): FlatNode {
-    return {
-      id: ulid(),
-      nodeType: "TagElement",
-      parentId,
-      tagName: tagName !== "text" ? tagName : "text",
-      copy,
-    };
-  }
-
-  const nodes: FlatNode[] = [];
-  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|([^*]+))/g;
-  let match;
-
-  while ((match = pattern.exec(text)) !== null) {
-    if (match[2]) {
-      const strongNode = createNode("strong", undefined, parentId);
-      nodes.push(strongNode);
-      nodes.push(createNode("text", match[2], strongNode.id));
-    } else if (match[3]) {
-      const emNode = createNode("em", undefined, parentId);
-      nodes.push(emNode);
-      nodes.push(createNode("text", match[3], emNode.id));
-    } else if (match[4]?.trim()) {
-      nodes.push(createNode("text", match[4].trim(), parentId));
+function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
+  for (let i = 0; i < nodes.length; i++){
+    const node = nodes[i];
+    if(["em", "strong"].includes(node.tagName)) {
+      nodes.insertAfter(i, [{
+        id: ulid(),
+        parentId: node.id,
+        copy: node.copy,
+        tagName: "text",
+        nodeType: "TagElement"
+      } as FlatNode]);
+      node.copy = undefined;
     }
   }
-
   return nodes;
 }
 
-export function innerHtmlToNodes(innerHtml: string, parentId: string): FlatNode[] {
-  function createNode(
-    tagName: string,
-    copy: string | undefined,
-    parentId: string,
-    href?: string
-  ): FlatNode {
-    return {
-      id: ulid(),
-      nodeType: "TagElement",
-      parentId,
-      tagName: tagName !== "text" ? tagName : "text",
-      copy: tagName === "text" ? copy : undefined,
-      href,
-    };
+function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] {
+  const mergedNodes: FlatNode[] = [];
+  let lastNode: FlatNode | null = null;
+
+  for (let i = 0; i < nodes.length; i++){
+    const node = nodes[i];
+    if(node.copy?.length === 0) {
+      nodes.splice(i, 1);
+      --i;
+      continue;
+    }
+    if (
+      lastNode &&
+      node.tagName === lastNode.tagName &&
+      node.parentId === lastNode.parentId &&
+      ["em", "text", "strong"].includes(node.tagName)
+    ) {
+      // Merge copy content into the last node
+      lastNode.copy = (lastNode.copy || "") + (node.copy || "");
+    } else {
+      mergedNodes.push(node);
+      lastNode = node;
+    }
   }
 
-  const resultNodes: FlatNode[] = [];
-  const parsedObjects = parseInnerHtmlToNodeObjects(innerHtml);
-
-  let mergedText = "";
-
-  parsedObjects.forEach(({ tag, text }, index) => {
-    if (tag === "text") {
-      mergedText += text;
-
-      // Check if next tag is not text or we're at the last index to finalize merging
-      const nextTag = parsedObjects[index + 1]?.tag;
-      if (nextTag !== "text" || index === parsedObjects.length - 1) {
-        const markdownNodes = parseMarkdownToNodes(mergedText.trim(), parentId);
-        resultNodes.push(...markdownNodes);
-        mergedText = "";
-      }
-    } else {
-      if (mergedText) {
-        const markdownNodes = parseMarkdownToNodes(mergedText.trim(), parentId);
-        resultNodes.push(...markdownNodes);
-        mergedText = "";
-      }
-
-      const tagNode = createNode(tag, undefined, parentId);
-      resultNodes.push(tagNode);
-      resultNodes.push(createNode("text", text, tagNode.id));
-    }
-  });
-
-  return resultNodes;
+  return mergedNodes;
 }
