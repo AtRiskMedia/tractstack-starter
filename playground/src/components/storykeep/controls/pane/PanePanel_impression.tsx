@@ -49,21 +49,22 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
         // Update existing impression
         node = {
           ...cloneDeep(impressionNode),
+          tagName: "impression",
           ...data,
           isChanged: true,
         };
         ctx.modifyNodes([node]);
       } else {
-        // Create new impression
+        // Create new impression linked to this Pane
         node = {
           id: ulid(),
+          tagName: "impression",
           nodeType: "Impression",
           parentId: nodeId,
           ...data,
           isChanged: true,
         } as ImpressionNode;
-        //ctx.addTemplateNode(node.id, node);
-        console.log(`DID NOT ADD IMPRESSION; need helper`);
+        ctx.addTemplateImpressionNode(nodeId, node);
       }
     },
     [nodeId, impressionNode]

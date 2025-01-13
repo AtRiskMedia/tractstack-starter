@@ -768,6 +768,21 @@ export class NodesContext {
     });
   }
 
+  addTemplateImpressionNode(targetId: string, node: ImpressionNode) {
+    const targetNode = this.allNodes.get().get(targetId) as BaseNode;
+    if (!targetNode || targetNode.nodeType !== "Pane") {
+      return;
+    }
+    const duplicatedNodes = cloneDeep(node) as TemplateNode;
+    const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, targetId);
+    this.addNodes(flattenedNodes);
+    this.history.addPatch({
+      op: PatchOp.ADD,
+      undo: (ctx) => ctx.deleteNodes(flattenedNodes),
+      redo: (ctx) => ctx.addNodes(flattenedNodes),
+    });
+  }
+
   addTemplateNode(
     targetId: string,
     node: TemplateNode,

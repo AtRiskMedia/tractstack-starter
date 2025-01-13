@@ -1380,6 +1380,7 @@ export interface MarkdownPaneFragmentNode extends PaneFragmentNode {
 
 export interface ImpressionNode extends BaseNode {
   nodeType: "Impression";
+  tagName: "impression";
   title: string;
   body: string;
   buttonText: string;
