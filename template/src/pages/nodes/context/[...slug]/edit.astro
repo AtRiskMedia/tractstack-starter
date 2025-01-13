@@ -3,11 +3,9 @@ import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { getGenerateAllNodes } from "@/utils/db/nodes/generate.ts";
-import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import StoryKeepHeader from "@/components/storykeep/controls/StoryKeepHeader.tsx";
 import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar.tsx";
 import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode.tsx";
-import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
 import { ReactNodesWrapper } from "@/components/storykeep/compositor-nodes/ReactNodesWrapper.tsx";
 import StoryKeep from "@/layouts/StoryKeep.astro";
@@ -82,9 +80,7 @@ if (!paneNode) {
             "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
         }}
       >
-        <ContextPaneConfig nodeId={paneNode.id} client:only="react" />
-        <AnalyticsPanel nodeId={paneNode.id} client:only="react" />
-        <ReactNodesWrapper id={paneNode.id} nodes={nodes} client:only="react" />
+        <ReactNodesWrapper id={paneNode.id} nodes={nodes} config={config} client:only="react" />
       </div>
     </main>
   </div>

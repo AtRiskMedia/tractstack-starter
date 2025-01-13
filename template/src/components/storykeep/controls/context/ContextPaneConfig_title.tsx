@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import type { PaneNode } from "@/types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
+import type { Dispatch, SetStateAction } from "react";
+import type { PaneNode } from "@/types";
 
 interface PaneTitlePanelProps {
   nodeId: string;
@@ -42,12 +43,8 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
     if (title.length >= 30) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const updatedNode = { ...paneNode, title, isChanged: true };
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      const updatedNode = { ...cloneDeep(paneNode), title, isChanged: true };
+      ctx.modifyNodes([updatedNode]);
     }
   };
 

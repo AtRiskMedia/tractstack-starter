@@ -129,10 +129,6 @@ const StyleImageUpdatePanel = ({
       }
 
       ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
-      // Notify parent of changes
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
       setIsOverridden(checked);
     },
     [node, className, parentNode, childId, isImage]
@@ -184,13 +180,7 @@ const StyleImageUpdatePanel = ({
             setDesktopValue(value);
             break;
         }
-
-        // Update nodes
         ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-        // Notify parent of changes
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
       }
     },
     [node, parentNode, className, isOverridden]

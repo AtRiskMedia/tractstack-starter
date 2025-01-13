@@ -81,17 +81,11 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
         delete targetNode.overrideClasses;
       }
     }
-
     const deepParentClone = cloneDeep(parentNode);
-    // Update both nodes in the store
     ctx.modifyNodes([
       { ...targetNode, isChanged: true },
       { ...deepParentClone, isChanged: true },
     ]);
-    // Notify parent of changes
-    if (parentNode.id) {
-      ctx.notifyNode(parentNode.id);
-    }
     resetStore();
   };
 

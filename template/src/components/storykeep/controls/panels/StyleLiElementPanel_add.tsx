@@ -138,10 +138,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
 
       // Update the nodes in the store
       ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-      // Notify parent of changes
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
+
       // Switch to the update panel for the newly added style
       settingsPanelStore.set({
         action: isContainer ? "style-li-container-update" : "style-li-element-update",

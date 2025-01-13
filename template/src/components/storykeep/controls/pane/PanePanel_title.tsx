@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneMode } from "./ConfigPanePanel";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import { cloneDeep } from "@/utils/common/helpers.ts";
+import type { Dispatch, SetStateAction } from "react";
 import type { PaneNode } from "@/types";
 
 interface PaneTitlePanelProps {
@@ -42,12 +43,8 @@ const PaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
     if (title.length >= 5) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const updatedNode = { ...paneNode, title, isChanged: true };
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      const updatedNode = { ...cloneDeep(paneNode), title, isChanged: true };
+      ctx.modifyNodes([updatedNode]);
     }
   };
 

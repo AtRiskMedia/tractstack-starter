@@ -554,6 +554,23 @@ export class NodesContext {
     return "";
   }
 
+  nodeToNotify(nodeId: string, nodeType: string) {
+    switch (nodeType) {
+      case `StoryFragment`:
+        return `root`;
+      case `Pane`:
+        if (this.getIsContextPane(nodeId)) return `root`;
+        return this.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+      case `TagElement`:
+      case `BgPane`:
+      case `Markdown`:
+      case `Impression`:
+        return this.getClosestNodeTypeFromId(nodeId, "Pane");
+      default:
+        console.log(`nodeToNotify missed on`, nodeType);
+    }
+  }
+
   modifyNodes(newData: BaseNode[]) {
     // all nodes are the same, skip
     if (!this.checkAnyNodeDifferent(newData)) return;
@@ -578,17 +595,19 @@ export class NodesContext {
       undoList.push((ctx: NodesContext) => {
         const newNodes = new Map(ctx.allNodes.get());
         newNodes.set(node.id, currentNodeData);
-        ctx.allNodes.set(newNodes);
-        this.notifyNode(ctx.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
+        const parentNode = this.nodeToNotify(node.id, node.nodeType);
+        if (parentNode) this.notifyNode(parentNode);
       });
       redoList.push((ctx: NodesContext) => {
         const newNodes = new Map(ctx.allNodes.get());
         newNodes.set(node.id, node);
         ctx.allNodes.set(newNodes);
-        this.notifyNode(ctx.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
+        const parentNode = this.nodeToNotify(node.id, node.nodeType);
+        if (parentNode) this.notifyNode(parentNode);
       });
 
-      this.notifyNode(this.getClosestNodeTypeFromId(node.id, "Pane") || node.id);
+      const parentNode = this.nodeToNotify(node.id, node.nodeType);
+      if (parentNode) this.notifyNode(parentNode);
     }
 
     this.history.addPatch({

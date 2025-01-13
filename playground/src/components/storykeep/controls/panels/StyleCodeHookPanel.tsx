@@ -8,6 +8,7 @@ import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTria
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import { isPaneNode } from "@/utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { PaneNode } from "@/types";
@@ -37,24 +38,15 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
     (newTarget: string, newOptions: Record<string, string>) => {
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
-      const paneNode = allNodes.get(node.id) as PaneNode;
-
+      const paneNode = cloneDeep(allNodes.get(node.id)) as PaneNode;
       if (!paneNode) return;
-
       const updatedNode = {
         ...paneNode,
         codeHookTarget: newTarget,
         codeHookPayload: newOptions,
         isChanged: true,
       };
-
-      const newNodes = new Map(allNodes);
-      newNodes.set(node.id, updatedNode);
-      ctx.allNodes.set(newNodes);
-
-      if (node.parentId) {
-        ctx.notifyNode(node.parentId);
-      }
+      ctx.modifyNodes([updatedNode]);
     },
     [node]
   );

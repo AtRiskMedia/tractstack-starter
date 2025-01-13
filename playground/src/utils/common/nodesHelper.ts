@@ -81,9 +81,9 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
   const parentsStack: string[] = [];
   let buffer = "";
 
-  for(let i = 0; i < inputString.length; ++i) {
+  for (let i = 0; i < inputString.length; ++i) {
     buffer += inputString[i];
-    if(inputString[i] === "<") {
+    if (inputString[i] === "<") {
       const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
       buffer = buffer.replace("<", "").trim();
       result.push({
@@ -94,17 +94,17 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
         parentId,
       });
 
-      if(i + 1 < inputString.length && inputString[i+1] == "/") {
+      if (i + 1 < inputString.length && inputString[i + 1] == "/") {
         parentsStack.pop();
       }
 
-      if(inputString.startsWith("<em", i)) {
+      if (inputString.startsWith("<em", i)) {
         parentsStack.push("em");
-      } else if(inputString.startsWith("<strong", i)) {
+      } else if (inputString.startsWith("<strong", i)) {
         parentsStack.push("strong");
       }
       buffer = "";
-    } else if(inputString[i] === ">") {
+    } else if (inputString[i] === ">") {
       buffer = "";
     }
   }
@@ -123,16 +123,18 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
 }
 
 function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
-  for (let i = 0; i < nodes.length; i++){
+  for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    if(["em", "strong"].includes(node.tagName)) {
-      nodes.insertAfter(i, [{
-        id: ulid(),
-        parentId: node.id,
-        copy: node.copy,
-        tagName: "text",
-        nodeType: "TagElement"
-      } as FlatNode]);
+    if (["em", "strong"].includes(node.tagName)) {
+      nodes.insertAfter(i, [
+        {
+          id: ulid(),
+          parentId: node.id,
+          copy: node.copy,
+          tagName: "text",
+          nodeType: "TagElement",
+        } as FlatNode,
+      ]);
       node.copy = undefined;
     }
   }
@@ -143,9 +145,9 @@ function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] 
   const mergedNodes: FlatNode[] = [];
   let lastNode: FlatNode | null = null;
 
-  for (let i = 0; i < nodes.length; i++){
+  for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    if(node.copy?.length === 0) {
+    if (node.copy?.length === 0) {
       nodes.splice(i, 1);
       --i;
       continue;

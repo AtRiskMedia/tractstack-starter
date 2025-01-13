@@ -206,7 +206,7 @@ const getPanel = (
     }
     case "style-code-config":
       if (!clickedNode || !markdownNode?.id) return null;
-      return <StyleWidgetConfigPanel node={clickedNode} parentId={markdownNode.id} />;
+      return <StyleWidgetConfigPanel node={clickedNode} />;
     case "style-code-add":
     case "style-code-container-add":
     case "style-code-outer-add":

@@ -3,10 +3,10 @@ import { Switch } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import { PaneMode } from "./ConfigPanePanel";
-import { type Dispatch, type SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import { type PaneNode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { type PaneNode } from "@/types";
+import { type Dispatch, type SetStateAction } from "react";
 
 interface PaneCodeHookPanelProps {
   nodeId: string;
@@ -30,13 +30,9 @@ const PaneCodeHookPanel = ({ nodeId, setMode }: PaneCodeHookPanelProps) => {
       updatedNode.codeHookTarget = newTarget;
       updatedNode.codeHookPayload = newOptions;
       updatedNode.isChanged = true;
-
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      ctx.modifyNodes([updatedNode]);
     },
-    [nodeId, paneNode, allNodes, ctx]
+    [paneNode, ctx]
   );
 
   const handleTargetChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

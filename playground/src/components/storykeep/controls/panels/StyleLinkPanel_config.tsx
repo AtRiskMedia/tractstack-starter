@@ -54,7 +54,6 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
       ...(bunnyPayload ? { bunnyPayload } : {}),
     };
     ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
-    ctx.notifyNode(markdownId);
   };
 
   useEffect(() => {

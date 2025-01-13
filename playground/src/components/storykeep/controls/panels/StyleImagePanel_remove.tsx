@@ -84,15 +84,10 @@ const StyleImageRemovePanel = ({ node, parentNode, className, childId }: BasePan
 
     const parentNodeClone = cloneDeep(parentNode);
 
-    // Update both nodes in the store
     ctx.modifyNodes([
       { ...targetNode, isChanged: true },
       { ...parentNodeClone, isChanged: true },
     ]);
-    // Notify parent of changes
-    if (parentNode.id) {
-      ctx.notifyNode(parentNode.id);
-    }
     resetStore();
   };
 

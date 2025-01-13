@@ -4,6 +4,7 @@ import { getCtx } from "@/store/nodes.ts";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import type { StoryFragmentNode } from "@/types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
 interface StoryFragmentTitlePanelProps {
@@ -39,15 +40,11 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   };
 
   const handleTitleBlur = () => {
-    if (title.length >= 30) {
+    if (title.length >= 20) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const updatedNode = { ...storyfragmentNode, title, isChanged: true };
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      const updatedNode = cloneDeep({ ...storyfragmentNode, title, isChanged: true });
+      ctx.modifyNodes([updatedNode]);
     }
   };
 
@@ -71,7 +68,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
-              charCount < 30
+              charCount < 20
                 ? "border-red-500 bg-red-50"
                 : isValid
                   ? "border-green-500 bg-green-50"
@@ -82,7 +79,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             placeholder="Enter story fragment title (50-60 characters recommended)"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {charCount < 30 ? (
+            {charCount < 20 ? (
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
             ) : isValid ? (
               <CheckIcon className="h-5 w-5 text-green-500" />
@@ -91,7 +88,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             ) : null}
             <span
               className={`text-sm ${
-                charCount < 30
+                charCount < 20
                   ? "text-red-500"
                   : isValid
                     ? "text-green-500"
@@ -121,10 +118,10 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             </ul>
           </div>
           <div className="py-4">
-            {charCount < 30 && (
-              <span className="text-red-500">Title must be at least 30 characters</span>
+            {charCount < 20 && (
+              <span className="text-red-500">Title must be at least 20 characters</span>
             )}
-            {charCount >= 30 && charCount < 50 && (
+            {charCount >= 20 && charCount < 50 && (
               <span className="text-gray-500">
                 Add {50 - charCount} more characters for optimal length
               </span>

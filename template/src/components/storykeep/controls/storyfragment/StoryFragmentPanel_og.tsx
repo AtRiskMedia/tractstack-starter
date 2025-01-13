@@ -3,6 +3,7 @@ import { getCtx } from "@/store/nodes";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { StoryFragmentModeType, StoryFragmentNode } from "@/types";
 import type { ChangeEvent } from "react";
 
@@ -45,17 +46,12 @@ const StoryFragmentOgPanel = ({ nodeId, setMode }: StoryFragmentOgPanelProps) =>
         }),
       });
     }
-
-    const updatedNode = {
+    const updatedNode = cloneDeep({
       ...storyfragmentNode,
       socialImagePath: null,
       isChanged: true,
-    };
-
-    const newNodes = new Map(allNodes);
-    newNodes.set(nodeId, updatedNode);
-    ctx.allNodes.set(newNodes);
-    ctx.notifyNode(nodeId);
+    });
+    ctx.modifyNodes([updatedNode]);
     setImageSrc(null);
   };
 
@@ -105,24 +101,15 @@ const StoryFragmentOgPanel = ({ nodeId, setMode }: StoryFragmentOgPanelProps) =>
       }
 
       const { path: savedPath } = await response.json();
-
-      // Update store with new image path
-      const updatedNode = {
+      const updatedNode = cloneDeep({
         ...storyfragmentNode,
         socialImagePath: savedPath,
         isChanged: true,
-      };
-
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
-
-      // Update UI
+      });
+      ctx.modifyNodes([updatedNode]);
       setImageSrc(savedPath);
     } catch (error) {
       console.error("Error uploading image:", error);
-      // Could add error state handling here
     } finally {
       setIsProcessing(false);
     }

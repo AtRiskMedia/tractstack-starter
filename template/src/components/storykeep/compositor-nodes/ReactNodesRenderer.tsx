@@ -3,11 +3,17 @@ import { useEffect, useState } from "react";
 import type { StoryKeepAllNodes } from "@/types.ts";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
+//import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
+//import { timestampNodeId } from "@/utils/common/helpers.ts";
+//import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
+//import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
+import type { Config } from "@/types.ts";
 
 export type ReactNodesRendererProps = {
   nodes: StoryKeepAllNodes | null;
   ctx?: NodesContext;
   id: string;
+  config: Config;
 };
 
 export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
@@ -27,7 +33,12 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
   return (
     <>
       {renderTime > 0 ? (
-        <Node nodeId={props.id} key={timestampNodeId(props.id)} ctx={props.ctx} />
+        <Node
+          nodeId={props.id}
+          key={timestampNodeId(props.id)}
+          ctx={props.ctx}
+          config={props.config}
+        />
       ) : (
         <></>
       )}

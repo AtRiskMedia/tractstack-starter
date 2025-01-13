@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import { type Dispatch, type SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneMode } from "./ConfigPanePanel";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import type { PaneNode, BeliefDatum } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { type Dispatch, type SetStateAction } from "react";
+import type { PaneNode, BeliefDatum } from "@/types";
 
 interface PaneMagicPathPanelProps {
   nodeId: string;
@@ -42,10 +42,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
       }
       updatedNode.isChanged = true;
 
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      ctx.modifyNodes([updatedNode]);
     },
     [nodeId]
   );

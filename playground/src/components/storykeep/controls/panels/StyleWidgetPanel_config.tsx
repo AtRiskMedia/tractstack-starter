@@ -9,7 +9,6 @@ import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 
 interface StyleWidgetConfigPanelProps {
   node: FlatNode;
-  parentId: string;
 }
 
 const createUpdatedWidget = (
@@ -28,7 +27,7 @@ const createUpdatedWidget = (
   };
 };
 
-const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps) => {
+const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
   if (!isWidgetNode(node)) return null;
 
   const widgetId = node.copy && node.copy.substring(0, node.copy.indexOf("("));
@@ -73,10 +72,6 @@ const StyleWidgetConfigPanel = ({ node, parentId }: StyleWidgetConfigPanelProps)
     const newCopy = `${widgetId}(${paramStrings.join("|")})`;
 
     ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
-    // Notify parent of changes
-    if (parentId) {
-      ctx.notifyNode(parentId);
-    }
   };
 
   const handleCloseConfig = () => {

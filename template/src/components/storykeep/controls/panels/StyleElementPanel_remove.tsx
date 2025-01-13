@@ -55,15 +55,10 @@ const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps
       }
     }
 
-    // Update both nodes in the store
     ctx.modifyNodes([
       { ...elementNode, isChanged: true },
       { ...markdownNode, isChanged: true },
     ]);
-
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
-    }
     resetStore();
   };
 

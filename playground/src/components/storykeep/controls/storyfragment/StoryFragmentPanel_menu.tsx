@@ -7,6 +7,7 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { getCtx } from "@/store/nodes";
 import ActionBuilderField from "../fields/ActionBuilderField";
 import { contentMap } from "@/store/events";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { StoryFragmentNode, MenuNode, MenuLink } from "@/types";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types";
 
@@ -51,16 +52,12 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
 
   const handleMenuSelect = (menuId: string | null) => {
     const updatedNode = {
-      ...storyfragmentNode,
+      ...cloneDeep(storyfragmentNode),
       hasMenu: !!menuId,
       menuId: menuId,
       isChanged: true,
     };
-
-    const newNodes = new Map(allNodes);
-    newNodes.set(nodeId, updatedNode);
-    ctx.allNodes.set(newNodes);
-    ctx.notifyNode(nodeId);
+    ctx.modifyNodes([updatedNode]);
     setSelectedMenuId(menuId);
   };
 
@@ -68,25 +65,21 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
     if (!menuContent) return;
 
     const updatedMenu = {
-      ...menuContent,
+      ...cloneDeep(menuContent),
       optionsPayload: menuContent.optionsPayload.map((link, i) =>
         i === index ? { ...link, [field]: value } : link
       ),
       isChanged: true,
     };
-
-    const newNodes = new Map(allNodes);
-    newNodes.set(updatedMenu.id, updatedMenu);
-    ctx.allNodes.set(newNodes);
+    ctx.modifyNodes([updatedMenu]);
     setMenuContent(updatedMenu);
-    ctx.notifyNode(updatedMenu.id);
   };
 
   const handleAddLink = () => {
     if (!menuContent) return;
 
     const updatedMenu = {
-      ...menuContent,
+      ...cloneDeep(menuContent),
       optionsPayload: [
         ...menuContent.optionsPayload,
         {
@@ -98,28 +91,20 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
       ],
       isChanged: true,
     };
-
-    const newNodes = new Map(allNodes);
-    newNodes.set(updatedMenu.id, updatedMenu);
-    ctx.allNodes.set(newNodes);
+    ctx.modifyNodes([updatedMenu]);
     setMenuContent(updatedMenu);
-    ctx.notifyNode(updatedMenu.id);
   };
 
   const handleRemoveLink = (index: number) => {
     if (!menuContent) return;
 
     const updatedMenu = {
-      ...menuContent,
+      ...cloneDeep(menuContent),
       optionsPayload: menuContent.optionsPayload.filter((_, i) => i !== index),
       isChanged: true,
     };
-
-    const newNodes = new Map(allNodes);
-    newNodes.set(updatedMenu.id, updatedMenu);
-    ctx.allNodes.set(newNodes);
+    ctx.modifyNodes([updatedMenu]);
     setMenuContent(updatedMenu);
-    ctx.notifyNode(updatedMenu.id);
   };
 
   return (

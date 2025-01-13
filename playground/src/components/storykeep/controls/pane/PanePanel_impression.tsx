@@ -1,13 +1,14 @@
 import { useState, useCallback } from "react";
 import { ulid } from "ulid";
-import { type Dispatch, type SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneMode } from "./ConfigPanePanel";
-import type { ImpressionNode, PaneNode } from "@/types";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ActionBuilderField from "../fields/ActionBuilderField";
 import { contentMap } from "@/store/events";
+import { cloneDeep } from "@/utils/common/helpers.ts";
+import { type Dispatch, type SetStateAction } from "react";
+import type { ImpressionNode, PaneNode } from "@/types";
 
 interface PaneImpressionPanelProps {
   nodeId: string;
@@ -43,17 +44,15 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
   const updateStore = useCallback(
     (data: Partial<ImpressionNode>) => {
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-
       let node: ImpressionNode;
-
       if (impressionNode) {
         // Update existing impression
         node = {
-          ...impressionNode,
+          ...cloneDeep(impressionNode),
           ...data,
           isChanged: true,
         };
+        ctx.modifyNodes([node]);
       } else {
         // Create new impression
         node = {
@@ -63,12 +62,9 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
           ...data,
           isChanged: true,
         } as ImpressionNode;
+        //ctx.addTemplateNode(node.id, node);
+        console.log(`DID NOT ADD IMPRESSION; need helper`);
       }
-
-      const newNodes = new Map(allNodes);
-      newNodes.set(node.id, node);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
     },
     [nodeId, impressionNode]
   );

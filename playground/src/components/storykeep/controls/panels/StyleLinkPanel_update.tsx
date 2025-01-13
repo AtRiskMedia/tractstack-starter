@@ -67,13 +67,8 @@ const StyleLinkUpdatePanel = ({ node, className, config }: BasePanelProps) => {
           [className]: [newValue],
         };
       }
-
-      // Update state
       setValue(newValue);
-
-      // Update store
       ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
-      ctx.notifyNode(markdownId);
     },
     [node, className, isHoverMode]
   );

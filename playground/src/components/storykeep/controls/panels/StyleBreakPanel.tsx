@@ -5,6 +5,7 @@ import ColorPickerCombo from "../fields/ColorPickerCombo";
 import { getCtx } from "../../../../store/nodes";
 import { collections } from "../../../../constants";
 import { isBreakNode, isPaneNode } from "../../../../utils/nodes/type-guards";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { BasePanelProps } from "../SettingsPanel";
 import type { FlatNode, PaneNode } from "../../../../types";
 
@@ -61,8 +62,8 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
     };
 
     // Get mutable copies of the nodes
-    const breakNode = allNodes.get(node.id) as BreakNode;
-    const paneNode = allNodes.get(parentNode.id) as PaneNode;
+    const breakNode = cloneDeep(allNodes.get(node.id)) as BreakNode;
+    const paneNode = cloneDeep(allNodes.get(parentNode.id)) as PaneNode;
 
     if (!breakNode || !paneNode || !isPaneNode(paneNode)) return;
 
@@ -73,49 +74,38 @@ const StyleBreakPanel = ({ node, parentNode, config }: BasePanelProps) => {
             breakNode.breakDesktop.collection = value;
             breakNode.breakTablet.collection = value;
             breakNode.breakMobile.collection = value;
-            console.log("collection changed:", value);
             break;
 
           case "desktopImage":
             breakNode.breakDesktop.image = value;
-            console.log("desktop image changed:", value);
             break;
 
           case "tabletImage":
             breakNode.breakTablet.image = value;
-            console.log("tablet image changed:", value);
             break;
 
           case "mobileImage":
             breakNode.breakMobile.image = value;
-            console.log("mobile image changed:", value);
             break;
 
           case "svgFill":
             breakNode.breakDesktop.svgFill = value;
             breakNode.breakTablet.svgFill = value;
             breakNode.breakMobile.svgFill = value;
-            console.log("svg fill color changed:", value);
             break;
 
           case "bgColor":
             paneNode.bgColour = value;
-            console.log("background color changed:", value);
             break;
         }
       }
     });
 
-    // Update the nodes in the store
-    const newNodes = new Map(allNodes);
-    newNodes.set(node.id, { ...breakNode, isChanged: true });
-    newNodes.set(parentNode.id, { ...paneNode, isChanged: true });
-    ctx.allNodes.set(newNodes);
-
-    // Notify parent of changes
-    if (parentNode.id) {
-      ctx.notifyNode(parentNode.id);
-    }
+    const updatedNodes = [
+      { ...breakNode, isChanged: true },
+      { ...paneNode, isChanged: true },
+    ];
+    ctx.modifyNodes(updatedNodes);
   }, [settings, node, parentNode, ctx, allNodes]);
 
   return (

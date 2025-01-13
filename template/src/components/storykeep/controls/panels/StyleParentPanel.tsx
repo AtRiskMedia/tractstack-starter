@@ -78,7 +78,6 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       ...newParentClasses.slice(insertIndex),
     ];
 
-    // Update the node in the store
     ctx.modifyNodes([
       {
         ...markdownNode,
@@ -97,11 +96,6 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     // Set the current layer to the newly added layer
     const newLayer = position === "before" ? layerNum : layerNum + 1;
     setCurrentLayer(newLayer);
-
-    // Notify parent of changes
-    if (parentNode.id) {
-      ctx.notifyNode(parentNode.id);
-    }
   };
 
   useEffect(() => {
@@ -118,10 +112,6 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
           paneNode.bgColour = settings.bgColor;
         }
         ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
-
-        if (paneNode.id) {
-          ctx.notifyNode(paneNode.id);
-        }
       }
     }
   }, [settings.bgColor, ctx, allNodes, parentNode]);

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import type { StoryFragmentNode } from "@/types";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
+import type { StoryFragmentNode } from "@/types";
+import type { Dispatch, SetStateAction } from "react";
 
 interface StoryFragmentSlugPanelProps {
   nodeId: string;
@@ -58,12 +59,8 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode }: StoryFragmentSlugPanelProps
     if (slug.length >= 3) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const updatedNode = { ...storyfragmentNode, slug, isChanged: true };
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      const updatedNode = cloneDeep({ ...storyfragmentNode, slug, isChanged: true });
+      ctx.modifyNodes([updatedNode]);
     }
   };
 

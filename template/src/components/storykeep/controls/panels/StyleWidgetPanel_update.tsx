@@ -130,10 +130,6 @@ const StyleWidgetUpdatePanel = ({
 
       ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
       setIsOverridden(checked);
-
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
-      }
     },
     [node, className, parentNode, childId, isWidget]
   );
@@ -185,12 +181,7 @@ const StyleWidgetUpdatePanel = ({
             break;
         }
 
-        // Update nodes
         ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-        // Notify parent of changes
-        if (parentNode.id) {
-          ctx.notifyNode(parentNode.id);
-        }
       }
     },
     [node, parentNode, className, isOverridden]

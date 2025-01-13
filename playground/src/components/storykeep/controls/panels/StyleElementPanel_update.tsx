@@ -140,11 +140,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
             setDesktopValue(value);
             break;
         }
-
         ctx.modifyNodes([{ ...elementNode, isChanged: true }]);
-        if (node.parentId) {
-          ctx.notifyNode(node.parentId);
-        }
       } else {
         const markdownNode = cloneDeep(allNodes.get(parentNode.id)) as MarkdownPaneFragmentNode;
         if (!markdownNode) return;
@@ -185,7 +181,6 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
         }
 
         ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-        ctx.notifyNode(parentNode.id);
       }
     },
     [node, parentNode, className, isOverridden]

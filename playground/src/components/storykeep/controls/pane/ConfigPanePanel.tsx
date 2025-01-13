@@ -6,21 +6,15 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import PaneTitlePanel from "./PanePanel_title";
 import PaneSlugPanel from "./PanePanel_slug";
-import PaneCodeHookPanel from "./PanePanel_codehook";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
-import {
-  isContextPaneNode,
-  isCodeHookPaneNode,
-  hasBeliefPayload,
-} from "@/utils/nodes/type-guards.tsx";
+import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
 import type { PaneNode } from "@/types.ts";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
   TITLE = "TITLE",
   SLUG = "SLUG",
-  CODEHOOK = "CODEHOOK",
   PATH = "PATH",
   IMPRESSION = "IMPRESSION",
 }
@@ -40,8 +34,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     return <PaneTitlePanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.SLUG) {
     return <PaneSlugPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === PaneMode.CODEHOOK) {
-    return <PaneCodeHookPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.PATH) {
     return <PaneMagicPathPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === PaneMode.IMPRESSION) {
@@ -53,7 +45,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const paneNode = allNodes.get(nodeId) as PaneNode;
   if (!paneNode) return null;
   const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
-  const isCodeHook = isCodeHookPaneNode(paneNode);
   const isContextPane = isContextPaneNode(paneNode);
 
   const buttonClass =
@@ -99,13 +90,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                   )}
                 </button>
               </>
-            )}
-            {isCodeHook && (
-              <button onClick={() => setMode(PaneMode.CODEHOOK)} className={buttonClass}>
-                <CheckIcon className="w-4 h-4 inline" />
-                {` `}
-                <strong>Code Hook</strong>
-              </button>
             )}
             {!isContextPane && (
               <button onClick={() => setMode(PaneMode.PATH)} className={buttonClass}>

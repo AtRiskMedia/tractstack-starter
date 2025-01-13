@@ -45,7 +45,6 @@ const StyleLinkRemovePanel = ({ node, className }: BasePanelProps) => {
       }
     }
     ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
-    ctx.notifyNode(markdownId);
     resetStore();
   };
 

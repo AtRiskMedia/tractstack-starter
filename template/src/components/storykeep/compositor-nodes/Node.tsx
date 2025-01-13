@@ -21,12 +21,16 @@ import { Widget } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx
 import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
+import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
+import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
+import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import { toolModeValStore } from "@/store/storykeep.ts";
 import { memo, type ReactElement } from "react";
-import type { StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
+import type { Config, StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
 
 export type NodeProps = {
   nodeId: string;
+  config?: Config;
   ctx?: NodesContext;
   first?: boolean;
 };
@@ -92,16 +96,32 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "Markdown":
       return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
     case "StoryFragment":
-      return <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />;
+      return (
+        <>
+          <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+          <AnalyticsPanel nodeId={props.nodeId} />
+          <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />;
+        </>
+      );
     case "Pane": {
       const toolModeVal = toolModeValStore.get().value;
-      if (toolModeVal === `eraser`)
+      const isContextPane = getCtx(props).getIsContextPane(node.id);
+      if (toolModeVal === `eraser` && !isContextPane)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
-      if (toolModeVal === `layout`)
-        return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
-      else if (toolModeVal === `settings`)
+      if (toolModeVal === `layout`) {
+        if (isContextPane) return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
+        return (
+          <>
+            <ContextPaneConfig nodeId={node.id} />
+            <AnalyticsPanel nodeId={node.id} />
+            <div className="bg-white">
+              <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
+            </div>
+          </>
+        );
+      } else if (toolModeVal === `settings` && !isContextPane)
         return <PaneConfig {...sharedProps} key={timestampNodeId(node.id)} />;
-      else if (toolModeVal === `pane`) {
+      else if (toolModeVal === `pane` && !isContextPane) {
         const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
         const storyFragment = getCtx(props)
           .allNodes.get()
@@ -116,6 +136,16 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             />
           );
       }
+      if (isContextPane)
+        return (
+          <>
+            <ContextPaneConfig nodeId={node.id} />
+            <AnalyticsPanel nodeId={node.id} />
+            <div className="bg-white">
+              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+            </div>
+          </>
+        );
       return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
     }
     case "BgPane":

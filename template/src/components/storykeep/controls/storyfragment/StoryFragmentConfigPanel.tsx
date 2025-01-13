@@ -9,6 +9,7 @@ import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { StoryFragmentNode, Config } from "@/types.ts";
 import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
@@ -64,16 +65,12 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
     if (exactVal || val) {
       const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
       const updatedNode = {
-        ...storyfragmentNode,
+        ...cloneDeep(storyfragmentNode),
         tailwindBgColour: exactVal || val || `#ffffff`,
         isChanged: true,
       };
-      const newNodes = new Map(allNodes);
-      newNodes.set(nodeId, updatedNode);
-      ctx.allNodes.set(newNodes);
-      ctx.notifyNode(nodeId);
+      ctx.modifyNodes([updatedNode]);
       setStoryfragmentNode(updatedNode);
     }
   };

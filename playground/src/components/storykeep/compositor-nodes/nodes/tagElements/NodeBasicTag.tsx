@@ -67,7 +67,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         const textToNodes = parseMarkdownToNodes(newText, nodeId);
         console.log("on blur nodes: ", textToNodes);
         if (textToNodes?.length > 0) {
-
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
           getCtx(props).addNodes(textToNodes);
