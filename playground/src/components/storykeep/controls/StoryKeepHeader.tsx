@@ -25,7 +25,8 @@ const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" =>
   return "mobile";
 };
 
-const StoryKeepHeader = () => {
+const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean }) => {
+  const keyboardAccessibleEnabled = props.keyboardAccessibleEnabled;
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
@@ -33,6 +34,10 @@ const StoryKeepHeader = () => {
   const $keyboardAccessible = useStore(keyboardAccessible);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+
+  useEffect(() => {
+    if (keyboardAccessibleEnabled && !$keyboardAccessible) keyboardAccessible.set(true);
+  }, [keyboardAccessibleEnabled]);
 
   useEffect(() => {
     const updateUndoRedo = () => {
@@ -139,17 +144,19 @@ const StoryKeepHeader = () => {
             <BugAntIcon className={iconClassName} />
           </button>
         ) : null}
-        <button
-          onClick={() => {
-            keyboardAccessible.set(!$keyboardAccessible);
-            getCtx().notifyNode(ROOT_NODE_NAME);
-          }}
-          title="Toggle Mobile/Keyboard Accessibility"
-        >
-          <CursorArrowRaysIcon
-            className={`${$keyboardAccessible ? iconActiveClassName : iconClassName}`}
-          />
-        </button>
+        {!keyboardAccessibleEnabled && (
+          <button
+            onClick={() => {
+              keyboardAccessible.set(!$keyboardAccessible);
+              getCtx().notifyNode(ROOT_NODE_NAME);
+            }}
+            title="Toggle Mobile/Keyboard Accessibility"
+          >
+            <CursorArrowRaysIcon
+              className={`${$keyboardAccessible ? iconActiveClassName : iconClassName}`}
+            />
+          </button>
+        )}
       </div>
     </div>
   );

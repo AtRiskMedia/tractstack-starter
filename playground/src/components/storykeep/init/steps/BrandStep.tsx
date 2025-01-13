@@ -46,6 +46,7 @@ export default function BrandStep({
     logo: string;
     wordmark: string;
     favicon: string;
+    keyboardAccessible: boolean;
   }>({
     siteUrl: "",
     slogan: "",
@@ -62,6 +63,7 @@ export default function BrandStep({
     logo: "",
     wordmark: "",
     favicon: "",
+    keyboardAccessible: false,
   });
 
   const [initialValues, setInitialValues] = useState<{
@@ -80,6 +82,7 @@ export default function BrandStep({
     logo: string;
     wordmark: string;
     favicon: string;
+    keyboardAccessible: boolean;
   }>({
     siteUrl: "",
     slogan: "",
@@ -96,6 +99,7 @@ export default function BrandStep({
     logo: "",
     wordmark: "",
     favicon: "",
+    keyboardAccessible: false,
   });
 
   const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
@@ -124,6 +128,7 @@ export default function BrandStep({
         logo: initConfig.LOGO || "",
         wordmark: initConfig.WORDMARK || "",
         favicon: initConfig.FAVICON || "",
+        keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || false,
       };
 
       setCurrentValues(values);
@@ -284,6 +289,9 @@ export default function BrandStep({
       }
       if (currentValues.favicon !== initialValues.favicon) {
         updates.FAVICON = currentValues.favicon;
+      }
+      if (currentValues.keyboardAccessible !== initialValues.keyboardAccessible) {
+        updates.KEYBOARD_ACCESSIBLE = currentValues.keyboardAccessible;
       }
 
       if (Object.keys(updates).length > 0) {
@@ -463,6 +471,24 @@ export default function BrandStep({
             value={currentValues.socialLinks}
             onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
           />
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <h3 className="text-lg font-bold text-mydarkgrey mb-4">Accessibility Settings</h3>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="keyboardAccessible"
+              checked={currentValues.keyboardAccessible}
+              onChange={(e) =>
+                setCurrentValues((prev) => ({ ...prev, keyboardAccessible: e.target.checked }))
+              }
+              className="h-4 w-4 rounded border-mylightgrey text-myblue focus:ring-myblue"
+            />
+            <label htmlFor="keyboardAccessible" className="text-sm text-mydarkgrey">
+              Enable Keyboard/Mouse Accessible Mode by Default
+            </label>
+          </div>
         </div>
 
         <div className="flex justify-end pt-4">
