@@ -6,7 +6,7 @@ import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { isMarkdownPaneFragmentNode, isPaneNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { MarkdownPaneFragmentNode } from "../../../../types";
+import type { PaneNode, MarkdownPaneFragmentNode } from "../../../../types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface ParentStyles {
@@ -35,7 +35,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   const [layerCount, setLayerCount] = useState(node.parentClasses?.length || 0);
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
   const [settings, setSettings] = useState<ParentStyles>({
-    bgColor: parentNode.bgColour || "#FFFFFF",
+    bgColor: parentNode.bgColour || "",
     parentClasses: node.parentClasses || [],
   });
 
@@ -43,7 +43,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   useEffect(() => {
     setLayerCount(node.parentClasses?.length || 0);
     setSettings({
-      bgColor: parentNode.bgColour || "#FFFFFF",
+      bgColor: parentNode.bgColour || "",
       parentClasses: node.parentClasses || [],
     });
   }, [node, parentNode.bgColour]);
@@ -99,33 +99,32 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     setCurrentLayer(newLayer);
 
     // Notify parent of changes
-    if (node.parentId) {
-      ctx.notifyNode(node.parentId);
+    if (parentNode.id) {
+      ctx.notifyNode(parentNode.id);
     }
   };
 
   useEffect(() => {
     if (!parentNode) return;
+    const prevBgColor = parentNode.bgColour || ""; // Default to empty string if bgColour is not set
 
-    const prevSettings = {
-      bgColor: parentNode.bgColour || "#FFFFFF",
-      parentClasses: node.parentClasses || [],
-    };
+    if (settings.bgColor !== prevBgColor) {
+      const paneNode = { ...allNodes.get(parentNode.id) } as PaneNode;
+      if (paneNode) {
+        if (settings.bgColor === "") {
+          // If bgColor is empty, delete the bgColour property
+          delete paneNode.bgColour;
+        } else {
+          paneNode.bgColour = settings.bgColor;
+        }
+        ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
 
-    // Get mutable copy of the parent node
-    const paneNode = allNodes.get(parentNode.id);
-    if (!paneNode || !isPaneNode(paneNode)) return;
-
-    if (settings.bgColor !== prevSettings.bgColor) {
-      paneNode.bgColour = settings.bgColor;
-
-      ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
-      // Notify parent of changes
-      if (parentNode.id) {
-        ctx.notifyNode(parentNode.id);
+        if (paneNode.id) {
+          ctx.notifyNode(paneNode.id);
+        }
       }
     }
-  }, [settings, parentNode, ctx, allNodes, node.parentClasses]);
+  }, [settings.bgColor, ctx, allNodes, parentNode]);
 
   // Safely get current classes
   const currentClasses = settings.parentClasses?.[currentLayer - 1] || {
@@ -180,10 +179,11 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
         defaultColor={settings.bgColor}
         onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
         config={config!}
+        allowNull={true}
       />
 
       <div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
-        <span className="text-sm font-medium text-mydarkgrey">Layer:</span>
+        <span className="text-sm font-bold text-mydarkgrey">Layer:</span>
         <div className="flex items-center gap-2">
           <button
             key="first-add"
@@ -198,7 +198,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             .map((num, index) => (
               <div key={`layer-group-${num}`} className="flex items-center gap-1">
                 <button
-                  className={`min-w-[32px] px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`min-w-[32px] px-3 py-1.5 text-sm font-bold rounded-md transition-colors ${
                     currentLayer === num
                       ? "bg-myblue text-white shadow-sm"
                       : "bg-white hover:bg-mydarkgrey/10 text-mydarkgrey hover:text-black"

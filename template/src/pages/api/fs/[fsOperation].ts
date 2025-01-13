@@ -164,6 +164,33 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
+      case "deleteImage": {
+        const { path: imagePath } = await request.json();
+        const publicDir = path.join(process.cwd(), "public");
+        const fullPath = path.join(publicDir, imagePath);
+
+        try {
+          await fs.unlink(fullPath);
+          result = {
+            success: true,
+            message: "Image deleted successfully",
+          };
+        } catch (err: any) {
+          // If file doesn't exist, consider it a success
+          if (err?.code === "ENOENT") {
+            result = {
+              success: true,
+              message: "File already removed",
+            };
+          } else {
+            throw new Error(
+              `Failed to delete image: ${err instanceof Error ? err.message : "Unknown error"}`
+            );
+          }
+        }
+        break;
+      }
+
       case "saveImage": {
         const { path: imagePath, filename, data } = await request.json();
         const publicDir = path.join(process.cwd(), "public");

@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { HexColorPicker } from "react-colorful";
 import tinycolor from "tinycolor2";
-import { tailwindColors } from "../../../../utils/tailwind/tailwindColors";
-import { getComputedColor } from "../../../../utils/common/helpers";
-import { useDropdownDirection } from "../../../../utils/storykeep/useDropdownDirection";
+import { tailwindColors } from "@/utils/tailwind/tailwindColors";
+import { getComputedColor, debounce } from "@/utils/common/helpers";
+import { useDropdownDirection } from "@/utils/storykeep/useDropdownDirection";
 
 export interface ColorPickerProps {
   id: string;
@@ -142,7 +142,7 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
 
   // Handle clicking outside to close
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = debounce((event: MouseEvent) => {
       if (
         colorPickerRef.current &&
         !colorPickerRef.current.contains(event.target as Node) &&
@@ -150,7 +150,7 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
       ) {
         handleConfirmColor();
       }
-    };
+    }, 100);
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -159,23 +159,29 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
   // Adjust picker position to ensure it's visible
   useEffect(() => {
     if (isOpen && pickerPopoverRef.current) {
-      const picker = pickerPopoverRef.current;
-      const rect = picker.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      const adjustPickerPosition = debounce(() => {
+        const picker = pickerPopoverRef.current;
+        if (!picker) return;
 
-      if (rect.right > viewportWidth) {
-        const overflow = rect.right - viewportWidth;
-        picker.style.left = `${-overflow - 10}px`;
-      }
+        const rect = picker.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
-      if (!openAbove && rect.bottom > viewportHeight) {
-        picker.style.top = "auto";
-        picker.style.bottom = "calc(100% + 10px)";
-      } else if (openAbove && rect.top < 0) {
-        picker.style.bottom = "auto";
-        picker.style.top = "calc(100% + 10px)";
-      }
+        if (rect.right > viewportWidth) {
+          const overflow = rect.right - viewportWidth;
+          picker.style.left = `${-overflow - 10}px`;
+        }
+
+        if (!openAbove && rect.bottom > viewportHeight) {
+          picker.style.top = "auto";
+          picker.style.bottom = "calc(100% + 10px)";
+        } else if (openAbove && rect.top < 0) {
+          picker.style.bottom = "auto";
+          picker.style.top = "calc(100% + 10px)";
+        }
+      }, 16);
+
+      adjustPickerPosition();
     }
   }, [isOpen, openAbove]);
 
@@ -207,9 +213,12 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
     }
   }, [previewColor, onColorChange, skipTailwind]);
 
-  const handlePreviewChange = useCallback((newColor: string) => {
-    setPreviewColor(newColor);
-  }, []);
+  const handlePreviewChange = useCallback(
+    debounce((newColor: string) => {
+      setPreviewColor(newColor);
+    }, 16),
+    []
+  );
 
   return (
     <div className="relative" ref={colorPickerRef}>
@@ -259,111 +268,3 @@ const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPic
 };
 
 export default ColorPicker;
-
-//const ColorPicker = ({ id, defaultColor, onColorChange, skipTailwind }: ColorPickerProps) => {
-//  const [displayColorPicker, setDisplayColorPicker] = useState(false);
-//  const [color, setColor] = useState(getComputedColor(defaultColor));
-//  const lastSelectedColor = useRef(getComputedColor(defaultColor));
-//  const colorPickerRef = useRef<HTMLDivElement>(null);
-//  const { openAbove } = useDropdownDirection(colorPickerRef);
-//
-//  useEffect(() => {
-//    const computedColor = getComputedColor(defaultColor);
-//    setColor(computedColor);
-//    lastSelectedColor.current = computedColor;
-//  }, [defaultColor]);
-//
-//  const handleClick = useCallback(() => {
-//    setDisplayColorPicker((prev) => !prev);
-//  }, []);
-//
-//  const handleClose = useCallback(() => {
-//    setDisplayColorPicker(false);
-//    if (color !== lastSelectedColor.current) {
-//      setColor(lastSelectedColor.current);
-//      if (skipTailwind) {
-//        onColorChange(lastSelectedColor.current);
-//      } else {
-//        const closestColor = findClosestTailwindColor(lastSelectedColor.current);
-//        if (closestColor) {
-//          onColorChange(`${closestColor.name}-${closestColor.shade}`);
-//        } else {
-//          const customColorEntry = Object.entries(customColors).find(
-//            ([, value]) => getComputedColor(value) === lastSelectedColor.current
-//          );
-//          onColorChange(customColorEntry ? customColorEntry[0] : lastSelectedColor.current);
-//        }
-//      }
-//    }
-//  }, [color, onColorChange, skipTailwind]);
-//
-//  const handleColorChange = useCallback(
-//    (newColor: string) => {
-//      setColor(newColor);
-//      lastSelectedColor.current = newColor;
-//
-//      if (skipTailwind) {
-//        onColorChange(newColor);
-//        return;
-//      }
-//
-//      const customColorEntry = Object.entries(customColors).find(
-//        ([, value]) => getComputedColor(value) === newColor
-//      );
-//
-//      if (customColorEntry) {
-//        onColorChange(customColorEntry[0]);
-//      } else {
-//        const closestColor = findClosestTailwindColor(newColor);
-//        if (closestColor) {
-//          onColorChange(`${closestColor.name}-${closestColor.shade}`);
-//        } else {
-//          onColorChange(newColor);
-//        }
-//      }
-//    },
-//    [onColorChange, skipTailwind]
-//  );
-//
-//  const debouncedHandleColorChange = useCallback(
-//    debounce((newColor: string) => {
-//      handleColorChange(newColor);
-//      setDisplayColorPicker(false);
-//    }, 300),
-//    [handleColorChange]
-//  );
-//
-//  const popover: CSSProperties = {
-//    position: "absolute",
-//    zIndex: 2,
-//    ...(openAbove ? { bottom: "calc(100% + 10px)" } : { top: "calc(100% + 10px)" }),
-//    left: 0,
-//  };
-//  const cover: CSSProperties = {
-//    position: "fixed",
-//    top: "0px",
-//    right: "0px",
-//    bottom: "0px",
-//    left: "0px",
-//  };
-//
-//  return (
-//    <div className="relative">
-//      <div
-//        id={id}
-//        ref={colorPickerRef}
-//        style={{ backgroundColor: color }}
-//        className="border border-dotted border-1 border-black h-10 w-24 cursor-pointer"
-//        onClick={handleClick}
-//      />
-//      {displayColorPicker ? (
-//        <div style={popover}>
-//          <div style={cover} onClick={handleClose} />
-//          <HexColorPicker color={color} onChange={debouncedHandleColorChange} />
-//        </div>
-//      ) : null}
-//    </div>
-//  );
-//};
-//
-//export default ColorPicker;

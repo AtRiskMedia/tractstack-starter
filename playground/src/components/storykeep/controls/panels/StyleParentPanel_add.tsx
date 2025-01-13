@@ -194,7 +194,7 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
 
       {availableRecommendedStyles.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-3">Recommended Styles</h3>
+          <h3 className="text-lg font-bold mb-3">Recommended Styles</h3>
           <div className="flex flex-wrap gap-2">
             {availableRecommendedStyles.map((style) => (
               <button
@@ -204,7 +204,7 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
                          bg-slate-50 hover:bg-mygreen/20 text-black
                          transition-colors duration-200"
               >
-                <span className="font-medium">{style.title}</span>
+                <span className="font-bold">{style.title}</span>
               </button>
             ))}
           </div>

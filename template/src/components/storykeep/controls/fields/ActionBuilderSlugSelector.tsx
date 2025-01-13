@@ -99,7 +99,7 @@ const ActionBuilderSlugSelector = ({
               >
                 {({ selected, active }) => (
                   <>
-                    <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
+                    <span className={`block truncate ${selected ? "font-bold" : "font-normal"}`}>
                       {item.title}
                       <span className="ml-2 text-sm opacity-60">({item.slug})</span>
                     </span>

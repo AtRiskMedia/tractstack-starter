@@ -69,7 +69,6 @@ export const creationStateStore = atom<CreationState>({
 //
 
 export const keyboardAccessible = atom<boolean>(false);
-export const showSettings = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
 export const storedDashboardAnalytics = map<DashboardAnalytics>();

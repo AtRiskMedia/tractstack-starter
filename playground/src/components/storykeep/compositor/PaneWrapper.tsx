@@ -11,7 +11,7 @@ import {
   paneFragmentIds,
   paneFragmentMarkdown,
   paneInit,
-  paneTitle,
+  //paneTitle,
   showAnalytics,
   storedAnalytics,
   storyFragmentPaneIds,
@@ -32,7 +32,6 @@ import { classNames } from "@/utils/common/helpers.ts";
 import ChangeLayoutModal from "@/components/storykeep/panes/ChangeLayoutModal.tsx";
 import ConfirmationModal from "@/components/storykeep/panes/ConfirmationModal.tsx";
 import ChangeMarkdownModal from "@/components/storykeep/panes/ChangeMarkdownModal.tsx";
-import AnalyticsWrapper from "@/components/storykeep/nivo/AnalyticsWrapper.tsx";
 const InsertAboveBelowWrapper = ({
   children,
   onInsertClick,
@@ -132,7 +131,7 @@ const PaneWrapper = (props: {
   const $showAnalytics = useStore(showAnalytics);
   const $storedAnalytics = useStore(storedAnalytics);
   const $paneInit = useStore(paneInit, { keys: [id] });
-  const $paneTitle = useStore(paneTitle, { keys: [id] });
+  //const $paneTitle = useStore(paneTitle, { keys: [id] });
   const $paneCodeHook = useStore(paneCodeHook, { keys: [id] });
   const $editMode = useStore(editModeStore);
 
@@ -384,13 +383,7 @@ const PaneWrapper = (props: {
           </div>
         )}
       </div>
-      {$showAnalytics && $storedAnalytics[id] && (
-        <AnalyticsWrapper
-          data={$storedAnalytics[id]}
-          title={$paneTitle[id].current}
-          isPane={true}
-        />
-      )}
+      {$showAnalytics && $storedAnalytics[id] && <div>analytics</div>}
     </div>
   );
 };

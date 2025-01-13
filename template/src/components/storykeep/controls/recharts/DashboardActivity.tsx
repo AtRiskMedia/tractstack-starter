@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
-import { storedDashboardAnalytics, analyticsDuration } from "../../../store/storykeep";
-import { classNames } from "../../../utils/common/helpers";
+import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
+import { classNames } from "@/utils/common/helpers.ts";
+import ResponsiveLine from "./ResponsiveLine";
 
 const DashboardActivity = () => {
   const [isClient, setIsClient] = useState(false);
@@ -42,7 +43,7 @@ const DashboardActivity = () => {
     <div>
       <h3 className="text-black font-action font-bold my-4">Recent Activity</h3>
       <div className="bg-mywhite rounded-lg shadow p-4" style={{ height: "400px" }}>
-        Line {JSON.stringify(processedData)}
+        <ResponsiveLine data={processedData} duration={duration} />
         <div className="flex flex-wrap gap-x-2 text-md my-8">
           <span className="font-action">Stats for past:</span>
           {["daily", "weekly", "monthly"].map((period) => (
@@ -50,8 +51,9 @@ const DashboardActivity = () => {
               key={period}
               onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
               className={classNames(
-                duration === period ? "font-bold" : "underline",
-                "text-mydarkgrey/80 hover:text-myorange"
+                duration === period
+                  ? "font-bold text-myblue"
+                  : "underline text-mydarkgrey/80 hover:text-myorange"
               )}
             >
               {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}

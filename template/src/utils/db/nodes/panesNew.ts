@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Row } from "@libsql/client";
 import type {
   BeliefDatum,
@@ -34,6 +35,9 @@ export function getPaneNodes(row: Row): PaneNode | null {
       nodeType: "Pane",
       slug: row.slug,
       parentId: null,
+      isDecorative: optionsPayload?.paneFragmentsPayload.some(
+        (item: any) => item.type === "bgPane"
+      ),
       ...(row?.height_offset_desktop != 0
         ? { heightOffsetDesktop: row?.height_offset_desktop }
         : {}),

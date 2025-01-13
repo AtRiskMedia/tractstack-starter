@@ -64,11 +64,11 @@ export default function BrandImageUploads({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-mydarkgrey">Brand Assets</h3>
+      <h3 className="text-lg font-bold text-mydarkgrey">Brand Assets</h3>
       <div className="grid grid-cols-1 gap-6">
         {imageFields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium text-mydarkgrey flex items-center">
+            <label className="block text-sm font-bold text-mydarkgrey flex items-center">
               {field.description}
               <div className="relative ml-1 group">
                 <InformationCircleIcon className="h-5 w-5 text-myblue cursor-help" />

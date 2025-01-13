@@ -2,6 +2,7 @@ import type {
   BaseNode,
   PaneNode,
   LinkNode,
+  StoryFragmentNode,
   PaneFragmentNode,
   MarkdownPaneFragmentNode,
   FlatNode,
@@ -26,6 +27,22 @@ export const isBreakNode = (node: FlatNode | null): node is BreakNode => {
 
 export const isPaneNode = (node: BaseNode | undefined): node is PaneNode => {
   return node?.nodeType === "Pane";
+};
+
+export const isCodeHookPaneNode = (node: BaseNode | undefined): node is PaneNode => {
+  return node?.nodeType === "Pane" && `codeHookTarget` in node;
+};
+
+export const isContextPaneNode = (
+  node: BaseNode | undefined
+): node is PaneNode & { isContextPane: boolean } => {
+  return Boolean(
+    node?.nodeType === "Pane" && "isContextPane" in node && typeof node.isContextPane === "boolean"
+  );
+};
+
+export const isStoryFragmentNode = (node: BaseNode | null): node is StoryFragmentNode => {
+  return node?.nodeType === "StoryFragment";
 };
 
 export const isMarkdownPaneFragmentNode = (
@@ -103,3 +120,7 @@ export function hasButtonPayload(node: BaseNode): node is LinkNode {
     node.buttonPayload !== undefined
   );
 }
+
+export const hasBeliefPayload = (node: BaseNode): boolean =>
+  ("heldBeliefs" in node && Object.keys(node.heldBeliefs || {}).length > 0) ||
+  ("withheldBeliefs" in node && Object.keys(node.withheldBeliefs || {}).length > 0);

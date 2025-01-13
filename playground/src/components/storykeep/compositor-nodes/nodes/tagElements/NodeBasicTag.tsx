@@ -43,12 +43,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       contentEditable={toolModeValStore.get().value === "default"}
       suppressContentEditableWarning
       onBlur={(e) => {
-        function reset() { wasFocused.current = false; }
+        function reset() {
+          wasFocused.current = false;
+        }
 
-        if (!canEditText(props)
-          || e.target.tagName === "BUTTON"
-          || !wasFocused.current
-        ) {
+        if (!canEditText(props) || e.target.tagName === "BUTTON" || !wasFocused.current) {
           reset();
           return;
         }
@@ -92,12 +91,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           // });
           // getCtx(props).addNodes(nodesFromMarkdown);
         }
-      }
-      }
+      }}
       onFocus={(e) => {
-        if (!canEditText(props)
-          || e.target.tagName === "BUTTON"
-          || nodeId !== getCtx(props).clickedNodeId.get()) {
+        if (
+          !canEditText(props) ||
+          e.target.tagName === "BUTTON" ||
+          nodeId !== getCtx(props).clickedNodeId.get()
+        ) {
           return;
         }
 

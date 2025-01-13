@@ -420,6 +420,15 @@ export class NodesContext {
     return null;
   }
 
+  getPaneIsDecorative(nodeId: string): boolean {
+    const paneNode = this.allNodes.get().get(nodeId) as PaneNode;
+    if (paneNode.nodeType !== "Pane") {
+      return false;
+    }
+    if (paneNode.isDecorative) return true;
+    return false;
+  }
+
   getPaneBeliefs(
     nodeId: string
   ): { heldBeliefs: BeliefDatum; withheldBeliefs: BeliefDatum } | null {

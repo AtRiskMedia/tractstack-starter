@@ -16,9 +16,7 @@ export const NodeButton = (props: NodeProps) => {
         spanRef.current?.focus();
       }}
     >
-      <span ref={spanRef}
-        contentEditable={toolModeValStore.get().value === "default"}
-      >
+      <span ref={spanRef} contentEditable={toolModeValStore.get().value === "default"}>
         <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
       </span>
     </button>

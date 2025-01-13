@@ -1,15 +1,16 @@
 import { useState, useCallback } from "react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import {
   hexToTailwind,
   tailwindToHex,
   getTailwindColorOptions,
-} from "../../../../utils/tailwind/tailwindColors";
+} from "@/utils/tailwind/tailwindColors.ts";
 import { findClosestTailwindColor } from "./ColorPicker";
-import { getComputedColor } from "../../../../utils/common/helpers";
-import type { Config } from "../../../../types";
+import { getComputedColor, debounce } from "@/utils/common/helpers.ts";
+import type { Config } from "@/types.ts";
 
 export interface ColorPickerProps {
   title: string;
@@ -17,6 +18,7 @@ export interface ColorPickerProps {
   defaultColor: string;
   onColorChange: (color: string) => void;
   skipTailwind?: boolean;
+  allowNull?: boolean;
 }
 
 const ColorPickerCombo = ({
@@ -25,6 +27,7 @@ const ColorPickerCombo = ({
   onColorChange,
   config,
   skipTailwind = false,
+  allowNull = false,
 }: ColorPickerProps) => {
   const [hexColor, setHexColor] = useState(defaultColor);
   const [selectedTailwindColor, setSelectedTailwindColor] = useState(() => {
@@ -40,18 +43,16 @@ const ColorPickerCombo = ({
 
   // Handle hex color picker changes
   const handleHexColorChange = useCallback(
-    (newHexColor: string) => {
+    debounce((newHexColor: string) => {
       const computedColor = getComputedColor(newHexColor);
       setHexColor(computedColor);
 
       if (!skipTailwind) {
-        // Try exact match first
         const exactTailwindColor = hexToTailwind(computedColor);
         if (exactTailwindColor) {
           setSelectedTailwindColor(exactTailwindColor);
           setQuery(exactTailwindColor);
         } else {
-          // Find closest matching Tailwind color
           const closestColor = findClosestTailwindColor(computedColor);
           if (closestColor) {
             const tailwindClass = `${closestColor.name}-${closestColor.shade}`;
@@ -65,7 +66,7 @@ const ColorPickerCombo = ({
       }
 
       onColorChange(computedColor);
-    },
+    }, 16),
     [onColorChange, skipTailwind]
   );
 
@@ -86,21 +87,36 @@ const ColorPickerCombo = ({
     [onColorChange, config, skipTailwind]
   );
 
+  // New function to handle color removal
+  const handleRemoveColor = useCallback(() => {
+    setHexColor("");
+    setSelectedTailwindColor("");
+    setQuery("");
+    onColorChange("");
+  }, [onColorChange]);
+
   return (
     <div className="space-y-2">
-      <label className="block text-sm text-mydarkgrey">{title}</label>
+      <span className="block text-sm text-mydarkgrey">{title}</span>
       <div className="flex items-center space-x-2">
         <input
           type="color"
-          value={hexColor}
+          value={hexColor || `#ffffff`}
           onChange={(e) => handleHexColorChange(e.target.value)}
           className="h-9 w-12 rounded border-mydarkgrey"
         />
-
+        {allowNull && (
+          <button
+            onClick={handleRemoveColor}
+            className="h-9 w-9 flex items-center justify-center rounded border-mydarkgrey"
+          >
+            <XMarkIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
+          </button>
+        )}
         {!skipTailwind && (
           <div className="flex-grow">
             <Combobox value={selectedTailwindColor} onChange={handleTailwindColorChange}>
-              <div className="relative">
+              <div className="relative max-w-48">
                 <Combobox.Input
                   className="w-full border-mydarkgrey rounded-md py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue xs:text-sm"
                   displayValue={(color: string) => color}
@@ -110,7 +126,6 @@ const ColorPickerCombo = ({
                 <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
                 </Combobox.Button>
-
                 <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none xs:text-sm">
                   {filteredColors.map((color) => (
                     <Combobox.Option

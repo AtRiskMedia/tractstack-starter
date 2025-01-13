@@ -1199,6 +1199,7 @@ export interface ImageFileNode extends BaseNode {
 export interface PaneNode extends BaseNode {
   title: string;
   slug: string;
+  isDecorative: boolean;
   created?: Date;
   changed?: Date;
   bgColour?: string;
@@ -1213,6 +1214,8 @@ export interface PaneNode extends BaseNode {
   codeHookPayload?: {
     [key: string]: string;
   };
+  heldBeliefs?: BeliefDatum;
+  withheldBeliefs?: BeliefDatum;
 }
 
 export interface StoryFragmentNode extends BaseNode {
@@ -1225,7 +1228,7 @@ export interface StoryFragmentNode extends BaseNode {
   socialImagePath?: string;
   created?: Date;
   changed?: Date;
-  impressions?: ImpressionDatum[];
+  impressions?: ImpressionNode[];
 }
 
 export interface VisualBreakData {
@@ -1453,3 +1456,21 @@ export type {
   TargetConfig,
   GotoTargets,
 };
+
+export const StoryFragmentMode = {
+  DEFAULT: "DEFAULT",
+  TITLE: "TITLE",
+  SLUG: "SLUG",
+  MENU: "MENU",
+  OG: "OG",
+} as const;
+
+export type StoryFragmentModeType = (typeof StoryFragmentMode)[keyof typeof StoryFragmentMode];
+
+export const ContextPaneMode = {
+  DEFAULT: "DEFAULT",
+  TITLE: "TITLE",
+  SLUG: "SLUG",
+} as const;
+
+export type ContextPaneModeType = (typeof ContextPaneMode)[keyof typeof ContextPaneMode];

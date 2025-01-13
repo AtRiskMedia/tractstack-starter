@@ -3,14 +3,12 @@ import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
-import CogIcon from "@heroicons/react/24/outline/CogIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
 import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import {
   keyboardAccessible,
   showAnalytics,
-  showSettings,
   viewportStore,
   viewportKeyStore,
   viewportSetStore,
@@ -32,7 +30,6 @@ const StoryKeepHeader = () => {
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
   const $showAnalytics = useStore(showAnalytics);
-  const $showSettings = useStore(showSettings);
   const $keyboardAccessible = useStore(keyboardAccessible);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -124,22 +121,6 @@ const StoryKeepHeader = () => {
       </div>
 
       <div className="flex flex-wrap justify-center items-center gap-2">
-        <button
-          onClick={() => {
-            setTimeout(() => {
-              if (!$showSettings)
-                window.scrollTo({
-                  top: 0,
-                  behavior: "smooth",
-                });
-            }, 500);
-            showSettings.set(!$showSettings);
-            getCtx().notifyNode(ROOT_NODE_NAME);
-          }}
-          title="Advanced Settings"
-        >
-          <CogIcon className={`${$showSettings ? iconActiveClassName : iconClassName}`} />
-        </button>
         <button
           onClick={() => {
             showAnalytics.set(!$showAnalytics);
