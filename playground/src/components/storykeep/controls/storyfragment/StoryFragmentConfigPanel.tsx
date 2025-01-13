@@ -144,7 +144,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
           {/* Color picker */}
           {config && (
             <div className="flex items-center gap-2 h-9">
-              <div className="text-md pt-1.5">Background Colour:</div>
+              <div className="text-md">Background Colour:</div>
               <ColorPickerCombo
                 title=""
                 defaultColor={tailwindToHex(

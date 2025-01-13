@@ -96,7 +96,7 @@ const ColorPickerCombo = ({
   }, [onColorChange]);
 
   return (
-    <div className="space-y-2">
+    <>
       <span className="block text-sm text-mydarkgrey">{title}</span>
       <div className="flex items-center space-x-2">
         <input
@@ -174,7 +174,7 @@ const ColorPickerCombo = ({
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 
