@@ -44,7 +44,10 @@ if (!paneNode) {
   canonicalURL={canonicalURL}
 >
   <header id="mainHeader" class="fixed top-0 left-0 right-0 bg-mywhite z-[8999] drop-shadow">
-    <StoryKeepHeader client:load />
+    <StoryKeepHeader
+      keyboardAccessibleEnabled={config.init?.KEYBOARD_ACCESSIBLE || false}
+      client:load
+    />
     <PullAnalytics id={paneNode.id} type="pane" client:only="react" />
   </header>
   <div id="headerSpacer"></div>

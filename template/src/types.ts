@@ -384,6 +384,7 @@ export interface InitConfig {
   OG: string;
   OGLOGO: string;
   FAVICON: string;
+  KEYBOARD_ACCESSIBLE: boolean;
   [key: string]: unknown;
 }
 
