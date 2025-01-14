@@ -66,8 +66,9 @@ export const canEditText = (props: NodeTagProps): boolean => {
 export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
   text = text
     .replace("&nbsp;", "")
-    .replace(/(?<!<[^>]*)\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/(?<!<[^>]*)\*(.+?)\*/g, "<em>$1</em>");
+    .replace(/\[\[(.+?)\]\]/g, "<a>$1</a>")
+    .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
+    .replace(/(?<!<a[^>]*?>[^<]*)\*(.+?)\*(?![^<]*?<\/a>)/g, "<em>$1</em>");
 
   const nodes = extractNodes(text, parentId);
 
@@ -80,28 +81,46 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
   const result: FlatNode[] = [];
   const parentsStack: string[] = [];
   let buffer = "";
+  let inLink = false;
 
   for (let i = 0; i < inputString.length; ++i) {
     buffer += inputString[i];
+    if (inputString.startsWith("</a", i)) {
+      inLink = false;
+    }
+
     if (inputString[i] === "<") {
-      const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
-      buffer = buffer.replace("<", "").trim();
-      result.push({
-        id: ulid(),
-        copy: buffer,
-        tagName: parentType,
-        nodeType: "TagElement",
-        parentId,
-      });
+      if(!inLink) {
+        const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
+        buffer = buffer.replace("<", "").trim();
+        if(buffer.length > 0) {
+          result.push({
+            id: ulid(),
+            copy: buffer,
+            tagName: parentType,
+            nodeType: "TagElement",
+            parentId,
+          });
+        }
+      }
 
       if (i + 1 < inputString.length && inputString[i + 1] == "/") {
         parentsStack.pop();
       }
 
-      if (inputString.startsWith("<em", i)) {
-        parentsStack.push("em");
-      } else if (inputString.startsWith("<strong", i)) {
-        parentsStack.push("strong");
+      if (inputString.startsWith("<a", i)) {
+        inLink = true;
+        buffer = "";
+        parentsStack.push("a");
+      } else if (inputString.startsWith("</a", i)) {
+        inLink = false;
+        parentsStack.pop();
+      } else if(!inLink) {
+        if (inputString.startsWith("<em", i)) {
+          parentsStack.push("em");
+        } else if (inputString.startsWith("<strong", i)) {
+          parentsStack.push("strong");
+        }
       }
       buffer = "";
     } else if (inputString[i] === ">") {
@@ -111,13 +130,15 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
 
   const parentType = parentsStack.length === 0 ? "text" : parentsStack.pop();
   buffer = buffer.replace("<", "").trim();
-  result.push({
-    id: ulid(),
-    copy: buffer,
-    tagName: parentType || "text",
-    nodeType: "TagElement",
-    parentId,
-  });
+  if(buffer.length > 0) {
+    result.push({
+      id: ulid(),
+      copy: buffer,
+      tagName: parentType || "text",
+      nodeType: "TagElement",
+      parentId,
+    });
+  }
 
   return result;
 }
@@ -125,7 +146,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
 function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
-    if (["em", "strong"].includes(node.tagName)) {
+    if (["em", "strong", "a"].includes(node.tagName)) {
       nodes.insertAfter(i, [
         {
           id: ulid(),

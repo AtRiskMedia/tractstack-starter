@@ -5,6 +5,7 @@ import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { type JSX, useEffect, useRef, useState } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
+import type { FlatNode } from "@/types.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -67,28 +68,24 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         const textToNodes = parseMarkdownToNodes(newText, nodeId);
         console.log("on blur nodes: ", textToNodes);
         if (textToNodes?.length > 0) {
+          // should get styles from text not "a"
+          const originalLinksStyles = getCtx(props)
+            .getNodesRecursively(node)
+            .filter(childNode => "tagName" in childNode && childNode?.tagName === "a")
+            .map(childNode => (childNode as FlatNode).buttonPayload)
+            .reverse();
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
-          getCtx(props).addNodes(textToNodes);
 
-          // // should get styles from text not "a"
-          // const originalLinksStyles = getCtx(props)
-          //   .getNodesRecursively(node)
-          //   .filter(childNode => "tagName" in childNode && childNode?.tagName === "a")
-          //   .map(childNode => (childNode as FlatNode).buttonPayload)
-          //   .reverse();
-          // // keep original element on, we care about chldren only
-          // getCtx(props).deleteChildren(nodeId);
-          //
-          // // convert markdown to children nodes
-          // const nodesFromMarkdown = markdownToNodes(newText, nodeId);
-          // let stylesIdx = 0;
-          // nodesFromMarkdown.forEach((node: FlatNode) => {
-          //   if (node.tagName === "a") {
-          //     node.buttonPayload = originalLinksStyles[stylesIdx++];
-          //   }
-          // });
-          // getCtx(props).addNodes(nodesFromMarkdown);
+          // convert markdown to children nodes
+          let stylesIdx = 0;
+          textToNodes.forEach((node: FlatNode) => {
+            if (node.tagName === "a") {
+              node.buttonPayload = originalLinksStyles[stylesIdx++];
+            }
+          });
+          getCtx(props).addNodes(textToNodes);
+          getCtx(props).nodeToNotify(nodeId, "Pane");
         }
       }}
       onFocus={(e) => {

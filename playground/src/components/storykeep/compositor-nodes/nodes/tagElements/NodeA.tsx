@@ -3,65 +3,71 @@ import { getCtx } from "@/store/nodes.ts";
 import { toolModeValStore, viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { useRef } from "react";
+import { parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
+import type { FlatNode } from "@/types.ts";
 
 export const NodeA = (props: NodeProps) => {
   const textRef = useRef<HTMLParagraphElement | null>(null);
   const originalTextRef = useRef<string>("");
+  const nodeId = props.nodeId;
 
   return (
-    <button
+    <a
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
       onClick={(e) => {
         getCtx(props).setClickedNodeId(props.nodeId);
         e.stopPropagation();
       }}
+      contentEditable={toolModeValStore.get().value === "default"}
+      suppressContentEditableWarning
       onMouseDown={(e) => {
         textRef.current?.focus();
         e.stopPropagation();
       }}
-      onBlur={(e) => e.stopPropagation()}
-    >
-      <span
-        ref={textRef}
-        contentEditable={toolModeValStore.get().value === "default"}
-        suppressContentEditableWarning
-        tabIndex={0}
-        style={{ display: "block", outline: "none" }}
-        onFocus={(e) => {
-          console.log("A got focus");
-          e.stopPropagation();
+      onFocus={(e) => {
+        console.log("A got focus");
+        e.stopPropagation();
 
-          originalTextRef.current = e.target.textContent as string;
-        }}
-        onBlur={(e) => {
-          console.log("A got blur");
-          e.stopPropagation();
+        // Ensure the element is content-editable and fetch its innerHTML
+        originalTextRef.current = e.currentTarget.innerHTML;
+        console.log("Original text saved:", originalTextRef.current);
+      }}
+      onBlur={(e) => {
+        console.log("A got blur");
+        e.stopPropagation();
 
-          const newText = e.currentTarget.textContent?.trimEnd() || "";
-          if (newText === originalTextRef.current) {
-            return;
-          }
+        const node = getCtx(props).allNodes.get().get(nodeId);
 
+        const newText = e.currentTarget.innerHTML;
+        if (newText === originalTextRef.current) {
+          return;
+        }
+
+        const textToNodes = parseMarkdownToNodes(newText, nodeId);
+        console.log("on blur nodes: ", textToNodes);
+        if (textToNodes?.length > 0) {
+          // should get styles from text not "a"
+          const originalLinksStyles = getCtx(props)
+            .getNodesRecursively(node)
+            .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
+            .map((childNode) => (childNode as FlatNode).buttonPayload)
+            .reverse();
           // keep original element on, we care about chldren only
-          getCtx(props).deleteChildren(props.nodeId);
+          getCtx(props).deleteChildren(nodeId);
 
           // convert markdown to children nodes
-          //const nodesFromMarkdown = markdownToNodes(newText, props.nodeId);
-          //getCtx(props).addNodes(nodesFromMarkdown);
-        }}
-        onMouseDown={(e) => {
-          const range = document.createRange();
-          range.setStart(e.currentTarget, 0);
-          range.collapse(false); // Places caret at the end
-          const selection = window.getSelection();
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-          e.currentTarget.focus();
-          e.stopPropagation();
-        }}
-      >
-        <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
-      </span>
-    </button>
+          let stylesIdx = 0;
+          textToNodes.forEach((node: FlatNode) => {
+            if (node.tagName === "a") {
+              node.buttonPayload = originalLinksStyles[stylesIdx++];
+            }
+          });
+          getCtx(props).addNodes(textToNodes);
+          getCtx(props).nodeToNotify(nodeId, "Pane");
+        }
+      }}
+    >
+      <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
+    </a>
   );
 };
