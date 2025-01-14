@@ -106,6 +106,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         originalTextRef.current = e.currentTarget.innerHTML;
         console.log("Original text saved:", originalTextRef.current);
       }}
+      onClick={e => e.stopPropagation()}
       onMouseDown={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
