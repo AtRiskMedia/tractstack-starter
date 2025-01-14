@@ -1,5 +1,4 @@
 import { NodesContext } from "@/store/nodes.ts";
-import type { ImpressionNode } from "@/types.ts";
 
 export type TractStackRowData = {
   id: string;

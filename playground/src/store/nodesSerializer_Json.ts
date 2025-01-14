@@ -9,7 +9,6 @@ import type {
   MenuNode,
   PaneNode,
   TractStackNode,
-  ImpressionNode,
   StoryFragmentNode,
   StoryKeepAllNodes,
 } from "@/types.ts";
@@ -26,10 +25,10 @@ export class NodesSerializer_Json implements NodesSerializer {
       resources: [],
     };
     nodes?.tractstackNodes?.map((n: TractStackNode) => {
-      this.processTractStackNode(ctx, n, saveData);
+      this.processTractStackNode( n, saveData);
     });
     nodes?.storyfragmentNodes?.map((n: StoryFragmentNode) => {
-      this.processStoryFragmentNode(ctx, n, saveData);
+      this.processStoryFragmentNode( n, saveData);
     });
     nodes?.paneNodes?.map((n: PaneNode) => {
       this.processPaneNode(ctx, n, saveData);
@@ -37,7 +36,7 @@ export class NodesSerializer_Json implements NodesSerializer {
     return saveData;
   }
 
-  processTractStackNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+  processTractStackNode(node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const tractstackNode = node as TractStackNode;
     if (tractstackNode)
@@ -51,7 +50,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       });
   }
 
-  processStoryFragmentNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+  processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const storyfragmentNode = node as StoryFragmentNode;
     if (storyfragmentNode && storyfragmentNode.parentId)
