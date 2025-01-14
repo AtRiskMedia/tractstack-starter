@@ -85,6 +85,7 @@ export class NodesSerializer_Json implements NodesSerializer {
     const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
     if (impressionNodes.length > 0) nodes.push(...impressionNodes);
     const optionsPayload = {
+      isDecorative: paneNode.isDecorative || false,
       ...(typeof paneNode.bgColour === `string` ? { bgColour: paneNode.bgColour } : {}),
       ...(nodes?.length > 0 ? { nodes } : {}),
       ...(typeof paneNode.heightOffsetDesktop === `number` && paneNode.heightOffsetDesktop > 0
