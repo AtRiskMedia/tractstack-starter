@@ -19,6 +19,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       tractstacks: [],
       storyfragments: [],
       panes: [],
+      markdowns: [],
       files: [],
       menus: [],
       resources: [],
@@ -78,8 +79,11 @@ export class NodesSerializer_Json implements NodesSerializer {
     const paneNode = node as PaneNode;
     const allNodes = ctx.getNodesRecursively(paneNode).reverse();
     const paneType = allNodes?.at(0)?.nodeType;
+    const markdownNode = allNodes?.at(1)?.nodeType === `Markdown` ? allNodes.at(1) : null;
+    const nodes = [];
+    if (allNodes.length > 1) nodes.push(...allNodes.slice(1));
     const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
-    const nodes = [...allNodes, ...impressionNodes];
+    if (impressionNodes.length > 0) nodes.push(...impressionNodes);
     const optionsPayload = {
       ...(typeof paneNode.bgColour === `string` ? { bgColour: paneNode.bgColour } : {}),
       ...(nodes?.length > 0 ? { nodes } : {}),
@@ -102,6 +106,11 @@ export class NodesSerializer_Json implements NodesSerializer {
         ? { height_ratio_mobile: paneNode.heightRatioMobile }
         : {}),
     };
+    let markdownBody;
+    if (markdownNode) {
+      const markdownGen = new MarkdownGenerator(ctx);
+      markdownBody = markdownGen.markdownFragmentToMarkdown(markdownNode.id);
+    }
     if (paneType)
       saveData.panes.push({
         id: paneNode.id,
@@ -112,8 +121,10 @@ export class NodesSerializer_Json implements NodesSerializer {
         created: paneNode?.created?.toISOString() || new Date().toISOString(),
         is_context_pane: paneNode.isContextPane ? 1 : 0,
         options_payload: JSON.stringify(optionsPayload),
-        // notice no markdown_id here; unless we're create or deleting (and handle accordingly), the markdown_id wouldn't change
-        // on create new Pane MarkdownNode we need to handle markdown_id
+        ...(typeof markdownBody === `string` && typeof markdownNode?.id === `string`
+          ? { markdown_id: markdownNode.id }
+          : {}),
+        ...(typeof markdownBody === `string` ? { markdown_body: markdownBody } : {}),
       });
   }
 
@@ -124,6 +135,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       menus: [],
       resources: [],
       panes: [],
+      markdowns: [],
       storyfragments: [],
       tractstacks: [],
     };

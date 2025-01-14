@@ -39,6 +39,11 @@ export type PaneRowData = {
   is_context_pane: number;
 };
 
+export type MarkdownRowData = {
+  id: string;
+  markdown_body: string;
+};
+
 export type MenuRowData = {
   id: string;
   title: string;
@@ -62,6 +67,7 @@ export type SaveData = {
   resources: ResourceRowData[];
   storyfragments: StoryFragmentRowData[];
   panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
   tractstacks: TractStackRowData[];
 };
 
