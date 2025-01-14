@@ -90,7 +90,7 @@ export class NodesSerializer_Json implements NodesSerializer {
         alt_description:
           fileNode.altDescription || `Alt description missing; we apologize for this`,
         url: fileNode.src,
-        src_set: typeof fileNode.srcSet === `string`,
+        ...(typeof fileNode.srcSet === `string` ? { src_set: fileNode.srcSet } : {}),
       });
   }
 

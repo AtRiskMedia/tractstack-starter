@@ -25,7 +25,7 @@ export type FileObjectRowData = {
   filename: string;
   alt_description: string | null;
   url: string;
-  src_set: boolean;
+  src_set?: string;
 };
 
 export type PaneRowData = {
