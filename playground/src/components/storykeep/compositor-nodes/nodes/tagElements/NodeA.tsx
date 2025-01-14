@@ -12,11 +12,14 @@ export const NodeA = (props: NodeProps) => {
 
   const node = getCtx(props).allNodes.get().get(nodeId);
   const isFirstChild = getCtx(props).getChildNodeIDs(node?.parentId ?? "")[0] === nodeId;
-  const isLastChild = getCtx(props).getChildNodeIDs(node?.parentId ?? "")?.last() === nodeId;
+  const isLastChild =
+    getCtx(props)
+      .getChildNodeIDs(node?.parentId ?? "")
+      ?.last() === nodeId;
 
   return (
     <>
-      {isFirstChild && '\u00A0'}
+      {isFirstChild && "\u00A0"}
       <a
         className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
         onClick={(e) => {
@@ -39,7 +42,6 @@ export const NodeA = (props: NodeProps) => {
         onBlur={(e) => {
           console.log("A got blur");
           e.stopPropagation();
-
 
           const newText = e.currentTarget.innerHTML;
           if (newText === originalTextRef.current) {
@@ -72,7 +74,7 @@ export const NodeA = (props: NodeProps) => {
       >
         <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />
       </a>
-      {isLastChild && '\u00A0'}
+      {isLastChild && "\u00A0"}
     </>
   );
 };

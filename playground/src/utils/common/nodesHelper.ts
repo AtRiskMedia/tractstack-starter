@@ -91,10 +91,10 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
     }
 
     if (inputString[i] === "<") {
-      if(!inLink) {
+      if (!inLink) {
         const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
         buffer = buffer.replace("<", "").trim();
-        if(buffer.length > 0) {
+        if (buffer.length > 0) {
           result.push({
             id: ulid(),
             copy: buffer,
@@ -116,7 +116,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
       } else if (inputString.startsWith("</a", i)) {
         inLink = false;
         parentsStack.pop();
-      } else if(!inLink) {
+      } else if (!inLink) {
         if (inputString.startsWith("<em", i)) {
           parentsStack.push("em");
         } else if (inputString.startsWith("<strong", i)) {
@@ -131,7 +131,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
 
   const parentType = parentsStack.length === 0 ? "text" : parentsStack.pop();
   buffer = buffer.replace("<", "").trim();
-  if(buffer.length > 0) {
+  if (buffer.length > 0) {
     result.push({
       id: ulid(),
       copy: buffer,

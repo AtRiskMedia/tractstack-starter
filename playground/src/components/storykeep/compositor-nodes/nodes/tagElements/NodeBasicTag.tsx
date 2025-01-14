@@ -71,8 +71,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           // should get styles from text not "a"
           const originalLinksStyles = getCtx(props)
             .getNodesRecursively(node)
-            .filter(childNode => "tagName" in childNode && childNode?.tagName === "a")
-            .map(childNode => (childNode as FlatNode).buttonPayload)
+            .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
+            .map((childNode) => (childNode as FlatNode).buttonPayload)
             .reverse();
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
@@ -103,7 +103,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         originalTextRef.current = e.currentTarget.innerHTML;
         console.log("Original text saved:", originalTextRef.current);
       }}
-      onClick={e => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();

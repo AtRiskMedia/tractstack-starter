@@ -1,0 +1,18 @@
+---
+import { getCtx } from "@/store/nodes";
+import { getGenerateAllNodes } from "@/utils/db/nodes/generate";
+import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+
+// uses old data source + helper fn to generate as new datum
+const nodes = await getGenerateAllNodes();
+// create node tree
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
+// initialize serializer
+const s = new NodesSerializer_Json();
+// generate save data for all nodes (migrate to new data model)
+const saveData = await s.saveAll(getCtx(), nodes);
+---
+
+<pre>
+{JSON.stringify(saveData)}
+</pre>

@@ -1,0 +1,90 @@
+{
+  "version": "1.0.0",
+  "schemaInitialized": false,
+  "tables": {
+    "tractstacks": {
+      "sql": "CREATE TABLE IF NOT EXISTS tractstack (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, social_image_path TEXT)"
+    },
+    //"menu": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS menu (id TEXT PRIMARY KEY, title TEXT NOT NULL, theme TEXT NOT NULL, options_payload TEXT NOT NULL)"
+    //},
+    //"resource": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS resource (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, category_slug TEXT, oneliner TEXT NOT NULL, options_payload TEXT NOT NULL, action_lisp TEXT)"
+    //},
+    //"file": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS file (id TEXT PRIMARY KEY, filename TEXT NOT NULL, alt_description TEXT NOT NULL, url TEXT NOT NULL, src_set BOOLEAN DEFAULT false)"
+    //},
+    //"markdown": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS markdown (id TEXT PRIMARY KEY, body TEXT NOT NULL)"
+    //},
+    "storyfragments": {
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragments (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, social_image_path TEXT, tailwind_background_colour TEXT, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP, menu_id TEXT REFERENCES menu(id), tractstack_id TEXT NOT NULL REFERENCES tractstack(id))"
+    },
+    "panes": {
+      "sql": "CREATE TABLE IF NOT EXISTS panes (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP, markdown_id TEXT REFERENCES markdown(id), options_payload TEXT NOT NULL, is_context_pane BOOLEAN DEFAULT 0)"
+    },
+    "storyfragment_panes": {
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_panes (id TEXT PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), pane_id TEXT NOT NULL REFERENCES panes(id), weight INTEGER NOT NULL, UNIQUE(storyfragment_id, pane_id))"
+    }
+    //"file_pane": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS file_pane (id TEXT PRIMARY KEY, file_id TEXT NOT NULL REFERENCES file(id), pane_id TEXT NOT NULL REFERENCES pane(id), UNIQUE(file_id, pane_id))"
+    //},
+    //"file_markdown": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS file_markdown (id TEXT PRIMARY KEY, file_id TEXT NOT NULL REFERENCES file(id), markdown_id TEXT NOT NULL REFERENCES markdown(id), UNIQUE(file_id, markdown_id))"
+    //},
+    //"visits": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS visits (id TEXT PRIMARY KEY, fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), campaign_id TEXT REFERENCES campaigns(id), merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    //},
+    //"fingerprints": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS fingerprints (id TEXT PRIMARY KEY, merged TEXT, lead_id TEXT REFERENCES leads(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    //},
+    //"leads": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS leads (id TEXT PRIMARY KEY, first_name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, contact_persona TEXT NOT NULL, short_bio TEXT, encrypted_code TEXT, encrypted_email TEXT, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP)"
+    //},
+    //"campaigns": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, merged TEXT, source TEXT, medium TEXT, term TEXT, content TEXT, http_referrer TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    //},
+    //"actions": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, parent_id TEXT REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    //},
+    //"corpus": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS corpus (id TEXT PRIMARY KEY, object_id TEXT NOT NULL, object_type TEXT NOT NULL, object_name TEXT NOT NULL, merged TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, object_type))"
+    //},
+    //"parents": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS parents (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), parent_id TEXT NOT NULL REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, parent_id))"
+    //},
+    //"heldbeliefs": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS heldbeliefs (id TEXT PRIMARY KEY, belief_id TEXT NOT NULL REFERENCES corpus(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, object TEXT, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+    //},
+    //"stories": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS stories (id INTEGER PRIMARY KEY AUTOINCREMENT, transcript_id TEXT, uuid TEXT, data TEXT)"
+    //},
+    //"transcriptoverrides": {
+    //  "sql": "CREATE TABLE IF NOT EXISTS transcript_overrides (id INTEGER PRIMARY KEY AUTOINCREMENT, transcript_id TEXT, data TEXT)"
+    //}
+  },
+  "indexes": [
+    //"CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragment(tractstack_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_storyfragment_menu_id ON storyfragment(menu_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_storyfragment_id ON storyfragment_pane(storyfragment_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_pane_id ON storyfragment_pane(pane_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_file_pane_file_id ON file_pane(file_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_file_pane_pane_id ON file_pane(pane_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_file_markdown_file_id ON file_markdown(file_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_file_markdown_markdown_id ON file_markdown(markdown_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON pane(markdown_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_visits_fingerprint_id ON visits(fingerprint_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_visits_campaign_id ON visits(campaign_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_actions_object_id ON actions(object_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_actions_visit_id ON actions(visit_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_actions_fingerprint_id ON actions(fingerprint_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_actions_parent_id ON actions(parent_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_parents_object_id ON parents(object_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_parents_parent_id ON parents(parent_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_heldbeliefs_belief_id ON heldbeliefs(belief_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_corpus_object_id ON corpus(object_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_fingerprints_lead_id ON fingerprints(lead_id)",
+    //"CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email)"
+  ]
+}

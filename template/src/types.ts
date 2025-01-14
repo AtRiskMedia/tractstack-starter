@@ -1280,6 +1280,7 @@ export interface StoryKeepAllNodes {
   menuNodes: MenuNode[];
   impressionNodes: ImpressionNode[];
   resourceNodes: ResourceNode[];
+  storyfragmentPanesMap: { [key: string]: string[] };
 }
 
 export interface FlattenedClasses {
@@ -1312,6 +1313,7 @@ export interface FlatNode extends BaseNode {
   alt?: string;
   href?: string;
   text?: string;
+  fileId?: string;
   codeHookParams?: (string | string[])[];
   overrideClasses?: {
     mobile?: Record<string, string>;

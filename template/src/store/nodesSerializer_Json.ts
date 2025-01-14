@@ -2,31 +2,137 @@ import { NodesContext } from "@/store/nodes.ts";
 import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
+  FlatNode,
   ImageFileNode,
   MarkdownPaneFragmentNode,
   MarkdownPaneDatum,
   MenuNode,
   PaneNode,
+  TractStackNode,
   ImpressionNode,
   StoryFragmentNode,
+  StoryKeepAllNodes,
 } from "@/types.ts";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export class NodesSerializer_Json implements NodesSerializer {
+  saveAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData {
+    const saveData: SaveData = {
+      tractstacks: [],
+      storyfragments: [],
+      panes: [],
+      files: [],
+      menus: [],
+      resources: [],
+    };
+    nodes?.tractstackNodes?.map((n: TractStackNode) => {
+      this.processTractStackNode(ctx, n, saveData);
+    });
+    nodes?.storyfragmentNodes?.map((n: StoryFragmentNode) => {
+      this.processStoryFragmentNode(ctx, n, saveData);
+    });
+    nodes?.paneNodes?.map((n: PaneNode) => {
+      this.processPaneNode(ctx, n, saveData);
+    });
+    return saveData;
+  }
+
+  processTractStackNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
+    const tractstackNode = node as TractStackNode;
+    if (tractstackNode)
+      saveData.tractstacks.push({
+        id: tractstackNode.id,
+        title: tractstackNode.title,
+        slug: tractstackNode.slug,
+        ...(typeof tractstackNode.socialImagePath === `string`
+          ? { social_image_path: tractstackNode.socialImagePath }
+          : { social_image_path: null }),
+      });
+  }
+
+  processStoryFragmentNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
+    const storyfragmentNode = node as StoryFragmentNode;
+    if (storyfragmentNode && storyfragmentNode.parentId)
+      saveData.storyfragments.push({
+        id: storyfragmentNode.id,
+        trackstack_id: storyfragmentNode.parentId,
+        slug: storyfragmentNode.slug,
+        title: storyfragmentNode.title,
+        changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
+        created: storyfragmentNode?.created?.toISOString() || new Date().toISOString(),
+        ...(typeof storyfragmentNode.tailwindBgColour === `string`
+          ? { tailwind_background_colour: storyfragmentNode.tailwindBgColour }
+          : {}),
+        ...(typeof storyfragmentNode.menuId === `string`
+          ? { menu_id: storyfragmentNode.menuId }
+          : {}),
+        ...(typeof storyfragmentNode.socialImagePath === `string`
+          ? { social_image_path: storyfragmentNode.socialImagePath }
+          : {}),
+        pane_ids: storyfragmentNode.paneIds || [],
+      });
+  }
+
+  processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
+    const paneNode = node as PaneNode;
+    const nodes: (BaseNode | FlatNode)[] = [];
+    const allNodes = ctx.getNodesRecursively(paneNode).reverse();
+    const paneType = allNodes?.at(0)?.nodeType;
+    nodes.concat(allNodes);
+    const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
+    nodes.concat(impressionNodes);
+    const optionsPayload = {
+      ...(typeof paneNode.bgColour === `string` ? { bgColour: paneNode.bgColour } : {}),
+      ...(nodes?.length > 0 ? { nodes } : {}),
+      ...(typeof paneNode.heightOffsetDesktop === `number` && paneNode.heightOffsetDesktop > 0
+        ? { height_offset_desktop: paneNode.heightOffsetDesktop }
+        : {}),
+      ...(typeof paneNode.heightOffsetTablet === `number` && paneNode.heightOffsetTablet > 0
+        ? { height_offset_tablet: paneNode.heightOffsetTablet }
+        : {}),
+      ...(typeof paneNode.heightOffsetMobile === `number` && paneNode.heightOffsetMobile > 0
+        ? { height_offset_mobile: paneNode.heightOffsetMobile }
+        : {}),
+      ...(typeof paneNode.heightRatioDesktop === `string`
+        ? { height_ratio_desktop: paneNode.heightRatioDesktop }
+        : {}),
+      ...(typeof paneNode.heightRatioTablet === `string`
+        ? { height_ratio_tablet: paneNode.heightRatioTablet }
+        : {}),
+      ...(typeof paneNode.heightRatioMobile === `string`
+        ? { height_ratio_mobile: paneNode.heightRatioMobile }
+        : {}),
+    };
+    if (paneType)
+      saveData.panes.push({
+        id: paneNode.id,
+        title: paneNode.title,
+        slug: paneNode.slug,
+        pane_type: paneType,
+        changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
+        created: paneNode?.created?.toISOString() || new Date().toISOString(),
+        is_context_pane: paneNode.isContextPane ? 1 : 0,
+        options_payload: JSON.stringify(optionsPayload),
+        // notice no markdown_id here; unless we're create or deleting (and handle accordingly), the markdown_id wouldn't change
+        // on create new Pane MarkdownNode we need to handle markdown_id
+      });
+  }
+
   save(ctx: NodesContext): SaveData {
     const rootNode = ctx.allNodes.get().get(ctx.rootNodeId.get());
-
     const saveData: SaveData = {
       files: [],
       menus: [],
       resources: [],
       panes: [],
-      impressions: [],
-      storyFragments: [],
-      //tractStack: { id: "", slug: "", title: "", social_image_path: null },
+      storyfragments: [],
+      tractstacks: [],
     };
     this.processNode(ctx, rootNode, saveData);
-    console.log("Save data:", saveData);
+    //console.log("Save data:", saveData);
     return saveData;
   }
 
@@ -54,56 +160,57 @@ export class NodesSerializer_Json implements NodesSerializer {
     return JSON.stringify(markdownDatum);
   }
 
+  // will rewrite to use the above helper fns
   processNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
-    const isChanged = node.isChanged || false;
+    const isChanged = node?.isChanged || false;
     if (!node) return;
 
     switch (node.nodeType) {
       case "Pane": {
-        if (isChanged) {
-          const paneNode = node as PaneNode;
-          ctx.getChildNodeIDs(node.id).forEach((childId) => {
-            const childNode = ctx.allNodes.get().get(childId);
-            if (childNode?.nodeType === "Markdown") {
-              const markdownNode = childNode as MarkdownPaneFragmentNode;
-              const markdownGen = new MarkdownGenerator(ctx);
-              saveData.panes.push({
-                id: paneNode.id,
-                title: paneNode.title,
-                slug: paneNode.slug,
-                changed: paneNode.changed?.toISOString() || "",
-                created: paneNode.created?.toISOString() || "",
-                files: "[]", // todo
-                height_offset_desktop: paneNode.heightOffsetDesktop || 0,
-                height_offset_tablet: paneNode.heightOffsetTablet || 0,
-                height_offset_mobile: paneNode.heightOffsetMobile || 0,
-                height_ratio_desktop: paneNode.heightRatioDesktop || "0.00",
-                height_ratio_tablet: paneNode.heightRatioTablet || "0.00",
-                height_ratio_mobile: paneNode.heightRatioMobile || "0.00",
-                is_context_pane: paneNode.isContextPane ? 1 : 0,
-                markdown_body: markdownGen.markdownFragmentToMarkdown(markdownNode.id), // todo
-                options_payload: this.getMarkdownPayload(markdownNode), // todo
-                markdown_id: "",
-              });
-            }
-          });
-        }
+        console.log(`use the new processPaneNode helper`);
+        //if (isChanged) {
+        //  const paneNode = node as PaneNode;
+        //  ctx.getChildNodeIDs(node.id).forEach((childId) => {
+        //    const childNode = ctx.allNodes.get().get(childId);
+        //    if (childNode?.nodeType === "Markdown") {
+        //      const markdownNode = childNode as MarkdownPaneFragmentNode;
+        //      const markdownGen = new MarkdownGenerator(ctx);
+        //      saveData.panes.push({
+        //        id: paneNode.id,
+        //        title: paneNode.title,
+        //        slug: paneNode.slug,
+        //        changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
+        //        created: paneNode?.created?.toISOString() || new Date().toISOString(),
+        //        height_offset_desktop: paneNode.heightOffsetDesktop || 0,
+        //        height_offset_tablet: paneNode.heightOffsetTablet || 0,
+        //        height_offset_mobile: paneNode.heightOffsetMobile || 0,
+        //        height_ratio_desktop: paneNode.heightRatioDesktop || "0.00",
+        //        height_ratio_tablet: paneNode.heightRatioTablet || "0.00",
+        //        height_ratio_mobile: paneNode.heightRatioMobile || "0.00",
+        //        is_context_pane: paneNode.isContextPane ? 1 : 0,
+        //        markdown_body: markdownGen.markdownFragmentToMarkdown(markdownNode.id), // todo
+        //        options_payload: this.getMarkdownPayload(markdownNode), // todo
+        //        markdown_id: "",
+        //      });
+        //    }
+        //  });
+        //}
         break;
       }
       case "StoryFragment": {
         if (isChanged) {
-          const storyFragment = node as StoryFragmentNode;
-          saveData.storyFragments.push({
-            id: storyFragment.id,
+          const storyfragmentNode = node as StoryFragmentNode;
+          saveData.storyfragments.push({
+            id: storyfragmentNode.id,
             trackstack_id: "",
-            slug: storyFragment.slug,
-            tailwind_background_colour: storyFragment.tailwindBgColour || "",
-            title: storyFragment.title,
-            changed: storyFragment.changed?.toISOString() || "",
-            created: storyFragment.created?.toISOString() || "",
-            menu_id: storyFragment.menuId || "",
-            social_image_path: storyFragment.socialImagePath || "",
-            pane_ids: storyFragment.paneIds,
+            slug: storyfragmentNode.slug,
+            tailwind_background_colour: storyfragmentNode.tailwindBgColour || "",
+            title: storyfragmentNode.title,
+            changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
+            created: storyfragmentNode?.created?.toISOString() || new Date().toISOString(),
+            menu_id: storyfragmentNode.menuId || "",
+            social_image_path: storyfragmentNode.socialImagePath || "",
+            pane_ids: storyfragmentNode.paneIds,
           });
         }
         break;
@@ -133,20 +240,23 @@ export class NodesSerializer_Json implements NodesSerializer {
         }
         break;
       }
-      case "Impression": {
-        if (isChanged) {
-          const impressionData = node as ImpressionNode;
-          saveData.impressions.push({
-            nodeType: "Impression",
-            tagName: "impression",
-            title: node.title,
-            body: node.body,
-            buttonText: node.buttonText,
-            actionsLisp: node.actionsLisp,
-          });
-        }
-        break;
-      }
+      //case "Impression": {
+      //  if (isChanged) {
+      //    const impressionData = node as ImpressionNode;
+      //    saveData.impressions.push({
+      //      id: impressionData.id,
+      //      parentId: impressionData.parentId,
+      //      nodeType: "Impression",
+      //      tagName: "impression",
+      //      title: impressionData.title,
+      //      body: impressionData.body,
+      //      buttonText: impressionData.buttonText,
+      //      actionsLisp: impressionData.actionsLisp,
+      //    });
+      //  }
+      //  break;
+      //}
+      case "Impression":
       case "TagElement":
       case "BgPane":
       case "Markdown":
