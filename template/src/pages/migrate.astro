@@ -10,7 +10,7 @@ getCtx().buildNodesTreeFromFragmentNodes(nodes);
 // initialize serializer
 const s = new NodesSerializer_Json();
 // generate save data for all nodes (migrate to new data model)
-const saveData = nodes ? s.saveAll(getCtx(), nodes) : null;
+const saveData = nodes ? s.migrateAll(getCtx(), nodes) : null;
 ---
 
 <pre>

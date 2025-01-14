@@ -926,6 +926,38 @@ export class NodesContext {
     return nodes;
   }
 
+  getPaneImageFileIds(paneId: string): string[] {
+    const paneNode = this.allNodes.get().get(paneId);
+    if (!paneNode || paneNode.nodeType !== "Pane") return [];
+    const allNodes = this.getNodesRecursively(paneNode);
+    const fileNodes = allNodes
+      .filter(
+        (node): node is FlatNode =>
+          node.nodeType === "TagElement" &&
+          "tagName" in node &&
+          node.tagName === "img" &&
+          "fileId" in node &&
+          typeof node.fileId === "string"
+      )
+      .map((node) => node.fileId)
+      .filter((id): id is string => id !== undefined);
+    return fileNodes;
+  }
+
+  getPaneImagesMap(): Record<string, string[]> {
+    const paneNodes = Array.from(this.allNodes.get().values()).filter(
+      (node): node is PaneNode => node.nodeType === "Pane"
+    );
+    const result: Record<string, string[]> = {};
+    paneNodes.forEach((pane) => {
+      const fileIds = this.getPaneImageFileIds(pane.id);
+      if (fileIds.length > 0) {
+        result[pane.id] = fileIds;
+      }
+    });
+    return result;
+  }
+
   private deleteNodes(nodesList: BaseNode[]) {
     nodesList.forEach((node) => {
       if (!node) return;

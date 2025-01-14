@@ -1,4 +1,5 @@
 import { NodesContext } from "@/store/nodes.ts";
+import type { StoryKeepAllNodes } from "@/types.ts";
 
 export type TractStackRowData = {
   id: string;
@@ -14,7 +15,6 @@ export type StoryFragmentRowData = {
   trackstack_id: string;
   created: string;
   changed: string;
-  pane_ids: string[];
   menu_id?: string;
   social_image_path?: string;
   tailwind_background_colour?: string;
@@ -25,7 +25,7 @@ export type FileObjectRowData = {
   filename: string;
   alt_description: string | null;
   url: string;
-  src_set: string | null;
+  src_set: boolean;
 };
 
 export type PaneRowData = {
@@ -39,9 +39,24 @@ export type PaneRowData = {
   is_context_pane: number;
 };
 
+export type PaneFileRowData = {
+  pane_id: string;
+  file_id: string;
+};
+
 export type MarkdownRowData = {
   id: string;
   markdown_body: string;
+};
+
+export type PaneMarkdownRowData = {
+  paneId: string;
+  markdownId: string;
+};
+
+export type StoryFragmentPaneRowData = {
+  storyfragmentId: string;
+  paneId: string;
 };
 
 export type MenuRowData = {
@@ -55,10 +70,10 @@ export type ResourceRowData = {
   id: string;
   title: string;
   slug: string;
-  category: string;
-  actionLisp: string;
   oneliner: string;
-  optionsPayload: string;
+  options_payload: string;
+  category_slug?: string;
+  action_lisp?: string;
 };
 
 export type SaveData = {
@@ -68,9 +83,13 @@ export type SaveData = {
   storyfragments: StoryFragmentRowData[];
   panes: PaneRowData[];
   markdowns: MarkdownRowData[];
+  paneMarkdowns: PaneMarkdownRowData[];
+  paneFiles: PaneFileRowData[];
+  storyfragmentPanes: StoryFragmentPaneRowData[];
   tractstacks: TractStackRowData[];
 };
 
 export abstract class NodesSerializer {
   abstract save(ctx: NodesContext): SaveData;
+  abstract migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
 }
