@@ -65,7 +65,8 @@ export const canEditText = (props: NodeTagProps): boolean => {
 
 export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
   text = text
-    .replace("&nbsp;", "")
+    .replace(/&nbsp;|\u00A0/g, "")
+    .replace("<br>", "")
     .replace(/\[\[(.+?)\]\]/g, "<a>$1</a>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*(.+?)\*(?![^<]*?<\/a>)/g, "<em>$1</em>");
