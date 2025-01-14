@@ -78,7 +78,7 @@ export class NodesSerializer_Json implements NodesSerializer {
     if (!node) return;
     const paneNode = node as PaneNode;
     const allNodes = ctx.getNodesRecursively(paneNode).reverse();
-    const paneType = allNodes?.at(0)?.nodeType;
+    const paneType = allNodes?.at(1)?.nodeType;
     const markdownNode = allNodes?.at(1)?.nodeType === `Markdown` ? allNodes.at(1) : null;
     const nodes = [];
     if (allNodes.length > 1) nodes.push(...allNodes.slice(1));
