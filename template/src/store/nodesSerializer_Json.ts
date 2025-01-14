@@ -2,7 +2,6 @@ import { NodesContext } from "@/store/nodes.ts";
 import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
-  FlatNode,
   ImageFileNode,
   MarkdownPaneFragmentNode,
   MarkdownPaneDatum,
@@ -25,10 +24,10 @@ export class NodesSerializer_Json implements NodesSerializer {
       resources: [],
     };
     nodes?.tractstackNodes?.map((n: TractStackNode) => {
-      this.processTractStackNode( n, saveData);
+      this.processTractStackNode(n, saveData);
     });
     nodes?.storyfragmentNodes?.map((n: StoryFragmentNode) => {
-      this.processStoryFragmentNode( n, saveData);
+      this.processStoryFragmentNode(n, saveData);
     });
     nodes?.paneNodes?.map((n: PaneNode) => {
       this.processPaneNode(ctx, n, saveData);
@@ -77,12 +76,10 @@ export class NodesSerializer_Json implements NodesSerializer {
   processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const paneNode = node as PaneNode;
-    const nodes: (BaseNode | FlatNode)[] = [];
     const allNodes = ctx.getNodesRecursively(paneNode).reverse();
     const paneType = allNodes?.at(0)?.nodeType;
-    nodes.concat(allNodes);
     const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
-    nodes.concat(impressionNodes);
+    const nodes = [...allNodes, ...impressionNodes];
     const optionsPayload = {
       ...(typeof paneNode.bgColour === `string` ? { bgColour: paneNode.bgColour } : {}),
       ...(nodes?.length > 0 ? { nodes } : {}),
