@@ -926,46 +926,52 @@ export class NodesContext {
     return nodes;
   }
 
-  moveNode(nodeId: string, location: "before"|"after") {
+  moveNode(nodeId: string, location: "before" | "after") {
     const node = this.allNodes.get().get(nodeId);
-    if(!node || node.nodeType === "Root") return;
+    if (!node || node.nodeType === "Root") return;
 
-    if(node.parentId) {
+    if (node.parentId) {
       const children = this.getChildNodeIDs(node.parentId);
       const idx = children.indexOf(nodeId);
-      if(idx !== -1) {
+      if (idx !== -1) {
         const newPosNodeId = children.at(
           location === "before" ? Math.max(idx - 1, 0) : Math.min(idx + 1, children.length - 1)
         );
-        if(newPosNodeId) {
+        if (newPosNodeId) {
           this.moveNodeTo(nodeId, newPosNodeId, location);
         }
       }
     }
   }
 
-  moveNodeTo(nodeId: string, insertNodeId: string, location: "before"|"after") {
+  moveNodeTo(nodeId: string, insertNodeId: string, location: "before" | "after") {
     const node = this.allNodes.get().get(nodeId);
-    if(!node || node.nodeType === "Root") return;
+    if (!node || node.nodeType === "Root") return;
 
     const newLocationNode = this.allNodes.get().get(insertNodeId);
-    if(!newLocationNode) return;
+    if (!newLocationNode) return;
 
-    if(node.nodeType !== newLocationNode.nodeType) {
-      console.warn(`Trying to move nodes ${nodeId} and ${insertNodeId} but they're belong to different types`);
+    if (node.nodeType !== newLocationNode.nodeType) {
+      console.warn(
+        `Trying to move nodes ${nodeId} and ${insertNodeId} but they're belong to different types`
+      );
       return;
     }
 
     const oldParentNodes = this.getChildNodeIDs(node.parentId || "");
-    if(oldParentNodes) {
+    if (oldParentNodes) {
       oldParentNodes.splice(oldParentNodes.indexOf(nodeId), 1);
     }
 
     const newLocationParentNodes = this.getChildNodeIDs(newLocationNode.parentId || "");
     // now grab parent nodes, check if we have inner node
-    if (insertNodeId && newLocationParentNodes && newLocationParentNodes?.indexOf(insertNodeId) !== -1) {
+    if (
+      insertNodeId &&
+      newLocationParentNodes &&
+      newLocationParentNodes?.indexOf(insertNodeId) !== -1
+    ) {
       const spliceIdx = newLocationParentNodes.indexOf(nodeId);
-      if(spliceIdx !== -1) {
+      if (spliceIdx !== -1) {
         newLocationParentNodes.splice(newLocationParentNodes.indexOf(nodeId), 1);
       }
       if (location === "before") {
@@ -980,7 +986,7 @@ export class NodesContext {
       const storyFragment = this.allNodes.get().get(storyFragmentId) as StoryFragmentNode;
       if (storyFragment) {
         const spliceIdx = storyFragment.paneIds.indexOf(nodeId);
-        if(spliceIdx !== -1) {
+        if (spliceIdx !== -1) {
           storyFragment.paneIds.splice(spliceIdx, 1);
         }
         if (location === "before") {
