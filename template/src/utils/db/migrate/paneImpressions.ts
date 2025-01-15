@@ -12,7 +12,7 @@ export function getImpressionNode(row: Row): ImpressionNode | null {
         return {
           id: ulid(),
           nodeType: "Impression",
-          tagName: "Impression",
+          tagName: "impression",
           parentId: row.id,
           title: impression.title,
           body: impression.body,
