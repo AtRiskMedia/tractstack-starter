@@ -133,7 +133,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
       buffer = "";
     } else if (inputString[i] === ">") {
       const href = extractHref(buffer);
-      if(href !== null) {
+      if (href !== null) {
         hrefs.push(href);
       }
       buffer = "";
@@ -169,7 +169,8 @@ function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
           nodeType: "TagElement",
         } as FlatNode,
       ];
-      if(node.tagName === "a") { // add extra space
+      if (node.tagName === "a") {
+        // add extra space
         nodesToInsert.push({
           id: ulid(),
           parentId: node.parentId,

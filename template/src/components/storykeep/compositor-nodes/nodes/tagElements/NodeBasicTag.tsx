@@ -71,15 +71,15 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           // should get styles from text not "a"
           const originalLinksStyles = getCtx(props)
             .getNodesRecursively(node)
-            .filter(childNode => "tagName" in childNode && childNode?.tagName === "a")
-            .map(childNode => (childNode as FlatNode))
+            .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
+            .map((childNode) => childNode as FlatNode)
             .reverse();
           // keep original element on, we care about chldren only
           getCtx(props).deleteChildren(nodeId);
 
           // convert markdown to children nodes
           textToNodes.forEach((node: FlatNode) => {
-            const foundNode = originalLinksStyles.find(x => x.href === node.href);
+            const foundNode = originalLinksStyles.find((x) => x.href === node.href);
             if (foundNode) {
               node.buttonPayload = foundNode.buttonPayload;
             }
