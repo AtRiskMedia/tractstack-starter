@@ -1,6 +1,7 @@
 ---
 import AstroNodesRenderer from "@/components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
-import Layout from "@/layouts/Layout.astro";
+import { ReactNodesWrapper } from "@/components/storykeep/compositor-nodes/ReactNodesWrapper";
+import StoryKeep from "@/layouts/StoryKeep.astro";
 import { getConfig } from "@/utils/core/config.ts";
 import { getCtx } from "@/store/nodes";
 import { getGenerateAllNodes } from "@/utils/db/migrate/generate";
@@ -92,7 +93,7 @@ if (!storyfragmentNode) {
 const config = await getConfig();
 ---
 
-<Layout
+<StoryKeep
   title={storyfragmentNode.title}
   pubDatetime={storyfragmentNode.created || new Date()}
   modDatetime={storyfragmentNode.changed || new Date()}
@@ -107,7 +108,16 @@ const config = await getConfig();
         ? `bg-${storyfragmentNode.tailwindBgColour}`
         : ``}
     >
+      <ReactNodesWrapper
+        id={storyfragmentNode.id}
+        nodes={nodes}
+        config={config!}
+        client:only="react"
+      />
+      <br />
+      <br />
+      <br />
       <AstroNodesRenderer id={storyfragmentNode.id} />
     </div>
   </main>
-</Layout>
+</StoryKeep>
