@@ -10,6 +10,7 @@ import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
 import type { PaneNode } from "@/types.ts";
+import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
@@ -108,6 +109,16 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                 )}
               </button>
             )}
+            <button onClick={() => getCtx().moveNode(nodeId, "after")}>
+              <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
+                <ArrowDownIcon className="w-6 h-6 mr-1" />
+              </div>
+            </button>
+            <button onClick={() => getCtx().moveNode(nodeId, "before")}>
+              <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
+                <ArrowUpIcon className="w-6 h-6 mr-1" />
+              </div>
+            </button>
           </div>
         </div>
       </div>
