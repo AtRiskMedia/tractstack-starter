@@ -8,9 +8,9 @@ import { cleanTursoFile } from "./data/tursoFile";
 import { cleanTursoMenu } from "./data/tursoMenu";
 import { cleanTursoTractStack } from "./data/tursoTractStack";
 import { cleanPaneDesigns } from "./data/tursoPaneDesign";
-import { getFileNodes } from "./nodes/files";
-import { getResourceNodes } from "./nodes/resources";
-import { getMenuNodes } from "./nodes/menus";
+import { getFileNodes } from "./migrate/files";
+import { getResourceNodes } from "./migrate/resources";
+import { getMenuNodes } from "./migrate/menus";
 import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
 import { tursoClient } from "./client";
 import type {

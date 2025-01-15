@@ -486,10 +486,10 @@ export interface TursoPane {
 export interface ResourceNode extends BaseNode {
   title: string;
   slug: string;
-  category: string | null;
-  actionLisp: string;
   oneliner: string;
   optionsPayload: any;
+  category?: string;
+  actionLisp?: string;
 }
 
 export interface MenuNode extends BaseNode {
@@ -1180,7 +1180,8 @@ export type NodeType =
   | "TractStack"
   | "Menu"
   | "Impression"
-  | "File";
+  | "File"
+  | "Resource";
 
 export interface BaseNode {
   id: string;

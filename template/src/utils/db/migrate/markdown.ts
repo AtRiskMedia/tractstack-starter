@@ -13,7 +13,7 @@ import type {
   MarkdownPaneDatum,
   OptionsPayloadDatum,
 } from "../../../types";
-import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
+import type { GetPaneFragmentResult } from "@/utils/db/migrate/panefragments.ts";
 
 export function getMarkdownPaneNode(
   fragment: MarkdownPaneDatum,

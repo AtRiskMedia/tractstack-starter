@@ -2,8 +2,6 @@ import { NodesContext } from "@/store/nodes.ts";
 import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
-  MarkdownPaneFragmentNode,
-  MarkdownPaneDatum,
   MenuNode,
   ResourceNode,
   PaneNode,
@@ -24,7 +22,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       panes: [],
       markdowns: [],
       paneMarkdowns: [],
-      storyfragmentPanes: [],
+      storyfragmentPanes: {},
       paneFiles: [],
       files: [],
       menus: [],
@@ -49,6 +47,20 @@ export class NodesSerializer_Json implements NodesSerializer {
       this.processResourceNode(n, saveData);
     });
     return saveData;
+  }
+
+  processTractStackNode(node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
+    const tractstackNode = node as TractStackNode;
+    if (tractstackNode)
+      saveData.tractstacks.push({
+        id: tractstackNode.id,
+        title: tractstackNode.title,
+        slug: tractstackNode.slug,
+        ...(typeof tractstackNode.socialImagePath === `string`
+          ? { social_image_path: tractstackNode.socialImagePath }
+          : {}),
+      });
   }
 
   processResourceNode(node: BaseNode | undefined, saveData: SaveData) {
@@ -94,27 +106,13 @@ export class NodesSerializer_Json implements NodesSerializer {
       });
   }
 
-  processTractStackNode(node: BaseNode | undefined, saveData: SaveData) {
-    if (!node) return;
-    const tractstackNode = node as TractStackNode;
-    if (tractstackNode)
-      saveData.tractstacks.push({
-        id: tractstackNode.id,
-        title: tractstackNode.title,
-        slug: tractstackNode.slug,
-        ...(typeof tractstackNode.socialImagePath === `string`
-          ? { social_image_path: tractstackNode.socialImagePath }
-          : { social_image_path: null }),
-      });
-  }
-
   processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const storyfragmentNode = node as StoryFragmentNode;
     if (storyfragmentNode && storyfragmentNode.parentId)
       saveData.storyfragments.push({
         id: storyfragmentNode.id,
-        trackstack_id: storyfragmentNode.parentId,
+        tractstack_id: storyfragmentNode.parentId,
         slug: storyfragmentNode.slug,
         title: storyfragmentNode.title,
         changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
@@ -129,12 +127,7 @@ export class NodesSerializer_Json implements NodesSerializer {
           ? { social_image_path: storyfragmentNode.socialImagePath }
           : {}),
       });
-    storyfragmentNode.paneIds.forEach((pid: string) => {
-      saveData.storyfragmentPanes.push({
-        storyfragmentId: storyfragmentNode.id,
-        paneId: pid,
-      });
-    });
+    saveData.storyfragmentPanes[storyfragmentNode.id] = storyfragmentNode.paneIds || [];
   }
 
   processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
@@ -227,7 +220,7 @@ export class NodesSerializer_Json implements NodesSerializer {
       panes: [],
       markdowns: [],
       paneMarkdowns: [],
-      storyfragmentPanes: [],
+      storyfragmentPanes: {},
       paneFiles: [],
       files: [],
       menus: [],
@@ -238,29 +231,29 @@ export class NodesSerializer_Json implements NodesSerializer {
     return saveData;
   }
 
-  getMarkdownPayload(markdownNode: MarkdownPaneFragmentNode): string {
-    if (!markdownNode) return "";
+  //getMarkdownPayload(markdownNode: MarkdownPaneFragmentNode): string {
+  //  if (!markdownNode) return "";
 
-    const markdownDatum: MarkdownPaneDatum = {
-      id: markdownNode.id,
-      isModal: false,
-      type: "markdown",
-      hiddenViewports: "none",
-      imageMaskShapeDesktop: "none",
-      imageMaskShapeTablet: "none",
-      imageMaskShapeMobile: "none",
-      textShapeOutsideDesktop: "none",
-      textShapeOutsideTablet: "none",
-      textShapeOutsideMobile: "none",
-      optionsPayload: {
-        classNamesPayload: {},
-        classNames: {
-          all: {},
-        },
-      },
-    };
-    return JSON.stringify(markdownDatum);
-  }
+  //  const markdownDatum: MarkdownPaneDatum = {
+  //    id: markdownNode.id,
+  //    isModal: false,
+  //    type: "markdown",
+  //    hiddenViewports: "none",
+  //    imageMaskShapeDesktop: "none",
+  //    imageMaskShapeTablet: "none",
+  //    imageMaskShapeMobile: "none",
+  //    textShapeOutsideDesktop: "none",
+  //    textShapeOutsideTablet: "none",
+  //    textShapeOutsideMobile: "none",
+  //    optionsPayload: {
+  //      classNamesPayload: {},
+  //      classNames: {
+  //        all: {},
+  //      },
+  //    },
+  //  };
+  //  return JSON.stringify(markdownDatum);
+  //}
 
   //  // will rewrite to use the above helper fns
   //  processNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
@@ -304,7 +297,7 @@ export class NodesSerializer_Json implements NodesSerializer {
   //    //      const storyfragmentNode = node as StoryFragmentNode;
   //    //      saveData.storyfragments.push({
   //    //        id: storyfragmentNode.id,
-  //    //        trackstack_id: "",
+  //    //        tractstack_id: "",
   //    //        slug: storyfragmentNode.slug,
   //    //        tailwind_background_colour: storyfragmentNode.tailwindBgColour || "",
   //    //        title: storyfragmentNode.title,

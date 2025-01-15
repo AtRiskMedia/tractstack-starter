@@ -1,7 +1,7 @@
 import { ulid } from "ulid";
 import { getVisualBreak } from "../helpers/visualBreak";
 import type { BgPaneDatum } from "../../../types";
-import type { GetPaneFragmentResult } from "@/utils/db/nodes/panefragments.ts";
+import type { GetPaneFragmentResult } from "@/utils/db/migrate/panefragments.ts";
 
 export function getBgPaneNode(fragment: BgPaneDatum, parentId: string): GetPaneFragmentResult {
   if (

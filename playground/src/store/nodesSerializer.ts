@@ -1,18 +1,27 @@
 import { NodesContext } from "@/store/nodes.ts";
-import type { StoryKeepAllNodes } from "@/types.ts";
+import type {
+  BaseNode,
+  StoryKeepAllNodes,
+  ImageFileNode,
+  MenuNode,
+  ResourceNode,
+  StoryFragmentNode,
+  PaneNode,
+  TractStackNode,
+} from "@/types.ts";
 
 export type TractStackRowData = {
   id: string;
   title: string;
   slug: string;
-  social_image_path: string | null;
+  social_image_path?: string;
 };
 
 export type StoryFragmentRowData = {
   id: string;
   title: string;
   slug: string;
-  trackstack_id: string;
+  tractstack_id: string;
   created: string;
   changed: string;
   menu_id?: string;
@@ -20,7 +29,7 @@ export type StoryFragmentRowData = {
   tailwind_background_colour?: string;
 };
 
-export type FileObjectRowData = {
+export type ImageFileRowData = {
   id: string;
   filename: string;
   alt_description: string | null;
@@ -55,8 +64,7 @@ export type PaneMarkdownRowData = {
 };
 
 export type StoryFragmentPaneRowData = {
-  storyfragmentId: string;
-  paneId: string;
+  [key: string]: string[];
 };
 
 export type MenuRowData = {
@@ -77,7 +85,7 @@ export type ResourceRowData = {
 };
 
 export type SaveData = {
-  files: FileObjectRowData[];
+  files: ImageFileRowData[];
   menus: MenuRowData[];
   resources: ResourceRowData[];
   storyfragments: StoryFragmentRowData[];
@@ -85,11 +93,41 @@ export type SaveData = {
   markdowns: MarkdownRowData[];
   paneMarkdowns: PaneMarkdownRowData[];
   paneFiles: PaneFileRowData[];
-  storyfragmentPanes: StoryFragmentPaneRowData[];
+  storyfragmentPanes: StoryFragmentPaneRowData;
   tractstacks: TractStackRowData[];
+};
+export type LoadData = {
+  files: ImageFileNode[];
+  menus: MenuNode[];
+  resources: ResourceNode[];
+  storyfragments: StoryFragmentNode[];
+  panes: PaneNode[];
+  tractstacks: TractStackNode[];
 };
 
 export abstract class NodesSerializer {
   abstract save(ctx: NodesContext): SaveData;
   abstract migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
+  abstract processResourceNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processMenuNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processImageFileNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processTractStackNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData): void;
+}
+export abstract class NodesDeserializer {
+  //abstract loadAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
+  abstract processTractStackRowData(
+    rowData: TractStackRowData | undefined,
+    loadData: LoadData
+  ): void;
+  abstract processStoryFragmentRowData(
+    rowData: StoryFragmentRowData,
+    paneIds: string[],
+    loadData: LoadData
+  ): void;
+  abstract processPaneRowData(rowData: PaneRowData | undefined, loadData: LoadData): void;
+  abstract processMenuRowData(rowData: MenuRowData | undefined, loadData: LoadData): void;
+  abstract processImageFileRowData(rowData: ImageFileRowData | undefined, loadData: LoadData): void;
+  abstract processResourceRowData(rowData: ResourceRowData | undefined, loadData: LoadData): void;
 }
