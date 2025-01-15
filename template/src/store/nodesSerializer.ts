@@ -1,6 +1,7 @@
 import { NodesContext } from "@/store/nodes.ts";
 import type {
   BaseNode,
+  FlatNode,
   StoryKeepAllNodes,
   ImageFileNode,
   MenuNode,
@@ -103,6 +104,7 @@ export type LoadData = {
   storyfragments: StoryFragmentNode[];
   panes: PaneNode[];
   tractstacks: TractStackNode[];
+  childNodes: (BaseNode | FlatNode)[];
 };
 
 export abstract class NodesSerializer {

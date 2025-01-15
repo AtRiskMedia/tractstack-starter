@@ -25,6 +25,7 @@ import type {
   ViewportKey,
   Tag,
 } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
 import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames.ts";
 import type { BeliefDatum } from "../types.ts";
@@ -120,6 +121,24 @@ export class NodesContext {
     this.notifications.clear();
   }
 
+  buildNodesTreeFromRowDataMadeNodes(nodes: LoadData | null) {
+    if (nodes !== null) {
+      this.clearAll();
+      this.addNodes(nodes.files);
+      this.addNodes(nodes.menus);
+      this.addNodes(nodes.resources);
+      this.addNodes(nodes.tractstacks);
+      // IMPORTANT!
+      // pane nodes have to be added BEFORE StoryFragment nodes so they can register in this.allNodes
+      this.addNodes(nodes.panes);
+      // add childNodes after panes
+      this.addNodes(nodes.childNodes);
+      // then storyfragment nodes will link pane nodes from above
+      this.addNodes(nodes.storyfragments);
+    }
+  }
+
+  // this is for old data model
   buildNodesTreeFromFragmentNodes(nodes: StoryKeepAllNodes | null) {
     if (nodes !== null) {
       this.clearAll();

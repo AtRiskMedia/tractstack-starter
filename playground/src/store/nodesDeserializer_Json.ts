@@ -71,6 +71,16 @@ export class NodesDeserializer_Json implements NodesDeserializer {
     if (!rowData) return;
     if (typeof loadData.panes === `undefined`) loadData.panes = [] as PaneNode[];
     const optionsPayload = JSON.parse(rowData.options_payload);
+    const childNodes = optionsPayload.nodes || [];
+    const heldBeliefs =
+      typeof optionsPayload.heldBeliefs !== `undefined` ? optionsPayload.heldBeliefs : null;
+    const withheldBeliefs =
+      typeof optionsPayload.withheldBeliefs !== `undefined` ? optionsPayload.withheldBeliefs : null;
+    if (typeof optionsPayload.nodes !== `undefined`) delete optionsPayload.nodes;
+    if (typeof optionsPayload.heldBeliefs !== `undefined`) delete optionsPayload.heldBeliefs;
+    if (typeof optionsPayload.withheldBeliefs !== `undefined`)
+      delete optionsPayload.withheldBeliefs;
+    if (childNodes) loadData.childNodes = [...loadData.childNodes, ...childNodes];
     loadData.panes.push({
       id: rowData.id,
       title: rowData.title,
@@ -88,13 +98,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
           ? new Date(rowData.changed)
           : new Date(new Date().toISOString()),
       ...(typeof optionsPayload.bgColour === `string` ? { bgColour: optionsPayload.bgColour } : {}),
-      ...(typeof optionsPayload.heldBeliefs !== `undefined`
-        ? { heldBeliefs: optionsPayload.heldBeliefs }
-        : {}),
-      ...(typeof optionsPayload.withheldBeliefs !== `undefined`
-        ? { withheldBeliefs: optionsPayload.withheldBeliefs }
-        : {}),
-      ...(typeof optionsPayload.nodes !== `undefined` ? { nodes: optionsPayload.nodes } : {}),
+      ...(heldBeliefs ? { heldBeliefs } : {}),
+      ...(withheldBeliefs ? { withheldBeliefs } : {}),
     });
   }
 
@@ -119,7 +124,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       parentId: null,
       filename: rowData.filename,
       nodeType: `File`,
-      altDescription: rowData.alt_description || `We apologize this image description could not be found.`,
+      altDescription:
+        rowData.alt_description || `We apologize this image description could not be found.`,
       src: rowData.url,
       ...(typeof rowData.src_set === `string` ? { srcSet: rowData.src_set } : {}),
     });
