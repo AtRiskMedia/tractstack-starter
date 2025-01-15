@@ -157,6 +157,7 @@ export function mdAstTraverse(
           const imgSrc = node.properties?.src as string;
           const matchingFile = fileNodes.find((file) => file.filename === imgSrc);
           if (matchingFile) {
+            flatNode.fileId = matchingFile.id;
             flatNode.src = matchingFile.src;
             if (matchingFile.srcSet) flatNode.srcSet = matchingFile.srcSet;
             flatNode.alt =

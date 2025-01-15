@@ -1,4 +1,5 @@
 import { NodesContext } from "@/store/nodes.ts";
+import type { StoryKeepAllNodes } from "@/types.ts";
 
 export type TractStackRowData = {
   id: string;
@@ -12,12 +13,11 @@ export type StoryFragmentRowData = {
   title: string;
   slug: string;
   trackstack_id: string;
-  social_image_path: string | null;
-  tailwind_background_colour: string;
   created: string;
   changed: string;
-  menu_id: string;
-  pane_ids: string[];
+  menu_id?: string;
+  social_image_path?: string;
+  tailwind_background_colour?: string;
 };
 
 export type FileObjectRowData = {
@@ -25,26 +25,38 @@ export type FileObjectRowData = {
   filename: string;
   alt_description: string | null;
   url: string;
-  src_set: string | null;
+  src_set?: string;
 };
 
 export type PaneRowData = {
   id: string;
   title: string;
   slug: string;
+  pane_type: string;
   created: string;
   changed: string;
-  markdown_id: string;
   options_payload: string;
   is_context_pane: number;
-  height_offset_desktop: number;
-  height_offset_mobile: number;
-  height_offset_tablet: number;
-  height_ratio_desktop: string;
-  height_ratio_mobile: string;
-  height_ratio_tablet: string;
+};
+
+export type PaneFileRowData = {
+  pane_id: string;
+  file_id: string;
+};
+
+export type MarkdownRowData = {
+  id: string;
   markdown_body: string;
-  files: string;
+};
+
+export type PaneMarkdownRowData = {
+  paneId: string;
+  markdownId: string;
+};
+
+export type StoryFragmentPaneRowData = {
+  storyfragmentId: string;
+  paneId: string;
 };
 
 export type MenuRowData = {
@@ -58,22 +70,26 @@ export type ResourceRowData = {
   id: string;
   title: string;
   slug: string;
-  category: string;
-  actionLisp: string;
   oneliner: string;
-  optionsPayload: string;
+  options_payload: string;
+  category_slug?: string;
+  action_lisp?: string;
 };
 
 export type SaveData = {
   files: FileObjectRowData[];
   menus: MenuRowData[];
   resources: ResourceRowData[];
-
-  tractStack: TractStackRowData;
-  storyFragments: StoryFragmentRowData[];
+  storyfragments: StoryFragmentRowData[];
   panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
+  paneMarkdowns: PaneMarkdownRowData[];
+  paneFiles: PaneFileRowData[];
+  storyfragmentPanes: StoryFragmentPaneRowData[];
+  tractstacks: TractStackRowData[];
 };
 
 export abstract class NodesSerializer {
   abstract save(ctx: NodesContext): SaveData;
+  abstract migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
 }

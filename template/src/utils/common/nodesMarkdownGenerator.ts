@@ -93,7 +93,7 @@ export class MarkdownGenerator {
         this._listIdx = 0;
         return childrenMarkdown;
       case "img":
-        return `* ![${(node as FlatNode)?.alt}](${(node as FlatNode)?.src})\n\n`;
+        return `* ![${(node as FlatNode)?.alt}](${(node as FlatNode)?.fileId})\n\n`;
       case "li": {
         if (hasWidgetChildren(nodeId, this._ctx) || hasImgChildren(nodeId, this._ctx)) {
           return childrenMarkdown;
