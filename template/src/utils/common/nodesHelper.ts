@@ -78,9 +78,15 @@ export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[]
   return finalNodes;
 }
 
+function extractHref(str: string) {
+  const match = str.match(/href="([^"]*)"/);
+  return match ? match[1] : null;
+}
+
 function extractNodes(inputString: string, parentId: string): FlatNode[] {
   const result: FlatNode[] = [];
   const parentsStack: string[] = [];
+  const hrefs: string[] = [];
   let buffer = "";
   let inLink = false;
 
@@ -100,6 +106,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
             copy: buffer,
             tagName: parentType,
             nodeType: "TagElement",
+            href: hrefs.pop(),
             parentId,
           });
         }
@@ -125,6 +132,10 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
       }
       buffer = "";
     } else if (inputString[i] === ">") {
+      const href = extractHref(buffer);
+      if(href !== null) {
+        hrefs.push(href);
+      }
       buffer = "";
     }
   }
@@ -137,6 +148,7 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
       copy: buffer,
       tagName: parentType || "text",
       nodeType: "TagElement",
+      href: hrefs.pop(),
       parentId,
     });
   }
@@ -148,7 +160,7 @@ function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     if (["em", "strong", "a"].includes(node.tagName)) {
-      nodes.insertAfter(i, [
+      const nodesToInsert = [
         {
           id: ulid(),
           parentId: node.id,
@@ -156,7 +168,17 @@ function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
           tagName: "text",
           nodeType: "TagElement",
         } as FlatNode,
-      ]);
+      ];
+      if(node.tagName === "a") { // add extra space
+        nodesToInsert.push({
+          id: ulid(),
+          parentId: node.parentId,
+          copy: " ",
+          tagName: "text",
+          nodeType: "TagElement",
+        } as FlatNode);
+      }
+      nodes.insertAfter(i, nodesToInsert);
       node.copy = undefined;
     }
   }

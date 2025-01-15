@@ -7,6 +7,7 @@ import { useRef } from "react";
 export const NodeButton = (props: NodeProps) => {
   const spanRef = useRef<HTMLSpanElement | null>(null);
 
+  // todo: make it <a>
   return (
     <button
       className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
