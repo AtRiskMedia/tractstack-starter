@@ -35,7 +35,6 @@ import StyleParentDeleteLayerPanel from "./panels/StyleParentPanel_deleteLayer";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
 import { getCtx } from "../../../store/nodes";
 import { isMarkdownPaneFragmentNode } from "../../../utils/nodes/type-guards";
-import { classNames } from "@/utils/common/helpers.ts";
 import { type ReactElement } from "react";
 import type { MarkdownPaneFragmentNode, FlatNode, Config } from "@/types";
 
@@ -347,13 +346,9 @@ const SettingsPanel = ({
 
   if (!panel) return null;
   const thisPanel = (
-    <div
-      className={classNames(
-        "bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200",
-        signal.expanded ? "" : "pointer-events-auto hover:bg-myorange/20"
-      )}
-    >
+    <div className="bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
       <div
+        className={(!signal.expanded && "pointer-events-auto hover:bg-myorange/20") || ""}
         style={
           signal.expanded
             ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
@@ -394,15 +389,13 @@ const SettingsPanel = ({
           <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
       </div>
-      <div className="bg-white">
-        {signal.expanded ? (
-          <>{thisPanel}</>
-        ) : (
-          <div onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}>
-            {thisPanel}
-          </div>
-        )}
-      </div>
+      {signal.expanded ? (
+        <>{thisPanel}</>
+      ) : (
+        <div onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}>
+          {thisPanel}
+        </div>
+      )}
     </div>
   );
 };
