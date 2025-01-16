@@ -1,0 +1,29 @@
+---
+import { getCtx } from "@/store/nodes";
+import { getGenerateAllNodes } from "@/utils/db/migrate/generate";
+import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+import type { SaveData } from "@/store/nodesSerializer.ts";
+
+// uses old data source + helper fn to generate as new datum as *Node
+const nodes = await getGenerateAllNodes();
+
+// create node tree from *Node
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
+
+// initialize serializer
+const s = new NodesSerializer_Json();
+
+// generate save data for all nodes (migrate *Node back to *RowData)
+const saveData: SaveData | null = nodes ? s.migrateAll(getCtx(), nodes) : null;
+if (!saveData) {
+  console.error("No save data generated");
+  throw new Error("No save data generated");
+}
+
+const dump = JSON.stringify(saveData);
+---
+
+<h2>Step 1 - old to Nodes</h2>
+<pre>
+  {dump}
+</pre>

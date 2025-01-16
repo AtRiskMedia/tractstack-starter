@@ -25,6 +25,7 @@ export type StoryFragmentRowData = {
   tractstack_id: string;
   created: string;
   changed: string;
+  pane_ids: string[];
   menu_id?: string;
   social_image_path?: string;
   tailwind_background_colour?: string;
@@ -47,6 +48,7 @@ export type PaneRowData = {
   changed: string;
   options_payload: string;
   is_context_pane: number;
+  markdown_id?: string;
 };
 
 export type PaneFileRowData = {
@@ -57,11 +59,6 @@ export type PaneFileRowData = {
 export type MarkdownRowData = {
   id: string;
   markdown_body: string;
-};
-
-export type PaneMarkdownRowData = {
-  paneId: string;
-  markdownId: string;
 };
 
 export type StoryFragmentPaneRowData = {
@@ -92,9 +89,7 @@ export type SaveData = {
   storyfragments: StoryFragmentRowData[];
   panes: PaneRowData[];
   markdowns: MarkdownRowData[];
-  paneMarkdowns: PaneMarkdownRowData[];
   paneFiles: PaneFileRowData[];
-  storyfragmentPanes: StoryFragmentPaneRowData;
   tractstacks: TractStackRowData[];
 };
 export type LoadData = {
@@ -116,18 +111,22 @@ export abstract class NodesSerializer {
   abstract processTractStackNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData): void;
+  protected abstract processPaneData(
+    paneNode: PaneNode,
+    paneType: string,
+    markdownNode: BaseNode | null,
+    allNodes: BaseNode[],
+    ctx: NodesContext,
+    saveData: SaveData
+  ): void;
 }
+
 export abstract class NodesDeserializer {
-  //abstract loadAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
   abstract processTractStackRowData(
     rowData: TractStackRowData | undefined,
     loadData: LoadData
   ): void;
-  abstract processStoryFragmentRowData(
-    rowData: StoryFragmentRowData,
-    paneIds: string[],
-    loadData: LoadData
-  ): void;
+  abstract processStoryFragmentRowData(rowData: StoryFragmentRowData, loadData: LoadData): void;
   abstract processPaneRowData(rowData: PaneRowData | undefined, loadData: LoadData): void;
   abstract processMenuRowData(rowData: MenuRowData | undefined, loadData: LoadData): void;
   abstract processImageFileRowData(rowData: ImageFileRowData | undefined, loadData: LoadData): void;

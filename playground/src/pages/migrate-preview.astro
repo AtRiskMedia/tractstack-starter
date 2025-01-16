@@ -15,7 +15,6 @@ import type {
   PaneRowData,
   ImageFileRowData,
   SaveData,
-  StoryFragmentPaneRowData,
   LoadData,
 } from "@/store/nodesSerializer.ts";
 
@@ -47,11 +46,7 @@ saveData?.tractstacks.forEach((n: TractStackRowData) => {
 });
 
 saveData?.storyfragments.forEach((n: StoryFragmentRowData) => {
-  const fragmentPanes =
-    saveData.storyfragmentPanes && typeof saveData.storyfragmentPanes === "object"
-      ? (saveData.storyfragmentPanes as StoryFragmentPaneRowData)[n.id] || []
-      : [];
-  d.processStoryFragmentRowData(n, fragmentPanes, loadData);
+  d.processStoryFragmentRowData(n, loadData);
 });
 
 saveData?.panes.forEach((n: PaneRowData) => {

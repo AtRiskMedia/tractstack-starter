@@ -12,7 +12,7 @@
       "sql": "CREATE TABLE IF NOT EXISTS resources (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, category_slug TEXT, oneliner TEXT NOT NULL, options_payload TEXT NOT NULL, action_lisp TEXT)"
     },
     "files": {
-      "sql": "CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, filename TEXT NOT NULL, alt_description TEXT NOT NULL, url TEXT NOT NULL, src_set BOOLEAN DEFAULT false)"
+      "sql": "CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, filename TEXT NOT NULL, alt_description TEXT NOT NULL, url TEXT NOT NULL, src_set TEXT)"
     },
     "markdowns": {
       "sql": "CREATE TABLE IF NOT EXISTS markdowns (id TEXT PRIMARY KEY, body TEXT NOT NULL)"
@@ -21,7 +21,7 @@
       "sql": "CREATE TABLE IF NOT EXISTS storyfragments (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, social_image_path TEXT, tailwind_background_colour TEXT, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP, menu_id TEXT REFERENCES menus(id), tractstack_id TEXT NOT NULL REFERENCES tractstacks(id))"
     },
     "panes": {
-      "sql": "CREATE TABLE IF NOT EXISTS panes (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP, markdown_id TEXT REFERENCES markdowns(id), options_payload TEXT NOT NULL, is_context_pane BOOLEAN DEFAULT 0)"
+      "sql": "CREATE TABLE IF NOT EXISTS panes (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, changed TIMESTAMP, markdown_id TEXT REFERENCES markdowns(id), options_payload TEXT NOT NULL, is_context_pane BOOLEAN DEFAULT 0, pane_type TEXT NOT NULL)"
     },
     "storyfragment_panes": {
       "sql": "CREATE TABLE IF NOT EXISTS storyfragment_panes (id TEXT PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), pane_id TEXT NOT NULL REFERENCES panes(id), weight INTEGER NOT NULL, UNIQUE(storyfragment_id, pane_id))"
@@ -64,6 +64,7 @@
     }
   },
   "indexes": [
+    "CREATE INDEX IF NOT EXISTS idx_storyfragments_slug ON storyfragments(slug)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragments(tractstack_id)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_menu_id ON storyfragments(menu_id)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_pane_storyfragment_id ON storyfragment_panes(storyfragment_id)",

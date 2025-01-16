@@ -1,0 +1,251 @@
+---
+import { getCtx } from "@/store/nodes";
+import {
+  getTractStackByIdRowData,
+  upsertTractStackByIdRowData,
+  getResourceByIdRowData,
+  upsertResourceByIdRowData,
+  getMenuByIdRowData,
+  upsertMenuByIdRowData,
+  getFileByIdRowData,
+  upsertFileByIdRowData,
+  getPaneByIdRowData,
+  upsertPaneByIdRowData,
+  getMarkdownByIdRowData,
+  upsertMarkdownRowData,
+  upsertPaneFileRelation,
+  getStoryFragmentByIdRowData,
+  upsertStoryFragmentByIdRowData,
+} from "@/utils/db/turso.ts";
+import { getGenerateAllNodes } from "@/utils/db/migrate/generate";
+import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+import type {
+  TractStackRowData,
+  ResourceRowData,
+  MenuRowData,
+  ImageFileRowData,
+  PaneRowData,
+  MarkdownRowData,
+  StoryFragmentRowData,
+  SaveData,
+} from "@/store/nodesSerializer.ts";
+
+// Type for our migration load data
+interface MigratedLoadData {
+  tractstacks: TractStackRowData[];
+  resources: ResourceRowData[];
+  menus: MenuRowData[];
+  files: ImageFileRowData[];
+  panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
+  storyfragments: StoryFragmentRowData[];
+}
+
+// Type for migration status results
+interface MigrationResult {
+  id: string;
+  type: string;
+  status: "success" | "failed" | "error";
+  error?: unknown;
+}
+
+// uses old data source + helper fn to generate as new datum as *Node
+const nodes = await getGenerateAllNodes();
+
+// create node tree from *Node
+getCtx().buildNodesTreeFromFragmentNodes(nodes);
+
+// initialize serializer
+const s = new NodesSerializer_Json();
+
+// generate save data for all nodes (migrate *Node back to *RowData)
+const saveData: SaveData | null = nodes ? s.migrateAll(getCtx(), nodes) : null;
+if (!saveData) {
+  console.error("No save data generated");
+  throw new Error("No save data generated");
+}
+
+const migratedLoadData: MigratedLoadData = {
+  tractstacks: [],
+  resources: [],
+  menus: [],
+  files: [],
+  panes: [],
+  markdowns: [],
+  storyfragments: [],
+};
+
+// 1. First migrate tractstacks (required by storyfragments)
+const tractStackResults: MigrationResult[] = await Promise.all(
+  saveData.tractstacks.map(async (tractstack): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertTractStackByIdRowData(tractstack);
+      if (saved) {
+        const verified = await getTractStackByIdRowData(tractstack.id);
+        if (verified) {
+          migratedLoadData.tractstacks.push(verified);
+          return { id: tractstack.id, type: "tractstack", status: "success" };
+        }
+      }
+      return { id: tractstack.id, type: "tractstack", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate tractstack ${tractstack.id}:`, error);
+      return { id: tractstack.id, type: "tractstack", status: "error", error };
+    }
+  })
+);
+
+// 2. Then migrate menus (required by storyfragments)
+const menuResults: MigrationResult[] = await Promise.all(
+  saveData.menus.map(async (menu): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertMenuByIdRowData(menu);
+      if (saved) {
+        const verified = await getMenuByIdRowData(menu.id);
+        if (verified) {
+          migratedLoadData.menus.push(verified);
+          return { id: menu.id, type: "menu", status: "success" };
+        }
+      }
+      return { id: menu.id, type: "menu", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate menu ${menu.id}:`, error);
+      return { id: menu.id, type: "menu", status: "error", error };
+    }
+  })
+);
+
+// 3. Then files (required by panes)
+const fileResults: MigrationResult[] = await Promise.all(
+  saveData.files.map(async (file): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertFileByIdRowData(file);
+      if (saved) {
+        const verified = await getFileByIdRowData(file.id);
+        if (verified) {
+          migratedLoadData.files.push(verified);
+          return { id: file.id, type: "file", status: "success" };
+        }
+      }
+      return { id: file.id, type: "file", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate file ${file.id}:`, error);
+      return { id: file.id, type: "file", status: "error", error };
+    }
+  })
+);
+
+// 4. Then migrate markdowns (required by panes)
+const markdownResults: MigrationResult[] = await Promise.all(
+  saveData.markdowns.map(async (markdown): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertMarkdownRowData(markdown.id, markdown.markdown_body);
+      if (saved) {
+        const verified = await getMarkdownByIdRowData(markdown.id);
+        if (verified) {
+          migratedLoadData.markdowns.push(verified);
+          return { id: markdown.id, type: "markdown", status: "success" };
+        }
+      }
+      return { id: markdown.id, type: "markdown", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate markdown ${markdown.id}:`, error);
+      return { id: markdown.id, type: "markdown", status: "error", error };
+    }
+  })
+);
+
+// 5. Then migrate panes (required by storyfragments)
+const paneResults: MigrationResult[] = await Promise.all(
+  saveData.panes.map(async (pane): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertPaneByIdRowData(pane);
+      if (saved) {
+        const verified = await getPaneByIdRowData(pane.id);
+        if (verified) {
+          // Handle file relationships
+          const paneFileRelations = saveData.paneFiles.filter(
+            (relation) => relation.pane_id === pane.id
+          );
+          for (const relation of paneFileRelations) {
+            await upsertPaneFileRelation(relation.pane_id, relation.file_id);
+          }
+          migratedLoadData.panes.push(verified);
+          return { id: pane.id, type: "pane", status: "success" };
+        }
+      }
+      return { id: pane.id, type: "pane", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate pane ${pane.id}:`, error);
+      return { id: pane.id, type: "pane", status: "error", error };
+    }
+  })
+);
+
+// 6. Finally migrate storyfragments
+const storyfragmentResults: MigrationResult[] = await Promise.all(
+  saveData.storyfragments.map(async (storyfragment): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertStoryFragmentByIdRowData(storyfragment);
+      if (saved) {
+        const verified = await getStoryFragmentByIdRowData(storyfragment.id);
+        if (verified) {
+          migratedLoadData.storyfragments.push(verified);
+          return { id: storyfragment.id, type: "storyfragment", status: "success" };
+        }
+      }
+      return { id: storyfragment.id, type: "storyfragment", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate storyfragment ${storyfragment.id}:`, error);
+      return { id: storyfragment.id, type: "storyfragment", status: "error", error };
+    }
+  })
+);
+
+// 7. Resources can be migrated at any time (no dependencies)
+const resourceResults: MigrationResult[] = await Promise.all(
+  saveData.resources.map(async (resource): Promise<MigrationResult> => {
+    try {
+      const saved = await upsertResourceByIdRowData(resource);
+      if (saved) {
+        const verified = await getResourceByIdRowData(resource.id);
+        if (verified) {
+          migratedLoadData.resources.push(verified);
+          return { id: resource.id, type: "resource", status: "success" };
+        }
+      }
+      return { id: resource.id, type: "resource", status: "failed" };
+    } catch (error) {
+      console.error(`Failed to migrate resource ${resource.id}:`, error);
+      return { id: resource.id, type: "resource", status: "error", error };
+    }
+  })
+);
+
+interface MigrationSummary {
+  tractstacks: MigrationResult[];
+  resources: MigrationResult[];
+  menus: MigrationResult[];
+  files: MigrationResult[];
+  markdowns: MigrationResult[];
+  panes: MigrationResult[];
+  storyfragments: MigrationResult[];
+}
+
+const migrationSummary: MigrationSummary = {
+  tractstacks: tractStackResults,
+  resources: resourceResults,
+  menus: menuResults,
+  files: fileResults,
+  markdowns: markdownResults,
+  panes: paneResults,
+  storyfragments: storyfragmentResults,
+};
+
+const dump = JSON.stringify({ data: migratedLoadData, summary: migrationSummary }, null, 2);
+---
+
+<h2>Stage 2 - *Nodes to *RowData, save, and get *RowData back</h2>
+<pre>
+  {dump}
+</pre>

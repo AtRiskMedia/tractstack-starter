@@ -12,7 +12,7 @@ import type {
 } from "@/types.ts";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
-export class NodesSerializer_Json implements NodesSerializer {
+export class NodesSerializer_Json extends NodesSerializer {
   // this migrates allNodes (currently generated using helpers from old data model)
   // and saves as new data model
   migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData {
@@ -21,8 +21,6 @@ export class NodesSerializer_Json implements NodesSerializer {
       storyfragments: [],
       panes: [],
       markdowns: [],
-      paneMarkdowns: [],
-      storyfragmentPanes: {},
       paneFiles: [],
       files: [],
       menus: [],
@@ -115,6 +113,7 @@ export class NodesSerializer_Json implements NodesSerializer {
         tractstack_id: storyfragmentNode.parentId,
         slug: storyfragmentNode.slug,
         title: storyfragmentNode.title,
+        pane_ids: storyfragmentNode.paneIds,
         changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
         created: storyfragmentNode?.created?.toISOString() || new Date().toISOString(),
         ...(typeof storyfragmentNode.tailwindBgColour === `string`
@@ -127,55 +126,102 @@ export class NodesSerializer_Json implements NodesSerializer {
           ? { social_image_path: storyfragmentNode.socialImagePath }
           : {}),
       });
-    saveData.storyfragmentPanes[storyfragmentNode.id] = storyfragmentNode.paneIds || [];
   }
 
   processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const paneNode = node as PaneNode;
     const allNodes = ctx.getNodesRecursively(paneNode).reverse();
-    // for a code hook we get 1 "Pane" node; otherwise it's a nodeType wrapped in Pane
-    const paneType = allNodes.length > 1 ? allNodes?.at(1)?.nodeType : allNodes?.at(0)?.nodeType;
-    const markdownNode = allNodes?.at(1)?.nodeType === `Markdown` ? allNodes.at(1) : null;
-    const nodes = [];
-    if (allNodes.length > 1) nodes.push(...allNodes.slice(1));
+
+    // First check if it's a CodeHook pane
+    if (
+      allNodes.length === 1 &&
+      allNodes[0].nodeType === "Pane" &&
+      typeof (allNodes[0] as PaneNode).codeHookTarget === "string"
+    ) {
+      const paneType = "CodeHook";
+      this.processPaneData(paneNode, paneType, null, allNodes, ctx, saveData);
+      return;
+    }
+
+    // Find the first occurrence of either Markdown or BgPane
+    const validPaneTypes = ["Markdown", "BgPane"];
+    let markdownNode = null;
+    let paneType = null;
+
+    for (let i = 1; i < allNodes.length; i++) {
+      const currentNode = allNodes[i];
+      if (validPaneTypes.includes(currentNode.nodeType)) {
+        paneType = currentNode.nodeType;
+        if (paneType === "Markdown") {
+          markdownNode = currentNode;
+        }
+        break;
+      }
+    }
+
+    if (paneType) {
+      this.processPaneData(paneNode, paneType, markdownNode, allNodes, ctx, saveData);
+    } else {
+      console.warn(`Could not determine pane type for pane ${paneNode.id}`);
+      console.log(
+        "Nodes structure:",
+        allNodes.map((n) => ({ id: n.id, type: n.nodeType }))
+      );
+    }
+  }
+
+  protected processPaneData(
+    paneNode: PaneNode,
+    paneType: string,
+    markdownNode: BaseNode | null,
+    allNodes: BaseNode[],
+    ctx: NodesContext,
+    saveData: SaveData
+  ) {
+    const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
     const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
-    if (impressionNodes.length > 0) nodes.push(...impressionNodes);
+    if (impressionNodes.length > 0) {
+      nodes.push(...impressionNodes);
+    }
+
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);
     const optionsPayload = {
       isDecorative: paneNode.isDecorative || false,
-      ...(typeof paneNode.bgColour === `string` ? { bgColour: paneNode.bgColour } : {}),
+      ...(typeof paneNode.bgColour === "string" ? { bgColour: paneNode.bgColour } : {}),
       ...(nodes?.length > 0 ? { nodes } : {}),
-      ...(typeof paneNode.heightOffsetDesktop === `number` && paneNode.heightOffsetDesktop > 0
+      ...(typeof paneNode.heightOffsetDesktop === "number" && paneNode.heightOffsetDesktop > 0
         ? { height_offset_desktop: paneNode.heightOffsetDesktop }
         : {}),
-      ...(typeof paneNode.heightOffsetTablet === `number` && paneNode.heightOffsetTablet > 0
+      ...(typeof paneNode.heightOffsetTablet === "number" && paneNode.heightOffsetTablet > 0
         ? { height_offset_tablet: paneNode.heightOffsetTablet }
         : {}),
-      ...(typeof paneNode.heightOffsetMobile === `number` && paneNode.heightOffsetMobile > 0
+      ...(typeof paneNode.heightOffsetMobile === "number" && paneNode.heightOffsetMobile > 0
         ? { height_offset_mobile: paneNode.heightOffsetMobile }
         : {}),
-      ...(typeof paneNode.heightRatioDesktop === `string`
+      ...(typeof paneNode.heightRatioDesktop === "string"
         ? { height_ratio_desktop: paneNode.heightRatioDesktop }
         : {}),
-      ...(typeof paneNode.heightRatioTablet === `string`
+      ...(typeof paneNode.heightRatioTablet === "string"
         ? { height_ratio_tablet: paneNode.heightRatioTablet }
         : {}),
-      ...(typeof paneNode.heightRatioMobile === `string`
+      ...(typeof paneNode.heightRatioMobile === "string"
         ? { height_ratio_mobile: paneNode.heightRatioMobile }
         : {}),
-      ...(typeof paneNode.codeHookTarget === `string`
+      ...(typeof paneNode.codeHookTarget === "string"
         ? { codeHookTarget: paneNode.codeHookTarget }
         : {}),
-      ...(typeof paneNode.codeHookTarget === `string` &&
-      typeof paneNode.codeHookPayload !== `undefined`
+      ...(typeof paneNode.codeHookTarget === "string" &&
+      typeof paneNode.codeHookPayload !== "undefined"
         ? { codeHookPayload: paneNode.codeHookPayload }
         : {}),
-      ...(typeof paneNode.heldBeliefs !== `undefined` ? { heldBeliefs: paneNode.heldBeliefs } : {}),
-      ...(typeof paneNode.withheldBeliefs !== `undefined`
+      ...(typeof paneNode.heldBeliefs !== "undefined" ? { heldBeliefs: paneNode.heldBeliefs } : {}),
+      ...(typeof paneNode.withheldBeliefs !== "undefined"
         ? { withheldBeliefs: paneNode.withheldBeliefs }
         : {}),
     };
+
+    // Process file relationships
     if (paneFilesNodes) {
       paneFilesNodes.forEach((fid: string) => {
         saveData.paneFiles.push({
@@ -184,33 +230,32 @@ export class NodesSerializer_Json implements NodesSerializer {
         });
       });
     }
+
+    // Process markdown if present
     if (markdownNode) {
       const markdownGen = new MarkdownGenerator(ctx);
       const markdownBody = markdownGen.markdownFragmentToMarkdown(markdownNode.id);
-      if (markdownBody)
+      if (markdownBody) {
         saveData.markdowns.push({
           id: markdownNode.id,
           markdown_body: markdownBody,
         });
-      saveData.paneMarkdowns.push({
-        paneId: paneNode.id,
-        markdownId: markdownNode.id,
-      });
+      }
     }
-    if (paneType)
-      saveData.panes.push({
-        id: paneNode.id,
-        title: paneNode.title,
-        slug: paneNode.slug,
-        pane_type: paneType,
-        changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
-        created: paneNode?.created?.toISOString() || new Date().toISOString(),
-        is_context_pane: paneNode.isContextPane ? 1 : 0,
-        options_payload: JSON.stringify(optionsPayload),
-        ...(typeof markdownNode?.id === `string` ? { markdown_id: markdownNode.id } : {}),
-      });
-  }
 
+    // Create the pane record
+    saveData.panes.push({
+      id: paneNode.id,
+      title: paneNode.title,
+      slug: paneNode.slug,
+      pane_type: paneType,
+      ...(markdownNode ? { markdown_id: markdownNode.id } : {}),
+      changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
+      created: paneNode?.created?.toISOString() || new Date().toISOString(),
+      is_context_pane: paneNode.isContextPane ? 1 : 0,
+      options_payload: JSON.stringify(optionsPayload),
+    });
+  }
   save(ctx: NodesContext): SaveData {
     console.log(`must rewrite using the individual helper fns`, ctx);
     //const rootNode = ctx.allNodes.get().get(ctx.rootNodeId.get());
@@ -219,8 +264,6 @@ export class NodesSerializer_Json implements NodesSerializer {
       storyfragments: [],
       panes: [],
       markdowns: [],
-      paneMarkdowns: [],
-      storyfragmentPanes: {},
       paneFiles: [],
       files: [],
       menus: [],

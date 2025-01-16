@@ -33,11 +33,7 @@ export class NodesDeserializer_Json implements NodesDeserializer {
     });
   }
 
-  processStoryFragmentRowData(
-    rowData: StoryFragmentRowData,
-    paneIds: string[],
-    loadData: LoadData
-  ) {
+  processStoryFragmentRowData(rowData: StoryFragmentRowData, loadData: LoadData) {
     if (!rowData) return;
     if (typeof loadData.storyfragments === `undefined`)
       loadData.storyfragments = [] as StoryFragmentNode[];
@@ -46,7 +42,7 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       nodeType: `StoryFragment`,
       title: rowData.title,
       slug: rowData.slug,
-      paneIds,
+      paneIds: rowData.pane_ids,
       parentId: rowData.tractstack_id,
       ...(typeof rowData.tailwind_background_colour === `string`
         ? { tailwindBgColour: rowData.tailwind_background_colour }
@@ -87,6 +83,7 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       nodeType: `Pane`,
       slug: rowData.slug,
       parentId: null,
+      ...(typeof rowData.markdown_id === `string` ? { markdownId: rowData.markdown_id } : {}),
       isDecorative:
         typeof optionsPayload.isDecorative === `boolean` ? optionsPayload.isDecorative : false,
       created:
