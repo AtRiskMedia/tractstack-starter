@@ -970,6 +970,9 @@ export class NodesContext {
     const newLocationNode = this.allNodes.get().get(insertNodeId);
     if (!newLocationNode) return;
 
+    // same nodes do nothing
+    if(nodeId === insertNodeId) return;
+    
     if (node.nodeType !== newLocationNode.nodeType) {
       console.warn(
         `Trying to move nodes ${nodeId} and ${insertNodeId} but they're belong to different types`
