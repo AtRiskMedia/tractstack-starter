@@ -1,6 +1,6 @@
 ---
 import AstroNodesRenderer from "@/components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
-import StoryKeep from "@/layouts/StoryKeep.astro";
+import Layout from "@/layouts/Layout.astro";
 import { getConfig } from "@/utils/core/config.ts";
 import { getCtx } from "@/store/nodes";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
@@ -47,9 +47,9 @@ if (fullData.menu) {
   deserializer.processMenuRowData(fullData.menu, loadData);
 }
 
-fullData.files.forEach((file) => {
-  deserializer.processImageFileRowData(file, loadData);
-});
+//fullData.files.forEach((file) => {
+//  deserializer.processImageFileRowData(file, loadData);
+//});
 
 // Build the node tree from the loaded data
 getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
@@ -68,7 +68,7 @@ const contentMap = await getFullContentMap();
 console.log(contentMap);
 ---
 
-<StoryKeep
+<Layout
   title={storyfragmentNode.title}
   pubDatetime={storyfragmentNode.created || new Date()}
   modDatetime={storyfragmentNode.changed || new Date()}
@@ -86,4 +86,4 @@ console.log(contentMap);
       <AstroNodesRenderer id={storyfragmentNode.id} />
     </div>
   </main>
-</StoryKeep>
+</Layout>
