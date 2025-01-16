@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore, toolAddModeStore, keyboardAccessible } from "@/store/storykeep.ts";
+import { keyboardAccessible, toolAddModeStore, viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -7,7 +7,7 @@ import { type JSX, type MouseEvent, useEffect, useState } from "react";
 import { tagTitles } from "@/constants";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
 
-type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
+  type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const { value: toolAddMode } = toolAddModeStore.get();

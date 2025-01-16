@@ -1,4 +1,4 @@
-import type { FlatNode, TemplateNode, ToolAddMode } from "@/types.ts";
+import type { BaseNode, FlatNode, StoryFragmentNode, TemplateNode, ToolAddMode } from "@/types.ts";
 import {
   TemplateBeliefNode,
   TemplateBunnyNode,
@@ -12,7 +12,7 @@ import {
   TemplateToggleNode,
   TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
-import { getCtx } from "@/store/nodes.ts";
+import { getCtx, NodesContext } from "@/store/nodes.ts";
 import type { NodeTagProps } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 import { ulid } from "ulid";
 
@@ -212,4 +212,54 @@ function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] 
   }
 
   return mergedNodes;
+}
+
+export function moveNodeAtLocationInContext(
+  oldParentNodes: string[],
+  originalIdx: number,
+  newLocationNode: BaseNode,
+  insertNodeId: string,
+  nodeId: string,
+  location: "before" | "after",
+  node: BaseNode,
+  ctx: NodesContext,
+) {
+  if (oldParentNodes) {
+    oldParentNodes.splice(originalIdx, 1);
+  }
+
+  const newLocationParentNodes = ctx.getChildNodeIDs(newLocationNode.parentId || "");
+  // now grab parent nodes, check if we have inner node
+  if (
+    insertNodeId &&
+    newLocationParentNodes &&
+    newLocationParentNodes?.indexOf(insertNodeId) !== -1
+  ) {
+    const spliceIdx = newLocationParentNodes.indexOf(nodeId);
+    if (spliceIdx !== -1) {
+      newLocationParentNodes.splice(newLocationParentNodes.indexOf(nodeId), 1);
+    }
+    if (location === "before") {
+      newLocationParentNodes.insertBefore(newLocationParentNodes.indexOf(insertNodeId), [nodeId]);
+    } else {
+      newLocationParentNodes.insertAfter(newLocationParentNodes.indexOf(insertNodeId), [nodeId]);
+    }
+  }
+
+  if (node.nodeType === "Pane") {
+    const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
+    const storyFragment = ctx.allNodes.get().get(storyFragmentId) as StoryFragmentNode;
+    if (storyFragment) {
+      const spliceIdx = storyFragment.paneIds.indexOf(nodeId);
+      if (spliceIdx !== -1) {
+        storyFragment.paneIds.splice(spliceIdx, 1);
+      }
+      if (location === "before") {
+        storyFragment.paneIds.insertBefore(storyFragment.paneIds.indexOf(insertNodeId), [nodeId]);
+      } else {
+        storyFragment.paneIds.insertAfter(storyFragment.paneIds.indexOf(insertNodeId), [nodeId]);
+      }
+    }
+  }
+  node.parentId = newLocationNode.parentId;
 }

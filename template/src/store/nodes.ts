@@ -18,12 +18,12 @@ import type {
   PaneNode,
   StoryFragmentNode,
   StoryKeepAllNodes,
+  Tag,
   TemplateMarkdown,
   TemplateNode,
   TemplatePane,
   TractStackNode,
   ViewportKey,
-  Tag,
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
@@ -38,6 +38,7 @@ import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import allowInsert from "@/utils/nodes/allowInsert.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
+import { moveNodeAtLocationInContext } from "@/utils/common/nodesHelper.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -970,6 +971,9 @@ export class NodesContext {
     const newLocationNode = this.allNodes.get().get(insertNodeId);
     if (!newLocationNode) return;
 
+    // same nodes do nothing
+    if (nodeId === insertNodeId) return;
+
     if (node.nodeType !== newLocationNode.nodeType) {
       console.warn(
         `Trying to move nodes ${nodeId} and ${insertNodeId} but they're belong to different types`
@@ -977,46 +981,50 @@ export class NodesContext {
       return;
     }
 
+    const oldParentId = node.parentId || "";
+
     const oldParentNodes = this.getChildNodeIDs(node.parentId || "");
-    if (oldParentNodes) {
-      oldParentNodes.splice(oldParentNodes.indexOf(nodeId), 1);
-    }
+    const originalIdx = oldParentNodes.indexOf(nodeId);
+    moveNodeAtLocationInContext(
+      oldParentNodes,
+      originalIdx,
+      newLocationNode,
+      insertNodeId,
+      nodeId,
+      location,
+      node,
+      this
+    );
+    this.notifyNode(newLocationNode?.parentId || "");
 
-    const newLocationParentNodes = this.getChildNodeIDs(newLocationNode.parentId || "");
-    // now grab parent nodes, check if we have inner node
-    if (
-      insertNodeId &&
-      newLocationParentNodes &&
-      newLocationParentNodes?.indexOf(insertNodeId) !== -1
-    ) {
-      const spliceIdx = newLocationParentNodes.indexOf(nodeId);
-      if (spliceIdx !== -1) {
-        newLocationParentNodes.splice(newLocationParentNodes.indexOf(nodeId), 1);
-      }
-      if (location === "before") {
-        newLocationParentNodes.insertBefore(newLocationParentNodes.indexOf(insertNodeId), [nodeId]);
-      } else {
-        newLocationParentNodes.insertAfter(newLocationParentNodes.indexOf(insertNodeId), [nodeId]);
-      }
-    }
-
-    if (node.nodeType === "Pane") {
-      const storyFragmentId = this.getClosestNodeTypeFromId(node.id, "StoryFragment");
-      const storyFragment = this.allNodes.get().get(storyFragmentId) as StoryFragmentNode;
-      if (storyFragment) {
-        const spliceIdx = storyFragment.paneIds.indexOf(nodeId);
-        if (spliceIdx !== -1) {
-          storyFragment.paneIds.splice(spliceIdx, 1);
+    this.history.addPatch({
+      op: PatchOp.REPLACE,
+      undo: (ctx) => {
+        // Undo the move operation
+        const oldParentNodes = ctx.getChildNodeIDs(node.parentId || "");
+        const newParentNodes = ctx.getChildNodeIDs(newLocationNode.parentId || "");
+        if (newParentNodes) {
+          newParentNodes.splice(newParentNodes.indexOf(nodeId), 1);
         }
-        if (location === "before") {
-          storyFragment.paneIds.insertBefore(storyFragment.paneIds.indexOf(insertNodeId), [nodeId]);
-        } else {
-          storyFragment.paneIds.insertAfter(storyFragment.paneIds.indexOf(insertNodeId), [nodeId]);
+        if (oldParentNodes) {
+          oldParentNodes.insertBefore(originalIdx, [nodeId]); // Insert back to old position
         }
-      }
-    }
-    node.parentId = newLocationNode.parentId;
-    this.notifyNode(ROOT_NODE_NAME);
+        node.parentId = oldParentId;
+        ctx.notifyNode(node?.parentId || "");
+      },
+      redo: (ctx) => {
+        moveNodeAtLocationInContext(
+          oldParentNodes,
+          originalIdx,
+          newLocationNode,
+          insertNodeId,
+          nodeId,
+          location,
+          node,
+          ctx
+        );
+      },
+    });
   }
 
   getPaneImageFileIds(paneId: string): string[] {
