@@ -9,6 +9,15 @@ import type {
   StoryFragmentRowData,
 } from "@/store/nodesSerializer.ts";
 
+export interface StoryFragmentFullRowData {
+  storyfragment: StoryFragmentRowData;
+  tractstack: TractStackRowData;
+  menu: MenuRowData | null;
+  panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
+  files: ImageFileRowData[];
+}
+
 export async function getTractStackByIdRowData(id: string): Promise<TractStackRowData | null> {
   try {
     const client = await tursoClient.getClient();
@@ -421,6 +430,155 @@ export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData)
     return true;
   } catch (error) {
     console.error("Error in upsertStoryFragmentByIdRowData:", error);
+    throw error;
+  }
+}
+
+// Add these interfaces to the top of turso.ts
+export interface StoryFragmentFullRowData {
+  storyfragment: StoryFragmentRowData;
+  tractstack: TractStackRowData;
+  menu: MenuRowData | null;
+  panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
+  files: ImageFileRowData[];
+}
+
+export async function getStoryFragmentBySlugFullRowData(
+  slug: string
+): Promise<StoryFragmentFullRowData | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+
+    // First get the story fragment and its direct relationships
+    const { rows: sfRows } = await client.execute({
+      sql: `
+        SELECT 
+          sf.id, sf.title, sf.slug, sf.tractstack_id, 
+          sf.created, sf.changed, sf.menu_id,
+          sf.social_image_path, sf.tailwind_background_colour,
+          ts.id as ts_id, ts.title as ts_title, ts.slug as ts_slug,
+          ts.social_image_path as ts_social_image_path
+        FROM storyfragments sf
+        JOIN tractstacks ts ON sf.tractstack_id = ts.id
+        WHERE sf.slug = ?
+      `,
+      args: [slug],
+    });
+
+    if (sfRows.length === 0) return null;
+
+    const sfRow = sfRows[0];
+
+    // Create base story fragment data
+    const storyFragment: StoryFragmentRowData = {
+      id: String(sfRow.id),
+      title: String(sfRow.title),
+      slug: String(sfRow.slug),
+      tractstack_id: String(sfRow.tractstack_id),
+      created: String(sfRow.created),
+      changed: String(sfRow.changed || sfRow.created),
+      pane_ids: [], // Will be populated from join query
+      ...(sfRow.menu_id && { menu_id: String(sfRow.menu_id) }),
+      ...(sfRow.social_image_path && { social_image_path: String(sfRow.social_image_path) }),
+      ...(sfRow.tailwind_background_colour && {
+        tailwind_background_colour: String(sfRow.tailwind_background_colour),
+      }),
+    };
+
+    // Create tractstack data
+    const tractstack: TractStackRowData = {
+      id: String(sfRow.ts_id),
+      title: String(sfRow.ts_title),
+      slug: String(sfRow.ts_slug),
+      ...(sfRow.ts_social_image_path && {
+        social_image_path: String(sfRow.ts_social_image_path),
+      }),
+    };
+
+    // Get menu if exists
+    let menu: MenuRowData | null = null;
+    if (sfRow.menu_id) {
+      const menuData = await getMenuByIdRowData(String(sfRow.menu_id));
+      if (menuData) menu = menuData;
+    }
+
+    // Get panes and their ordering
+    const { rows: paneRows } = await client.execute({
+      sql: `
+        SELECT 
+          p.id, p.title, p.slug, p.pane_type,
+          p.created, p.changed, p.options_payload,
+          p.is_context_pane, p.markdown_id,
+          sp.weight
+        FROM storyfragment_panes sp
+        JOIN panes p ON sp.pane_id = p.id
+        WHERE sp.storyfragment_id = ?
+        ORDER BY sp.weight ASC
+      `,
+      args: [storyFragment.id],
+    });
+
+    const panes: PaneRowData[] = [];
+    const markdowns: MarkdownRowData[] = [];
+    const files: ImageFileRowData[] = [];
+
+    // Store pane IDs in order
+    storyFragment.pane_ids = paneRows.map((row) => String(row.id));
+
+    // Process each pane
+    for (const paneRow of paneRows) {
+      panes.push({
+        id: String(paneRow.id),
+        title: String(paneRow.title),
+        slug: String(paneRow.slug),
+        pane_type: String(paneRow.pane_type),
+        created: String(paneRow.created),
+        changed: String(paneRow.changed || paneRow.created),
+        options_payload: String(paneRow.options_payload),
+        is_context_pane: Number(paneRow.is_context_pane),
+        ...(paneRow.markdown_id && { markdown_id: String(paneRow.markdown_id) }),
+      });
+
+      // Get markdown if exists
+      if (paneRow.markdown_id) {
+        const markdownData = await getMarkdownByIdRowData(String(paneRow.markdown_id));
+        if (markdownData) markdowns.push(markdownData);
+      }
+
+      // Get associated files
+      const { rows: fileRows } = await client.execute({
+        sql: `
+          SELECT f.* 
+          FROM files f
+          JOIN file_panes fp ON f.id = fp.file_id
+          WHERE fp.pane_id = ?
+        `,
+        args: [paneRow.id],
+      });
+
+      fileRows.forEach((fileRow) => {
+        files.push({
+          id: String(fileRow.id),
+          filename: String(fileRow.filename),
+          alt_description: String(fileRow.alt_description),
+          url: String(fileRow.url),
+          ...(fileRow.src_set && { src_set: String(fileRow.src_set) }),
+        });
+      });
+    }
+
+    return {
+      storyfragment: storyFragment,
+      tractstack,
+      menu,
+      panes,
+      markdowns,
+      files,
+    };
+  } catch (error) {
+    console.error("Error in getStoryFragmentBySlugFullRowData:", error);
     throw error;
   }
 }
