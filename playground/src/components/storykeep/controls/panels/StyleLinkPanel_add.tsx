@@ -91,6 +91,7 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
         action: isHoverMode ? "style-link-update-hover" : "style-link-update",
         nodeId: node.id,
         className: styleKey,
+        expanded: true,
       });
     },
     [node.id, isHoverMode]
@@ -102,6 +103,7 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
         action: isHoverMode ? "style-link-update-hover" : "style-link-update",
         nodeId: node.id,
         className: styleKey,
+        expanded: true,
       });
     },
     [node.id, isHoverMode]
@@ -111,6 +113,7 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
     settingsPanelStore.set({
       action: "style-link",
       nodeId: node.id,
+      expanded: true,
     });
   };
 

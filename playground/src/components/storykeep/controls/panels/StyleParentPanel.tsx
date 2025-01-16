@@ -131,6 +131,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       nodeId: node.id,
       layer: currentLayer,
       action: `style-parent-delete-layer`,
+      expanded: true,
     });
   };
 
@@ -140,6 +141,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       layer: currentLayer,
       className: name,
       action: `style-parent-remove`,
+      expanded: true,
     });
   };
 
@@ -149,6 +151,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       layer: currentLayer,
       className: name,
       action: `style-parent-update`,
+      expanded: true,
     });
   };
 
@@ -157,6 +160,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       nodeId: node.id,
       layer: currentLayer,
       action: `style-parent-add`,
+      expanded: true,
     });
   };
 

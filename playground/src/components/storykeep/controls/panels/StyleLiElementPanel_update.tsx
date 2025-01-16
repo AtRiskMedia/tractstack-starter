@@ -30,6 +30,7 @@ const StyleLiElementUpdatePanel = ({
     settingsPanelStore.set({
       action: "style-li-element",
       nodeId: isContainer && typeof childId === `string` ? childId : node.id,
+      expanded: true,
     });
   };
 

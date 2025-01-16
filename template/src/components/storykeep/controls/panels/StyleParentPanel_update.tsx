@@ -25,6 +25,7 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
         nodeId: node.id,
         layer: layer,
         action: `style-parent`,
+        expanded: true,
       });
   };
 

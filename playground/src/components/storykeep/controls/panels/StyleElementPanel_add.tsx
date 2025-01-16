@@ -142,6 +142,7 @@ const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
         nodeId: node.id,
         className: styleKey,
         action: "style-element-update",
+        expanded: true,
       });
     },
     [node.id]
@@ -153,6 +154,7 @@ const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
         nodeId: node.id,
         className: styleKey,
         action: "style-element-update",
+        expanded: true,
       });
     },
     [node.id]
@@ -162,6 +164,7 @@ const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
     settingsPanelStore.set({
       nodeId: node.id,
       action: "style-element",
+      expanded: true,
     });
   };
 

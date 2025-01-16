@@ -18,6 +18,7 @@ const StyleLiElementRemovePanel = ({ node, parentNode, className, childId }: Bas
       settingsPanelStore.set({
         action: isContainer ? "style-li-container" : "style-li-element",
         nodeId: isContainer && typeof childId === `string` ? childId : node.id,
+        expanded: true,
       });
   };
 

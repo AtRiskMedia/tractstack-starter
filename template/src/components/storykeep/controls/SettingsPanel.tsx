@@ -1,5 +1,7 @@
 import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
+import ChevronDoubleDownIcon from "@heroicons/react/24/outline/ChevronDoubleDownIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import DebugPanel from "./DebugPanel";
 import StyleCodeHookPanel from "./panels/StyleCodeHookPanel";
@@ -33,6 +35,7 @@ import StyleParentDeleteLayerPanel from "./panels/StyleParentPanel_deleteLayer";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
 import { getCtx } from "../../../store/nodes";
 import { isMarkdownPaneFragmentNode } from "../../../utils/nodes/type-guards";
+import { classNames } from "@/utils/common/helpers.ts";
 import { type ReactElement } from "react";
 import type { MarkdownPaneFragmentNode, FlatNode, Config } from "@/types";
 
@@ -343,27 +346,62 @@ const SettingsPanel = ({
   }
 
   if (!panel) return null;
-  return (
-    <div className="fixed bottom-0 right-0 flex flex-col items-start">
-      <button
-        onClick={() => settingsPanelStore.set(null)}
-        className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
-        aria-label="Close settings panel"
-        title="Close settings panel"
+  const thisPanel = (
+    <div
+      className={classNames(
+        "bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200",
+        signal.expanded ? "" : "pointer-events-auto hover:bg-myorange/20"
+      )}
+    >
+      <div
+        style={
+          signal.expanded
+            ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
+            : { height: "60px", overflowY: "hidden" }
+        }
       >
-        <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-      </button>
-
-      <div className="bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
-        <div
-          id="settings-panel"
-          className="overflow-y-auto"
-          style={{ minHeight: "280px", maxHeight: "50vh" }}
-        >
-          <div key={clickedNode?.id || `debug`} className="p-4">
-            {panel}
-          </div>
+        <div key={clickedNode?.id || `debug`} className="p-4">
+          {panel}
         </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div
+      id="settings-panel"
+      className="fixed bottom-16 md:bottom-0 right-0 flex flex-col items-start"
+    >
+      <div className="inline space-x-2">
+        <button
+          onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}
+          className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
+          aria-label={signal.expanded ? `Hide Settings Panel` : `Show Settings Panel`}
+          title={signal.expanded ? `Hide Settings Panel` : `Show Settings Panel`}
+        >
+          {signal.expanded ? (
+            <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          ) : (
+            <ChevronDoubleUpIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          )}
+        </button>
+        <button
+          onClick={() => settingsPanelStore.set(null)}
+          className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
+          aria-label="Close settings panel"
+          title="Close settings panel"
+        >
+          <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+        </button>
+      </div>
+      <div className="bg-white">
+        {signal.expanded ? (
+          <>{thisPanel}</>
+        ) : (
+          <div onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}>
+            {thisPanel}
+          </div>
+        )}
       </div>
     </div>
   );

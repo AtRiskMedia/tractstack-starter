@@ -25,6 +25,7 @@ const StyleParentDeleteLayerPanel = ({ node, layer }: BasePanelProps) => {
     settingsPanelStore.set({
       nodeId: node.id,
       action: "style-parent",
+      expanded: true,
     });
   };
 

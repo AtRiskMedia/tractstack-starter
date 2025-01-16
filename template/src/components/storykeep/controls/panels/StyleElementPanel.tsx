@@ -64,6 +64,7 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
     settingsPanelStore.set({
       nodeId: node.id,
       action: `style-element-add`,
+      expanded: true,
     });
   };
 
@@ -72,6 +73,7 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
       nodeId: node.id,
       className,
       action: `style-element-remove`,
+      expanded: true,
     });
   };
 
@@ -80,6 +82,7 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
       nodeId: node.id,
       className,
       action: `style-element-update`,
+      expanded: true,
     });
   };
 

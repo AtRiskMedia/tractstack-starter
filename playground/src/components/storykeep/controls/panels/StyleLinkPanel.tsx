@@ -61,6 +61,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
     settingsPanelStore.set({
       action: "style-link-add",
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -68,6 +69,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
     settingsPanelStore.set({
       action: "style-link-add-hover",
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -76,6 +78,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       action: "style-link-remove",
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -84,6 +87,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       action: "style-link-remove-hover",
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -92,6 +96,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       action: "style-link-update",
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -100,6 +105,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       action: "style-link-update-hover",
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -107,6 +113,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
     settingsPanelStore.set({
       action: "style-link-config",
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -114,7 +121,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
     <div className="space-y-8">
       <div className="space-y-4">
         <h2 className="text-xl font-bold">
-          Link {node.tagName === "button" ? "Button" : ""} Styles
+          Edit Link {node.tagName === "button" ? "Button" : ""} Styles
         </h2>
 
         <div className="pb-2">

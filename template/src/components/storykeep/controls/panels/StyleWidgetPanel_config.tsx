@@ -78,6 +78,7 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
     settingsPanelStore.set({
       nodeId: node.id,
       action: "style-widget",
+      expanded: true,
     });
   };
 

@@ -18,6 +18,7 @@ const StyleLinkRemovePanel = ({ node, className }: BasePanelProps) => {
       settingsPanelStore.set({
         action: "style-link",
         nodeId: node.id,
+        expanded: true,
       });
     }
   };

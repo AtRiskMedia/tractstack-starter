@@ -36,6 +36,7 @@ const StyleImageUpdatePanel = ({
     settingsPanelStore.set({
       action: "style-image",
       nodeId: isOuterContainer || isContainer ? childId || node.id : node.id,
+      expanded: true,
     });
   };
 

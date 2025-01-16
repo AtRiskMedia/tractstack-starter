@@ -25,6 +25,7 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
       settingsPanelStore.set({
         action: "style-widget",
         nodeId: isOuterContainer || isContainer ? childId || node.id : node.id,
+        expanded: true,
       });
   };
 

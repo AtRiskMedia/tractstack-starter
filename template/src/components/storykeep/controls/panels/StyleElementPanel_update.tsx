@@ -31,6 +31,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
     settingsPanelStore.set({
       nodeId: node.id,
       action: `style-element`,
+      expanded: true,
     });
   };
 

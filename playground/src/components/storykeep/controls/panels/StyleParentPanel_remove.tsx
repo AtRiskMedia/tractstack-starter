@@ -17,6 +17,7 @@ const StyleParentRemovePanel = ({ node, layer, className }: BasePanelProps) => {
         nodeId: node.id,
         layer: layer,
         action: `style-parent`,
+        expanded: true,
       });
   };
 

@@ -173,6 +173,7 @@ const StyleWidgetPanel = ({
     settingsPanelStore.set({
       action: `style-code-add`,
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -181,6 +182,7 @@ const StyleWidgetPanel = ({
       action: `style-code-container-add`,
       nodeId: containerNode.id,
       childId: node.id,
+      expanded: true,
     });
   };
 
@@ -189,6 +191,7 @@ const StyleWidgetPanel = ({
       action: `style-code-outer-add`,
       nodeId: outerContainerNode.id,
       childId: node.id,
+      expanded: true,
     });
   };
 
@@ -197,6 +200,7 @@ const StyleWidgetPanel = ({
       action: `style-code-remove`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -206,6 +210,7 @@ const StyleWidgetPanel = ({
       nodeId: containerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -215,6 +220,7 @@ const StyleWidgetPanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -223,6 +229,7 @@ const StyleWidgetPanel = ({
       action: `style-code-update`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -232,6 +239,7 @@ const StyleWidgetPanel = ({
       nodeId: containerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -241,6 +249,7 @@ const StyleWidgetPanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -248,13 +257,14 @@ const StyleWidgetPanel = ({
     settingsPanelStore.set({
       action: `style-code-config`,
       nodeId: node.id,
+      expanded: true,
     });
   };
 
   return (
     <div className="space-y-8">
       <div className="space-y-4">
-        <h2 className="text-xl font-bold">{widgetName}</h2>
+        <h2 className="text-xl font-bold">Setup {widgetName}</h2>
 
         <div className="pb-2">
           <div className="text-myblack text-sm p-2 border border-slate-200 rounded w-fit hover:bg-mygreen/20">

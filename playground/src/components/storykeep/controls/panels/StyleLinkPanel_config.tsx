@@ -25,6 +25,7 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
     settingsPanelStore.set({
       nodeId: node.id,
       action: "style-link",
+      expanded: true,
     });
   };
 

@@ -111,6 +111,7 @@ const StyleLiElementPanel = ({
     settingsPanelStore.set({
       action: `style-li-element-add`,
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -119,6 +120,7 @@ const StyleLiElementPanel = ({
       action: `style-li-container-add`,
       nodeId: outerContainerNode.id,
       childId: node.id,
+      expanded: true,
     });
   };
 
@@ -127,6 +129,7 @@ const StyleLiElementPanel = ({
       action: `style-li-element-remove`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -136,6 +139,7 @@ const StyleLiElementPanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -144,6 +148,7 @@ const StyleLiElementPanel = ({
       action: `style-li-element-update`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -153,6 +158,7 @@ const StyleLiElementPanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 

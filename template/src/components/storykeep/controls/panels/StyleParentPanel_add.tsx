@@ -83,6 +83,7 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
         layer: layer,
         className: styleKey,
         action: "style-parent-update",
+        expanded: true,
       });
     },
     [paneFragmentNode.id, layer]
@@ -95,6 +96,7 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
         layer: layer,
         className: styleKey,
         action: "style-parent-update",
+        expanded: true,
       });
     },
     [paneFragmentNode.id, layer]
@@ -105,6 +107,7 @@ const StyleParentPanelAdd = ({ node, layer }: BasePanelProps) => {
       nodeId: paneFragmentNode.id,
       layer: layer,
       action: "style-parent",
+      expanded: true,
     });
   };
 

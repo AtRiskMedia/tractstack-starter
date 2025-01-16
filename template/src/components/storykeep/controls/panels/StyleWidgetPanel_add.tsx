@@ -148,6 +148,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
         nodeId: node.id,
         childId, // Preserve childId for container context
         className: styleKey,
+        expanded: true,
       };
 
       settingsPanelStore.set(nextAction);
@@ -166,6 +167,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
         nodeId: node.id,
         childId, // Preserve childId for container context
         className: styleKey,
+        expanded: true,
       });
     },
     [node.id, childId, isOuterContainer, isContainer, isWidget]
@@ -176,6 +178,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
     settingsPanelStore.set({
       action: "style-widget",
       nodeId: childId || node.id, // Use childId when available for context
+      expanded: true,
     });
   };
 

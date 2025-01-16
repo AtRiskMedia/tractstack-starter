@@ -16,6 +16,7 @@ const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps
       settingsPanelStore.set({
         nodeId: node.id,
         action: "style-element",
+        expanded: true,
       });
   };
 

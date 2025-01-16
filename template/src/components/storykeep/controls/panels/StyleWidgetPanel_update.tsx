@@ -36,6 +36,7 @@ const StyleWidgetUpdatePanel = ({
     settingsPanelStore.set({
       action: "style-widget",
       nodeId: isOuterContainer || isContainer ? childId || node.id : node.id,
+      expanded: true,
     });
   };
 

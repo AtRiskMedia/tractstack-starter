@@ -162,6 +162,7 @@ const StyleImagePanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
         nodeId: node.id,
         childId, // Preserve childId for container context
         className: styleKey,
+        expanded: true,
       };
 
       settingsPanelStore.set(nextAction);
@@ -180,6 +181,7 @@ const StyleImagePanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
         nodeId: node.id,
         childId, // Preserve childId for container context
         className: styleKey,
+        expanded: true,
       });
     },
     [node.id, childId, isOuterContainer, isContainer, isImage]
@@ -190,6 +192,7 @@ const StyleImagePanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
     settingsPanelStore.set({
       action: "style-image",
       nodeId: childId || node.id, // Use childId when available for context
+      expanded: true,
     });
   };
 

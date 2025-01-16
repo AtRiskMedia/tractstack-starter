@@ -145,6 +145,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
         nodeId: targetNodeId,
         childId: isContainer ? childId : undefined,
         className: styleKey,
+        expanded: true,
       });
     },
     [targetNodeId, parentNode, isContainer, childId]
@@ -157,6 +158,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
         nodeId: targetNodeId,
         childId: isContainer ? childId : undefined,
         className: styleKey,
+        expanded: true,
       });
     },
     [targetNodeId, isContainer, childId]
@@ -166,6 +168,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
     settingsPanelStore.set({
       action: "style-li-element",
       nodeId: isContainer && typeof childId === `string` ? childId : targetNodeId,
+      expanded: true,
     });
   };
 

@@ -114,6 +114,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
     settingsPanelStore.set({
       nodeId: node.id,
       action: "style-break",
+      expanded: true,
     });
   };
 

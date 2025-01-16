@@ -172,6 +172,7 @@ const StyleImagePanel = ({
     settingsPanelStore.set({
       action: `style-img-add`,
       nodeId: node.id,
+      expanded: true,
     });
   };
 
@@ -180,6 +181,7 @@ const StyleImagePanel = ({
       action: `style-img-container-add`,
       nodeId: containerNode.id,
       childId: node.id,
+      expanded: true,
     });
   };
 
@@ -188,6 +190,7 @@ const StyleImagePanel = ({
       action: `style-img-outer-add`,
       nodeId: outerContainerNode.id,
       childId: node.id,
+      expanded: true,
     });
   };
 
@@ -196,6 +199,7 @@ const StyleImagePanel = ({
       action: `style-img-remove`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -205,6 +209,7 @@ const StyleImagePanel = ({
       nodeId: containerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -214,6 +219,7 @@ const StyleImagePanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -222,6 +228,7 @@ const StyleImagePanel = ({
       action: `style-img-update`,
       nodeId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -231,6 +238,7 @@ const StyleImagePanel = ({
       nodeId: containerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
@@ -240,6 +248,7 @@ const StyleImagePanel = ({
       nodeId: outerContainerNode.id,
       childId: node.id,
       className,
+      expanded: true,
     });
   };
 
