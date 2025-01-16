@@ -1281,7 +1281,6 @@ export interface StoryKeepAllNodes {
   menuNodes: MenuNode[];
   impressionNodes: ImpressionNode[];
   resourceNodes: ResourceNode[];
-  storyfragmentPanesMap: { [key: string]: string[] };
 }
 
 export interface FlattenedClasses {

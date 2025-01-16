@@ -109,18 +109,9 @@ export async function getGenerateAllNodes(): Promise<StoryKeepAllNodes | null> {
 
     const fragmentResults = getPaneFragmentNodes(paneRows, fileNodes, "all", false);
 
-    const storyfragmentPanesMap = storyfragmentNodes.reduce(
-      (acc, n: StoryFragmentNode) => {
-        acc[n.id] = n.paneIds;
-        return acc;
-      },
-      {} as Record<string, string[]>
-    );
-
     return {
       tractstackNodes: tractStackNodes,
       storyfragmentNodes: storyfragmentNodes,
-      storyfragmentPanesMap,
       paneNodes,
       paneFragmentNodes: fragmentResults.paneFragments || [],
       flatNodes: fragmentResults.flatNodes || [],
