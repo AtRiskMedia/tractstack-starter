@@ -36,7 +36,8 @@ export const Pane = (props: NodeProps) => {
           className={contentClasses}
           style={contentStyles}
           onClick={(e) => {
-            getCtx(props).setClickedNodeId(props.nodeId);
+            // treat as dbl-click to force open panel
+            getCtx(props).setClickedNodeId(props.nodeId, true);
             e.stopPropagation();
           }}
         >

@@ -75,7 +75,7 @@ export class NodesContext {
     this.clickedParentLayer.set(layer);
   }
 
-  handleClickEvent() {
+  handleClickEvent(dblClick: boolean = false) {
     const toolModeVal = toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
     if (!node) return;
@@ -83,7 +83,7 @@ export class NodesContext {
     // click handler based on toolModeVal
     switch (toolModeVal) {
       case `default`:
-        handleClickEventDefault(node, this.clickedParentLayer.get());
+        handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         break;
       case `eraser`:
         this.deleteNode(node.id);
@@ -95,23 +95,54 @@ export class NodesContext {
     this.setClickedParentLayer(null);
   }
 
-  setClickedNodeId(nodeId: string) {
+  private clickTimer: number | null = null;
+  private DOUBLE_CLICK_DELAY = 300;
+  private isProcessingDoubleClick = false;
+  private lastProcessedTime = 0;
+
+  setClickedNodeId(nodeId: string, dblClick: boolean = false) {
+    const now = Date.now();
+    // Prevent processing if we're too close to the last event
+    if (now - this.lastProcessedTime < 50 || this.isProcessingDoubleClick) return;
     let node = this.allNodes.get().get(nodeId) as FlatNode;
     if (node && "tagName" in node) {
-      // make sure the element we clicked is an actual block element, not a decorator
       while (node.parentId !== null && blockedClickNodes.has(node.tagName)) {
-        // if not then look for closest suitable element
         node = this.allNodes.get().get(node.parentId) as FlatNode;
       }
-      // only decorators? Tree broken, don't allow any clicks
-      if (!node) {
-        console.error("Cannot find any available element to click, abort");
-        return;
-      }
+      if (!node) return;
     }
-    this.clickedNodeId.set(node.id);
-    console.log("this.clickedNodeId: ", node.id);
-    this.handleClickEvent();
+
+    // Handle double click
+    if (dblClick) {
+      console.log("Processing explicit double click");
+      if (this.clickTimer) {
+        window.clearTimeout(this.clickTimer);
+        this.clickTimer = null;
+      }
+      this.isProcessingDoubleClick = true;
+      this.clickedNodeId.set(node.id);
+      this.lastProcessedTime = now;
+      window.setTimeout(() => {
+        this.isProcessingDoubleClick = false;
+        console.log("Reset double click processing flag");
+      }, 100);
+      this.handleClickEvent(true);
+      return;
+    }
+
+    // Handle single click with delay for potential double click
+    if (this.clickTimer) {
+      window.clearTimeout(this.clickTimer);
+    }
+    this.clickTimer = window.setTimeout(() => {
+      if (!this.isProcessingDoubleClick) {
+        console.log("Processing delayed single click");
+        this.clickTimer = null;
+        this.clickedNodeId.set(node.id);
+        this.lastProcessedTime = Date.now();
+        this.handleClickEvent(false);
+      }
+    }, this.DOUBLE_CLICK_DELAY);
   }
 
   clearAll() {

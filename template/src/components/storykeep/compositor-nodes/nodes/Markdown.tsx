@@ -31,6 +31,11 @@ export const Markdown = (props: NodeProps) => {
             getCtx(props).setClickedNodeId(props.nodeId);
             e.stopPropagation();
           }}
+          onDoubleClick={(e) => {
+            getCtx(props).setClickedParentLayer(i);
+            getCtx(props).setClickedNodeId(props.nodeId, true);
+            e.stopPropagation();
+          }}
           className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}
         >
           {nodesToRender}

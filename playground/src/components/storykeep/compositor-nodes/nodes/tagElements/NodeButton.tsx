@@ -16,6 +16,10 @@ export const NodeButton = (props: NodeProps) => {
         e.stopPropagation();
         spanRef.current?.focus();
       }}
+      onDoubleClick={(e) => {
+        getCtx(props).setClickedNodeId(props.nodeId, true);
+        e.stopPropagation();
+      }}
     >
       <span ref={spanRef} contentEditable={toolModeValStore.get().value === "default"}>
         <RenderChildren children={getCtx(props).getChildNodeIDs(props.nodeId)} nodeProps={props} />

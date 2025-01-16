@@ -108,6 +108,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
       }}
+      onDoubleClick={(e) => {
+        getCtx(props).setClickedNodeId(nodeId, true);
+        e.stopPropagation();
+      }}
     >
       <RenderChildren children={children} nodeProps={props} />
     </Tag>

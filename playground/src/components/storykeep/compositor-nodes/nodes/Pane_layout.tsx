@@ -38,11 +38,19 @@ export const PaneLayout = (props: NodeProps) => {
             getCtx(props).setClickedNodeId(props.nodeId);
             e.stopPropagation();
           }}
+          onDoubleClick={(e) => {
+            getCtx(props).setClickedNodeId(props.nodeId, true);
+            e.stopPropagation();
+          }}
         >
           <button
             title="Apply New Layout"
             onClick={(e) => {
               getCtx(props).setClickedNodeId(props.nodeId);
+              e.stopPropagation();
+            }}
+            onDoubleClick={(e) => {
+              getCtx(props).setClickedNodeId(props.nodeId, true);
               e.stopPropagation();
             }}
             className="z-10 absolute top-2 right-2 p-1.5 bg-cyan-700 rounded-full hover:bg-black"

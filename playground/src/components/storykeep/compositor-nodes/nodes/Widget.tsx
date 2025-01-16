@@ -91,6 +91,10 @@ export const Widget = memo((props: WidgetProps) => {
         getCtx(props).setClickedNodeId(props.nodeId);
         e.stopPropagation();
       }}
+      onDoubleClick={(e) => {
+        getCtx(props).setClickedNodeId(props.nodeId, true);
+        e.stopPropagation();
+      }}
     >
       {content}
     </div>

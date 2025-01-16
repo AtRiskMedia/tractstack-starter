@@ -39,6 +39,10 @@ export const PaneConfig = (props: NodeProps) => {
               getCtx(props).setClickedNodeId(props.nodeId);
               e.stopPropagation();
             }}
+            onDoubleClick={(e) => {
+              getCtx(props).setClickedNodeId(props.nodeId, true);
+              e.stopPropagation();
+            }}
           >
             {codeHookPayload ? (
               <>

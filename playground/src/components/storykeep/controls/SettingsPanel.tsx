@@ -370,7 +370,7 @@ const SettingsPanel = ({
   return (
     <div
       id="settings-panel"
-      className="fixed bottom-16 md:bottom-0 right-0 flex flex-col items-start"
+      className="transition-all fixed bottom-16 md:bottom-0 right-0 flex flex-col items-start"
     >
       <div className="inline space-x-2">
         <button

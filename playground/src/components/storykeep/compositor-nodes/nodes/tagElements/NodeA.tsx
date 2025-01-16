@@ -26,6 +26,10 @@ export const NodeA = (props: NodeProps) => {
           getCtx(props).setClickedNodeId(props.nodeId);
           e.stopPropagation();
         }}
+        onDoubleClick={(e) => {
+          getCtx(props).setClickedNodeId(props.nodeId, true);
+          e.stopPropagation();
+        }}
         href={(node as FlatNode).href}
         contentEditable={toolModeValStore.get().value === "default"}
         suppressContentEditableWarning

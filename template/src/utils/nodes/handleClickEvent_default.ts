@@ -15,13 +15,18 @@ function isCodeHookPane(node: FlatNode): boolean {
   return node.nodeType === "Pane" && "codeHookTarget" in node;
 }
 
-export function handleClickEventDefault(node: FlatNode, parentLayer?: number | null) {
+export function handleClickEventDefault(
+  node: FlatNode,
+  expanded: boolean,
+  parentLayer?: number | null
+) {
+  console.log(node, expanded);
   if (!node?.nodeType) return;
 
   switch (node.nodeType) {
     case "BgPane": {
       if (isVisualBreakNode(node)) {
-        settingsPanelStore.set({ action: "style-break", nodeId: node.id });
+        settingsPanelStore.set({ action: "style-break", nodeId: node.id, expanded: true });
       } else {
         console.log("unhandled BgPane type");
       }
@@ -33,12 +38,14 @@ export function handleClickEventDefault(node: FlatNode, parentLayer?: number | n
         settingsPanelStore.set({
           action: "setup-codehook",
           nodeId: node.id,
+          expanded: true,
         });
       else {
         settingsPanelStore.set({
           action: "style-parent",
           nodeId: node.id,
           ...(parentLayer ? { layer: parentLayer } : {}),
+          ...(expanded ? { expanded: true } : {}),
         });
       }
       break;
@@ -48,6 +55,7 @@ export function handleClickEventDefault(node: FlatNode, parentLayer?: number | n
         action: "style-parent",
         nodeId: node.id,
         ...(parentLayer ? { layer: parentLayer } : {}),
+        ...(expanded ? { expanded: true } : {}),
       });
       break;
 
@@ -56,7 +64,11 @@ export function handleClickEventDefault(node: FlatNode, parentLayer?: number | n
 
       switch (node.tagName) {
         case "code":
-          settingsPanelStore.set({ action: "style-widget", nodeId: node.id });
+          settingsPanelStore.set({
+            action: "style-widget",
+            nodeId: node.id,
+            ...(expanded ? { expanded: true } : {}),
+          });
           break;
         case "p":
         case "h2":
@@ -64,17 +76,33 @@ export function handleClickEventDefault(node: FlatNode, parentLayer?: number | n
         case "h4":
         case "h5":
         case "ol":
-          settingsPanelStore.set({ action: "style-element", nodeId: node.id });
+          settingsPanelStore.set({
+            action: "style-element",
+            nodeId: node.id,
+            ...(expanded ? { expanded: true } : {}),
+          });
           break;
         case "img":
-          settingsPanelStore.set({ action: "style-image", nodeId: node.id });
+          settingsPanelStore.set({
+            action: "style-image",
+            nodeId: node.id,
+            ...(expanded ? { expanded: true } : {}),
+          });
           break;
         case "li":
-          settingsPanelStore.set({ action: "style-li-element", nodeId: node.id });
+          settingsPanelStore.set({
+            action: "style-li-element",
+            nodeId: node.id,
+            ...(expanded ? { expanded: true } : {}),
+          });
           break;
         case "a":
         case "button":
-          settingsPanelStore.set({ action: "style-link", nodeId: node.id });
+          settingsPanelStore.set({
+            action: "style-link",
+            nodeId: node.id,
+            ...(expanded ? { expanded: true } : {}),
+          });
           break;
         default:
           console.log(`also missed on: ${node.tagName}`);
