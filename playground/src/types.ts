@@ -457,12 +457,18 @@ export type TractStackContentMap = ContentMapBase & {
   type: "TractStack";
 };
 
+export type BeliefContentMap = ContentMapBase & {
+  type: "Belief";
+  scale: string;
+};
+
 export type FullContentMap =
   | MenuContentMap
   | ResourceContentMap
   | PaneContentMap
   | StoryFragmentContentMap
-  | TractStackContentMap;
+  | TractStackContentMap
+  | BeliefContentMap;
 
 export interface TursoPane {
   id: string;

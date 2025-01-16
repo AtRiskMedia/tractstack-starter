@@ -8,6 +8,15 @@ import type {
   MarkdownRowData,
   StoryFragmentRowData,
 } from "@/store/nodesSerializer.ts";
+import type {
+  FullContentMap,
+  BeliefContentMap,
+  TractStackContentMap,
+  StoryFragmentContentMap,
+  PaneContentMap,
+  ResourceContentMap,
+  MenuContentMap,
+} from "@/types.ts";
 
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
@@ -16,6 +25,13 @@ export interface StoryFragmentFullRowData {
   panes: PaneRowData[];
   markdowns: MarkdownRowData[];
   files: ImageFileRowData[];
+}
+
+function ensureString(value: unknown): string {
+  if (value === null || value === undefined) {
+    throw new Error("Required string value is null or undefined");
+  }
+  return String(value);
 }
 
 export async function getTractStackByIdRowData(id: string): Promise<TractStackRowData | null> {
@@ -579,6 +595,181 @@ export async function getStoryFragmentBySlugFullRowData(
     };
   } catch (error) {
     console.error("Error in getStoryFragmentBySlugFullRowData:", error);
+    throw error;
+  }
+}
+
+export async function getFullContentMap(): Promise<FullContentMap[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    const queryParts = [
+      `SELECT id, id as slug, title, 'Menu' as type, theme as extra 
+       FROM menus`,
+
+      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
+       FROM panes`,
+
+      `SELECT id, slug, title, 'Resource' as type, category_slug as extra 
+       FROM resources`,
+
+      `SELECT id, slug, title, 'StoryFragment' as type, NULL as extra 
+       FROM storyfragments`,
+
+      `SELECT id, slug, title, 'TractStack' as type, NULL as extra 
+       FROM tractstacks`,
+
+      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra 
+       FROM beliefs`,
+    ];
+
+    const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
+
+    return rows.map((row) => {
+      const base = {
+        id: ensureString(row.id),
+        title: ensureString(row.title),
+        slug: ensureString(row.slug),
+      };
+
+      switch (ensureString(row.type)) {
+        case "Menu":
+          return {
+            ...base,
+            type: "Menu" as const,
+            theme: ensureString(row.extra),
+          } as MenuContentMap;
+        case "Resource":
+          return {
+            ...base,
+            type: "Resource" as const,
+            categorySlug: row.extra as string | null,
+          } as ResourceContentMap;
+        case "Pane":
+          return {
+            ...base,
+            type: "Pane" as const,
+            isContext: Boolean(row.extra),
+          } as PaneContentMap;
+        case "StoryFragment":
+          return {
+            ...base,
+            type: "StoryFragment" as const,
+          } as StoryFragmentContentMap;
+        case "TractStack":
+          return {
+            ...base,
+            type: "TractStack" as const,
+          } as TractStackContentMap;
+        case "Belief":
+          return {
+            ...base,
+            type: "Belief" as const,
+            scale: ensureString(row.extra),
+          } as BeliefContentMap;
+        default:
+          throw new Error(`Unknown type: ${row.type}`);
+      }
+    }) as FullContentMap[];
+  } catch (error) {
+    console.log("Unable to fetch content map:", error);
+    return [];
+  }
+}
+
+export async function getResourcesByCategorySlugRowData(
+  categorySlug: string
+): Promise<ResourceRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    const { rows } = await client.execute({
+      sql: `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
+            FROM resources 
+            WHERE category_slug = ?`,
+      args: [categorySlug],
+    });
+
+    return rows.map(
+      (row) =>
+        ({
+          id: ensureString(row.id),
+          title: ensureString(row.title),
+          slug: ensureString(row.slug),
+          oneliner: ensureString(row.oneliner),
+          options_payload: ensureString(row.options_payload),
+          ...(typeof row.category_slug === "string" ? { category_slug: row.category_slug } : {}),
+          ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
+        }) as ResourceRowData
+    );
+  } catch (error) {
+    console.error("Error fetching resources by category slug:", error);
+    throw error;
+  }
+}
+
+export async function getResourcesBySlugsRowData(slugs: string[]): Promise<ResourceRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    // Create placeholders for the IN clause
+    const placeholders = slugs.map(() => "?").join(",");
+
+    const { rows } = await client.execute({
+      sql: `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
+            FROM resources 
+            WHERE slug IN (${placeholders})`,
+      args: slugs,
+    });
+
+    // Transform each row into a ResourceRowData
+    return rows.map(
+      (row) =>
+        ({
+          id: ensureString(row.id),
+          title: ensureString(row.title),
+          slug: ensureString(row.slug),
+          oneliner: ensureString(row.oneliner),
+          options_payload: ensureString(row.options_payload),
+          ...(typeof row.category_slug === "string" ? { category_slug: row.category_slug } : {}),
+          ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
+        }) as ResourceRowData
+    );
+  } catch (error) {
+    console.error("Error fetching resources by slugs:", error);
+    return [];
+  }
+}
+
+export async function getResourceBySlugRowData(slug: string): Promise<ResourceRowData | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+
+    const { rows } = await client.execute({
+      sql: `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
+            FROM resources 
+            WHERE slug = ?`,
+      args: [slug],
+    });
+
+    if (rows.length === 0) return null;
+
+    const row = rows[0];
+    return {
+      id: ensureString(row.id),
+      title: ensureString(row.title),
+      slug: ensureString(row.slug),
+      oneliner: ensureString(row.oneliner),
+      options_payload: ensureString(row.options_payload),
+      ...(typeof row.category_slug === "string" ? { category_slug: row.category_slug } : {}),
+      ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
+    } as ResourceRowData;
+  } catch (error) {
+    console.error("Error fetching resource by slug:", error);
     throw error;
   }
 }

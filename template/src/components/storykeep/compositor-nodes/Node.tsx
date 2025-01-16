@@ -27,9 +27,7 @@ import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPa
 import { toolModeValStore } from "@/store/storykeep.ts";
 import { memo, type ReactElement } from "react";
 import type { Config, StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
-import {
-  NodeBasicTag_settings
-} from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
+import { NodeBasicTag_settings } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
 
 export type NodeProps = {
   nodeId: string;
@@ -176,7 +174,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       else if (toolModeVal === `settings`)
         return (
           <NodeBasicTag_settings {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
-        )
+        );
       return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
     }
 

@@ -222,7 +222,7 @@ export function moveNodeAtLocationInContext(
   nodeId: string,
   location: "before" | "after",
   node: BaseNode,
-  ctx: NodesContext,
+  ctx: NodesContext
 ) {
   if (oldParentNodes) {
     oldParentNodes.splice(originalIdx, 1);

@@ -38,35 +38,33 @@ export const NodeBasicTag_settings = (props: NodeTagProps) => {
     </div>
   );
 
-      const baseComponent = (
-      <div className="relative group">
-        <div className="relative">
-          <div className="absolute inset-0">
-            <div
-              className="h-full w-full outline outline-4 outline-dashed outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
-          </div>
-          <SettingsButtons/>
-          <div className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
-            <RenderChildren children={children} nodeProps={props} />
-          </div>
+  const baseComponent = (
+    <div className="relative group">
+      <div className="relative">
+        <div className="absolute inset-0">
+          <div className="h-full w-full outline outline-4 outline-dashed outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
+        </div>
+        <SettingsButtons />
+        <div className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
+          <RenderChildren children={children} nodeProps={props} />
         </div>
       </div>
-      );
+    </div>
+  );
 
-      if (showGuids.get()) return baseComponent;
+  if (showGuids.get()) return baseComponent;
 
-      return (
-      <div className="relative group">
-        <div className="relative">
-          <div className="absolute inset-0">
-            <div
-              className="h-full w-full outline outline-4 outline-dashed outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
-          </div>
-          <SettingsButtons/>
-          <Tag className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
-            <RenderChildren children={children} nodeProps={props} />
-          </Tag>
+  return (
+    <div className="relative group">
+      <div className="relative">
+        <div className="absolute inset-0">
+          <div className="h-full w-full outline outline-4 outline-dashed outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
+        <SettingsButtons />
+        <Tag className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
+          <RenderChildren children={children} nodeProps={props} />
+        </Tag>
       </div>
-      );
-      };
+    </div>
+  );
+};

@@ -7,7 +7,7 @@ import { type JSX, type MouseEvent, useEffect, useState } from "react";
 import { tagTitles } from "@/constants";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
 
-  type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
+type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTagInsert = (props: NodeTagProps) => {
   const { value: toolAddMode } = toolAddModeStore.get();

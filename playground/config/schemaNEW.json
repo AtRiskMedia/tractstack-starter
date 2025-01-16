@@ -42,19 +42,13 @@
       "sql": "CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, source TEXT, medium TEXT, term TEXT, content TEXT, http_referrer TEXT, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "actions": {
-      "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, parent_id TEXT REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
-    },
-    "corpus": {
-      "sql": "CREATE TABLE IF NOT EXISTS corpus (id TEXT PRIMARY KEY, object_id TEXT NOT NULL, object_type TEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, object_type))"
-    },
-    "parents": {
-      "sql": "CREATE TABLE IF NOT EXISTS parents (id TEXT PRIMARY KEY, object_id TEXT NOT NULL REFERENCES corpus(id), parent_id TEXT NOT NULL REFERENCES corpus(id), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, UNIQUE(object_id, parent_id))"
-    },
-    "heldbeliefs": {
-      "sql": "CREATE TABLE IF NOT EXISTS heldbeliefs (id TEXT PRIMARY KEY, belief_id TEXT NOT NULL REFERENCES corpus(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, object TEXT, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+      "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL, object_type TEXT NOT NULL, visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "beliefs": {
-      "sql": "CREATE TABLE IF NOT EXISTS beliefs (id INTEGER PRIMARY KEY AUTOINCREMENT, slug TEXT NOT NULL UNIQUE, scale TEXT NOT NULL)"
+      "sql": "CREATE TABLE IF NOT EXISTS beliefs (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, scale TEXT NOT NULL)"
+    },
+    "heldbeliefs": {
+      "sql": "CREATE TABLE IF NOT EXISTS heldbeliefs (id TEXT PRIMARY KEY, belief_id TEXT NOT NULL REFERENCES beliefs(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, object TEXT, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "stories": {
       "sql": "CREATE TABLE IF NOT EXISTS stories (id INTEGER PRIMARY KEY AUTOINCREMENT, transcript_id TEXT, uuid TEXT, data TEXT)"
@@ -74,19 +68,15 @@
     "CREATE INDEX IF NOT EXISTS idx_pane_markdown_id ON panes(markdown_id)",
     "CREATE INDEX IF NOT EXISTS idx_visits_fingerprint_id ON visits(fingerprint_id)",
     "CREATE INDEX IF NOT EXISTS idx_visits_campaign_id ON visits(campaign_id)",
-    "CREATE INDEX IF NOT EXISTS idx_actions_object_id ON actions(object_id)",
-    "CREATE INDEX IF NOT EXISTS idx_actions_visit_id ON actions(visit_id)",
-    "CREATE INDEX IF NOT EXISTS idx_actions_fingerprint_id ON actions(fingerprint_id)",
-    "CREATE INDEX IF NOT EXISTS idx_actions_parent_id ON actions(parent_id)",
-    "CREATE INDEX IF NOT EXISTS idx_parents_object_id ON parents(object_id)",
-    "CREATE INDEX IF NOT EXISTS idx_parents_parent_id ON parents(parent_id)",
-    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_belief_id ON heldbeliefs(belief_id)",
-    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
-    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_composite ON heldbeliefs(fingerprint_id, belief_id)",
-    "CREATE INDEX IF NOT EXISTS idx_corpus_object_id ON corpus(object_id)",
-    "CREATE INDEX IF NOT EXISTS idx_corpus_object_type ON corpus(object_type)",
     "CREATE INDEX IF NOT EXISTS idx_fingerprints_lead_id ON fingerprints(lead_id)",
     "CREATE INDEX IF NOT EXISTS idx_leads_email ON leads(email)",
-    "CREATE INDEX IF NOT EXISTS idx_beliefs_slug ON beliefs(slug)"
+    "CREATE INDEX IF NOT EXISTS idx_actions_object ON actions(object_id, object_type)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_visit_id ON actions(visit_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_fingerprint_id ON actions(fingerprint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_actions_verb ON actions(verb)",
+    "CREATE INDEX IF NOT EXISTS idx_beliefs_slug ON beliefs(slug)",
+    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_belief_id ON heldbeliefs(belief_id)",
+    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
+    "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_composite ON heldbeliefs(fingerprint_id, belief_id)"
   ]
 }
