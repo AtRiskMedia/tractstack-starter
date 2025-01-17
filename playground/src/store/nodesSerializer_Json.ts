@@ -179,10 +179,10 @@ export class NodesSerializer_Json extends NodesSerializer {
     saveData: SaveData
   ) {
     const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
-    const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
-    if (impressionNodes.length > 0) {
-      nodes.push(...impressionNodes);
-    }
+    //const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
+    //if (impressionNodes.length > 0) {
+    //  nodes.push(...impressionNodes);
+    //}
 
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);
     const optionsPayload = {
