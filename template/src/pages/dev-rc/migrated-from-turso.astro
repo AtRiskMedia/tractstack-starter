@@ -55,27 +55,33 @@ if (!storyfragmentNode) {
   });
 }
 
-const config = await getConfig();
-const contentMap = await getFullContentMap();
-console.log(contentMap);
+//const config = await getConfig();
+//const contentMap = await getFullContentMap();
+//---
+//
+//<Layout
+//  title={storyfragmentNode.title}
+//  pubDatetime={storyfragmentNode.created || new Date()}
+//  modDatetime={storyfragmentNode.changed || new Date()}
+//  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
+//    ? storyfragmentNode.socialImagePath
+//    : undefined}
+//  config={config!}
+//>
+//  <main id="main-content" class="w-full overflow-hidden">
+//    <div
+//      class={typeof storyfragmentNode.tailwindBgColour === `string`
+//        ? `bg-${storyfragmentNode.tailwindBgColour}`
+//        : ``}
+//    >
+//      <AstroNodesRenderer id={storyfragmentNode.id} />
+//    </div>
+//  </main>
+//</Layout>
+
+const dump = JSON.stringify(fullData, null, 2);
 ---
 
-<Layout
-  title={storyfragmentNode.title}
-  pubDatetime={storyfragmentNode.created || new Date()}
-  modDatetime={storyfragmentNode.changed || new Date()}
-  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
-    ? storyfragmentNode.socialImagePath
-    : undefined}
-  config={config!}
->
-  <main id="main-content" class="w-full overflow-hidden">
-    <div
-      class={typeof storyfragmentNode.tailwindBgColour === `string`
-        ? `bg-${storyfragmentNode.tailwindBgColour}`
-        : ``}
-    >
-      <AstroNodesRenderer id={storyfragmentNode.id} />
-    </div>
-  </main>
-</Layout>
+<pre>
+{dump}
+</pre>
