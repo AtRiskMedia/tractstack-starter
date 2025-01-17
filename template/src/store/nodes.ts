@@ -17,7 +17,6 @@ import type {
   PaneFragmentNode,
   PaneNode,
   StoryFragmentNode,
-  StoryKeepAllNodes,
   Tag,
   TemplateMarkdown,
   TemplateNode,
@@ -156,36 +155,43 @@ export class NodesContext {
   buildNodesTreeFromRowDataMadeNodes(nodes: LoadData | null) {
     if (nodes !== null) {
       this.clearAll();
-      this.addNodes(nodes.files);
-      this.addNodes(nodes.menus);
-      this.addNodes(nodes.resources);
-      this.addNodes(nodes.tractstacks);
+      if (nodes?.fileNodes) this.addNodes(nodes.fileNodes);
+      if (nodes?.menuNodes) this.addNodes(nodes.menuNodes);
+      if (nodes?.resourceNodes) this.addNodes(nodes.resourceNodes);
+      if (nodes?.tractstackNodes) this.addNodes(nodes.tractstackNodes);
       // IMPORTANT!
       // pane nodes have to be added BEFORE StoryFragment nodes so they can register in this.allNodes
-      this.addNodes(nodes.panes);
+      if (nodes?.paneNodes) this.addNodes(nodes.paneNodes);
       // add childNodes after panes
-      this.addNodes(nodes.childNodes);
+      if (nodes?.childNodes) this.addNodes(nodes.childNodes);
       // then storyfragment nodes will link pane nodes from above
-      this.addNodes(nodes.storyfragments);
+
+      // for compatibility (until we remove buildNodesTreeFromFragmentNodes)
+      if (nodes?.impressionNodes) this.addNodes(nodes.impressionNodes);
+      if (nodes?.paneFragmentNodes) this.addNodes(nodes.paneFragmentNodes);
+      if (nodes?.flatNodes) this.addNodes(nodes.flatNodes);
+
+      // then add storyfragmentNodes
+      if (nodes?.storyfragmentNodes) this.addNodes(nodes.storyfragmentNodes);
     }
   }
 
-  // this is for old data model
-  buildNodesTreeFromFragmentNodes(nodes: StoryKeepAllNodes | null) {
+  // this is for old data model once converted to nodes
+  buildNodesTreeFromFragmentNodes(nodes: LoadData | null) {
     if (nodes !== null) {
       this.clearAll();
-      this.addNodes(nodes.fileNodes);
-      this.addNodes(nodes.menuNodes);
-      this.addNodes(nodes.resourceNodes);
-      this.addNodes(nodes.tractstackNodes);
+      if (nodes?.fileNodes) this.addNodes(nodes.fileNodes);
+      if (nodes?.menuNodes) this.addNodes(nodes.menuNodes);
+      if (nodes?.resourceNodes) this.addNodes(nodes.resourceNodes);
+      if (nodes?.tractstackNodes) this.addNodes(nodes.tractstackNodes);
       // IMPORTANT!
       // pane nodes have to be added BEFORE StoryFragment nodes so they can register in this.allNodes
-      this.addNodes(nodes.paneNodes);
+      if (nodes?.paneNodes) this.addNodes(nodes.paneNodes);
+      if (nodes?.impressionNodes) this.addNodes(nodes.impressionNodes);
+      if (nodes?.paneFragmentNodes) this.addNodes(nodes.paneFragmentNodes);
+      if (nodes?.flatNodes) this.addNodes(nodes.flatNodes);
       // then storyfragment nodes will link pane nodes from above
-      this.addNodes(nodes.storyfragmentNodes);
-      this.addNodes(nodes.impressionNodes);
-      this.addNodes(nodes.paneFragmentNodes);
-      this.addNodes(nodes.flatNodes);
+      if (nodes?.storyfragmentNodes) this.addNodes(nodes.storyfragmentNodes);
     }
   }
 

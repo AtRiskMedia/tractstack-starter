@@ -20,8 +20,9 @@ import type {
 export class NodesDeserializer_Json implements NodesDeserializer {
   processTractStackRowData(rowData: TractStackRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.tractstacks === `undefined`) loadData.tractstacks = [] as TractStackNode[];
-    loadData.tractstacks.push({
+    if (typeof loadData.tractstackNodes === `undefined`)
+      loadData.tractstackNodes = [] as TractStackNode[];
+    loadData.tractstackNodes.push({
       id: rowData.id,
       nodeType: `TractStack`,
       parentId: null,
@@ -35,9 +36,9 @@ export class NodesDeserializer_Json implements NodesDeserializer {
 
   processStoryFragmentRowData(rowData: StoryFragmentRowData, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.storyfragments === `undefined`)
-      loadData.storyfragments = [] as StoryFragmentNode[];
-    loadData.storyfragments.push({
+    if (typeof loadData.storyfragmentNodes === `undefined`)
+      loadData.storyfragmentNodes = [] as StoryFragmentNode[];
+    loadData.storyfragmentNodes.push({
       id: rowData.id,
       nodeType: `StoryFragment`,
       title: rowData.title,
@@ -65,7 +66,7 @@ export class NodesDeserializer_Json implements NodesDeserializer {
 
   processPaneRowData(rowData: PaneRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.panes === `undefined`) loadData.panes = [] as PaneNode[];
+    if (typeof loadData.paneNodes === `undefined`) loadData.paneNodes = [] as PaneNode[];
     const optionsPayload = JSON.parse(rowData.options_payload);
     const childNodes = optionsPayload.nodes || [];
     const heldBeliefs =
@@ -76,13 +77,17 @@ export class NodesDeserializer_Json implements NodesDeserializer {
     if (typeof optionsPayload.heldBeliefs !== `undefined`) delete optionsPayload.heldBeliefs;
     if (typeof optionsPayload.withheldBeliefs !== `undefined`)
       delete optionsPayload.withheldBeliefs;
-    if (childNodes) loadData.childNodes = [...loadData.childNodes, ...childNodes];
-    loadData.panes.push({
+    loadData.childNodes = [
+      ...(loadData?.childNodes ? [...loadData.childNodes] : []),
+      ...childNodes,
+    ];
+    loadData.paneNodes.push({
       id: rowData.id,
       title: rowData.title,
       nodeType: `Pane`,
       slug: rowData.slug,
       parentId: null,
+      isContextPane: rowData.is_context_pane ? true : false,
       ...(typeof rowData.markdown_id === `string` ? { markdownId: rowData.markdown_id } : {}),
       isDecorative:
         typeof optionsPayload.isDecorative === `boolean` ? optionsPayload.isDecorative : false,
@@ -102,8 +107,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
 
   processMenuRowData(rowData: MenuRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.menus === `undefined`) loadData.menus = [] as MenuNode[];
-    loadData.menus.push({
+    if (typeof loadData.menuNodes === `undefined`) loadData.menuNodes = [] as MenuNode[];
+    loadData.menuNodes.push({
       id: rowData.id,
       nodeType: `Menu`,
       parentId: null,
@@ -115,8 +120,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
 
   processImageFileRowData(rowData: ImageFileRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.files === `undefined`) loadData.files = [] as ImageFileNode[];
-    loadData.files.push({
+    if (typeof loadData.fileNodes === `undefined`) loadData.fileNodes = [] as ImageFileNode[];
+    loadData.fileNodes.push({
       id: rowData.id,
       parentId: null,
       filename: rowData.filename,
@@ -130,8 +135,9 @@ export class NodesDeserializer_Json implements NodesDeserializer {
 
   processResourceRowData(rowData: ResourceRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
-    if (typeof loadData.resources === `undefined`) loadData.resources = [] as ResourceNode[];
-    loadData.resources.push({
+    if (typeof loadData.resourceNodes === `undefined`)
+      loadData.resourceNodes = [] as ResourceNode[];
+    loadData.resourceNodes.push({
       id: rowData.id,
       nodeType: `Resource`,
       parentId: null,

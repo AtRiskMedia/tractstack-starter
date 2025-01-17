@@ -2,8 +2,10 @@ import { NodesContext } from "@/store/nodes.ts";
 import type {
   BaseNode,
   FlatNode,
+  PaneFragmentNode,
   StoryKeepAllNodes,
   ImageFileNode,
+  ImpressionNode,
   MenuNode,
   ResourceNode,
   StoryFragmentNode,
@@ -93,13 +95,16 @@ export type SaveData = {
   tractstacks: TractStackRowData[];
 };
 export type LoadData = {
-  files: ImageFileNode[];
-  menus: MenuNode[];
-  resources: ResourceNode[];
-  storyfragments: StoryFragmentNode[];
-  panes: PaneNode[];
-  tractstacks: TractStackNode[];
-  childNodes: (BaseNode | FlatNode)[];
+  fileNodes?: ImageFileNode[];
+  menuNodes?: MenuNode[];
+  resourceNodes?: ResourceNode[];
+  storyfragmentNodes?: StoryFragmentNode[];
+  paneNodes?: PaneNode[];
+  tractstackNodes?: TractStackNode[];
+  childNodes?: (BaseNode | FlatNode)[];
+  paneFragmentNodes?: PaneFragmentNode[];
+  flatNodes?: FlatNode[];
+  impressionNodes?: ImpressionNode[];
 };
 
 export abstract class NodesSerializer {

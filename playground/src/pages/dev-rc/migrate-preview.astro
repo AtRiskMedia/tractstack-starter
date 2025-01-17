@@ -31,15 +31,7 @@ const saveData: SaveData | null = nodes ? s.migrateAll(getCtx(), nodes) : null;
 
 // initialize deserializer
 const d = new NodesDeserializer_Json();
-const loadData: LoadData = {
-  files: [],
-  menus: [],
-  resources: [],
-  storyfragments: [],
-  panes: [],
-  tractstacks: [],
-  childNodes: [],
-};
+const loadData: LoadData = {};
 
 saveData?.tractstacks.forEach((n: TractStackRowData) => {
   d.processTractStackRowData(n, loadData);
