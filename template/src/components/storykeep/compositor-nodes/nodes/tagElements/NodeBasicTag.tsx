@@ -21,6 +21,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       console.log("notification received data update for node: " + nodeId);
       setChildren([...getCtx(props).getChildNodeIDs(nodeId)]);
     });
+    getCtx(props).clickedNodeId.subscribe((val) => {
+      if(wasFocused.current && val !== nodeId) {
+        originalTextRef.current = "";
+      }
+    });
     return unsubscribe;
   }, []);
 
@@ -88,29 +93,20 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           getCtx(props).nodeToNotify(nodeId, "Pane");
         }
       }}
-      onFocus={(e) => {
-        if (
-          !canEditText(props) ||
-          e.target.tagName === "BUTTON" ||
-          nodeId !== getCtx(props).clickedNodeId.get()
-        ) {
-          return;
-        }
-
-        // http://localhost:4321/hello/edit
-        wasFocused.current = true;
-        // Ensure the element is content-editable and fetch its innerHTML
-        originalTextRef.current = e.currentTarget.innerHTML;
-        console.log("Original text saved:", originalTextRef.current);
-      }}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
       }}
-      onDoubleClick={(e) => {
-        getCtx(props).setClickedNodeId(nodeId, true);
-        e.stopPropagation();
+      onFocus={(e) => {
+        if (!canEditText(props) || e.target.tagName === "BUTTON") {
+          return;
+        }
+
+        wasFocused.current = true;
+        // Ensure the element is content-editable and fetch its innerHTML
+        originalTextRef.current = e.currentTarget.innerHTML;
+        console.log("Original text saved:", originalTextRef.current);
       }}
     >
       <RenderChildren children={children} nodeProps={props} />
