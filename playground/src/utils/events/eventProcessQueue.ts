@@ -1,4 +1,4 @@
-import { events, panesVisible, current } from "../../store/events";
+import { events, panesVisible } from "../../store/events";
 import { THRESHOLD_READ, THRESHOLD_GLOSSED } from "../../constants";
 
 export async function eventProcessQueue() {

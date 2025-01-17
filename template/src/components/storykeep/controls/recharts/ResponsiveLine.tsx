@@ -114,6 +114,7 @@ const ResponsiveLine = ({ data, duration }: LineProps) => {
       <LineChart
         data={rechartsData}
         style={{
+          borderRadius: "0.375rem",
           backgroundColor: "#282C34", // OneDark background
           color: "#ABB2BF", // OneDark text color
         }}

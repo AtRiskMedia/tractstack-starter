@@ -1,15 +1,5 @@
-import { events, current, pageLoadTime } from "../../store/events";
-import {
-  auth,
-  profile,
-  sync,
-  locked,
-  entered,
-  error,
-  success,
-  loading,
-  referrer,
-} from "../../store/auth";
+import { pageLoadTime } from "../../store/events";
+import { auth, profile, sync, locked, error, success, loading, referrer } from "../../store/auth";
 import { syncVisit } from "./syncVisit.ts";
 import { JWT_LIFETIME } from "../../constants";
 

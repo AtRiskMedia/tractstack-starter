@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
 import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRippleIcon";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
-import { storedDashboardAnalytics, analyticsDuration } from "../../../store/storykeep";
-import { classNames } from "../../../utils/common/helpers";
-import type { FullContentMap, HotItem } from "../../../types";
+import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
+import { classNames } from "@/utils/common/helpers.ts";
+import type { FullContentMap, HotItem } from "@/types.ts";
 
 const WhatsHot = ({ contentMap }: { contentMap: FullContentMap[] }) => {
   const [isClient, setIsClient] = useState(false);
@@ -41,7 +41,7 @@ const WhatsHot = ({ contentMap }: { contentMap: FullContentMap[] }) => {
   return (
     <div>
       <div className="flex justify-between items-center px-3.5 mt-12">
-        <h3 className="text-black font-action font-bold my-4">What's Hot</h3>
+        <h3 className="text-black font-action font-bold my-4 text-xl">What's Hot</h3>
         <div className="flex flex-wrap gap-x-2 text-md">
           <span className="font-action">Stats for past:</span>
           {["daily", "weekly", "monthly"].map((period) => (

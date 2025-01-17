@@ -40,28 +40,27 @@ const DashboardActivity = () => {
   if (processedData.length === 0) return <div />;
 
   return (
-    <div>
-      <h3 className="text-black font-action font-bold my-4">Recent Activity</h3>
-      <div className="bg-mywhite rounded-lg shadow p-4" style={{ height: "400px" }}>
+    <>
+      <div style={{ height: "400px" }}>
         <ResponsiveLine data={processedData} duration={duration} />
-        <div className="flex flex-wrap gap-x-2 text-md my-8">
-          <span className="font-action">Stats for past:</span>
-          {["daily", "weekly", "monthly"].map((period) => (
-            <button
-              key={period}
-              onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
-              className={classNames(
-                duration === period
-                  ? "font-bold text-myblue"
-                  : "underline text-mydarkgrey/80 hover:text-myorange"
-              )}
-            >
-              {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
-            </button>
-          ))}
-        </div>
       </div>
-    </div>
+      <div className="flex flex-wrap gap-x-2 text-md mt-4">
+        <span className="font-action">Stats for past:</span>
+        {["daily", "weekly", "monthly"].map((period) => (
+          <button
+            key={period}
+            onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
+            className={classNames(
+              duration === period
+                ? "font-bold text-myblue"
+                : "underline text-mydarkgrey/80 hover:text-myorange"
+            )}
+          >
+            {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
+          </button>
+        ))}
+      </div>
+    </>
   );
 };
 

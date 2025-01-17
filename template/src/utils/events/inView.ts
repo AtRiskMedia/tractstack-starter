@@ -1,6 +1,6 @@
 import InView from "@opuu/inview";
 import type { InViewEvent } from "@opuu/inview";
-import { events, current, panesVisible } from "../../store/events";
+import { events, panesVisible } from "../../store/events";
 import { THRESHOLD_READ, THRESHOLD_GLOSSED } from "../../constants";
 
 export function inView() {

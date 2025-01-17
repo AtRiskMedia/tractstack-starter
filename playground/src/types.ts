@@ -451,10 +451,12 @@ export type PaneContentMap = ContentMapBase & {
 
 export type StoryFragmentContentMap = ContentMapBase & {
   type: "StoryFragment";
+  socialImagePath?: string;
 };
 
 export type TractStackContentMap = ContentMapBase & {
   type: "TractStack";
+  socialImagePath?: string;
 };
 
 export type BeliefContentMap = ContentMapBase & {

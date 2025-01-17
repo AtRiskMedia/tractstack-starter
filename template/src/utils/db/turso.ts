@@ -610,10 +610,10 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
       `SELECT id, slug, title, 'Resource' as type, category_slug as extra 
        FROM resources`,
 
-      `SELECT id, slug, title, 'StoryFragment' as type, NULL as extra 
+      `SELECT id, slug, title, 'StoryFragment' as type, social_image_path as extra 
        FROM storyfragments`,
 
-      `SELECT id, slug, title, 'TractStack' as type, NULL as extra 
+      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra 
        FROM tractstacks`,
 
       `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra 
@@ -652,11 +652,13 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           return {
             ...base,
             type: "StoryFragment" as const,
+            ...(row.extra && { socialImagePath: String(row.extra) }),
           } as StoryFragmentContentMap;
         case "TractStack":
           return {
             ...base,
             type: "TractStack" as const,
+            ...(row.extra && { socialImagePath: String(row.extra) }),
           } as TractStackContentMap;
         case "Belief":
           return {
