@@ -46,22 +46,3 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
     </>
   );
 };
-
-//      <>
-//        <div className="flex gap-x-2">
-//          <button
-//            className="bg-cyan-500 rounded-md p-2"
-//            onClick={() => {
-//              const storyFragment = getCtx(props)
-//                .allNodes.get()
-//                .values()
-//                .find((x) => x.nodeType === "StoryFragment");
-//              if (storyFragment && storyFragment.id !== null) {
-//                getCtx(props).addTemplatePane(storyFragment.id, TemplateSimplePane);
-//              }
-//            }}
-//          >
-//            Add Pane
-//          </button>
-//        </div>
-//      </>

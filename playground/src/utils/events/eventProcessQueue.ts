@@ -12,7 +12,6 @@ export async function eventProcessQueue() {
       if (verb) {
         const event = {
           id: id,
-          parentId: current.get().id || undefined,
           type: `Pane`,
           verb: verb,
           duration: diff,

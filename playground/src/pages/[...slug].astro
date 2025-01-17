@@ -10,6 +10,7 @@ import HeaderWidget from "@/custom/HeaderWidget.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
 import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import AddStoryStep from "@/components/common/state/StoryStep.tsx";
 import type { AuthStatus, ImpressionDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
@@ -93,6 +94,13 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
     impressions={impressionNodes}
     user={user}
     config={config}
+  />
+  <AddStoryStep
+    id={storyfragmentNode.id}
+    slug={storyfragmentNode.slug}
+    title={storyfragmentNode.title}
+    isContextPane={false}
+    client:only="react"
   />
 
   <main id="main-content" class="w-full overflow-hidden">

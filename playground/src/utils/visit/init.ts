@@ -41,34 +41,6 @@ export async function init() {
     auth.setKey(`unlockedProfile`, undefined);
   }
 
-  // register page view
-  const cur = current.get();
-  if (cur.id && cur.slug && cur.title && cur.parentId) {
-    const pageViewEvent = {
-      id: cur.id,
-      parentId: cur.parentId,
-      type: `StoryFragment`,
-      verb: `PAGEVIEWED`,
-    };
-    events.set([...events.get(), pageViewEvent]);
-  }
-
-  // flag on first visit from external
-  if (!entered.get()) {
-    entered.set(true);
-    const ref = document.referrer;
-    const internal = ref !== `` && ref.indexOf(location.protocol + "//" + location.host) === 0;
-    if (!internal && ref && cur?.id && cur?.parentId) {
-      const enteredEvent = {
-        id: cur.id,
-        parentId: cur.parentId,
-        type: `StoryFragment`,
-        verb: `ENTERED`,
-      };
-      events.set([...events.get(), enteredEvent]);
-    }
-  }
-
   // sync once; unless soon inactive
   if (!mustSync && !reset) {
     sync.set(true);

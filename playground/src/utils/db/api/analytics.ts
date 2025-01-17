@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
 import type { LineDataSeries, LineDataPoint, PieDataItem, RawAnalytics } from "@/types.ts";
 
@@ -73,124 +72,9 @@ function mergePaneDataIntoStoryFragment(data: RawAnalytics): RawAnalytics {
   return result;
 }
 
-// Simplified queries for pane-only analytics
-function getPaneQueries(id: string, dateFilter: string, limit: number, intervalExpression: string) {
-  return {
-    pieQuery: {
-      sql: `
-      SELECT
-        c.object_id,
-        c.object_name,
-        c.object_type,
-        a.verb,
-        COUNT(a.id) AS verb_count
-      FROM corpus c
-      JOIN actions a ON c.id = a.object_id
-      WHERE c.object_id = ? AND c.object_type = 'Pane'
-      AND a.created_at >= ${dateFilter}
-      GROUP BY c.object_id, c.object_name, c.object_type, a.verb
-      ORDER BY verb_count DESC
-      `,
-      args: [id],
-    },
-    lineQuery: {
-      sql: `
-      WITH intervals(interval_num) AS (
-        SELECT 0
-        UNION ALL
-        SELECT interval_num + 1
-        FROM intervals
-        WHERE interval_num < ?
-      )
-      SELECT
-        c.object_id,
-        c.object_name,
-        c.object_type,
-        a.verb,
-        CAST((JULIANDAY('now') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
-        COUNT(a.id) AS total_count
-      FROM corpus c
-      JOIN actions a ON c.id = a.object_id
-      WHERE c.object_id = ? AND c.object_type = 'Pane'
-      AND a.created_at >= ${dateFilter}
-      GROUP BY c.object_id, c.object_name, c.object_type, a.verb, time_interval
-      ORDER BY verb, time_interval
-      `,
-      args: [limit, intervalExpression, id],
-    },
-  };
-}
-
-// Queries for story fragment analytics (includes related panes)
-function getStoryFragmentQueries(
-  id: string,
-  dateFilter: string,
-  limit: number,
-  intervalExpression: string
-) {
-  return {
-    pieQuery: {
-      sql: `
-      SELECT
-        c.object_id,
-        c.object_name,
-        c.object_type,
-        a.verb,
-        COUNT(a.id) AS verb_count
-      FROM corpus c
-      JOIN actions a ON c.id = a.object_id
-      WHERE (
-        (c.object_id = ? AND c.object_type = 'StoryFragment') OR
-        (c.object_type = 'Pane' AND EXISTS (
-          SELECT 1 FROM storyfragment_pane sp 
-          WHERE sp.storyfragment_id = ? 
-          AND sp.pane_id = c.object_id
-        ))
-      )
-      AND a.created_at >= ${dateFilter}
-      GROUP BY c.object_id, c.object_name, c.object_type, a.verb
-      ORDER BY c.object_type DESC, verb_count DESC
-      `,
-      args: [id, id],
-    },
-    lineQuery: {
-      sql: `
-      WITH intervals(interval_num) AS (
-        SELECT 0
-        UNION ALL
-        SELECT interval_num + 1
-        FROM intervals
-        WHERE interval_num < ?
-      )
-      SELECT
-        c.object_id,
-        c.object_name,
-        c.object_type,
-        a.verb,
-        CAST((JULIANDAY('now') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
-        COUNT(a.id) AS total_count
-      FROM corpus c
-      JOIN actions a ON c.id = a.object_id
-      WHERE (
-        (c.object_id = ? AND c.object_type = 'StoryFragment') OR
-        (c.object_type = 'Pane' AND EXISTS (
-          SELECT 1 FROM storyfragment_pane sp 
-          WHERE sp.storyfragment_id = ? 
-          AND sp.pane_id = c.object_id
-        ))
-      )
-      AND a.created_at >= ${dateFilter}
-      GROUP BY c.object_id, c.object_name, c.object_type, a.verb, time_interval
-      ORDER BY c.object_type DESC, verb, time_interval
-      `,
-      args: [limit, intervalExpression, id, id],
-    },
-  };
-}
-
 export async function getAnalytics(
   id: string,
-  type: "pane" | "storyfragment",
+  type: string,
   duration: string = "weekly"
 ): Promise<RawAnalytics | null> {
   try {
@@ -201,14 +85,67 @@ export async function getAnalytics(
     const intervalExpression = duration === "daily" ? "hour" : "day";
     const limit = duration === "daily" ? 24 : duration === "weekly" ? 7 : 28;
 
-    const queries =
-      type === "pane"
-        ? getPaneQueries(id, dateFilter, limit, intervalExpression)
-        : getStoryFragmentQueries(id, dateFilter, limit, intervalExpression);
+    const pieQuery = {
+      sql: `
+    SELECT
+      c.object_id,
+      c.object_name,
+      c.object_type,
+      a.verb,
+      COUNT(a.id) AS verb_count
+    FROM corpus c
+    JOIN actions a ON c.id = a.object_id
+    WHERE (
+      (c.object_id = ? AND c.object_type = 'StoryFragment') OR
+      (c.object_type = 'Pane' AND EXISTS (
+        SELECT 1 FROM storyfragment_pane sp 
+        WHERE sp.storyfragment_id = ? 
+        AND sp.pane_id = c.object_id
+      ))
+    )
+    AND a.created_at >= ${dateFilter}
+    GROUP BY c.object_id, c.object_name, c.object_type, a.verb
+    ORDER BY c.object_type DESC, verb_count DESC
+  `,
+      args: [id, id],
+    };
+
+    const lineQuery = {
+      sql: `
+    WITH intervals(interval_num) AS (
+      SELECT 0
+      UNION ALL
+      SELECT interval_num + 1
+      FROM intervals
+      WHERE interval_num < ?
+    )
+    SELECT
+      c.object_id,
+      c.object_name,
+      c.object_type,
+      a.verb,
+      CAST((JULIANDAY('now') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
+      COUNT(a.id) AS total_count
+    FROM corpus c
+    JOIN actions a ON c.id = a.object_id
+    WHERE (
+      (c.object_id = ? AND c.object_type = 'StoryFragment') OR
+      (c.object_type = 'Pane' AND EXISTS (
+        SELECT 1 FROM storyfragment_pane sp 
+        WHERE sp.storyfragment_id = ? 
+        AND sp.pane_id = c.object_id
+      ))
+    )
+    AND a.created_at >= ${dateFilter}
+    GROUP BY c.object_id, c.object_name, c.object_type, a.verb, time_interval
+    ORDER BY c.object_type DESC, verb, time_interval
+  `,
+      args: [limit, intervalExpression, id, id],
+    };
 
     const [pieResults, lineResults] = await Promise.all([
-      client.execute(queries.pieQuery),
-      client.execute(queries.lineQuery),
+      client.execute(pieQuery),
+      client.execute(lineQuery),
     ]);
 
     // Group the results by object_id
@@ -278,9 +215,8 @@ export async function getAnalytics(
       obj.verbs = Object.values(obj.verbs);
     });
     analytics.line = Object.values(lineByObject);
-
-    // Only merge if this is a story fragment query
-    return type === "storyfragment" ? mergePaneDataIntoStoryFragment(analytics) : analytics;
+    const processedData = mergePaneDataIntoStoryFragment(analytics);
+    return processedData;
   } catch (error) {
     console.error("Error getting analytics:", error);
     throw error;

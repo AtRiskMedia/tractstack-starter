@@ -819,9 +819,7 @@ export interface Current {
   id: string;
   slug: string;
   title: string;
-  parentId?: string;
-  parentSlug?: string;
-  parentTitle?: string;
+  isContextPane?: boolean;
 }
 
 export interface VisitContext {
@@ -833,13 +831,7 @@ export type EventStream = {
   id: string;
   type: string;
   verb: string;
-  targetId?: string;
-  parentId?: string;
   duration?: number;
-  score?: string;
-  title?: string;
-  targetSlug?: string;
-  isContextPane?: string;
   object?: string | boolean;
 };
 
@@ -847,7 +839,6 @@ export interface EventPayload {
   events: EventStream[];
   referrer?: Referrer;
   visit: VisitContext;
-  contentMap?: ContentMap[];
 }
 
 export type EnvSettingType = "string" | "boolean" | "number" | "string[]";

@@ -9,6 +9,7 @@ import { getContextPaneBySlugFullRowData } from "@/utils/db/turso.ts";
 import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
+import AddStoryStep from "@/components/common/state/StoryStep.tsx";
 import type { AuthStatus, ImpressionDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
@@ -74,6 +75,13 @@ const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as Im
     impressions={impressionNodes}
     user={user}
     config={config}
+  />
+  <AddStoryStep
+    id={paneNode.id}
+    slug={paneNode.slug}
+    title={paneNode.title}
+    isContextPane={true}
+    client:only="react"
   />
   <main id="main-content" class="min-h-screen">
     <AstroNodesRenderer id={paneNode.id} />

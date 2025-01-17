@@ -51,7 +51,7 @@ export interface BasePanelProps {
   availableCodeHooks?: string[];
 }
 
-const MIN_HEIGHT = 800
+const MIN_HEIGHT = 800;
 
 const getPanel = (
   config: Config | null,
@@ -300,7 +300,6 @@ const SettingsPanel = ({
 
   const [userHasInteracted, setUserHasInteracted] = useState(false);
   const [windowHeight, setWindowHeight] = useState(window.innerHeight);
-  console.log(windowHeight);
 
   useEffect(() => {
     const handleResize = () => {

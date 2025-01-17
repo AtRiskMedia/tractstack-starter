@@ -14,7 +14,6 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
   const $showAnalytics = useStore(showAnalytics);
   const duration = $analyticsDuration;
   const [isDataReady, setIsDataReady] = useState(false);
-
   const data = $storedAnalytics[nodeId] || { pie: [], line: [] };
 
   useEffect(() => {

@@ -11,13 +11,11 @@ export function inView() {
   });
 
   elements.on("enter", (event: InViewEvent) => {
-    //const target = event.target as HTMLElement;
     const id = event.target.id.substring(5);
     if (!panesVisible.get()[id]) panesVisible.setKey(id, Date.now());
   });
 
   elements.on("exit", (event: InViewEvent) => {
-    //const target = event.target as HTMLElement;
     const id = event.target.id.substring(5);
     const values = panesVisible.get();
     const value = values[id];
@@ -28,12 +26,10 @@ export function inView() {
       if (verb) {
         const event = {
           id: id,
-          parentId: current.get().id,
           type: `Pane`,
           verb: verb,
           duration: diff / 1000,
         };
-        //console.log(`=event`, event);
         events.set([...events.get(), event]);
       }
     }

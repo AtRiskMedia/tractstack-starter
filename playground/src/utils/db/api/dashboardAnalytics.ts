@@ -24,13 +24,13 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   // Get basic stats for all durations
   const statsQuery = {
     sql: `
-      SELECT
-        SUM(CASE WHEN created_at >= datetime('now', '-1 day') THEN 1 ELSE 0 END) as daily,
-        SUM(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as weekly,
-        SUM(CASE WHEN created_at >= datetime('now', '-28 days') THEN 1 ELSE 0 END) as monthly
-      FROM actions
-      WHERE verb = 'PAGEVIEWED'
-    `,
+     SELECT
+       SUM(CASE WHEN created_at >= datetime('now', '-1 day') THEN 1 ELSE 0 END) as daily,
+       SUM(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as weekly,
+       SUM(CASE WHEN created_at >= datetime('now', '-28 days') THEN 1 ELSE 0 END) as monthly
+     FROM actions
+     WHERE verb = 'PAGEVIEWED'
+   `,
     args: [],
   };
   const { rows: statsRows } = await client.execute(statsQuery);
@@ -41,39 +41,39 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
 
   const lineQuery = {
     sql: `
-      WITH RECURSIVE
-      intervals(interval_num) AS (
-        SELECT 0
-        UNION ALL
-        SELECT interval_num + 1
-        FROM intervals
-        WHERE interval_num < ?
-      ),
-      interval_counts AS (
-        SELECT 
-          verb,
-          CAST(
-            (
-              JULIANDAY('now') - 
-              JULIANDAY(created_at)
-            ) * CASE ? 
-              WHEN 'hour' THEN 24 
-              ELSE 1 
-            END AS INTEGER
-          ) as time_interval,
-          COUNT(*) as event_count
-        FROM actions
-        WHERE created_at >= ${getDateFilter(duration)}
-        GROUP BY verb, time_interval
-      )
-      SELECT 
-        i.interval_num as time_interval,
-        COALESCE(ic.verb, 'NONE') as verb,
-        COALESCE(ic.event_count, 0) as total_count
-      FROM intervals i
-      LEFT JOIN interval_counts ic ON i.interval_num = ic.time_interval
-      ORDER BY verb, time_interval
-    `,
+     WITH RECURSIVE
+     intervals(interval_num) AS (
+       SELECT 0
+       UNION ALL
+       SELECT interval_num + 1
+       FROM intervals
+       WHERE interval_num < ?
+     ),
+     interval_counts AS (
+       SELECT 
+         verb,
+         CAST(
+           (
+             JULIANDAY('now') - 
+             JULIANDAY(created_at)
+           ) * CASE ? 
+             WHEN 'hour' THEN 24 
+             ELSE 1 
+           END AS INTEGER
+         ) as time_interval,
+         COUNT(*) as event_count
+       FROM actions
+       WHERE created_at >= ${getDateFilter(duration)}
+       GROUP BY verb, time_interval
+     )
+     SELECT 
+       i.interval_num as time_interval,
+       COALESCE(ic.verb, 'NONE') as verb,
+       COALESCE(ic.event_count, 0) as total_count
+     FROM intervals i
+     LEFT JOIN interval_counts ic ON i.interval_num = ic.time_interval
+     ORDER BY verb, time_interval
+   `,
     args: [intervalLimit, timeInterval],
   };
   const { rows: lineRows } = await client.execute(lineQuery);
@@ -81,18 +81,17 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   // Get hot story fragments
   const hotQuery = {
     sql: `
-      SELECT 
-        c.object_id as id,
-        COUNT(*) as total_events
-      FROM actions a
-      JOIN corpus c ON a.object_id = c.id
-      WHERE 
-        c.object_type = 'StoryFragment'
-        AND a.created_at >= ${getDateFilter(duration)}
-      GROUP BY c.object_id
-      ORDER BY total_events DESC
-      LIMIT 5
-    `,
+     SELECT 
+       object_id as id,
+       COUNT(*) as total_events
+     FROM actions 
+     WHERE 
+       object_type = 'StoryFragment'
+       AND created_at >= ${getDateFilter(duration)}
+     GROUP BY object_id
+     ORDER BY total_events DESC
+     LIMIT 5
+   `,
     args: [],
   };
   const { rows: hotRows } = await client.execute(hotQuery);

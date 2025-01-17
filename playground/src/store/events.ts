@@ -7,6 +7,7 @@ export const current = atom<Current>({
   id: ``,
   slug: ``,
   title: ``,
+  isContextPane: false,
 });
 export const storySteps = atom<StoryStep[]>([]);
 export const loaded = atom<boolean>(false);

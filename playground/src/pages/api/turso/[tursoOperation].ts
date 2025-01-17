@@ -7,7 +7,7 @@ import { createProfile } from "../../../utils/db/api/create";
 import { updateProfile } from "../../../utils/db/api/update";
 import { executeQueries } from "../../../utils/db/api/executeQueries";
 import { getPaneDesigns } from "../../../utils/db/api/paneDesigns";
-import { getAnalytics } from "../../../utils/db/api/analytics";
+import { getAnalytics } from "../../../utils/db/api/getAnalytics";
 import { getUniqueTailwindClasses } from "../../../utils/db/api/uniqueTailwindClasses";
 import { initializeContent } from "../../../utils/db/utils";
 

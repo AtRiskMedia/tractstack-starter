@@ -101,7 +101,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
         <>
           <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
           <AnalyticsPanel nodeId={props.nodeId} />
-          <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />;
+          <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
         </>
       );
     case "Pane": {
