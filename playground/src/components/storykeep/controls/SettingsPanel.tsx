@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
@@ -49,6 +50,8 @@ export interface BasePanelProps {
   childId?: string;
   availableCodeHooks?: string[];
 }
+
+const MIN_HEIGHT = 800
 
 const getPanel = (
   config: Config | null,
@@ -294,6 +297,22 @@ const SettingsPanel = ({
   availableCodeHooks?: string[];
 }) => {
   const signal = useStore(settingsPanelStore);
+
+  const [userHasInteracted, setUserHasInteracted] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  console.log(windowHeight);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const shouldRespectCollapse = userHasInteracted || windowHeight < MIN_HEIGHT;
+  const effectiveExpanded = shouldRespectCollapse ? signal?.expanded : true;
+
   if (signal) console.log(signal);
   if (!signal) return null;
 
@@ -350,7 +369,7 @@ const SettingsPanel = ({
       <div
         className={(!signal.expanded && "pointer-events-auto hover:bg-myorange/20") || ""}
         style={
-          signal.expanded
+          effectiveExpanded
             ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
             : { height: "60px", overflowY: "hidden" }
         }
@@ -369,19 +388,25 @@ const SettingsPanel = ({
     >
       <div className="inline space-x-2">
         <button
-          onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}
+          onClick={() => {
+            setUserHasInteracted(true);
+            const currentEffectiveState = shouldRespectCollapse ? signal.expanded : true;
+            settingsPanelStore.set({ ...signal, expanded: !currentEffectiveState });
+          }}
           className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
-          aria-label={signal.expanded ? `Hide Settings Panel` : `Show Settings Panel`}
-          title={signal.expanded ? `Hide Settings Panel` : `Show Settings Panel`}
+          aria-label={effectiveExpanded ? `Hide Settings Panel` : `Show Settings Panel`}
+          title={effectiveExpanded ? `Hide Settings Panel` : `Show Settings Panel`}
         >
-          {signal.expanded ? (
+          {effectiveExpanded ? (
             <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
           ) : (
             <ChevronDoubleUpIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
           )}
         </button>
         <button
-          onClick={() => settingsPanelStore.set(null)}
+          onClick={() => {
+            settingsPanelStore.set(null);
+          }}
           className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
           aria-label="Close settings panel"
           title="Close settings panel"
@@ -389,7 +414,7 @@ const SettingsPanel = ({
           <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
       </div>
-      {signal.expanded ? (
+      {effectiveExpanded ? (
         <>{thisPanel}</>
       ) : (
         <div onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}>
