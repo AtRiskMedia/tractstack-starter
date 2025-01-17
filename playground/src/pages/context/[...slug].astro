@@ -1,0 +1,98 @@
+---
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import AstroNodesRenderer from "@/components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
+import Layout from "@/layouts/Layout.astro";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
+import { getContextPaneBySlugFullRowData } from "@/utils/db/turso.ts";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import type { AuthStatus, ImpressionDatum } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// validate context pane?
+const { slug } = Astro.params;
+if (!slug || !isValidContentPath(slug)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Get all the data from Turso
+const fullData = await getContextPaneBySlugFullRowData(slug);
+if (!fullData) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+fullData.panes.forEach((pane) => {
+  deserializer.processPaneRowData(pane, loadData);
+});
+
+// Build the node tree from the loaded data
+getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
+
+// Get the context pane node for rendering
+const paneNode = getCtx().getContextPaneNodeBySlug(slug);
+
+if (!paneNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as ImpressionDatum[];
+---
+
+<Layout
+  title={paneNode.title}
+  pubDatetime={paneNode.created}
+  modDatetime={paneNode.changed}
+  config={config}
+>
+  <Header
+    title={paneNode.title}
+    slug={paneNode.slug}
+    isContext={true}
+    isEditable={true}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+  <main id="main-content" class="min-h-screen">
+    <AstroNodesRenderer id={paneNode.id} />
+  </main>
+  {
+    impressionNodes && (
+      <ImpressionWrapper
+        payload={impressionNodes}
+        slug={paneNode.slug}
+        isContext={true}
+        config={config}
+        client:load
+      />
+    )
+  }
+  <Footer
+    created={paneNode.created || new Date()}
+    slug={paneNode.slug}
+    isContext={true}
+    config={config}
+  />
+</Layout>

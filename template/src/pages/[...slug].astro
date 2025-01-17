@@ -1,0 +1,128 @@
+---
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import AstroNodesRenderer from "@/components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
+import Layout from "@/layouts/Layout.astro";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
+import { getStoryFragmentBySlugFullRowData } from "@/utils/db/turso.ts";
+import HeaderWidget from "@/custom/HeaderWidget.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import type { AuthStatus, ImpressionDatum } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const { slug } = Astro.params;
+const lookup = slug || config?.init?.HOME_SLUG;
+if (slug === config.init?.HOME_SLUG) {
+  return Astro.redirect("/");
+}
+if (!lookup) return Astro.redirect("/404");
+if (!isValidContentPath(lookup)) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Get all the data from Turso
+const fullData = await getStoryFragmentBySlugFullRowData(lookup);
+if (!fullData) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+deserializer.processTractStackRowData(fullData.tractstack, loadData);
+deserializer.processStoryFragmentRowData(fullData.storyfragment, loadData);
+fullData.panes.forEach((pane) => {
+  deserializer.processPaneRowData(pane, loadData);
+});
+if (fullData.menu) {
+  deserializer.processMenuRowData(fullData.menu, loadData);
+}
+//fullData.files.forEach((file) => {
+//  deserializer.processImageFileRowData(file, loadData);
+//});
+
+// Build the node tree from the loaded data
+getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
+
+// Get the story fragment node for rendering
+const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(lookup);
+if (!storyfragmentNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+const impressionNodes = getCtx().getImpressionNodesForPanes(
+  storyfragmentNode.paneIds
+) as ImpressionDatum[];
+---
+
+<Layout
+  title={storyfragmentNode.title}
+  pubDatetime={storyfragmentNode.created || new Date()}
+  modDatetime={storyfragmentNode.changed || new Date()}
+  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
+    ? storyfragmentNode.socialImagePath
+    : undefined}
+  config={config}
+>
+  {config?.init?.ENABLE_HEADER_WIDGET && <HeaderWidget slug={lookup} resources={[]} />}
+
+  <Header
+    title={storyfragmentNode.title}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
+    slug={lookup}
+    isContext={false}
+    isEditable={true}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+
+  <main id="main-content" class="w-full overflow-hidden">
+    <div
+      class={typeof storyfragmentNode.tailwindBgColour === `string`
+        ? `bg-${storyfragmentNode.tailwindBgColour}`
+        : ``}
+    >
+      <AstroNodesRenderer id={storyfragmentNode.id} />
+    </div>
+  </main>
+
+  {
+    impressionNodes && (
+      <ImpressionWrapper
+        slug={storyfragmentNode.slug}
+        isContext={true}
+        payload={impressionNodes}
+        config={config}
+        client:idle
+      />
+    )
+  }
+
+  <Footer
+    created={storyfragmentNode.created || new Date()}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
+    backToTop={true}
+    slug={lookup}
+    isContext={false}
+    config={config}
+  />
+</Layout>

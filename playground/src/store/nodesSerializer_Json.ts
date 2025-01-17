@@ -1,5 +1,5 @@
 import { NodesContext } from "@/store/nodes.ts";
-import { NodesSerializer, type SaveData } from "@/store/nodesSerializer.ts";
+import { NodesSerializer, type SaveData, type LoadData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
   MenuNode,
@@ -8,14 +8,13 @@ import type {
   ImageFileNode,
   TractStackNode,
   StoryFragmentNode,
-  StoryKeepAllNodes,
 } from "@/types.ts";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export class NodesSerializer_Json extends NodesSerializer {
   // this migrates allNodes (currently generated using helpers from old data model)
   // and saves as new data model
-  migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData {
+  migrateAll(ctx: NodesContext, nodes: LoadData): SaveData {
     const saveData: SaveData = {
       tractstacks: [],
       storyfragments: [],

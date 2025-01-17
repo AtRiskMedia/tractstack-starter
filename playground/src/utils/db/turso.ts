@@ -27,6 +27,12 @@ export interface StoryFragmentFullRowData {
   files: ImageFileRowData[];
 }
 
+export interface ContextPaneFullRowData {
+  panes: PaneRowData[];
+  markdowns: MarkdownRowData[];
+  files: ImageFileRowData[];
+}
+
 function ensureString(value: unknown): string {
   if (value === null || value === undefined) {
     throw new Error("Required string value is null or undefined");
@@ -242,7 +248,7 @@ export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null
         title: rows[0].title,
         slug: rows[0].slug,
         pane_type: rows[0].pane_type,
-        ...(typeof rows[0].markdown_id ? { markdown_id: rows[0].markdown_id } : {}),
+        ...(typeof rows[0].markdown_id === `string` ? { markdown_id: rows[0].markdown_id } : {}),
         created: rows[0].created,
         changed: rows[0].changed,
         options_payload: rows[0].options_payload,
@@ -448,16 +454,6 @@ export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData)
     console.error("Error in upsertStoryFragmentByIdRowData:", error);
     throw error;
   }
-}
-
-// Add these interfaces to the top of turso.ts
-export interface StoryFragmentFullRowData {
-  storyfragment: StoryFragmentRowData;
-  tractstack: TractStackRowData;
-  menu: MenuRowData | null;
-  panes: PaneRowData[];
-  markdowns: MarkdownRowData[];
-  files: ImageFileRowData[];
 }
 
 export async function getStoryFragmentBySlugFullRowData(
@@ -770,6 +766,103 @@ export async function getResourceBySlugRowData(slug: string): Promise<ResourceRo
     } as ResourceRowData;
   } catch (error) {
     console.error("Error fetching resource by slug:", error);
+    throw error;
+  }
+}
+
+export async function getContextPaneBySlugFullRowData(
+  slug: string
+): Promise<ContextPaneFullRowData | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+
+    // Get the context pane
+    const { rows: paneRows } = await client.execute({
+      sql: `SELECT 
+              p.id, 
+              p.title,
+              p.slug,
+              p.pane_type,
+              p.created,
+              p.changed,
+              p.options_payload,
+              p.is_context_pane,
+              p.markdown_id,
+              m.body as markdown_body,
+              (
+                SELECT json_group_array(
+                  json_object(
+                    'id', f.id,
+                    'filename', f.filename,
+                    'alt_description', f.alt_description,
+                    'url', f.url,
+                    'src_set', f.src_set
+                  )
+                )
+                FROM file_panes fp
+                JOIN files f ON fp.file_id = f.id
+                WHERE fp.pane_id = p.id
+              ) as files
+            FROM panes p
+            LEFT JOIN markdowns m ON p.markdown_id = m.id
+            WHERE p.slug = ? AND p.is_context_pane = 1
+            LIMIT 1`,
+      args: [slug],
+    });
+
+    if (paneRows.length === 0) return null;
+
+    const paneRow = paneRows[0];
+
+    // Convert to PaneRowData
+    const panes: PaneRowData[] = [
+      {
+        id: ensureString(paneRow.id),
+        title: ensureString(paneRow.title),
+        slug: ensureString(paneRow.slug),
+        pane_type: ensureString(paneRow.pane_type),
+        created: ensureString(paneRow.created),
+        changed: ensureString(paneRow.changed || paneRow.created),
+        options_payload: ensureString(paneRow.options_payload),
+        is_context_pane: 1,
+        ...(paneRow.markdown_id ? { markdown_id: ensureString(paneRow.markdown_id) } : {}),
+      },
+    ];
+
+    // Get markdown if it exists
+    const markdowns: MarkdownRowData[] = [];
+    if (paneRow.markdown_id && paneRow.markdown_body) {
+      markdowns.push({
+        id: ensureString(paneRow.markdown_id),
+        markdown_body: ensureString(paneRow.markdown_body),
+      });
+    }
+
+    // Parse files JSON array
+    let files: ImageFileRowData[] = [];
+    if (paneRow.files && typeof paneRow.files === "string") {
+      try {
+        const filesArray = JSON.parse(paneRow.files);
+        files = filesArray.map((file: any) => ({
+          id: ensureString(file.id),
+          filename: ensureString(file.filename),
+          alt_description: ensureString(file.alt_description),
+          url: ensureString(file.url),
+          ...(file.src_set ? { src_set: ensureString(file.src_set) } : {}),
+        }));
+      } catch (e) {
+        console.error("Error parsing files JSON:", e);
+      }
+    }
+
+    return {
+      panes,
+      markdowns,
+      files,
+    };
+  } catch (error) {
+    console.error("Error in getContextPaneBySlugFullRowData:", error);
     throw error;
   }
 }

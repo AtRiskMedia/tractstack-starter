@@ -24,15 +24,7 @@ if (!fullData) {
 const deserializer = new NodesDeserializer_Json();
 
 // Create LoadData structure
-const loadData: LoadData = {
-  files: [],
-  menus: [],
-  resources: [],
-  storyfragments: [],
-  panes: [],
-  tractstacks: [],
-  childNodes: [],
-};
+const loadData: LoadData = {};
 
 // Process each type of data using deserializer
 deserializer.processTractStackRowData(fullData.tractstack, loadData);
