@@ -1,15 +1,15 @@
 ---
-import { isValidContentPath } from "../../utils/common/routeValidation";
-import { getCtx } from "../../store/nodes";
-import { getGenerateAllNodes } from "../../utils/db/migrate/generate";
-import { getConfig, validateConfig } from "../../utils/core/config";
-import AstroNodesRenderer from "../../components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
-import Layout from "../../../src/layouts/Layout.astro";
-import HeaderWidget from "../../custom/HeaderWidget.astro";
-import Header from "../../components/common/Header.astro";
-import Footer from "../../components/common/Footer.astro";
-import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
-import type { AuthStatus, ImpressionDatum } from "../../types";
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getGenerateAllNodes } from "@/utils/db/migrate/generate.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import AstroNodesRenderer from "@/components/storykeep/compositor-nodes/AstroNodesRenderer.astro";
+import Layout from "@/layouts/Layout.astro";
+import HeaderWidget from "@/custom/HeaderWidget.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import type { AuthStatus, ImpressionDatum } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
@@ -31,7 +31,7 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
-// Generate nodes and build tree
+// Generate nodes (from old data source) and build tree
 const nodes = await getGenerateAllNodes();
 getCtx().buildNodesTreeFromFragmentNodes(nodes);
 const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(lookup);

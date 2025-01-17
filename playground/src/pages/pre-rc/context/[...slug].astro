@@ -1,13 +1,13 @@
 ---
-import { getContextPaneBySlug } from "../../utils/db/utils";
-import { isValidContentPath } from "../../utils/common/routeValidation";
-import { getConfig, validateConfig } from "../../utils/core/config";
-import ContextPaneWrapper from "../../components/frontend/ContextPaneWrapper.astro";
-import ImpressionWrapper from "../../components/common/widgets/ImpressionWrapper";
-import Layout from "../../layouts/Layout.astro";
-import Header from "../../components/common/Header.astro";
-import Footer from "../../components/common/Footer.astro";
-import type { Current, AuthStatus } from "../../types";
+import { getContextPaneBySlug } from "@/utils/db/utils.ts";
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import ContextPaneWrapper from "@/components/frontend/ContextPaneWrapper.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import type { Current, AuthStatus } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();

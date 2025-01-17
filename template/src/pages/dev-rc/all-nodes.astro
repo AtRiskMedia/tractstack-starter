@@ -1,7 +1,7 @@
 ---
-import { getConfig, validateConfig } from "../../utils/core/config";
-import { getGenerateAllNodes } from "../../utils/db/migrate/generate";
-import Layout from "../../../src/layouts/StoryKeep.astro";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import { getGenerateAllNodes } from "@/utils/db/migrate/generate.ts";
+import Layout from "@/layouts/StoryKeep.astro";
 
 const config = await getConfig();
 const validation = await validateConfig(config);

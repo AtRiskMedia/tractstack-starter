@@ -1,14 +1,14 @@
 ---
-import { getStoryFragmentBySlug } from "../utils/db/utils";
-import { isValidContentPath } from "../utils/common/routeValidation";
-import { getConfig, validateConfig } from "../utils/core/config";
-import Layout from "../layouts/Layout.astro";
-import HeaderWidget from "../custom/HeaderWidget.astro";
-import Header from "../components/common/Header.astro";
-import Footer from "../components/common/Footer.astro";
-import StoryFragmentWrapper from "../components/frontend/StoryFragmentWrapper.astro";
-import ImpressionWrapper from "../components/common/widgets/ImpressionWrapper";
-import type { AuthStatus, Current } from "../types";
+import { getStoryFragmentBySlug } from "@/utils/db/utils.ts";
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import Layout from "@/layouts/Layout.astro";
+import HeaderWidget from "@/custom/HeaderWidget.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import StoryFragmentWrapper from "@/components/frontend/StoryFragmentWrapper.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import type { AuthStatus, Current } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();

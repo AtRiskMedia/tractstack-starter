@@ -1,14 +1,18 @@
 ---
-import { getConfig, validateConfig } from "../../../utils/core/config";
-import { getAllFileDatum, getContextPaneBySlug } from "../../../utils/db/utils";
-import { cleanTursoFileDatum } from "../../../utils/db/data/tursoFileDatum";
-import { getAllMenus, getContentMap } from "../../../utils/db/utils";
-import StoryKeep from "../../../layouts/StoryKeep.astro";
-import { EditModal } from "../../../components/storykeep/panel/EditModal";
-import { ContextPage } from "../../../components/storykeep/ContextPage";
-import { StoryKeepContextStore } from "../../../components/storykeep/state/StoryKeepContextStore";
-import { StoryKeepHeader } from "../../../components/storykeep/StoryKeepHeader";
-import type { AuthStatus, ContentMap } from "../../../types";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import {
+  getAllMenus,
+  getContentMap,
+  getAllFileDatum,
+  getContextPaneBySlug,
+} from "@/utils/db/utils.ts";
+import { cleanTursoFileDatum } from "@/utils/db/data/tursoFileDatum.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import { EditModal } from "@/components/storykeep/panel/EditModal.tsx";
+import { ContextPage } from "@/components/storykeep/ContextPage.tsx";
+import { StoryKeepContextStore } from "@/components/storykeep/state/StoryKeepContextStore.tsx";
+import { StoryKeepHeader } from "@/components/storykeep/StoryKeepHeader.tsx";
+import type { AuthStatus, ContentMap } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();

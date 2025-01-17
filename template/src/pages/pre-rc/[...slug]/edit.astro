@@ -1,15 +1,15 @@
 ---
-import { getConfig, validateConfig } from "../../utils/core/config";
-import { getAllFileDatum, getStoryFragmentBySlug } from "../../utils/db/utils";
-import { cleanTursoFileDatum } from "../../utils/db/data/tursoFileDatum";
-import StoryKeep from "../../layouts/StoryKeep.astro";
-import { StoryKeepHeader } from "../../components/storykeep/StoryKeepHeader";
-import { StoryKeepStore } from "../../components/storykeep/state/StoryKeepStore";
-import { EditModal } from "../../components/storykeep/panel/EditModal";
-import { StoryFragment } from "../../components/storykeep/StoryFragment";
-import { getAllMenus, getContentMap } from "../../utils/db/utils";
-import { components } from "../../custom/CodeHook.astro";
-import type { AuthStatus, ContentMap } from "../../types";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import { getAllFileDatum, getStoryFragmentBySlug } from "@/utils/db/utils.ts";
+import { cleanTursoFileDatum } from "@/utils/db/data/tursoFileDatum.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import { StoryKeepHeader } from "@/components/storykeep/StoryKeepHeader.tsx";
+import { StoryKeepStore } from "@/components/storykeep/state/StoryKeepStore.tsx";
+import { EditModal } from "@/components/storykeep/panel/EditModal.tsx";
+import { StoryFragment } from "@/components/storykeep/StoryFragment.tsx";
+import { getAllMenus, getContentMap } from "@/utils/db/utils.ts";
+import { components } from "@/custom/CodeHook.astro";
+import type { AuthStatus, ContentMap } from "@/types.ts";
 
 const { slug } = Astro.params;
 const user = Astro.locals.user as AuthStatus;
