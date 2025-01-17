@@ -1032,7 +1032,8 @@ export class NodesContext {
       node,
       this
     );
-    this.notifyNode(newLocationNode?.parentId || "");
+    const parentNode = this.nodeToNotify(newLocationNode?.parentId || "", newLocationNode.nodeType);
+    this.notifyNode(parentNode || "");
 
     this.history.addPatch({
       op: PatchOp.REPLACE,
@@ -1047,7 +1048,8 @@ export class NodesContext {
           oldParentNodes.insertBefore(originalIdx, [nodeId]); // Insert back to old position
         }
         node.parentId = oldParentId;
-        ctx.notifyNode(node?.parentId || "");
+        const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
+        ctx.notifyNode(parentNode || "");
       },
       redo: (ctx) => {
         moveNodeAtLocationInContext(
