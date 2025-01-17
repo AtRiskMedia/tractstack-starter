@@ -61,6 +61,12 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
           ctx.setClickedNodeId(nodeId);
           e.stopPropagation();
         }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
         onDoubleClick={(e) => {
           ctx.setClickedNodeId(nodeId, true);
           e.stopPropagation();

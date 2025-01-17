@@ -98,6 +98,12 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
       }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.currentTarget.blur();
+        }
+      }}
       onFocus={(e) => {
         if (!canEditText(props) || e.target.tagName === "BUTTON") {
           return;
