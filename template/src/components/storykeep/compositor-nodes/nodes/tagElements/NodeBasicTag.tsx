@@ -108,6 +108,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         originalTextRef.current = e.currentTarget.innerHTML;
         console.log("Original text saved:", originalTextRef.current);
       }}
+      onDoubleClick={(e) => {
+        getCtx(props).setClickedNodeId(nodeId, true);
+        e.stopPropagation();
+      }}
     >
       <RenderChildren children={children} nodeProps={props} />
     </Tag>
