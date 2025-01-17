@@ -33,10 +33,10 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
   if (!$showAnalytics || !isDataReady) return null;
 
   return (
-    <div className="w-full mb-6 overflow-hidden">
+    <div className="w-full overflow-hidden">
       <div className="rounded-md bg-mywhite mb-4 shadow">
         <div className="p-2.5">
-          <div className="flex flex-wrap gap-x-4 gap-y-2 text-md">
+          <div className="flex flex-wrap gap-x-4 text-md">
             <span className="font-action">Recent Activity:</span>
             {["daily", "weekly", "monthly"].map((period) => (
               <button
@@ -59,13 +59,14 @@ const AnalyticsPanel = ({ nodeId }: AnalyticsPanelProps) => {
             </button>
           </div>
         </div>
-      </div>
-
-      <div
-        className="overflow-hidden bg-mywhite shadow-inner rounded-xl w-full"
-        style={{ height: "300px", maxWidth: "100%", minWidth: "0" }}
-      >
-        <ResponsiveLine data={data.line} duration={duration} />
+        <div className="p-2">
+          <div
+            className="overflow-hidden bg-mywhite shadow-inner rounded-xl w-full"
+            style={{ height: "300px", maxWidth: "100%", minWidth: "0" }}
+          >
+            <ResponsiveLine data={data.line} duration={duration} />
+          </div>
+        </div>
       </div>
     </div>
   );
