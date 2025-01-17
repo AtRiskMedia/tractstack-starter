@@ -1,4 +1,4 @@
-import { type JSX, useEffect, useMemo, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
@@ -23,10 +23,10 @@ export const NodeBasicTag_settings = (props: NodeTagProps) => {
     return unsubscribe;
   }, []);
 
-  const canMove = (direction: "before"|"after"): boolean => {
+  const canMove = (direction: "before" | "after"): boolean => {
     const hasCodeChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["code"]);
     // only ul/ol can move code nodes
-    if(hasCodeChildren && node.tagName === "li") {
+    if (hasCodeChildren && node.tagName === "li") {
       return false;
     }
     return true;
