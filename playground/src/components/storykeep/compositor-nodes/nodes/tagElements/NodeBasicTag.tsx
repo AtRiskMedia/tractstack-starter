@@ -22,7 +22,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       setChildren([...getCtx(props).getChildNodeIDs(nodeId)]);
     });
     getCtx(props).clickedNodeId.subscribe((val) => {
-      if(wasFocused.current && val !== nodeId) {
+      if (wasFocused.current && val !== nodeId) {
         originalTextRef.current = "";
       }
     });
