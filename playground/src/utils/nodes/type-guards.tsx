@@ -38,6 +38,7 @@ export const isContextPaneNode = (
 ): node is PaneNode & { isContextPane: boolean } => {
   return Boolean(
     node?.nodeType === "Pane" && "isContextPane" in node && typeof node.isContextPane === "boolean"
+    && node.isContextPane
   );
 };
 

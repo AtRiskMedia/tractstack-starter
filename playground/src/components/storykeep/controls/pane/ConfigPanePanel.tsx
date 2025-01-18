@@ -109,16 +109,18 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                 )}
               </button>
             )}
-            <button onClick={() => getCtx().moveNode(nodeId, "after")}>
+            <div className="space-x-2">
+            <button title="Move pane up" onClick={() => getCtx().moveNode(nodeId, "after")}>
               <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
-                <ArrowDownIcon className="w-6 h-6 mr-1" />
+                <ArrowDownIcon className="w-4 h-4 mr-1" />
               </div>
             </button>
-            <button onClick={() => getCtx().moveNode(nodeId, "before")}>
+            <button title="Move pane down" onClick={() => getCtx().moveNode(nodeId, "before")}>
               <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
-                <ArrowUpIcon className="w-6 h-6 mr-1" />
+                <ArrowUpIcon className="w-4 h-4 mr-1" />
               </div>
             </button>
+            </div>
           </div>
         </div>
       </div>
