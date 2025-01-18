@@ -745,6 +745,34 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
   }
 }
 
+export async function getAllResourcesRowData(): Promise<ResourceRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    const { rows } = await client.execute(
+      `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
+            FROM resources`
+    );
+
+    return rows.map(
+      (row) =>
+        ({
+          id: ensureString(row.id),
+          title: ensureString(row.title),
+          slug: ensureString(row.slug),
+          oneliner: ensureString(row.oneliner),
+          options_payload: ensureString(row.options_payload),
+          ...(typeof row.category_slug === "string" ? { category_slug: row.category_slug } : {}),
+          ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
+        }) as ResourceRowData
+    );
+  } catch (error) {
+    console.error("Error fetching resources by category slug:", error);
+    throw error;
+  }
+}
+
 export async function getResourcesByCategorySlugRowData(
   categorySlug: string
 ): Promise<ResourceRowData[]> {

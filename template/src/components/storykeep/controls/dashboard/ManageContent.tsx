@@ -5,44 +5,44 @@ const contentTypes = {
     name: "Image",
     browse: "Images",
     url: "/storykeep/content/images",
-    createUrl: "/storykeep/create/image",
+    createUrl: null, // "/storykeep/create/image",
   },
   menu: {
     name: "Menu",
     browse: "Menus",
     url: "/storykeep/content/menus",
-    createUrl: "/storykeep/create/menu",
+    createUrl: "/storykeep/content/menus/create",
   },
   resource: {
     name: "Resource",
     browse: "Resources",
     url: "/storykeep/content/resources",
-    createUrl: "/storykeep/create/resource",
+    createUrl: "/storykeep/content/resources/create",
   },
   tractstack: {
     name: "Tract Stack",
     browse: "Tract Stacks",
     url: "/storykeep/content/tractstacks",
-    createUrl: "/storykeep/create/tractstack",
+    createUrl: "/storykeep/content/tractstacks/create",
   },
-  storyfragment: {
-    name: "Story Fragment",
-    browse: "Story Fragments",
-    url: "/storykeep/content/storyfragments",
-    createUrl: "/storykeep/create/storyfragment",
-  },
-  pane: {
-    name: "Pane",
-    browse: "Panes",
-    url: "/storykeep/content/panes",
-    createUrl: "/storykeep/create/pane",
-  },
-  context: {
-    name: "Context Pane",
-    browse: "Context Panes",
-    url: "/storykeep/content/context",
-    createUrl: "/storykeep/create/context",
-  },
+  //storyfragment: {
+  //  name: "Story Fragment",
+  //  browse: "Story Fragments",
+  //  url: "/storykeep/content/storyfragments",
+  //  createUrl: "/storykeep/create/storyfragment",
+  //},
+  //pane: {
+  //  name: "Pane",
+  //  browse: "Panes",
+  //  url: "/storykeep/content/panes",
+  //  createUrl: "/storykeep/create/pane",
+  //},
+  //context: {
+  //  name: "Context Pane",
+  //  browse: "Context Panes",
+  //  url: "/storykeep/content/context",
+  //  createUrl: "/storykeep/create/context",
+  //},
 };
 
 const ManageContent = () => {
@@ -64,9 +64,13 @@ const ManageContent = () => {
               </div>
 
               {Object.entries(contentTypes).map(([key, content]) => (
-                <a key={`browse-${key}`} href={content.url} className={buttonClass}>
-                  {content.browse}
-                </a>
+                <div key={`browse-${key}`}>
+                  {content.url ? (
+                    <a key={`browse-${key}`} href={content.url} className={buttonClass}>
+                      {content.browse}
+                    </a>
+                  ) : null}
+                </div>
               ))}
             </div>
           </div>
@@ -80,9 +84,13 @@ const ManageContent = () => {
               </div>
 
               {Object.entries(contentTypes).map(([key, content]) => (
-                <a key={`create-${key}`} href={content.createUrl} className={buttonClass}>
-                  {content.name}
-                </a>
+                <div key={`create-${key}`}>
+                  {content.createUrl ? (
+                    <a href={content.createUrl} className={buttonClass}>
+                      {content.name}
+                    </a>
+                  ) : null}
+                </div>
               ))}
             </div>
           </div>

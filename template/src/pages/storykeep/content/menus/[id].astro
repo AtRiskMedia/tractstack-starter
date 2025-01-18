@@ -19,7 +19,7 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/storykeep/manage/menu/${id}`;
+const canonicalURL = `/storykeep/content/menus/${id}`;
 const menuPayload: MenuDatum = {
   id: `storykeep`,
   title: "Story Keep Menu",

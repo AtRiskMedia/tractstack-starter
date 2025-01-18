@@ -1,9 +1,9 @@
 import { useState } from "react";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
-import type { ResourceDatum } from "../../../types";
+import type { ResourceNode } from "@/types.ts";
 
 interface ResourcesTableProps {
-  resources: ResourceDatum[];
+  resources: ResourceNode[];
 }
 
 export default function ResourcesTable({ resources }: ResourcesTableProps) {
@@ -14,7 +14,7 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
   );
 
   return (
-    <div>
+    <div className="mx-auto max-w-screen-xl">
       <div className="mb-4">
         <input
           type="text"
@@ -61,7 +61,7 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                     <a
-                      href={`/storykeep/manage/resource/${resource.slug}`}
+                      href={`/storykeep/content/resources/${resource.slug}`}
                       className="text-myblue hover:text-myorange"
                       title="Edit"
                     >

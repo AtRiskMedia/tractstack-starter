@@ -3,15 +3,15 @@ import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
-import MenuEditor from "@/components/storykeep/controls/manage/MenuEditor.tsx";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
-import { getMenuByIdRowData } from "@/utils/db/turso.ts";
-import { getFullContentMap } from "@/utils/db/turso.ts";
-import type { AuthStatus, MenuDatum } from "@/types.ts";
+import { getResourceBySlugRowData } from "@/utils/db/turso.ts";
+import ResourceEditor from "@/components/storykeep/controls/manage/ResourceEditor.tsx";
+import type {ResourceNode, AuthStatus, MenuDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
-const { id } = Astro.params;
-const create = id === "create";
+const { slug } = Astro.params;
+const create = slug === "create";
+if (!slug && !create) return Astro.redirect("/404");
 
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig();
@@ -19,7 +19,8 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/storykeep/content/menus/${id}`;
+
+const canonicalURL = `/storykeep/content/resources/${slug}`;
 const menuPayload: MenuDatum = {
   id: `storykeep`,
   title: "Story Keep Menu",
@@ -41,8 +42,8 @@ const menuPayload: MenuDatum = {
 };
 
 // Get all the data from Turso
-const menuRowData = id ? await getMenuByIdRowData(id) : null;
-if (!menuRowData) {
+const resourceRowData = !create ? await getResourceBySlugRowData(slug) : null;
+if (!resourceRowData && !create) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
@@ -50,30 +51,42 @@ if (!menuRowData) {
 }
 
 // Initialize deserializer
-const deserializer = new NodesDeserializer_Json();
 const loadData: LoadData = {};
-deserializer.processMenuRowData(menuRowData, loadData);
-const menu = loadData?.menuNodes?.length ? loadData.menuNodes.at(0) : null;
-if (!menu) {
+if (!create && resourceRowData) {
+  const deserializer = new NodesDeserializer_Json();
+  deserializer.processResourceRowData(resourceRowData, loadData);
+}
+const defaultResource: ResourceNode = {
+  id: ``,
+  parentId: null,
+  nodeType: `Resource` as const,
+  title: ``,
+  slug: ``,
+  category: ``,
+  oneliner: ``,
+  actionLisp: ``,
+  optionsPayload: {}
+};
+const resource = loadData?.resourceNodes?.length 
+  ? loadData.resourceNodes.at(0) 
+  : defaultResource;
+if (!resource) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
-
-// get storykeep datum
-const contentMap = await getFullContentMap();
 ---
 
 <StoryKeep
-  title={create ? "Create New Menu" : `Edit Menu: ${menu.title}`}
+  title={create ? "Create New Resource" : `Edit Resource: ${resource.title}`}
   canonicalURL={canonicalURL}
   config={config}
 >
   <Header
-    title={create ? "Create New Menu" : `Edit Menu: ${menu.title}`}
+    title={create ? "Create New Resource" : `Edit Resource: ${resource.title}`}
     menu={menuPayload}
-    slug={`storykeep-manage-menu-${id}`}
+    slug={`storykeep-manage-resource-${slug}`}
     isContext={false}
     user={user}
     isStoryKeep={true}
@@ -83,14 +96,14 @@ const contentMap = await getFullContentMap();
   <main id="main-content" class="min-h-screen">
     <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
       <div class="py-1.5 bg-white px-3.5">
-        <MenuEditor menu={menu} create={create} contentMap={contentMap} client:load />
+        <ResourceEditor resource={resource} create={create} client:load />
       </div>
     </div>
   </main>
   <Footer
     menu={menuPayload}
     backToTop={true}
-    slug={`storykeep-manage-menu-${id}`}
+    slug={`storykeep-manage-resource-${slug}`}
     isContext={false}
     config={config}
   />
