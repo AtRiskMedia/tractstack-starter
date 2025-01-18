@@ -145,6 +145,28 @@ export async function upsertResourceByIdRowData(data: ResourceRowData): Promise<
   }
 }
 
+export async function getAllMenusRowData(): Promise<MenuRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`SELECT id, title, theme, options_payload FROM menus`);
+    return rows
+      .map((row) => {
+        if (!row.id || !row.title) return null;
+        return {
+          id: row.id,
+          title: row.title,
+          theme: row.theme,
+          options_payload: row.options_payload,
+        } as MenuRowData;
+      })
+      .filter((row): row is MenuRowData => row !== null);
+  } catch (error) {
+    console.error("Error fetching getAllMenusRowData:", error);
+    throw error;
+  }
+}
+
 export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null> {
   try {
     const client = await tursoClient.getClient();
@@ -184,6 +206,31 @@ export async function upsertMenuByIdRowData(data: MenuRowData): Promise<boolean>
     return true;
   } catch (error) {
     console.error("Error in upsertMenuByIdRowData:", error);
+    throw error;
+  }
+}
+
+export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(
+      `SELECT id, filename, alt_description, url, src_set FROM files`
+    );
+    return rows
+      .map((row) => {
+        if (!row.id || !row.filename) return null;
+        return {
+          id: row.id,
+          filename: row.filename,
+          alt_description: row.alt_description,
+          url: row.url,
+          ...(typeof row.src_set === "boolean" ? { src_set: row.src_set } : {}),
+        } as ImageFileRowData;
+      })
+      .filter((row): row is ImageFileRowData => row !== null);
+  } catch (error) {
+    console.error("Error fetching getAllFilesRowData:", error);
     throw error;
   }
 }
@@ -601,22 +648,36 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     if (!client) return [];
 
     const queryParts = [
-      `SELECT id, id as slug, title, 'Menu' as type, theme as extra 
+      `SELECT id, id as slug, title, 'Menu' as type, theme as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
        FROM menus`,
 
-      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra 
+      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
        FROM panes`,
 
-      `SELECT id, slug, title, 'Resource' as type, category_slug as extra 
+      `SELECT id, slug, title, 'Resource' as type, category_slug as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
        FROM resources`,
 
-      `SELECT id, slug, title, 'StoryFragment' as type, social_image_path as extra 
-       FROM storyfragments`,
+      `SELECT 
+         sf.id, 
+         sf.slug, 
+         sf.title, 
+         'StoryFragment' as type, 
+         sf.social_image_path as extra,
+         ts.id as parent_id,
+         ts.title as parent_title,
+         ts.slug as parent_slug,
+         (
+           SELECT GROUP_CONCAT(pane_id)
+           FROM storyfragment_panes sp
+           WHERE sp.storyfragment_id = sf.id
+         ) as pane_ids
+       FROM storyfragments sf
+       JOIN tractstacks ts ON sf.tractstack_id = ts.id`,
 
-      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra 
+      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
        FROM tractstacks`,
 
-      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra 
+      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
        FROM beliefs`,
     ];
 
@@ -653,6 +714,14 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
             ...base,
             type: "StoryFragment" as const,
             ...(row.extra && { socialImagePath: String(row.extra) }),
+            ...(row.parent_id && {
+              parentId: String(row.parent_id),
+              parentTitle: String(row.parent_title),
+              parentSlug: String(row.parent_slug),
+            }),
+            ...(row.pane_ids && {
+              panes: String(row.pane_ids).split(","),
+            }),
           } as StoryFragmentContentMap;
         case "TractStack":
           return {
@@ -669,7 +738,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         default:
           throw new Error(`Unknown type: ${row.type}`);
       }
-    }) as FullContentMap[];
+    });
   } catch (error) {
     console.log("Unable to fetch content map:", error);
     return [];
@@ -846,7 +915,7 @@ export async function getContextPaneBySlugFullRowData(
     if (paneRow.files && typeof paneRow.files === "string") {
       try {
         const filesArray = JSON.parse(paneRow.files);
-        files = filesArray.map((file: any) => ({
+        files = filesArray.map((file: ImageFileRowData) => ({
           id: ensureString(file.id),
           filename: ensureString(file.filename),
           alt_description: ensureString(file.alt_description),

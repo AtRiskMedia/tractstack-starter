@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
 import type { LineDataSeries, LineDataPoint, PieDataItem, RawAnalytics } from "@/types.ts";
 

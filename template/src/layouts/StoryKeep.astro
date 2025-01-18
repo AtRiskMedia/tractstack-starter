@@ -1,8 +1,8 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "../components/frontend/state/SetContentMap";
-import { getContentMap } from "../utils/db/utils";
-import type { ContentMap, Config } from "../types";
+import SetContentMap from "@/components/storykeep/controls/state/SetContentMap.tsx";
+import { getFullContentMap } from "@/utils/db/turso.ts";
+import type { FullContentMap, Config } from "@/types.ts";
 
 export interface Props {
   config: Config;
@@ -32,7 +32,7 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 
-const contentMap: ContentMap[] = await getContentMap();
+const contentMap: FullContentMap[] = await getFullContentMap();
 ---
 
 <!doctype html>

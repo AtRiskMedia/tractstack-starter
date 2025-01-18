@@ -1,24 +1,26 @@
 import { useState } from "react";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
-import type { MenuDatum } from "../../../types";
+import type { ImageFileNode } from "@/types.ts";
 
-interface MenusTableProps {
-  menus: MenuDatum[];
+interface ImagesTableProps {
+  images: ImageFileNode[];
 }
 
-export default function MenusTable({ menus }: MenusTableProps) {
+export default function ImagesTable({ images }: ImagesTableProps) {
   const [query, setQuery] = useState("");
 
-  const filteredMenus = menus.filter((menu) =>
-    menu.title.toLowerCase().includes(query.toLowerCase())
+  const filteredImages = images.filter(
+    (image) =>
+      image.filename.toLowerCase().includes(query.toLowerCase()) ||
+      image.altDescription.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div>
+    <div className="max-w-screen-xl mx-auto">
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search menus..."
+          placeholder="Search images..."
           className="w-full p-2 border rounded"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -29,10 +31,13 @@ export default function MenusTable({ menus }: MenusTableProps) {
           <thead className="bg-mylightgrey/20">
             <tr>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
-                Title
+                Preview
               </th>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
-                Theme
+                Filename
+              </th>
+              <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
+                Alt Description
               </th>
               <th className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider">
                 Actions
@@ -40,20 +45,29 @@ export default function MenusTable({ menus }: MenusTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {!filteredMenus.length ? (
+            {!filteredImages.length ? (
               <tr>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">None found.</td>
               </tr>
             ) : (
-              filteredMenus.map((menu) => (
-                <tr key={menu.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">{menu.title}</td>
+              filteredImages.map((image) => (
+                <tr key={image.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <img
+                      src={image.src}
+                      alt={image.altDescription}
+                      className="h-16 w-16 object-contain"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
+                    {image.filename}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-mydarkgrey">
-                    {menu.theme}
+                    {image.altDescription}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                     <a
-                      href={`/storykeep/manage/menu/${menu.id}`}
+                      href={`/storykeep/content/images/${image.id}`}
                       className="text-myblue hover:text-myorange"
                       title="Edit"
                     >

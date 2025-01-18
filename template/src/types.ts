@@ -451,6 +451,7 @@ export type PaneContentMap = ContentMapBase & {
 
 export type StoryFragmentContentMap = ContentMapBase & {
   type: "StoryFragment";
+  panes?: string[];
   socialImagePath?: string;
 };
 

@@ -3,12 +3,12 @@ import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { GOTO_TARGETS } from "@/constants";
-import type { ContentMap } from "@/types";
+import type { FullContentMap } from "@/types";
 
 interface ActionBuilderFieldProps {
   value: string;
   onChange: (value: string) => void;
-  contentMap: ContentMap[];
+  contentMap: FullContentMap[];
 }
 
 const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldProps) => {
@@ -23,8 +23,8 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
 
   // Filter content map based on type
   const storyFragments = contentMap.filter((item) => item.type === "StoryFragment");
-  const contextPanes = contentMap.filter((item) => item.type === "Pane" && item.isContextPane);
-  const regularPanes = contentMap.filter((item) => item.type === "Pane" && !item.isContextPane);
+  const contextPanes = contentMap.filter((item) => item.type === "Pane" && item.isContext);
+  const regularPanes = contentMap.filter((item) => item.type === "Pane" && !item.isContext);
 
   useEffect(() => {
     if (value) {
@@ -61,7 +61,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
   };
 
   const getFilteredItems = (type: string, query: string) => {
-    let items: ContentMap[] = [];
+    let items: FullContentMap[] = [];
     switch (type) {
       case "storyFragment":
       case "bunny":

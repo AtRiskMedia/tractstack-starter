@@ -1,16 +1,17 @@
-import type { EventStream } from "../../types";
 import { auth } from "../../store/auth";
 import { referrer } from "../../store/auth";
+import type { EventStream } from "../../types";
 
 export async function eventSync(payload: EventStream[]) {
   const authPayload = auth.get();
 
   // Convert each event to the expected format
   const events = payload.map((e) => {
-    const event: any = {
+    const event: EventStream = {
       id: e.id,
       type: e.type,
       verb: e.verb,
+      ...(typeof e.object === `string` ? { object: e.object } : {}),
     };
 
     // Only add optional fields if they exist

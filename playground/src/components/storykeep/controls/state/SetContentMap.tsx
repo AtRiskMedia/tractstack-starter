@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { contentMap } from "../../../store/events";
-import type { ContentMap } from "../../../types";
+import { contentMap } from "@/store/events.ts";
+import type { FullContentMap } from "@/types.ts";
 
-const SetContentMap = (props: { payload: ContentMap[] }) => {
+const SetContentMap = (props: { payload: FullContentMap[] }) => {
   const { payload } = props;
 
   useEffect(() => {
