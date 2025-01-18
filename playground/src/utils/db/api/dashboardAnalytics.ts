@@ -78,19 +78,20 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   };
   const { rows: lineRows } = await client.execute(lineQuery);
 
-  // Get hot story fragments
+  // Get hot content (both story fragments and context panes)
   const hotQuery = {
     sql: `
      SELECT 
        object_id as id,
+       object_type as type,
        COUNT(*) as total_events
      FROM actions 
      WHERE 
-       object_type = 'StoryFragment'
+       (object_type = 'StoryFragment' OR object_type = 'Pane')
        AND created_at >= ${getDateFilter(duration)}
-     GROUP BY object_id
+     GROUP BY object_id, object_type
      ORDER BY total_events DESC
-     LIMIT 5
+     LIMIT 10
    `,
     args: [],
   };
@@ -126,15 +127,16 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
     }
   });
 
-  // Process hot story fragments data
-  const hotStoryFragments = hotRows.map((row: any) => ({
+  // Process hot content data
+  const hotContent = hotRows.map((row: any) => ({
     id: row.id,
+    type: row.type,
     total_events: Number(row.total_events),
   }));
 
   return {
     stats,
     line: Array.from(lineData.values()),
-    hot_story_fragments: hotStoryFragments,
+    hot_content: hotContent,
   };
 }

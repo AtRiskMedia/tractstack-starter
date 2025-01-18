@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { storedDashboardAnalytics, analyticsDuration } from "../../../store/storykeep";
-import type { DashboardAnalytics, LineDataSeries, HotItem } from "../../../types";
+import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
+import type { DashboardAnalytics, LineDataSeries, HotItem } from "@/types.ts";
 
-export const StoryKeepDashboardStore = () => {
+export const PullDashboardAnalytics = () => {
   const $analyticsDuration = useStore(analyticsDuration);
   const duration = $analyticsDuration;
 
@@ -34,7 +34,7 @@ export const StoryKeepDashboardStore = () => {
     stats: { daily: number; weekly: number; monthly: number };
     line: LineDataSeries[];
     hot_panes: { id: string; total_events: number }[];
-    hot_story_fragments: { id: string; total_events: number }[];
+    hot_content: { id: string; total_events: number }[];
   }): DashboardAnalytics {
     return {
       stats: {
@@ -43,7 +43,7 @@ export const StoryKeepDashboardStore = () => {
         monthly: data.stats.monthly,
       },
       line: data.line,
-      hot_story_fragments: data.hot_story_fragments.map(
+      hot_content: data.hot_content.map(
         (item): HotItem => ({
           id: item.id,
           total_events: item.total_events,
@@ -55,4 +55,4 @@ export const StoryKeepDashboardStore = () => {
   return null;
 };
 
-export default StoryKeepDashboardStore;
+export default PullDashboardAnalytics;

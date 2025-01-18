@@ -19,7 +19,6 @@ const AddStoryStep = ({ id, slug, title, isContextPane }: AddStoryStepProps) => 
     const currentSteps = storySteps.get();
     const isFirstStep = currentSteps.length === 0;
 
-    console.log(currentSteps, newStep);
     storySteps.set([...currentSteps, newStep]);
 
     // Always create page view event

@@ -912,7 +912,7 @@ export type DashboardAnalytics = {
     monthly: number;
   };
   line: LineDataSeries[];
-  hot_story_fragments: HotItem[];
+  hot_content: HotItem[];
 };
 
 export type HotItem = {

@@ -1,8 +1,6 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "../components/frontend/state/SetContentMap";
-import { getContentMap } from "../utils/db/utils";
-import type { ContentMap, Config } from "../types";
+import type { Config } from "../types";
 
 export interface Props {
   config: Config;
@@ -38,8 +36,6 @@ const gtagUrl =
   typeof gtag === `string` && gtag.length > 1
     ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
     : null;
-
-const contentMap: ContentMap[] = await getContentMap();
 ---
 
 <!doctype html>
@@ -179,7 +175,6 @@ const contentMap: ContentMap[] = await getContentMap();
       class="fixed top-0 left-0 w-full h-1 bg-myorange transform scale-x-0 transition-transform duration-300 ease-out z-50"
     >
     </div>
-    <SetContentMap payload={contentMap} client:only="react" />
     <div id="content" class="transition-opacity duration-300">
       <slot />
     </div>

@@ -1,11 +1,9 @@
 import type { EventStream } from "../../types";
-import { contentMap } from "../../store/events";
 import { auth } from "../../store/auth";
 import { referrer } from "../../store/auth";
 
 export async function eventSync(payload: EventStream[]) {
   const authPayload = auth.get();
-  const map = contentMap.get();
 
   // Convert each event to the expected format
   const events = payload.map((e) => {
@@ -26,7 +24,6 @@ export async function eventSync(payload: EventStream[]) {
   const apiPayload = {
     events,
     referrer: ref.httpReferrer !== `` ? ref : undefined,
-    contentMap: map,
     fingerprint: authPayload?.key,
     visitId: authPayload?.visitId,
   };

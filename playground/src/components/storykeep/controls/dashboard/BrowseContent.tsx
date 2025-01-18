@@ -36,13 +36,13 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
       return matchesType && matchesQuery;
     })
     .sort((a, b) => {
-      if (showMostActive && $storedDashboardAnalytics?.hot_story_fragments) {
+      if (showMostActive && $storedDashboardAnalytics?.hot_content) {
         const aEvents =
-          $storedDashboardAnalytics.hot_story_fragments.find((h: HotItem) => h.id === a.id)
-            ?.total_events || 0;
+          $storedDashboardAnalytics.hot_content.find((h: HotItem) => h.id === a.id)?.total_events ||
+          0;
         const bEvents =
-          $storedDashboardAnalytics.hot_story_fragments.find((h: HotItem) => h.id === b.id)
-            ?.total_events || 0;
+          $storedDashboardAnalytics.hot_content.find((h: HotItem) => h.id === b.id)?.total_events ||
+          0;
         return bEvents - aEvents;
       }
       return 0;
@@ -197,9 +197,8 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
               <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
                 {paginatedPages.map((page) => {
                   const events = showMostActive
-                    ? $storedDashboardAnalytics?.hot_story_fragments?.find(
-                        (h: HotItem) => h.id === page.id
-                      )?.total_events || 0
+                    ? $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
+                        ?.total_events || 0
                     : null;
 
                   return (
