@@ -9,7 +9,7 @@ export const Close = () => {
 
   useEffect(() => {
     const lastSteps = $lastStep.filter((e: StoryStep) => e.type !== `ContextPane`);
-    const lastStep = lastSteps.length ? lastSteps.at(-1) : null;
+    const lastStep = lastSteps.length > 1 ? lastSteps.at(-2) : null;
     setGoto(
       lastStep && typeof lastStep.slug === `string` && lastStep.slug.length ? lastStep.slug : ``
     );

@@ -10,6 +10,7 @@ import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
 import AddStoryStep from "@/components/common/state/StoryStep.tsx";
+import { Close } from "@/components/frontend/nav/Close.tsx";
 import type { AuthStatus, ImpressionDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
@@ -85,6 +86,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as Im
   />
   <main id="main-content" class="min-h-screen">
     <AstroNodesRenderer id={paneNode.id} />
+    <Close client:only="react" />
   </main>
   {
     impressionNodes && (
