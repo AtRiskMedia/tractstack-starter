@@ -1,12 +1,13 @@
 ---
-import { ulid } from "ulid";
-import { getConfig, validateConfig } from "../../../../utils/core/config";
-import StoryKeep from "../../../../layouts/StoryKeep.astro";
-import Header from "../../../../components/common/Header.astro";
-import Footer from "../../../../components/common/Footer.astro";
-import TractStackEditor from "../../../../components/storykeep/manage/TractStackEditor";
-import { getTractStackBySlug } from "../../../../utils/db/utils";
-import type { AuthStatus, MenuDatum, TractStackDatum } from "../../../../types";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
+import { getTractStackBySlugRowData } from "@/utils/db/turso.ts";
+import TractStackEditor from "@/components/storykeep/controls/manage/TractStackEditor.tsx";
+import type { AuthStatus, MenuDatum } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const { slug } = Astro.params;
 const create = slug === "create";
@@ -17,24 +18,8 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/storykeep/manage/tractstack/${slug}`;
 
-let tractstack: TractStackDatum | undefined = undefined;
-
-if (create) {
-  tractstack = {
-    id: ulid(),
-    title: "",
-    slug: "",
-    socialImagePath: "",
-  };
-} else {
-  if (!slug) return Astro.redirect("/404");
-  const tractstacks = await getTractStackBySlug(slug);
-  tractstack = tractstacks?.at(0);
-}
-if (!tractstack) return Astro.redirect("/404");
-
+const canonicalURL = `/storykeep/content/tractstacks/${slug}`;
 const menuPayload: MenuDatum = {
   id: `storykeep`,
   title: "Story Keep Menu",
@@ -54,6 +39,27 @@ const menuPayload: MenuDatum = {
     },
   ],
 };
+
+// Get all the data from Turso
+const tractstackRowData = slug && await getTractStackBySlugRowData(slug);
+if (!tractstackRowData) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+deserializer.processTractStackRowData(tractstackRowData, loadData);
+const tractstack = loadData?.tractstackNodes?.length ? loadData.tractstackNodes.at(0) : null;
+if (!tractstack) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
 ---
 
 <StoryKeep

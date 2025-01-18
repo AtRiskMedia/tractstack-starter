@@ -6,7 +6,7 @@ import Footer from "@/components/common/Footer.astro";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
 import { getResourceBySlugRowData } from "@/utils/db/turso.ts";
 import ResourceEditor from "@/components/storykeep/controls/manage/ResourceEditor.tsx";
-import type {ResourceNode, AuthStatus, MenuDatum } from "@/types.ts";
+import type { ResourceNode, AuthStatus, MenuDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const { slug } = Astro.params;
@@ -65,11 +65,9 @@ const defaultResource: ResourceNode = {
   category: ``,
   oneliner: ``,
   actionLisp: ``,
-  optionsPayload: {}
+  optionsPayload: {},
 };
-const resource = loadData?.resourceNodes?.length 
-  ? loadData.resourceNodes.at(0) 
-  : defaultResource;
+const resource = loadData?.resourceNodes?.length ? loadData.resourceNodes.at(0) : defaultResource;
 if (!resource) {
   return new Response(null, {
     status: 404,

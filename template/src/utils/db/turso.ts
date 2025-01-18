@@ -40,6 +40,59 @@ function ensureString(value: unknown): string {
   return String(value);
 }
 
+export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    const { rows } = await client.execute(
+      `SELECT id, title, slug, social_image_path FROM tractstacks`
+    );
+
+    return rows
+      .map((row) => {
+        if (!row.id || !row.title || !row.slug) return null;
+        return {
+          id: row.id,
+          title: row.title,
+          slug: row.slug,
+          ...(typeof row.social_image_path === "string"
+            ? { social_image_path: row.social_image_path }
+            : {}),
+        } as TractStackRowData;
+      })
+      .filter((row): row is TractStackRowData => row !== null);
+  } catch (error) {
+    console.error("Error fetching getAllTractStackRowData:", error);
+    throw error;
+  }
+}
+
+export async function getTractStackBySlugRowData(slug: string): Promise<TractStackRowData | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
+      sql: `SELECT id,title,slug,social_image_path FROM tractstacks WHERE slug = ?`,
+      args: [slug],
+    });
+    if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
+      return {
+        id: rows[0].id,
+        title: rows[0].title,
+        slug: rows[0].slug,
+        ...(typeof rows[0].social_image_path === `string`
+          ? { social_image_path: rows[0].social_image_path }
+          : {}),
+      } as TractStackRowData;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching getTractStackByIdRowData:", error);
+    throw error;
+  }
+}
+
 export async function getTractStackByIdRowData(id: string): Promise<TractStackRowData | null> {
   try {
     const client = await tursoClient.getClient();

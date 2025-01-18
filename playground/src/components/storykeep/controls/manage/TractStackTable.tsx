@@ -1,20 +1,20 @@
 import { useState } from "react";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
-import type { TractStackDatum } from "../../../types";
+import type { TractStackNode } from "@/types.ts";
 
 interface TractStackTableProps {
-  tractstacks: TractStackDatum[];
+  tractstacks: TractStackNode[];
 }
 
 export default function TractStackTable({ tractstacks }: TractStackTableProps) {
   const [query, setQuery] = useState("");
 
-  const filteredTractStacks = tractstacks.filter((tractstack) =>
+  const filteredTractStacks = tractstacks?.filter((tractstack) =>
     tractstack.title.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div>
+    <div className="mx-auto max-w-screen-xl">
       <div className="mb-4">
         <input
           type="text"
@@ -43,7 +43,7 @@ export default function TractStackTable({ tractstacks }: TractStackTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {filteredTractStacks.map((tractstack) => (
+            {filteredTractStacks?.map((tractstack) => (
               <tr key={tractstack.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
                   {tractstack.title}
@@ -56,7 +56,7 @@ export default function TractStackTable({ tractstacks }: TractStackTableProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                   <a
-                    href={`/storykeep/manage/tractstack/${tractstack.slug}`}
+                    href={`/storykeep/content/tractstacks/${tractstack.slug}`}
                     className="text-myblue hover:text-myorange"
                     title="Edit"
                   >
