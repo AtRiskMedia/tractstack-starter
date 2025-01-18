@@ -45,7 +45,7 @@
       "sql": "CREATE TABLE IF NOT EXISTS actions (id TEXT PRIMARY KEY, object_id TEXT NOT NULL, object_type TEXT NOT NULL, visit_id TEXT NOT NULL REFERENCES visits(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     },
     "beliefs": {
-      "sql": "CREATE TABLE IF NOT EXISTS beliefs (id TEXT PRIMARY KEY, slug TEXT NOT NULL UNIQUE, scale TEXT NOT NULL)"
+      "sql": "CREATE TABLE IF NOT EXISTS beliefs (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, scale TEXT NOT NULL, custom_values TEXT)"
     },
     "heldbeliefs": {
       "sql": "CREATE TABLE IF NOT EXISTS heldbeliefs (id TEXT PRIMARY KEY, belief_id TEXT NOT NULL REFERENCES beliefs(id), fingerprint_id TEXT NOT NULL REFERENCES fingerprints(id), verb TEXT NOT NULL, object TEXT, updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"

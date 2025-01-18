@@ -501,6 +501,13 @@ export interface ResourceNode extends BaseNode {
   actionLisp?: string;
 }
 
+export interface BeliefNode extends BaseNode {
+  title: string;
+  slug: string;
+  scale: string;
+  customValues?: string[];
+}
+
 export interface MenuNode extends BaseNode {
   title: string;
   theme: string;
@@ -1182,6 +1189,7 @@ export type NodeType =
   | "Menu"
   | "Impression"
   | "File"
+  | "Belief"
   | "Resource";
 
 export interface BaseNode {

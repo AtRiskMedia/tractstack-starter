@@ -7,6 +7,7 @@ import type {
   PaneRowData,
   MarkdownRowData,
   StoryFragmentRowData,
+  BeliefRowData,
 } from "@/store/nodesSerializer.ts";
 import type {
   FullContentMap,
@@ -1015,6 +1016,56 @@ export async function getContextPaneBySlugFullRowData(
     };
   } catch (error) {
     console.error("Error in getContextPaneBySlugFullRowData:", error);
+    throw error;
+  }
+}
+
+export async function getAllBeliefRowData(): Promise<BeliefRowData[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const query = {
+      sql: `SELECT id, title, slug, scale, custom_values 
+            FROM beliefs`,
+      args: [],
+    };
+    const { rows } = await client.execute(query);
+    return rows.map((row) => ({
+      id: row.id as string,
+      title: row.title as string,
+      slug: row.slug as string,
+      scale: row.scale as string,
+      custom_values: row.custom_values as string | undefined,
+    }));
+  } catch (error) {
+    console.error("Error fetching belief data:", error);
+    throw error;
+  }
+}
+
+export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | null> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return null;
+    const { rows } = await client.execute({
+      sql: `SELECT id, title, slug, scale, custom_values 
+            FROM beliefs WHERE id = ?`,
+      args: [id],
+    });
+    if (rows.length > 0 && rows[0].id && rows[0].title) {
+      return {
+        id: rows[0].id,
+        title: rows[0].title,
+        slug: rows[0].slug,
+        scale: rows[0].scale,
+        ...(typeof rows[0].custom_values === "string"
+          ? { custom_values: rows[0].custom_values }
+          : {}),
+      } as BeliefRowData;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching getBeliefByIdRowData:", error);
     throw error;
   }
 }

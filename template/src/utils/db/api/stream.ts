@@ -1,5 +1,5 @@
 import { tursoClient } from "../client";
-import { processEventStream } from "@/utils/visit/processEventStream.ts";
+import { processEventStream } from "@/utils/events/processEventStream.ts";
 import type { EventPayload, EventStream, Referrer } from "@/types.ts";
 
 export async function streamEvents(payload: {

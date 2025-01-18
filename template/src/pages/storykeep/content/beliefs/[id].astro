@@ -3,11 +3,10 @@ import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
-import MenuEditor from "@/components/storykeep/controls/manage/MenuEditor.tsx";
+import BeliefEditor from "@/components/storykeep/controls/manage/BeliefEditor.tsx";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
-import { getMenuByIdRowData } from "@/utils/db/turso.ts";
-import { getFullContentMap } from "@/utils/db/turso.ts";
-import type { AuthStatus, MenuNode, MenuLink } from "@/types.ts";
+import { getBeliefByIdRowData } from "@/utils/db/turso.ts";
+import type { AuthStatus, BeliefNode, MenuNode } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const { id } = Astro.params;
@@ -19,7 +18,7 @@ const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/storykeep/content/menus/${id}`;
+const canonicalURL = `/storykeep/content/beliefs/${id}`;
 const menuPayload: MenuNode = {
   id: `storykeep`,
   parentId: null,
@@ -43,8 +42,8 @@ const menuPayload: MenuNode = {
 };
 
 // Get all the data from Turso
-const menuRowData = id ? await getMenuByIdRowData(id) : null;
-if (!menuRowData && !create) {
+const beliefRowData = id ? await getBeliefByIdRowData(id) : null;
+if (!beliefRowData && !create) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
@@ -54,36 +53,33 @@ if (!menuRowData && !create) {
 // Initialize deserializer
 const deserializer = new NodesDeserializer_Json();
 const loadData: LoadData = {};
-if (menuRowData) deserializer.processMenuRowData(menuRowData, loadData);
-const defaultMenu: MenuNode = {
+if (beliefRowData) deserializer.processBeliefRowData(beliefRowData, loadData);
+const defaultBelief: BeliefNode = {
   id: ``,
   parentId: null,
-  nodeType: `Menu` as const,
+  nodeType: `Belief` as const,
+  slug: ``,
   title: ``,
-  theme: ``,
-  optionsPayload: [] as MenuLink[],
+  scale: ``,
 };
-const menu = loadData?.menuNodes?.length ? loadData.menuNodes.at(0) : defaultMenu;
-if (!menu) {
+const belief = loadData?.beliefNodes?.length ? loadData.beliefNodes.at(0) : defaultBelief;
+if (!belief) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
-
-// get storykeep datum
-const contentMap = await getFullContentMap();
 ---
 
 <StoryKeep
-  title={create ? "Create New Menu" : `Edit Menu: ${menu.title}`}
+  title={create ? "Create New Belief" : `Edit Belief: ${belief.title}`}
   canonicalURL={canonicalURL}
   config={config}
 >
   <Header
-    title={create ? "Create New Menu" : `Edit Menu: ${menu.title}`}
+    title={create ? "Create New Belief" : `Edit Belief: ${belief.title}`}
     menu={menuPayload}
-    slug={`storykeep-manage-menu-${id}`}
+    slug={`storykeep-manage-belief-${id}`}
     isContext={false}
     user={user}
     isStoryKeep={true}
@@ -93,14 +89,14 @@ const contentMap = await getFullContentMap();
   <main id="main-content" class="min-h-screen">
     <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
       <div class="py-1.5 bg-white px-3.5">
-        <MenuEditor menu={menu} create={create} contentMap={contentMap} client:load />
+        <BeliefEditor belief={belief} create={create} client:load />
       </div>
     </div>
   </main>
   <Footer
     menu={menuPayload}
     backToTop={true}
-    slug={`storykeep-manage-menu-${id}`}
+    slug={`storykeep-manage-belief-${id}`}
     isContext={false}
     config={config}
   />

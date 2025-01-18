@@ -25,6 +25,13 @@ const contentTypes = {
     url: "/storykeep/content/tractstacks",
     createUrl: "/storykeep/content/tractstacks/create",
   },
+  belief: {
+    name: "Magic Path Belief",
+    browse: "Magic Path Beliefs",
+    url: "/storykeep/content/beliefs",
+    createUrl: "/storykeep/content/beliefs/create",
+  },
+
   //storyfragment: {
   //  name: "Story Fragment",
   //  browse: "Story Fragments",

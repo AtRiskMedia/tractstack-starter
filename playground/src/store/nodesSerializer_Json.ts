@@ -5,6 +5,7 @@ import type {
   MenuNode,
   ResourceNode,
   PaneNode,
+  BeliefNode,
   ImageFileNode,
   TractStackNode,
   StoryFragmentNode,
@@ -24,6 +25,7 @@ export class NodesSerializer_Json extends NodesSerializer {
       files: [],
       menus: [],
       resources: [],
+      beliefs: [],
     };
     nodes?.tractstackNodes?.forEach((n: TractStackNode) => {
       this.processTractStackNode(n, saveData);
@@ -101,6 +103,22 @@ export class NodesSerializer_Json extends NodesSerializer {
         url: fileNode.src,
         ...(typeof fileNode.srcSet === `string` ? { src_set: fileNode.srcSet } : {}),
       });
+  }
+
+  processBeliefNode(node: BaseNode | undefined, saveData: SaveData) {
+    if (!node) return;
+    const beliefNode = node as BeliefNode;
+    if (beliefNode) {
+      saveData.beliefs.push({
+        id: beliefNode.id,
+        title: beliefNode.title,
+        slug: beliefNode.slug,
+        scale: beliefNode.scale,
+        ...(Array.isArray(beliefNode.customValues)
+          ? { custom_values: beliefNode.customValues.join(",") }
+          : {}),
+      });
+    }
   }
 
   processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData) {
@@ -267,6 +285,7 @@ export class NodesSerializer_Json extends NodesSerializer {
       files: [],
       menus: [],
       resources: [],
+      beliefs: [],
     };
     //this.processNode(ctx, rootNode, saveData);
     ////console.log("Save data:", saveData);

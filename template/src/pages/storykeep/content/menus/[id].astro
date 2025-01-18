@@ -7,7 +7,7 @@ import MenuEditor from "@/components/storykeep/controls/manage/MenuEditor.tsx";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
 import { getMenuByIdRowData } from "@/utils/db/turso.ts";
 import { getFullContentMap } from "@/utils/db/turso.ts";
-import type { AuthStatus, MenuDatum } from "@/types.ts";
+import type { AuthStatus, MenuNode, MenuLink } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const { id } = Astro.params;
@@ -20,8 +20,10 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 const canonicalURL = `/storykeep/content/menus/${id}`;
-const menuPayload: MenuDatum = {
+const menuPayload: MenuNode = {
   id: `storykeep`,
+  parentId: null,
+  nodeType: `Menu`,
   title: "Story Keep Menu",
   theme: "default",
   optionsPayload: [
@@ -42,7 +44,7 @@ const menuPayload: MenuDatum = {
 
 // Get all the data from Turso
 const menuRowData = id ? await getMenuByIdRowData(id) : null;
-if (!menuRowData) {
+if (!menuRowData && !create) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
@@ -52,8 +54,16 @@ if (!menuRowData) {
 // Initialize deserializer
 const deserializer = new NodesDeserializer_Json();
 const loadData: LoadData = {};
-deserializer.processMenuRowData(menuRowData, loadData);
-const menu = loadData?.menuNodes?.length ? loadData.menuNodes.at(0) : null;
+if (menuRowData) deserializer.processMenuRowData(menuRowData, loadData);
+const defaultMenu: MenuNode = {
+  id: ``,
+  parentId: null,
+  nodeType: `Menu` as const,
+  title: ``,
+  theme: ``,
+  optionsPayload: [] as MenuLink[],
+};
+const menu = loadData?.menuNodes?.length ? loadData.menuNodes.at(0) : defaultMenu;
 if (!menu) {
   return new Response(null, {
     status: 404,
