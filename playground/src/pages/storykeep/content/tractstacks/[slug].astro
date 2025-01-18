@@ -6,7 +6,7 @@ import Footer from "@/components/common/Footer.astro";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
 import { getTractStackBySlugRowData } from "@/utils/db/turso.ts";
 import TractStackEditor from "@/components/storykeep/controls/manage/TractStackEditor.tsx";
-import type { AuthStatus, MenuDatum } from "@/types.ts";
+import type { AuthStatus, MenuDatum,TractStackNode } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const { slug } = Astro.params;
@@ -41,8 +41,8 @@ const menuPayload: MenuDatum = {
 };
 
 // Get all the data from Turso
-const tractstackRowData = slug && await getTractStackBySlugRowData(slug);
-if (!tractstackRowData) {
+const tractstackRowData = slug && !create && (await getTractStackBySlugRowData(slug));
+if (!tractstackRowData && !create) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
@@ -50,10 +50,21 @@ if (!tractstackRowData) {
 }
 
 // Initialize deserializer
-const deserializer = new NodesDeserializer_Json();
 const loadData: LoadData = {};
-deserializer.processTractStackRowData(tractstackRowData, loadData);
-const tractstack = loadData?.tractstackNodes?.length ? loadData.tractstackNodes.at(0) : null;
+if (!create && tractstackRowData) {
+  const deserializer = new NodesDeserializer_Json();
+  deserializer.processTractStackRowData(tractstackRowData, loadData);
+}
+const defaultTractStack: TractStackNode = {
+  id: ``,
+  parentId: null,
+  nodeType: `TractStack` as const,
+  title: ``,
+  slug: ``,
+};
+const tractstack = loadData?.tractstackNodes?.length
+  ? loadData.tractstackNodes.at(0)
+  : defaultTractStack;
 if (!tractstack) {
   return new Response(null, {
     status: 404,
