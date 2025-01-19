@@ -1,5 +1,6 @@
 import type { NodesContext } from "@/store/nodes.ts";
 import type { FlatNode, MarkdownPaneFragmentNode } from "@/types.ts";
+import { ulid } from "ulid";
 
 export const hasWidgetChildren = (nodeId: string, ctx: NodesContext): boolean => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
@@ -105,5 +106,96 @@ export class MarkdownGenerator {
       default:
         return childrenMarkdown; // Default case for unhandled typeNames
     }
+  }
+
+  markdownToFlatNodes(markdown: string, parentId: string): FlatNode[] {
+    const nodes: FlatNode[] = [];
+
+    const createTextNode = (text: string, parentId: string): FlatNode => {
+      const textNodeId = ulid();
+      const textNode: FlatNode = {
+        id: textNodeId,
+        tagName: "text",
+        copy: text,
+        nodeType: "TagElement",
+        parentId,
+      };
+      nodes.push(textNode);
+      return textNode;
+    };
+
+    const createNode = (
+      tagName: string,
+      parentId: string,
+      additionalProps: Partial<FlatNode> = {}
+    ): FlatNode => {
+      const nodeId = ulid();
+      const node: FlatNode = {
+        id: nodeId,
+        tagName,
+        nodeType: "TagElement",
+        parentId,
+        ...additionalProps,
+      };
+      nodes.push(node);
+      return node;
+    };
+
+    // Markdown processing logic
+    const lines = markdown.split(/\r?\n/);
+    const currentParentId: string | null = parentId;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (!trimmed) continue; // Skip empty lines
+
+      let match;
+
+      if ((match = /^## (.*)$/.exec(trimmed))) {
+        const headerText = match[1];
+        const headerNode = createNode("h2", currentParentId);
+        createTextNode(headerText, headerNode.id);
+      } else if ((match = /^### (.*)$/.exec(trimmed))) {
+        const headerText = match[1];
+        const headerNode = createNode("h3", currentParentId);
+        createTextNode(headerText, headerNode.id);
+      } else if ((match = /^#### (.*)$/.exec(trimmed))) {
+        const headerText = match[1];
+        const headerNode = createNode("h4", currentParentId);
+        createTextNode(headerText, headerNode.id);
+      } else if ((match = /^\* (.*)$/.exec(trimmed))) {
+        const listItemText = match[1];
+        const listItemNode = createNode("li", currentParentId);
+        createTextNode(listItemText, listItemNode.id);
+      } else if ((match = /^\!\[(.*?)\]\((.*?)\)$/.exec(trimmed))) {
+        const [, alt, src] = match;
+        createNode("img", currentParentId, { alt, fileId: src });
+      } else if (trimmed.includes("[") && trimmed.includes("]") && trimmed.includes("(")) {
+        const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
+        let linkMatch;
+        while ((linkMatch = linkRegex.exec(trimmed)) !== null) {
+          const [, linkText, href] = linkMatch;
+          const linkNode = createNode("a", currentParentId, { href });
+          createTextNode(linkText, linkNode.id);
+        }
+      } else if ((match = /^\*\*(.*?)\*\*$/.exec(trimmed))) {
+        const boldText = match[1];
+        const boldNode = createNode("strong", currentParentId);
+        createTextNode(boldText, boldNode.id);
+      } else if ((match = /^\*(.*?)\*$/.exec(trimmed))) {
+        const italicText = match[1];
+        const italicNode = createNode("em", currentParentId);
+        createTextNode(italicText, italicNode.id);
+      } else if ((match = /^```([a-z]*)\n([\s\S]*?)\n```$/.exec(trimmed))) {
+        const [, code] = match;
+        createNode("code", currentParentId, { copy: code });
+      } else {
+        // Default case for paragraphs or plain text
+        const paragraphNode = createNode("p", currentParentId);
+        createTextNode(trimmed, paragraphNode.id);
+      }
+    }
+    return nodes;
   }
 }
