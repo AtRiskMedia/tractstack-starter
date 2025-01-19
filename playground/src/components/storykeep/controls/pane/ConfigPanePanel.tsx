@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
@@ -25,11 +25,26 @@ interface ConfigPanePanelProps {
 }
 
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
-  const [mode, setMode] = useState<PaneMode>(PaneMode.DEFAULT);
+  const ctx = getCtx();
+  const activePaneMode = ctx.activePaneMode.get();
+  const isActiveMode =
+    activePaneMode.panel === `settings` && activePaneMode.paneId === nodeId && activePaneMode.mode;
+  const allNodes = ctx.allNodes.get();
+  const paneNode = allNodes.get(nodeId) as PaneNode;
+  if (!paneNode) return null;
+  const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
+  const isContextPane = isContextPaneNode(paneNode);
+  const buttonClass =
+    "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
 
-  useEffect(() => {
-    setMode(PaneMode.DEFAULT);
-  }, [nodeId]);
+  const [mode, setMode] = useState<PaneMode>(
+    (isActiveMode as PaneMode) || PaneMode.DEFAULT
+  );
+
+  const setSaveMode = (newMode: PaneMode) => {
+    setMode(newMode);
+    ctx.activePaneMode.set({ paneId: nodeId, mode: newMode, panel: `settings` });
+  };
 
   if (mode === PaneMode.TITLE) {
     return <PaneTitlePanel nodeId={nodeId} setMode={setMode} />;
@@ -40,16 +55,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   } else if (mode === PaneMode.IMPRESSION) {
     return <PaneImpressionPanel nodeId={nodeId} setMode={setMode} />;
   }
-
-  const ctx = getCtx();
-  const allNodes = ctx.allNodes.get();
-  const paneNode = allNodes.get(nodeId) as PaneNode;
-  if (!paneNode) return null;
-  const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
-  const isContextPane = isContextPaneNode(paneNode);
-
-  const buttonClass =
-    "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
 
   return (
     <div className="p-0.5 shadow-inner">
@@ -69,13 +74,13 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </button>
             ) : (
               <>
-                <button onClick={() => setMode(PaneMode.TITLE)} className={buttonClass}>
+                <button onClick={() => setSaveMode(PaneMode.TITLE)} className={buttonClass}>
                   Title: <strong>{paneNode.title}</strong>
                 </button>
-                <button onClick={() => setMode(PaneMode.SLUG)} className={buttonClass}>
+                <button onClick={() => setSaveMode(PaneMode.SLUG)} className={buttonClass}>
                   Slug: <strong>{paneNode.slug}</strong>
                 </button>
-                <button onClick={() => setMode(PaneMode.IMPRESSION)} className={buttonClass}>
+                <button onClick={() => setSaveMode(PaneMode.IMPRESSION)} className={buttonClass}>
                   {impressionNodes.length ? (
                     <>
                       <CheckIcon className="w-4 h-4 inline" />
@@ -93,7 +98,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </>
             )}
             {!isContextPane && (
-              <button onClick={() => setMode(PaneMode.PATH)} className={buttonClass}>
+              <button onClick={() => setSaveMode(PaneMode.PATH)} className={buttonClass}>
                 {hasBeliefPayload(paneNode) ? (
                   <>
                     <CheckIcon className="w-4 h-4 inline" />

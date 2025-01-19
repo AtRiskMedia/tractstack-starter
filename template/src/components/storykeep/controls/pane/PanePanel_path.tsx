@@ -34,14 +34,12 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
       const updatedNode = cloneDeep(allNodes.get(nodeId)) as PaneNode;
-
       if (isHeld) {
         updatedNode.heldBeliefs = newPaths;
       } else {
         updatedNode.withheldBeliefs = newPaths;
       }
       updatedNode.isChanged = true;
-
       ctx.modifyNodes([updatedNode]);
     },
     [nodeId]
@@ -54,7 +52,6 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
       ...paths,
       [newKey]: [""],
     };
-
     if (isHeld) {
       setHeldPaths(updatedPaths);
     } else {

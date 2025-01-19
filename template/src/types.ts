@@ -1487,3 +1487,9 @@ export const ContextPaneMode = {
 } as const;
 
 export type ContextPaneModeType = (typeof ContextPaneMode)[keyof typeof ContextPaneMode];
+
+export interface ActivePaneMode {
+  paneId: string;
+  mode: string;
+  panel: string;
+}

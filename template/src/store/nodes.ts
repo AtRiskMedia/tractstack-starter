@@ -23,6 +23,7 @@ import type {
   TemplatePane,
   TractStackNode,
   ViewportKey,
+  ActivePaneMode,
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
@@ -63,6 +64,11 @@ export class NodesContext {
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
+  activePaneMode = atom<ActivePaneMode>({
+    paneId: "",
+    mode: "",
+    panel: "",
+  });
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
   getChildNodeIDs(parentNodeId: string): string[] {
