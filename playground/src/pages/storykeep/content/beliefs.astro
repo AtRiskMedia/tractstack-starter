@@ -49,7 +49,6 @@ if (!beliefRowData) {
 // Initialize deserializer
 const deserializer = new NodesDeserializer_Json();
 const loadData: LoadData = {};
-console.log(loadData, beliefRowData);
 beliefRowData.forEach((belief) => {
   deserializer.processBeliefRowData(belief, loadData);
 });

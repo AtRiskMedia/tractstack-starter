@@ -13,6 +13,8 @@ type ScaleType = keyof typeof heldBeliefsScales | "custom" | "";
 interface BeliefEditorProps {
   belief: BeliefNode;
   create: boolean;
+  onComplete?: () => void;
+  onCancel?: () => void;
 }
 
 function createBeliefUpdateQuery(id: string, belief: BeliefNode): TursoQuery {
@@ -61,7 +63,7 @@ function compareBeliefFields(current: BeliefNode, original: BeliefNode): boolean
   );
 }
 
-export default function BeliefEditor({ belief, create }: BeliefEditorProps) {
+export default function BeliefEditor({ belief, create, onComplete, onCancel }: BeliefEditorProps) {
   const [localBelief, setLocalBelief] = useState<BeliefNode>(belief);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -173,25 +175,37 @@ export default function BeliefEditor({ belief, create }: BeliefEditorProps) {
       setTimeout(() => {
         setSaveSuccess(false);
         if (create) {
-          navigate(`/storykeep/manage/belief/${updatedBelief.slug}`);
+          if (onComplete) {
+            onComplete();
+          } else {
+            navigate(`/storykeep/manage/belief/${updatedBelief.slug}`);
+          }
         }
-      }, 7000);
+      }, 2000);
     } catch (error) {
       console.error("Error saving belief:", error);
     } finally {
       setIsSaving(false);
     }
-  }, [localBelief, belief, unsavedChanges, isSaving, create, customValues]);
+  }, [localBelief, belief, unsavedChanges, isSaving, create, customValues, onComplete]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {
       if (window.confirm("You have unsaved changes. Are you sure you want to cancel?")) {
-        navigate(`/storykeep`);
+        if (onCancel) {
+          onCancel();
+        } else {
+          navigate(`/storykeep`);
+        }
       }
     } else {
-      navigate(`/storykeep`);
+      if (onCancel) {
+        onCancel();
+      } else {
+        navigate(`/storykeep`);
+      }
     }
-  }, [unsavedChanges]);
+  }, [unsavedChanges, onCancel]);
 
   const scaleOptions: Array<{ value: ScaleType; label: string }> = [
     { value: "", label: "Select a scale" },

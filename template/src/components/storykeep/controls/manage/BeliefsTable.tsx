@@ -77,7 +77,7 @@ export default function BeliefsTable({ beliefs }: BeliefsTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                     <a
-                      href={`/storykeep/content/beliefs/${belief.slug}`}
+                      href={`/storykeep/content/beliefs/${belief.id}`}
                       className="text-myblue hover:text-myorange"
                       title="Edit"
                     >
