@@ -366,7 +366,11 @@ const SettingsPanel = ({
   const thisPanel = (
     <div className="bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
       <div
-        className={(!signal.expanded && "pointer-events-auto hover:bg-myorange/20") || ""}
+        className={
+          (!signal.expanded &&
+            `pointer-events-auto ${!effectiveExpanded && `hover:bg-myorange/20`}`) ||
+          ""
+        }
         style={
           effectiveExpanded
             ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }

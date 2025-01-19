@@ -173,6 +173,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
           <BeliefEditor
             belief={emptyBelief}
             create={true}
+            isEmbedded={true}
             onComplete={() => {
               setIsCreatingBelief(false);
               fetchBeliefs();

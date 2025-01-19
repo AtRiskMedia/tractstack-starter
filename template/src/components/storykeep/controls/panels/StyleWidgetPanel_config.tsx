@@ -1,11 +1,14 @@
-import { useState } from "react";
-import { widgetMeta } from "../../../../constants";
-import { settingsPanelStore } from "@/store/storykeep";
-import { getCtx } from "@/store/nodes";
-import { isWidgetNode } from "../../../../utils/nodes/type-guards";
-import type { FlatNode } from "../../../../types";
+import { useState, useEffect, useCallback } from "react";
+import { ulid } from "ulid";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
+import BeliefEditor from "../manage/BeliefEditor";
+import type { FlatNode, BeliefNode } from "@/types.ts";
+import { widgetMeta } from "@/constants.ts";
+import { settingsPanelStore } from "@/store/storykeep.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { isWidgetNode } from "@/utils/nodes/type-guards.tsx";
 
 interface StyleWidgetConfigPanelProps {
   node: FlatNode;
@@ -35,14 +38,9 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
 
   if (!meta) return null;
 
-  // Initialize state from codeHookParams
   const [values, setValues] = useState(() => {
-    // Create an object to hold all values
     const initialValues: { [key: string]: string | string[] } = {};
-
-    // Map each parameter to its corresponding value
     meta.valueLabels.forEach((label, index) => {
-      // Handle array values based on multi flag
       if (meta.multi[index]) {
         initialValues[label] = Array.isArray(node.codeHookParams[index])
           ? node.codeHookParams[index]
@@ -51,28 +49,56 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
         initialValues[label] = node.codeHookParams[index] || meta.valueDefaults[index];
       }
     });
-
     return initialValues;
   });
 
-  const updateStore = (newValues: typeof values) => {
-    const ctx = getCtx();
-    const allNodes = ctx.allNodes.get();
-    const widgetNode = allNodes.get(node.id);
-    if (!widgetNode || !isWidgetNode(widgetNode) || !widgetId) return;
+  const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
+  const [isCreatingBelief, setIsCreatingBelief] = useState(false);
+  const [availableBeliefs, setAvailableBeliefs] = useState<BeliefNode[]>([]);
 
-    // Convert values object back to params array
-    const newParams = meta.valueLabels.map((label) => newValues[label]);
+  const fetchBeliefs = useCallback(async () => {
+    try {
+      const response = await fetch("/api/turso/getAllBeliefNodes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
 
-    // Create the widget copy string
-    const paramStrings = meta.valueLabels.map((label) => {
-      const value = newValues[label];
-      return Array.isArray(value) ? value.join(",") : value;
-    });
-    const newCopy = `${widgetId}(${paramStrings.join("|")})`;
+      if (!response.ok) throw new Error("Failed to fetch beliefs");
 
-    ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
-  };
+      const result = await response.json();
+      if (result.success) {
+        setAvailableBeliefs(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching beliefs:", error);
+    }
+  }, []);
+
+  // Fetch available beliefs
+  useEffect(() => {
+    if (meta.isBelief) {
+      fetchBeliefs();
+    }
+  }, [meta.isBelief, fetchBeliefs]);
+
+  const updateStore = useCallback(
+    (newValues: typeof values) => {
+      const ctx = getCtx();
+      const allNodes = ctx.allNodes.get();
+      const widgetNode = allNodes.get(node.id);
+      if (!widgetNode || !isWidgetNode(widgetNode) || !widgetId) return;
+
+      const newParams = meta.valueLabels.map((label) => newValues[label]);
+      const paramStrings = meta.valueLabels.map((label) => {
+        const value = newValues[label];
+        return Array.isArray(value) ? value.join(",") : value;
+      });
+      const newCopy = `${widgetId}(${paramStrings.join("|")})`;
+
+      ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
+    },
+    [node.id, widgetId, meta.valueLabels]
+  );
 
   const handleCloseConfig = () => {
     settingsPanelStore.set({
@@ -82,13 +108,80 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
     });
   };
 
+  const handleCreateBelief = () => {
+    setIsCreatingBelief(true);
+  };
+
+  // Render BeliefEditor for creating/editing beliefs
+  if (isCreatingBelief || editingBeliefId) {
+    const belief: BeliefNode = isCreatingBelief
+      ? {
+          id: ulid(),
+          nodeType: "Belief",
+          parentId: null,
+          title: "",
+          slug: "",
+          scale: "",
+        }
+      : availableBeliefs.find((b) => b.id === editingBeliefId) || {
+          id: "",
+          nodeType: "Belief",
+          parentId: null,
+          title: "",
+          slug: "",
+          scale: "",
+        };
+
+    if (!isCreatingBelief && !belief) return null;
+
+    return (
+      <div className="my-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">
+            {isCreatingBelief ? "Create New Belief" : "Edit Belief"}
+          </h3>
+          <button
+            onClick={() => {
+              setIsCreatingBelief(false);
+              setEditingBeliefId(null);
+            }}
+            className="text-cyan-700 hover:text-black"
+          >
+            ← Back to Widget Config
+          </button>
+        </div>
+        <BeliefEditor
+          belief={belief}
+          create={isCreatingBelief}
+          isEmbedded={true}
+          onComplete={() => {
+            setIsCreatingBelief(false);
+            setEditingBeliefId(null);
+            fetchBeliefs();
+          }}
+          onCancel={() => {
+            setIsCreatingBelief(false);
+            setEditingBeliefId(null);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Helper function to determine if the select should be disabled
+  const isSelectDisabled = (beliefTag: string) => {
+    const selectedBelief = availableBeliefs.find((b) => b.slug === beliefTag);
+    return selectedBelief?.scale === "custom";
+  };
+
+  // Main widget configuration panel
   return (
     <div className="my-4 flex flex-wrap gap-x-1.5 gap-y-3.5">
       <div className="space-y-4 max-w-md min-w-80">
         <div className="flex flex-row flex-nowrap justify-between">
           <h2 className="text-xl font-bold">{meta.title}</h2>
           <button
-            className="text-myblue hover:text-black"
+            className="text-cyan-700 hover:text-black"
             title="Return to preview pane"
             onClick={handleCloseConfig}
           >
@@ -98,27 +191,69 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
 
         {meta.valueLabels.map((label, index) => (
           <div key={label} className="space-y-1">
-            <label className="block text-sm text-mydarkgrey">{label}</label>
+            <label className="block text-sm text-gray-600">{label}</label>
             {meta.multi[index] ? (
               <div className="space-y-1">
                 {(values[label] as string[]).map((value, valueIndex) => (
                   <div key={valueIndex} className="flex items-center space-x-2">
-                    <div
-                      contentEditable
-                      onBlur={(e) => {
-                        const newArray = [...(values[label] as string[])];
-                        newArray[valueIndex] = e.currentTarget.textContent || "";
-                        const newValues = { ...values, [label]: newArray };
-                        setValues(newValues);
-                        updateStore(newValues);
-                      }}
-                      className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6 flex-1"
-                      style={{ minHeight: "1em", pointerEvents: "auto" }}
-                      data-placeholder={`Enter ${label}`}
-                      suppressContentEditableWarning
-                    >
-                      {value}
-                    </div>
+                    {meta.isBelief &&
+                    label === "Belief Matching Value(s)" &&
+                    isSelectDisabled(values["Belief Tag"] as string) ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="rounded-md border-0 px-2.5 py-1.5 text-gray-500 bg-gray-100 ring-1 ring-inset ring-gray-300 flex-1">
+                          {value}
+                        </div>
+                        <button
+                          onClick={() => {
+                            const belief = availableBeliefs.find(
+                              (b) => b.slug === values["Belief Tag"]
+                            );
+                            if (belief) {
+                              setEditingBeliefId(belief.id);
+                            }
+                          }}
+                          className="text-cyan-700 hover:text-black"
+                          title="Edit custom values"
+                        >
+                          <BeakerIcon className="h-5 w-5" />
+                        </button>
+                      </div>
+                    ) : meta.isBelief && label === "Belief Tag" ? (
+                      <select
+                        value={value}
+                        onChange={(e) => {
+                          const newArray = [...(values[label] as string[])];
+                          newArray[valueIndex] = e.target.value;
+                          const newValues = { ...values, [label]: newArray };
+                          setValues(newValues);
+                          updateStore(newValues);
+                        }}
+                        className="rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700 flex-1"
+                      >
+                        <option value="">Select a belief</option>
+                        {availableBeliefs.map((belief) => (
+                          <option key={belief.slug} value={belief.slug}>
+                            {belief.title}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div
+                        contentEditable
+                        onBlur={(e) => {
+                          const newArray = [...(values[label] as string[])];
+                          newArray[valueIndex] = e.currentTarget.textContent || "";
+                          const newValues = { ...values, [label]: newArray };
+                          setValues(newValues);
+                          updateStore(newValues);
+                        }}
+                        className="rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700 flex-1"
+                        style={{ minHeight: "1em" }}
+                        suppressContentEditableWarning
+                      >
+                        {value}
+                      </div>
+                    )}
                     <button
                       onClick={() => {
                         const newArray = (values[label] as string[]).filter(
@@ -128,7 +263,7 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
                         setValues(newValues);
                         updateStore(newValues);
                       }}
-                      className="text-myorange hover:text-black"
+                      className="text-gray-500 hover:text-gray-700"
                       title="Remove value"
                     >
                       <XMarkIcon className="h-5 w-5" />
@@ -142,7 +277,7 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
                     setValues(newValues);
                     updateStore(newValues);
                   }}
-                  className="text-myblue hover:text-black flex items-center"
+                  className="text-cyan-700 hover:text-black flex items-center"
                   title={`Add ${label}`}
                 >
                   <PlusIcon className="h-5 w-5 mr-1" />
@@ -150,19 +285,76 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
                 </button>
               </div>
             ) : meta.isScale[index] ? (
-              <select
-                value={values[label] as string}
-                onChange={(e) => {
-                  const newValues = { ...values, [label]: e.target.value };
-                  setValues(newValues);
-                  updateStore(newValues);
-                }}
-                className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6 w-full"
-              >
-                <option value="yn">Yes/No</option>
-                <option value="likert">Likert Scale</option>
-                <option value="10pt">10-point Scale</option>
-              </select>
+              <div className="flex items-center gap-2">
+                <select
+                  value={values[label] as string}
+                  onChange={(e) => {
+                    const newValues = { ...values, [label]: e.target.value };
+                    setValues(newValues);
+                    updateStore(newValues);
+                  }}
+                  disabled={isSelectDisabled(values["Belief Tag"] as string)}
+                  className="rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700 w-full disabled:bg-gray-100 disabled:text-gray-500"
+                >
+                  <option value="yn">Yes/No</option>
+                  <option value="likert">Likert Scale</option>
+                  <option value="10pt">10-point Scale</option>
+                  {values["Belief Tag"] &&
+                    isSelectDisabled(values["Belief Tag"] as string) && (
+                      <option value="custom">Custom Scale</option>
+                    )}
+                </select>
+                {values["Belief Tag"] &&
+                  isSelectDisabled(values["Belief Tag"] as string) && (
+                    <button
+                      onClick={() => {
+                        const belief = availableBeliefs.find(
+                          (b) => b.slug === values["Belief Tag"]
+                        );
+                        if (belief) {
+                          setEditingBeliefId(belief.id);
+                        }
+                      }}
+                      className="text-cyan-700 hover:text-black"
+                      title="Edit custom scale values"
+                    >
+                      <BeakerIcon className="h-5 w-5" />
+                    </button>
+                  )}
+              </div>
+            ) : meta.isBelief && label === "Belief Tag" ? (
+              <div className="flex items-center gap-2">
+                <select
+                  value={values[label] as string}
+                  onChange={(e) => {
+                    const newValues = { ...values, [label]: e.target.value };
+                    setValues(newValues);
+                    updateStore(newValues);
+                  }}
+                  className="rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700 flex-1"
+                >
+                  <option value="">Select a belief</option>
+                  {availableBeliefs.map((belief) => (
+                    <option key={belief.slug} value={belief.slug}>
+                      {belief.title}
+                    </option>
+                  ))}
+                </select>
+                {values[label] && (
+                  <button
+                    onClick={() => {
+                      const belief = availableBeliefs.find((b) => b.slug === values[label]);
+                      if (belief) {
+                        setEditingBeliefId(belief.id);
+                      }
+                    }}
+                    className="text-cyan-700 hover:text-black"
+                    title="Edit belief"
+                  >
+                    <BeakerIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
             ) : (
               <div
                 contentEditable
@@ -174,9 +366,8 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
                   setValues(newValues);
                   updateStore(newValues);
                 }}
-                className="rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm xs:leading-6"
-                style={{ minHeight: "1em", pointerEvents: "auto" }}
-                data-placeholder={`Enter ${label}`}
+                className="rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700"
+                style={{ minHeight: "1em" }}
                 suppressContentEditableWarning
               >
                 {values[label]}
@@ -184,6 +375,17 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
             )}
           </div>
         ))}
+
+        {meta.isBelief && (
+          <div className="mt-6">
+            <button
+              onClick={handleCreateBelief}
+              className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800"
+            >
+              Create New Belief
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

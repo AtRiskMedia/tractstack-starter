@@ -181,6 +181,7 @@ interface WidgetMeta {
     valueDefaults: string[];
     multi: boolean[];
     isScale: boolean[];
+    isBelief?: boolean;
   };
 }
 
@@ -191,6 +192,7 @@ export const widgetMeta: WidgetMeta = {
     valueDefaults: ["BELIEF", "yn", "Prompt"],
     multi: [false, false, false],
     isScale: [false, true, false],
+    isBelief: true,
   },
   identifyAs: {
     title: `Identify As Widget`,
@@ -198,6 +200,7 @@ export const widgetMeta: WidgetMeta = {
     valueDefaults: ["BELIEF", "*", "Prompt"],
     multi: [false, true, false],
     isScale: [false, false, false],
+    isBelief: true,
   },
   toggle: {
     title: `Toggle Belief Widget`,
@@ -205,6 +208,7 @@ export const widgetMeta: WidgetMeta = {
     valueDefaults: ["BELIEF", "Prompt"],
     multi: [false, false],
     isScale: [false, false],
+    isBelief: true,
   },
   youtube: {
     title: `YouTube Video Embed`,

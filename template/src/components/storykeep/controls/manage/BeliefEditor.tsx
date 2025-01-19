@@ -15,6 +15,7 @@ interface BeliefEditorProps {
   create: boolean;
   onComplete?: () => void;
   onCancel?: () => void;
+  isEmbedded?: boolean;
 }
 
 function createBeliefUpdateQuery(id: string, belief: BeliefNode): TursoQuery {
@@ -63,7 +64,13 @@ function compareBeliefFields(current: BeliefNode, original: BeliefNode): boolean
   );
 }
 
-export default function BeliefEditor({ belief, create, onComplete, onCancel }: BeliefEditorProps) {
+export default function BeliefEditor({
+  belief,
+  create,
+  onComplete,
+  onCancel,
+  isEmbedded = false,
+}: BeliefEditorProps) {
   const [localBelief, setLocalBelief] = useState<BeliefNode>(belief);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,7 +83,6 @@ export default function BeliefEditor({ belief, create, onComplete, onCancel }: B
       setLocalBelief((prev) => {
         const processedValue = field === "slug" ? cleanString(value) : value;
         const updatedBelief = { ...prev, [field]: processedValue };
-        // Reset custom values when changing scale
         if (field === "scale") {
           if (value === "custom") {
             updatedBelief.customValues = customValues;
@@ -242,135 +248,140 @@ export default function BeliefEditor({ belief, create, onComplete, onCancel }: B
     );
   };
 
+  const content = (
+    <>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 gap-4">
+          {/* Basic Fields */}
+          {["title", "slug"].map((field) => (
+            <div key={field}>
+              <label className="block text-sm font-bold text-gray-800">
+                {field.charAt(0).toUpperCase() + field.slice(1)}
+              </label>
+              <input
+                type="text"
+                value={(localBelief[field as keyof BeliefNode] as string) || ""}
+                onChange={(e) => handleChange(field as keyof BeliefNode, e.target.value)}
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+              />
+            </div>
+          ))}
+
+          {/* Scale Field */}
+          <div>
+            <label className="block text-sm font-bold text-gray-800">Scale</label>
+            <select
+              value={localBelief.scale || ""}
+              onChange={(e) => handleChange("scale", e.target.value as ScaleType)}
+              className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+            >
+              {scaleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Scale Preview */}
+          {renderScalePreview(localBelief.scale)}
+
+          {/* Custom Values Section */}
+          {localBelief.scale === "custom" && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-800 mb-2">Custom Values</label>
+                <form onSubmit={handleAddCustomValue} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customValue}
+                    onChange={(e) => setCustomValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Add a custom value..."
+                    className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!customValue.trim()}
+                    className="px-4 py-2 bg-cyan-700 text-white rounded-md hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                  </button>
+                </form>
+              </div>
+
+              {customValues.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {customValues.map((value, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm"
+                    >
+                      <span>{value}</span>
+                      <button
+                        onClick={() => handleRemoveCustomValue(index)}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        <XMarkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={handleCancel}
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            {unsavedChanges ? "Cancel" : "Close"}
+          </button>
+          {unsavedChanges && (
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
+          )}
+        </div>
+
+        {/* Status Messages */}
+        {(unsavedChanges || saveSuccess) && (
+          <div className={`mt-4 p-4 rounded-md ${unsavedChanges ? "bg-amber-50" : "bg-green-50"}`}>
+            {unsavedChanges ? (
+              <p className="text-gray-800 font-bold">
+                <ExclamationTriangleIcon className="inline-block h-5 w-5 mr-2 text-amber-500" />
+                You have unsaved changes
+              </p>
+            ) : (
+              <p className="text-gray-800 font-bold">
+                <CheckCircleIcon className="inline-block h-5 w-5 mr-2 text-green-500" />
+                Changes saved successfully
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  if (isEmbedded) {
+    return content;
+  }
+
   return (
     <div className="p-0.5 shadow-md mx-auto max-w-screen-xl">
       <div className="p-1.5 bg-white rounded-b-md w-full">
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Belief" : "Edit Belief"}
         </h3>
-
-        <div className="space-y-6 max-w-screen-xl mx-auto">
-          <div className="grid grid-cols-1 gap-4">
-            {/* Basic Fields */}
-            {["title", "slug"].map((field) => (
-              <div key={field}>
-                <label className="block text-sm font-bold text-gray-800">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-                <input
-                  type="text"
-                  value={(localBelief[field as keyof BeliefNode] as string) || ""}
-                  onChange={(e) => handleChange(field as keyof BeliefNode, e.target.value)}
-                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-                />
-              </div>
-            ))}
-
-            {/* Scale Field */}
-            <div>
-              <label className="block text-sm font-bold text-gray-800">Scale</label>
-              <select
-                value={localBelief.scale || ""}
-                onChange={(e) => handleChange("scale", e.target.value as ScaleType)}
-                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-              >
-                {scaleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Scale Preview */}
-            {renderScalePreview(localBelief.scale)}
-
-            {/* Custom Values Section */}
-            {localBelief.scale === "custom" && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-800 mb-2">
-                    Custom Values
-                  </label>
-                  <form onSubmit={handleAddCustomValue} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={customValue}
-                      onChange={(e) => setCustomValue(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Add a custom value..."
-                      className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!customValue.trim()}
-                      className="px-4 py-2 bg-cyan-700 text-white rounded-md hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
-                    >
-                      <PlusIcon className="h-5 w-5" />
-                    </button>
-                  </form>
-                </div>
-
-                {customValues.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {customValues.map((value, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-full text-sm"
-                      >
-                        <span>{value}</span>
-                        <button
-                          onClick={() => handleRemoveCustomValue(index)}
-                          className="text-gray-500 hover:text-gray-700"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              {unsavedChanges ? "Cancel" : "Close"}
-            </button>
-            {unsavedChanges && (
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            )}
-          </div>
-
-          {/* Status Messages */}
-          {(unsavedChanges || saveSuccess) && (
-            <div
-              className={`mt-4 p-4 rounded-md ${unsavedChanges ? "bg-amber-50" : "bg-green-50"}`}
-            >
-              {unsavedChanges ? (
-                <p className="text-gray-800 font-bold">
-                  <ExclamationTriangleIcon className="inline-block h-5 w-5 mr-2 text-amber-500" />
-                  You have unsaved changes
-                </p>
-              ) : (
-                <p className="text-gray-800 font-bold">
-                  <CheckCircleIcon className="inline-block h-5 w-5 mr-2 text-green-500" />
-                  Changes saved successfully
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+        {content}
       </div>
     </div>
   );
