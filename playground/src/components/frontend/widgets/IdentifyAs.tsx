@@ -49,14 +49,14 @@ const SingleIdentifyAs = ({
       const event = {
         id: value.slug,
         verb: `IDENTIFY_AS`,
-        object: target.toUpperCase(),
+        object: target,
         type: `Belief`,
       };
       const belief = {
         id: value.slug,
         verb: `IDENTIFY_AS`,
         slug: value.slug,
-        object: target.toUpperCase(),
+        object: target,
       };
       const prevBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug !== value.slug);
       heldBeliefs.set([...prevBeliefs, belief]);
@@ -135,7 +135,7 @@ export const IdentifyAs = ({
           <SingleIdentifyAs
             key={`${value.slug}-${index}`}
             value={{ ...value, target }}
-            target={target.toUpperCase()}
+            target={target}
             noprompt={noprompt}
             readonly={readonly}
           />

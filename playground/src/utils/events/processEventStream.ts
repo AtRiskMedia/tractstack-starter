@@ -30,16 +30,6 @@ async function processBeliefEvent(
   }
 
   try {
-    // Always record action using belief ID
-    const actionQuery = {
-      sql: `INSERT INTO actions 
-            (id, object_id, object_type, visit_id, fingerprint_id, verb, created_at) 
-            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      args: [ulid(), beliefId, event.type, visit_id, fingerprint_id, event.verb],
-    };
-    if (DEBUG) console.log(actionQuery);
-    await client.execute(actionQuery);
-
     // Handle UNSET by deleting existing belief
     if (event.verb === "UNSET") {
       const deleteQuery = {
@@ -50,6 +40,16 @@ async function processBeliefEvent(
       await client.execute(deleteQuery);
       return;
     }
+
+    // Record action for non-UNSET verbs
+    const actionQuery = {
+      sql: `INSERT INTO actions 
+        (id, object_id, object_type, visit_id, fingerprint_id, verb, created_at) 
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+      args: [ulid(), beliefId, event.type, visit_id, fingerprint_id, event.verb],
+    };
+    if (DEBUG) console.log(actionQuery);
+    await client.execute(actionQuery);
 
     // Check for existing belief state
     const checkHeldBeliefQuery = {

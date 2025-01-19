@@ -3,21 +3,23 @@ export function smoothScrollToPane(
   offset: number = 20,
   updateInterval: number = 50
 ): NodeJS.Timeout | undefined {
-  const viewportHeight = window.innerHeight;
-  const viewportTop = window.scrollY;
-  const viewportBottom = viewportTop + viewportHeight;
-  const paneTop = thisPane.offsetTop;
-  const PROXIMITY_THRESHOLD = viewportHeight;
-
   const timeout = setTimeout(() => {
-    if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
-      thisPane.classList.add("motion-safe:animate-fadeInUp");
+    setTimeout(() => {
+      const viewportHeight = window.innerHeight;
+      const viewportTop = window.scrollY;
+      const viewportBottom = viewportTop + viewportHeight;
+      const paneTop = thisPane.offsetTop;
+      const PROXIMITY_THRESHOLD = viewportHeight;
 
-      window.scrollTo({
-        top: paneTop - offset,
-        behavior: "smooth",
-      });
-    }
+      if (Math.abs(paneTop - viewportBottom) < PROXIMITY_THRESHOLD) {
+        thisPane.classList.add("motion-safe:animate-fadeInUp");
+
+        window.scrollTo({
+          top: paneTop - offset,
+          behavior: "smooth",
+        });
+      }
+    }, 100);
   }, updateInterval);
 
   return timeout;
