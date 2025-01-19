@@ -263,3 +263,22 @@ export function moveNodeAtLocationInContext(
   }
   node.parentId = newLocationNode.parentId;
 }
+
+export function createEmptyStorykeep(id: string) {
+  return {
+    id,
+    nodeType: "StoryFragment",
+    parentId: null,
+    isChanged: false,
+    paneIds: [],
+    changed: undefined,
+    slug: "temp",
+    hasMenu: false,
+    title: "temp",
+    impressions: [],
+    created: undefined,
+    menuId: undefined,
+    socialImagePath: undefined,
+    tailwindBgColour: undefined
+  } as StoryFragmentNode
+}

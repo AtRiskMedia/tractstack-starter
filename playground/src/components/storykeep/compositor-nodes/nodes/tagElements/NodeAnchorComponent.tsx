@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import type { FlatNode } from "@/types.ts";
-import { toolModeValStore, viewportStore } from "@/store/storykeep.ts";
+import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 
 export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
@@ -55,7 +55,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
       <a
         className={ctx.getNodeClasses(nodeId, viewportStore.get().value)}
         href={(node as FlatNode).href}
-        contentEditable={toolModeValStore.get().value === "default"}
+        contentEditable={getCtx(props).toolModeValStore.get().value === "default"}
         suppressContentEditableWarning
         onClick={(e) => {
           ctx.setClickedNodeId(nodeId);

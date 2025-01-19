@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import { toolModeValStore, viewportStore } from "@/store/storykeep.ts";
+import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -46,7 +46,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   return (
     <Tag
       className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      contentEditable={toolModeValStore.get().value === "default"}
+      contentEditable={getCtx(props).toolModeValStore.get().value === "default"}
       suppressContentEditableWarning
       onBlur={(e) => {
         function reset() {

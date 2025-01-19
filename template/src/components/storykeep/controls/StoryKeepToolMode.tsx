@@ -7,7 +7,7 @@ import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 //import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
-import { toolModeValStore, settingsPanelStore } from "@/store/storykeep.ts";
+import { settingsPanelStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import type { ToolModeVal } from "@/types.ts";
 
@@ -51,13 +51,13 @@ export const toolModes = [
 
 const StoryKeepToolMode = () => {
   const ctx = getCtx();
-  const { value: toolModeVal } = useStore(toolModeValStore);
+  const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const className =
     "w-8 h-8 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
   const classNameActive = "w-8 h-8 py-1.5 rounded-md bg-myblue text-white";
 
   const handleClick = (mode: ToolModeVal) => {
-    toolModeValStore.set({ value: mode });
+    ctx.toolModeValStore.set({ value: mode });
     settingsPanelStore.set(null);
     ctx.notifyNode(`root`);
   };
@@ -66,7 +66,7 @@ const StoryKeepToolMode = () => {
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        toolModeValStore.set({ value: "default" });
+        ctx.toolModeValStore.set({ value: "default" });
         settingsPanelStore.set(null);
         ctx.notifyNode(`root`);
       }

@@ -50,13 +50,13 @@ export const tailwindToHex = (tailwindColor: string, brand: string | null): stri
   if (tailwindColor.startsWith("bg-brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor.slice(3)})`, brand);
     if (brandColor) {
-      return `#${brandColor}`;
+      return brandColor.startsWith("#") ? brandColor : `#${brandColor}`;
     }
   }
   if (tailwindColor.startsWith("brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor})`, brand);
     if (brandColor) {
-      return `#${brandColor}`;
+      return brandColor.startsWith("#") ? brandColor : `#${brandColor}`;
     }
   }
   if (tailwindColor in customColors) {
@@ -64,7 +64,7 @@ export const tailwindToHex = (tailwindColor: string, brand: string | null): stri
     if (color.startsWith("var(--")) {
       const brandColor = getBrandColor(color, brand);
       if (brandColor) {
-        return `#${brandColor}`;
+        return brandColor.startsWith("#") ? brandColor : `#${brandColor}`;
       }
     }
     return color;

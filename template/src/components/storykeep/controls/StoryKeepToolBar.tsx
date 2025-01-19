@@ -3,7 +3,6 @@ import {
   settingsPanelStore,
   toolModeStore,
   toolAddModeStore,
-  toolModeValStore,
 } from "@/store/storykeep.ts";
 import { AddElementsPanel } from "./insert/AddElementsPanel.tsx";
 import { getCtx } from "@/store/nodes.ts";
@@ -11,7 +10,7 @@ import type { ToolMode, ToolAddMode } from "@/types.ts";
 
 const StoryKeepToolBar = () => {
   const ctx = getCtx();
-  const { value: toolModeVal } = useStore(toolModeValStore);
+  const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const { value: toolAddModeVal } = useStore(toolAddModeStore);
   const setToolMode = (newToolMode: ToolMode) => {
     settingsPanelStore.set(null);

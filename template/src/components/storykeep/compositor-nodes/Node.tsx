@@ -24,7 +24,6 @@ import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGu
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
 import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
-import { toolModeValStore } from "@/store/storykeep.ts";
 import { memo, type ReactElement } from "react";
 import type { Config, StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
@@ -105,7 +104,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
         </>
       );
     case "Pane": {
-      const toolModeVal = toolModeValStore.get().value;
+      const toolModeVal = getCtx(props).toolModeValStore.get().value;
       const isContextPane = getCtx(props).getIsContextPane(node.id);
       if (toolModeVal === `eraser` && !isContextPane)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
@@ -162,7 +161,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "li":
     case "aside":
     case "p": {
-      const toolModeVal = toolModeValStore.get().value;
+      const toolModeVal = getCtx(props).toolModeValStore.get().value;
       if (toolModeVal === `insert`)
         return (
           <NodeBasicTagInsert {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
@@ -185,13 +184,13 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "text":
       return <NodeText {...sharedProps} key={timestampNodeId(node.id)} />;
     case "button": {
-      const toolModeVal = toolModeValStore.get().value;
+      const toolModeVal = getCtx(props).toolModeValStore.get().value;
       if (toolModeVal === `eraser`)
         return <NodeButtonEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       return <NodeButton {...sharedProps} key={timestampNodeId(node.id)} />;
     }
     case "a": {
-      const toolModeVal = toolModeValStore.get().value;
+      const toolModeVal = getCtx(props).toolModeValStore.get().value;
       if (toolModeVal === `eraser`)
         return <NodeAEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       return <NodeA {...sharedProps} key={timestampNodeId(node.id)} />;
