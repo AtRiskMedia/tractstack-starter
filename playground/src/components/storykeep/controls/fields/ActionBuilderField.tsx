@@ -4,12 +4,12 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { GOTO_TARGETS } from "@/constants";
 import ActionBuilderSlugSelector from "./ActionBuilderSlugSelector";
-import type { ContentMap } from "@/types";
+import type { FullContentMap } from "@/types";
 
 interface ActionBuilderFieldProps {
   value: string;
   onChange: (value: string) => void;
-  contentMap: ContentMap[];
+  contentMap: FullContentMap[];
 }
 
 const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldProps) => {

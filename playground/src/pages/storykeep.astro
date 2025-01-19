@@ -8,7 +8,7 @@ import BrowseContent from "@/components/storykeep/controls/dashboard/BrowseConte
 import PullDashboardAnalytics from "@/components/storykeep/controls/recharts/PullDashboardAnalytics.tsx";
 import ManageContent from "@/components/storykeep/controls/dashboard/ManageContent.tsx";
 import PageViewStats from "@/components/storykeep/controls/dashboard/PageViewStats.tsx";
-import { getFullContentMap } from "@/utils/db/utils.ts";
+import { getFullContentMap } from "@/utils/db/turso.ts";
 import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;

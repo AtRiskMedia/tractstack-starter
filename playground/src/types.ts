@@ -451,6 +451,7 @@ export type PaneContentMap = ContentMapBase & {
 
 export type StoryFragmentContentMap = ContentMapBase & {
   type: "StoryFragment";
+  panes?: string[];
   socialImagePath?: string;
 };
 
@@ -498,6 +499,13 @@ export interface ResourceNode extends BaseNode {
   optionsPayload: any;
   category?: string;
   actionLisp?: string;
+}
+
+export interface BeliefNode extends BaseNode {
+  title: string;
+  slug: string;
+  scale: string;
+  customValues?: string[];
 }
 
 export interface MenuNode extends BaseNode {
@@ -1181,6 +1189,7 @@ export type NodeType =
   | "Menu"
   | "Impression"
   | "File"
+  | "Belief"
   | "Resource";
 
 export interface BaseNode {
@@ -1478,3 +1487,9 @@ export const ContextPaneMode = {
 } as const;
 
 export type ContextPaneModeType = (typeof ContextPaneMode)[keyof typeof ContextPaneMode];
+
+export interface ActivePaneMode {
+  paneId: string;
+  mode: string;
+  panel: string;
+}

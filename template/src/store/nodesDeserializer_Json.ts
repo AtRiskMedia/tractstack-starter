@@ -4,6 +4,7 @@ import type {
   PaneRowData,
   TractStackRowData,
   MenuRowData,
+  BeliefRowData,
   ImageFileRowData,
   ResourceRowData,
   StoryFragmentRowData,
@@ -12,6 +13,7 @@ import type {
   TractStackNode,
   StoryFragmentNode,
   PaneNode,
+  BeliefNode,
   MenuNode,
   ImageFileNode,
   ResourceNode,
@@ -61,6 +63,23 @@ export class NodesDeserializer_Json implements NodesDeserializer {
           : new Date(new Date().toISOString()),
       hasMenu: !!rowData.menu_id,
       ...(typeof rowData?.menu_id === `string` ? { menuId: rowData.menu_id } : {}),
+    });
+  }
+
+  processBeliefRowData(rowData: BeliefRowData | undefined, loadData: LoadData) {
+    if (!rowData) return;
+    if (typeof loadData.beliefNodes === "undefined") loadData.beliefNodes = [] as BeliefNode[];
+
+    loadData.beliefNodes.push({
+      id: rowData.id,
+      nodeType: "Belief",
+      parentId: null,
+      title: rowData.title,
+      slug: rowData.slug,
+      scale: rowData.scale,
+      ...(typeof rowData.custom_values === "string"
+        ? { customValues: rowData.custom_values.split(",") }
+        : {}),
     });
   }
 

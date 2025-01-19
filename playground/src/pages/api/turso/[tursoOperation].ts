@@ -1,22 +1,30 @@
+// [tursoOperation].ts
 import type { APIRoute } from "astro";
-import { dashboardAnalytics } from "../../../utils/db/api/dashboardAnalytics";
-import { streamEvents } from "../../../utils/db/api/stream";
-import { syncVisit } from "../../../utils/db/api/syncVisit";
-import { unlockProfile } from "../../../utils/db/api/unlock";
-import { createProfile } from "../../../utils/db/api/create";
-import { updateProfile } from "../../../utils/db/api/update";
-import { executeQueries } from "../../../utils/db/api/executeQueries";
-import { getPaneDesigns } from "../../../utils/db/api/paneDesigns";
-import { getAnalytics } from "../../../utils/db/api/getAnalytics";
-import { getUniqueTailwindClasses } from "../../../utils/db/api/uniqueTailwindClasses";
-import { initializeContent } from "../../../utils/db/utils";
+import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics.ts";
+import { streamEvents } from "@/utils/db/api/stream.ts";
+import { syncVisit } from "@/utils/db/api/syncVisit.ts";
+import { unlockProfile } from "@/utils/db/api/unlock.ts";
+import { createProfile } from "@/utils/db/api/create.ts";
+import { updateProfile } from "@/utils/db/api/update.ts";
+import { executeQueries } from "@/utils/db/api/executeQueries.ts";
+import { getPaneDesigns } from "@/utils/db/api/paneDesigns.ts";
+import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
+import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
+import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
+import { initializeContent } from "@/utils/db/utils.ts";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
+
+// Operations that don't require a request body
+const NO_BODY_OPERATIONS = ["initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
     const { tursoOperation } = params;
-    const body = await request.json();
+
+    const body = NO_BODY_OPERATIONS.includes(tursoOperation as (typeof NO_BODY_OPERATIONS)[number])
+      ? undefined
+      : await request.json();
 
     let result;
     switch (tursoOperation) {
@@ -37,6 +45,9 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "uniqueTailwindClasses":
         result = await getUniqueTailwindClasses(body);
+        break;
+      case "getAllBeliefNodes":
+        result = await getAllBeliefNodes();
         break;
       case "paneDesigns":
         result = await getPaneDesigns();

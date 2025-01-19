@@ -1,7 +1,7 @@
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import type { ContentMap } from "@/types";
+import type { FullContentMap } from "@/types";
 
 interface ActionBuilderSlugSelectorProps {
   type: "storyFragment" | "context" | "pane";
@@ -11,7 +11,7 @@ interface ActionBuilderSlugSelectorProps {
   setQuery: (query: string) => void;
   label: string;
   placeholder: string;
-  contentMap: ContentMap[];
+  contentMap: FullContentMap[];
   parentSlug?: string; // For filtering panes by parent story fragment
 }
 
@@ -28,26 +28,33 @@ const ActionBuilderSlugSelector = ({
 }: ActionBuilderSlugSelectorProps) => {
   // Filter content map based on type and query
   const getFilteredItems = () => {
-    let items: ContentMap[] = [];
+    let items: FullContentMap[] = [];
     switch (type) {
       case "storyFragment":
         items = contentMap.filter((item) => item.type === "StoryFragment");
         break;
       case "context":
-        items = contentMap.filter((item) => item.type === "Pane" && item.isContextPane);
+        items = contentMap.filter(
+          (item) => item.type === "Pane" && "isContext" in item && item.isContext
+        );
         break;
       case "pane": {
-        // Get the story fragment that matches the parentSlug
-        const parentFragment = contentMap.find(
-          (item) => item.type === "StoryFragment" && item.slug === parentSlug
-        );
+        if (parentSlug) {
+          // Find the story fragment that matches the parentSlug
+          const parentFragment = contentMap.find(
+            (item) => item.type === "StoryFragment" && item.slug === parentSlug
+          ) as (FullContentMap & { panes?: string[] }) | undefined;
 
-        if (parentFragment) {
-          // Filter panes that belong to this story fragment using parentId
-          items = contentMap.filter(
-            (item) =>
-              item.type === "Pane" && !item.isContextPane && item.parentId === parentFragment.id
-          );
+          if (parentFragment?.panes) {
+            // Filter panes that belong to this story fragment using the panes array
+            items = contentMap.filter(
+              (item) =>
+                item.type === "Pane" &&
+                "isContext" in item &&
+                !item.isContext &&
+                parentFragment.panes?.includes(item.id)
+            );
+          }
         }
         break;
       }

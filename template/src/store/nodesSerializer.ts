@@ -10,6 +10,7 @@ import type {
   ResourceNode,
   StoryFragmentNode,
   PaneNode,
+  BeliefNode,
   TractStackNode,
 } from "@/types.ts";
 
@@ -84,6 +85,14 @@ export type ResourceRowData = {
   action_lisp?: string;
 };
 
+export type BeliefRowData = {
+  id: string;
+  title: string;
+  slug: string;
+  scale: string;
+  custom_values?: string;
+};
+
 export type SaveData = {
   files: ImageFileRowData[];
   menus: MenuRowData[];
@@ -93,6 +102,7 @@ export type SaveData = {
   markdowns: MarkdownRowData[];
   paneFiles: PaneFileRowData[];
   tractstacks: TractStackRowData[];
+  beliefs: BeliefRowData[];
 };
 export type LoadData = {
   fileNodes?: ImageFileNode[];
@@ -105,6 +115,7 @@ export type LoadData = {
   paneFragmentNodes?: PaneFragmentNode[];
   flatNodes?: FlatNode[];
   impressionNodes?: ImpressionNode[];
+  beliefNodes?: BeliefNode[];
 };
 
 export abstract class NodesSerializer {
@@ -115,6 +126,7 @@ export abstract class NodesSerializer {
   abstract processImageFileNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processTractStackNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData): void;
+  abstract processBeliefNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData): void;
   protected abstract processPaneData(
     paneNode: PaneNode,
@@ -136,4 +148,5 @@ export abstract class NodesDeserializer {
   abstract processMenuRowData(rowData: MenuRowData | undefined, loadData: LoadData): void;
   abstract processImageFileRowData(rowData: ImageFileRowData | undefined, loadData: LoadData): void;
   abstract processResourceRowData(rowData: ResourceRowData | undefined, loadData: LoadData): void;
+  abstract processBeliefRowData(rowData: BeliefRowData | undefined, loadData: LoadData): void;
 }
