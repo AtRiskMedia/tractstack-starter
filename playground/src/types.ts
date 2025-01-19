@@ -851,21 +851,6 @@ export interface EventPayload {
   visit: VisitContext;
 }
 
-export type EnvSettingType = "string" | "boolean" | "number" | "string[]";
-
-export interface EnvSetting {
-  name: string;
-  defaultValue: string;
-  type: EnvSettingType;
-  description: string;
-  group: string;
-  priority: boolean;
-  required: boolean;
-}
-export interface EnvSettingDatum extends EnvSetting {
-  value: string;
-}
-
 export type StylesMemory = {
   [key in AllTag]?: ClassNamesPayloadDatumValue;
 };
