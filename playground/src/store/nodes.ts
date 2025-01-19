@@ -814,7 +814,7 @@ export class NodesContext {
     // add self
     duplicatedPane.markdown.nodes?.forEach((node) => {
       // retrieve flattened children nodes
-      const childrenNodes = this.setupTemplateNodeRecursively(node, "");
+      const childrenNodes = this.setupTemplateNodeRecursively(node, duplicatedPane.markdown.id);
       // flatten children nodes so they're the same level as our pane
       childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode));
     });
