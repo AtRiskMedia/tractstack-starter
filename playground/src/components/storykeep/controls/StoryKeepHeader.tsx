@@ -12,7 +12,6 @@ import {
   viewportStore,
   viewportKeyStore,
   viewportSetStore,
-  toolModeValStore,
   settingsPanelStore,
 } from "../../../store/storykeep";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
@@ -143,9 +142,9 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
         <button
           onClick={() => {
             showAnalytics.set(!$showAnalytics);
-            toolModeValStore.set({ value: "default" });
+            getCtx(props).toolModeValStore.set({ value: "default" });
             settingsPanelStore.set(null);
-            getCtx().notifyNode(ROOT_NODE_NAME);
+            getCtx(props).notifyNode(ROOT_NODE_NAME);
           }}
           title="Toggle Interaction Analytics"
         >

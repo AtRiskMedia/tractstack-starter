@@ -1,5 +1,4 @@
-import { atom } from "nanostores";
-import { toolModeValStore } from "./storykeep.ts";
+import { atom, map } from "nanostores";
 import {
   hasButtonPayload,
   hasTagName,
@@ -20,7 +19,7 @@ import type {
   Tag,
   TemplateMarkdown,
   TemplateNode,
-  TemplatePane,
+  TemplatePane, ToolModeVal,
   TractStackNode,
   ViewportKey,
   ActivePaneMode,
@@ -71,6 +70,10 @@ export class NodesContext {
   });
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
+  toolModeValStore = map<{ value: ToolModeVal }>({
+    value: "default",
+  });
+
   getChildNodeIDs(parentNodeId: string): string[] {
     const returnVal = this.parentNodes.get()?.get(parentNodeId) || [];
     return returnVal;
@@ -81,7 +84,7 @@ export class NodesContext {
   }
 
   handleClickEvent(dblClick: boolean = false) {
-    const toolModeVal = toolModeValStore.get().value;
+    const toolModeVal = this.toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
     if (!node) return;
 
