@@ -144,7 +144,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
                 type="text"
                 value={localMenu.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
 
@@ -154,7 +154,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
                 type="text"
                 value={localMenu.theme}
                 onChange={(e) => handleChange("theme", cleanString(e.target.value))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
 
@@ -179,7 +179,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
                         type="text"
                         value={link.name}
                         onChange={(e) => handleLinkChange(index, "name", e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                        className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
                       />
                     </div>
 
@@ -189,7 +189,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
                         type="text"
                         value={link.description}
                         onChange={(e) => handleLinkChange(index, "description", e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                        className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
                       />
                     </div>
 

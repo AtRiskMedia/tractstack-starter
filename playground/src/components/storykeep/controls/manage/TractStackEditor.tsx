@@ -123,7 +123,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
                 type="text"
                 value={localTractStack.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
 
@@ -133,7 +133,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
                 type="text"
                 value={localTractStack.slug}
                 onChange={(e) => handleChange("slug", cleanString(e.target.value))}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
 
@@ -143,7 +143,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
                 type="text"
                 value={localTractStack.socialImagePath || ""}
                 onChange={(e) => handleChange("socialImagePath", e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
           </div>

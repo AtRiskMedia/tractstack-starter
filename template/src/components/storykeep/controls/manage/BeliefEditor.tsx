@@ -261,7 +261,7 @@ export default function BeliefEditor({ belief, create, onComplete, onCancel }: B
                   type="text"
                   value={(localBelief[field as keyof BeliefNode] as string) || ""}
                   onChange={(e) => handleChange(field as keyof BeliefNode, e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
                 />
               </div>
             ))}
@@ -272,7 +272,7 @@ export default function BeliefEditor({ belief, create, onComplete, onCancel }: B
               <select
                 value={localBelief.scale || ""}
                 onChange={(e) => handleChange("scale", e.target.value as ScaleType)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               >
                 {scaleOptions.map((option) => (
                   <option key={option.value} value={option.value}>

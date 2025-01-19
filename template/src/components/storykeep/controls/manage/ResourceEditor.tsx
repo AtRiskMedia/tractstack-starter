@@ -261,7 +261,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
                 const date = new Date(e.target.value);
                 handleOptionsPayloadChange(key, Math.floor(date.getTime() / 1000));
               }}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+              className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
             />
           );
         default:
@@ -270,7 +270,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
               type="text"
               value={value === null || value === undefined ? "" : String(value)}
               onChange={(e) => handleOptionsPayloadChange(key, e.target.value)}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+              className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
             />
           );
       }
@@ -301,7 +301,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
                     ""
                   }
                   onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
                 />
               </div>
             ))}

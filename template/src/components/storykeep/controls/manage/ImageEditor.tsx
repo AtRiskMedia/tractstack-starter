@@ -99,7 +99,7 @@ export default function ImageEditor({ image }: ImageEditorProps) {
                 type="text"
                 value={localImage.filename}
                 disabled
-                className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
 
@@ -109,7 +109,7 @@ export default function ImageEditor({ image }: ImageEditorProps) {
                 type="text"
                 value={localImage.altDescription}
                 onChange={(e) => handleChange(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>
           </div>
