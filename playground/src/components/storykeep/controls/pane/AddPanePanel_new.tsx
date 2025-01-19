@@ -3,7 +3,7 @@ import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes.ts";
 import { NodesSnapshotRenderer } from "@/utils/nodes/NodesSnapshotRenderer.tsx";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper.ts";
-import { getTemplateSimplePane } from "@/utils/TemplatePanes.ts";
+import { getTemplateMarkdownPane, getTemplateSimplePane } from "@/utils/TemplatePanes.ts";
 
 interface AddPaneNewPanelProps {
   nodeId: string;
@@ -19,7 +19,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   useEffect(() => {
     const tmpCtx1 = new NodesContext();
     tmpCtx1.addNode(createEmptyStorykeep("tmp"));
-    tmpCtx1.addTemplatePane("tmp", getTemplateSimplePane("dark"));
+    tmpCtx1.addTemplatePane("tmp", getTemplateMarkdownPane("dark"));
     const tmpCtx2 = new NodesContext();
     tmpCtx2.addNode(createEmptyStorykeep("tmp"));
     tmpCtx2.addTemplatePane("tmp", getTemplateSimplePane("light"));

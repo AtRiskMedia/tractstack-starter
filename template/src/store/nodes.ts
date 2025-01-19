@@ -38,6 +38,7 @@ import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.
 import allowInsert from "@/utils/nodes/allowInsert.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
 import { moveNodeAtLocationInContext } from "@/utils/common/nodesHelper.ts";
+import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 const blockedClickNodes = new Set<string>(["em", "strong"]);
 export const ROOT_NODE_NAME = "root";
@@ -800,11 +801,16 @@ export class NodesContext {
     duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
     duplicatedPane.markdown.id = ulid();
     duplicatedPane.markdown.parentId = duplicatedPaneId;
-    const markdownNodes: TemplateNode[] = [];
+
+    let markdownNodes: TemplateNode[] = [];
+    if(duplicatedPane.markdown.markdownBody) {
+      const markdownGen = new MarkdownGenerator(this);
+      markdownNodes = markdownGen.markdownToFlatNodes(duplicatedPane.markdown.markdownBody, duplicatedPane.markdown.id) as TemplateNode[];
+    }
     // add self
     duplicatedPane.markdown.nodes?.forEach((node) => {
       // retrieve flattened children nodes
-      const childrenNodes = this.setupTemplateNodeRecursively(node, duplicatedPane.markdown.id);
+      const childrenNodes = this.setupTemplateNodeRecursively(node, "");
       // flatten children nodes so they're the same level as our pane
       childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode));
     });
