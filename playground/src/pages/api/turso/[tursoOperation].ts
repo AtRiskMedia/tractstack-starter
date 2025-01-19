@@ -1,4 +1,3 @@
-// [tursoOperation].ts
 import type { APIRoute } from "astro";
 import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics.ts";
 import { streamEvents } from "@/utils/db/api/stream.ts";
@@ -10,6 +9,7 @@ import { executeQueries } from "@/utils/db/api/executeQueries.ts";
 import { getPaneDesigns } from "@/utils/db/api/paneDesigns.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
+import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
 import { initializeContent } from "@/utils/db/utils.ts";
 
@@ -45,6 +45,9 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "uniqueTailwindClasses":
         result = await getUniqueTailwindClasses(body);
+        break;
+      case "upsertBeliefNode":
+        result = await upsertBeliefNode(body);
         break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();
