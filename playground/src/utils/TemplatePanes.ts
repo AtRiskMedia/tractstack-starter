@@ -12,18 +12,17 @@ export const getTemplateSimplePane = (theme: Theme) => {
     nodeType: "Pane",
     title: "Simple Pane",
     slug: "simple-pane",
-    bgColour:
-      getComputedColor(
-        {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
-        },
-        theme
-      ),
+    bgColour: getComputedColor(
+      {
+        light: "#fcfcfc",
+        "light-bw": "brand-2",
+        "light-bold": "brand-8",
+        dark: "#000000",
+        "dark-bw": "brand-1",
+        "dark-bold": "black",
+      },
+      theme
+    ),
     markdown: {
       ...getTemplateSimpleMarkdown(theme),
       nodes: [
@@ -41,18 +40,17 @@ export const getTemplateMarkdownPane = (theme: Theme) => {
     nodeType: "Pane",
     title: "Simple Pane",
     slug: "simple-pane",
-    bgColour:
-      getComputedColor(
-        {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
-        },
-        theme
-      ),
+    bgColour: getComputedColor(
+      {
+        light: "#fcfcfc",
+        "light-bw": "brand-2",
+        "light-bold": "brand-8",
+        dark: "#000000",
+        "dark-bw": "brand-1",
+        "dark-bold": "black",
+      },
+      theme
+    ),
     markdown: {
       ...getTemplateSimpleMarkdown(theme),
       markdownBody: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,

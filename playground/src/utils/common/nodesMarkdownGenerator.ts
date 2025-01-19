@@ -107,8 +107,8 @@ export class MarkdownGenerator {
         return childrenMarkdown; // Default case for unhandled typeNames
     }
   }
-  
- markdownToFlatNodes(markdown: string, parentId: string): FlatNode[] {
+
+  markdownToFlatNodes(markdown: string, parentId: string): FlatNode[] {
     const nodes: FlatNode[] = [];
 
     const createTextNode = (text: string, parentId: string): FlatNode => {
@@ -124,7 +124,11 @@ export class MarkdownGenerator {
       return textNode;
     };
 
-    const createNode = (tagName: string, parentId: string, additionalProps: Partial<FlatNode> = {}): FlatNode => {
+    const createNode = (
+      tagName: string,
+      parentId: string,
+      additionalProps: Partial<FlatNode> = {}
+    ): FlatNode => {
       const nodeId = ulid();
       const node: FlatNode = {
         id: nodeId,

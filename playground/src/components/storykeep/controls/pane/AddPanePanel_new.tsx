@@ -36,28 +36,31 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
           </div>
           <div className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10">
             + Placeholder 1
-            <NodesSnapshotRenderer ctx={ctx[0]}
-                                   forceRegenerate={false}
-                                   config={undefined}
-                                   onComplete={(imageData) => setSnapshotImage1(imageData) }/>
+            <NodesSnapshotRenderer
+              ctx={ctx[0]}
+              forceRegenerate={false}
+              config={undefined}
+              onComplete={(imageData) => setSnapshotImage1(imageData)}
+            />
             <div className="relative">
               <img
                 src={snapshotImage1}
                 alt={`design preview`}
                 width={550}
                 height={350}
-                style={{width: "550px", maxWidth: "550px", height: "350px"}}
+                style={{ width: "550px", maxWidth: "550px", height: "350px" }}
                 className="absolute inset-0"
               />
             </div>
           </div>
-          <div
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10">
+          <div className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10">
             + Placeholder 2
-            <NodesSnapshotRenderer ctx={ctx[1]}
-                                   forceRegenerate={false}
-                                   config={undefined}
-                                   onComplete={(imageData) => setSnapshotImage2(imageData)} />
+            <NodesSnapshotRenderer
+              ctx={ctx[1]}
+              forceRegenerate={false}
+              config={undefined}
+              onComplete={(imageData) => setSnapshotImage2(imageData)}
+            />
             <div className="relative">
               <img
                 src={snapshotImage2}

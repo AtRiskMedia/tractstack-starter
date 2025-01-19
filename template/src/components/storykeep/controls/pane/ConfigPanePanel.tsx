@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
@@ -37,9 +37,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const buttonClass =
     "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
 
-  const [mode, setMode] = useState<PaneMode>(
-    (isActiveMode as PaneMode) || PaneMode.DEFAULT
-  );
+  const [mode, setMode] = useState<PaneMode>((isActiveMode as PaneMode) || PaneMode.DEFAULT);
 
   const setSaveMode = (newMode: PaneMode) => {
     setMode(newMode);

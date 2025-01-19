@@ -19,7 +19,8 @@ import type {
   Tag,
   TemplateMarkdown,
   TemplateNode,
-  TemplatePane, ToolModeVal,
+  TemplatePane,
+  ToolModeVal,
   TractStackNode,
   ViewportKey,
   ActivePaneMode,
@@ -803,9 +804,12 @@ export class NodesContext {
     duplicatedPane.markdown.parentId = duplicatedPaneId;
 
     let markdownNodes: TemplateNode[] = [];
-    if(duplicatedPane.markdown.markdownBody) {
+    if (duplicatedPane.markdown.markdownBody) {
       const markdownGen = new MarkdownGenerator(this);
-      markdownNodes = markdownGen.markdownToFlatNodes(duplicatedPane.markdown.markdownBody, duplicatedPane.markdown.id) as TemplateNode[];
+      markdownNodes = markdownGen.markdownToFlatNodes(
+        duplicatedPane.markdown.markdownBody,
+        duplicatedPane.markdown.id
+      ) as TemplateNode[];
     }
     // add self
     duplicatedPane.markdown.nodes?.forEach((node) => {
