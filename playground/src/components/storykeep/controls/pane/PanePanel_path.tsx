@@ -4,36 +4,66 @@ import { PaneMode } from "./ConfigPanePanel";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { heldBeliefsScales } from "@/utils/common/beliefs.ts";
 import { type Dispatch, type SetStateAction } from "react";
-import type { PaneNode, BeliefDatum } from "@/types";
+import type { PaneNode, BeliefNode } from "@/types";
 
 interface PaneMagicPathPanelProps {
   nodeId: string;
   setMode: Dispatch<SetStateAction<PaneMode>>;
 }
 
+type PathsType = Record<string, string[]>;
+
 const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
-  // Local state for form management
-  const [heldPaths, setHeldPaths] = useState<BeliefDatum>({});
-  const [withheldPaths, setWithheldPaths] = useState<BeliefDatum>({});
-  const [editingValues, setEditingValues] = useState<{ [key: string]: string }>({});
+  const [heldPaths, setHeldPaths] = useState<PathsType>({});
+  const [withheldPaths, setWithheldPaths] = useState<PathsType>({});
+  const [availableBeliefs, setAvailableBeliefs] = useState<BeliefNode[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
-  const paneNode = allNodes.get(nodeId) as PaneNode;
+  const paneNode = allNodes.get(nodeId) as PaneNode | undefined;
+
   if (!paneNode) return null;
+
+  // Fetch available beliefs
+  useEffect(() => {
+    const fetchBeliefs = async () => {
+      try {
+        const response = await fetch("/api/turso/getAllBeliefNodes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch beliefs");
+
+        const result = await response.json();
+        if (result.success) {
+          setAvailableBeliefs(result.data);
+        }
+      } catch (error) {
+        console.error("Error fetching beliefs:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBeliefs();
+  }, []);
 
   // Initialize state from node data
   useEffect(() => {
-    setHeldPaths(paneNode.heldBeliefs || {});
-    setWithheldPaths(paneNode.withheldBeliefs || {});
+    setHeldPaths(paneNode.heldBeliefs as PathsType || {});
+    setWithheldPaths(paneNode.withheldBeliefs as PathsType || {});
   }, [paneNode.heldBeliefs, paneNode.withheldBeliefs]);
 
   const updateStore = useCallback(
-    (isHeld: boolean, newPaths: BeliefDatum) => {
+    (isHeld: boolean, newPaths: PathsType) => {
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
       const updatedNode = cloneDeep(allNodes.get(nodeId)) as PaneNode;
+
       if (isHeld) {
         updatedNode.heldBeliefs = newPaths;
       } else {
@@ -45,13 +75,26 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
     [nodeId]
   );
 
-  const addPath = (isHeld: boolean) => {
+  const getValidValuesForBelief = (beliefSlug: string): string[] => {
+    const belief = availableBeliefs.find((b) => b.slug === beliefSlug);
+    if (!belief) return [];
+
+    if (belief.scale === "custom" && belief.customValues) {
+      return belief.customValues;
+    }
+
+    const scaleKey = belief.scale as keyof typeof heldBeliefsScales;
+    const scale = heldBeliefsScales[scaleKey];
+    return scale ? scale.map((option) => option.slug) : [];
+  };
+
+  const addPath = (isHeld: boolean): void => {
     const paths = isHeld ? heldPaths : withheldPaths;
-    const newKey = `newPath${Object.keys(paths).length + 1}`;
     const updatedPaths = {
       ...paths,
-      [newKey]: [""],
+      "": [""],
     };
+
     if (isHeld) {
       setHeldPaths(updatedPaths);
     } else {
@@ -60,89 +103,56 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
     updateStore(isHeld, updatedPaths);
   };
 
-  const handleEditingChange = useCallback(
-    (isHeld: boolean, key: string, valueIndex: number | null, editing: boolean) => {
-      if (!editing) {
-        const paths = isHeld ? heldPaths : withheldPaths;
-        const updatedPaths = { ...paths };
+  const handleValueChange = (
+    isHeld: boolean,
+    beliefKey: string,
+    valueIndex: number,
+    newValue: string
+  ): void => {
+    const paths = isHeld ? heldPaths : withheldPaths;
+    const values = paths[beliefKey];
+    
+    if (!Array.isArray(values)) return;
 
-        const editKey = valueIndex !== null ? `${key}-${valueIndex}-value` : `${key}-key`;
-        const newValue = editingValues[editKey];
+    const updatedPaths = { ...paths };
+    updatedPaths[beliefKey] = [...values];
+    updatedPaths[beliefKey][valueIndex] = newValue;
 
-        if (valueIndex !== null) {
-          if (Array.isArray(updatedPaths[key])) {
-            updatedPaths[key] = [...updatedPaths[key]];
-            updatedPaths[key][valueIndex] = newValue?.trim().toUpperCase() || "";
-          }
-        } else if (newValue) {
-          const oldKey = Object.keys(paths).find((k) => k.toLowerCase() === key.toLowerCase());
-          if (oldKey && oldKey !== newValue) {
-            const values = updatedPaths[oldKey];
-            delete updatedPaths[oldKey];
-            updatedPaths[newValue] = values;
-          }
-        }
+    if (isHeld) {
+      setHeldPaths(updatedPaths);
+    } else {
+      setWithheldPaths(updatedPaths);
+    }
+    updateStore(isHeld, updatedPaths);
+  };
 
-        if (isHeld) {
-          setHeldPaths(updatedPaths);
-        } else {
-          setWithheldPaths(updatedPaths);
-        }
-        updateStore(isHeld, updatedPaths);
+  const handleRemoveValue = (isHeld: boolean, beliefKey: string, valueIndex: number): void => {
+    const paths = isHeld ? heldPaths : withheldPaths;
+    const values = paths[beliefKey];
+    
+    if (!Array.isArray(values)) return;
 
-        setEditingValues((prev) => {
-          const next = { ...prev };
-          delete next[editKey];
-          return next;
-        });
-      }
-    },
-    [heldPaths, withheldPaths, editingValues, updateStore]
-  );
+    const updatedPaths = { ...paths };
+    updatedPaths[beliefKey] = values.filter((_, i: number) => i !== valueIndex);
+    
+    if (updatedPaths[beliefKey].length === 0) {
+      delete updatedPaths[beliefKey];
+    }
 
-  const addPathValue = useCallback(
-    (isHeld: boolean, key: string) => {
-      const paths = isHeld ? heldPaths : withheldPaths;
-      const values = paths[key];
-      if (Array.isArray(values)) {
-        const updatedValues = [...values, ""];
-        const updatedPaths = { ...paths, [key]: updatedValues };
-        if (isHeld) {
-          setHeldPaths(updatedPaths);
-        } else {
-          setWithheldPaths(updatedPaths);
-        }
-        updateStore(isHeld, updatedPaths);
-      }
-    },
-    [heldPaths, withheldPaths, updateStore]
-  );
-
-  const removePathValue = useCallback(
-    (isHeld: boolean, key: string, valueIndex: number) => {
-      const paths = isHeld ? heldPaths : withheldPaths;
-      const values = paths[key];
-      if (Array.isArray(values)) {
-        const updatedValues = values.filter((_, index) => index !== valueIndex);
-        let updatedPaths: BeliefDatum;
-        if (updatedValues.length === 0) {
-          updatedPaths = Object.fromEntries(Object.entries(paths).filter(([k]) => k !== key));
-        } else {
-          updatedPaths = { ...paths, [key]: updatedValues };
-        }
-        if (isHeld) {
-          setHeldPaths(updatedPaths);
-        } else {
-          setWithheldPaths(updatedPaths);
-        }
-        updateStore(isHeld, updatedPaths);
-      }
-    },
-    [heldPaths, withheldPaths, updateStore]
-  );
+    if (isHeld) {
+      setHeldPaths(updatedPaths);
+    } else {
+      setWithheldPaths(updatedPaths);
+    }
+    updateStore(isHeld, updatedPaths);
+  };
 
   const renderPathForm = (isHeld: boolean) => {
     const paths = isHeld ? heldPaths : withheldPaths;
+
+    if (isLoading) {
+      return <div>Loading available beliefs...</div>;
+    }
 
     return (
       <div className="mb-4 w-96">
@@ -159,78 +169,105 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
           </button>
         </div>
 
-        {Object.entries(paths).map(([key, values]) => (
-          <div key={key} className="mb-2 p-2 border border-mylightgrey rounded-md">
-            <div className="flex gap-2 mb-1">
-              <div className="flex-1">
-                <label className="text-sm text-mydarkgrey">Belief Slug</label>
-                <div
-                  contentEditable
-                  onBlur={(e) => {
-                    const newKey = e.currentTarget.textContent || "";
-                    if (newKey && newKey !== key) {
+        {Object.entries(paths).map(([key, values]) => {
+          if (!Array.isArray(values)) return null;
+          
+          return (
+            <div key={key} className="mb-2 p-2 border border-mylightgrey rounded-md">
+              <div className="flex flex-col gap-2">
+                <div>
+                  <label className="text-sm text-mydarkgrey">Select Belief</label>
+                  <select
+                    value={key}
+                    onChange={(e) => {
+                      const newKey = e.target.value;
                       const updatedPaths = { ...paths };
-                      const values = updatedPaths[key];
                       delete updatedPaths[key];
-                      updatedPaths[newKey] = values;
+                      if (newKey) {
+                        updatedPaths[newKey] = [""];
+                      }
                       if (isHeld) {
                         setHeldPaths(updatedPaths);
                       } else {
                         setWithheldPaths(updatedPaths);
                       }
                       updateStore(isHeld, updatedPaths);
-                    }
-                  }}
-                  suppressContentEditableWarning
-                  className="block w-full rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm"
-                >
-                  {key}
-                </div>
-              </div>
-              <div className="flex-1">
-                <label className="text-sm text-mydarkgrey">Value(s)</label>
-                <div className="flex flex-wrap gap-1">
-                  {Array.isArray(values) &&
-                    values.map((value, valueIndex) => (
-                      <div key={valueIndex} className="flex items-center">
-                        <input
-                          type="text"
-                          value={editingValues[`${key}-${valueIndex}-value`] ?? value}
-                          onChange={(e) => {
-                            setEditingValues((prev) => ({
-                              ...prev,
-                              [`${key}-${valueIndex}-value`]: e.target.value,
-                            }));
-                          }}
-                          onBlur={() => handleEditingChange(isHeld, key, valueIndex, false)}
-                          placeholder="Value"
-                          className="block rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm"
-                        />
-                        <div className="flex">
-                          <button
-                            onClick={() => removePathValue(isHeld, key, valueIndex)}
-                            className="ml-1 text-myorange hover:text-black"
-                            title="Remove value"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                          {valueIndex === values.length - 1 && (
-                            <button
-                              onClick={() => addPathValue(isHeld, key)}
-                              className="text-mydarkgrey hover:text-black"
-                              title="Add value"
-                            >
-                              <PlusIcon className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                    }}
+                    className="block w-full rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm"
+                  >
+                    <option value="">Select a belief</option>
+                    {availableBeliefs.map((belief) => (
+                      <option key={belief.slug} value={belief.slug}>
+                        {belief.title}
+                      </option>
                     ))}
+                  </select>
                 </div>
+
+                {key && (
+                  <div>
+                    <label className="text-sm text-mydarkgrey">Select Values</label>
+                    <div className="flex flex-wrap gap-1">
+                      {values.map((value: string, valueIndex: number) => {
+                        const validValues = getValidValuesForBelief(key);
+                        return (
+                          <div key={valueIndex} className="flex items-center">
+                            <select
+                              value={value}
+                              onChange={(e) => handleValueChange(isHeld, key, valueIndex, e.target.value)}
+                              className="block rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm"
+                            >
+                              <option value="">Select a value</option>
+                              {validValues.map((val) => (
+                                <option key={val} value={val}>
+                                  {val}
+                                </option>
+                              ))}
+                            </select>
+
+                            <div className="flex">
+                              <button
+                                onClick={() => handleRemoveValue(isHeld, key, valueIndex)}
+                                className="ml-1 text-myorange hover:text-black"
+                                title="Remove value"
+                              >
+                                <XMarkIcon className="h-4 w-4" />
+                              </button>
+                              {valueIndex === values.length - 1 && (
+                                <button
+                                  onClick={() => {
+                                    const updatedPaths = { ...paths };
+                                    updatedPaths[key] = [...values, ""];
+                                    if (isHeld) {
+                                      setHeldPaths(updatedPaths);
+                                    } else {
+                                      setWithheldPaths(updatedPaths);
+                                    }
+                                    updateStore(isHeld, updatedPaths);
+                                  }}
+                                  className="text-mydarkgrey hover:text-black"
+                                  title="Add value"
+                                >
+                                  <PlusIcon className="h-4 w-4" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+
+        <div className="mt-2 text-sm">
+          <a href="/storykeep/content/beliefs/create" className="text-myblue hover:text-mygreen">
+            Add New Belief
+          </a>
+        </div>
       </div>
     );
   };
@@ -258,8 +295,8 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
           <ul className="list-disc ml-5 mt-2">
             <li>Show Conditions display content when matching beliefs are held</li>
             <li>Hide Conditions prevent content display when matching beliefs are held</li>
-            <li>Belief Slugs should be descriptive (e.g. "KeyChallenge", "Industry")</li>
-            <li>Values should be uppercase and specific (e.g. "INCREASE ENGAGEMENT")</li>
+            <li>Select from existing beliefs or create new ones using the Add New Belief link</li>
+            <li>Values must match the belief's defined scale</li>
           </ul>
         </div>
       </div>
