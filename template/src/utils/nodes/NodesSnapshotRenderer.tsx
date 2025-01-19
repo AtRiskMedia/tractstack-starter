@@ -20,7 +20,7 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
     console.log("ctx updated");
     if (!contentRef.current) return;
     if (!isGenerating && !props.forceRegenerate) return;
-    if(props.ctx.allNodes.get().size === 0) return;
+    if (props.ctx.allNodes.get().size === 0) return;
 
     const generateSnapshot = async () => {
       try {

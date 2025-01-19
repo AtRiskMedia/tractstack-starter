@@ -279,6 +279,6 @@ export function createEmptyStorykeep(id: string) {
     created: undefined,
     menuId: undefined,
     socialImagePath: undefined,
-    tailwindBgColour: undefined
-  } as StoryFragmentNode
+    tailwindBgColour: undefined,
+  } as StoryFragmentNode;
 }

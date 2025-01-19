@@ -54,8 +54,8 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
 
   // Initialize state from node data
   useEffect(() => {
-    setHeldPaths(paneNode.heldBeliefs as PathsType || {});
-    setWithheldPaths(paneNode.withheldBeliefs as PathsType || {});
+    setHeldPaths((paneNode.heldBeliefs as PathsType) || {});
+    setWithheldPaths((paneNode.withheldBeliefs as PathsType) || {});
   }, [paneNode.heldBeliefs, paneNode.withheldBeliefs]);
 
   const updateStore = useCallback(
@@ -111,7 +111,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
   ): void => {
     const paths = isHeld ? heldPaths : withheldPaths;
     const values = paths[beliefKey];
-    
+
     if (!Array.isArray(values)) return;
 
     const updatedPaths = { ...paths };
@@ -129,12 +129,12 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
   const handleRemoveValue = (isHeld: boolean, beliefKey: string, valueIndex: number): void => {
     const paths = isHeld ? heldPaths : withheldPaths;
     const values = paths[beliefKey];
-    
+
     if (!Array.isArray(values)) return;
 
     const updatedPaths = { ...paths };
     updatedPaths[beliefKey] = values.filter((_, i: number) => i !== valueIndex);
-    
+
     if (updatedPaths[beliefKey].length === 0) {
       delete updatedPaths[beliefKey];
     }
@@ -171,7 +171,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
 
         {Object.entries(paths).map(([key, values]) => {
           if (!Array.isArray(values)) return null;
-          
+
           return (
             <div key={key} className="mb-2 p-2 border border-mylightgrey rounded-md">
               <div className="flex flex-col gap-2">
@@ -214,7 +214,9 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
                           <div key={valueIndex} className="flex items-center">
                             <select
                               value={value}
-                              onChange={(e) => handleValueChange(isHeld, key, valueIndex, e.target.value)}
+                              onChange={(e) =>
+                                handleValueChange(isHeld, key, valueIndex, e.target.value)
+                              }
                               className="block rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen focus:ring-2 focus:ring-myorange xs:text-sm"
                             >
                               <option value="">Select a value</option>

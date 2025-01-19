@@ -5,7 +5,10 @@ import { colorValues } from "@/utils/tailwind/tailwindColors.ts";
 export type TailwindColor = (typeof colorValues)[number];
 export type ThemeColorMap = { [key in Theme]: TailwindColor };
 
-export const getComputedColor = (colorMap: ThemeColorMap, theme: Theme = PUBLIC_THEME): TailwindColor => {
+export const getComputedColor = (
+  colorMap: ThemeColorMap,
+  theme: Theme = PUBLIC_THEME
+): TailwindColor => {
   return colorMap[theme] || "brand-1";
 };
 
@@ -122,4 +125,4 @@ export const getTemplateSimpleMarkdown = (theme: Theme) => {
       },
     ],
   } as TemplateMarkdown;
-}
+};

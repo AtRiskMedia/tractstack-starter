@@ -1,9 +1,5 @@
 import { useStore } from "@nanostores/react";
-import {
-  settingsPanelStore,
-  toolModeStore,
-  toolAddModeStore,
-} from "@/store/storykeep.ts";
+import { settingsPanelStore, toolModeStore, toolAddModeStore } from "@/store/storykeep.ts";
 import { AddElementsPanel } from "./insert/AddElementsPanel.tsx";
 import { getCtx } from "@/store/nodes.ts";
 import type { ToolMode, ToolAddMode } from "@/types.ts";
