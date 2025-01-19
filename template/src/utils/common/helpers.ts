@@ -891,3 +891,44 @@ export function convertToString(value: TupleValue): string {
 
   return String(value);
 }
+
+export const formatAndValidateUrl = (
+  input: string
+): {
+  url: string;
+  isValid: boolean;
+  error?: string;
+} => {
+  try {
+    // Trim whitespace
+    let formatted = input.trim().toLowerCase();
+
+    // Add protocol if missing
+    if (!/^https?:\/\//i.test(formatted)) {
+      formatted = `https://${formatted}`;
+    }
+
+    // Try to construct URL (this will throw if invalid)
+    const url = new URL(formatted);
+
+    // Additional validation if needed
+    if (!url.hostname.includes(".")) {
+      return {
+        url: input,
+        isValid: false,
+        error: "Please enter a valid domain",
+      };
+    }
+
+    return {
+      url: url.toString(),
+      isValid: true,
+    };
+  } catch {
+    return {
+      url: input,
+      isValid: false,
+      error: "Please enter a valid URL",
+    };
+  }
+};

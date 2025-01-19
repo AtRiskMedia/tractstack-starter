@@ -7,9 +7,11 @@ import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import OpenGraphSettings from "./settings/OpenGraphSettings";
 import SocialLinks from "./settings/SocialLinks";
+import { formatAndValidateUrl } from "@/utils/common/helpers.ts";
 import BrandImageUploads from "./settings/BrandImageUploads";
-import { knownBrand } from "../../../../constants";
-import type { Config, InitConfig, Theme } from "../../../../types";
+import { knownBrand } from "@/constants.ts";
+import type { Config, InitConfig, Theme } from "@/types.ts";
+import type { FocusEvent, FormEvent } from "react";
 
 interface BrandStepProps {
   onComplete: () => void;
@@ -29,6 +31,7 @@ export default function BrandStep({
   onConfigUpdate,
 }: BrandStepProps) {
   const [error, setError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
 
   const [currentValues, setCurrentValues] = useState<{
     siteUrl: string;
@@ -158,6 +161,21 @@ export default function BrandStep({
 
   if (!isActive) return null;
 
+  const handleUrlBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const result = formatAndValidateUrl(e.target.value);
+
+    setCurrentValues((prev) => ({
+      ...prev,
+      siteUrl: result.url,
+    }));
+
+    if (!result.isValid) {
+      setUrlError(result.error || null);
+    } else {
+      setUrlError(null);
+    }
+  };
+
   const handleImageChange = async (id: string, base64: string, filename: string) => {
     try {
       if (!base64) {
@@ -238,7 +256,7 @@ export default function BrandStep({
     setSelectedBrandPreset(matchingPreset || "custom");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (isUploadingImages || isProcessing) {
       return;
@@ -322,13 +340,17 @@ export default function BrandStep({
 
         <div className="space-y-4">
           <label className="block">
-            <span className="text-mydarkgrey font-bold">Site URL</span>
+            <div className="flex items-center justify-between">
+              <span className="text-mydarkgrey font-bold">Site URL</span>
+              {urlError && <span className="text-sm text-myred">{urlError}</span>}
+            </div>
             <input
               type="url"
               value={currentValues.siteUrl}
               onChange={(e) => setCurrentValues((prev) => ({ ...prev, siteUrl: e.target.value }))}
+              onBlur={handleUrlBlur}
               placeholder="https://example.com"
-              className={commonInputClass}
+              className={`${commonInputClass} ${urlError ? "ring-myred/50" : ""}`}
               required
             />
           </label>

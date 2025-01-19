@@ -299,28 +299,24 @@ const StyleWidgetConfigPanel = ({ node }: StyleWidgetConfigPanelProps) => {
                   <option value="yn">Yes/No</option>
                   <option value="likert">Likert Scale</option>
                   <option value="10pt">10-point Scale</option>
-                  {values["Belief Tag"] &&
-                    isSelectDisabled(values["Belief Tag"] as string) && (
-                      <option value="custom">Custom Scale</option>
-                    )}
-                </select>
-                {values["Belief Tag"] &&
-                  isSelectDisabled(values["Belief Tag"] as string) && (
-                    <button
-                      onClick={() => {
-                        const belief = availableBeliefs.find(
-                          (b) => b.slug === values["Belief Tag"]
-                        );
-                        if (belief) {
-                          setEditingBeliefId(belief.id);
-                        }
-                      }}
-                      className="text-cyan-700 hover:text-black"
-                      title="Edit custom scale values"
-                    >
-                      <BeakerIcon className="h-5 w-5" />
-                    </button>
+                  {values["Belief Tag"] && isSelectDisabled(values["Belief Tag"] as string) && (
+                    <option value="custom">Custom Scale</option>
                   )}
+                </select>
+                {values["Belief Tag"] && isSelectDisabled(values["Belief Tag"] as string) && (
+                  <button
+                    onClick={() => {
+                      const belief = availableBeliefs.find((b) => b.slug === values["Belief Tag"]);
+                      if (belief) {
+                        setEditingBeliefId(belief.id);
+                      }
+                    }}
+                    className="text-cyan-700 hover:text-black"
+                    title="Edit custom scale values"
+                  >
+                    <BeakerIcon className="h-5 w-5" />
+                  </button>
+                )}
               </div>
             ) : meta.isBelief && label === "Belief Tag" ? (
               <div className="flex items-center gap-2">
