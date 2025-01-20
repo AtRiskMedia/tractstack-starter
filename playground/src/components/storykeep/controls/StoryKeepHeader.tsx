@@ -33,7 +33,12 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
   const $keyboardAccessible = useStore(keyboardAccessible);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  console.log(canUndo);
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state after initial render
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (keyboardAccessibleEnabled && !$keyboardAccessible) keyboardAccessible.set(true);
@@ -53,6 +58,8 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
     const updateViewportKey = () => {
       if (!$viewportSet && $viewport.value === "auto") {
         const newViewportKey = getViewportFromWidth(window.innerWidth);
@@ -64,14 +71,16 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
     updateViewportKey();
     window.addEventListener("resize", updateViewportKey);
     return () => window.removeEventListener("resize", updateViewportKey);
-  }, [$viewportSet, $viewport.value, $viewportKey.value]);
+  }, [$viewportSet, $viewport.value, $viewportKey.value, mounted]);
 
   const setViewport = (newViewport: "auto" | "mobile" | "tablet" | "desktop") => {
     const isAuto = newViewport === "auto";
     viewportSetStore.set(!isAuto);
     viewportStore.set({ value: newViewport });
-    const newViewportKey = isAuto ? getViewportFromWidth(window.innerWidth) : newViewport;
-    viewportKeyStore.set({ value: newViewportKey });
+    if (mounted) {
+      const newViewportKey = isAuto ? getViewportFromWidth(window.innerWidth) : newViewport;
+      viewportKeyStore.set({ value: newViewportKey });
+    }
   };
 
   const showDebugPanel = () => {
@@ -86,18 +95,29 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
     console.log(`serializing nodes complete.`);
   };
 
+  const handleCancel = () => {
+    if (window.confirm("You have unsaved changes. Are you sure you want to leave?")) {
+      window.location.href = "/storykeep";
+    }
+  };
+
   const iconClassName =
     "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
   const iconActiveClassName = "-rotate-6 w-6 h-6 text-white rounded bg-myblue p-0.5";
 
+  // Only render viewport selector after mounting to avoid hydration mismatch
+  const viewportSelectorContent = mounted ? (
+    <ViewportSelector
+      viewport={$viewport.value}
+      viewportKey={$viewportKey.value}
+      auto={!$viewportSet}
+      setViewport={setViewport}
+    />
+  ) : null;
+
   return (
     <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
-      <ViewportSelector
-        viewport={$viewport.value}
-        viewportKey={$viewportKey.value}
-        auto={!$viewportSet}
-        setViewport={setViewport}
-      />
+      {viewportSelectorContent}
 
       {(canUndo || canRedo) && (
         <div className="flex flex-wrap justify-center items-center gap-2">
@@ -123,15 +143,29 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
       )}
 
       <div className="flex flex-wrap justify-center items-center gap-2">
-        <button
-          onClick={() => handleSave()}
-          className="bg-white text-myblue hover:underline font-action font-bold"
-        >
-          Save
-        </button>
-        <button className="bg-white text-myblue hover:underline font-action font-bold">
-          Cancel
-        </button>
+        {canUndo ? (
+          <>
+            <button
+              onClick={() => handleSave()}
+              className="bg-white text-myblue hover:underline font-action font-bold"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => handleCancel()}
+              className="bg-white text-myblue hover:underline font-action font-bold"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          <a
+            href="/storykeep"
+            className="bg-white text-myblue hover:underline font-action font-bold"
+          >
+            Cancel
+          </a>
+        )}
       </div>
 
       <div className="flex flex-wrap justify-center items-center gap-2">

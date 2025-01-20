@@ -85,6 +85,13 @@ export class NodesContext {
     this.allNodes.set(newNodes);
   }
 
+  getDirtyNodes(): BaseNode[] {
+    const allNodes = Array.from(this.allNodes.get().values());
+    return allNodes.filter(
+      (node): node is BaseNode => "isChanged" in node && node.isChanged === true
+    );
+  }
+
   clearUndoHistory() {
     this.history.clearHistory();
   }
