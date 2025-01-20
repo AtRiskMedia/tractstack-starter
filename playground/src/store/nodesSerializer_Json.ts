@@ -274,6 +274,7 @@ export class NodesSerializer_Json extends NodesSerializer {
     });
   }
   save(ctx: NodesContext): SaveData {
+    ctx.clearUndoHistory();
     console.log(`must rewrite using the individual helper fns`, ctx);
     //const rootNode = ctx.allNodes.get().get(ctx.rootNodeId.get());
     const saveData: SaveData = {

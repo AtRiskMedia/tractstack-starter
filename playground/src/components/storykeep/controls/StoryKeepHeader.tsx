@@ -1,4 +1,3 @@
-// Update to StoryKeepHeader.tsx
 import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
@@ -13,7 +12,7 @@ import {
   viewportKeyStore,
   viewportSetStore,
   settingsPanelStore,
-} from "../../../store/storykeep";
+} from "@/store/storykeep.ts";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import ViewportSelector from "../header/ViewportSelector";
 import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
@@ -34,6 +33,7 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
   const $keyboardAccessible = useStore(keyboardAccessible);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  console.log(canUndo);
 
   useEffect(() => {
     if (keyboardAccessibleEnabled && !$keyboardAccessible) keyboardAccessible.set(true);
@@ -43,9 +43,7 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
     const updateUndoRedo = () => {
       setCanUndo(getCtx().history.canUndo());
       setCanRedo(getCtx().history.canRedo());
-      console.log("undo/redo update");
     };
-
     getCtx().history.headIndex.listen(() => {
       updateUndoRedo();
     });
@@ -63,7 +61,6 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
         }
       }
     };
-
     updateViewportKey();
     window.addEventListener("resize", updateViewportKey);
     return () => window.removeEventListener("resize", updateViewportKey);
@@ -73,7 +70,6 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
     const isAuto = newViewport === "auto";
     viewportSetStore.set(!isAuto);
     viewportStore.set({ value: newViewport });
-
     const newViewportKey = isAuto ? getViewportFromWidth(window.innerWidth) : newViewport;
     viewportKeyStore.set({ value: newViewportKey });
   };

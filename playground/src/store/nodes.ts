@@ -76,6 +76,19 @@ export class NodesContext {
     value: "default",
   });
 
+  cleanNode(nodeId: string) {
+    const node = this.allNodes.get().get(nodeId);
+    if (!node) return;
+    const newNodes = new Map(this.allNodes.get());
+    const { isChanged, ...cleanedNode } = node;
+    newNodes.set(nodeId, cleanedNode);
+    this.allNodes.set(newNodes);
+  }
+
+  clearUndoHistory() {
+    this.history.clearHistory();
+  }
+
   getChildNodeIDs(parentNodeId: string): string[] {
     const returnVal = this.parentNodes.get()?.get(parentNodeId) || [];
     return returnVal;

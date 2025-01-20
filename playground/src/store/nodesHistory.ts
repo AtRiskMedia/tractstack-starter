@@ -59,4 +59,9 @@ export class NodesHistory {
       this.headIndex.set(this.headIndex.get() - 1);
     }
   }
+
+  clearHistory() {
+    this.history.set([]);
+    this.headIndex.set(0);
+  }
 }
