@@ -1,15 +1,15 @@
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
 export const PaneEraser = (props: NodeProps) => {
-  const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
+  const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
-    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value),
+    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value),
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);

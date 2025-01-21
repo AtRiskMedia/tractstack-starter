@@ -1,7 +1,7 @@
 ---
-import BgPane from "../../../frontend/panes/BgPaneNew.astro";
-import { getCtx } from "../../../../store/nodes";
-import type { VisualBreakNode } from "../../../../types";
+import BgPane from "@/components/frontend/panes/BgPaneNew.astro";
+import { getCtx } from "@/store/nodes.ts";
+import type { VisualBreakNode } from "@/types.ts";
 
 const { nodeId } = Astro.props;
 const node = getCtx().allNodes.get().get(nodeId) as VisualBreakNode;

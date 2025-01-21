@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import type { MarkdownPaneFragmentNode, ParentClassesPayload } from "@/types.ts";
@@ -36,7 +36,7 @@ export const Markdown = (props: NodeProps) => {
             getCtx(props).setClickedNodeId(props.nodeId, true);
             e.stopPropagation();
           }}
-          className={getCtx(props).getNodeClasses(id, viewportStore.get().value, i - 1)}
+          className={getCtx(props).getNodeClasses(id, viewportKeyStore.get().value, i - 1)}
         >
           {nodesToRender}
         </div>

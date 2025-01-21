@@ -1,11 +1,11 @@
-import { YouTubeWrapper } from "../../../frontend/widgets/YouTubeWrapper";
-import { Belief } from "../../../frontend/widgets/Belief";
-import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
-import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
-import { SignUp } from "../../../frontend/widgets/SignUp";
+import { YouTubeWrapper } from "@/components/frontend/widgets/YouTubeWrapper.tsx";
+import { Belief } from "@/components/frontend/widgets/Belief.tsx";
+import { IdentifyAs } from "@/components/frontend/widgets/IdentifyAs.tsx";
+import { ToggleBelief } from "@/components/frontend/widgets/ToggleBelief.tsx";
+import { SignUp } from "@/components/frontend/widgets/SignUp.tsx";
 import { memo, type ReactElement } from "react";
 import { getCtx, NodesContext } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 
 export interface WidgetProps {
   nodeId: string;
@@ -80,7 +80,7 @@ const getWidgetElement = (props: WidgetProps, classNames: string): ReactElement 
 };
 
 export const Widget = memo((props: WidgetProps) => {
-  const classNames = getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value);
+  const classNames = getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value);
   const content = getWidgetElement(props, classNames);
 
   if (!content) return null;

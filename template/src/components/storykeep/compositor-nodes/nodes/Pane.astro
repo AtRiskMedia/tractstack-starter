@@ -1,10 +1,9 @@
 ---
-import CodeHook from "../../../../custom/CodeHook.astro";
-import { getCtx } from "../../../../store/nodes";
-import { viewportStore } from "../../../../store/storykeep";
+import CodeHook from "@/custom/CodeHook.astro";
+import { getCtx } from "@/store/nodes.ts";
 import Node from "../Node.astro";
-import Filter from "../../../../components/frontend/state/Filter";
-import type { CodeHookDatum } from "../../../../types";
+import Filter from "@/components/frontend/state/Filter.tsx";
+import type { CodeHookDatum } from "@/types.ts";
 
 const { nodeId } = Astro.props;
 const rawPayload = getCtx().getNodeCodeHookPayload(nodeId);
@@ -14,10 +13,9 @@ const codeHookPayload =
     : null;
 const beliefs = getCtx().getPaneBeliefs(nodeId);
 const isDecorative = getCtx().getPaneIsDecorative(nodeId);
-const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, viewportStore.get().value)}`;
+const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, `auto`)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
-const contentStyles =
-  getCtx().getNodeStringStyles(nodeId, viewportStore.get().value) + "; grid-area: 1/1/1/1";
+const contentStyles = getCtx().getNodeStringStyles(nodeId, `auto`) + "; grid-area: 1/1/1/1";
 ---
 
 {

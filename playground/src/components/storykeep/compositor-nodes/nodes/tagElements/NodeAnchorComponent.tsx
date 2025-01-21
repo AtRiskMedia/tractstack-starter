@@ -1,15 +1,15 @@
 import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-//import { useRef } from "react";
 import { getCtx } from "@/store/nodes.ts";
-//import { parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import type { FlatNode } from "@/types.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+//import { useRef } from "react";
+//import { parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 //import { PatchOp } from "@/store/nodesHistory.ts";
 
 export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
-  //const originalTextRef = useRef<string>("");
   const nodeId = props.nodeId;
+  //const originalTextRef = useRef<string>("");
   //const wasFocused = useRef<boolean>(false);
 
   const ctx = getCtx(props);
@@ -75,7 +75,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
     <>
       {isFirstChild && "\u00A0"}
       <a
-        className={ctx.getNodeClasses(nodeId, viewportStore.get().value)}
+        className={ctx.getNodeClasses(nodeId, viewportKeyStore.get().value)}
         href={(node as FlatNode).href}
         //contentEditable={getCtx(props).toolModeValStore.get().value === "default"}
         //suppressContentEditableWarning

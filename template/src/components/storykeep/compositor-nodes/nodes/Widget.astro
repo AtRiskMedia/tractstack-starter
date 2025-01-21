@@ -1,12 +1,11 @@
 ---
-import { YouTubeWrapper } from "../../../frontend/widgets/YouTubeWrapper";
-import BunnyVideo from "../../../frontend/widgets/BunnyVideo.astro";
-import { Belief } from "../../../frontend/widgets/Belief";
-import { IdentifyAs } from "../../../frontend/widgets/IdentifyAs";
-import { ToggleBelief } from "../../../frontend/widgets/ToggleBelief";
-import { SignUp } from "../../../frontend/widgets/SignUp";
-import { getCtx } from "../../../../store/nodes";
-import { viewportStore } from "../../../../store/storykeep";
+import { YouTubeWrapper } from "@/components/frontend/widgets/YouTubeWrapper.tsx";
+import BunnyVideo from "@/components/frontend/widgets/BunnyVideo.astro";
+import { Belief } from "@/components/frontend/widgets/Belief.tsx";
+import { IdentifyAs } from "@/components/frontend/widgets/IdentifyAs.tsx";
+import { ToggleBelief } from "@/components/frontend/widgets/ToggleBelief.tsx";
+import { SignUp } from "@/components/frontend/widgets/SignUp.tsx";
+import { getCtx } from "@/store/nodes.ts";
 
 interface Props {
   nodeId: string;
@@ -17,7 +16,7 @@ interface Props {
 }
 
 const { nodeId, hook, value1, value2, value3 = "" } = Astro.props;
-const classNames = getCtx().getNodeClasses(nodeId, viewportStore.get().value);
+const classNames = getCtx().getNodeClasses(nodeId, `auto`);
 ---
 
 {

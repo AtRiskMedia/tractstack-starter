@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 
@@ -19,8 +19,8 @@ export const StoryFragment = (props: NodeProps) => {
 
   return (
     <div
-      className={getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
-      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value)}
+      className={getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}
+      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value)}
     >
       <RenderChildren children={children} nodeProps={props} />
     </div>

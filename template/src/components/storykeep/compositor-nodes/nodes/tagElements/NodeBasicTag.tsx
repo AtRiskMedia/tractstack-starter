@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore } from "@/store/storykeep.ts";
+import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -124,7 +124,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     return (
       <div
         ref={elementRef as React.RefObject<HTMLDivElement>}
-        className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
+        className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
         onClick={(e) => {
           getCtx(props).setClickedNodeId(nodeId);
           e.stopPropagation();
@@ -139,7 +139,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     Tag,
     {
       ref: elementRef,
-      className: getCtx(props).getNodeClasses(nodeId, viewportStore.get().value),
+      className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
       contentEditable: getCtx(props).toolModeValStore.get().value === "default",
       suppressContentEditableWarning: true,
       onBlur: handleBlur,

@@ -1,5 +1,5 @@
-import { Svg } from "../../common/panes/Svg";
-import type { VisualBreakNode, ViewportKey } from "../../../types";
+import { Svg } from "@/components/common/panes/Svg.tsx";
+import type { VisualBreakNode, ViewportKey } from "@/types.ts";
 
 interface BgPaneProps {
   payload: VisualBreakNode;

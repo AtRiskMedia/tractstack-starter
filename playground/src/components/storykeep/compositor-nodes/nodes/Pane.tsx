@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import { viewportStore, showAnalytics } from "@/store/storykeep.ts";
+import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyticsPanel.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
@@ -7,10 +7,10 @@ import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx
 
 export const Pane = (props: NodeProps) => {
   const $showAnalytics = showAnalytics.get();
-  const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}`;
+  const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
-    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportStore.get().value),
+    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value),
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);

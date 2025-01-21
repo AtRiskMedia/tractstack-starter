@@ -1,8 +1,7 @@
 ---
-import Node from "../../../storykeep/compositor-nodes/Node.astro";
-import { getCtx } from "../../../../store/nodes";
-import type { MarkdownPaneFragmentNode } from "../../../../types";
-import { viewportStore } from "../../../../store/storykeep";
+import Node from "@/components/storykeep/compositor-nodes/Node.astro";
+import { getCtx } from "@/store/nodes.ts";
+import type { MarkdownPaneFragmentNode } from "@/types.ts";
 
 const { nodeId, depth = 0 } = Astro.props;
 const node = getCtx().allNodes.get().get(nodeId) as MarkdownPaneFragmentNode;
@@ -11,7 +10,7 @@ const parentCss = (node?.parentCss as string[]) || [];
 
 {
   parentCss.length > 0 && depth < parentCss.length ? (
-    <div class={getCtx().getNodeClasses(nodeId, viewportStore.get().value, depth)}>
+    <div class={getCtx().getNodeClasses(nodeId, `auto`, depth)}>
       <Astro.self nodeId={nodeId} depth={depth + 1} />
     </div>
   ) : (

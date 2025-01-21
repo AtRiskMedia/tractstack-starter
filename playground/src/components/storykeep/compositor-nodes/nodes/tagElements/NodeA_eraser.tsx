@@ -1,6 +1,6 @@
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node";
 import { getCtx } from "@/store/nodes";
-import { viewportStore } from "@/store/storykeep";
+import { viewportKeyStore } from "@/store/storykeep";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 
@@ -8,7 +8,7 @@ export const NodeAEraser = (props: NodeProps) => {
   return (
     <button
       className={`
-        ${getCtx(props).getNodeClasses(props.nodeId, viewportStore.get().value)}
+        ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}
         relative
         eraser-child
         group

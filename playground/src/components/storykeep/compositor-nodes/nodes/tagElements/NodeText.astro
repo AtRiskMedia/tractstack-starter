@@ -1,6 +1,6 @@
 ---
-import { getCtx } from "../../../../../store/nodes";
-import type { FlatNode } from "../../../../../types";
+import { getCtx } from "@/store/nodes.ts";
+import type { FlatNode } from "@/types.ts";
 
 const { nodeId } = Astro.props;
 const node = getCtx().allNodes.get().get(nodeId) as FlatNode;

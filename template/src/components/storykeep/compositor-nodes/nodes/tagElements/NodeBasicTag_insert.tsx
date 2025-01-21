@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import { keyboardAccessible, toolAddModeStore, viewportStore } from "@/store/storykeep.ts";
+import { keyboardAccessible, toolAddModeStore, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
@@ -99,7 +99,9 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
           <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
         <InsertButtons />
-        <div className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
+        <div
+          className={`${getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)} pt-12`}
+        >
           <RenderChildren children={children} nodeProps={props} />
         </div>
       </div>
@@ -122,7 +124,9 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
           <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
         </div>
         <InsertButtons />
-        <Tag className={`${getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)} pt-12`}>
+        <Tag
+          className={`${getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)} pt-12`}
+        >
           <RenderChildren children={children} nodeProps={props} />
         </Tag>
       </div>
