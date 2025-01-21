@@ -944,14 +944,15 @@ export class NodesContext {
     return result;
   }
 
-  deleteChildren(nodeId: string) {
+  deleteChildren(nodeId: string): BaseNode[] {
     const node = this.allNodes.get().get(nodeId);
-    if (!node) return;
+    if (!node) return [];
 
     const children = this.getNodesRecursively(node).reverse();
     children.shift();
-    this.deleteNodes(children);
+    const deletedNodes = this.deleteNodes(children);
     this.notifyNode(node.parentId || "");
+    return deletedNodes;
   }
 
   deleteNode(nodeId: string) {
@@ -1137,13 +1138,19 @@ export class NodesContext {
     return result;
   }
 
-  private deleteNodes(nodesList: BaseNode[]) {
+  private deleteNodes(nodesList: BaseNode[]): BaseNode[] {
+    const deletedNodes: BaseNode[] = [];
+
     nodesList.forEach((node) => {
       if (!node) return;
-      // remove node
-      this.allNodes.get().delete(node.id);
 
-      // remove parent link too
+      // Remove node
+      const allNodes = this.allNodes.get();
+      if (allNodes.delete(node.id)) {
+        deletedNodes.push(node);
+      }
+
+      // Remove parent link
       if (node?.parentId !== null) {
         const parentNodes = this.parentNodes.get();
         const parentNode = parentNodes.get(node.parentId);
@@ -1153,7 +1160,10 @@ export class NodesContext {
         }
       }
     });
+
+    return deletedNodes;
   }
+
 }
 
 export const globalCtx: NodesContext = new NodesContext();

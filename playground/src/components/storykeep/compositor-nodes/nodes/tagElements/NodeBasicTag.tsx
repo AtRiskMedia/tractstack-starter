@@ -6,6 +6,7 @@ import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx
 import { type JSX, useEffect, useRef, useState } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import type { FlatNode } from "@/types.ts";
+import { PatchOp } from "@/store/nodesHistory.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -80,7 +81,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             .map((childNode) => childNode as FlatNode)
             .reverse();
           // keep original element on, we care about chldren only
-          getCtx(props).deleteChildren(nodeId);
+          const deletedNodes = getCtx(props).deleteChildren(nodeId);
 
           // convert markdown to children nodes
           textToNodes.forEach((node: FlatNode) => {
@@ -91,6 +92,20 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           });
           getCtx(props).addNodes(textToNodes);
           getCtx(props).nodeToNotify(nodeId, "Pane");
+
+          getCtx(props).history.addPatch({
+            op: PatchOp.REMOVE,
+            undo: ctx => {
+              ctx.deleteChildren(nodeId);
+              ctx.addNodes(deletedNodes);
+              ctx.nodeToNotify(nodeId, "Pane");
+            },
+            redo: ctx => {
+              ctx.deleteChildren(nodeId);
+              ctx.addNodes(textToNodes);
+              ctx.nodeToNotify(nodeId, "Pane");
+            }
+          });
         }
       }}
       onClick={(e) => e.stopPropagation()}

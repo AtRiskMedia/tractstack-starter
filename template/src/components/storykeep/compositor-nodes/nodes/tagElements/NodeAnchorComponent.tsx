@@ -5,10 +5,12 @@ import { parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import type { FlatNode } from "@/types.ts";
 import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
+import { PatchOp } from "@/store/nodesHistory.ts";
 
 export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
   const originalTextRef = useRef<string>("");
   const nodeId = props.nodeId;
+  const wasFocused = useRef<boolean>(false);
 
   const ctx = getCtx(props);
   const node = ctx.allNodes.get().get(nodeId);
@@ -17,17 +19,23 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
   const isLastChild = childNodeIDs[childNodeIDs.length - 1] === nodeId;
 
   const handleBlur = (e: React.FocusEvent<HTMLAnchorElement>) => {
+    function reset() {
+      wasFocused.current = false;
+    }
+
     console.log(`${tagName} got blur`);
     e.stopPropagation();
 
     const newText = e.currentTarget.innerHTML;
-    if (newText === originalTextRef.current) {
+    if (newText === originalTextRef.current || !wasFocused.current) {
+      reset();
       return;
     }
 
     const textToNodes = parseMarkdownToNodes(newText, nodeId);
     console.log("on blur nodes: ", textToNodes);
 
+    reset();
     if (textToNodes?.length > 0) {
       const originalLinksStyles = ctx
         .getNodesRecursively(node)
@@ -35,7 +43,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
         .map((childNode) => childNode as FlatNode)
         .reverse();
 
-      ctx.deleteChildren(nodeId);
+      const deletedNodes = ctx.deleteChildren(nodeId);
 
       textToNodes.forEach((newNode: FlatNode) => {
         const foundNode = originalLinksStyles.find((x) => x.href === newNode.href);
@@ -46,6 +54,20 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
 
       ctx.addNodes(textToNodes);
       ctx.nodeToNotify(nodeId, "Pane");
+
+      getCtx(props).history.addPatch({
+        op: PatchOp.REMOVE,
+        undo: ctx => {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(deletedNodes);
+          ctx.nodeToNotify(nodeId, "Pane");
+        },
+        redo: ctx => {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(textToNodes);
+          ctx.nodeToNotify(nodeId, "Pane");
+        }
+      });
     }
   };
 
