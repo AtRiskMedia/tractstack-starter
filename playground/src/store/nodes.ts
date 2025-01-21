@@ -683,6 +683,7 @@ export class NodesContext {
       undoList.push((ctx: NodesContext) => {
         const newNodes = new Map(ctx.allNodes.get());
         newNodes.set(node.id, currentNodeData);
+        ctx.allNodes.set(newNodes);
         const parentNode = this.nodeToNotify(node.id, node.nodeType);
         if (parentNode) this.notifyNode(parentNode);
       });
