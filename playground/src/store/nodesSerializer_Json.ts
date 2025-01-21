@@ -368,6 +368,6 @@ export class NodesSerializer_Json extends NodesSerializer {
     });
 
     console.log(saveData);
-    return true
+    return true;
   }
 }

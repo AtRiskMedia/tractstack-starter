@@ -1164,7 +1164,6 @@ export class NodesContext {
 
     return deletedNodes;
   }
-
 }
 
 export const globalCtx: NodesContext = new NodesContext();

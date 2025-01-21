@@ -3,7 +3,7 @@ import { viewportStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/storykeep/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import { type JSX, useEffect, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState, createElement } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import type { FlatNode } from "@/types.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
@@ -15,25 +15,115 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const wasFocused = useRef<boolean>(false);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
   const originalTextRef = useRef<string>("");
+  const elementRef = useRef<HTMLElement | null>(null);
 
   const Tag = props.tagName;
+
   useEffect(() => {
+    if (/Chrome/.test(navigator.userAgent) && elementRef.current instanceof Node) {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === "childList" && mutation.addedNodes.length) {
+            mutation.addedNodes.forEach((node) => {
+              if (
+                node instanceof Text &&
+                node.parentElement &&
+                node.previousSibling instanceof Element &&
+                node.previousSibling.tagName === "A" &&
+                node.textContent?.trim()
+              ) {
+                const anchor = node.previousSibling as HTMLAnchorElement;
+                const text = node.textContent;
+                node.parentElement.removeChild(node);
+                anchor.appendChild(document.createTextNode(text));
+              }
+            });
+          }
+        });
+      });
+
+      observer.observe(elementRef.current, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => observer.disconnect();
+    }
+
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      console.log("notification received data update for node: " + nodeId);
       setChildren([...getCtx(props).getChildNodeIDs(nodeId)]);
     });
+
     getCtx(props).clickedNodeId.subscribe((val) => {
       if (wasFocused.current && val !== nodeId) {
         originalTextRef.current = "";
       }
     });
-    return unsubscribe;
+
+    return () => unsubscribe();
   }, []);
 
-  // showGuids means each node has a dotted outline and must render as div (can't be p, e.g.)
-  if (showGuids.get())
+  const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
+    function reset() {
+      wasFocused.current = false;
+    }
+
+    if (!canEditText(props) || e.target.tagName === "BUTTON" || !wasFocused.current) {
+      reset();
+      return;
+    }
+
+    const node = getCtx(props).allNodes.get().get(nodeId);
+
+    reset();
+    const newText = e.currentTarget.innerHTML;
+
+    if (newText === originalTextRef.current) {
+      getCtx(props).notifyNode(node?.parentId || "");
+      return;
+    }
+
+    const textToNodes = parseMarkdownToNodes(newText, nodeId);
+
+    if (textToNodes?.length > 0) {
+      const originalLinksStyles = getCtx(props)
+        .getNodesRecursively(node)
+        .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
+        .map((childNode) => childNode as FlatNode)
+        .reverse();
+
+      const deletedNodes = getCtx(props).deleteChildren(nodeId);
+
+      textToNodes.forEach((node: FlatNode) => {
+        const foundNode = originalLinksStyles.find((x) => x.href === node.href);
+        if (foundNode) {
+          node.buttonPayload = foundNode.buttonPayload;
+        }
+      });
+
+      getCtx(props).addNodes(textToNodes);
+      getCtx(props).nodeToNotify(nodeId, "Pane");
+
+      getCtx(props).history.addPatch({
+        op: PatchOp.REMOVE,
+        undo: (ctx) => {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(deletedNodes);
+          ctx.nodeToNotify(nodeId, "Pane");
+        },
+        redo: (ctx) => {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(textToNodes);
+          ctx.nodeToNotify(nodeId, "Pane");
+        },
+      });
+    }
+  };
+
+  if (showGuids.get()) {
     return (
       <div
+        ref={elementRef as React.RefObject<HTMLDivElement>}
         className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
         onClick={(e) => {
           getCtx(props).setClickedNodeId(nodeId);
@@ -43,98 +133,39 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         <RenderChildren children={children} nodeProps={props} />
       </div>
     );
+  }
 
-  return (
-    <Tag
-      className={getCtx(props).getNodeClasses(nodeId, viewportStore.get().value)}
-      contentEditable={getCtx(props).toolModeValStore.get().value === "default"}
-      suppressContentEditableWarning
-      onBlur={(e) => {
-        function reset() {
-          wasFocused.current = false;
-        }
-
-        if (!canEditText(props) || e.target.tagName === "BUTTON" || !wasFocused.current) {
-          reset();
-          return;
-        }
-
-        const node = getCtx(props).allNodes.get().get(nodeId);
-
-        reset();
-        const newText = e.currentTarget.innerHTML;
-        console.log("on blur text: " + newText);
-
-        if (newText === originalTextRef.current) {
-          // no changes, redraw self to remove the markdown
-          getCtx(props).notifyNode(node?.parentId || "");
-          return;
-        }
-
-        const textToNodes = parseMarkdownToNodes(newText, nodeId);
-        console.log("on blur nodes: ", textToNodes);
-        if (textToNodes?.length > 0) {
-          // should get styles from text not "a"
-          const originalLinksStyles = getCtx(props)
-            .getNodesRecursively(node)
-            .filter((childNode) => "tagName" in childNode && childNode?.tagName === "a")
-            .map((childNode) => childNode as FlatNode)
-            .reverse();
-          // keep original element on, we care about chldren only
-          const deletedNodes = getCtx(props).deleteChildren(nodeId);
-
-          // convert markdown to children nodes
-          textToNodes.forEach((node: FlatNode) => {
-            const foundNode = originalLinksStyles.find((x) => x.href === node.href);
-            if (foundNode) {
-              node.buttonPayload = foundNode.buttonPayload;
-            }
-          });
-          getCtx(props).addNodes(textToNodes);
-          getCtx(props).nodeToNotify(nodeId, "Pane");
-
-          getCtx(props).history.addPatch({
-            op: PatchOp.REMOVE,
-            undo: ctx => {
-              ctx.deleteChildren(nodeId);
-              ctx.addNodes(deletedNodes);
-              ctx.nodeToNotify(nodeId, "Pane");
-            },
-            redo: ctx => {
-              ctx.deleteChildren(nodeId);
-              ctx.addNodes(textToNodes);
-              ctx.nodeToNotify(nodeId, "Pane");
-            }
-          });
-        }
-      }}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => {
+  return createElement(
+    Tag,
+    {
+      ref: elementRef,
+      className: getCtx(props).getNodeClasses(nodeId, viewportStore.get().value),
+      contentEditable: getCtx(props).toolModeValStore.get().value === "default",
+      suppressContentEditableWarning: true,
+      onBlur: handleBlur,
+      onClick: (e: React.MouseEvent) => e.stopPropagation(),
+      onMouseDown: (e: React.MouseEvent) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
-      }}
-      onKeyDown={(e) => {
+      },
+      onKeyDown: (e: React.KeyboardEvent) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          e.currentTarget.blur();
+          (e.currentTarget as HTMLElement).blur();
         }
-      }}
-      onFocus={(e) => {
+      },
+      onFocus: (e: React.FocusEvent) => {
         if (!canEditText(props) || e.target.tagName === "BUTTON") {
           return;
         }
-
         wasFocused.current = true;
-        // Ensure the element is content-editable and fetch its innerHTML
         originalTextRef.current = e.currentTarget.innerHTML;
-        console.log("Original text saved:", originalTextRef.current);
-      }}
-      onDoubleClick={(e) => {
+      },
+      onDoubleClick: (e: React.MouseEvent) => {
         getCtx(props).setClickedNodeId(nodeId, true);
         e.stopPropagation();
-      }}
-    >
-      <RenderChildren children={children} nodeProps={props} />
-    </Tag>
+      },
+    },
+    <RenderChildren children={children} nodeProps={props} />
   );
 };

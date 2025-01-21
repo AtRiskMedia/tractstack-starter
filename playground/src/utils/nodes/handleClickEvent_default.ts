@@ -20,7 +20,6 @@ export function handleClickEventDefault(
   expanded: boolean,
   parentLayer?: number | null
 ) {
-  console.log(node, expanded);
   if (!node?.nodeType) return;
 
   switch (node.nodeType) {

@@ -312,8 +312,8 @@ const SettingsPanel = ({
   const shouldRespectCollapse = userHasInteracted || windowHeight < MIN_HEIGHT;
   const effectiveExpanded = shouldRespectCollapse ? signal?.expanded : true;
 
-  if (signal) console.log(signal);
   if (!signal) return null;
+  //console.log(signal);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
