@@ -131,8 +131,8 @@ export class NodesSerializer_Json extends NodesSerializer {
         slug: storyfragmentNode.slug,
         title: storyfragmentNode.title,
         pane_ids: storyfragmentNode.paneIds,
-        changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
-        created: storyfragmentNode?.created?.toISOString() || new Date().toISOString(),
+        created: this.ensureDate(storyfragmentNode.created),
+        changed: this.ensureDate(storyfragmentNode.changed),
         ...(typeof storyfragmentNode.tailwindBgColour === `string`
           ? { tailwind_background_colour: storyfragmentNode.tailwindBgColour }
           : {}),
@@ -267,13 +267,20 @@ export class NodesSerializer_Json extends NodesSerializer {
       slug: paneNode.slug,
       pane_type: paneType,
       ...(markdownNode ? { markdown_id: markdownNode.id } : {}),
-      changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
-      created: paneNode?.created?.toISOString() || new Date().toISOString(),
+      created: this.ensureDate(paneNode.created),
+      changed: this.ensureDate(paneNode.changed),
       is_context_pane: paneNode.isContextPane ? 1 : 0,
       options_payload: JSON.stringify(optionsPayload),
     });
   }
-  save(ctx: NodesContext): SaveData {
+
+  protected ensureDate(date: Date | string | undefined | null): string {
+    if (!date) return new Date().toISOString();
+    if (typeof date === "string") return date;
+    return date.toISOString();
+  }
+
+  save(ctx: NodesContext) {
     const saveData: SaveData = {
       tractstacks: [],
       storyfragments: [],
@@ -285,144 +292,82 @@ export class NodesSerializer_Json extends NodesSerializer {
       resources: [],
       beliefs: [],
     };
+
     ctx.clearUndoHistory();
     const dirtyNodes = ctx.getDirtyNodes();
-    console.log(`dirtyNodes`, dirtyNodes);
-    //this.processNode(ctx, rootNode, saveData);
-    console.log("Save data:", saveData);
-    return saveData;
+
+    // 1. Process TractStack nodes first (required by storyfragments)
+    const tractStackNodes = dirtyNodes.filter(
+      (node): node is TractStackNode => node.nodeType === "TractStack"
+    );
+    tractStackNodes.forEach((node) => {
+      console.log(`Processing TractStack node:`, node);
+      this.processTractStackNode(node, saveData);
+    });
+
+    // 2. Process Menu nodes (required by storyfragments)
+    const menuNodes = dirtyNodes.filter((node): node is MenuNode => node.nodeType === "Menu");
+    menuNodes.forEach((node) => {
+      console.log(`Processing Menu node:`, node);
+      this.processMenuNode(node, saveData);
+    });
+
+    // 3. Process File nodes (required by panes)
+    const fileNodes = dirtyNodes.filter((node): node is ImageFileNode => node.nodeType === "File");
+    fileNodes.forEach((node) => {
+      console.log(`Processing File node:`, node);
+      this.processImageFileNode(node, saveData);
+    });
+
+    // 4. Process Markdown nodes (part of panes)
+    // Note: Markdown nodes are processed through processPaneNode
+    // They don't appear directly in dirtyNodes
+
+    // 5. Process Pane nodes
+    const paneNodes = dirtyNodes.filter((node): node is PaneNode => node.nodeType === "Pane");
+    paneNodes.forEach((node) => {
+      console.log(`Processing Pane node:`, node);
+      // Convert string dates to proper format before processing
+      const processNode = {
+        ...node,
+        changed: this.ensureDate(node.changed),
+        created: this.ensureDate(node.created),
+      };
+      this.processPaneNode(ctx, processNode, saveData);
+    });
+
+    // 6. Process StoryFragment nodes
+    const storyFragmentNodes = dirtyNodes.filter(
+      (node): node is StoryFragmentNode => node.nodeType === "StoryFragment"
+    );
+    storyFragmentNodes.forEach((node) => {
+      console.log(`Processing StoryFragment node:`, node);
+      // Convert string dates to proper format before processing
+      const processNode = {
+        ...node,
+        changed: this.ensureDate(node.changed),
+        created: this.ensureDate(node.created),
+      };
+      this.processStoryFragmentNode(processNode, saveData);
+    });
+
+    // 7. Process Resource nodes (no dependencies)
+    const resourceNodes = dirtyNodes.filter(
+      (node): node is ResourceNode => node.nodeType === "Resource"
+    );
+    resourceNodes.forEach((node) => {
+      console.log(`Processing Resource node:`, node);
+      this.processResourceNode(node, saveData);
+    });
+
+    // 8. Process Belief nodes (no dependencies)
+    const beliefNodes = dirtyNodes.filter((node): node is BeliefNode => node.nodeType === "Belief");
+    beliefNodes.forEach((node) => {
+      console.log(`Processing Belief node:`, node);
+      this.processBeliefNode(node, saveData);
+    });
+
+    console.log(saveData);
+    return true
   }
-
-  //getMarkdownPayload(markdownNode: MarkdownPaneFragmentNode): string {
-  //  if (!markdownNode) return "";
-
-  //  const markdownDatum: MarkdownPaneDatum = {
-  //    id: markdownNode.id,
-  //    isModal: false,
-  //    type: "markdown",
-  //    hiddenViewports: "none",
-  //    imageMaskShapeDesktop: "none",
-  //    imageMaskShapeTablet: "none",
-  //    imageMaskShapeMobile: "none",
-  //    textShapeOutsideDesktop: "none",
-  //    textShapeOutsideTablet: "none",
-  //    textShapeOutsideMobile: "none",
-  //    optionsPayload: {
-  //      classNamesPayload: {},
-  //      classNames: {
-  //        all: {},
-  //      },
-  //    },
-  //  };
-  //  return JSON.stringify(markdownDatum);
-  //}
-
-  //  // will rewrite to use the above helper fns
-  //  processNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {
-  //    //const isChanged = node?.isChanged || false;
-  //    if (!node) return;
-  //
-  //    console.log(`use the new process*Node helper`);
-  //    //switch (node.nodeType) {
-  //    //  case "Pane": {
-  //    //    //if (isChanged) {
-  //    //    //  const paneNode = node as PaneNode;
-  //    //    //  ctx.getChildNodeIDs(node.id).forEach((childId) => {
-  //    //    //    const childNode = ctx.allNodes.get().get(childId);
-  //    //    //    if (childNode?.nodeType === "Markdown") {
-  //    //    //      const markdownNode = childNode as MarkdownPaneFragmentNode;
-  //    //    //      const markdownGen = new MarkdownGenerator(ctx);
-  //    //    //      saveData.panes.push({
-  //    //    //        id: paneNode.id,
-  //    //    //        title: paneNode.title,
-  //    //    //        slug: paneNode.slug,
-  //    //    //        changed: paneNode?.changed?.toISOString() || new Date().toISOString(),
-  //    //    //        created: paneNode?.created?.toISOString() || new Date().toISOString(),
-  //    //    //        height_offset_desktop: paneNode.heightOffsetDesktop || 0,
-  //    //    //        height_offset_tablet: paneNode.heightOffsetTablet || 0,
-  //    //    //        height_offset_mobile: paneNode.heightOffsetMobile || 0,
-  //    //    //        height_ratio_desktop: paneNode.heightRatioDesktop || "0.00",
-  //    //    //        height_ratio_tablet: paneNode.heightRatioTablet || "0.00",
-  //    //    //        height_ratio_mobile: paneNode.heightRatioMobile || "0.00",
-  //    //    //        is_context_pane: paneNode.isContextPane ? 1 : 0,
-  //    //    //        markdown_body: markdownGen.markdownFragmentToMarkdown(markdownNode.id), // todo
-  //    //    //        options_payload: this.getMarkdownPayload(markdownNode), // todo
-  //    //    //        markdown_id: "",
-  //    //    //      });
-  //    //    //    }
-  //    //    //  });
-  //    //    //}
-  //    //    break;
-  //    //  }
-  //    //  case "StoryFragment": {
-  //    //    if (isChanged) {
-  //    //      const storyfragmentNode = node as StoryFragmentNode;
-  //    //      saveData.storyfragments.push({
-  //    //        id: storyfragmentNode.id,
-  //    //        tractstack_id: "",
-  //    //        slug: storyfragmentNode.slug,
-  //    //        tailwind_background_colour: storyfragmentNode.tailwindBgColour || "",
-  //    //        title: storyfragmentNode.title,
-  //    //        changed: storyfragmentNode?.changed?.toISOString() || new Date().toISOString(),
-  //    //        created: storyfragmentNode?.created?.toISOString() || new Date().toISOString(),
-  //    //        menu_id: storyfragmentNode.menuId || "",
-  //    //        social_image_path: storyfragmentNode.socialImagePath || "",
-  //    //      });
-  //    //    }
-  //    //    break;
-  //    //  }
-  //    //  case "File": {
-  //    //    if (isChanged) {
-  //    //      const fileData = node as ImageFileNode;
-  //    //      saveData.files.push({
-  //    //        id: fileData.id,
-  //    //        alt_description: fileData.altDescription,
-  //    //        filename: fileData.filename,
-  //    //        url: fileData.src,
-  //    //        src_set: fileData.srcSet || null,
-  //    //      });
-  //    //    }
-  //    //    break;
-  //    //  }
-  //    //  case "Menu": {
-  //    //    if (isChanged) {
-  //    //      const menuData = node as MenuNode;
-  //    //      saveData.menus.push({
-  //    //        id: menuData.id,
-  //    //        title: menuData.title,
-  //    //        theme: menuData.theme,
-  //    //        options_payload: JSON.stringify(menuData.optionsPayload),
-  //    //      });
-  //    //    }
-  //    //    break;
-  //    //  }
-  //    //  //case "Impression": {
-  //    //  //  if (isChanged) {
-  //    //  //    const impressionData = node as ImpressionNode;
-  //    //  //    saveData.impressions.push({
-  //    //  //      id: impressionData.id,
-  //    //  //      parentId: impressionData.parentId,
-  //    //  //      nodeType: "Impression",
-  //    //  //      tagName: "impression",
-  //    //  //      title: impressionData.title,
-  //    //  //      body: impressionData.body,
-  //    //  //      buttonText: impressionData.buttonText,
-  //    //  //      actionsLisp: impressionData.actionsLisp,
-  //    //  //    });
-  //    //  //  }
-  //    //  //  break;
-  //    //  //}
-  //    //  case "Impression":
-  //    //  case "TagElement":
-  //    //  case "BgPane":
-  //    //  case "Markdown":
-  //    //    // ignore ?
-  //    //    break;
-  //    //  default:
-  //    //    console.log(`processNode missed on`, node);
-  //    //}
-  //    //ctx.getChildNodeIDs(node.id).forEach((childId) => {
-  //    //  this.processNode(ctx, ctx.allNodes.get().get(childId), saveData);
-  //    //});
-  //  }
 }
