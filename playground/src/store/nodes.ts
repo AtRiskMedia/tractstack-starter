@@ -119,7 +119,7 @@ export class NodesContext {
         this.deleteNode(node.id);
         break;
       default:
-        console.log(`this mode isn't wired up yet`, toolModeVal);
+      //console.log(`this mode isn't wired up yet`, toolModeVal);
     }
     // reset on parentLayer
     this.setClickedParentLayer(null);
@@ -144,7 +144,6 @@ export class NodesContext {
 
     // Handle double click
     if (dblClick) {
-      console.log("Processing explicit double click");
       if (this.clickTimer) {
         window.clearTimeout(this.clickTimer);
         this.clickTimer = null;
@@ -154,7 +153,6 @@ export class NodesContext {
       this.lastProcessedTime = now;
       window.setTimeout(() => {
         this.isProcessingDoubleClick = false;
-        console.log("Reset double click processing flag");
       }, 100);
       this.handleClickEvent(true);
       return;
@@ -166,7 +164,6 @@ export class NodesContext {
     }
     this.clickTimer = window.setTimeout(() => {
       if (!this.isProcessingDoubleClick) {
-        console.log("Processing delayed single click");
         this.clickTimer = null;
         this.clickedNodeId.set(node.id);
         this.lastProcessedTime = Date.now();
@@ -611,12 +608,6 @@ export class NodesContext {
                 (node as FlatNode)?.overrideClasses || {},
                 1
               );
-              //console.log(`all`,all)
-              //console.log(`mobile`,mobile)
-              //console.log(`tablet`,tablet)
-              //console.log(`desktop`,desktop)
-              //console.log(``)
-              //return all[0];
               switch (viewport) {
                 case "desktop":
                   return desktop[0];
@@ -654,14 +645,19 @@ export class NodesContext {
       case `Markdown`:
       case `Impression`:
         return this.getClosestNodeTypeFromId(nodeId, "Pane");
+      case `Menu`:
+        // do nothing
+        break;
       default:
         console.log(`nodeToNotify missed on`, nodeType);
     }
   }
 
   modifyNodes(newData: BaseNode[]) {
+    console.log(`modifyNodes`, newData);
     // all nodes are the same, skip
     if (!this.checkAnyNodeDifferent(newData)) return;
+    console.log(`modifying...`);
 
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
@@ -674,6 +670,23 @@ export class NodesContext {
       }
       if (isDeepEqual(currentNodeData, node, ["isChanged"])) {
         continue; // data is the same
+      }
+
+      switch (node.nodeType) {
+        case `TagElement`:
+        case `BgPane`:
+        case `Markdown`:
+          console.log(`must dirty Pane`);
+          break;
+
+        case `Menu`:
+        case `Pane`:
+        case `StoryFragment`:
+          // do nothing
+          break;
+
+        default:
+          console.log(`missed on `, node.nodeType);
       }
 
       const newNodes = new Map(this.allNodes.get());

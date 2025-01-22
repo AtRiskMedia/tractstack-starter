@@ -70,7 +70,7 @@ const StyleImageUpdatePanel = ({
 
       // Get the correct target node based on what we're styling
       const targetNodeId = isImage ? node.id : childId || node.id;
-      const targetNode = allNodes.get(targetNodeId) as FlatNode;
+      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
 
       if (!targetNode) return;
 
@@ -146,7 +146,9 @@ const StyleImageUpdatePanel = ({
 
       if (!targetNode) return;
 
-      const markdownNode = { ...allNodes.get(parentNode.id) } as MarkdownPaneFragmentNode;
+      const markdownNode = {
+        ...cloneDeep(allNodes.get(parentNode.id)),
+      } as MarkdownPaneFragmentNode;
       if (!markdownNode?.defaultClasses) {
         markdownNode.defaultClasses = {};
       }

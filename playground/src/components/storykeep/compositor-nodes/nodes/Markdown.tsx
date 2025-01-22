@@ -20,7 +20,7 @@ export const Markdown = (props: NodeProps) => {
     return unsubscribe;
   }, []);
 
-  console.log("draw markdown: " + props.nodeId);
+  //console.log("draw markdown: " + props.nodeId);
   let nodesToRender = <RenderChildren children={children} nodeProps={props} />;
   if ("parentClasses" in node) {
     for (let i = (node.parentClasses as ParentClassesPayload)?.length; i > 0; --i) {

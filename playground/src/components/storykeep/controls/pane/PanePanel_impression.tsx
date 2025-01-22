@@ -27,7 +27,7 @@ const validateImpression = (impression: Partial<ImpressionNode>): boolean => {
 const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
-  const paneNode = allNodes.get(nodeId) as PaneNode;
+  const paneNode = cloneDeep(allNodes.get(nodeId)) as PaneNode;
   const impressionNode = Array.from(allNodes.values()).find(
     (node): node is ImpressionNode => node.nodeType === "Impression" && node.parentId === nodeId
   );
@@ -65,8 +65,13 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
           isChanged: true,
         } as ImpressionNode;
         ctx.addTemplateImpressionNode(nodeId, node);
-        ctx.notifyNode(nodeId);
       }
+      ctx.modifyNodes([
+        {
+          ...paneNode,
+          isChanged: true,
+        },
+      ]);
     },
     [nodeId, impressionNode]
   );
@@ -99,7 +104,12 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
     if (impressionNode?.id && impressionNode?.parentId) {
       const ctx = getCtx();
       ctx.deleteNode(impressionNode.id);
-      ctx.notifyNode(impressionNode.parentId);
+      ctx.modifyNodes([
+        {
+          ...paneNode,
+          isChanged: true,
+        },
+      ]);
       setMode(PaneMode.DEFAULT);
     }
   };

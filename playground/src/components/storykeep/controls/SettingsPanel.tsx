@@ -67,7 +67,7 @@ const getPanel = (
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
-
+  console.log(action);
   if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
   switch (action) {
     case "debug":
@@ -171,7 +171,7 @@ const getPanel = (
     case "style-img-update":
     case "style-img-container-update":
     case "style-img-outer-update":
-      return clickedNode && markdownNode && className && childId && config ? (
+      return clickedNode && markdownNode && className && config ? (
         <StyleImageUpdatePanel
           node={clickedNode}
           parentNode={markdownNode}
@@ -183,7 +183,7 @@ const getPanel = (
     case "style-img-remove":
     case "style-img-container-remove":
     case "style-img-outer-remove":
-      return clickedNode && markdownNode && className && childId ? (
+      return clickedNode && markdownNode && className ? (
         <StyleImageRemovePanel
           node={clickedNode}
           parentNode={markdownNode}
@@ -313,7 +313,7 @@ const SettingsPanel = ({
   const effectiveExpanded = shouldRespectCollapse ? signal?.expanded : true;
 
   if (!signal) return null;
-  //console.log(signal);
+  console.log(signal);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();

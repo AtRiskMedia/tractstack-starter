@@ -1,6 +1,5 @@
-import { useState, useCallback } from "react";
-import { Combobox } from "@headlessui/react";
-import { Switch } from "@headlessui/react";
+import { useState, useCallback, useEffect } from "react";
+import { Combobox, Switch } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -17,13 +16,173 @@ interface ExtendedBasePanelProps extends BasePanelProps {
   availableCodeHooks?: string[];
 }
 
+interface OptionState {
+  key: string;
+  value: string;
+  isDirty: boolean;
+}
+
 const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanelProps) => {
   if (!node || !isPaneNode(node)) return null;
 
   const [localTarget, setLocalTarget] = useState(node.codeHookTarget || "");
   const [query, setQuery] = useState("");
-  const [localOptions, setLocalOptions] = useState<Record<string, string>>(
-    node.codeHookPayload || {}
+
+  // Convert options object to array for better state management
+  const [localOptions, setLocalOptions] = useState<OptionState[]>(() =>
+    Object.entries(node.codeHookPayload || {}).map(([key, value]) => ({
+      key,
+      value,
+      isDirty: false,
+    }))
+  );
+
+  // Debounced update to store
+  const updateStore = useCallback(
+    (target: string, options: Record<string, string>) => {
+      const ctx = getCtx();
+      const allNodes = ctx.allNodes.get();
+      const paneNode = cloneDeep(allNodes.get(node.id)) as PaneNode;
+      if (!paneNode) return;
+      const updatedNode = {
+        ...paneNode,
+        codeHookTarget: target,
+        ...(Object.keys(options).length
+          ? {
+              codeHookPayload: options,
+            }
+          : {}),
+        isChanged: true,
+      };
+      ctx.modifyNodes([updatedNode]);
+    },
+    [node]
+  );
+
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!isInitialized) {
+      setIsInitialized(true);
+      return;
+    }
+  }, []);
+
+  const handleOptionKeyChange = useCallback((index: number, newKey: string) => {
+    setLocalOptions((prev) =>
+      prev.map((opt, idx) => (idx === index ? { ...opt, key: newKey, isDirty: true } : opt))
+    );
+  }, []);
+
+  const handleOptionKeyBlur = useCallback(
+    (index: number) => {
+      if (!isInitialized) return;
+
+      setLocalOptions((prev) => {
+        const updated = prev.map((opt, idx) => (idx === index ? { ...opt, isDirty: false } : opt));
+        const payload = updated.reduce(
+          (acc, { key, value }) => {
+            if (key.trim()) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+        updateStore(localTarget, payload);
+        return updated;
+      });
+    },
+    [isInitialized, localTarget, updateStore]
+  );
+
+  const handleOptionValueChange = useCallback(
+    (index: number, newValue: string) => {
+      if (!isInitialized) return;
+      setLocalOptions((prev) =>
+        prev.map((opt, idx) => (idx === index ? { ...opt, value: newValue, isDirty: true } : opt))
+      );
+    },
+    [isInitialized]
+  );
+
+  const handleOptionValueBlur = useCallback(
+    (index: number) => {
+      if (!isInitialized) return;
+
+      setLocalOptions((prev) => {
+        const updated = prev.map((opt, idx) => (idx === index ? { ...opt, isDirty: false } : opt));
+        const payload = updated.reduce(
+          (acc, { key, value }) => {
+            if (key.trim()) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+        updateStore(localTarget, payload);
+        return updated;
+      });
+    },
+    [isInitialized, localTarget, updateStore]
+  );
+
+  const toggleBooleanOption = useCallback(
+    (index: number) => {
+      if (!isInitialized) return;
+
+      setLocalOptions((prev) => {
+        const updated = prev.map((opt, idx) =>
+          idx === index ? { ...opt, value: opt.value === "true" ? "false" : "true" } : opt
+        );
+        const payload = updated.reduce(
+          (acc, { key, value }) => {
+            if (key.trim()) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+        updateStore(localTarget, payload);
+        return updated;
+      });
+    },
+    [isInitialized, localTarget, updateStore]
+  );
+
+  const addOption = useCallback(() => {
+    setLocalOptions((prev) => [
+      ...prev,
+      { key: `newOption${prev.length + 1}`, value: "", isDirty: false },
+    ]);
+  }, []);
+
+  const removeOption = useCallback(
+    (index: number) => {
+      if (!isInitialized) return;
+
+      setLocalOptions((prev) => {
+        const updated = prev.filter((_, idx) => idx !== index);
+        const payload = updated.reduce(
+          (acc, { key, value }) => {
+            if (key.trim()) {
+              acc[key] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+        updateStore(localTarget, payload);
+        return updated;
+      });
+    },
+    [isInitialized, localTarget, updateStore]
   );
 
   const filteredCodeHooks =
@@ -33,82 +192,22 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
 
   const isValidCodeHook = availableCodeHooks.includes(localTarget);
 
-  // Update node in store
-  const updateNode = useCallback(
-    (newTarget: string, newOptions: Record<string, string>) => {
-      const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const paneNode = cloneDeep(allNodes.get(node.id)) as PaneNode;
-      if (!paneNode) return;
-      const updatedNode = {
-        ...paneNode,
-        codeHookTarget: newTarget,
-        codeHookPayload: newOptions,
-        isChanged: true,
-      };
-      ctx.modifyNodes([updatedNode]);
-    },
-    [node]
-  );
+  const handleTargetChange = (value: string) => {
+    if (!isInitialized) return;
+    setLocalTarget(value);
 
-  const handleOptionValueChange = useCallback(
-    (key: string, newValue: string) => {
-      setLocalOptions((prev) => {
-        const updated = { ...prev, [key]: newValue };
-        updateNode(localTarget, updated);
-        return updated;
-      });
-    },
-    [localTarget, updateNode]
-  );
+    const payload = localOptions.reduce(
+      (acc, { key, value }) => {
+        if (key.trim()) {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, string>
+    );
 
-  const handleOptionKeyChange = useCallback(
-    (oldKey: string, newKey: string) => {
-      if (newKey.trim() === "") return;
-
-      setLocalOptions((prev) => {
-        const updated = { ...prev };
-        delete updated[oldKey];
-        updated[newKey] = prev[oldKey];
-        updateNode(localTarget, updated);
-        return updated;
-      });
-    },
-    [localTarget, updateNode]
-  );
-
-  const toggleBooleanOption = useCallback(
-    (key: string) => {
-      setLocalOptions((prev) => {
-        const updated = { ...prev };
-        updated[key] = updated[key] === "true" ? "false" : "true";
-        updateNode(localTarget, updated);
-        return updated;
-      });
-    },
-    [localTarget, updateNode]
-  );
-
-  const addOption = useCallback(() => {
-    setLocalOptions((prev) => {
-      const newKey = `newOption${Object.keys(prev).length + 1}`;
-      const updated = { ...prev, [newKey]: "" };
-      updateNode(localTarget, updated);
-      return updated;
-    });
-  }, [localTarget, updateNode]);
-
-  const removeOption = useCallback(
-    (key: string) => {
-      setLocalOptions((prev) => {
-        const updated = { ...prev };
-        delete updated[key];
-        updateNode(localTarget, updated);
-        return updated;
-      });
-    },
-    [localTarget, updateNode]
-  );
+    updateStore(value, payload);
+  };
 
   const handleCancel = () => {
     settingsPanelStore.set({
@@ -123,6 +222,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
 
   return (
     <div className="space-y-4">
+      {/* Header section */}
       <div className="flex flex-row flex-nowrap justify-between">
         <h2 className="text-xl font-bold">Code Hook Settings</h2>
         <button
@@ -135,16 +235,11 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
       </div>
 
       <div className="space-y-4">
+        {/* Target ComboBox */}
         <div>
           <label className="block text-sm text-mydarkgrey">Target</label>
           <div className="relative mt-1">
-            <Combobox
-              value={localTarget}
-              onChange={(value) => {
-                setLocalTarget(value);
-                updateNode(value, localOptions);
-              }}
-            >
+            <Combobox value={localTarget} onChange={handleTargetChange}>
               <div className="relative">
                 <Combobox.Input
                   className={commonInputClass}
@@ -203,44 +298,45 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
           )}
         </div>
 
+        {/* Options section */}
         <div>
           <label className="block text-sm text-mydarkgrey">Options</label>
-          {Object.entries(localOptions).map(([key, value]) => (
-            <div key={key} className="flex items-center space-x-2 mt-2">
+          {localOptions.map((option, index) => (
+            <div key={index} className="flex items-center space-x-2 mt-2">
               <input
                 type="text"
-                value={key}
-                onChange={(e) => handleOptionKeyChange(key, e.target.value)}
-                onBlur={(e) => handleOptionKeyChange(key, e.target.value)}
+                value={option.key}
+                onChange={(e) => handleOptionKeyChange(index, e.target.value)}
+                onBlur={() => handleOptionKeyBlur(index)}
                 placeholder="Key"
                 className={`w-1/3 ${commonInputClass}`}
               />
-              {value === "true" || value === "false" ? (
+              {option.value === "true" || option.value === "false" ? (
                 <Switch
-                  checked={value === "true"}
-                  onChange={() => toggleBooleanOption(key)}
+                  checked={option.value === "true"}
+                  onChange={() => toggleBooleanOption(index)}
                   className={`${
-                    value === "true" ? "bg-myorange" : "bg-mydarkgrey"
+                    option.value === "true" ? "bg-myorange" : "bg-mydarkgrey"
                   } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`}
                 >
                   <span
                     className={`${
-                      value === "true" ? "translate-x-6" : "translate-x-1"
+                      option.value === "true" ? "translate-x-6" : "translate-x-1"
                     } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                   />
                 </Switch>
               ) : (
                 <input
                   type="text"
-                  value={value}
-                  onChange={(e) => handleOptionValueChange(key, e.target.value)}
-                  onBlur={(e) => handleOptionValueChange(key, e.target.value)}
+                  value={option.value}
+                  onChange={(e) => handleOptionValueChange(index, e.target.value)}
+                  onBlur={() => handleOptionValueBlur(index)}
                   placeholder="Value"
                   className={`w-1/2 ${commonInputClass}`}
                 />
               )}
               <button
-                onClick={() => removeOption(key)}
+                onClick={() => removeOption(index)}
                 className="text-myorange hover:text-black"
                 title="Remove option"
               >

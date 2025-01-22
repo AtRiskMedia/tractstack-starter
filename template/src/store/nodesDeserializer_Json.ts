@@ -86,20 +86,36 @@ export class NodesDeserializer_Json implements NodesDeserializer {
   processPaneRowData(rowData: PaneRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
     if (typeof loadData.paneNodes === `undefined`) loadData.paneNodes = [] as PaneNode[];
+
     const optionsPayload = JSON.parse(rowData.options_payload);
+
+    // Extract nodes and beliefs from options payload
     const childNodes = optionsPayload.nodes || [];
     const heldBeliefs =
       typeof optionsPayload.heldBeliefs !== `undefined` ? optionsPayload.heldBeliefs : null;
     const withheldBeliefs =
       typeof optionsPayload.withheldBeliefs !== `undefined` ? optionsPayload.withheldBeliefs : null;
-    if (typeof optionsPayload.nodes !== `undefined`) delete optionsPayload.nodes;
-    if (typeof optionsPayload.heldBeliefs !== `undefined`) delete optionsPayload.heldBeliefs;
-    if (typeof optionsPayload.withheldBeliefs !== `undefined`)
-      delete optionsPayload.withheldBeliefs;
+
+    // Extract codeHook related fields
+    const codeHookTarget =
+      typeof optionsPayload.codeHookTarget === "string" ? optionsPayload.codeHookTarget : null;
+    const codeHookPayload =
+      typeof optionsPayload.codeHookPayload === "object" ? optionsPayload.codeHookPayload : null;
+
+    // Clean up processed fields from optionsPayload
+    ["nodes", "heldBeliefs", "withheldBeliefs", "codeHookTarget", "codeHookPayload"].forEach(
+      (field) => {
+        if (typeof optionsPayload[field] !== `undefined`) delete optionsPayload[field];
+      }
+    );
+
+    // Update childNodes in loadData
     loadData.childNodes = [
       ...(loadData?.childNodes ? [...loadData.childNodes] : []),
       ...childNodes,
     ];
+
+    // Build and push the pane node
     loadData.paneNodes.push({
       id: rowData.id,
       title: rowData.title,
@@ -121,6 +137,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       ...(typeof optionsPayload.bgColour === `string` ? { bgColour: optionsPayload.bgColour } : {}),
       ...(heldBeliefs ? { heldBeliefs } : {}),
       ...(withheldBeliefs ? { withheldBeliefs } : {}),
+      ...(codeHookTarget ? { codeHookTarget } : {}),
+      ...(codeHookPayload ? { codeHookPayload } : {}),
     });
   }
 

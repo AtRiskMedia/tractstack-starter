@@ -18,6 +18,7 @@ export enum PaneMode {
   SLUG = "SLUG",
   PATH = "PATH",
   IMPRESSION = "IMPRESSION",
+  CODEHOOK = "CODEHOOK",
 }
 
 interface ConfigPanePanelProps {

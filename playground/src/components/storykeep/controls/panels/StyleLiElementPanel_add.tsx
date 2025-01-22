@@ -4,11 +4,10 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
-import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { tailwindClasses } from "@/utils/tailwind/tailwindClasses.ts";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
-import { cloneDeep } from "@/utils/common/helpers.ts";
+import type { FlatNode } from "@/types.ts";
 
 // Recommended styles for list items
 const LIST_ITEM_STYLES = [
@@ -109,50 +108,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
 
   const handleSelect = useCallback(
     (styleKey: string) => {
-      setSelectedStyle(styleKey);
-
-      const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-
-      const elementNode = allNodes.get(targetNodeId) as FlatNode;
-      const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
-
-      if (!elementNode || !markdownNode) return;
-
-      // Initialize default classes if they don't exist
-      if (!markdownNode.defaultClasses) {
-        markdownNode.defaultClasses = {};
-      }
-      if (!markdownNode.defaultClasses[elementNode.tagName]) {
-        markdownNode.defaultClasses[elementNode.tagName] = {
-          mobile: {},
-          tablet: {},
-          desktop: {},
-        };
-      }
-
-      // Add the new style with empty values
-      markdownNode.defaultClasses[elementNode.tagName].mobile[styleKey] = "";
-      markdownNode.defaultClasses[elementNode.tagName].tablet[styleKey] = "";
-      markdownNode.defaultClasses[elementNode.tagName].desktop[styleKey] = "";
-
-      // Update the nodes in the store
-      ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-
-      // Switch to the update panel for the newly added style
-      settingsPanelStore.set({
-        action: isContainer ? "style-li-container-update" : "style-li-element-update",
-        nodeId: targetNodeId,
-        childId: isContainer ? childId : undefined,
-        className: styleKey,
-        expanded: true,
-      });
-    },
-    [targetNodeId, parentNode, isContainer, childId]
-  );
-
-  const handleStyleClick = useCallback(
-    (styleKey: string) => {
+      setSelectedStyle(null);
       settingsPanelStore.set({
         action: isContainer ? "style-li-container-update" : "style-li-element-update",
         nodeId: targetNodeId,
@@ -259,7 +215,7 @@ const StyleLiElementAddPanel = ({ node, parentNode, childId }: BasePanelProps) =
             {availableRecommendedStyles.map((style) => (
               <button
                 key={style.key}
-                onClick={() => handleStyleClick(style.key)}
+                onClick={() => handleSelect(style.key)}
                 className="inline-flex items-center px-3 py-2 rounded-md text-sm
                          bg-slate-50 hover:bg-mygreen/20 text-black
                          transition-colors duration-200"

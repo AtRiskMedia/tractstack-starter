@@ -7,8 +7,6 @@ import { getCtx } from "@/store/nodes";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { MarkdownPaneFragmentNode } from "../../../../types";
-import { cloneDeep } from "@/utils/common/helpers.ts";
 
 // Recommended styles for widget containers (li)
 const CONTAINER_STYLES = [
@@ -111,53 +109,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
 
   const handleSelect = useCallback(
     (styleKey: string) => {
-      setSelectedStyle(styleKey);
-
-      const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-      const markdownNode = cloneDeep(allNodes.get(parentNode.id) as MarkdownPaneFragmentNode);
-
-      if (!markdownNode) return;
-
-      // Initialize default classes if they don't exist
-      if (!markdownNode.defaultClasses) {
-        markdownNode.defaultClasses = {};
-      }
-      if (!markdownNode.defaultClasses[node.tagName]) {
-        markdownNode.defaultClasses[node.tagName] = {
-          mobile: {},
-          tablet: {},
-          desktop: {},
-        };
-      }
-
-      // Add the new style with empty values
-      markdownNode.defaultClasses[node.tagName].mobile[styleKey] = "";
-      markdownNode.defaultClasses[node.tagName].tablet[styleKey] = "";
-      markdownNode.defaultClasses[node.tagName].desktop[styleKey] = "";
-
-      ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-
-      // When selecting styles for container/outer container, keep childId for context
-      const nextAction = {
-        action: isOuterContainer
-          ? "style-code-outer-update"
-          : isContainer
-            ? "style-code-container-update"
-            : "style-code-update",
-        nodeId: node.id,
-        childId, // Preserve childId for container context
-        className: styleKey,
-        expanded: true,
-      };
-
-      settingsPanelStore.set(nextAction);
-    },
-    [node, childId, isOuterContainer, isContainer, isWidget, parentNode]
-  );
-
-  const handleStyleClick = useCallback(
-    (styleKey: string) => {
+      setSelectedStyle(styleKey)
       settingsPanelStore.set({
         action: isOuterContainer
           ? "style-code-outer-update"
@@ -275,7 +227,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
             {availableRecommendedStyles.map((style) => (
               <button
                 key={style.key}
-                onClick={() => handleStyleClick(style.key)}
+                onClick={() => handleSelect(style.key)}
                 className="inline-flex items-center px-3 py-2 rounded-md text-sm
                          bg-slate-50 hover:bg-mygreen/20 text-black
                          transition-colors duration-200"

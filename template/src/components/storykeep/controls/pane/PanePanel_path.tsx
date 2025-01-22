@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { ulid } from "ulid";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneMode } from "./ConfigPanePanel";
 import { cloneDeep } from "@/utils/common/helpers.ts";
@@ -150,7 +151,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
 
   if (isCreatingBelief) {
     const emptyBelief: BeliefNode = {
-      id: crypto.randomUUID(),
+      id: ulid(),
       nodeType: "Belief",
       parentId: null,
       title: "",

@@ -5,7 +5,8 @@ import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { type JSX, useEffect, useRef, useState, createElement } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
-import type { FlatNode } from "@/types.ts";
+import { cloneDeep } from "@/utils/common/helpers.ts";
+import type { FlatNode, PaneNode } from "@/types.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
@@ -102,19 +103,43 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       });
 
       getCtx(props).addNodes(textToNodes);
-      getCtx(props).nodeToNotify(nodeId, "Pane");
+      const paneNodeId = getCtx(props).nodeToNotify(nodeId, `TagElement`);
+      if (paneNodeId) {
+        const paneNode = {
+          ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
+          isChanged: true,
+        } as PaneNode;
+        getCtx(props).modifyNodes([paneNode]);
+      }
+      //getCtx(props).nodeToNotify(nodeId, "Pane");
 
       getCtx(props).history.addPatch({
         op: PatchOp.REMOVE,
         undo: (ctx) => {
           ctx.deleteChildren(nodeId);
           ctx.addNodes(deletedNodes);
-          ctx.nodeToNotify(nodeId, "Pane");
+          const paneNodeId = getCtx(props).nodeToNotify(nodeId, `TagElement`);
+          if (paneNodeId) {
+            const paneNode = {
+              ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
+              isChanged: true,
+            } as PaneNode;
+            getCtx(props).modifyNodes([paneNode]);
+          }
+          //ctx.nodeToNotify(nodeId, "Pane");
         },
         redo: (ctx) => {
           ctx.deleteChildren(nodeId);
           ctx.addNodes(textToNodes);
-          ctx.nodeToNotify(nodeId, "Pane");
+          const paneNodeId = getCtx(props).nodeToNotify(nodeId, `TagElement`);
+          if (paneNodeId) {
+            const paneNode = {
+              ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
+              isChanged: true,
+            } as PaneNode;
+            getCtx(props).modifyNodes([paneNode]);
+          }
+          //ctx.nodeToNotify(nodeId, "Pane");
         },
       });
     }

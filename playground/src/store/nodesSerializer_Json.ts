@@ -295,6 +295,7 @@ export class NodesSerializer_Json extends NodesSerializer {
 
     ctx.clearUndoHistory();
     const dirtyNodes = ctx.getDirtyNodes();
+    console.log(`dirtyNodes to process`, dirtyNodes);
 
     // 1. Process TractStack nodes first (required by storyfragments)
     const tractStackNodes = dirtyNodes.filter(

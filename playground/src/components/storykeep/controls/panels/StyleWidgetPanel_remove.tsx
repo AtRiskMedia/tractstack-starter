@@ -1,9 +1,9 @@
 import type { BasePanelProps } from "../SettingsPanel";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
-import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import type { FlatNode } from "../../../../types";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { tailwindClasses } from "@/utils/tailwind/tailwindClasses.ts";
+import type { FlatNode } from "@/types.ts";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePanelProps) => {
@@ -39,12 +39,13 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
     const allNodes = ctx.allNodes.get();
 
     const targetNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+    const deepParentClone = cloneDeep(parentNode);
 
     if (!targetNode) return;
 
     // Remove from defaultClasses if present
-    if (parentNode.defaultClasses?.[targetNode.tagName]) {
-      const defaultClasses = parentNode.defaultClasses[targetNode.tagName];
+    if (deepParentClone.defaultClasses?.[targetNode.tagName]) {
+      const defaultClasses = deepParentClone.defaultClasses[targetNode.tagName];
       if (className in defaultClasses.mobile) delete defaultClasses.mobile[className];
       if (className in defaultClasses.tablet) delete defaultClasses.tablet[className];
       if (className in defaultClasses.desktop) delete defaultClasses.desktop[className];
@@ -82,7 +83,6 @@ const StyleWidgetRemovePanel = ({ node, parentNode, className, childId }: BasePa
         delete targetNode.overrideClasses;
       }
     }
-    const deepParentClone = cloneDeep(parentNode);
     ctx.modifyNodes([
       { ...targetNode, isChanged: true },
       { ...deepParentClone, isChanged: true },
