@@ -96,7 +96,6 @@ const getFilteredStyles = (showAdvanced: boolean, existingClasses: Set<string>) 
 };
 
 const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
-  console.log(node, parentNode);
   const [query, setQuery] = useState("");
   const showAdvanced = false;
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
