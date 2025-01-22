@@ -104,8 +104,8 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
   };
 
   const iconClassName =
-    "w-6 h-6 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white";
-  const iconActiveClassName = "-rotate-6 w-6 h-6 text-white rounded bg-myblue p-0.5";
+    "w-8 h-8 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white p-1";
+  const iconActiveClassName = "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1";
 
   // Only render viewport selector after mounting to avoid hydration mismatch
   const viewportSelectorContent = mounted ? (
