@@ -37,11 +37,11 @@ export const toolModes = [
     Icon: Cog8ToothIcon,
     title: "Edit settings",
   },
-  {
-    key: "layout" as const,
-    Icon: PuzzlePieceIcon,
-    title: "Auto-layout design",
-  },
+  //{
+  //  key: "layout" as const,
+  //  Icon: PuzzlePieceIcon,
+  //  title: "Auto-layout design",
+  //},
   //{
   //  key: "markdown" as const,
   //  Icon: BoltIcon,
