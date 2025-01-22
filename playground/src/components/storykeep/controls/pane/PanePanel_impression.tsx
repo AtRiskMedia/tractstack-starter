@@ -7,6 +7,7 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ActionBuilderField from "../fields/ActionBuilderField";
 import { contentMap } from "@/store/events";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { GOTO_TARGETS } from "@/constants";
 import { type Dispatch, type SetStateAction } from "react";
 import type { ImpressionNode, PaneNode } from "@/types";
 
@@ -15,12 +16,52 @@ interface PaneImpressionPanelProps {
   setMode: Dispatch<SetStateAction<PaneMode>>;
 }
 
+const validateGotoAction = (value: string): boolean => {
+  if (!value.startsWith("(goto (")) return false;
+
+  try {
+    const match = value.match(/\(goto\s+\(([^)]+)\)/);
+    if (!match) return false;
+
+    const parts = match[1].split(" ").filter(Boolean);
+    if (parts.length === 0) return false;
+
+    const target = parts[0];
+    const targetConfig = GOTO_TARGETS[target];
+    if (!targetConfig) return false;
+
+    // For targets with subcommands
+    if (targetConfig.subcommands) {
+      if (parts.length < 2) return false;
+      return targetConfig.subcommands.includes(parts[1]);
+    }
+
+    // For targets requiring parameters
+    if (targetConfig.requiresParam) {
+      if (parts.length < 2) return false;
+
+      // For targets requiring two parameters
+      if (targetConfig.requiresSecondParam) {
+        return parts.length >= 3;
+      }
+
+      return true;
+    }
+
+    // For simple targets (like 'home')
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
 const validateImpression = (impression: Partial<ImpressionNode>): boolean => {
   return !!(
     impression.title?.trim() &&
     impression.body?.trim() &&
     impression.buttonText?.trim() &&
-    impression.actionsLisp?.trim()
+    impression.actionsLisp?.trim() &&
+    validateGotoAction(impression.actionsLisp.trim())
   );
 };
 
@@ -183,7 +224,9 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
                 <span>Valid impression configuration</span>
               </div>
             ) : (
-              <div className="text-mydarkgrey">All fields are required to create an impression</div>
+              <div className="text-mydarkgrey">
+                All fields are required and action must be fully configured
+              </div>
             )}
           </div>
 

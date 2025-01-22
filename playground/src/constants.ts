@@ -312,9 +312,8 @@ export const GOTO_TARGETS: GotoTargets = {
   },
   concierge: {
     name: "Concierge",
-    requiresParam: true,
-    paramLabel: "Concierge Slug",
-    description: "Navigate to a concierge page",
+    subcommands: ["profile"],
+    description: "Navigate to concierge sections",
   },
   context: {
     name: "Context",
