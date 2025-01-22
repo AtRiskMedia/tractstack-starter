@@ -30,18 +30,30 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
 
   const handleInsertAbove = (e: MouseEvent) => {
     e.stopPropagation();
-    console.log(`above`);
     const templateNode = getTemplateNode(toolAddModeStore.get().value);
-
-    getCtx(props).addTemplateNode(props.nodeId, templateNode, props.nodeId, "before");
+    const newNodeId = getCtx(props).addTemplateNode(
+      props.nodeId,
+      templateNode,
+      props.nodeId,
+      "before"
+    );
+    if (newNodeId && templateNode.tagName) handleInsertSignal(templateNode.tagName, newNodeId);
   };
 
   const handleInsertBelow = (e: MouseEvent) => {
     e.stopPropagation();
-    console.log(`below`);
     const templateNode = getTemplateNode(toolAddModeStore.get().value);
+    const newNodeId = getCtx(props).addTemplateNode(
+      props.nodeId,
+      templateNode,
+      props.nodeId,
+      "after"
+    );
+    if (newNodeId && templateNode.tagName) handleInsertSignal(templateNode.tagName, newNodeId);
+  };
 
-    getCtx(props).addTemplateNode(props.nodeId, templateNode, props.nodeId, "after");
+  const handleInsertSignal = (tagName: string, nodeId: string) => {
+    console.log(`new node added *trigger a signal?`, tagName, nodeId);
   };
 
   const handleClickIntercept = (e: MouseEvent) => {

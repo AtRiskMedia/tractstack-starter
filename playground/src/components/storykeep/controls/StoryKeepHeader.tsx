@@ -84,7 +84,9 @@ const StoryKeepHeader = (props: { keyboardAccessibleEnabled: boolean; nodeId: st
   };
 
   const showDebugPanel = () => {
-    settingsPanelStore.set({ nodeId: ``, action: `debug` });
+    getCtx().toolModeValStore.set({ value: "default" });
+    settingsPanelStore.set({ nodeId: ``, action: `debug`, expanded: true });
+    getCtx().notifyNode(`root`);
   };
 
   const handleSave = () => {

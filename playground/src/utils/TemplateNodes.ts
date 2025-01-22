@@ -58,10 +58,8 @@ export const TemplateAsideNode = {
 export const TemplateImgNode = {
   nodeType: "TagElement",
   tagName: "img",
-  src: "/images/2024-11/rBOU0YdIVX_600px.webp",
-  srcSet:
-    "/images/2024-11/rBOU0YdIVX_600px.webp 600w, /images/2024-11/rBOU0YdIVX_1080px.webp 1080w, /images/2024-11/rBOU0YdIVX_1920px.webp 1920w",
-  alt: "Screenshot of engagement analytics",
+  src: "/static.jpg",
+  alt: "New image coming soon!",
 } as TemplateNode;
 
 export const TemplateYoutubeNode = {

@@ -919,13 +919,13 @@ export class NodesContext {
     node: TemplateNode,
     insertNodeId?: string,
     location?: "before" | "after"
-  ) {
+  ): string | null {
     const targetNode = this.allNodes.get().get(targetId) as BaseNode;
     if (
       !targetNode ||
       (targetNode.nodeType !== "Markdown" && targetNode.nodeType !== "TagElement")
     ) {
-      return;
+      return null;
     }
 
     let closestListNode = "";
@@ -951,17 +951,23 @@ export class NodesContext {
       redo: (ctx) => ctx.addNodes(flattenedNodes),
     });
 
+    let newNodeId;
     const parentNodes = this.parentNodes.get().get(parentId);
     // now grab parent nodes, check if we have inner node
     if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
       const newNode = parentNodes.splice(parentNodes.indexOf(duplicatedNodes.id, 1));
+      newNodeId = newNode.at(0);
       if (location === "before") {
         parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), newNode);
       } else {
         parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), newNode);
       }
     }
-    this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
+    if (newNodeId) {
+      this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
+      return newNodeId;
+    }
+    return null;
   }
 
   setupTemplateNodeRecursively(node: TemplateNode, parentId: string) {

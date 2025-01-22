@@ -64,6 +64,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     return () => unsubscribe();
   }, []);
 
+  const handleInsertSignal = (tagName: string, nodeId: string) => {
+    console.log(`new link added *trigger a signal?`, tagName, nodeId);
+  };
+
   const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
     function reset() {
       wasFocused.current = false;
@@ -99,6 +103,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         const foundNode = originalLinksStyles.find((x) => x.href === node.href);
         if (foundNode) {
           node.buttonPayload = foundNode.buttonPayload;
+        } else if ([`a`, `button`].includes(node.tagName)) {
+          handleInsertSignal(node.tagName, node.id);
+          console.log(node);
         }
       });
 
