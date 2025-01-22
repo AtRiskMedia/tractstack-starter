@@ -109,7 +109,7 @@ const StyleWidgetPanelAdd = ({ node, parentNode, childId }: BasePanelProps) => {
 
   const handleSelect = useCallback(
     (styleKey: string) => {
-      setSelectedStyle(styleKey)
+      setSelectedStyle(styleKey);
       settingsPanelStore.set({
         action: isOuterContainer
           ? "style-code-outer-update"

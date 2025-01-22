@@ -105,6 +105,26 @@ export class NodesContext {
     this.clickedParentLayer.set(layer);
   }
 
+  handleEraseEvent(nodeId: string) {
+    const node = this.allNodes.get().get(nodeId) as FlatNode;
+    if (!node) return;
+    switch (node.nodeType) {
+      case `Pane`:
+        const storyfragmentNodeId = this.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+        const storyfragmentNode = cloneDeep(
+          this.allNodes.get().get(storyfragmentNodeId)
+        ) as StoryFragmentNode;
+        this.modifyNodes([{ ...storyfragmentNode, isChanged: true }]);
+        break;
+      case `TagElement`:
+        const paneNodeId = this.getClosestNodeTypeFromId(nodeId, "Pane");
+        const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+        this.modifyNodes([{ ...paneNode, isChanged: true }]);
+        break;
+      default:
+    }
+  }
+
   handleClickEvent(dblClick: boolean = false) {
     const toolModeVal = this.toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
@@ -116,10 +136,10 @@ export class NodesContext {
         handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         break;
       case `eraser`:
+        this.handleEraseEvent(node.id);
         this.deleteNode(node.id);
         break;
       default:
-      //console.log(`this mode isn't wired up yet`, toolModeVal);
     }
     // reset on parentLayer
     this.setClickedParentLayer(null);
@@ -654,10 +674,8 @@ export class NodesContext {
   }
 
   modifyNodes(newData: BaseNode[]) {
-    console.log(`modifyNodes`, newData);
-    // all nodes are the same, skip
+    // if all nodes are the same, skip
     if (!this.checkAnyNodeDifferent(newData)) return;
-    console.log(`modifying...`);
 
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
@@ -676,17 +694,19 @@ export class NodesContext {
         case `TagElement`:
         case `BgPane`:
         case `Markdown`:
-          console.log(`must dirty Pane`);
+          const paneNodeId = this.getClosestNodeTypeFromId(node.id, "Pane");
+          const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+          this.modifyNodes([{ ...paneNode, isChanged: true }]);
           break;
 
         case `Menu`:
         case `Pane`:
         case `StoryFragment`:
-          // do nothing
+          // do nothing *already set isChanged
           break;
 
         default:
-          console.log(`missed on `, node.nodeType);
+          console.log(`must dirty check missed on `, node.nodeType);
       }
 
       const newNodes = new Map(this.allNodes.get());

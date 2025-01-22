@@ -67,8 +67,9 @@ const getPanel = (
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownNode = childNodes.find((node) => node.nodeType === "Markdown");
-  console.log(action);
+
   if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
+
   switch (action) {
     case "debug":
       return <DebugPanel />;
@@ -313,7 +314,6 @@ const SettingsPanel = ({
   const effectiveExpanded = shouldRespectCollapse ? signal?.expanded : true;
 
   if (!signal) return null;
-  console.log(signal);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
