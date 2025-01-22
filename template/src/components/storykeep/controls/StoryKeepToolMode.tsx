@@ -4,7 +4,7 @@ import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
 import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
+//import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 //import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import { useStore } from "@nanostores/react";
 import { settingsPanelStore } from "@/store/storykeep.ts";

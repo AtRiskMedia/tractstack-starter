@@ -78,7 +78,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.SLUG) {
-    return <StoryFragmentSlugPanel nodeId={nodeId} setMode={setMode} />;
+    return <StoryFragmentSlugPanel nodeId={nodeId} setMode={setMode} config={config!} />;
   } else if (mode === StoryFragmentMode.MENU) {
     return <StoryFragmentMenuPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.OG) {

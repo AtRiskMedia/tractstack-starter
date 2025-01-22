@@ -1,8 +1,8 @@
 # Tract Stack
 
-no-code website builder and content marketing platform
+free web press
 
-made by [At Risk Media](https://atriskmedia.com)
+by [At Risk Media](https://atriskmedia.com)
 
 ## Try Tract Stack
 

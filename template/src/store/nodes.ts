@@ -37,6 +37,7 @@ import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/
 import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import allowInsert from "@/utils/nodes/allowInsert.ts";
+import { reservedSlugs } from "@/constants.ts";
 import { NodesHistory, PatchOp } from "@/store/nodesHistory.ts";
 import { moveNodeAtLocationInContext } from "@/utils/common/nodesHelper.ts";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
@@ -1170,6 +1171,61 @@ export class NodesContext {
       }
     });
     return result;
+  }
+
+  isSlugValid(slug: string, currentNodeId?: string): { isValid: boolean; error?: string } {
+    // Early validation for empty slugs
+    if (!slug || slug.length < 3) {
+      return { isValid: false, error: "Slug must be at least 3 characters" };
+    }
+    // Check against reserved slugs
+    if (reservedSlugs.includes(slug)) {
+      return { isValid: false, error: "This URL is reserved and cannot be used" };
+    }
+    // Check if slug contains only valid characters (alphanumeric, hyphens)
+    const validSlugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+    if (!validSlugPattern.test(slug)) {
+      return {
+        isValid: false,
+        error: "Slug can only contain lowercase letters, numbers, and hyphens",
+      };
+    }
+    // Check for duplicate slugs
+    const nodes = Array.from(this.allNodes.get().values());
+    const duplicateNode = nodes.find(
+      (node) =>
+        (node.nodeType === "StoryFragment" || node.nodeType === "Pane") &&
+        "slug" in node &&
+        node.slug === slug &&
+        node.id !== currentNodeId
+    );
+    if (duplicateNode) {
+      return {
+        isValid: false,
+        error: `This URL is already in use by ${duplicateNode.nodeType === "Pane" ? "pane" : "page"}: ${(duplicateNode as any).title}`,
+      };
+    }
+    return { isValid: true };
+  }
+
+  generateValidSlug(title: string, currentNodeId?: string): string {
+    // Convert title to lowercase and replace spaces/special chars with hyphens
+    let slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    // If the base slug is already valid and unique, use it
+    if (this.isSlugValid(slug, currentNodeId)) {
+      return slug;
+    }
+    // Otherwise, append numbers until we find a unique slug
+    let counter = 1;
+    let newSlug = slug;
+    while (!this.isSlugValid(newSlug, currentNodeId)) {
+      newSlug = `${slug}-${counter}`;
+      counter++;
+    }
+    return newSlug;
   }
 
   private deleteNodes(nodesList: BaseNode[]): BaseNode[] {

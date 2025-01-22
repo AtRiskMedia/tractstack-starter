@@ -17,6 +17,8 @@ const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [canSave, setCanSave] = useState(false);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
@@ -26,37 +28,66 @@ const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
   useEffect(() => {
     setSlug(paneNode.slug);
     setCharCount(paneNode.slug.length);
+    checkLiveValidity(paneNode.slug);
   }, [paneNode.slug]);
 
-  const validateSlug = (value: string): string => {
-    // Convert to lowercase and replace spaces with hyphens
-    return (
-      value
-        .toLowerCase()
-        // Replace spaces and underscores with hyphens
-        .replace(/[\s_]+/g, "-")
-        // Remove any characters that aren't alphanumeric or hyphens
-        .replace(/[^a-z0-9-]/g, "")
-    );
-    // Replace multiple consecutive hyphens with a single hyphen
-    //.replace(/-+/g, '-')
-    // Remove hyphens from start and end
-    //.replace(/^-+|-+$/g, '');
+  // More permissive validation for typing
+  const checkLiveValidity = (value: string) => {
+    const length = value.length;
+    setCharCount(length);
+
+    // Basic format check for allowed characters
+    if (!/^[a-z0-9-]*$/.test(value)) {
+      setValidationError("Only lowercase letters, numbers, and hyphens allowed");
+      setIsValid(false);
+      setCanSave(false);
+      return false;
+    }
+
+    // Length checks
+    setIsValid(length >= 3 && length <= 40);
+    setWarning(length > 40 && length <= 50);
+    setValidationError(null);
+
+    // Check if we can save
+    if (length >= 3) {
+      const saveValidation = checkSaveValidity(value);
+      setCanSave(saveValidation.isValid);
+      if (!saveValidation.isValid) {
+        setValidationError(saveValidation.error || null);
+      }
+    } else {
+      setCanSave(false);
+    }
+
+    return true;
+  };
+
+  // Strict validation for saving
+  const checkSaveValidity = (value: string): { isValid: boolean; error?: string } => {
+    // Strict pattern that prevents leading/trailing hyphens and multiple consecutive hyphens
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
+      return {
+        isValid: false,
+        error: "Slug must start and end with letters or numbers, and no consecutive hyphens",
+      };
+    }
+
+    // Check duplicates and reserved slugs
+    return ctx.isSlugValid(value, nodeId);
   };
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSlug = validateSlug(e.target.value);
+    const newSlug = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+
     if (newSlug.length <= 50) {
       setSlug(newSlug);
-      setCharCount(newSlug.length);
-      setIsValid(newSlug.length >= 3 && newSlug.length <= 40);
-      setWarning(newSlug.length > 40 && newSlug.length <= 50);
+      checkLiveValidity(newSlug);
     }
   };
 
   const handleSlugBlur = () => {
-    if (slug.length >= 3) {
-      // Only update if meets minimum length
+    if (canSave) {
       const ctx = getCtx();
       const updatedNode = { ...cloneDeep(paneNode), slug, isChanged: true };
       ctx.modifyNodes([updatedNode]);
@@ -83,55 +114,82 @@ const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
             onChange={handleSlugChange}
             onBlur={handleSlugBlur}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
-              charCount < 3
+              validationError || charCount < 3
                 ? "border-red-500 bg-red-50"
-                : isValid
+                : isValid && canSave
                   ? "border-green-500 bg-green-50"
                   : warning
                     ? "border-yellow-500 bg-yellow-50"
                     : "border-gray-300"
             }`}
-            placeholder="Enter URL slug (3-60 characters recommended)"
+            placeholder="Enter pane slug (3-40 characters recommended)"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {charCount < 3 ? (
+            {validationError || charCount < 3 ? (
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
-            ) : isValid ? (
+            ) : isValid && canSave ? (
               <CheckIcon className="h-5 w-5 text-green-500" />
             ) : warning ? (
               <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
             ) : null}
             <span
               className={`text-sm ${
-                charCount < 3
+                validationError || charCount < 3
                   ? "text-red-500"
-                  : isValid
+                  : isValid && canSave
                     ? "text-green-500"
                     : warning
                       ? "text-yellow-500"
                       : "text-gray-500"
               }`}
             >
-              {charCount}/75
+              {charCount}/50
             </span>
           </div>
         </div>
+        {validationError && (
+          <div className="mt-2 text-sm text-red-600">
+            <ExclamationTriangleIcon className="h-4 w-4 inline mr-1" />
+            {validationError}
+          </div>
+        )}
         <div className="mt-4 text-lg space-y-4">
-          <div className="text-gray-600">This is solely used for analytics!</div>
+          <div className="text-gray-600">
+            This is solely used for analytics!
+            <ul className="ml-4 mt-1">
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Keep it concise and descriptive
+              </li>
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Use lowercase letters and numbers
+              </li>
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Use hyphens between words
+              </li>
+              <li>
+                <CheckIcon className="h-4 w-4 inline" /> Must start and end with a letter or number
+              </li>
+            </ul>
+          </div>
           <div className="py-4">
             {charCount < 3 && (
               <span className="text-red-500">Slug must be at least 3 characters</span>
             )}
-            {charCount >= 3 && charCount < 5 && (
+            {charCount >= 3 && charCount < 5 && !validationError && (
               <span className="text-gray-500">
                 Consider adding more characters for better description
               </span>
             )}
-            {warning && (
+            {warning && !validationError && (
               <span className="text-yellow-500">Slug is getting long - consider shortening it</span>
             )}
-            {isValid && charCount >= 5 && (
-              <span className="text-green-500">Good URL length and format!</span>
+            {isValid && canSave && charCount >= 5 && !validationError && (
+              <span className="text-green-500">Good slug length and format!</span>
+            )}
+            {isValid && !canSave && !validationError && (
+              <span className="text-gray-500">
+                Valid characters but needs proper formatting to save
+              </span>
             )}
           </div>
         </div>

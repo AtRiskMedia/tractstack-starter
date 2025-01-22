@@ -1,8 +1,8 @@
 # Tract Stack
 
-no-code website builder and content marketing platform
+free web press
 
-made by [At Risk Media](https://atriskmedia.com)
+by [At Risk Media](https://atriskmedia.com)
 
 ## Try Tract Stack
 
@@ -19,7 +19,7 @@ For production deployment you'll need to prepare your server.
 
 `docker build --network=host -t tractstack .`
 
-`docker run --net=host -d --restart unless-stopped tractstack`
+`docker run --net=host -v $(pwd)/config:/app/config -d --restart unless-stopped tractstack`
 
 ## Queries?
 

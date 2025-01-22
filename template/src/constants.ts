@@ -258,6 +258,9 @@ export const reservedSlugs = [
   `storykeep`,
   `cart`,
   `404`,
+  `transcribe`,
+  `sitemap`,
+  `robots`,
 ];
 
 // Helper function to validate and process a resource value based on its type
