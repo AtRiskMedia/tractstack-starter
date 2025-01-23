@@ -6,6 +6,7 @@ import {
   isValidTag,
   toTag,
 } from "../utils/nodes/type-guards";
+import { startLoadingAnimation } from "@/utils/common/helpers";
 import { settingsPanelStore } from "@/store/storykeep.ts";
 import type {
   BaseNode,
@@ -829,8 +830,9 @@ export class NodesContext {
 
   notifyNode(nodeId: string, payload?: BaseNode) {
     let notifyNodeId = nodeId;
-    if (notifyNodeId === this.rootNodeId.get()) {
+    if (notifyNodeId === this.rootNodeId.get() || nodeId === `root`) {
       notifyNodeId = ROOT_NODE_NAME;
+      startLoadingAnimation();
     }
     this.notifications.notify(notifyNodeId, payload);
   }

@@ -301,7 +301,7 @@ export function startLoadingAnimation() {
   if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
     loadingIndicator.style.transform = "scaleX(0)";
     loadingIndicator.style.display = "block";
-    content.style.opacity = "0.7";
+    content.style.opacity = "0.5";
 
     let progress = 0;
     progressInterval = setInterval(() => {

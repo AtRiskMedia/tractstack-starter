@@ -1,12 +1,8 @@
-import { getCtx, NodesContext, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { useEffect, useState } from "react";
-import type { LoadData } from "@/store/nodesSerializer.ts";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
+import { getCtx, ROOT_NODE_NAME, type NodesContext } from "@/store/nodes.ts";
+import { timestampNodeId, stopLoadingAnimation } from "@/utils/common/helpers.ts";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
-//import { TemplateSimplePane } from "@/utils/TemplatePanes.ts";
-//import { timestampNodeId } from "@/utils/common/helpers.ts";
-//import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
-//import { markdownToNodes } from "@/utils/common/nodesMarkdownGenerator.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { Config } from "@/types.ts";
 
 export type ReactNodesRendererProps = {
@@ -21,14 +17,17 @@ export const ReactNodesRenderer = (props: ReactNodesRendererProps) => {
 
   useEffect(() => {
     getCtx(props).buildNodesTreeFromRowDataMadeNodes(props.nodes);
-    //getCtx(props).buildNodesTreeFromFragmentNodes(props.nodes);
     setRenderTime(Date.now());
 
     const unsubscribe = getCtx(props).notifications.subscribe(ROOT_NODE_NAME, () => {
-      console.log("notification received data update for root node");
       setRenderTime(Date.now());
+      setTimeout(() => stopLoadingAnimation(), 160);
     });
-    return unsubscribe;
+
+    return () => {
+      unsubscribe();
+      stopLoadingAnimation();
+    };
   }, []);
 
   return (
