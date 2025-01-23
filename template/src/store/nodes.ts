@@ -830,10 +830,10 @@ export class NodesContext {
 
   notifyNode(nodeId: string, payload?: BaseNode) {
     let notifyNodeId = nodeId;
-    if (notifyNodeId === this.rootNodeId.get() || nodeId === `root`) {
+    if (notifyNodeId === this.rootNodeId.get()) {
       notifyNodeId = ROOT_NODE_NAME;
-      startLoadingAnimation();
     }
+    if (nodeId === `root`) startLoadingAnimation();
     this.notifications.notify(notifyNodeId, payload);
   }
 

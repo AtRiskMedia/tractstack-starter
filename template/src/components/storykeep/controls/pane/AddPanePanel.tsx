@@ -24,7 +24,6 @@ const AddPanePanel = ({ nodeId, first = false }: AddPanePanelProps) => {
   useEffect(() => {
     setMode(PaneMode.DEFAULT);
   }, [nodeId]);
-
   if (mode === PaneMode.NEW) {
     return <AddPaneNewPanel nodeId={nodeId} first={first} setMode={setMode} />;
   } else if (mode === PaneMode.BREAK) {
