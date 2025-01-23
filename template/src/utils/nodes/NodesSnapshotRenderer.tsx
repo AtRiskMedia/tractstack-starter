@@ -1,26 +1,40 @@
-import type { NodesContext } from "@/store/nodes.ts";
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { blobToBase64, timestampNodeId } from "@/utils/common/helpers.ts";
 import { Node } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import type { Config } from "@/types.ts";
+import type { NodesContext } from "@/store/nodes.ts";
+
+export type SnapshotData = {
+  imageData: string;
+  height: number;
+};
 
 export type NodesSnapshotRendererProps = {
   ctx: NodesContext;
-  onComplete?: ((imageData: string) => void) | undefined;
+  onComplete?: ((data: SnapshotData) => void) | undefined;
   forceRegenerate: boolean;
   config?: Config;
 };
+
+const snapshotCache = new Map<string, SnapshotData>();
 
 export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("ctx updated");
     if (!contentRef.current) return;
     if (!isGenerating && !props.forceRegenerate) return;
     if (props.ctx.allNodes.get().size === 0) return;
+
+    const cacheKey = timestampNodeId(props.ctx.rootNodeId.get());
+    if (!props.forceRegenerate && snapshotCache.has(cacheKey)) {
+      const cached = snapshotCache.get(cacheKey);
+      props.onComplete?.(cached!);
+      setIsGenerating(false);
+      return;
+    }
 
     const generateSnapshot = async () => {
       try {
@@ -28,9 +42,13 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
 
         if (!contentRef.current) return;
 
+        const height = contentRef.current.offsetHeight;
+        const scale = 500 / 1500; // Target width 500px while maintaining aspect ratio
+        const scaledHeight = height * scale;
+
         const pngImage = await toPng(contentRef.current, {
           width: 1500,
-          height: contentRef.current.offsetHeight,
+          height: height,
           style: {
             transform: "scale(1)",
             transformOrigin: "top left",
@@ -39,7 +57,7 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
           backgroundColor: "#ffffff",
           quality: 1,
           canvasWidth: 1500,
-          canvasHeight: contentRef.current.offsetHeight,
+          canvasHeight: height,
         });
 
         const img = new Image();
@@ -47,10 +65,10 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         await new Promise((resolve) => (img.onload = resolve));
 
         const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.width = 500; // Target width
+        canvas.height = scaledHeight;
         const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0);
+        ctx?.drawImage(img, 0, 0, 500, scaledHeight);
 
         const webpBlob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
@@ -58,7 +76,9 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         const base64 = await blobToBase64(webpBlob);
 
         if (props.onComplete && typeof base64 === "string") {
-          props.onComplete(base64);
+          const data = { imageData: base64, height: scaledHeight };
+          snapshotCache.set(cacheKey, data);
+          props.onComplete(data);
         }
       } catch (error) {
         console.error("Error generating snapshot:", error);
