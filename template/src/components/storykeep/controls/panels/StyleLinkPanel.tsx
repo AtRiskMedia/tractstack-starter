@@ -10,15 +10,22 @@ import { getCtx } from "@/store/nodes";
 import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames";
 
 const getButtonStyleClasses = (style: ButtonStyle) => ({
-  mobile: Object.entries(style).reduce((acc, [key, values]) => {
-    acc[key] = values[0];
-    return acc;
-  }, {} as Record<string, string>),
+  mobile: Object.entries(style).reduce(
+    (acc, [key, values]) => {
+      acc[key] = values[0];
+      return acc;
+    },
+    {} as Record<string, string>
+  ),
   tablet: {},
-  desktop: {}
+  desktop: {},
 });
 
-const addHoverPrefix = (str: string): string => str.split(" ").map(word => `hover:${word}`).join(" ");
+const addHoverPrefix = (str: string): string =>
+  str
+    .split(" ")
+    .map((word) => `hover:${word}`)
+    .join(" ");
 
 type ButtonStyle = Record<string, string[]>;
 type ButtonStylePair = [ButtonStyle, ButtonStyle];
@@ -30,38 +37,38 @@ const buttonStyleClasses: ButtonStylePair[] = [
       fontWEIGHT: ["bold"],
       textDECORATION: ["underline"],
       textUNDERLINEOFFSET: ["2"],
-      textCOLOR: ["myblue"],
+      textCOLOR: ["brand-5"],
     },
     {
       textUNDERLINEOFFSET: ["4"],
-      textCOLOR: ["black"],
+      textCOLOR: ["brand-1"],
     },
   ],
   [
     {
-      bgCOLOR: ["mygreen"],
+      bgCOLOR: ["brand-4"],
       fontWEIGHT: ["bold"],
       px: ["3.5"],
       py: ["1.5"],
       rounded: ["lg"],
-      textCOLOR: ["black"],
+      textCOLOR: ["brand-1"],
     },
     {
-      bgCOLOR: ["myorange"],
+      bgCOLOR: ["brand-3"],
     },
   ],
   [
     {
-      bgCOLOR: ["mygreen"],
+      bgCOLOR: ["brand-4"],
       display: ["inline-block"],
       fontWEIGHT: ["bold"],
       px: ["3.5"],
       py: ["2.5"],
       rounded: ["md"],
-      textCOLOR: ["black"],
+      textCOLOR: ["brand-1"],
     },
     {
-      bgCOLOR: ["myorange"],
+      bgCOLOR: ["brand-3"],
       rotate: ["2"],
     },
   ],
@@ -216,13 +223,25 @@ const StyleLinkPanel = ({ node }: BasePanelProps) => {
             <div className="flex flex-col gap-4">
               {buttonStyleOptions.map((_, index) => {
                 const [buttonStyle, hoverStyle] = buttonStyleClasses[index];
-                
-                const [classesPayload] = processClassesForViewports(getButtonStyleClasses(buttonStyle), {}, 1);
-                const [classesHoverPayload] = processClassesForViewports(getButtonStyleClasses(hoverStyle), {}, 1);
-                const combinedClasses = `${classesPayload[0]} ${classesHoverPayload[0] ? addHoverPrefix(classesHoverPayload[0]) : ''}`;
+
+                const [classesPayload] = processClassesForViewports(
+                  getButtonStyleClasses(buttonStyle),
+                  {},
+                  1
+                );
+                const [classesHoverPayload] = processClassesForViewports(
+                  getButtonStyleClasses(hoverStyle),
+                  {},
+                  1
+                );
+                const combinedClasses = `${classesPayload[0]} ${classesHoverPayload[0] ? addHoverPrefix(classesHoverPayload[0]) : ""}`;
 
                 return (
-                  <button key={index} onClick={() => applyQuickStyle(index)} className={combinedClasses}>
+                  <button
+                    key={index}
+                    onClick={() => applyQuickStyle(index)}
+                    className={combinedClasses}
+                  >
                     Use this Button Style
                   </button>
                 );
