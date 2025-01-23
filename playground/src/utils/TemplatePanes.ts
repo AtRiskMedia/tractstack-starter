@@ -1,6 +1,6 @@
 import type { TemplatePane, Theme } from "@/types.ts";
 import {
-  TemplateAsideNode,
+  //TemplateAsideNode,
   TemplateH2Node,
   TemplateH3Node,
   TemplatePNode,
@@ -29,7 +29,7 @@ export const getTemplateSimplePane = (theme: Theme) => {
         { ...TemplateH2Node, copy: "H2 node in simple pane" },
         { ...TemplatePNode, copy: "P node in simple pane" },
         { ...TemplateH3Node, copy: "H3 node in simple pane" },
-        { ...TemplateAsideNode, copy: "Aside node in simple pane" },
+        //{ ...TemplateAsideNode, copy: "Aside node in simple pane" },
       ],
     },
   } as TemplatePane;

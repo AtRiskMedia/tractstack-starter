@@ -6,6 +6,7 @@ import {
   isValidTag,
   toTag,
 } from "../utils/nodes/type-guards";
+import { settingsPanelStore } from "@/store/storykeep.ts";
 import type {
   BaseNode,
   FlatNode,
@@ -899,6 +900,33 @@ export class NodesContext {
     });
   }
 
+  handleInsertSignal(tagName: string, nodeId: string) {
+    switch (tagName) {
+      case `a`:
+        settingsPanelStore.set({
+          action: `style-link`,
+          nodeId: nodeId,
+          expanded: true,
+        });
+        break;
+      case `img`:
+        settingsPanelStore.set({
+          action: `style-image`,
+          nodeId: nodeId,
+          expanded: true,
+        });
+        break;
+      case `code`:
+        settingsPanelStore.set({
+          action: `style-widget`,
+          nodeId: nodeId,
+          expanded: true,
+        });
+        break;
+    }
+    this.toolModeValStore.set({ value: "default" });
+  }
+
   addTemplateImpressionNode(targetId: string, node: ImpressionNode) {
     const targetNode = this.allNodes.get().get(targetId) as BaseNode;
     if (!targetNode || targetNode.nodeType !== "Pane") {
@@ -928,45 +956,138 @@ export class NodesContext {
       return null;
     }
 
-    let closestListNode = "";
-    if ("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
-      closestListNode = targetId;
-    } else {
-      closestListNode = this.getParentNodeByTagNames(targetId, ["ol", "ul"]);
-    }
+    let parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
+    let duplicatedNodes = cloneDeep(node) as TemplateNode;
+    let flattenedNodes: TemplateNode[] = [];
 
-    const parentId = closestListNode || this.getClosestNodeTypeFromId(targetId, "Markdown");
-    const duplicatedNodes = cloneDeep(node) as TemplateNode;
-    // register flattened nodes to all nodes and set up relationship with its parent
-    const flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
-    // this is a list node so make it an "li" but save original tag name
-    if (closestListNode.length > 0 && flattenedNodes.length > 0) {
-      flattenedNodes[0].tagNameCustom = flattenedNodes[0].tagName;
-      flattenedNodes[0].tagName = "li";
-    }
-    this.addNodes(flattenedNodes);
-    this.history.addPatch({
-      op: PatchOp.ADD,
-      undo: (ctx) => ctx.deleteNodes(flattenedNodes),
-      redo: (ctx) => ctx.addNodes(flattenedNodes),
-    });
-
-    let newNodeId;
-    const parentNodes = this.parentNodes.get().get(parentId);
-    // now grab parent nodes, check if we have inner node
-    if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
-      const newNode = parentNodes.splice(parentNodes.indexOf(duplicatedNodes.id, 1));
-      newNodeId = newNode.at(0);
-      if (location === "before") {
-        parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), newNode);
+    // Check if we need to wrap in ul/li structure
+    if (["img", "code"].includes(duplicatedNodes.tagName)) {
+      // Look for existing ul parent
+      let closestListNode = "";
+      if ("tagName" in targetNode && ["ol", "ul"].includes(targetNode.tagName as string)) {
+        closestListNode = targetId;
       } else {
-        parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), newNode);
+        closestListNode = this.getParentNodeByTagNames(targetId, ["ol", "ul"]);
+      }
+
+      if (!closestListNode) {
+        // Create new ul wrapper if none exists
+        const ulNode: TemplateNode = {
+          id: ulid(),
+          nodeType: "TagElement",
+          tagName: "ul",
+          parentId: parentId,
+        };
+
+        const liNode: TemplateNode = {
+          id: ulid(),
+          nodeType: "TagElement",
+          tagName: "li",
+          tagNameCustom: duplicatedNodes.tagName,
+          parentId: ulNode.id,
+        };
+
+        duplicatedNodes.parentId = liNode.id;
+
+        // Create flattened node structure
+        flattenedNodes = [
+          ulNode,
+          liNode,
+          ...this.setupTemplateNodeRecursively(duplicatedNodes, liNode.id),
+        ];
+
+        this.addNodes(flattenedNodes);
+        this.history.addPatch({
+          op: PatchOp.ADD,
+          undo: (ctx) => ctx.deleteNodes(flattenedNodes),
+          redo: (ctx) => ctx.addNodes(flattenedNodes),
+        });
+
+        // Handle insertion position
+        const newNodeId = ulNode.id;
+        const parentNodes = this.parentNodes.get().get(parentId);
+        if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
+          const spliceIdx = parentNodes.indexOf(newNodeId);
+          if (spliceIdx !== -1) {
+            parentNodes.splice(spliceIdx, 1);
+          }
+          if (location === "before") {
+            parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), [newNodeId]);
+          } else {
+            parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [newNodeId]);
+          }
+        }
+
+        this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
+        return duplicatedNodes.id;
+      } else {
+        // We found an existing ul, create a new li wrapper
+        const liNode: TemplateNode = {
+          id: ulid(),
+          nodeType: "TagElement",
+          tagName: "li",
+          tagNameCustom: duplicatedNodes.tagName,
+          parentId: closestListNode,
+        };
+
+        // Set up proper parent relationships
+        duplicatedNodes.parentId = liNode.id;
+
+        // Flatten all nodes with proper hierarchy
+        flattenedNodes = [liNode, ...this.setupTemplateNodeRecursively(duplicatedNodes, liNode.id)];
+
+        this.addNodes(flattenedNodes);
+        this.history.addPatch({
+          op: PatchOp.ADD,
+          undo: (ctx) => ctx.deleteNodes(flattenedNodes),
+          redo: (ctx) => ctx.addNodes(flattenedNodes),
+        });
+
+        // Handle insertion position
+        const parentNodes = this.parentNodes.get().get(closestListNode);
+        if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
+          const spliceIdx = parentNodes.indexOf(liNode.id);
+          if (spliceIdx !== -1) {
+            parentNodes.splice(spliceIdx, 1);
+          }
+          if (location === "before") {
+            parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), [liNode.id]);
+          } else {
+            parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [liNode.id]);
+          }
+        }
+
+        this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
+        return duplicatedNodes.id;
+      }
+    } else {
+      // For non-img/code nodes, just flatten and add normally
+      flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
+      this.addNodes(flattenedNodes);
+      this.history.addPatch({
+        op: PatchOp.ADD,
+        undo: (ctx) => ctx.deleteNodes(flattenedNodes),
+        redo: (ctx) => ctx.addNodes(flattenedNodes),
+      });
+
+      let newNodeId;
+      const parentNodes = this.parentNodes.get().get(parentId);
+      // Handle insertion for normal nodes
+      if (insertNodeId && parentNodes && parentNodes?.indexOf(insertNodeId) !== -1) {
+        const newNode = parentNodes.splice(parentNodes.indexOf(duplicatedNodes.id, 1));
+        newNodeId = newNode.at(0);
+        if (location === "before") {
+          parentNodes.insertBefore(parentNodes.indexOf(insertNodeId), newNode);
+        } else {
+          parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), newNode);
+        }
+      }
+      if (newNodeId) {
+        this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
+        return newNodeId;
       }
     }
-    if (newNodeId) {
-      this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
-      return newNodeId;
-    }
+
     return null;
   }
 

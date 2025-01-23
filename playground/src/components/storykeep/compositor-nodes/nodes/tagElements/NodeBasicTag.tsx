@@ -65,7 +65,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   }, []);
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
-    console.log(`new link added *trigger a signal?`, tagName, nodeId);
+    getCtx(props).handleInsertSignal(tagName, nodeId);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
@@ -105,7 +105,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           node.buttonPayload = foundNode.buttonPayload;
         } else if ([`a`, `button`].includes(node.tagName)) {
           handleInsertSignal(node.tagName, node.id);
-          console.log(node);
         }
       });
 

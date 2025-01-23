@@ -38,7 +38,6 @@ export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
       return TemplateEmailSignUpNode;
     case "identify":
       return TemplateIdentifyAsNode;
-
     case "p":
     default:
       return TemplatePNode;

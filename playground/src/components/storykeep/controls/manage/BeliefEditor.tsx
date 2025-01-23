@@ -1,10 +1,11 @@
 import { useState, useCallback } from "react";
+import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import { cleanString } from "@/utils/common/helpers.ts";
+import { cleanAllowCapsString } from "@/utils/common/helpers.ts";
 import { heldBeliefsScales, heldBeliefsTitles } from "@/utils/common/beliefs.ts";
 import type { BeliefNode, TursoQuery, BeliefOptionDatum } from "@/types.ts";
 
@@ -71,7 +72,9 @@ export default function BeliefEditor({
   onCancel,
   isEmbedded = false,
 }: BeliefEditorProps) {
-  const [localBelief, setLocalBelief] = useState<BeliefNode>(belief);
+  const [localBelief, setLocalBelief] = useState<BeliefNode>(
+    create ? { ...belief, id: ulid() } : belief
+  );
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -81,7 +84,7 @@ export default function BeliefEditor({
   const handleChange = useCallback(
     (field: keyof BeliefNode, value: any) => {
       setLocalBelief((prev) => {
-        const processedValue = field === "slug" ? cleanString(value) : value;
+        const processedValue = field === "slug" ? cleanAllowCapsString(value) : value;
         const updatedBelief = { ...prev, [field]: processedValue };
         if (field === "scale") {
           if (value === "custom") {
@@ -184,7 +187,7 @@ export default function BeliefEditor({
           if (onComplete) {
             onComplete();
           } else {
-            navigate(`/storykeep/manage/belief/${updatedBelief.slug}`);
+            navigate(`/storykeep/content/beliefs/${updatedBelief.id}`);
           }
         }
       }, 2000);
@@ -270,17 +273,23 @@ export default function BeliefEditor({
           {/* Scale Field */}
           <div>
             <label className="block text-sm font-bold text-gray-800">Scale</label>
-            <select
-              value={localBelief.scale || ""}
-              onChange={(e) => handleChange("scale", e.target.value as ScaleType)}
-              className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-            >
-              {scaleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+            {isEmbedded ? (
+              <div className="mt-1 block w-full p-2 text-gray-700 sm:text-sm">
+                {scaleOptions.find((option) => option.value === localBelief.scale)?.label || "None"}
+              </div>
+            ) : (
+              <select
+                value={localBelief.scale || ""}
+                onChange={(e) => handleChange("scale", e.target.value as ScaleType)}
+                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+              >
+                {scaleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Scale Preview */}

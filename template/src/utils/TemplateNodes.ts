@@ -22,17 +22,6 @@ export const TemplateH3Node = {
   ],
 } as TemplateNode;
 
-export const TemplatePNode = {
-  nodeType: "TagElement",
-  tagName: "p",
-  nodes: [
-    {
-      copy: "P node",
-      tagName: "text",
-    },
-  ],
-} as TemplateNode;
-
 export const TemplateH4Node = {
   nodeType: "TagElement",
   tagName: "h4",
@@ -44,16 +33,60 @@ export const TemplateH4Node = {
   ],
 } as TemplateNode;
 
-export const TemplateAsideNode = {
+export const TemplatePNode = {
   nodeType: "TagElement",
-  tagName: "aside",
+  tagName: "p",
   nodes: [
     {
-      copy: "aside node",
+      copy: "P node",
       tagName: "text",
     },
   ],
 } as TemplateNode;
+
+export const TemplateOLNode = {
+  nodeType: "TagElement",
+  tagName: "ol",
+  nodes: [
+    {
+      copy: "OL node",
+      tagName: "text",
+    },
+  ],
+} as TemplateNode;
+
+export const TemplateULNode = {
+  nodeType: "TagElement",
+  tagName: "ul",
+  nodes: [
+    {
+      copy: "UL node",
+      tagName: "text",
+    },
+  ],
+} as TemplateNode;
+
+export const TemplateLINode = {
+  nodeType: "TagElement",
+  tagName: "li",
+  nodes: [
+    {
+      copy: "LI node",
+      tagName: "text",
+    },
+  ],
+} as TemplateNode;
+
+//export const TemplateAsideNode = {
+//  nodeType: "TagElement",
+//  tagName: "aside",
+//  nodes: [
+//    {
+//      copy: "aside node",
+//      tagName: "text",
+//    },
+//  ],
+//} as TemplateNode;
 
 export const TemplateImgNode = {
   nodeType: "TagElement",

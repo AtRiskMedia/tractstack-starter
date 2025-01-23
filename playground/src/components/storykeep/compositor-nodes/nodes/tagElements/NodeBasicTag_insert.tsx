@@ -53,7 +53,7 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
   };
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
-    console.log(`new node added *trigger a signal?`, tagName, nodeId);
+    getCtx(props).handleInsertSignal(tagName, nodeId);
   };
 
   const handleClickIntercept = (e: MouseEvent) => {

@@ -528,6 +528,23 @@ export function cleanString(s: string): string {
   return s;
 }
 
+export function cleanAllowCapsString(s: string): string {
+  if (!s) return s;
+  s = s.replace(/[^a-zA-Z0-9\s-_]/g, "");
+  s = s.replace(/\s+/g, "-");
+  const words = s.split(/[-_]/);
+  if (words.length > 1) {
+    s = words.filter((word) => !stopWords.has(word.toLowerCase())).join("-");
+  }
+  s = s.replace(/^[^a-zA-Z]+/, "");
+  s = s.replace(/[-_]{2,}/g, "-");
+  s = s.replace(/^[-_]+|[-_]+$/g, "");
+  if (!s.match(/^[a-zA-Z][a-zA-Z0-9-_]*[a-zA-Z0-9]$/)) {
+    s = s.replace(/[^a-zA-Z0-9]/g, "");
+  }
+  return s;
+}
+
 export function cleanStringUpper(s: string): string {
   if (!s) return s;
   return s
