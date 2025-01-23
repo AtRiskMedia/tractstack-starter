@@ -3,7 +3,7 @@ import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { Combobox } from "@headlessui/react";
-import BrandColorPicker from "../../../storykeep/widgets/BrandColorPicker";
+import BrandColorPicker from "@/components/storykeep/widgets/BrandColorPicker.tsx";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import OpenGraphSettings from "./settings/OpenGraphSettings";
 import SocialLinks from "./settings/SocialLinks";

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import DesignSnapshot from "../../../preview/DesignSnapshot";
-import { pageDesigns } from "../../../../../utils/designs/paneDesigns";
-import type { Theme, Config } from "../../../../../types";
+import DesignSnapshot from "@/components/storykeep/preview/DesignSnapshot.tsx";
+import { pageDesigns } from "@/utils/designs/paneDesigns.ts";
+import type { Theme, Config } from "@/types.ts";
 
 interface ThemeVisualSelectorProps {
   value: Theme;

@@ -36,7 +36,7 @@ export function setupLayoutObservers() {
         navSpacer.style.height = `${navHeight}px`;
       }
 
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= 801) {
         nav.style.top = header?.offsetHeight + "px";
       } else {
         nav.style.top = "auto";
@@ -44,8 +44,8 @@ export function setupLayoutObservers() {
     }
 
     if (toolbarNav) {
-      toolbarNav.style.bottom = window.innerWidth < 768 ? nav?.offsetHeight + "px" : "0";
-      toolbarNav.style.left = window.innerWidth < 768 ? "0" : "4rem";
+      toolbarNav.style.bottom = window.innerWidth < 801 ? nav?.offsetHeight + "px" : "0";
+      toolbarNav.style.left = window.innerWidth < 801 ? "0" : "4rem";
     }
   }
 

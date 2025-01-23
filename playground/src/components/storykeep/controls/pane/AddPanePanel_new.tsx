@@ -26,7 +26,6 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
     setCtx([tmpCtx1, tmpCtx2]);
   }, []);
 
-  console.log(nodeId, first);
   return (
     <div className="p-0.5 shadow-inner">
       <div className="flex flex-col gap-2 mb-1.5">
