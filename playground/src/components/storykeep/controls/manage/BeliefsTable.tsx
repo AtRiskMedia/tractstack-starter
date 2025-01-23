@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CreateNewButton from "./CreateNewButton";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import type { BeliefNode } from "@/types.ts";
@@ -90,6 +91,7 @@ export default function BeliefsTable({ beliefs }: BeliefsTableProps) {
           </tbody>
         </table>
       </div>
+      <CreateNewButton type="Magic Path Belief" href="/storykeep/content/beliefs/create" />
     </div>
   );
 }

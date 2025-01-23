@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CreateNewButton from "./CreateNewButton";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import type { MenuNode } from "@/types.ts";
 
@@ -66,6 +67,7 @@ export default function MenusTable({ menus }: MenusTableProps) {
           </tbody>
         </table>
       </div>
+      <CreateNewButton type="Menu" href="/storykeep/content/menus/create" />
     </div>
   );
 }

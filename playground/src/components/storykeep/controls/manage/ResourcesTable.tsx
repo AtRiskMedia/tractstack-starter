@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CreateNewButton from "./CreateNewButton";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import type { ResourceNode } from "@/types.ts";
 
@@ -74,6 +75,7 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
           </tbody>
         </table>
       </div>
+      <CreateNewButton type="Resource" href="/storykeep/content/resources/create" />
     </div>
   );
 }

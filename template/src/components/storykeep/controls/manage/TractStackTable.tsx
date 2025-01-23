@@ -1,4 +1,5 @@
 import { useState } from "react";
+import CreateNewButton from "./CreateNewButton";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import type { TractStackNode } from "@/types.ts";
 
@@ -68,6 +69,7 @@ export default function TractStackTable({ tractstacks }: TractStackTableProps) {
           </tbody>
         </table>
       </div>
+      <CreateNewButton type="Tract Stack" href="/storykeep/content/tractstacks/create" />
     </div>
   );
 }
