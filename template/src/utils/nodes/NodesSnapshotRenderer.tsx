@@ -43,7 +43,7 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         if (!contentRef.current) return;
 
         const height = contentRef.current.offsetHeight;
-        const scale = 500 / 1500; // Target width 500px while maintaining aspect ratio
+        const scale = 800 / 1500; // Target width 800px while maintaining aspect ratio
         const scaledHeight = height * scale;
 
         const pngImage = await toPng(contentRef.current, {
@@ -65,10 +65,10 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         await new Promise((resolve) => (img.onload = resolve));
 
         const canvas = document.createElement("canvas");
-        canvas.width = 500; // Target width
+        canvas.width = 800; // Target width
         canvas.height = scaledHeight;
         const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, 500, scaledHeight);
+        ctx?.drawImage(img, 0, 0, 800, scaledHeight);
 
         const webpBlob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
