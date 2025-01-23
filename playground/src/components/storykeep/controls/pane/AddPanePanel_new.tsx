@@ -16,14 +16,21 @@ interface PreviewPane {
   snapshot?: SnapshotData;
 }
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 4;
 
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
 
   useEffect(() => {
-    const templates = [getTemplateMarkdownPane("dark"), getTemplateSimplePane("light")];
+    const templates = [
+      getTemplateMarkdownPane("dark"),
+      getTemplateSimplePane("light"),
+      getTemplateMarkdownPane("light"),
+      getTemplateSimplePane("dark"),
+      getTemplateMarkdownPane("light-bw"),
+      getTemplateMarkdownPane("light-bold"),
+    ];
 
     setPreviews(
       templates.map((template) => {
@@ -40,11 +47,13 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
 
   return (
     <div className="p-4">
+      <h3 className="py-6 font-action font-bold text-xl text-black">Select a design to insert</h3>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {visiblePreviews.map((preview, index) => (
           <div
             key={index}
-            className="relative w-full min-h-[100px] rounded-md"
+            onClick={() => console.log("Selected template:", index + 1)}
+            className={`relative w-full min-h-[100px] rounded-sm cursor-pointer transition-all duration-200 ${preview.snapshot && `hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey`}`}
             style={{
               background:
                 "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
@@ -66,11 +75,13 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
               }}
             />
             {preview.snapshot && (
-              <img
-                src={preview.snapshot.imageData}
-                alt={`Template ${index + 1}`}
-                className="w-full rounded-md"
-              />
+              <div className="p-1.5">
+                <img
+                  src={preview.snapshot.imageData}
+                  alt={`Template ${index + 1}`}
+                  className="w-full"
+                />
+              </div>
             )}
           </div>
         ))}
