@@ -14,7 +14,7 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
   const [beliefs, setBeliefs] = useState<BeliefNode[]>([]);
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
-  
+
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
   const prompt = String(params[1] || "");

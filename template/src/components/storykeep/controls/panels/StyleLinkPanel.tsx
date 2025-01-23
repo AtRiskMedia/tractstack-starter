@@ -1,24 +1,79 @@
+import type { BasePanelProps } from "../SettingsPanel";
+import type { FlatNode } from "../../../../types";
 import { useMemo } from "react";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { settingsPanelStore } from "@/store/storykeep";
 import { isLinkNode } from "@/utils/nodes/type-guards";
-import type { FlatNode } from "../../../../types";
+import { cloneDeep } from "@/utils/common/helpers";
+import { getCtx } from "@/store/nodes";
+import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames";
 
-interface StyleLinkPanelProps {
-  node: FlatNode;
-}
+const getButtonStyleClasses = (style: ButtonStyle) => ({
+  mobile: Object.entries(style).reduce((acc, [key, values]) => {
+    acc[key] = values[0];
+    return acc;
+  }, {} as Record<string, string>),
+  tablet: {},
+  desktop: {}
+});
 
-const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
-  if (!isLinkNode(node)) {
-    return null;
-  }
+const addHoverPrefix = (str: string): string => str.split(" ").map(word => `hover:${word}`).join(" ");
+
+type ButtonStyle = Record<string, string[]>;
+type ButtonStylePair = [ButtonStyle, ButtonStyle];
+
+const buttonStyleOptions = ["Plain text inline", "Fancy text inline", "Fancy button"];
+const buttonStyleClasses: ButtonStylePair[] = [
+  [
+    {
+      fontWEIGHT: ["bold"],
+      textDECORATION: ["underline"],
+      textUNDERLINEOFFSET: ["2"],
+      textCOLOR: ["myblue"],
+    },
+    {
+      textUNDERLINEOFFSET: ["4"],
+      textCOLOR: ["black"],
+    },
+  ],
+  [
+    {
+      bgCOLOR: ["mygreen"],
+      fontWEIGHT: ["bold"],
+      px: ["3.5"],
+      py: ["1.5"],
+      rounded: ["lg"],
+      textCOLOR: ["black"],
+    },
+    {
+      bgCOLOR: ["myorange"],
+    },
+  ],
+  [
+    {
+      bgCOLOR: ["mygreen"],
+      display: ["inline-block"],
+      fontWEIGHT: ["bold"],
+      px: ["3.5"],
+      py: ["2.5"],
+      rounded: ["md"],
+      textCOLOR: ["black"],
+    },
+    {
+      bgCOLOR: ["myorange"],
+      rotate: ["2"],
+    },
+  ],
+];
+
+const StyleLinkPanel = ({ node }: BasePanelProps) => {
+  if (!isLinkNode(node)) return null;
 
   const buttonPayload = node.buttonPayload;
   const buttonClasses = buttonPayload?.buttonClasses || {};
   const hoverClasses = buttonPayload?.buttonHoverClasses || {};
 
-  // Transform classes into format expected by SelectedTailwindClass
   const mergedButtonClasses = useMemo(() => {
     const result: {
       [key: string]: {
@@ -28,7 +83,6 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       };
     } = {};
 
-    // Transform button classes - using single value for all viewports
     Object.entries(buttonClasses).forEach(([className, values]) => {
       result[className] = {
         mobile: values[0] || "",
@@ -47,7 +101,6 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
       };
     } = {};
 
-    // Transform hover classes - using single value for all viewports
     Object.entries(hoverClasses).forEach(([className, values]) => {
       result[className] = {
         mobile: values[0] || "",
@@ -117,6 +170,30 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
     });
   };
 
+  const applyQuickStyle = (styleIndex: number) => {
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+    if (!isLinkNode(linkNode)) return;
+
+    const [buttonClasses, hoverClasses] = buttonStyleClasses[styleIndex];
+
+    linkNode.buttonPayload = {
+      ...linkNode.buttonPayload,
+      buttonClasses,
+      buttonHoverClasses: hoverClasses,
+      callbackPayload: linkNode.buttonPayload?.callbackPayload || "",
+    };
+
+    ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
+
+    settingsPanelStore.set({
+      action: "style-link",
+      nodeId: node.id,
+      expanded: true,
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="space-y-4">
@@ -133,17 +210,80 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
           </div>
         </div>
 
+        {Object.keys(buttonClasses).length === 0 && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold">Quick Style this Link</h3>
+            <div className="flex flex-col gap-4">
+              {buttonStyleOptions.map((_, index) => {
+                const [buttonStyle, hoverStyle] = buttonStyleClasses[index];
+                
+                const [classesPayload] = processClassesForViewports(getButtonStyleClasses(buttonStyle), {}, 1);
+                const [classesHoverPayload] = processClassesForViewports(getButtonStyleClasses(hoverStyle), {}, 1);
+                const combinedClasses = `${classesPayload[0]} ${classesHoverPayload[0] ? addHoverPrefix(classesHoverPayload[0]) : ''}`;
+
+                return (
+                  <button key={index} onClick={() => applyQuickStyle(index)} className={combinedClasses}>
+                    Use this Button Style
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {Object.keys(buttonClasses).length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold">Button Styles</h3>
+            {Object.keys(mergedButtonClasses).length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(mergedButtonClasses).map(([className, values]) => (
+                  <SelectedTailwindClass
+                    key={className}
+                    name={className}
+                    values={values}
+                    onRemove={handleButtonStyleRemove}
+                    onUpdate={handleButtonStyleUpdate}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <em>No styles.</em>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
+                <li>
+                  <em>Actions:</em>
+                </li>
+                <li>
+                  <button
+                    onClick={handleButtonStyleAdd}
+                    className="text-myblue hover:text-black underline font-bold"
+                  >
+                    Add Style
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {Object.keys(buttonClasses).length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-sm font-bold">Button Styles</h3>
-          {Object.keys(mergedButtonClasses).length > 0 ? (
+          <h3 className="text-sm font-bold">Hover Styles</h3>
+
+          {Object.keys(mergedHoverClasses).length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {Object.entries(mergedButtonClasses).map(([className, values]) => (
+              {Object.entries(mergedHoverClasses).map(([className, values]) => (
                 <SelectedTailwindClass
                   key={className}
                   name={className}
                   values={values}
-                  onRemove={handleButtonStyleRemove}
-                  onUpdate={handleButtonStyleUpdate}
+                  onRemove={handleHoverStyleRemove}
+                  onUpdate={handleHoverStyleUpdate}
                 />
               ))}
             </div>
@@ -160,7 +300,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
               </li>
               <li>
                 <button
-                  onClick={handleButtonStyleAdd}
+                  onClick={handleHoverStyleAdd}
                   className="text-myblue hover:text-black underline font-bold"
                 >
                   Add Style
@@ -169,45 +309,7 @@ const StyleLinkPanel = ({ node }: StyleLinkPanelProps) => {
             </ul>
           </div>
         </div>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-sm font-bold">Hover Styles</h3>
-
-        {Object.keys(mergedHoverClasses).length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(mergedHoverClasses).map(([className, values]) => (
-              <SelectedTailwindClass
-                key={className}
-                name={className}
-                values={values}
-                onRemove={handleHoverStyleRemove}
-                onUpdate={handleHoverStyleUpdate}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <em>No styles.</em>
-          </div>
-        )}
-
-        <div className="space-y-4">
-          <ul className="flex flex-wrap gap-x-4 gap-y-1 text-mydarkgrey">
-            <li>
-              <em>Actions:</em>
-            </li>
-            <li>
-              <button
-                onClick={handleHoverStyleAdd}
-                className="text-myblue hover:text-black underline font-bold"
-              >
-                Add Style
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

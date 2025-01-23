@@ -18,11 +18,7 @@ function BunnyWidget({ node, onUpdate }: BunnyWidgetProps) {
         value={embedCode}
         onChange={(value) => onUpdate([value, title])}
       />
-      <SingleParam 
-        label="Title" 
-        value={title} 
-        onChange={(value) => onUpdate([embedCode, value])} 
-      />
+      <SingleParam label="Title" value={title} onChange={(value) => onUpdate([embedCode, value])} />
     </div>
   );
 }

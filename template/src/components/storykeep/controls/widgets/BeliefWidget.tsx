@@ -14,7 +14,7 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   const [beliefs, setBeliefs] = useState<BeliefNode[]>([]);
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
-  
+
   // Ensure params are always strings
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
@@ -32,33 +32,54 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   }, []);
 
   const handleBeliefChange = (selectedTag: string) => {
-    const selectedBelief = beliefs.find(b => b.slug === selectedTag);
+    const selectedBelief = beliefs.find((b) => b.slug === selectedTag);
     if (selectedBelief) {
-      onUpdate([selectedTag, selectedBelief.scale || '', String(prompt)]);
+      onUpdate([selectedTag, selectedBelief.scale || "", String(prompt)]);
     } else {
-      onUpdate([selectedTag, '', String(prompt)]);
+      onUpdate([selectedTag, "", String(prompt)]);
     }
   };
 
   if (isCreatingBelief || editingBeliefId) {
     const belief: BeliefNode = isCreatingBelief
       ? { id: ulid(), nodeType: "Belief", parentId: null, title: "", slug: "", scale: "" }
-      : beliefs.find((b) => b.id === editingBeliefId) || 
-        { id: "", nodeType: "Belief", parentId: null, title: "", slug: "", scale: "" };
+      : beliefs.find((b) => b.id === editingBeliefId) || {
+          id: "",
+          nodeType: "Belief",
+          parentId: null,
+          title: "",
+          slug: "",
+          scale: "",
+        };
 
     return (
       <div className="my-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">{isCreatingBelief ? "Create New Belief" : "Edit Belief"}</h3>
-          <button onClick={() => { setIsCreatingBelief(false); setEditingBeliefId(null); }}
-            className="text-cyan-700 hover:text-black">← Back</button>
+          <h3 className="text-lg font-bold">
+            {isCreatingBelief ? "Create New Belief" : "Edit Belief"}
+          </h3>
+          <button
+            onClick={() => {
+              setIsCreatingBelief(false);
+              setEditingBeliefId(null);
+            }}
+            className="text-cyan-700 hover:text-black"
+          >
+            ← Back
+          </button>
         </div>
         <BeliefEditor
           belief={belief}
           create={isCreatingBelief}
           isEmbedded={true}
-          onComplete={() => { setIsCreatingBelief(false); setEditingBeliefId(null); }}
-          onCancel={() => { setIsCreatingBelief(false); setEditingBeliefId(null); }}
+          onComplete={() => {
+            setIsCreatingBelief(false);
+            setEditingBeliefId(null);
+          }}
+          onCancel={() => {
+            setIsCreatingBelief(false);
+            setEditingBeliefId(null);
+          }}
         />
       </div>
     );
@@ -75,19 +96,26 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
         >
           <option value="">Select a belief</option>
           {beliefs.map((b) => (
-            <option key={b.slug} value={b.slug}>{b.title}</option>
+            <option key={b.slug} value={b.slug}>
+              {b.title}
+            </option>
           ))}
         </select>
         {beliefTag ? (
-          <button onClick={() => {
-            const belief = beliefs.find(b => b.slug === beliefTag);
-            if (belief) setEditingBeliefId(belief.id);
-          }} className="text-cyan-700 hover:text-black">
+          <button
+            onClick={() => {
+              const belief = beliefs.find((b) => b.slug === beliefTag);
+              if (belief) setEditingBeliefId(belief.id);
+            }}
+            className="text-cyan-700 hover:text-black"
+          >
             <BeakerIcon className="h-5 w-5" />
           </button>
         ) : (
-          <button onClick={() => setIsCreatingBelief(true)}
-            className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800">
+          <button
+            onClick={() => setIsCreatingBelief(true)}
+            className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800"
+          >
             Create New Belief
           </button>
         )}

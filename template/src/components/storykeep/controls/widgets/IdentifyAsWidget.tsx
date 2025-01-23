@@ -14,7 +14,7 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
   const [beliefs, setBeliefs] = useState<BeliefNode[]>([]);
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
-  
+
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
   const matchingValues = String(params[1] || "");
