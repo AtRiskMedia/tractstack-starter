@@ -7,7 +7,7 @@ import {
 } from "@/utils/TemplateNodes.ts";
 import { getComputedColor, getTemplateSimpleMarkdown } from "@/utils/TemplateMarkdowns.ts";
 
-export const getTemplateSimplePane = (theme: Theme, useOdd: boolean = false) => {
+export const getTemplateSimplePane = (theme: Theme, variant: string, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
@@ -24,7 +24,7 @@ export const getTemplateSimplePane = (theme: Theme, useOdd: boolean = false) => 
       theme
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme),
+      ...getTemplateSimpleMarkdown(theme, variant ),
       nodes: [
         { ...TemplateH2Node, copy: "H2 node in simple pane" },
         { ...TemplatePNode, copy: "P node in simple pane" },
@@ -35,7 +35,7 @@ export const getTemplateSimplePane = (theme: Theme, useOdd: boolean = false) => 
   } as TemplatePane;
 };
 
-export const getTemplateMarkdownPane = (theme: Theme, useOdd: boolean = false) => {
+export const getTemplateMarkdownPane = (theme: Theme, variant: string, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
@@ -52,7 +52,7 @@ export const getTemplateMarkdownPane = (theme: Theme, useOdd: boolean = false) =
       theme
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme),
+      ...getTemplateSimpleMarkdown(theme, variant ),
       markdownBody: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,
     },
   } as TemplatePane;

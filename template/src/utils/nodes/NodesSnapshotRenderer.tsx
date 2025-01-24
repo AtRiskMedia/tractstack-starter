@@ -90,6 +90,8 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
     generateSnapshot();
   }, [props.ctx, props.forceRegenerate]);
 
+  console.log(`new context`, props.ctx.allNodes.get());
+
   return (
     <>
       {(isGenerating || props.forceRegenerate) && (

@@ -43,16 +43,16 @@ const templateCategories: TemplateCategory[] = [
     id: "basic",
     title: "Basic Templates",
     getTemplates: (theme: Theme, useOdd: boolean) => [
-      getTemplateMarkdownPane(theme, useOdd),
-      getTemplateSimplePane(theme, useOdd),
+      getTemplateMarkdownPane(theme, `variant1`, useOdd),
+      getTemplateSimplePane(theme, `variant2`, useOdd),
     ],
   },
   {
     id: "advanced",
     title: "Advanced Templates",
     getTemplates: (theme: Theme, useOdd: boolean) => [
-      getTemplateSimplePane(theme, useOdd),
-      getTemplateMarkdownPane(theme, useOdd),
+      getTemplateSimplePane(theme, `variant1`, useOdd),
+      getTemplateMarkdownPane(theme, `variant2`, useOdd),
     ],
   },
 ];
