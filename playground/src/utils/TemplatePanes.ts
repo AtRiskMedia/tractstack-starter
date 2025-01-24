@@ -24,7 +24,7 @@ export const getTemplateSimplePane = (theme: Theme, variant: string, useOdd: boo
       theme
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme, variant ),
+      ...getTemplateSimpleMarkdown(theme, variant, useOdd),
       nodes: [
         { ...TemplateH2Node, copy: "H2 node in simple pane" },
         { ...TemplatePNode, copy: "P node in simple pane" },
@@ -52,7 +52,7 @@ export const getTemplateMarkdownPane = (theme: Theme, variant: string, useOdd: b
       theme
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme, variant ),
+      ...getTemplateSimpleMarkdown(theme, variant, useOdd),
       markdownBody: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,
     },
   } as TemplatePane;

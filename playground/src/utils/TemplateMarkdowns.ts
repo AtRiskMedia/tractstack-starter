@@ -12,7 +12,11 @@ export const getComputedColor = (
   return colorMap[theme] || "brand-1";
 };
 
-export const getTemplateSimpleMarkdown = (theme: Theme, variant: string) => {
+export const getTemplateSimpleMarkdown = (
+  theme: Theme,
+  variant: string,
+  isOdd: boolean = false
+) => {
   return {
     nodeType: "Markdown",
     id: "",
