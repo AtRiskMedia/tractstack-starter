@@ -1,9 +1,12 @@
-import { type Dispatch, type SetStateAction, useEffect, useState, useMemo } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
+import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
+import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { PaneMode } from "./AddPanePanel";
-import { NodesContext } from "@/store/nodes.ts";
-import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer.tsx";
-import { createEmptyStorykeep } from "@/utils/common/nodesHelper.ts";
-import { getTemplateMarkdownPane, getTemplateSimplePane } from "@/utils/TemplatePanes.ts";
+import { NodesContext } from "@/store/nodes";
+import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
+import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
+import { getTemplateMarkdownPane, getTemplateSimplePane } from "@/utils/TemplatePanes";
+import type { Theme } from "@/types";
 
 interface AddPaneNewPanelProps {
   nodeId: string;
@@ -18,35 +21,80 @@ interface PreviewPane {
   index: number;
 }
 
+interface TemplateCategory {
+  id: string;
+  title: string;
+  getTemplates: (theme: Theme, useOdd: boolean) => any[];
+}
+
 const ITEMS_PER_PAGE = 3;
+const THEMES = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"] as const;
+
+const templateCategories: TemplateCategory[] = [
+  {
+    id: "all",
+    title: "All designs",
+    getTemplates: (theme: Theme, useOdd: boolean) => [
+      ...basicTemplates.getTemplates(theme, useOdd),
+      ...advancedTemplates.getTemplates(theme, useOdd),
+    ],
+  },
+  {
+    id: "basic",
+    title: "Basic Templates",
+    getTemplates: (theme: Theme, useOdd: boolean) => [
+      getTemplateMarkdownPane(theme, useOdd),
+      getTemplateSimplePane(theme, useOdd),
+    ],
+  },
+  {
+    id: "advanced",
+    title: "Advanced Templates",
+    getTemplates: (theme: Theme, useOdd: boolean) => [
+      getTemplateSimplePane(theme, useOdd),
+      getTemplateMarkdownPane(theme, useOdd),
+    ],
+  },
+];
+
+const basicTemplates = templateCategories[1];
+const advancedTemplates = templateCategories[2];
 
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
+  const [selectedTheme, setSelectedTheme] = useState<Theme>("light");
+  const [useOddVariant, setUseOddVariant] = useState(false);
+  const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(templateCategories[0]);
 
-  const templates = useMemo(
-    () => [
-      getTemplateMarkdownPane("dark"),
-      getTemplateSimplePane("light"),
-      getTemplateMarkdownPane("light"),
-      getTemplateSimplePane("dark"),
-      getTemplateMarkdownPane("light-bw"),
-      getTemplateMarkdownPane("light-bold"),
-    ],
-    []
-  );
+  const filteredTemplates = useMemo(() => {
+    if (query === "") {
+      return selectedCategory.getTemplates(selectedTheme, useOddVariant);
+    }
+
+    const searchQuery = query.toLowerCase();
+    const allTemplates = templateCategories[0].getTemplates(selectedTheme, useOddVariant);
+
+    return allTemplates.filter(
+      (template) =>
+        template.title?.toLowerCase().includes(searchQuery) ||
+        template.description?.toLowerCase().includes(searchQuery)
+    );
+  }, [selectedTheme, useOddVariant, query, selectedCategory]);
 
   useEffect(() => {
-    setPreviews(
-      templates.map((template, index) => {
-        const ctx = new NodesContext();
-        ctx.addNode(createEmptyStorykeep("tmp"));
-        ctx.addTemplatePane("tmp", template);
-        return { ctx, template, index };
-      })
-    );
-  }, [templates]);
+    const newPreviews = filteredTemplates.map((template, index) => {
+      const ctx = new NodesContext();
+      ctx.addNode(createEmptyStorykeep("tmp"));
+      ctx.addTemplatePane("tmp", template);
+      return { ctx, template, index };
+    });
+    setPreviews(newPreviews);
+    setCurrentPage(0);
+    setRenderedPages(new Set([0]));
+  }, [filteredTemplates]);
 
   const totalPages = Math.ceil(previews.length / ITEMS_PER_PAGE);
 
@@ -71,34 +119,166 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
         >
           ← Go Back
         </button>
-        <div className="flex gap-1">
-          <div className="px-2 py-1 text-sm rounded bg-cyan-700 text-white shadow-sm z-10">
+
+        <div className="flex flex-wrap gap-x-6 gap-y-2 items-center ml-4 py-2">
+          <div className="px-2 py-2.5 text-sm rounded bg-cyan-700 text-white shadow-sm flex items-center">
             + Design New
+          </div>
+
+          {/* Theme Select */}
+          <div className="w-40">
+            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
+              <div className="relative">
+                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+                  <span className="block truncate capitalize">
+                    {selectedTheme.replace(/-/g, " ")}
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {THEMES.map((theme) => (
+                      <Listbox.Option
+                        key={theme}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
+                          }`
+                        }
+                        value={theme}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate capitalize ${selected ? "font-medium" : "font-normal"}`}
+                            >
+                              {theme.replace(/-/g, " ")}
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+          </div>
+
+          {/* Odd Variant Toggle */}
+          <Switch.Group as="div" className="flex items-center gap-2">
+            <div className="relative">
+              <Switch
+                checked={useOddVariant}
+                onChange={setUseOddVariant}
+                className={`${
+                  useOddVariant ? "bg-cyan-600" : "bg-gray-200"
+                } my-2 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2`}
+              >
+                <span
+                  className={`${
+                    useOddVariant ? "left-6" : "left-1"
+                  } absolute top-1 inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-all duration-200`}
+                />
+              </Switch>
+            </div>
+            <Switch.Label className="text-sm text-gray-700">Use odd variant</Switch.Label>
+          </Switch.Group>
+
+          {/* Category Filter */}
+          <div className="w-[250px]">
+            <Combobox value={selectedCategory} onChange={setSelectedCategory}>
+              <div className="relative">
+                <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
+                  <Combobox.Input
+                    className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
+                    onChange={(event) => setQuery(event.target.value)}
+                    displayValue={(category: TemplateCategory) => category.title}
+                  />
+                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </Combobox.Button>
+                </div>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Combobox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {templateCategories.map((category) => (
+                      <Combobox.Option
+                        key={category.id}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-teal-600 text-white" : "text-gray-900"
+                          }`
+                        }
+                        value={category}
+                      >
+                        {({ selected, active }) => (
+                          <>
+                            <span
+                              className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                            >
+                              {category.title}
+                            </span>
+                            {selected && (
+                              <span
+                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                                  active ? "text-white" : "text-teal-600"
+                                }`}
+                              >
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Combobox.Option>
+                    ))}
+                  </Combobox.Options>
+                </Transition>
+              </div>
+            </Combobox>
           </div>
         </div>
       </div>
+
       <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
         Click on a design to use:
       </h3>
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 p-2">
         {visiblePreviews.map((preview) => (
           <div
             key={preview.index}
-            onClick={() => console.log("Selected template:", preview.index + 1)}
-            className={`relative w-full min-h-[100px] rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot &&
-              `hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey`
+            onClick={() => console.log("Selected template:", preview.index + 1, nodeId, first)}
+            className={`relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+              preview.snapshot
+                ? "hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey"
+                : ""
             }`}
             style={{
               background:
                 "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
+              ...(!preview.snapshot ? { minHeight: "100px" } : {}),
             }}
           >
             {renderedPages.has(currentPage) && !preview.snapshot && (
               <NodesSnapshotRenderer
                 ctx={preview.ctx}
                 forceRegenerate={false}
-                config={undefined}
                 onComplete={(data) => {
                   setPreviews((prev) =>
                     prev.map((p) => (p.index === preview.index ? { ...p, snapshot: data } : p))

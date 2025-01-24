@@ -7,7 +7,7 @@ import {
 } from "@/utils/TemplateNodes.ts";
 import { getComputedColor, getTemplateSimpleMarkdown } from "@/utils/TemplateMarkdowns.ts";
 
-export const getTemplateSimplePane = (theme: Theme) => {
+export const getTemplateSimplePane = (theme: Theme, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
@@ -35,7 +35,7 @@ export const getTemplateSimplePane = (theme: Theme) => {
   } as TemplatePane;
 };
 
-export const getTemplateMarkdownPane = (theme: Theme) => {
+export const getTemplateMarkdownPane = (theme: Theme, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
