@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
 import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
@@ -7,6 +8,7 @@ import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSna
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { brandColours } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
+import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
 
 interface AddPaneNewPanelProps {
@@ -29,7 +31,6 @@ interface TemplateCategory {
 }
 
 const ITEMS_PER_PAGE = 3;
-const THEMES = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"] as const;
 
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
@@ -61,7 +62,6 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
       ctx.addTemplatePane("tmp", template);
-      console.log(template);
       return { ctx, template, index };
     });
     setPreviews(newPreviews);
@@ -117,7 +117,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
                   leaveTo="opacity-0"
                 >
                   <Listbox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {THEMES.map((theme) => (
+                    {themes.map((theme) => (
                       <Listbox.Option
                         key={theme}
                         className={({ active }) =>

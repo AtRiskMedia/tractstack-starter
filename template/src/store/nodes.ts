@@ -83,7 +83,8 @@ export class NodesContext {
     const node = this.allNodes.get().get(nodeId);
     if (!node) return;
     const newNodes = new Map(this.allNodes.get());
-    const { isChanged, ...cleanedNode } = node;
+    const cleanedNode = cloneDeep(node);
+    if (cleanedNode.isChanged) delete cleanedNode.isChanged;
     newNodes.set(nodeId, cleanedNode);
     this.allNodes.set(newNodes);
   }
@@ -112,18 +113,20 @@ export class NodesContext {
     const node = this.allNodes.get().get(nodeId) as FlatNode;
     if (!node) return;
     switch (node.nodeType) {
-      case `Pane`:
+      case `Pane`: {
         const storyfragmentNodeId = this.getClosestNodeTypeFromId(nodeId, "StoryFragment");
         const storyfragmentNode = cloneDeep(
           this.allNodes.get().get(storyfragmentNodeId)
         ) as StoryFragmentNode;
         this.modifyNodes([{ ...storyfragmentNode, isChanged: true }]);
         break;
-      case `TagElement`:
+      }
+      case `TagElement`: {
         const paneNodeId = this.getClosestNodeTypeFromId(nodeId, "Pane");
         const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
         this.modifyNodes([{ ...paneNode, isChanged: true }]);
         break;
+      }
       default:
     }
   }
@@ -696,12 +699,12 @@ export class NodesContext {
       switch (node.nodeType) {
         case `TagElement`:
         case `BgPane`:
-        case `Markdown`:
+        case `Markdown`: {
           const paneNodeId = this.getClosestNodeTypeFromId(node.id, "Pane");
           const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
           this.modifyNodes([{ ...paneNode, isChanged: true }]);
           break;
-
+        }
         case `Menu`:
         case `Pane`:
         case `StoryFragment`:
@@ -986,7 +989,7 @@ export class NodesContext {
       return null;
     }
 
-    let parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
+    const parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
     let duplicatedNodes = cloneDeep(node) as TemplateNode;
     let flattenedNodes: TemplateNode[] = [];
 
@@ -1367,7 +1370,7 @@ export class NodesContext {
 
   generateValidSlug(title: string, currentNodeId?: string): string {
     // Convert title to lowercase and replace spaces/special chars with hyphens
-    let slug = title
+    const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");

@@ -5,7 +5,7 @@ import {
   TrashIcon,
   Square3Stack3DIcon,
 } from "@heroicons/react/24/outline";
-import type { ResourceSetting, Tag, ToolMode, ToolAddMode, GotoTargets } from "./types";
+import type { ResourceSetting, Tag, ToolMode, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
 import type { SubmitParams } from "assemblyai";
 
 export const AUTH_COOKIE_NAME = "auth_token";
@@ -26,6 +26,7 @@ export const MAX_HISTORY_LENGTH = 10;
 export const MAX_LENGTH_CONTENT = 10000;
 
 export const PUBLIC_THEME = `light-bold`;
+export const themes: Theme[] = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"];
 
 export const SHORT_SCREEN_THRESHOLD = 900;
 export const SMALL_SCREEN_WIDTH = 600;

@@ -1,6 +1,8 @@
 import { getColor, tailwindToHex } from "@/utils/tailwind/tailwindColors";
 import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 
+const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`;
+
 export const templateCategories = [
   {
     id: "all",
@@ -18,6 +20,9 @@ export const templateCategories = [
       getParagraphDefault(theme, brand, useOdd),
       getParagraphOneColumn(theme, brand, useOdd),
       getParagraphCenter(theme, brand, useOdd),
+      getParagraphDefault(theme, brand, useOdd, true),
+      getParagraphOneColumn(theme, brand, useOdd, true),
+      getParagraphCenter(theme, brand, useOdd, true),
     ],
   },
 ] as const;
@@ -116,7 +121,7 @@ const getBaseParagraphClasses = (theme: Theme) => ({
   },
 });
 
-const getBaseParentClasses = (theme: Theme): ParentClassesPayload => {
+const getBaseParentClasses = (): ParentClassesPayload => {
   return [
     {
       mobile: {
@@ -155,10 +160,41 @@ const getBaseParentClasses = (theme: Theme): ParentClassesPayload => {
   ];
 };
 
-function getParagraphDefault(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
-  const baseClasses = getBaseParentClasses(theme);
+function getParagraphDefault(
+  theme: Theme,
+  brand: string,
+  useOdd: boolean,
+  bordered: boolean = false
+): TemplatePane {
+  const baseClasses = getBaseParentClasses();
   baseClasses[2].mobile.textALIGN = "left";
   baseClasses[2].mobile.textWRAP = "pretty";
+  if (bordered) {
+    baseClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    baseClasses[2].mobile.borderSTROKE = "2";
+    baseClasses[2].mobile.borderSTYLE = "dashed";
+    baseClasses[2].mobile.borderCOLOR = getColor(
+      {
+        light: "brand-8",
+        "light-bw": "brand-8",
+        "light-bold": "brand-6",
+        dark: "brand-7",
+        "dark-bw": "neutral-800",
+        "dark-bold": "brand-7",
+      },
+      theme
+    );
+  }
 
   return {
     nodeType: "Pane",
@@ -189,15 +225,46 @@ function getParagraphDefault(theme: Theme, brand: string, useOdd: boolean): Temp
       markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
       defaultClasses: getBaseParagraphClasses(theme),
       parentClasses: baseClasses,
-      markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+      markdownBody: defaultMarkdownBody,
     },
   };
 }
 
-function getParagraphCenter(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
-  const baseClasses = getBaseParentClasses(theme);
+function getParagraphCenter(
+  theme: Theme,
+  brand: string,
+  useOdd: boolean,
+  bordered: boolean = false
+): TemplatePane {
+  const baseClasses = getBaseParentClasses();
   baseClasses[2].mobile.textALIGN = "center";
   baseClasses[2].mobile.textWRAP = "balance";
+  if (bordered) {
+    baseClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    baseClasses[2].mobile.borderSTROKE = "2";
+    baseClasses[2].mobile.borderSTYLE = "dashed";
+    baseClasses[2].mobile.borderCOLOR = getColor(
+      {
+        light: "brand-8",
+        "light-bw": "brand-8",
+        "light-bold": "brand-6",
+        dark: "brand-7",
+        "dark-bw": "neutral-800",
+        "dark-bold": "brand-7",
+      },
+      theme
+    );
+  }
 
   return {
     nodeType: "Pane",
@@ -228,16 +295,47 @@ function getParagraphCenter(theme: Theme, brand: string, useOdd: boolean): Templ
       markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
       defaultClasses: getBaseParagraphClasses(theme),
       parentClasses: baseClasses,
-      markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+      markdownBody: defaultMarkdownBody,
     },
   };
 }
 
-function getParagraphOneColumn(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
-  const baseClasses = getBaseParentClasses(theme);
+function getParagraphOneColumn(
+  theme: Theme,
+  brand: string,
+  useOdd: boolean,
+  bordered: boolean = false
+): TemplatePane {
+  const baseClasses = getBaseParentClasses();
   baseClasses[2].mobile.textALIGN = "left";
   baseClasses[2].mobile.textWRAP = "pretty";
   baseClasses[2].mobile.maxW = "3xl";
+  if (bordered) {
+    baseClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    baseClasses[2].mobile.borderSTROKE = "2";
+    baseClasses[2].mobile.borderSTYLE = "dashed";
+    baseClasses[2].mobile.borderCOLOR = getColor(
+      {
+        light: "brand-8",
+        "light-bw": "brand-8",
+        "light-bold": "brand-6",
+        dark: "brand-7",
+        "dark-bw": "neutral-800",
+        "dark-bold": "brand-7",
+      },
+      theme
+    );
+  }
 
   return {
     nodeType: "Pane",
@@ -268,7 +366,7 @@ function getParagraphOneColumn(theme: Theme, brand: string, useOdd: boolean): Te
       markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
       defaultClasses: getBaseParagraphClasses(theme),
       parentClasses: baseClasses,
-      markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+      markdownBody: defaultMarkdownBody,
     },
   };
 }

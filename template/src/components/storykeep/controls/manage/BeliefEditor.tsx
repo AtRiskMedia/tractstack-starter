@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
 import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";

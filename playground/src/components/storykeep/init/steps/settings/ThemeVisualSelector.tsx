@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import DesignSnapshot from "@/components/storykeep/preview/DesignSnapshot.tsx";
 import { pageDesigns } from "@/utils/designs/paneDesigns.ts";
+import { themes } from "@/constants.ts";
 import type { Theme, Config } from "@/types.ts";
 
 interface ThemeVisualSelectorProps {
@@ -9,8 +10,6 @@ interface ThemeVisualSelectorProps {
   brandString: string;
   config: Config;
 }
-
-const themes: Theme[] = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"];
 
 const themeNames: Record<Theme, string> = {
   light: "Light",
