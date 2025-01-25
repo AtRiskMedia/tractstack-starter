@@ -274,7 +274,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
             style={{
               background:
                 "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
-              ...(!preview.snapshot ? { minHeight: "100px" } : {}),
+              ...(!preview.snapshot ? { minHeight: "200px" } : {}),
             }}
           >
             {renderedPages.has(currentPage) && !preview.snapshot && (

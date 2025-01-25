@@ -202,13 +202,14 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
             style={{
               background:
                 "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
-              ...(!preview.snapshot ? { minHeight: "100px" } : {}),
+              ...(!preview.snapshot ? { minHeight: "50px" } : {}),
             }}
           >
             {renderedPages.has(currentPage) && !preview.snapshot && (
               <NodesSnapshotRenderer
                 ctx={preview.ctx}
                 forceRegenerate={false}
+                outputWidth={400}
                 onComplete={(data) => {
                   setPreviews((prev) =>
                     prev.map((p) => (p.index === preview.index ? { ...p, snapshot: data } : p))

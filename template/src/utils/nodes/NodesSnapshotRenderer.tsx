@@ -15,13 +15,16 @@ export type NodesSnapshotRendererProps = {
   onComplete?: ((data: SnapshotData) => void) | undefined;
   forceRegenerate: boolean;
   config?: Config;
+  outputWidth?: number;
 };
 
 const snapshotCache = new Map<string, SnapshotData>();
+const SOURCE_WIDTH = 1500;
 
 export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
   const [isGenerating, setIsGenerating] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
+  const outputWidth = props.outputWidth || 800;
 
   useEffect(() => {
     if (!contentRef.current) return;
@@ -43,11 +46,11 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         if (!contentRef.current) return;
 
         const height = contentRef.current.offsetHeight;
-        const scale = 800 / 1500; // Target width 800px while maintaining aspect ratio
+        const scale = outputWidth / SOURCE_WIDTH; // Scale based on desired output width
         const scaledHeight = height * scale;
 
         const pngImage = await toPng(contentRef.current, {
-          width: 1500,
+          width: SOURCE_WIDTH,
           height: height,
           style: {
             transform: "scale(1)",
@@ -56,7 +59,7 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
           pixelRatio: 1,
           backgroundColor: "#ffffff",
           quality: 1,
-          canvasWidth: 1500,
+          canvasWidth: SOURCE_WIDTH,
           canvasHeight: height,
         });
 
@@ -65,10 +68,10 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
         await new Promise((resolve) => (img.onload = resolve));
 
         const canvas = document.createElement("canvas");
-        canvas.width = 800; // Target width
+        canvas.width = outputWidth; // Use specified output width
         canvas.height = scaledHeight;
         const ctx = canvas.getContext("2d");
-        ctx?.drawImage(img, 0, 0, 800, scaledHeight);
+        ctx?.drawImage(img, 0, 0, outputWidth, scaledHeight);
 
         const webpBlob = await new Promise<Blob>((resolve) => {
           canvas.toBlob((blob) => resolve(blob!), "image/webp", 0.8);
@@ -88,9 +91,7 @@ export const NodesSnapshotRenderer = (props: NodesSnapshotRendererProps) => {
     };
 
     generateSnapshot();
-  }, [props.ctx, props.forceRegenerate]);
-
-  //console.log(`new context`, props.ctx.allNodes.get());
+  }, [props.ctx, props.forceRegenerate, outputWidth]);
 
   return (
     <>
