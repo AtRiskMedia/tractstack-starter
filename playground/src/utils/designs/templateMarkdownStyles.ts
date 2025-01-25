@@ -1,5 +1,5 @@
 import { getColor, tailwindToHex } from "@/utils/tailwind/tailwindColors";
-import type { Theme, TemplatePane } from "@/types";
+import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 
 export const templateCategories = [
   {
@@ -7,15 +7,8 @@ export const templateCategories = [
     title: "All designs",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       ...templateCategories[1].getTemplates(theme, brand, useOdd),
-      ...templateCategories[2].getTemplates(theme, brand, useOdd),
-      ...templateCategories[3].getTemplates(theme, brand, useOdd),
-    ],
-  },
-  {
-    id: "intro",
-    title: "Introduction Sections",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getIntroDefault(theme, brand, useOdd),
+      //    ...templateCategories[2].getTemplates(theme, brand, useOdd),
+      //    ...templateCategories[3].getTemplates(theme, brand, useOdd),
     ],
   },
   {
@@ -23,202 +16,166 @@ export const templateCategories = [
     title: "Paragraphs & Content",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       getParagraphDefault(theme, brand, useOdd),
-    ],
-  },
-  {
-    id: "section",
-    title: "Section Titles",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getSection(theme, brand, useOdd),
+      getParagraphOneColumn(theme, brand, useOdd),
+      getParagraphCenter(theme, brand, useOdd),
     ],
   },
 ] as const;
 
-function getIntroDefault(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
-  return {
-    nodeType: "Pane",
-    id: "", // Will be set when template is used
-    parentId: "", // Will be set when template is used
-    isDecorative: false,
-    title: "Simple Pane",
-    slug: "simple-pane",
-    bgColour: tailwindToHex(
-      getColor(
+const getBaseParagraphClasses = (theme: Theme) => ({
+  h2: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
         {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
         },
         theme
       ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWeight: "bold",
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "brand-8",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "4xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "5xl",
-          },
-          desktop: {
-            textSize: "6xl",
-          },
-        },
-        h3: {
-          mobile: {
-            fontWeight: "bold",
-            textColor: getColor(
-              {
-                light: "brand-5",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "3xl",
-          },
-          desktop: {},
-        },
-        h4: {
-          mobile: {
-            textColor: getColor(
-              {
-                light: "brand-5",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "2xl",
-          },
-          desktop: {},
-        },
-        p: {
-          mobile: {
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-7",
-                dark: "brand-8",
-                "dark-bw": "brand-2",
-                "dark-bold": "brand-8",
-              },
-              theme
-            ),
-            textSize: "lg",
-            lineHeight: "loose",
-            mt: "2.5",
-          },
-          tablet: {
-            textSize: "xl",
-            mt: "3.5",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: [
-        {
-          mobile: {
-            mt: "10",
-            mb: "5",
-            mx: "5",
-          },
-          tablet: {
-            mt: "20",
-            mb: "10",
-            mx: "10",
-          },
-          desktop: {},
-        },
-        {
-          mobile: {
-            maxWidth: "none",
-            mx: "auto",
-          },
-          tablet: {
-            maxWidth: "screen-lg",
-          },
-          desktop: {
-            maxWidth: "screen-xl",
-          },
-        },
-        {
-          mobile: {
-            px: "9",
-            pt: "12",
-            pb: "10",
-            textAlign: "left",
-            textWrap: "pretty",
-            maxWidth: "none",
-          },
-          tablet: {
-            px: "14",
-          },
-          desktop: {
-            px: "32",
-          },
-        },
-      ],
-      markdownBody: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,
+      textSIZE: "3xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
     },
-  };
-}
+    tablet: {
+      textSIZE: "5xl",
+    },
+    desktop: {
+      textSIZE: "6xl",
+    },
+  },
+  h3: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "white",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "xl",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "3xl",
+    },
+    desktop: {},
+  },
+  h4: {
+    mobile: {
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "white",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "xl",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "2xl",
+    },
+    desktop: {},
+  },
+  p: {
+    mobile: {
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-7",
+          dark: "brand-8",
+          "dark-bw": "brand-2",
+          "dark-bold": "brand-8",
+        },
+        theme
+      ),
+      textSIZE: "lg",
+      lineHEIGHT: "loose",
+      py: "2.5",
+    },
+    tablet: {
+      textSIZE: "xl",
+      py: "3.5",
+    },
+    desktop: {},
+  },
+});
+
+const getBaseParentClasses = (theme: Theme): ParentClassesPayload => {
+  return [
+    {
+      mobile: {
+        mx: "5",
+        my: "16",
+      },
+      tablet: {
+        mx: "10",
+      },
+      desktop: {},
+    },
+    {
+      mobile: {
+        mx: "auto",
+        maxW: "none",
+      },
+      tablet: {
+        maxW: "screen-lg",
+      },
+      desktop: {
+        maxW: "screen-xl",
+      },
+    },
+    {
+      mobile: {
+        px: "9",
+        py: "10",
+      },
+      tablet: {
+        px: "14",
+      },
+      desktop: {
+        px: "32",
+      },
+    },
+  ];
+};
 
 function getParagraphDefault(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
+  const baseClasses = getBaseParentClasses(theme);
+  baseClasses[2].mobile.textALIGN = "left";
+  baseClasses[2].mobile.textWRAP = "pretty";
+
   return {
     nodeType: "Pane",
-    id: "", // Will be set when template is used
-    parentId: "", // Will be set when template is used
+    id: "",
+    parentId: "",
     isDecorative: false,
-    title: "Simple Pane",
-    slug: "simple-pane",
+    title: "Paragraph section",
+    slug: "paragraph-default",
     bgColour: tailwindToHex(
       getColor(
         {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
         },
         theme
       ),
@@ -230,117 +187,34 @@ function getParagraphDefault(theme: Theme, brand: string, useOdd: boolean): Temp
       parentId: "",
       type: "markdown",
       markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWeight: "bold",
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "brand-8",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "3xl",
-            lineHeight: "snug",
-            fontFace: "action",
-            pt: "9",
-            pb: "2.5",
-          },
-          tablet: {
-            textSize: "5xl",
-            pt: "14",
-            pb: "3.5",
-          },
-          desktop: {
-            textSize: "6xl",
-            pt: "20",
-          },
-        },
-        p: {
-          mobile: {
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-7",
-                dark: "brand-8",
-                "dark-bw": "brand-2",
-                "dark-bold": "brand-8",
-              },
-              theme
-            ),
-            textSize: "lg",
-            lineHeight: "loose",
-            py: "2.5",
-          },
-          tablet: {
-            textSize: "xl",
-            py: "3.5",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: [
-        {
-          mobile: {
-            mx: "5",
-            mt: "8",
-            mb: "16",
-          },
-          tablet: {
-            mx: "10",
-            mt: "10",
-            mb: "20",
-          },
-          desktop: {},
-        },
-        {
-          mobile: {
-            maxWidth: "none",
-            mx: "auto",
-          },
-          tablet: {
-            maxWidth: "screen-lg",
-          },
-          desktop: {
-            maxWidth: "screen-xl",
-          },
-        },
-        {
-          mobile: {
-            textWrap: "balance",
-          },
-          tablet: {},
-          desktop: {},
-        },
-      ],
+      defaultClasses: getBaseParagraphClasses(theme),
+      parentClasses: baseClasses,
       markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
     },
   };
 }
 
-function getSection(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
+function getParagraphCenter(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
+  const baseClasses = getBaseParentClasses(theme);
+  baseClasses[2].mobile.textALIGN = "center";
+  baseClasses[2].mobile.textWRAP = "balance";
+
   return {
     nodeType: "Pane",
-    id: "", // Will be set when template is used
-    parentId: "", // Will be set when template is used
+    id: "",
+    parentId: "",
     isDecorative: false,
-    title: "Simple Pane",
-    slug: "simple-pane",
+    title: "Paragraph section - centered",
+    slug: "paragraph-center",
     bgColour: tailwindToHex(
       getColor(
         {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
         },
         theme
       ),
@@ -352,125 +226,49 @@ function getSection(theme: Theme, brand: string, useOdd: boolean): TemplatePane 
       parentId: "",
       type: "markdown",
       markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWeight: "bold",
-            textColor: getColor(
-              {
-                light: "brand-5",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "brand-8",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "3xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "5xl",
-          },
-          desktop: {
-            textSize: "6xl",
-          },
-        },
-        h3: {
-          mobile: {
-            fontWeight: "bold",
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "2xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "3xl",
-          },
-          desktop: {},
-        },
-        h4: {
-          mobile: {
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSize: "xl",
-            fontFace: "action",
-          },
-          tablet: {
-            textSize: "2xl",
-          },
-          desktop: {},
-        },
-        p: {
-          mobile: {
-            textColor: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-7",
-                dark: "brand-6",
-                "dark-bw": "brand-2",
-                "dark-bold": "brand-8",
-              },
-              theme
-            ),
-            textSize: "lg",
-            py: "3",
-          },
-          tablet: {
-            textSize: "xl",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: [
+      defaultClasses: getBaseParagraphClasses(theme),
+      parentClasses: baseClasses,
+      markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
+    },
+  };
+}
+
+function getParagraphOneColumn(theme: Theme, brand: string, useOdd: boolean): TemplatePane {
+  const baseClasses = getBaseParentClasses(theme);
+  baseClasses[2].mobile.textALIGN = "left";
+  baseClasses[2].mobile.textWRAP = "pretty";
+  baseClasses[2].mobile.maxW = "3xl";
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Paragraph section - one column",
+    slug: "paragraph-onecolumn",
+    bgColour: tailwindToHex(
+      getColor(
         {
-          mobile: {
-            my: "12",
-          },
-          tablet: {},
-          desktop: {},
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
         },
-        {
-          mobile: {
-            maxWidth: "2xl",
-            mx: "auto",
-            px: "8",
-            textAlign: "center",
-          },
-          tablet: {
-            maxWidth: "3xl",
-          },
-          desktop: {},
-        },
-        {
-          mobile: {
-            textWrap: "balance",
-          },
-          tablet: {},
-          desktop: {},
-        },
-      ],
-      markdownBody: `## Section Title Here\n\nYour section intro text goes here - make it compelling!\n\n### An incredible journey awaits...\n\nAdd some details about what's coming up next.`,
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: "01JD2RGG95PMZ7E6V5MBX9Q3FJ",
+      defaultClasses: getBaseParagraphClasses(theme),
+      parentClasses: baseClasses,
+      markdownBody: `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`,
     },
   };
 }

@@ -61,6 +61,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
       ctx.addTemplatePane("tmp", template);
+      console.log(template);
       return { ctx, template, index };
     });
     setPreviews(newPreviews);
