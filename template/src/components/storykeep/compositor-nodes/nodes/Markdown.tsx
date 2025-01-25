@@ -19,7 +19,6 @@ export const Markdown = (props: NodeProps) => {
     });
     return unsubscribe;
   }, []);
-
   //console.log("draw markdown: " + props.nodeId);
   let nodesToRender = <RenderChildren children={children} nodeProps={props} />;
   if ("parentClasses" in node) {

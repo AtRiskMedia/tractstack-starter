@@ -5,6 +5,7 @@ import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
+import { brandColours } from "@/store/storykeep.ts";
 import { getTemplateMarkdownPane, getTemplateSimplePane } from "@/utils/TemplatePanes";
 import type { Theme } from "@/types";
 
@@ -24,7 +25,7 @@ interface PreviewPane {
 interface TemplateCategory {
   id: string;
   title: string;
-  getTemplates: (theme: Theme, useOdd: boolean) => any[];
+  getTemplates: (theme: Theme, brand: string, useOdd: boolean) => any[];
 }
 
 const ITEMS_PER_PAGE = 3;
@@ -34,25 +35,25 @@ const templateCategories: TemplateCategory[] = [
   {
     id: "all",
     title: "All designs",
-    getTemplates: (theme: Theme, useOdd: boolean) => [
-      ...basicTemplates.getTemplates(theme, useOdd),
-      ...advancedTemplates.getTemplates(theme, useOdd),
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      ...basicTemplates.getTemplates(theme, brand, useOdd),
+      ...advancedTemplates.getTemplates(theme, brand, useOdd),
     ],
   },
   {
     id: "basic",
     title: "Basic Templates",
-    getTemplates: (theme: Theme, useOdd: boolean) => [
-      getTemplateMarkdownPane(theme, `variant1`, useOdd),
-      getTemplateSimplePane(theme, `variant2`, useOdd),
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      getTemplateMarkdownPane(theme, `variant1`, brand, useOdd),
+      getTemplateSimplePane(theme, `variant2`, brand, useOdd),
     ],
   },
   {
     id: "advanced",
     title: "Advanced Templates",
-    getTemplates: (theme: Theme, useOdd: boolean) => [
-      getTemplateSimplePane(theme, `variant1`, useOdd),
-      getTemplateMarkdownPane(theme, `variant2`, useOdd),
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      getTemplateSimplePane(theme, `variant1`, brand, useOdd),
+      getTemplateMarkdownPane(theme, `variant2`, brand, useOdd),
     ],
   },
 ];
@@ -61,6 +62,7 @@ const basicTemplates = templateCategories[1];
 const advancedTemplates = templateCategories[2];
 
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
+  const brand = brandColours.get();
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
@@ -71,11 +73,11 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
 
   const filteredTemplates = useMemo(() => {
     if (query === "") {
-      return selectedCategory.getTemplates(selectedTheme, useOddVariant);
+      return selectedCategory.getTemplates(selectedTheme, brand, useOddVariant);
     }
 
     const searchQuery = query.toLowerCase();
-    const allTemplates = templateCategories[0].getTemplates(selectedTheme, useOddVariant);
+    const allTemplates = templateCategories[0].getTemplates(selectedTheme, brand, useOddVariant);
 
     return allTemplates.filter(
       (template) =>
@@ -121,8 +123,8 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
         </button>
 
         <div className="flex flex-wrap gap-x-6 gap-y-2 items-center ml-4 py-2">
-          <div className="px-2 py-2.5 text-sm rounded bg-cyan-700 text-white shadow-sm flex items-center">
-            + Design New
+          <div className="flex-none px-2 py-2.5 text-sm rounded text-cyan-700 font-bold font-action shadow-sm">
+            + Design New Pane
           </div>
 
           {/* Theme Select */}

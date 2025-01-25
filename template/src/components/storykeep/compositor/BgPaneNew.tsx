@@ -29,7 +29,6 @@ const BgPane = ({ payload, viewportKey }: BgPaneProps) => {
     if (!breakData) {
       return null;
     }
-
     return (
       <div className="grid" style={{ fill: breakData.svgFill || "none" }}>
         <Svg

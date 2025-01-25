@@ -7,7 +7,6 @@ import type { VisualBreakNode } from "@/types";
 export const BgPaneWrapper = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as VisualBreakNode;
   const viewport = viewportKeyStore.get().value;
-
   return (
     <div
       onClick={(e) => {

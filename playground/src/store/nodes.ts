@@ -857,47 +857,75 @@ export class NodesContext {
     duplicatedPane.id = duplicatedPaneId;
     duplicatedPane.parentId = ownerNode.id;
 
-    duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
-    duplicatedPane.markdown.id = ulid();
-    duplicatedPane.markdown.parentId = duplicatedPaneId;
+    // Track all nodes that need to be added
+    let allNodes: BaseNode[] = [];
 
-    let markdownNodes: TemplateNode[] = [];
-    if (duplicatedPane.markdown.markdownBody) {
-      const markdownGen = new MarkdownGenerator(this);
-      markdownNodes = markdownGen.markdownToFlatNodes(
-        duplicatedPane.markdown.markdownBody,
-        duplicatedPane.markdown.id
-      ) as TemplateNode[];
+    // Handle markdown panes
+    if (duplicatedPane.markdown) {
+      duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
+      duplicatedPane.markdown.id = ulid();
+      duplicatedPane.markdown.parentId = duplicatedPaneId;
+
+      let markdownNodes: TemplateNode[] = [];
+      if (duplicatedPane.markdown.markdownBody) {
+        const markdownGen = new MarkdownGenerator(this);
+        markdownNodes = markdownGen.markdownToFlatNodes(
+          duplicatedPane.markdown.markdownBody,
+          duplicatedPane.markdown.id
+        ) as TemplateNode[];
+      }
+
+      // Process markdown nodes
+      if (
+        typeof duplicatedPane.markdown !== `undefined` &&
+        typeof duplicatedPane.markdown.id === `string`
+      ) {
+        duplicatedPane?.markdown.nodes?.forEach((node) => {
+          const childrenNodes = this.setupTemplateNodeRecursively(
+            node,
+            duplicatedPane?.markdown?.id || ""
+          );
+          markdownNodes.push(...childrenNodes);
+        });
+        allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
+      }
     }
-    // add self
-    duplicatedPane.markdown.nodes?.forEach((node) => {
-      // retrieve flattened children nodes
-      const childrenNodes = this.setupTemplateNodeRecursively(node, duplicatedPane.markdown.id);
-      // flatten children nodes so they're the same level as our pane
-      childrenNodes.forEach((childrenNode) => markdownNodes.push(childrenNode));
-    });
+    // Handle visual break panes
+    else if (duplicatedPane.bgPane) {
+      const bgPaneId = ulid();
+      const bgPaneNode = {
+        id: bgPaneId,
+        nodeType: "BgPane",
+        parentId: duplicatedPaneId,
+        type: "visual-break",
+        breakDesktop: duplicatedPane.bgPane.breakDesktop,
+        breakTablet: duplicatedPane.bgPane.breakTablet,
+        breakMobile: duplicatedPane.bgPane.breakMobile,
+      } as PaneFragmentNode;
 
-    // add pane but manually as addNodes will skip pane addition due to storyfragments rule
+      allNodes = [bgPaneNode];
+      // Remove bgPane from duplicatedPane to avoid duplication
+      delete duplicatedPane.bgPane;
+    }
+
+    // Add pane but manually as addNodes will skip pane addition due to storyfragments rule
     this.addNode(duplicatedPane as PaneNode);
     this.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
 
-    // add markdown now since pane already exists
-    this.addNode(duplicatedPane.markdown as MarkdownPaneFragmentNode);
-
-    // add the result of the markdown nodes
-    this.addNodes(markdownNodes);
+    // Add all child nodes
+    this.addNodes(allNodes);
     this.notifyNode(ownerId);
 
     this.history.addPatch({
       op: PatchOp.ADD,
       undo: (ctx) => {
-        ctx.deleteNodes(markdownNodes);
-        ctx.deleteNodes([duplicatedPane.markdown, duplicatedPane]);
+        ctx.deleteNodes(allNodes);
+        ctx.deleteNodes([duplicatedPane]);
       },
       redo: (ctx) => {
-        ctx.addNodes(markdownNodes);
+        ctx.addNodes(allNodes);
         ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
-        ctx.addNodes([duplicatedPane, duplicatedPane.markdown]);
+        ctx.addNodes([duplicatedPane]);
       },
     });
   }

@@ -5,23 +5,54 @@ import {
   TemplateH3Node,
   TemplatePNode,
 } from "@/utils/TemplateNodes.ts";
-import { getComputedColor, getTemplateSimpleMarkdown } from "@/utils/TemplateMarkdowns.ts";
+import { getTemplateSimpleMarkdown } from "@/utils/TemplateMarkdowns.ts";
+import { getColor, tailwindToHex } from "@/utils/tailwind/tailwindColors.ts";
 
-export const getTemplateSimplePane = (theme: Theme, variant: string, useOdd: boolean = false) => {
+export const getTemplateVisualBreakPane = (variant: string) => {
+  // colour will be set on insert based on adjacent nodes
+  const breakConfig = {
+    collection: "kCz",
+    image: variant,
+    svgFill: "black",
+  };
+  return {
+    nodeType: "Pane",
+    title: "Visual Break Pane",
+    slug: "visual-break-pane",
+    bgColour: "white",
+    bgPane: {
+      nodeType: "BgPane",
+      type: "visual-break",
+      breakDesktop: breakConfig,
+      breakTablet: breakConfig,
+      breakMobile: breakConfig,
+    },
+  } as TemplatePane;
+};
+
+export const getTemplateSimplePane = (
+  theme: Theme,
+  variant: string,
+  brand: string,
+  useOdd: boolean = false
+) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
     slug: "simple-pane",
-    bgColour: getComputedColor(
-      {
-        light: "#fcfcfc",
-        "light-bw": "brand-2",
-        "light-bold": "brand-8",
-        dark: "#000000",
-        "dark-bw": "brand-1",
-        "dark-bold": "black",
-      },
-      theme
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: "#fcfcfc",
+          "light-bw": "brand-2",
+          "light-bold": "brand-8",
+          dark: "#000000",
+          "dark-bw": "brand-1",
+          "dark-bold": "black",
+        },
+        theme
+      ),
+      brand
     ),
     markdown: {
       ...getTemplateSimpleMarkdown(theme, variant, useOdd),
@@ -35,21 +66,29 @@ export const getTemplateSimplePane = (theme: Theme, variant: string, useOdd: boo
   } as TemplatePane;
 };
 
-export const getTemplateMarkdownPane = (theme: Theme, variant: string, useOdd: boolean = false) => {
+export const getTemplateMarkdownPane = (
+  theme: Theme,
+  variant: string,
+  brand: string,
+  useOdd: boolean = false
+) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
     slug: "simple-pane",
-    bgColour: getComputedColor(
-      {
-        light: "#fcfcfc",
-        "light-bw": "brand-2",
-        "light-bold": "brand-8",
-        dark: "#000000",
-        "dark-bw": "brand-1",
-        "dark-bold": "black",
-      },
-      theme
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: "#fcfcfc",
+          "light-bw": "brand-2",
+          "light-bold": "brand-8",
+          dark: "#000000",
+          "dark-bw": "brand-1",
+          "dark-bold": "black",
+        },
+        theme
+      ),
+      brand
     ),
     markdown: {
       ...getTemplateSimpleMarkdown(theme, variant, useOdd),

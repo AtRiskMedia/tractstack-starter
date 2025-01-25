@@ -1,6 +1,7 @@
 ---
 import { ViewTransitions } from "astro:transitions";
-import SetContentMap from "@/components/storykeep/controls/state/SetContentMap.tsx";
+import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
+import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso.ts";
 import type { FullContentMap, Config } from "@/types.ts";
 
@@ -31,7 +32,6 @@ const defaultSocialDesc = `No-code website builder and content marketing platfor
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
-
 const contentMap: FullContentMap[] = await getFullContentMap();
 ---
 
@@ -123,7 +123,12 @@ const contentMap: FullContentMap[] = await getFullContentMap();
       });
     </script>
 
-    <SetContentMap payload={contentMap} client:only="react" />
+    <SetMap
+      payload={contentMap}
+      availableCodeHooks={Object.keys(codeHookComponents)}
+      brand={config.init.BRAND_COLOURS || ``}
+      client:only="react"
+    />
     <ViewTransitions />
   </head>
   <body class="w-full">

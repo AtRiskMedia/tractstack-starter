@@ -1293,10 +1293,21 @@ export type TemplateMarkdown = MarkdownPaneFragmentNode & {
   markdownBody?: string;
 };
 
+export interface VisualBreakNode extends PaneFragmentNode {
+  type: "visual-break";
+  breakDesktop?: VisualBreakData;
+  breakTablet?: VisualBreakData;
+  breakMobile?: VisualBreakData;
+  hiddenViewportDesktop?: boolean;
+  hiddenViewportTablet?: boolean;
+  hiddenViewportMobile?: boolean;
+}
+
 export type TemplatePane = PaneNode & {
   id?: string;
   parentId?: string;
-  markdown: TemplateMarkdown;
+  markdown?: TemplateMarkdown;
+  bgPane?: VisualBreakNode;
 };
 
 export interface FlatNode extends BaseNode {

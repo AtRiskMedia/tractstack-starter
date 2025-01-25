@@ -3,6 +3,7 @@ import type { Current, EventStream, StoryStep, FullContentMap, PanesVisible } fr
 
 export const events = atom<EventStream[]>([]);
 export const contentMap = atom<FullContentMap[]>([]);
+export const codehookMap = atom<string[]>([]);
 export const current = atom<Current>({
   id: ``,
   slug: ``,

@@ -1,16 +1,5 @@
 import type { TemplateMarkdown, Theme } from "@/types.ts";
-import { PUBLIC_THEME } from "@/constants.ts";
-import { colorValues } from "@/utils/tailwind/tailwindColors.ts";
-
-export type TailwindColor = (typeof colorValues)[number];
-export type ThemeColorMap = { [key in Theme]: TailwindColor };
-
-export const getComputedColor = (
-  colorMap: ThemeColorMap,
-  theme: Theme = PUBLIC_THEME
-): TailwindColor => {
-  return colorMap[theme] || "brand-1";
-};
+import { getColor } from "@/utils/tailwind/tailwindColors.ts";
 
 export const getTemplateSimpleMarkdown = (
   theme: Theme,
@@ -27,7 +16,7 @@ export const getTemplateSimpleMarkdown = (
       h2: {
         mobile: {
           fontWEIGHT: "bold",
-          textCOLOR: getComputedColor(
+          textCOLOR: getColor(
             {
               light: "brand-7",
               "light-bw": "brand-1",

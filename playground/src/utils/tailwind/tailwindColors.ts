@@ -1,4 +1,9 @@
-import colorConfig from "../../../config/tailwindColors.json";
+import colorConfig from "@/../config/tailwindColors.json";
+import type { Theme } from "@/types.ts";
+import { PUBLIC_THEME } from "@/constants.ts";
+
+export type TailwindColor = (typeof colorValues)[number];
+export type ThemeColorMap = { [key in Theme]: TailwindColor };
 
 type TailwindColorPalette = {
   [colorName: string]: string[];
@@ -101,3 +106,7 @@ export const hexToTailwind = (hexColor: string): string | null => {
 };
 
 export const colorValues = getTailwindColorOptions();
+
+export const getColor = (colorMap: ThemeColorMap, theme: Theme = PUBLIC_THEME): TailwindColor => {
+  return colorMap[theme] || "brand-1";
+};
