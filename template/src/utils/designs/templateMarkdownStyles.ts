@@ -1,7 +1,7 @@
 import { getColor, tailwindToHex } from "@/utils/tailwind/tailwindColors";
 import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 
-const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!`;
+const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves.`;
 
 export const templateCategories = [
   {
@@ -9,17 +9,23 @@ export const templateCategories = [
     title: "All designs",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       ...templateCategories[1].getTemplates(theme, brand, useOdd),
-      //    ...templateCategories[2].getTemplates(theme, brand, useOdd),
+      ...templateCategories[2].getTemplates(theme, brand, useOdd),
       //    ...templateCategories[3].getTemplates(theme, brand, useOdd),
     ],
   },
   {
     id: "paragraph",
-    title: "Paragraphs & Content",
+    title: "Just copy",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       getParagraphDefault(theme, brand, useOdd),
       getParagraphOneColumn(theme, brand, useOdd),
       getParagraphCenter(theme, brand, useOdd),
+    ],
+  },
+  {
+    id: "paragraph-bordered",
+    title: "Just copy (bordered)",
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       getParagraphDefault(theme, brand, useOdd, true),
       getParagraphOneColumn(theme, brand, useOdd, true),
       getParagraphCenter(theme, brand, useOdd, true),
@@ -45,12 +51,17 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       textSIZE: "3xl",
       lineHEIGHT: "snug",
       fontFACE: "action",
+      pt: "9",
+      pb: "2.5",
     },
     tablet: {
       textSIZE: "5xl",
+      pt: "14",
+      pb: "3.5",
     },
     desktop: {
       textSIZE: "6xl",
+      pt: "20",
     },
   },
   h3: {
@@ -69,11 +80,17 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "xl",
       fontFACE: "action",
+      pt: "9",
+      pb: "2.5",
     },
     tablet: {
       textSIZE: "3xl",
+      pt: "14",
+      pb: "3.5",
     },
-    desktop: {},
+    desktop: {
+      pt: "20",
+    },
   },
   h4: {
     mobile: {
@@ -90,9 +107,13 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "xl",
       fontFACE: "action",
+      pt: "4",
+      pb: "1.5",
     },
     tablet: {
       textSIZE: "2xl",
+      pt: "6",
+      pb: "2.5",
     },
     desktop: {},
   },
@@ -111,11 +132,9 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "lg",
       lineHEIGHT: "loose",
-      py: "2.5",
     },
     tablet: {
       textSIZE: "xl",
-      py: "3.5",
     },
     desktop: {},
   },
@@ -181,19 +200,7 @@ function getParagraphDefault(
       },
       theme
     );
-    baseClasses[2].mobile.borderSTROKE = "2";
-    baseClasses[2].mobile.borderSTYLE = "dashed";
-    baseClasses[2].mobile.borderCOLOR = getColor(
-      {
-        light: "brand-8",
-        "light-bw": "brand-8",
-        "light-bold": "brand-6",
-        dark: "brand-7",
-        "dark-bw": "neutral-800",
-        "dark-bold": "brand-7",
-      },
-      theme
-    );
+    baseClasses[2].mobile.shadow = "md";
   }
 
   return {
@@ -251,19 +258,7 @@ function getParagraphCenter(
       },
       theme
     );
-    baseClasses[2].mobile.borderSTROKE = "2";
-    baseClasses[2].mobile.borderSTYLE = "dashed";
-    baseClasses[2].mobile.borderCOLOR = getColor(
-      {
-        light: "brand-8",
-        "light-bw": "brand-8",
-        "light-bold": "brand-6",
-        dark: "brand-7",
-        "dark-bw": "neutral-800",
-        "dark-bold": "brand-7",
-      },
-      theme
-    );
+    baseClasses[2].mobile.shadow = "md";
   }
 
   return {
@@ -322,19 +317,7 @@ function getParagraphOneColumn(
       },
       theme
     );
-    baseClasses[2].mobile.borderSTROKE = "2";
-    baseClasses[2].mobile.borderSTYLE = "dashed";
-    baseClasses[2].mobile.borderCOLOR = getColor(
-      {
-        light: "brand-8",
-        "light-bw": "brand-8",
-        "light-bold": "brand-6",
-        dark: "brand-7",
-        "dark-bw": "neutral-800",
-        "dark-bold": "brand-7",
-      },
-      theme
-    );
+    baseClasses[2].mobile.shadow = "md";
   }
 
   return {

@@ -232,19 +232,17 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
         Click on a design to use:
       </h3>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-2 p-2">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
         {visiblePreviews.map((preview) => (
           <div
             key={preview.index}
             onClick={() => console.log("Selected template:", preview.index + 1, nodeId, first)}
-            className={`relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+            className={`shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
               preview.snapshot
                 ? "hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey"
                 : ""
             }`}
             style={{
-              background:
-                "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
               ...(!preview.snapshot ? { minHeight: "200px" } : {}),
             }}
           >
@@ -260,7 +258,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
               />
             )}
             {preview.snapshot && (
-              <div className="p-1.5">
+              <div className="p-0.5">
                 <img
                   src={preview.snapshot.imageData}
                   alt={`Template ${preview.index + 1}`}

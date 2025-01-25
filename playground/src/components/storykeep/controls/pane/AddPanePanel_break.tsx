@@ -195,15 +195,13 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
             onClick={() =>
               console.log("Selected break:", preview.variant, preview.index + 1, nodeId, first)
             }
-            className={`relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+            className={`shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
               preview.snapshot
                 ? "hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey"
                 : ""
             }`}
             style={{
-              background:
-                "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
-              ...(!preview.snapshot ? { minHeight: "50px" } : {}),
+              ...(!preview.snapshot ? { minHeight: "100px" } : {}),
             }}
           >
             {renderedPages.has(currentPage) && !preview.snapshot && (
@@ -219,7 +217,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
               />
             )}
             {preview.snapshot && (
-              <div className="p-1.5">
+              <div className="p-3.5">
                 <img
                   src={preview.snapshot.imageData}
                   alt={`${preview.variant} break ${preview.index + 1}`}
