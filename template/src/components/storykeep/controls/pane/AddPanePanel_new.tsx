@@ -6,7 +6,7 @@ import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { brandColours } from "@/store/storykeep.ts";
-import { getTemplateMarkdownPane, getTemplateSimplePane } from "@/utils/TemplatePanes";
+import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
 import type { Theme } from "@/types";
 
 interface AddPaneNewPanelProps {
@@ -31,36 +31,6 @@ interface TemplateCategory {
 const ITEMS_PER_PAGE = 3;
 const THEMES = ["light", "light-bw", "light-bold", "dark", "dark-bw", "dark-bold"] as const;
 
-const templateCategories: TemplateCategory[] = [
-  {
-    id: "all",
-    title: "All designs",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      ...basicTemplates.getTemplates(theme, brand, useOdd),
-      ...advancedTemplates.getTemplates(theme, brand, useOdd),
-    ],
-  },
-  {
-    id: "basic",
-    title: "Basic Templates",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getTemplateMarkdownPane(theme, `variant1`, brand, useOdd),
-      getTemplateSimplePane(theme, `variant2`, brand, useOdd),
-    ],
-  },
-  {
-    id: "advanced",
-    title: "Advanced Templates",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getTemplateSimplePane(theme, `variant1`, brand, useOdd),
-      getTemplateMarkdownPane(theme, `variant2`, brand, useOdd),
-    ],
-  },
-];
-
-const basicTemplates = templateCategories[1];
-const advancedTemplates = templateCategories[2];
-
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
@@ -82,12 +52,12 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
     return allTemplates.filter(
       (template) =>
         template.title?.toLowerCase().includes(searchQuery) ||
-        template.description?.toLowerCase().includes(searchQuery)
+        template.slug?.toLowerCase().includes(searchQuery)
     );
   }, [selectedTheme, useOddVariant, query, selectedCategory]);
 
   useEffect(() => {
-    const newPreviews = filteredTemplates.map((template, index) => {
+    const newPreviews = filteredTemplates.map((template, index: number) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
       ctx.addTemplatePane("tmp", template);

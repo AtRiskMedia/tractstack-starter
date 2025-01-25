@@ -72,6 +72,7 @@ export const getTemplateMarkdownPane = (
   brand: string,
   useOdd: boolean = false
 ) => {
+  console.log(`variant: ${variant}`);
   return {
     nodeType: "Pane",
     title: "Simple Pane",
