@@ -4,6 +4,7 @@ import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 
 const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves.`;
 const defaultSectionBody = `### An incredible journey awaits... An incredible journey awaits... An incredible journey awaits...`;
+const defaultIntroBody = `## An incredible journey awaits\n\nAn incredible journey awaits... An incredible journey awaits...`;
 
 export const templateCategories = [
   {
@@ -13,6 +14,7 @@ export const templateCategories = [
       ...templateCategories[1].getTemplates(theme, brand, useOdd),
       ...templateCategories[2].getTemplates(theme, brand, useOdd),
       ...templateCategories[3].getTemplates(theme, brand, useOdd),
+      ...templateCategories[4].getTemplates(theme, brand, useOdd),
     ],
   },
   {
@@ -34,8 +36,20 @@ export const templateCategories = [
     ],
   },
   {
+    id: "intro",
+    title: "Intro Section",
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      getIntroSectionDefault(theme, brand, useOdd),
+      getIntroSectionDefault(theme, brand, useOdd, true),
+      getIntroSectionOneColumn(theme, brand, useOdd),
+      getIntroSectionOneColumn(theme, brand, useOdd, true),
+      getIntroSectionCenter(theme, brand, useOdd),
+      getIntroSectionCenter(theme, brand, useOdd, true),
+    ],
+  },
+  {
     id: "section",
-    title: "Section title",
+    title: "Title Section",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       getSectionDefault(theme, brand, useOdd),
       getSectionDefault(theme, brand, useOdd, true),
@@ -827,3 +841,313 @@ function getSectionBrand(
     },
   };
 }
+
+const getBaseIntroClasses = (theme: Theme) => ({
+  h2: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "3xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "5xl",
+    },
+    desktop: {
+      textSIZE: "6xl",
+    },
+  },
+  h3: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "white",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "3xl",
+    },
+    desktop: {},
+  },
+  h4: {
+    mobile: {
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "white",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "2xl",
+    },
+    desktop: {},
+  },
+  p: {
+    mobile: {
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-7",
+          dark: "brand-8",
+          "dark-bw": "brand-2",
+          "dark-bold": "brand-8",
+        },
+        theme
+      ),
+      textSIZE: "lg",
+      lineHEIGHT: "loose",
+      mt: "4",
+    },
+    tablet: {
+      textSIZE: "xl",
+      mt: "5",
+    },
+    desktop: {},
+  },
+});
+
+const getIntroBaseParentClasses = (): ParentClassesPayload => [
+  {
+    mobile: {
+      mx: "5",
+      mt: "16",
+      mb: "16",
+    },
+    tablet: {
+      mx: "10",
+      mt: "20",
+    },
+    desktop: {},
+  },
+  {
+    mobile: {
+      mx: "auto",
+      maxW: "none",
+    },
+    tablet: {
+      maxW: "screen-lg",
+    },
+    desktop: {
+      maxW: "screen-xl",
+    },
+  },
+  {
+    mobile: {
+      px: "9",
+      py: "10",
+    },
+    tablet: {
+      px: "14",
+    },
+    desktop: {
+      px: "32",
+    },
+  },
+];
+
+export const getIntroSectionDefault = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getIntroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "left";
+  parentClasses[2].mobile.textWRAP = "pretty";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "inner";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section",
+    slug: "intro-default",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseIntroClasses(theme),
+      parentClasses,
+      markdownBody: defaultIntroBody,
+    },
+  };
+};
+
+export const getIntroSectionCenter = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getIntroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "center";
+  parentClasses[2].mobile.textWRAP = "balance";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "inner";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section - centered",
+    slug: "intro-center",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseIntroClasses(theme),
+      parentClasses,
+      markdownBody: defaultIntroBody,
+    },
+  };
+};
+
+export const getIntroSectionOneColumn = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getIntroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "left";
+  parentClasses[2].mobile.textWRAP = "pretty";
+  parentClasses[2].mobile.maxW = "3xl";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "inner";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section - one column",
+    slug: "intro-onecolumn",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseIntroClasses(theme),
+      parentClasses,
+      markdownBody: defaultIntroBody,
+    },
+  };
+};
