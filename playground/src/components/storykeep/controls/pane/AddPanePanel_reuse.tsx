@@ -2,11 +2,11 @@ import { type Dispatch, type SetStateAction, Fragment, useState, useEffect } fro
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { contentMap } from "@/store/events";
-import { NodesContext } from "@/store/nodes";
+import { NodesContext, getCtx } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { PaneMode } from "./AddPanePanel";
-import type { ContentMap, PaneNode } from "@/types";
+import type { PaneContentMap, PaneNode, StoryFragmentNode } from "@/types";
 
 interface AddPaneReUsePanelProps {
   nodeId: string;
@@ -15,16 +15,28 @@ interface AddPaneReUsePanelProps {
 }
 
 const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) => {
-  const [selected, setSelected] = useState<ContentMap | null>(null);
+  const [selected, setSelected] = useState<PaneContentMap | null>(null);
   const [previews, setPreviews] = useState<{ ctx: NodesContext; snapshot?: SnapshotData }[]>([]);
   const [query, setQuery] = useState("");
+  const [availablePanes, setAvailablePanes] = useState<PaneContentMap[]>([]);
 
-  const panes = contentMap.get().filter((item) => item.type === "Pane");
+  useEffect(() => {
+    const ctx = getCtx();
+    const storyfragmentId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+    const storyfragmentNode = ctx.allNodes.get().get(storyfragmentId) as StoryFragmentNode;
+    const usedPaneIds = storyfragmentNode?.paneIds || [];
+
+    const allPanes = contentMap
+      .get()
+      .filter((item): item is PaneContentMap => item.type === "Pane");
+    const unusedPanes = allPanes.filter((pane) => !usedPaneIds.includes(pane.id));
+    setAvailablePanes(unusedPanes);
+  }, [nodeId]);
 
   const filteredPanes =
     query === ""
-      ? panes
-      : panes.filter(
+      ? availablePanes
+      : availablePanes.filter(
           (pane) =>
             pane.title.toLowerCase().includes(query.toLowerCase()) ||
             pane.slug.toLowerCase().includes(query.toLowerCase())
@@ -51,7 +63,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
         }
 
         const paneNode = result.data.data.templatePane as PaneNode;
-        console.log(paneNode);
+        console.log(`not rendering`, paneNode);
         const ctx = new NodesContext();
         ctx.addNode(createEmptyStorykeep("tmp"));
         ctx.addNode({ ...paneNode, parentId: "tmp" });
@@ -89,7 +101,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    displayValue={(pane: ContentMap) => pane?.title || ""}
+                    displayValue={(pane: PaneContentMap) => pane?.title || ""}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search for a pane..."
                   />

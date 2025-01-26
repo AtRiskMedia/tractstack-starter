@@ -19,7 +19,12 @@ import { initializeContent } from "@/utils/db/utils.ts";
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
 // Operations that don't require a request body
-const NO_BODY_OPERATIONS = ["getAllFiles","initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
+const NO_BODY_OPERATIONS = [
+  "getAllFiles",
+  "initializeContent",
+  "getAllBeliefNodes",
+  "getPaneDesigns",
+] as const;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {

@@ -6,10 +6,10 @@ import type { LoadData } from "@/store/nodesSerializer";
 export async function getAllFiles(): Promise<ImageFileNode[]> {
   try {
     const fileRowData = await getAllFilesRowData();
-    
+
     const deserializer = new NodesDeserializer_Json();
     const loadData: LoadData = {};
-    fileRowData.forEach(file => {
+    fileRowData.forEach((file) => {
       deserializer.processImageFileRowData(file, loadData);
     });
 
