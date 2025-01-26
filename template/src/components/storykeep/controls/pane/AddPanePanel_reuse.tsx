@@ -1,9 +1,12 @@
-import { type Dispatch, type SetStateAction, Fragment, useState } from "react";
+import { type Dispatch, type SetStateAction, Fragment, useState, useEffect } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { contentMap } from "@/store/events";
+import { NodesContext } from "@/store/nodes";
+import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
+import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { PaneMode } from "./AddPanePanel";
-import type { ContentMap } from "@/types";
+import type { ContentMap, PaneNode } from "@/types";
 
 interface AddPaneReUsePanelProps {
   nodeId: string;
@@ -13,6 +16,7 @@ interface AddPaneReUsePanelProps {
 
 const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) => {
   const [selected, setSelected] = useState<ContentMap | null>(null);
+  const [previews, setPreviews] = useState<{ ctx: NodesContext; snapshot?: SnapshotData }[]>([]);
   const [query, setQuery] = useState("");
 
   const panes = contentMap.get().filter((item) => item.type === "Pane");
@@ -25,6 +29,41 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
             pane.title.toLowerCase().includes(query.toLowerCase()) ||
             pane.slug.toLowerCase().includes(query.toLowerCase())
         );
+
+  useEffect(() => {
+    if (!selected) {
+      setPreviews([]);
+      return;
+    }
+
+    const fetchPanePreview = async () => {
+      try {
+        const response = await fetch("/api/turso/getPaneTemplateNode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selected.id }),
+        });
+
+        const result = await response.json();
+        if (!result.success || !result.data.data.templatePane) {
+          console.error("Failed to fetch pane:", result.error);
+          return;
+        }
+
+        const paneNode = result.data.data.templatePane as PaneNode;
+        console.log(paneNode);
+        const ctx = new NodesContext();
+        ctx.addNode(createEmptyStorykeep("tmp"));
+        ctx.addNode({ ...paneNode, parentId: "tmp" });
+
+        setPreviews([{ ctx }]);
+      } catch (error) {
+        console.error("Error fetching pane preview:", error);
+      }
+    };
+
+    fetchPanePreview();
+  }, [selected]);
 
   return (
     <div className="p-0.5 shadow-inner">
@@ -48,6 +87,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-200 focus-within:border-cyan-500 transition-colors">
                   <Combobox.Input
+                    autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                     displayValue={(pane: ContentMap) => pane?.title || ""}
                     onChange={(event) => setQuery(event.target.value)}
@@ -121,7 +161,6 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
               <button
                 onClick={() => {
                   console.log("Reusing pane:", selected.id, "at position:", nodeId, first);
-                  // Add your reuse logic here
                 }}
                 className="px-3 py-2 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 focus:bg-cyan-700 transition-colors"
               >
@@ -137,6 +176,46 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
           )}
         </div>
       </div>
+
+      {selected && (
+        <div className="mt-4">
+          <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
+            Preview of selected pane:
+          </h3>
+          <div className="grid grid-cols-1 gap-4 p-2">
+            {previews.map((preview, index) => (
+              <div
+                key={index}
+                className="group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200"
+                style={{
+                  ...(!preview.snapshot ? { minHeight: "200px" } : {}),
+                }}
+              >
+                {!preview.snapshot && (
+                  <NodesSnapshotRenderer
+                    ctx={preview.ctx}
+                    forceRegenerate={false}
+                    onComplete={(data) => {
+                      setPreviews((prev) =>
+                        prev.map((p, i) => (i === index ? { ...p, snapshot: data } : p))
+                      );
+                    }}
+                  />
+                )}
+                {preview.snapshot && (
+                  <div className="p-0.5">
+                    <img
+                      src={preview.snapshot.imageData}
+                      alt={`Preview of ${selected.title}`}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

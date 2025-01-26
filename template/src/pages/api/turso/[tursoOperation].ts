@@ -8,6 +8,7 @@ import { updateProfile } from "@/utils/db/api/update.ts";
 import { executeQueries } from "@/utils/db/api/executeQueries.ts";
 import { getPaneDesigns } from "@/utils/db/api/paneDesigns.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
+import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
 import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
@@ -48,6 +49,9 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "upsertBeliefNode":
         result = await upsertBeliefNode(body);
+        break;
+      case "getPaneTemplateNode":
+        result = await getPaneTemplateNode(body.id);
         break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();

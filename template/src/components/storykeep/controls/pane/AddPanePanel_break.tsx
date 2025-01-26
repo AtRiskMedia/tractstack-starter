@@ -81,6 +81,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
     const newPreviews = templates.map((template, index) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
+      console.log(template);
       ctx.addTemplatePane("tmp", template);
       return { ctx, template, index, variant: template.variant };
     });
@@ -123,6 +124,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                   <Combobox.Input
+                    autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                     onChange={(event) => setVariantQuery(event.target.value)}
                     displayValue={(variant: string) =>
@@ -196,7 +198,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
               console.log("Selected break:", preview.variant, preview.index + 1, nodeId, first)
             }
             className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot ? "hover:outline hover:outline-2 hover:outline-solid" : ""
+              preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
             }`}
             style={{
               ...(!preview.snapshot ? { minHeight: "100px" } : {}),
@@ -223,7 +225,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
                     className="w-full"
                   />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
+                <div className="rounded-t-md absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
                   {preview.variant}
                 </div>
               </>

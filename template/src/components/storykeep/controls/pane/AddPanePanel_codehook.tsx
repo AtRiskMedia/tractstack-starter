@@ -43,6 +43,7 @@ const AddPaneCodeHookPanel = ({ nodeId, first, setMode }: AddPaneCodeHookPanelPr
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-200 focus-within:border-cyan-500 transition-colors">
                   <Combobox.Input
+                    autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                     displayValue={(hook: string) => hook || ""}
                     onChange={(event) => setQuery(event.target.value)}

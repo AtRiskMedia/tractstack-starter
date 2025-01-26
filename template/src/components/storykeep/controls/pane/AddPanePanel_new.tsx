@@ -62,6 +62,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
       ctx.addTemplatePane("tmp", template);
+      console.log(template);
       return { ctx, template, index };
     });
     setPreviews(newPreviews);
@@ -175,6 +176,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                   <Combobox.Input
+                    autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
                     onChange={(event) => setQuery(event.target.value)}
                     displayValue={(category: TemplateCategory) => category.title}
@@ -238,7 +240,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
             key={preview.index}
             onClick={() => console.log("Selected template:", preview.index + 1, nodeId, first)}
             className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot ? "hover:outline hover:outline-2 hover:outline-solid" : ""
+              preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
             }`}
             style={{
               ...(!preview.snapshot ? { minHeight: "200px" } : {}),
@@ -264,7 +266,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
                 />
               </div>
             )}
-            <div className="absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
+            <div className="rounded-t-md absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
               {preview.template.title}
             </div>
           </div>
