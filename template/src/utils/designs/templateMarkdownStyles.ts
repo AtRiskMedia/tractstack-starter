@@ -236,8 +236,8 @@ function getParagraphDefault(
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Paragraph section",
-    slug: "paragraph-default",
+    title: !bordered ? "Copy goes here" : "Copy goes here with border",
+    slug: !bordered ? "paragraph-default" : "paragraph-default-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -294,8 +294,8 @@ function getParagraphCenter(
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Paragraph section - centered",
-    slug: "paragraph-center",
+    title: !bordered ? "Copy goes here - centered" : "Copy goes here with border - centered",
+    slug: !bordered ? "paragraph-centered" : "paragraph-centered-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -353,8 +353,8 @@ function getParagraphOneColumn(
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Paragraph section - one column",
-    slug: "paragraph-onecolumn",
+    title: !bordered ? "Copy goes here - one column" : "Copy goes here with border - one column",
+    slug: !bordered ? "paragraph-onecol" : "paragraph-onecol-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -451,15 +451,15 @@ function getSectionDefault(
   theme: Theme,
   brand: string,
   useOdd: boolean,
-  extra: boolean = false
+  bordered: boolean = false
 ): TemplatePane {
   return {
     nodeType: "Pane",
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Section title",
-    slug: "section",
+    title: !bordered ? "Title Section" : "Title Section with border",
+    slug: !bordered ? "section" : "section-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -571,7 +571,7 @@ function getSectionDefault(
           desktop: {},
         },
       },
-      parentClasses: !extra ? sectionParentClasses : sectionExtraParentClasses,
+      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
       markdownBody: defaultSectionBody,
     },
   };
@@ -581,15 +581,15 @@ function getSectionInverse(
   theme: Theme,
   brand: string,
   useOdd: boolean,
-  extra: boolean = false
+  bordered: boolean = false
 ): TemplatePane {
   return {
     nodeType: "Pane",
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Section title - Inverse",
-    slug: "sectioninverse",
+    title: !bordered ? "Title Section - inverse" : "Title Section with border - inverse",
+    slug: !bordered ? "section-inverse" : "section-inverse-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -702,7 +702,7 @@ function getSectionInverse(
           desktop: {},
         },
       },
-      parentClasses: !extra ? sectionParentClasses : sectionExtraParentClasses,
+      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
       markdownBody: defaultSectionBody,
     },
   };
@@ -712,15 +712,17 @@ function getSectionBrand(
   theme: Theme,
   brand: string,
   useOdd: boolean,
-  extra: boolean = false
+  bordered: boolean = false
 ): TemplatePane {
   return {
     nodeType: "Pane",
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Section title - Brand Colours",
-    slug: "sectionbrand",
+    title: !bordered
+      ? "Title Section - brand colours"
+      : "Title Section with border - brand colours",
+    slug: !bordered ? "section-brand" : "section-brand-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -836,7 +838,7 @@ function getSectionBrand(
           desktop: {},
         },
       },
-      parentClasses: !extra ? sectionParentClasses : sectionExtraParentClasses,
+      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
       markdownBody: defaultSectionBody,
     },
   };
@@ -862,10 +864,10 @@ const getBaseIntroClasses = (theme: Theme) => ({
       fontFACE: "action",
     },
     tablet: {
-      textSIZE: "5xl",
+      textSIZE: "4xl",
     },
     desktop: {
-      textSIZE: "6xl",
+      textSIZE: "5xl",
     },
   },
   h3: {

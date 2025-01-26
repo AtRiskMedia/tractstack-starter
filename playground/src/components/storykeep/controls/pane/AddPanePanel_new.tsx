@@ -102,7 +102,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
           <div className="w-40">
             <Listbox value={selectedTheme} onChange={setSelectedTheme}>
               <div className="relative">
-                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
                   <span className="block truncate capitalize">
                     {selectedTheme.replace(/-/g, " ")}
                   </span>
@@ -237,10 +237,8 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
           <div
             key={preview.index}
             onClick={() => console.log("Selected template:", preview.index + 1, nodeId, first)}
-            className={`shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot
-                ? "hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey"
-                : ""
+            className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+              preview.snapshot ? "hover:outline hover:outline-2 hover:outline-solid" : ""
             }`}
             style={{
               ...(!preview.snapshot ? { minHeight: "200px" } : {}),
@@ -266,6 +264,9 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
                 />
               </div>
             )}
+            <div className="absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
+              {preview.template.title}
+            </div>
           </div>
         ))}
       </div>

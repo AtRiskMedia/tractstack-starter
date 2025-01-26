@@ -188,17 +188,15 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
         Click on a break design to use:
       </h3>
 
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-2 p-2">
+      <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 p-2">
         {visiblePreviews.map((preview) => (
           <div
             key={preview.index}
             onClick={() =>
               console.log("Selected break:", preview.variant, preview.index + 1, nodeId, first)
             }
-            className={`shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot
-                ? "hover:outline hover:outline-4 hover:outline-dashed hover:outline-mydarkgrey"
-                : ""
+            className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+              preview.snapshot ? "hover:outline hover:outline-2 hover:outline-solid" : ""
             }`}
             style={{
               ...(!preview.snapshot ? { minHeight: "100px" } : {}),
@@ -217,17 +215,19 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
               />
             )}
             {preview.snapshot && (
-              <div className="p-3.5">
-                <img
-                  src={preview.snapshot.imageData}
-                  alt={`${preview.variant} break ${preview.index + 1}`}
-                  className="w-full"
-                />
-              </div>
+              <>
+                <div className="p-3.5 mb-4">
+                  <img
+                    src={preview.snapshot.imageData}
+                    alt={`${preview.variant} break ${preview.index + 1}`}
+                    className="w-full"
+                  />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
+                  {preview.variant}
+                </div>
+              </>
             )}
-            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white px-2 py-1 text-sm">
-              {preview.variant}
-            </div>
           </div>
         ))}
       </div>
