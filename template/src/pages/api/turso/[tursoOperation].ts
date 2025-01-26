@@ -7,17 +7,19 @@ import { createProfile } from "@/utils/db/api/create.ts";
 import { updateProfile } from "@/utils/db/api/update.ts";
 import { executeQueries } from "@/utils/db/api/executeQueries.ts";
 import { getPaneDesigns } from "@/utils/db/api/paneDesigns.ts";
+import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
 import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
+import { upsertFileNode } from "@/utils/db/api/upsertFileNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
 import { initializeContent } from "@/utils/db/utils.ts";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
 // Operations that don't require a request body
-const NO_BODY_OPERATIONS = ["initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
+const NO_BODY_OPERATIONS = ["getAllFiles","initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
@@ -47,11 +49,17 @@ export const POST: APIRoute = async ({ request, params }) => {
       case "uniqueTailwindClasses":
         result = await getUniqueTailwindClasses(body);
         break;
+      case "upsertFileNode":
+        result = await upsertFileNode(body);
+        break;
       case "upsertBeliefNode":
         result = await upsertBeliefNode(body);
         break;
       case "getPaneTemplateNode":
         result = await getPaneTemplateNode(body.id);
+        break;
+      case "getAllFiles":
+        result = await getAllFiles();
         break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();
