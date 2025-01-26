@@ -30,7 +30,7 @@ interface TemplateCategory {
   getTemplates: (theme: Theme, brand: string, useOdd: boolean) => any[];
 }
 
-const ITEMS_PER_PAGE = 3;
+const ITEMS_PER_PAGE = 4;
 
 const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
