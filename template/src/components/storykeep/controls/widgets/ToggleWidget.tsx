@@ -21,7 +21,7 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
 
   useEffect(() => {
     async function fetchBeliefs() {
-      const response = await fetch("/api/turso/getAllBeliefNodes", { method: "POST" });
+      const response = await fetch("/api/turso/getAllBeliefNodes", { method: "GET" });
       if (!response.ok) return;
       const result = await response.json();
       if (result.success) setBeliefs(result.data);

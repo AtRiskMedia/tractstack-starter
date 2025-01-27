@@ -22,7 +22,7 @@ import { initializeContent } from "@/utils/db/utils.ts";
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
 // Operations that don't require a request body
-const NO_BODY_OPERATIONS = ["initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
+const NO_BODY_OPERATIONS = ["initializeContent"] as const;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
@@ -70,12 +70,6 @@ export const POST: APIRoute = async ({ request, params }) => {
       case "getPaneTemplateNode":
         result = await getPaneTemplateNode(body.id);
         break;
-      case "getAllBeliefNodes":
-        result = await getAllBeliefNodes();
-        break;
-      case "paneDesigns":
-        result = await getPaneDesigns();
-        break;
       case "unlock":
         result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
         break;
@@ -120,6 +114,12 @@ export const GET: APIRoute = async ({ params }) => {
     switch (tursoOperation) {
       case "getAllFiles":
         result = await getAllFiles();
+        break;
+      case "getAllBeliefNodes":
+        result = await getAllBeliefNodes();
+        break;
+      case "paneDesigns":
+        result = await getPaneDesigns();
         break;
       default:
         if (tursoOperation === "read") {

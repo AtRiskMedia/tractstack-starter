@@ -208,11 +208,10 @@ const DesignNewPane = ({
       try {
         setIsLoading(true);
         const response = await fetch("/api/turso/paneDesigns", {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({}),
         });
 
         if (!response.ok) {

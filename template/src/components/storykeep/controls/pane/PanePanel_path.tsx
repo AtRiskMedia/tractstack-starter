@@ -39,7 +39,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
     try {
       setIsLoading(true);
       const response = await fetch("/api/turso/getAllBeliefNodes", {
-        method: "POST",
+        method: "GET",
         headers: { "Content-Type": "application/json" },
       });
 
