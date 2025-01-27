@@ -19,12 +19,7 @@ import { initializeContent } from "@/utils/db/utils.ts";
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
 // Operations that don't require a request body
-const NO_BODY_OPERATIONS = [
-  "getAllFiles",
-  "initializeContent",
-  "getAllBeliefNodes",
-  "getPaneDesigns",
-] as const;
+const NO_BODY_OPERATIONS = ["initializeContent", "getAllBeliefNodes", "getPaneDesigns"] as const;
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {
@@ -63,9 +58,6 @@ export const POST: APIRoute = async ({ request, params }) => {
       case "getPaneTemplateNode":
         result = await getPaneTemplateNode(body.id);
         break;
-      case "getAllFiles":
-        result = await getAllFiles();
-        break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();
         break;
@@ -102,6 +94,44 @@ export const POST: APIRoute = async ({ request, params }) => {
       }),
       {
         status: error instanceof Error && error.message.includes("not found") ? 404 : 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+};
+
+export const GET: APIRoute = async ({ params }) => {
+  const { tursoOperation } = params;
+
+  try {
+    let result;
+    switch (tursoOperation) {
+      case "getAllFiles":
+        result = await getAllFiles();
+        break;
+      default:
+        if (tursoOperation === "read") {
+          return POST({
+            request: new Request("http://dummy"),
+            params,
+            redirect: () => new Response(),
+          } as any);
+        }
+        throw new Error("Method not allowed");
+    }
+
+    return new Response(JSON.stringify({ success: true, data: result }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "An error occurred",
+      }),
+      {
+        status: 500,
         headers: { "Content-Type": "application/json" },
       }
     );

@@ -279,7 +279,7 @@ export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
           filename: row.filename,
           alt_description: row.alt_description,
           url: row.url,
-          ...(typeof row.src_set === "boolean" ? { src_set: row.src_set } : {}),
+          ...(typeof row.src_set === "string" ? { src_set: row.src_set } : {}),
         } as ImageFileRowData;
       })
       .filter((row): row is ImageFileRowData => row !== null);

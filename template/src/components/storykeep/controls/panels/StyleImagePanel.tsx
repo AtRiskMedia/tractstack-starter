@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
-import { getCtx } from "../../../../store/nodes";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
-import { tagTitles } from "../../../../constants";
+import ImageUpload from "../fields/ImageUpload";
+import type { ImageParams } from "../fields/ImageUpload";
+import { getCtx } from "@/store/nodes";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
+import { tagTitles } from "@/constants";
 import { settingsPanelStore } from "@/store/storykeep";
-import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface StyleImagePanelProps {
@@ -257,8 +259,32 @@ const StyleImagePanel = ({
     const allNodes = ctx.allNodes.get();
     const imgNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
     if (!imgNode) return;
-
     imgNode.alt = newAlt;
+    ctx.modifyNodes([{ ...imgNode, isChanged: true }]);
+  };
+
+  const handleImageUpdate = (params: ImageParams) => {
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const imgNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+    if (!imgNode) return;
+    imgNode.fileId = params.fileId;
+    imgNode.src = params.src;
+    imgNode.alt = params.altDescription || "!!This is requires a description!!";
+    setAltDescription(params.altDescription || "!!This is requires a description!!");
+    if (params.srcSet) imgNode.srcSet = params.srcSet;
+    ctx.modifyNodes([{ ...imgNode, isChanged: true }]);
+  };
+
+  const handleImageRemove = () => {
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const imgNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+    if (!imgNode) return;
+    if (typeof imgNode.fileId === `string`) delete imgNode.fileId;
+    imgNode.src = `/static.jpg`;
+    if (typeof imgNode.srcSet === `string`) delete imgNode.srcSet;
+    imgNode.alt = `This is a placeholder for an image that hasn't yet been uploaded`;
     ctx.modifyNodes([{ ...imgNode, isChanged: true }]);
   };
 
@@ -267,7 +293,13 @@ const StyleImagePanel = ({
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Style this {tagTitles[node.tagName as Tag]}</h2>
 
-        <div className="space-y-4">
+        <ImageUpload
+          currentFileId={node.fileId}
+          onUpdate={handleImageUpdate}
+          onRemove={handleImageRemove}
+        />
+
+        <div>
           <label className="block text-sm text-mydarkgrey">Alt Description</label>
           <input
             type="text"

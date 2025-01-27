@@ -2,6 +2,7 @@ import { NodesContext } from "@/store/nodes.ts";
 import { NodesSerializer, type SaveData, type LoadData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
+  FlatNode,
   MenuNode,
   ResourceNode,
   PaneNode,
@@ -197,10 +198,6 @@ export class NodesSerializer_Json extends NodesSerializer {
     saveData: SaveData
   ) {
     const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
-    //const impressionNodes = ctx.getImpressionNodesForPanes([paneNode.id]);
-    //if (impressionNodes.length > 0) {
-    //  nodes.push(...impressionNodes);
-    //}
 
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);
     const optionsPayload = {
@@ -238,13 +235,32 @@ export class NodesSerializer_Json extends NodesSerializer {
         : {}),
     };
 
-    // Process file relationships
+    // Process file relationships and create updated file records
     if (paneFilesNodes) {
       paneFilesNodes.forEach((fid: string) => {
+        // Add file relationship
         saveData.paneFiles.push({
           pane_id: paneNode.id,
           file_id: fid,
         });
+
+        // Find the TagElement with this fileId
+        const tagElement = allNodes.find(
+          (node) => node.nodeType === "TagElement" && "fileId" in node && node.fileId === fid
+        ) as FlatNode;
+
+        if (tagElement && "alt" in tagElement) {
+          // Extract base filename from src URL by removing the _???px part
+          const urlFilename = tagElement.src?.split("/").pop() || "";
+          const baseFilename = urlFilename.replace(/_\d+px\./, ".");
+          saveData.files.push({
+            id: fid,
+            filename: baseFilename || fid, // Fallback to fid if extraction fails
+            alt_description: tagElement.alt || "Image description missing",
+            url: tagElement.src || "",
+            ...(typeof tagElement.srcSet === "string" ? { src_set: tagElement.srcSet } : {}),
+          });
+        }
       });
     }
 
