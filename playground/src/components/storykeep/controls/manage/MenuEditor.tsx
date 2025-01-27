@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
@@ -7,34 +6,12 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import { cleanString } from "@/utils/common/helpers.ts";
 import ActionBuilderField from "@/components/storykeep/controls/fields/ActionBuilderField.tsx";
-import type { MenuNode, MenuLink, TursoQuery, FullContentMap } from "@/types.ts";
+import type { MenuNode, MenuLink, FullContentMap } from "@/types.ts";
 
 interface MenuEditorProps {
   menu: MenuNode;
   create: boolean;
   contentMap: FullContentMap[];
-}
-
-function createMenuInsertQuery(menu: MenuNode): TursoQuery {
-  return {
-    sql: `INSERT INTO menus (id, title, theme, options_payload) VALUES (?, ?, ?, ?)`,
-    args: [menu.id, menu.title, menu.theme, JSON.stringify(menu.optionsPayload)],
-  };
-}
-
-function createMenuUpdateQuery(id: string, menu: MenuNode): TursoQuery {
-  return {
-    sql: `UPDATE menus SET title = ?, theme = ?, options_payload = ? WHERE id = ?`,
-    args: [menu.title, menu.theme, JSON.stringify(menu.optionsPayload), id],
-  };
-}
-
-function compareMenuFields(current: MenuNode, original: MenuNode): boolean {
-  return (
-    current.title !== original.title ||
-    current.theme !== original.theme ||
-    JSON.stringify(current.optionsPayload) !== JSON.stringify(original.optionsPayload)
-  );
 }
 
 export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps) {
@@ -78,30 +55,23 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
 
   const handleSave = useCallback(async () => {
     if (!unsavedChanges || isSaving) return;
+
     try {
       setIsSaving(true);
-      const queries: TursoQuery[] = [];
-      if (create) {
-        queries.push(createMenuInsertQuery(localMenu));
-      } else if (compareMenuFields(localMenu, menu)) {
-        queries.push(createMenuUpdateQuery(menu.id, localMenu));
+
+      const response = await fetch("/api/turso/upsertMenuNode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(localMenu),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save menu changes");
       }
 
-      if (queries.length > 0) {
-        const response = await fetch("/api/turso/executeQueries", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(queries),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to save menu changes");
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || "Failed to save menu changes");
-        }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save menu changes");
       }
 
       setUnsavedChanges(false);
@@ -117,7 +87,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
     } finally {
       setIsSaving(false);
     }
-  }, [localMenu, menu, unsavedChanges, isSaving, create]);
+  }, [localMenu, create, unsavedChanges, isSaving]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {

@@ -1,11 +1,11 @@
 ---
 import { ulid } from "ulid";
-import { getConfig } from "../../../utils/core/config";
-import StoryKeep from "../../../layouts/StoryKeep.astro";
-import { getTractStackIdBySlug } from "../../../utils/db/utils";
-import CreateNewPage from "../../../components/storykeep/create/CreateNewPage";
-import { getContentMap } from "../../../utils/db/utils";
-import type { ContentMap } from "../../../types";
+import { getConfig } from "@/utils/core/config";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import { getTractStackIdBySlug } from "@/utils/db/utils";
+import CreateNewPage from "@/components/storykeep/create/CreateNewPage";
+import { getContentMap } from "@/utils/db/utils";
+import type { ContentMap } from "@/types";
 
 const slug = `create`;
 const newId = ulid();

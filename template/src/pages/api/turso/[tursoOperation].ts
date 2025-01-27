@@ -13,6 +13,9 @@ import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
 import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
 import { upsertFileNode } from "@/utils/db/api/upsertFileNode.ts";
+import { upsertMenuNode } from "@/utils/db/api/upsertMenuNode.ts";
+import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
+import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
 import { initializeContent } from "@/utils/db/utils.ts";
 
@@ -51,6 +54,15 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "upsertFileNode":
         result = await upsertFileNode(body);
+        break;
+      case "upsertMenuNode":
+        result = await upsertMenuNode(body);
+        break;
+      case "upsertResourceNode":
+        result = await upsertResourceNode(body);
+        break;
+      case "upsertTractStackNode":
+        result = await upsertTractStackNode(body);
         break;
       case "upsertBeliefNode":
         result = await upsertBeliefNode(body);

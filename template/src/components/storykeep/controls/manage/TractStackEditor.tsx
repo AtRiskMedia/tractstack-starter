@@ -1,45 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import { cleanString } from "@/utils/common/helpers.ts";
-import type { TractStackNode, TursoQuery } from "@/types.ts";
+import type { TractStackNode } from "@/types.ts";
 
 interface TractStackEditorProps {
   tractstack: TractStackNode;
   create: boolean;
-}
-
-function createTractStackInsertQuery(tractstack: TractStackNode): TursoQuery {
-  return {
-    sql: `INSERT INTO tractstacks (
-            id,
-            title,
-            slug,
-            social_image_path
-          ) VALUES (?, ?, ?, ?)`,
-    args: [tractstack.id, tractstack.title, tractstack.slug, tractstack.socialImagePath || null],
-  };
-}
-
-function createTractStackUpdateQuery(id: string, tractstack: TractStackNode): TursoQuery {
-  return {
-    sql: `UPDATE tractstacks 
-          SET title = ?, 
-              slug = ?,
-              social_image_path = ?
-          WHERE id = ?`,
-    args: [tractstack.title, tractstack.slug, tractstack.socialImagePath || null, id],
-  };
-}
-
-function compareTractStackFields(current: TractStackNode, original: TractStackNode): boolean {
-  return (
-    current.title !== original.title ||
-    current.slug !== original.slug ||
-    current.socialImagePath !== original.socialImagePath
-  );
 }
 
 export default function TractStackEditor({ tractstack, create }: TractStackEditorProps) {
@@ -57,30 +25,20 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
     if (!unsavedChanges || isSaving) return;
     try {
       setIsSaving(true);
-      const queries: TursoQuery[] = [];
-      if (create) {
-        queries.push(createTractStackInsertQuery(localTractStack));
-      } else if (compareTractStackFields(localTractStack, tractstack)) {
-        queries.push(createTractStackUpdateQuery(tractstack.id, localTractStack));
+
+      const response = await fetch("/api/turso/upsertTractStackNode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(localTractStack),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save tractstack changes");
       }
 
-      if (queries.length > 0) {
-        const response = await fetch("/api/turso/executeQueries", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(queries),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to save tractstack changes");
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || "Failed to save tractstack changes");
-        }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save tractstack changes");
       }
 
       setUnsavedChanges(false);
@@ -96,7 +54,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
     } finally {
       setIsSaving(false);
     }
-  }, [localTractStack, tractstack, unsavedChanges, isSaving, create]);
+  }, [localTractStack, create, unsavedChanges, isSaving]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {

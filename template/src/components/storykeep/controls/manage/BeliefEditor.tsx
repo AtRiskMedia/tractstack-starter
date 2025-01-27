@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useCallback } from "react";
+// BeliefEditor.tsx
 import { ulid } from "ulid";
+import { useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
@@ -8,7 +8,7 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import { cleanAllowCapsString } from "@/utils/common/helpers.ts";
 import { heldBeliefsScales, heldBeliefsTitles } from "@/utils/common/beliefs.ts";
-import type { BeliefNode, TursoQuery, BeliefOptionDatum } from "@/types.ts";
+import type { BeliefNode, BeliefOptionDatum } from "@/types.ts";
 
 type ScaleType = keyof typeof heldBeliefsScales | "custom" | "";
 
@@ -18,52 +18,6 @@ interface BeliefEditorProps {
   onComplete?: () => void;
   onCancel?: () => void;
   isEmbedded?: boolean;
-}
-
-function createBeliefUpdateQuery(id: string, belief: BeliefNode): TursoQuery {
-  return {
-    sql: `UPDATE beliefs
-          SET title = ?, 
-              slug = ?, 
-              scale = ?,
-              custom_values = ?
-          WHERE id = ?`,
-    args: [
-      belief.title,
-      belief.slug,
-      belief.scale,
-      belief.customValues ? belief.customValues.join(",") : null,
-      id,
-    ],
-  };
-}
-
-function createBeliefInsertQuery(belief: BeliefNode): TursoQuery {
-  return {
-    sql: `INSERT INTO beliefs (
-            id,
-            title,
-            slug,
-            scale,
-            custom_values
-          ) VALUES (?, ?, ?, ?, ?)`,
-    args: [
-      belief.id,
-      belief.title,
-      belief.slug,
-      belief.scale,
-      belief.customValues ? belief.customValues.join(",") : null,
-    ],
-  };
-}
-
-function compareBeliefFields(current: BeliefNode, original: BeliefNode): boolean {
-  return (
-    current.title !== original.title ||
-    current.slug !== original.slug ||
-    current.scale !== original.scale ||
-    JSON.stringify(current.customValues) !== JSON.stringify(original.customValues)
-  );
 }
 
 export default function BeliefEditor({
@@ -143,9 +97,9 @@ export default function BeliefEditor({
 
   const handleSave = useCallback(async () => {
     if (!unsavedChanges || isSaving) return;
+
     try {
       setIsSaving(true);
-      const queries: TursoQuery[] = [];
 
       const updatedBelief = {
         ...localBelief,
@@ -155,29 +109,19 @@ export default function BeliefEditor({
             : undefined,
       };
 
-      if (create) {
-        queries.push(createBeliefInsertQuery(updatedBelief));
-      } else if (compareBeliefFields(updatedBelief, belief)) {
-        queries.push(createBeliefUpdateQuery(belief.id, updatedBelief));
+      const response = await fetch("/api/turso/upsertBeliefNode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedBelief),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save belief changes");
       }
 
-      if (queries.length > 0) {
-        const response = await fetch("/api/turso/executeQueries", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(queries),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to save belief changes");
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || "Failed to save belief changes");
-        }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save belief changes");
       }
 
       setUnsavedChanges(false);
@@ -197,7 +141,7 @@ export default function BeliefEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [localBelief, belief, unsavedChanges, isSaving, create, customValues, onComplete]);
+  }, [localBelief, create, unsavedChanges, isSaving, customValues, onComplete]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {

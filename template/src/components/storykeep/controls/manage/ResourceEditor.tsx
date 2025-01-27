@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import { Switch } from "@headlessui/react";
@@ -8,69 +7,13 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import { cleanString } from "@/utils/common/helpers.ts";
 import { getResourceSetting, processResourceValue } from "@/utils/storykeep/resourceHelpers.ts";
-import type { ResourceNode, ResourceSetting, TursoQuery } from "@/types.ts";
+import ActionBuilderField from "../fields/ActionBuilderField";
+import type { ResourceNode, ResourceSetting, FullContentMap } from "@/types";
 
 interface ResourceEditorProps {
   resource: ResourceNode;
   create: boolean;
-}
-
-function createResourceUpdateQuery(id: string, resource: ResourceNode): TursoQuery {
-  return {
-    sql: `UPDATE resources
-          SET title = ?, 
-              slug = ?, 
-              category_slug = ?,
-              oneliner = ?,
-              options_payload = ?,
-              action_lisp = ?
-          WHERE id = ?`,
-    args: [
-      resource.title,
-      resource.slug,
-      resource.category || null,
-      resource.oneliner,
-      typeof resource.optionsPayload !== `undefined`
-        ? JSON.stringify(resource.optionsPayload)
-        : `{}`,
-      resource.actionLisp || null,
-      id,
-    ],
-  };
-}
-
-function createResourceInsertQuery(resource: ResourceNode): TursoQuery {
-  return {
-    sql: `INSERT INTO resources (
-            id,
-            title,
-            slug,
-            category_slug,
-            oneliner,
-            options_payload,
-            action_lisp
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    args: [
-      resource.id,
-      resource.title,
-      resource.slug,
-      resource.category || null,
-      resource.oneliner,
-      JSON.stringify(resource.optionsPayload),
-      resource.actionLisp || null,
-    ],
-  };
-}
-
-function compareResourceFields(current: ResourceNode, original: ResourceNode): boolean {
-  return (
-    current.title !== original.title ||
-    current.slug !== original.slug ||
-    current.category !== original.category ||
-    current.oneliner !== original.oneliner ||
-    current.actionLisp !== original.actionLisp ||
-    JSON.stringify(current.optionsPayload) !== JSON.stringify(original.optionsPayload)
-  );
+  contentMap: FullContentMap[];
 }
 
 const EditableKey = ({
@@ -107,8 +50,11 @@ const EditableKey = ({
   );
 };
 
-export default function ResourceEditor({ resource, create }: ResourceEditorProps) {
-  const [localResource, setLocalResource] = useState<ResourceNode>(resource);
+export default function ResourceEditor({ resource, create, contentMap }: ResourceEditorProps) {
+  const [localResource, setLocalResource] = useState<ResourceNode>({
+    ...resource,
+    actionLisp: resource.actionLisp || "", // Ensure actionLisp is initialized to empty string if invalid
+  });
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -164,7 +110,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
   const handleAddOptionPayloadField = useCallback(() => {
     const newKey = `newField${Object.keys(localResource?.optionsPayload || {}).length}`;
     handleOptionsPayloadChange(newKey, "");
-  }, [localResource?.optionsPayload || {}, handleOptionsPayloadChange]);
+  }, [localResource?.optionsPayload, handleOptionsPayloadChange]);
 
   const handleRemoveOptionPayloadField = useCallback((key: string) => {
     setLocalResource((prev) => {
@@ -179,30 +125,20 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
     if (!unsavedChanges || isSaving) return;
     try {
       setIsSaving(true);
-      const queries: TursoQuery[] = [];
-      if (create) {
-        queries.push(createResourceInsertQuery(localResource));
-      } else if (compareResourceFields(localResource, resource)) {
-        queries.push(createResourceUpdateQuery(resource.id, localResource));
+
+      const response = await fetch("/api/turso/upsertResourceNode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(localResource),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save resource changes");
       }
 
-      if (queries.length > 0) {
-        const response = await fetch("/api/turso/executeQueries", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(queries),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to save resource changes");
-        }
-
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || "Failed to save resource changes");
-        }
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save resource changes");
       }
 
       setUnsavedChanges(false);
@@ -218,7 +154,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
     } finally {
       setIsSaving(false);
     }
-  }, [localResource, resource, unsavedChanges, isSaving, create]);
+  }, [localResource, create, unsavedChanges, isSaving]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {
@@ -287,7 +223,7 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
 
         <div className="space-y-6 max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 gap-4">
-            {["title", "slug", "category", "oneliner", "actionLisp"].map((field) => (
+            {["title", "slug", "category", "oneliner"].map((field) => (
               <div key={field}>
                 <label className="block text-sm font-bold text-gray-800">
                   {field.charAt(0).toUpperCase() + field.slice(1)}
@@ -305,6 +241,15 @@ export default function ResourceEditor({ resource, create }: ResourceEditorProps
                 />
               </div>
             ))}
+
+            <div>
+              <label className="block text-sm font-bold text-gray-800">Action</label>
+              <ActionBuilderField
+                value={localResource.actionLisp || ""}
+                onChange={(value) => handleChange("actionLisp", value)}
+                contentMap={contentMap}
+              />
+            </div>
 
             <div className="space-y-4">
               <h4 className="text-lg font-bold text-gray-800">Options Payload</h4>
