@@ -9,7 +9,7 @@ import type { PaneNode } from "@/types";
 
 interface PaneTitlePanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<ContextPaneModeType>>;
+  setMode?: Dispatch<SetStateAction<ContextPaneModeType>>;
 }
 
 const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
@@ -54,7 +54,7 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Page Title</h3>
           <button
-            onClick={() => setMode(ContextPaneMode.DEFAULT)}
+            onClick={() => setMode && setMode(ContextPaneMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
             ← Go Back

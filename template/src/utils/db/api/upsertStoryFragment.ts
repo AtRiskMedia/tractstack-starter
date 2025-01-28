@@ -34,23 +34,23 @@ export async function upsertStoryFragment(
         rowData.changed,
         rowData.menu_id || null,
         rowData.social_image_path || null,
-        rowData.tailwind_background_colour || null
-      ]
+        rowData.tailwind_background_colour || null,
+      ],
     });
 
     // Handle pane relationships
     if (rowData.pane_ids?.length > 0) {
       // First delete existing relationships
       await client.execute({
-        sql: 'DELETE FROM storyfragment_pane WHERE storyfragment_id = ?',
-        args: [rowData.id]
+        sql: "DELETE FROM storyfragment_pane WHERE storyfragment_id = ?",
+        args: [rowData.id],
       });
 
       // Then insert new relationships
       for (let i = 0; i < rowData.pane_ids.length; i++) {
         await client.execute({
-          sql: 'INSERT INTO storyfragment_pane (storyfragment_id, pane_id, weight) VALUES (?, ?, ?)',
-          args: [rowData.id, rowData.pane_ids[i], i]
+          sql: "INSERT INTO storyfragment_pane (storyfragment_id, pane_id, weight) VALUES (?, ?, ?)",
+          args: [rowData.id, rowData.pane_ids[i], i],
         });
       }
     }
@@ -60,7 +60,7 @@ export async function upsertStoryFragment(
     console.error("Error in upsertStoryFragment:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
+      error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
 }

@@ -1,4 +1,6 @@
 import { getCtx, NodesContext } from "@/store/nodes.ts";
+import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
+import PaneTitlePanel from "@/components/storykeep/controls/pane/PanePanel_title";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { PaneAdd } from "@/components/storykeep/compositor-nodes/nodes/Pane_add.tsx";
 import { PaneConfig } from "@/components/storykeep/compositor-nodes/nodes/Pane_config.tsx";
@@ -24,8 +26,9 @@ import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGu
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
 import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
+import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import { memo, type ReactElement } from "react";
-import type { Config, StoryFragmentNode, BaseNode, FlatNode } from "@/types.ts";
+import type { Config, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
 
 export type NodeProps = {
@@ -95,17 +98,40 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     // generic nodes, not tag (html) elements
     case "Markdown":
       return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
-    case "StoryFragment":
+
+    case "StoryFragment": {
+      const sf = node as StoryFragmentNode;
       return (
         <>
-          <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+          {!(sf.slug && sf.title) ? (
+            <PaneTitlePanel nodeId={props.nodeId} />
+          ) : (
+            <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+          )}
           <AnalyticsPanel nodeId={props.nodeId} />
           <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
+          {sf.slug && sf.title && sf.paneIds.length === 0 && (
+            <AddPanePanel nodeId={props.nodeId} first={true} />
+          )}
         </>
       );
+    }
+
     case "Pane": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
       const isContextPane = getCtx(props).getIsContextPane(node.id);
+      const paneNodes = getCtx(props).getChildNodeIDs(node.id);
+      const paneNode = node as PaneNode;
+      if (isContextPane && !(paneNode.slug && paneNode.title))
+        return (
+          <>
+            <ContextPaneTitlePanel nodeId={node.id} />
+            <AnalyticsPanel nodeId={node.id} />
+            <div className="bg-white">
+              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+            </div>
+          </>
+        );
       if (toolModeVal === `eraser` && !isContextPane)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
       if (toolModeVal === `layout`) {
@@ -116,6 +142,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <AnalyticsPanel nodeId={node.id} />
             <div className="bg-white">
               <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
+              {paneNodes.length === 0 && <AddPanePanel nodeId={node.id} first={true} />}
             </div>
           </>
         );
@@ -136,18 +163,9 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             />
           );
       }
-      if (isContextPane)
-        return (
-          <>
-            <ContextPaneConfig nodeId={node.id} />
-            <AnalyticsPanel nodeId={node.id} />
-            <div className="bg-white">
-              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
-            </div>
-          </>
-        );
       return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
     }
+
     case "BgPane":
       return <BgPaneWrapper {...sharedProps} key={timestampNodeId(node.id)} />;
     case "TagElement":

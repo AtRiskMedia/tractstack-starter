@@ -27,6 +27,18 @@ const contentTypes = {
     url: "/storykeep/content/tractstacks",
     createUrl: "/storykeep/content/tractstacks/create",
   },
+  storyfragment: {
+    name: "Story Fragment",
+    browse: "Story Fragments",
+    url: null,
+    createUrl: "/create/edit",
+  },
+  contextPane: {
+    name: "Context Page",
+    browse: "Context Pages",
+    url: null,
+    createUrl: "/context/create/edit",
+  },
 };
 
 const magicPaths = {

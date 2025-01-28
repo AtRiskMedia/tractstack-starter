@@ -4,14 +4,16 @@ import { getConfig, validateConfig } from "@/utils/core/config";
 import { ReactNodesWrapper } from "@/components/storykeep/compositor-nodes/ReactNodesWrapper";
 import { getCtx } from "@/store/nodes";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
-import { getStoryFragmentBySlugFullRowData } from "@/utils/db/turso.ts";
+import { getStoryFragmentBySlugFullRowData, getFullContentMap } from "@/utils/db/turso.ts";
 import StoryKeepHeader from "@/components/storykeep/controls/StoryKeepHeader";
 import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar";
 import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode";
 import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
+import { ulid } from "ulid";
 import type { LoadData } from "@/store/nodesSerializer.ts";
+import type { StoryFragmentNode } from "@/types";
 
 const config = await getConfig();
 const validation = await validateConfig(config);
@@ -23,35 +25,63 @@ if (!slug) return Astro.redirect("/404");
 
 const canonicalURL = `/${slug}`;
 
-// Get all the data from Turso
-const fullData = await getStoryFragmentBySlugFullRowData(slug);
-if (!fullData) {
-  return new Response(null, {
-    status: 404,
-    statusText: "Not Found",
+let loadData: LoadData = {};
+
+if (slug === "create") {
+  const contentMap = await getFullContentMap();
+  const homeTractstack = contentMap.find(
+    (item) =>
+      item.type === "TractStack" &&
+      item.slug.toLowerCase() === config.init.TRACTSTACK_HOME_SLUG.toLowerCase()
+  );
+
+  if (!homeTractstack) {
+    return new Response(null, {
+      status: 404,
+      statusText: "Home TractStack not found",
+    });
+  }
+
+  const storyFragmentNode = {
+    id: ulid(),
+    nodeType: "StoryFragment",
+    parentId: homeTractstack.id,
+    title: "",
+    slug: "",
+    paneIds: [],
+    created: new Date(),
+    changed: new Date(),
+    hasMenu: false,
+  } as StoryFragmentNode;
+
+  loadData = {
+    storyfragmentNodes: [storyFragmentNode],
+  };
+} else {
+  const fullData = await getStoryFragmentBySlugFullRowData(slug);
+  if (!fullData) {
+    return new Response(null, {
+      status: 404,
+      statusText: "Not Found",
+    });
+  }
+
+  const deserializer = new NodesDeserializer_Json();
+  deserializer.processTractStackRowData(fullData.tractstack, loadData);
+  deserializer.processStoryFragmentRowData(fullData.storyfragment, loadData);
+  fullData.panes.forEach((pane) => {
+    deserializer.processPaneRowData(pane, loadData);
   });
+  if (fullData.menu) {
+    deserializer.processMenuRowData(fullData.menu, loadData);
+  }
 }
 
-// Initialize deserializer
-const deserializer = new NodesDeserializer_Json();
-const loadData: LoadData = {};
-deserializer.processTractStackRowData(fullData.tractstack, loadData);
-deserializer.processStoryFragmentRowData(fullData.storyfragment, loadData);
-fullData.panes.forEach((pane) => {
-  deserializer.processPaneRowData(pane, loadData);
-});
-if (fullData.menu) {
-  deserializer.processMenuRowData(fullData.menu, loadData);
-}
-//fullData.files.forEach((file) => {
-//  deserializer.processImageFileRowData(file, loadData);
-//});
-
-// Build the node tree from the loaded data
 getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
 
-// Get the story fragment node for rendering
-const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(slug);
+const storyfragmentNode =
+  slug === "create" ? loadData.storyfragmentNodes?.[0] : getCtx().getStoryFragmentNodeBySlug(slug);
+
 if (!storyfragmentNode) {
   return new Response(null, {
     status: 404,
@@ -104,7 +134,7 @@ if (!storyfragmentNode) {
 
     <main class="flex-1 relative">
       <div
-        class="bg-myblue/20 px-4 pb-28"
+        class="bg-myblue/20 px-4 pb-28 min-h-screen"
         style={{
           backgroundImage:
             "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
