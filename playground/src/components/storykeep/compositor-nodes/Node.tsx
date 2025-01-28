@@ -25,8 +25,8 @@ import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
-import ContextPaneConfig from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
+import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import { memo, type ReactElement } from "react";
 import type { Config, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
@@ -122,30 +122,27 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const isContextPane = getCtx(props).getIsContextPane(node.id);
       const paneNodes = getCtx(props).getChildNodeIDs(node.id);
       const paneNode = node as PaneNode;
-      if (isContextPane && !(paneNode.slug && paneNode.title))
+      if (isContextPane)
         return (
           <>
-            <ContextPaneTitlePanel nodeId={node.id} />
+            {!(paneNode.slug && paneNode.title) ? (
+              <ContextPaneTitlePanel nodeId={node.id} />
+            ) : (
+              <ContextPanePanel nodeId={node.id} />
+            )}
             <AnalyticsPanel nodeId={node.id} />
             <div className="bg-white">
               <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+              {paneNode.slug && paneNode.title && paneNodes.length === 0 && (
+                <AddPanePanel nodeId={node.id} first={true} />
+              )}
             </div>
           </>
         );
       if (toolModeVal === `eraser` && !isContextPane)
         return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
-      if (toolModeVal === `layout`) {
-        if (isContextPane) return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
-        return (
-          <>
-            <ContextPaneConfig nodeId={node.id} />
-            <AnalyticsPanel nodeId={node.id} />
-            <div className="bg-white">
-              <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
-              {paneNodes.length === 0 && <AddPanePanel nodeId={node.id} first={true} />}
-            </div>
-          </>
-        );
+      if (toolModeVal === `layout` && !isContextPane) {
+        return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
       } else if (toolModeVal === `settings` && !isContextPane)
         return <PaneConfig {...sharedProps} key={timestampNodeId(node.id)} />;
       else if (toolModeVal === `pane` && !isContextPane) {

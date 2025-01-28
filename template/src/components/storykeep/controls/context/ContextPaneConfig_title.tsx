@@ -117,17 +117,22 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
               </li>
             </ul>
           </div>
-          <div className="py-4">
-            {charCount < 30 && (
-              <span className="text-red-500">Title must be at least 30 characters</span>
-            )}
-            {charCount >= 30 && charCount < 50 && (
-              <span className="text-gray-500">
-                Add {50 - charCount} more characters for optimal length
-              </span>
-            )}
-            {warning && <span className="text-yellow-500">Title is getting long</span>}
-            {isValid && <span className="text-green-500">Perfect title length!</span>}
+          <div className="mt-4 text-lg space-y-4">
+            <div className="text-gray-600">
+              Write a clear, descriptive title for this piece of content.{" "}
+            </div>
+            <div className="py-4">
+              {charCount < 5 && (
+                <span className="text-red-500">Title must be at least 5 characters</span>
+              )}
+              {charCount >= 5 && charCount < 10 && (
+                <span className="text-gray-500">
+                  Add {10 - charCount} more characters for optimal length
+                </span>
+              )}
+              {warning && <span className="text-yellow-500">Title is getting long</span>}
+              {isValid && <span className="text-green-500">Perfect title length!</span>}
+            </div>
           </div>
         </div>
       </div>
