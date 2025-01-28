@@ -21,6 +21,7 @@ const TEMPLATE_DIR = path.join(ROOT_DIR, "template");
 const CORE_FILES = [
   "src",
   "public",
+  "config",  // Added config directory
   ".prettierrc",
   ".prettierignore",
   "astro.config.mjs",
@@ -32,16 +33,25 @@ const CORE_FILES = [
 ];
 
 // Paths to exclude from copying
-const EXCLUDED_PATHS = ["public/images", "config/init.json"];
+const EXCLUDED_PATHS = [
+  "public/images",
+  "config/init.json",
+  "config/turso.json"
+];
+
+async function shouldCopyFile(srcPath: string): Promise<boolean> {
+  const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
+  
+  // Check if path is in exclusion list
+  const isExcluded = EXCLUDED_PATHS.some(
+    excludedPath => relativePath.startsWith(excludedPath) || relativePath === excludedPath
+  );
+  
+  return !isExcluded;
+}
 
 async function copyWithExclusions(src: string, dest: string) {
-  const filter = (srcPath: string) => {
-    const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
-    return !EXCLUDED_PATHS.some(
-      (excludedPath) => relativePath.startsWith(excludedPath) || relativePath === excludedPath
-    );
-  };
-
+  const filter = (srcPath: string) => shouldCopyFile(srcPath);
   await fs.copy(src, dest, { filter });
 }
 
@@ -67,8 +77,8 @@ async function prepareTemplate() {
       const dest = path.join(TEMPLATE_DIR, file);
 
       if (fs.existsSync(src)) {
-        if (file === "public") {
-          // Use custom copy function with exclusions for public directory
+        if (file === "public" || file === "config") {
+          // Use custom copy function with exclusions for public and config directories
           await copyWithExclusions(src, dest);
         } else {
           await fs.copy(src, dest);
