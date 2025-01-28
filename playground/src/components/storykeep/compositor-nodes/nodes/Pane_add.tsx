@@ -29,7 +29,7 @@ export const PaneAdd = (props: NodeProps) => {
 
   return (
     <>
-      {props?.first && <AddPanePanel nodeId={props.nodeId} first={true} />}
+      {props?.first && <AddPanePanel nodeId={props.nodeId} first={true} ctx={getCtx(props)} />}
       <div id={getPaneId()} className="pane">
         <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
           <div
@@ -55,7 +55,7 @@ export const PaneAdd = (props: NodeProps) => {
           </div>
         </div>
       </div>
-      <AddPanePanel nodeId={props.nodeId} />
+      <AddPanePanel nodeId={props.nodeId} ctx={getCtx(props)} />
     </>
   );
 };

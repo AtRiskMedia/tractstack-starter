@@ -12,6 +12,7 @@ interface AddPaneBreakPanelProps {
   nodeId: string;
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
+  ctx?: NodesContext;
 }
 
 interface PreviewPane {
@@ -50,7 +51,7 @@ const templateCategory = {
   getTemplatesByVariant: (variant: string) => [getTemplateVisualBreakPane(variant)],
 };
 
-const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) => {
+const AddPaneBreakPanel = ({ nodeId, first, setMode, ctx }: AddPaneBreakPanelProps) => {
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
@@ -81,7 +82,6 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
     const newPreviews = templates.map((template, index) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
-      console.log(template);
       ctx.addTemplatePane("tmp", template);
       return { ctx, template, index, variant: template.variant };
     });
@@ -103,6 +103,15 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
     const startIndex = currentPage * ITEMS_PER_PAGE;
     return previews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [previews, currentPage]);
+
+  const handleVisualBreakInsert = (variant: string, nodeId: string, first: boolean) => {
+    if (ctx) {
+      const template = getTemplateVisualBreakPane(variant);
+      const ownerId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+      console.log(`insert not working`, ownerId, ctx);
+      ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+    }
+  };
 
   return (
     <div className="p-0.5 shadow-inner">
@@ -194,9 +203,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
         {visiblePreviews.map((preview) => (
           <div
             key={preview.index}
-            onClick={() =>
-              console.log("Selected break:", preview.variant, preview.index + 1, nodeId, first)
-            }
+            onClick={() => handleVisualBreakInsert(preview.variant, nodeId, first)}
             className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
               preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
             }`}

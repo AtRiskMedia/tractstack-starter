@@ -111,7 +111,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           <AnalyticsPanel nodeId={props.nodeId} />
           <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
           {sf.slug && sf.title && sf.paneIds.length === 0 && (
-            <AddPanePanel nodeId={props.nodeId} first={true} />
+            <AddPanePanel nodeId={props.nodeId} first={true} ctx={getCtx(props)} />
           )}
         </>
       );
@@ -134,7 +134,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <div className="bg-white">
               <Pane {...sharedProps} key={timestampNodeId(node.id)} />
               {paneNode.slug && paneNode.title && paneNodes.length === 0 && (
-                <AddPanePanel nodeId={node.id} first={true} />
+                <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
               )}
             </div>
           </>

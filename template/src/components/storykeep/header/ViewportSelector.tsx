@@ -63,7 +63,6 @@ const ViewportSelector = ({ viewport, viewportKey, auto, setViewport }: Viewport
             onClick={() => {
               setViewport(key);
               getCtx().notifyNode(ROOT_NODE_NAME);
-              console.log(`click`, key, ROOT_NODE_NAME);
             }}
           >
             <span className="sr-only">{key}</span>

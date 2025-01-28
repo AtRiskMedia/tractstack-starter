@@ -4,6 +4,7 @@ import AddPaneNewPanel from "./AddPanePanel_new";
 import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
 import AddPaneCodeHookPanel from "./AddPanePanel_codehook";
+import { NodesContext } from "@/store/nodes";
 
 export enum PaneMode {
   DEFAULT = "DEFAULT",
@@ -16,18 +17,19 @@ export enum PaneMode {
 interface AddPanePanelProps {
   nodeId: string;
   first?: boolean;
+  ctx?: NodesContext;
 }
 
-const AddPanePanel = ({ nodeId, first = false }: AddPanePanelProps) => {
+const AddPanePanel = ({ nodeId, first = false, ctx }: AddPanePanelProps) => {
   const [mode, setMode] = useState<PaneMode>(PaneMode.DEFAULT);
 
   useEffect(() => {
     setMode(PaneMode.DEFAULT);
   }, [nodeId]);
   if (mode === PaneMode.NEW) {
-    return <AddPaneNewPanel nodeId={nodeId} first={first} setMode={setMode} />;
+    return <AddPaneNewPanel nodeId={nodeId} first={first} setMode={setMode} ctx={ctx} />;
   } else if (mode === PaneMode.BREAK) {
-    return <AddPaneBreakPanel nodeId={nodeId} first={first} setMode={setMode} />;
+    return <AddPaneBreakPanel nodeId={nodeId} first={first} setMode={setMode} ctx={ctx} />;
   } else if (mode === PaneMode.REUSE) {
     return <AddPaneReUsePanel nodeId={nodeId} first={first} setMode={setMode} />;
   } else if (mode === PaneMode.CODEHOOK) {
