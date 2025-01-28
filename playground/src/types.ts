@@ -685,6 +685,7 @@ export interface MarkdownLookupObj {
 
 export type ToolModeVal =
   | "default"
+  | "text"
   | "insert"
   | "eraser"
   | "pane"

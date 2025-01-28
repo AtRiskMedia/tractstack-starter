@@ -1,6 +1,7 @@
 import { useEffect } from "react"; // Add this import
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
 import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
@@ -16,6 +17,11 @@ export const toolModes = [
     key: "default" as const,
     Icon: CursorArrowRaysIcon,
     title: "Edit text/styles",
+  },
+  {
+    key: "text" as const,
+    Icon: PencilIcon,
+    title: "Edit text",
   },
   {
     key: "insert" as const,
@@ -54,7 +60,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
   const ctx = getCtx();
   const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const className =
-    "w-8 h-8 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
+    "w-8 h-8 py-1 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
   const classNameActive = "w-8 h-8 py-1.5 rounded-md bg-myblue text-white";
 
   const handleClick = (mode: ToolModeVal) => {

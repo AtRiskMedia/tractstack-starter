@@ -171,7 +171,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     {
       ref: elementRef,
       className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
-      contentEditable: getCtx(props).toolModeValStore.get().value === "default",
+      contentEditable: [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value),
       suppressContentEditableWarning: true,
       onBlur: handleBlur,
       onClick: (e: React.MouseEvent) => e.stopPropagation(),
