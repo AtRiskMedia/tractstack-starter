@@ -48,8 +48,8 @@ const gtag = config?.init?.GTAG || false;
               <InformationCircle classes="w-5 h-5 text-mydarkgrey/50" />
             </span>
           </h3>
-          <RememberMeToggle client:load />
-          <ProfileSwitch client:load />
+          <RememberMeToggle client:only="react" />
+          <ProfileSwitch client:only="react" />
 
           {
             gtag ? (

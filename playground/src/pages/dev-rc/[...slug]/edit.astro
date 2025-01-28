@@ -67,7 +67,7 @@ if (!storyfragmentNode) {
         flex flex-wrap gap-4 justify-around py-3.5
         md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2 md:gap-8 md:mt-8"
       >
-        <StoryKeepToolMode client:load />
+        <StoryKeepToolMode isContext={false} client:only="react" />
       </div>
     </nav>
 

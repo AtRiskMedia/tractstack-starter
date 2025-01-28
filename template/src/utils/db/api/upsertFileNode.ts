@@ -5,6 +5,7 @@ import type { ImageFileRowData } from "@/store/nodesSerializer";
 export async function upsertFileNode(
   fileNode: ImageFileNode
 ): Promise<{ success: boolean; error?: string }> {
+  console.log(`upsertFileNode`, fileNode);
   try {
     const fileData: ImageFileRowData = {
       id: fileNode.id,

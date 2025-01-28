@@ -63,7 +63,6 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
 
   const handleLinkChange = (index: number, field: keyof MenuLink, value: string | boolean) => {
     if (!menuContent) return;
-    console.log(menuContent);
 
     const updatedMenu = {
       ...cloneDeep(menuContent),

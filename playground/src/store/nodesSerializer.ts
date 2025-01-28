@@ -119,7 +119,7 @@ export type LoadData = {
 };
 
 export abstract class NodesSerializer {
-  abstract save(ctx: NodesContext): boolean;
+  abstract save(ctx: NodesContext): SaveData;
   abstract migrateAll(ctx: NodesContext, nodes: StoryKeepAllNodes): SaveData;
   abstract processResourceNode(node: BaseNode | undefined, saveData: SaveData): void;
   abstract processMenuNode(node: BaseNode | undefined, saveData: SaveData): void;

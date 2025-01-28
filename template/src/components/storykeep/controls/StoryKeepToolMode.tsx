@@ -49,7 +49,8 @@ export const toolModes = [
   //},
 ] as const;
 
-const StoryKeepToolMode = () => {
+const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
+  const skipIfContextPane = [`pane`];
   const ctx = getCtx();
   const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const className =
@@ -79,13 +80,15 @@ const StoryKeepToolMode = () => {
 
   return (
     <>
-      {toolModes.map(({ key, Icon, title }) =>
-        key === toolModeVal ? (
-          <Icon key={key} title={title} className={classNameActive} />
-        ) : (
-          <Icon key={key} title={title} className={className} onClick={() => handleClick(key)} />
-        )
-      )}
+      {toolModes
+        .filter(({ key }) => isContext ? !skipIfContextPane.includes(key) : true)
+        .map(({ key, Icon, title }) =>
+          key === toolModeVal ? (
+            <Icon key={key} title={title} className={classNameActive} />
+          ) : (
+            <Icon key={key} title={title} className={className} onClick={() => handleClick(key)} />
+          )
+        )}
     </>
   );
 };

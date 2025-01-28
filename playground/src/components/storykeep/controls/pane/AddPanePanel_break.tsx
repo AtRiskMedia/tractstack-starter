@@ -160,7 +160,7 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode }: AddPaneBreakPanelProps) =
                           {({ selected, active }) => (
                             <>
                               <span
-                                className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                                className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                               >
                                 {variant === "all" ? "All Variants" : variant}
                               </span>

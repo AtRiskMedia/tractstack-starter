@@ -63,12 +63,12 @@ if (!paneNode) {
         flex flex-wrap gap-4 justify-around py-3.5
         md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2 md:gap-8 md:mt-8"
       >
-        <StoryKeepToolMode client:load />
+        <StoryKeepToolMode isContext={true} client:only="react" />
       </div>
     </nav>
 
     <nav id="toolbarNav" class="fixed z-30 w-full md:w-auto">
-      <StoryKeepToolBar client:load />
+      <StoryKeepToolBar client:only="react" />
     </nav>
 
     <div class="hidden md:block w-16 flex-shrink-0"></div>

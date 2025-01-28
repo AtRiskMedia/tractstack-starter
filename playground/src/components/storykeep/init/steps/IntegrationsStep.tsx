@@ -96,7 +96,7 @@ export default function IntegrationsStep({
           />
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end pt-4 gap-x-4">
           <button
             type="submit"
             disabled={isProcessing}
@@ -104,6 +104,12 @@ export default function IntegrationsStep({
           >
             {isProcessing ? "Saving..." : "Save and Continue"}
           </button>
+          <a
+            href="/storykeep"
+            className="px-4 py-2 text-white bg-myblack rounded hover:bg-black disabled:bg-mylightgrey"
+          >
+            Cancel
+          </a>
         </div>
       </form>
     </div>

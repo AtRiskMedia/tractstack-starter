@@ -5,6 +5,7 @@ import type { MenuRowData } from "@/store/nodesSerializer";
 export async function upsertMenuNode(
   menuNode: MenuNode
 ): Promise<{ success: boolean; error?: string }> {
+  console.log(`upsertMenuNode`, menuNode);
   try {
     const menuData: MenuRowData = {
       id: menuNode.id,

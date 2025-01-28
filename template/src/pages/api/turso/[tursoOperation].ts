@@ -11,9 +11,18 @@ import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
+import { upsertBelief } from "@/utils/db/api/upsertBelief.ts";
+import { upsertFile } from "@/utils/db/api/upsertFile.ts";
+import { upsertMenu } from "@/utils/db/api/upsertMenu.ts";
+import { upsertPane } from "@/utils/db/api/upsertPane.ts";
+import { upsertStoryFragment } from "@/utils/db/api/upsertStoryFragment.ts";
+import { upsertResource } from "@/utils/db/api/upsertResource.ts";
+import { upsertTractStack } from "@/utils/db/api/upsertTractStack.ts";
 import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
 import { upsertFileNode } from "@/utils/db/api/upsertFileNode.ts";
 import { upsertMenuNode } from "@/utils/db/api/upsertMenuNode.ts";
+import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode.ts";
+import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode.ts";
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
@@ -52,8 +61,35 @@ export const POST: APIRoute = async ({ request, params }) => {
       case "uniqueTailwindClasses":
         result = await getUniqueTailwindClasses(body);
         break;
+      case "upsertFile":
+        result = await upsertFile(body);
+        break;
+      case "upsertPane":
+        result = await upsertPane(body);
+        break;
+      case "upsertStoryFragment":
+        result = await upsertStoryFragment(body);
+        break;
+      case "upsertMenu":
+        result = await upsertMenu(body);
+        break;
+      case "upsertResource":
+        result = await upsertResource(body);
+        break;
+      case "upsertTractStack":
+        result = await upsertTractStack(body);
+        break;
+      case "upsertBelief":
+        result = await upsertBelief(body);
+        break;
       case "upsertFileNode":
         result = await upsertFileNode(body);
+        break;
+      case "upsertPaneNode":
+        result = await upsertPaneNode(body);
+        break;
+      case "upsertStoryFragmentNode":
+        result = await upsertStoryFragmentNode(body);
         break;
       case "upsertMenuNode":
         result = await upsertMenuNode(body);

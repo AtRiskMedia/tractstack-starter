@@ -95,7 +95,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as Im
         slug={paneNode.slug}
         isContext={true}
         config={config}
-        client:load
+        client:only="react"
       />
     )
   }

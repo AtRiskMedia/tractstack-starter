@@ -296,7 +296,7 @@ export class NodesSerializer_Json extends NodesSerializer {
     return date.toISOString();
   }
 
-  save(ctx: NodesContext) {
+  save(ctx: NodesContext): SaveData {
     const saveData: SaveData = {
       tractstacks: [],
       storyfragments: [],
@@ -385,6 +385,6 @@ export class NodesSerializer_Json extends NodesSerializer {
     });
 
     console.log(saveData);
-    return true;
+    return saveData;
   }
 }

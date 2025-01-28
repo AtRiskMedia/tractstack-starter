@@ -131,7 +131,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
                         {({ selected }) => (
                           <>
                             <span
-                              className={`block truncate capitalize ${selected ? "font-medium" : "font-normal"}`}
+                              className={`block truncate capitalize ${selected ? "font-bold" : "font-normal"}`}
                             >
                               {theme.replace(/-/g, " ")}
                             </span>
@@ -205,7 +205,7 @@ const AddPaneNewPanel = ({ nodeId, first, setMode }: AddPaneNewPanelProps) => {
                         {({ selected, active }) => (
                           <>
                             <span
-                              className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                             >
                               {category.title}
                             </span>
