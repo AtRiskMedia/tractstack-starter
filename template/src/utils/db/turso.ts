@@ -1,3 +1,4 @@
+import { ulid } from "ulid";
 import { tursoClient } from "./client";
 import type {
   TractStackRowData,
@@ -670,7 +671,8 @@ export async function getStoryFragmentBySlugFullRowData(
     }
 
     // Parse the panes data
-    const panesData = sfRow.panes_data ? JSON.parse(String(sfRow.panes_data)) : [];
+    const rawPanesData = sfRow.panes_data ? JSON.parse(String(sfRow.panes_data)) : [];
+    const panesData = rawPanesData.filter((item:PaneRowData) => item.id !== null || item.slug !== null);
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
     const files: ImageFileRowData[] = [];
@@ -692,7 +694,7 @@ export async function getStoryFragmentBySlugFullRowData(
       });
 
       // Add to story fragment pane IDs
-      storyFragment.pane_ids.push(String(paneData.id));
+      if (paneData.id) storyFragment.pane_ids.push(String(paneData.id));
 
       // Add markdown if exists
       if (paneData.markdown_id && paneData.markdown_body) {
@@ -1105,5 +1107,51 @@ export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | 
   } catch (error) {
     console.error("Error fetching getBeliefByIdRowData:", error);
     throw error;
+  }
+}
+
+export async function initializeContent(): Promise<void> {
+  const client = await tursoClient.getClient();
+  if (client) {
+    try {
+      // Create tractstack first and get its id
+      const tractStackId = ulid();
+      await client.execute({
+        sql: "INSERT INTO tractstacks (id, title, slug, social_image_path) VALUES (?, ?, ?, ?) ON CONFLICT (slug) DO NOTHING",
+        args: [tractStackId, "Tract Stack", "HELLO", ""],
+      });
+      // Create storyfragment linked to the tractstack
+      const storyFragmentId = ulid();
+      const now = new Date().toISOString();
+      await client.execute({
+        sql: `INSERT INTO storyfragments (
+                id, 
+                title, 
+                slug, 
+                tractstack_id, 
+                created, 
+                changed, 
+                menu_id, 
+                social_image_path, 
+                tailwind_background_colour
+              ) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+              ON CONFLICT (slug) DO NOTHING`,
+        args: [
+          storyFragmentId, // id
+          "", // title
+          "hello", // slug
+          tractStackId, // tractstack_id
+          now, // created
+          now, // changed
+          null, // menu_id
+          null, // social_image_path
+          null, // tailwind_background_colour
+        ],
+      });
+    } catch (error) {
+      console.error("Content initialization error:", error);
+      throw error;
+    }
   }
 }

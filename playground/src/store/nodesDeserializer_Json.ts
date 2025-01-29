@@ -90,22 +90,24 @@ export class NodesDeserializer_Json implements NodesDeserializer {
     const optionsPayload = JSON.parse(rowData.options_payload);
 
     // Extract nodes and beliefs from options payload
-    const childNodes = optionsPayload.nodes || [];
+    const childNodes = optionsPayload?.nodes || [];
     const heldBeliefs =
-      typeof optionsPayload.heldBeliefs !== `undefined` ? optionsPayload.heldBeliefs : null;
+      typeof optionsPayload?.heldBeliefs !== `undefined` ? optionsPayload.heldBeliefs : null;
     const withheldBeliefs =
-      typeof optionsPayload.withheldBeliefs !== `undefined` ? optionsPayload.withheldBeliefs : null;
+      typeof optionsPayload?.withheldBeliefs !== `undefined`
+        ? optionsPayload.withheldBeliefs
+        : null;
 
     // Extract codeHook related fields
     const codeHookTarget =
-      typeof optionsPayload.codeHookTarget === "string" ? optionsPayload.codeHookTarget : null;
+      typeof optionsPayload?.codeHookTarget === "string" ? optionsPayload.codeHookTarget : null;
     const codeHookPayload =
-      typeof optionsPayload.codeHookPayload === "object" ? optionsPayload.codeHookPayload : null;
+      typeof optionsPayload?.codeHookPayload === "object" ? optionsPayload.codeHookPayload : null;
 
     // Clean up processed fields from optionsPayload
     ["nodes", "heldBeliefs", "withheldBeliefs", "codeHookTarget", "codeHookPayload"].forEach(
       (field) => {
-        if (typeof optionsPayload[field] !== `undefined`) delete optionsPayload[field];
+        if (typeof optionsPayload?.[field] !== `undefined`) delete optionsPayload[field];
       }
     );
 
@@ -125,7 +127,7 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       isContextPane: rowData.is_context_pane ? true : false,
       ...(typeof rowData.markdown_id === `string` ? { markdownId: rowData.markdown_id } : {}),
       isDecorative:
-        typeof optionsPayload.isDecorative === `boolean` ? optionsPayload.isDecorative : false,
+        typeof optionsPayload?.isDecorative === `boolean` ? optionsPayload.isDecorative : false,
       created:
         typeof rowData?.created === `string`
           ? new Date(rowData.created)
@@ -134,7 +136,9 @@ export class NodesDeserializer_Json implements NodesDeserializer {
         typeof rowData?.changed === `string`
           ? new Date(rowData.changed)
           : new Date(new Date().toISOString()),
-      ...(typeof optionsPayload.bgColour === `string` ? { bgColour: optionsPayload.bgColour } : {}),
+      ...(typeof optionsPayload?.bgColour === `string`
+        ? { bgColour: optionsPayload.bgColour }
+        : {}),
       ...(heldBeliefs ? { heldBeliefs } : {}),
       ...(withheldBeliefs ? { withheldBeliefs } : {}),
       ...(codeHookTarget ? { codeHookTarget } : {}),

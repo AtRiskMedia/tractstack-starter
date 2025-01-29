@@ -26,7 +26,7 @@ import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode.
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
 import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
-import { initializeContent } from "@/utils/db/utils.ts";
+import { initializeContent } from "@/utils/db/turso.ts";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 

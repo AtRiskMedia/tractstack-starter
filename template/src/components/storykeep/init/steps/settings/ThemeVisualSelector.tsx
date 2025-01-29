@@ -74,6 +74,7 @@ export default function ThemeVisualSelector({
         const design = pageDesigns(theme, thisConfig).basic;
         return (
           <button
+            type="button"
             key={theme}
             onClick={() => onChange(theme)}
             className={`group relative rounded-lg transition-all hover:ring-2 hover:ring-myorange hover:ring-offset-2 ${

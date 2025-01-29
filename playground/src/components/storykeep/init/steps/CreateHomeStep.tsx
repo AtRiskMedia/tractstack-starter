@@ -41,10 +41,7 @@ export default function HasHomeStep({ isActive }: HasHomeStepProps) {
           </div>
 
           <div className="flex justify-end">
-            <a
-              href="/storykeep/create/storyfragment"
-              className="px-4 py-2 text-white bg-myblue rounded hover:bg-black"
-            >
+            <a href="/hello/edit" className="px-4 py-2 text-white bg-myblue rounded hover:bg-black">
               Create Home Page
             </a>
           </div>
