@@ -21,7 +21,6 @@ export const RememberMeToggle = () => {
       localStorage.removeItem("auth:consent");
       localStorage.removeItem("auth:active");
       localStorage.removeItem("auth:visitId");
-      localStorage.removeItem("auth:knownCorpusIds");
 
       // Clear user beliefs
       localStorage.removeItem("user");
@@ -37,7 +36,6 @@ export const RememberMeToggle = () => {
       auth.setKey("consent", undefined);
       auth.setKey("active", undefined);
       auth.setKey("visitId", undefined);
-      auth.setKey("knownCorpusIds", undefined);
 
       // Reload page to resync with new fingerprint
       window.location.reload();

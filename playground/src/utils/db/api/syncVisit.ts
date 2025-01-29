@@ -1,14 +1,12 @@
 import { tursoClient } from "../client";
 import { ulid } from "ulid";
-import type { Value } from "@libsql/client";
-import type { SyncOptions } from "../../../types";
+import type { SyncOptions } from "@/types";
 
 interface SyncVisitResponse {
   fingerprint: string;
   visitId: string;
   auth: boolean;
   knownLead: boolean;
-  knownCorpusIds: (string | null)[];
 }
 
 export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse> {
@@ -25,20 +23,6 @@ export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse
       args: [fingerprintId],
     });
   }
-
-  // Get known corpus IDs
-  const { rows: corpusRows } = await client.execute({
-    sql: `SELECT DISTINCT c.object_id 
-          FROM corpus c
-          INNER JOIN actions a ON a.object_id = c.id
-          WHERE a.fingerprint_id = ?`,
-    args: [fingerprintId],
-  });
-
-  const knownCorpusIds = corpusRows.map((row) => {
-    const value = row.object_id as Value;
-    return value ? String(value) : null;
-  });
 
   // Handle campaign/referrer data if present
   let campaignId = null;
@@ -82,6 +66,5 @@ export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse
     visitId: visitId,
     auth: false,
     knownLead: false,
-    knownCorpusIds,
   };
 }

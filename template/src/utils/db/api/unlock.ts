@@ -79,22 +79,24 @@ export async function unlockProfile(
 
   const { rows: beliefRows } = await client.execute({
     sql: `
-    WITH latest_fingerprint AS (
-      SELECT f.id as fingerprint_id
-      FROM fingerprints f
-      JOIN heldbeliefs b ON f.id = b.fingerprint_id
-      WHERE f.lead_id = ?
-      GROUP BY f.id
-      ORDER BY MAX(b.updated_at) DESC
-      LIMIT 1
-    )
-    SELECT c.object_name as slug, 
-           c.object_id as id, 
-           b.verb, 
-           b.object
-    FROM heldbeliefs b
-    JOIN corpus c ON b.belief_id = c.id
-    JOIN latest_fingerprint lf ON b.fingerprint_id = lf.fingerprint_id`,
+      WITH latest_fingerprint AS (
+        SELECT f.id as fingerprint_id
+        FROM fingerprints f
+        JOIN heldbeliefs b ON f.id = b.fingerprint_id
+        WHERE f.lead_id = ?
+        GROUP BY f.id
+        ORDER BY MAX(b.updated_at) DESC
+        LIMIT 1
+      )
+      SELECT 
+        b.slug,
+        b.id,
+        hb.verb,
+        hb.object
+      FROM heldbeliefs hb
+      JOIN beliefs b ON hb.belief_id = b.id
+      JOIN latest_fingerprint lf ON hb.fingerprint_id = lf.fingerprint_id
+      `,
     args: [rows[0].id],
   });
 

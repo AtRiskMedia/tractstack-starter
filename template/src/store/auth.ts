@@ -12,7 +12,6 @@ export type AuthSettings = {
   active: string | undefined;
   hasProfile: string | undefined;
   unlockedProfile: string | undefined;
-  knownCorpusIds: string | undefined;
 };
 
 export type AuthProfile = {
@@ -32,7 +31,6 @@ export const auth = persistentMap<AuthSettings>("auth:", {
   active: undefined,
   hasProfile: undefined,
   unlockedProfile: undefined,
-  knownCorpusIds: undefined,
 });
 
 export const entered = atom<boolean>(false);

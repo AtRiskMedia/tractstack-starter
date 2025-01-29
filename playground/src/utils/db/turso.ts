@@ -564,20 +564,68 @@ export async function getStoryFragmentBySlugFullRowData(
     const client = await tursoClient.getClient();
     if (!client) return null;
 
-    // First get the story fragment and its direct relationships
+    // First get story fragment data with tractstack and menu in a single query
     const { rows: sfRows } = await client.execute({
       sql: `
+        WITH ordered_panes AS (
+          SELECT 
+            p.*,
+            sp.weight,
+            m.body as markdown_body,
+            (
+              SELECT json_group_array(
+                json_object(
+                  'id', f.id,
+                  'filename', f.filename,
+                  'alt_description', f.alt_description,
+                  'url', f.url,
+                  'src_set', f.src_set
+                )
+              )
+              FROM file_panes fp
+              JOIN files f ON fp.file_id = f.id
+              WHERE fp.pane_id = p.id
+            ) as pane_files
+          FROM storyfragment_panes sp
+          JOIN panes p ON sp.pane_id = p.id
+          LEFT JOIN markdowns m ON p.markdown_id = m.id
+          WHERE sp.storyfragment_id = (
+            SELECT id FROM storyfragments WHERE slug = ?
+          )
+          ORDER BY sp.weight ASC
+        )
         SELECT 
           sf.id, sf.title, sf.slug, sf.tractstack_id, 
           sf.created, sf.changed, sf.menu_id,
           sf.social_image_path, sf.tailwind_background_colour,
           ts.id as ts_id, ts.title as ts_title, ts.slug as ts_slug,
-          ts.social_image_path as ts_social_image_path
+          ts.social_image_path as ts_social_image_path,
+          m.id as menu_id, m.title as menu_title, m.theme as menu_theme, 
+          m.options_payload as menu_options_payload,
+          json_group_array(
+            json_object(
+              'id', op.id,
+              'title', op.title,
+              'slug', op.slug,
+              'pane_type', op.pane_type,
+              'created', op.created,
+              'changed', op.changed,
+              'options_payload', op.options_payload,
+              'is_context_pane', op.is_context_pane,
+              'markdown_id', op.markdown_id,
+              'markdown_body', op.markdown_body,
+              'files', op.pane_files,
+              'weight', op.weight
+            )
+          ) as panes_data
         FROM storyfragments sf
         JOIN tractstacks ts ON sf.tractstack_id = ts.id
+        LEFT JOIN menus m ON sf.menu_id = m.id
+        LEFT JOIN ordered_panes op
         WHERE sf.slug = ?
+        GROUP BY sf.id
       `,
-      args: [slug],
+      args: [slug, slug],
     });
 
     if (sfRows.length === 0) return null;
@@ -592,7 +640,7 @@ export async function getStoryFragmentBySlugFullRowData(
       tractstack_id: String(sfRow.tractstack_id),
       created: String(sfRow.created),
       changed: String(sfRow.changed || sfRow.created),
-      pane_ids: [], // Will be populated from join query
+      pane_ids: [], // Will be populated from panes data
       ...(sfRow.menu_id && { menu_id: String(sfRow.menu_id) }),
       ...(sfRow.social_image_path && { social_image_path: String(sfRow.social_image_path) }),
       ...(sfRow.tailwind_background_colour && {
@@ -610,77 +658,67 @@ export async function getStoryFragmentBySlugFullRowData(
       }),
     };
 
-    // Get menu if exists
+    // Create menu data if exists
     let menu: MenuRowData | null = null;
     if (sfRow.menu_id) {
-      const menuData = await getMenuByIdRowData(String(sfRow.menu_id));
-      if (menuData) menu = menuData;
+      menu = {
+        id: String(sfRow.menu_id),
+        title: String(sfRow.menu_title),
+        theme: String(sfRow.menu_theme),
+        options_payload: String(sfRow.menu_options_payload),
+      };
     }
 
-    // Get panes and their ordering
-    const { rows: paneRows } = await client.execute({
-      sql: `
-        SELECT 
-          p.id, p.title, p.slug, p.pane_type,
-          p.created, p.changed, p.options_payload,
-          p.is_context_pane, p.markdown_id,
-          sp.weight
-        FROM storyfragment_panes sp
-        JOIN panes p ON sp.pane_id = p.id
-        WHERE sp.storyfragment_id = ?
-        ORDER BY sp.weight ASC
-      `,
-      args: [storyFragment.id],
-    });
-
+    // Parse the panes data
+    const panesData = sfRow.panes_data ? JSON.parse(String(sfRow.panes_data)) : [];
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
     const files: ImageFileRowData[] = [];
+    const processedFileIds = new Set<string>();
 
-    // Store pane IDs in order
-    storyFragment.pane_ids = paneRows.map((row) => String(row.id));
-
-    // Process each pane
-    for (const paneRow of paneRows) {
+    // Process each pane and its related data
+    panesData.forEach((paneData: any) => {
+      // Add pane
       panes.push({
-        id: String(paneRow.id),
-        title: String(paneRow.title),
-        slug: String(paneRow.slug),
-        pane_type: String(paneRow.pane_type),
-        created: String(paneRow.created),
-        changed: String(paneRow.changed || paneRow.created),
-        options_payload: String(paneRow.options_payload),
-        is_context_pane: Number(paneRow.is_context_pane),
-        ...(paneRow.markdown_id && { markdown_id: String(paneRow.markdown_id) }),
+        id: String(paneData.id),
+        title: String(paneData.title),
+        slug: String(paneData.slug),
+        pane_type: String(paneData.pane_type),
+        created: String(paneData.created),
+        changed: String(paneData.changed || paneData.created),
+        options_payload: String(paneData.options_payload),
+        is_context_pane: Number(paneData.is_context_pane),
+        ...(paneData.markdown_id && { markdown_id: String(paneData.markdown_id) }),
       });
 
-      // Get markdown if exists
-      if (paneRow.markdown_id) {
-        const markdownData = await getMarkdownByIdRowData(String(paneRow.markdown_id));
-        if (markdownData) markdowns.push(markdownData);
+      // Add to story fragment pane IDs
+      storyFragment.pane_ids.push(String(paneData.id));
+
+      // Add markdown if exists
+      if (paneData.markdown_id && paneData.markdown_body) {
+        markdowns.push({
+          id: String(paneData.markdown_id),
+          markdown_body: String(paneData.markdown_body),
+        });
       }
 
-      // Get associated files
-      const { rows: fileRows } = await client.execute({
-        sql: `
-          SELECT f.* 
-          FROM files f
-          JOIN file_panes fp ON f.id = fp.file_id
-          WHERE fp.pane_id = ?
-        `,
-        args: [paneRow.id],
-      });
-
-      fileRows.forEach((fileRow) => {
-        files.push({
-          id: String(fileRow.id),
-          filename: String(fileRow.filename),
-          alt_description: String(fileRow.alt_description),
-          url: String(fileRow.url),
-          ...(fileRow.src_set && { src_set: String(fileRow.src_set) }),
+      // Process files
+      if (paneData.files) {
+        const paneFiles = JSON.parse(paneData.files);
+        paneFiles.forEach((file: any) => {
+          if (!processedFileIds.has(file.id)) {
+            files.push({
+              id: String(file.id),
+              filename: String(file.filename),
+              alt_description: String(file.alt_description),
+              url: String(file.url),
+              ...(file.src_set && { src_set: String(file.src_set) }),
+            });
+            processedFileIds.add(file.id);
+          }
         });
-      });
-    }
+      }
+    });
 
     return {
       storyfragment: storyFragment,

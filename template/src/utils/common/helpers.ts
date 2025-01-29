@@ -217,15 +217,13 @@ export const processGraphPayload = (rows: GraphNodes[]) => {
         ? `#f4dbd6`
         : e?.labels?.at(0) === `TractStack`
           ? `#f0c6c6`
-          : e?.labels?.at(0) === `Corpus`
-            ? `#f5bde6`
-            : e?.labels?.at(0) === `Visit`
-              ? `#c6a0f6`
-              : e?.labels?.at(0) === `Belief`
-                ? `#ed8796`
-                : e?.labels?.at(0) === `Fingerprint`
-                  ? `#ee99a0`
-                  : `#f5a97f`;
+          : e?.labels?.at(0) === `Visit`
+            ? `#c6a0f6`
+            : e?.labels?.at(0) === `Belief`
+              ? `#ed8796`
+              : e?.labels?.at(0) === `Fingerprint`
+                ? `#ee99a0`
+                : `#f5a97f`;
     if (e?.id && e?.properties?.object_type && e?.properties?.object_name)
       nodes.push({
         id: e.id,

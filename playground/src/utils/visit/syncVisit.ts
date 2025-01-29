@@ -11,7 +11,6 @@ interface SyncResponse {
   encryptedEmail?: string;
   encryptedCode?: string;
   beliefs?: string;
-  knownCorpusIds?: string[];
 }
 
 export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse> {
@@ -38,9 +37,6 @@ export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse
       encryptedCode: options.encryptedCode,
       active: Date.now().toString(),
       hasProfile: result.data.auth ? "1" : undefined,
-      knownCorpusIds: result.data.knownCorpusIds
-        ? JSON.stringify(result.data.knownCorpusIds)
-        : undefined,
     };
 
     Object.entries(authUpdate).forEach(([key, value]) => {
