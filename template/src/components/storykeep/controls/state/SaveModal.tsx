@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+import { getTailwindWhitelist } from "@/utils/data/tursoTailwindWhitelist";
 import type { SaveData } from "@/store/nodesSerializer";
 
 type SaveStage =
@@ -10,6 +11,7 @@ type SaveStage =
   | "SAVING_FILES"
   | "SAVING_PANES"
   | "SAVING_STORY_FRAGMENTS"
+  | "PROCESSING_STYLES"
   | "COMPLETED"
   | "ERROR";
 
@@ -36,7 +38,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
   useEffect(() => {
     const saveChanges = async () => {
-      // Prevent double execution in Strict Mode
       if (isSaving.current) return;
       isSaving.current = true;
 
@@ -55,10 +56,10 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         // Convert boolean result to SaveData
         const saveData = saveResult as unknown as SaveData;
 
-        // Save Menu nodes first
+        // Save Menu nodes
         if (saveData.menus?.length > 0) {
           setStage("SAVING_MENUS");
-          setProgress(20);
+          setProgress(10);
           setItemProgress({ currentItem: 0, totalItems: saveData.menus.length });
 
           for (let i = 0; i < saveData.menus.length; i++) {
@@ -78,7 +79,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         // Save File nodes
         if (saveData.files?.length > 0) {
           setStage("SAVING_FILES");
-          setProgress(40);
+          setProgress(20);
           setItemProgress({ currentItem: 0, totalItems: saveData.files.length });
 
           for (let i = 0; i < saveData.files.length; i++) {
@@ -98,7 +99,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         // Save Pane nodes (which include markdown content)
         if (saveData.panes?.length > 0) {
           setStage("SAVING_PANES");
-          setProgress(60);
+          setProgress(30);
           setItemProgress({ currentItem: 0, totalItems: saveData.panes.length });
 
           for (let i = 0; i < saveData.panes.length; i++) {
@@ -118,7 +119,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         // Save StoryFragment nodes last
         if (saveData.storyfragments?.length > 0) {
           setStage("SAVING_STORY_FRAGMENTS");
-          setProgress(80);
+          setProgress(70);
           setItemProgress({ currentItem: 0, totalItems: saveData.storyfragments.length });
 
           for (let i = 0; i < saveData.storyfragments.length; i++) {
@@ -141,6 +142,30 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             ctx.cleanNode(node.id);
           }
         });
+
+        // Process Tailwind styles
+        setStage("PROCESSING_STYLES");
+        setProgress(80);
+
+        try {
+          // Extract classes from panes
+          const panes = saveData.panes || [];
+          const whitelistClasses = getTailwindWhitelist(panes);
+
+          // Call new Tailwind generation endpoint
+          const response = await fetch("/api/tailwind/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ whitelist: whitelistClasses }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to generate Tailwind styles");
+          }
+        } catch (styleError) {
+          console.error("Style processing error:", styleError);
+          // Continue with save process even if style generation fails
+        }
 
         setProgress(100);
         setStage("COMPLETED");
@@ -166,6 +191,8 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
     switch (currentStage) {
       case "PREPARING":
         return "Preparing changes...";
+      case "PROCESSING_STYLES":
+        return "Processing styles...";
       case "SAVING_MENUS":
         return `Saving menu content...${getProgressText()}`;
       case "SAVING_FILES":
@@ -188,7 +215,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4">
         <h2 className="text-2xl font-bold mb-4">Saving Changes</h2>
 
-        {/* Progress bar */}
         <div className="mb-4">
           <div className="h-2 bg-gray-200 rounded-full">
             <div
@@ -202,10 +228,8 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           </div>
         </div>
 
-        {/* Status message */}
         <p className="text-lg mb-4">{getStageDescription(stage)}</p>
 
-        {/* Action buttons */}
         {(stage === "COMPLETED" || stage === "ERROR") && (
           <div className="flex justify-end gap-2">
             {stage === "ERROR" && (

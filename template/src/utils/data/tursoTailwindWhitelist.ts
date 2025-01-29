@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { BgPaneDatum, BgColourDatum, MarkdownPaneDatum } from "../../types";
+import type { BgPaneDatum, BgColourDatum, MarkdownPaneDatum } from "@/types";
 
 export function getTailwindWhitelist(rows: any[]) {
   if (!rows.length) return [];

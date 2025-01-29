@@ -1,5 +1,6 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
+import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
 import type {
   TractStackRowData,
   ResourceRowData,
@@ -672,7 +673,9 @@ export async function getStoryFragmentBySlugFullRowData(
 
     // Parse the panes data
     const rawPanesData = sfRow.panes_data ? JSON.parse(String(sfRow.panes_data)) : [];
-    const panesData = rawPanesData.filter((item:PaneRowData) => item.id !== null || item.slug !== null);
+    const panesData = rawPanesData.filter(
+      (item: PaneRowData) => item.id !== null || item.slug !== null
+    );
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
     const files: ImageFileRowData[] = [];
@@ -1153,5 +1156,17 @@ export async function initializeContent(): Promise<void> {
       console.error("Content initialization error:", error);
       throw error;
     }
+  }
+}
+
+export async function getUniqueTailwindClasses() {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+    const { rows } = await client.execute(`SELECT id, options_payload FROM pane`);
+    return getTailwindWhitelist(rows);
+  } catch (error) {
+    console.error("Error fetching pane payloads:", error);
+    throw error;
   }
 }

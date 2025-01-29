@@ -20,7 +20,7 @@ if (!slug) return Astro.redirect("/404");
 
 const config = await getConfig();
 const validation = await validateConfig(config);
-if ((!validation.isValid && slug!==`hello` ) || !config) {
+if ((!validation.isValid && slug !== `hello`) || !config) {
   return Astro.redirect("/storykeep/init");
 }
 const canonicalURL = `/${slug}`;

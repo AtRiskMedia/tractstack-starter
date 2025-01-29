@@ -64,7 +64,7 @@ const wordmarkIsSvg = wordmark.includes("svg");
   </head>
   <body class="h-full">
     <div class="flex min-h-full flex-col justify-center py-12 xs:px-6 lg:px-8">
-      <div class="xs:mx-auto xs:w-full xs:max-w-md">
+      <div class="mx-auto pb-6">
         <!-- Logo and Wordmark -->
         <div class="flex flex-col items-center justify-center gap-4">
           {
@@ -114,8 +114,8 @@ const wordmarkIsSvg = wordmark.includes("svg");
         </h2>
       </div>
 
-      <div class="mt-10 xs:mx-auto xs:w-full xs:max-w-[480px]">
-        <div class="bg-white px-6 py-12 shadow-lg xs:rounded-lg xs:px-12">
+      <div class="mx-auto">
+        <div class="bg-white px-6 py-12 shadow-inner rounded-lg">
           {
             loginError && (
               <div class="mb-6 rounded-md bg-myred/10 p-4">

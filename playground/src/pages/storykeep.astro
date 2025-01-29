@@ -30,19 +30,19 @@ if (!payload) {
 }
 
 const links = [];
-if (!user?.isAuthenticated)
-  links.unshift({
-    name: "Login",
-    description: "Enter your Story Keep",
-    featured: true,
-    actionLisp: "(goto (storykeep login))",
-  });
 if (user?.isAdmin)
   links.unshift({
     name: "Advanced Setup",
     description: "Your Story Keep Settings",
     featured: true,
     actionLisp: "(goto (storykeep settings))",
+  });
+if (!user?.isAuthenticated)
+  links.unshift({
+    name: "Login",
+    description: "Enter your Story Keep",
+    featured: true,
+    actionLisp: "(goto (storykeep login))",
   });
 if (user?.isAuthenticated)
   links.unshift({
@@ -51,6 +51,7 @@ if (user?.isAuthenticated)
     featured: true,
     actionLisp: "(goto (storykeep logout))",
   });
+
 const menuPayload = {
   id: `storykeep`,
   title: "Story Keep Menu",

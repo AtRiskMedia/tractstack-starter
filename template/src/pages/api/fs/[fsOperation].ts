@@ -265,7 +265,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
 
       case "generateTailwindWhitelist": {
-        console.log(`this step is triggering the old way`);
+        console.log(`THIS SHOULD NOT HAPPEN`);
         //const { whitelist } = (await request.json()) as { whitelist?: string[] };
         //const whitelistedClasses = whitelist || (await getUniqueTailwindClasses(""));
         //await generateOptimizedCss(whitelistedClasses);
