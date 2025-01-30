@@ -64,12 +64,14 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Page Title</h3>
-          <button
-            onClick={() => setMode && setMode(StoryFragmentMode.DEFAULT)}
-            className="text-myblue hover:text-black"
-          >
-            ← Go Back
-          </button>
+          {setMode && (
+            <button
+              onClick={() => setMode && setMode(StoryFragmentMode.DEFAULT)}
+              className="text-myblue hover:text-black"
+            >
+              ← Go Back
+            </button>
+          )}
         </div>
 
         <div className="relative">
