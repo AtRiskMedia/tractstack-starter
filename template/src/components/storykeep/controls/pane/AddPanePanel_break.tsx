@@ -7,12 +7,14 @@ import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
+import type { PaneNode, StoryFragmentNode, TemplatePane } from "@/types";
 
 interface AddPaneBreakPanelProps {
   nodeId: string;
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
   ctx?: NodesContext;
+  isStoryFragment?: boolean;
 }
 
 interface PreviewPane {
@@ -51,7 +53,13 @@ const templateCategory = {
   getTemplatesByVariant: (variant: string) => [getTemplateVisualBreakPane(variant)],
 };
 
-const AddPaneBreakPanel = ({ nodeId, first, setMode, ctx }: AddPaneBreakPanelProps) => {
+const AddPaneBreakPanel = ({
+  nodeId,
+  first,
+  setMode,
+  ctx,
+  isStoryFragment = false,
+}: AddPaneBreakPanelProps) => {
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
@@ -105,12 +113,80 @@ const AddPaneBreakPanel = ({ nodeId, first, setMode, ctx }: AddPaneBreakPanelPro
   }, [previews, currentPage]);
 
   const handleVisualBreakInsert = (variant: string, nodeId: string, first: boolean) => {
-    if (ctx) {
-      const template = getTemplateVisualBreakPane(variant);
-      const ownerId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
-      console.log(`insert not working`, ownerId, ctx);
-      ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+    if (!ctx) return;
+    const rawTemplate = getTemplateVisualBreakPane(variant);
+
+    // Cast as TemplatePane to match the expected type
+    const template: TemplatePane = {
+      ...rawTemplate,
+      bgColour: "white", // Will be overridden below
+    };
+
+    // If isStoryFragment, nodeId is already the owner, otherwise need to get storyfragment
+    const ownerId = isStoryFragment
+      ? nodeId
+      : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+    const owner = ctx.allNodes.get().get(ownerId);
+
+    // Get adjacent colors based on whether it's a storyFragment/contextPane vs regular pane
+    let aboveColor = "white";
+    let belowColor = "white";
+
+    if (isStoryFragment) {
+      // Working with storyfragment/contextPane directly
+      const sf = owner as StoryFragmentNode;
+      if (sf.paneIds.length > 0) {
+        if (first) {
+          // Inserting before first pane
+          const firstPane = ctx.allNodes.get().get(sf.paneIds[0]) as PaneNode;
+          belowColor = firstPane?.bgColour || "white";
+        } else {
+          // Inserting after last pane
+          const lastPane = ctx.allNodes.get().get(sf.paneIds[sf.paneIds.length - 1]) as PaneNode;
+          aboveColor = lastPane?.bgColour || "white";
+        }
+      }
+    } else {
+      // Working with existing pane
+      const sf = ctx.allNodes.get().get(ownerId) as StoryFragmentNode;
+      const currentIndex = sf.paneIds.indexOf(nodeId);
+      if (first) {
+        // Inserting before current pane
+        const abovePaneId = currentIndex > 0 ? sf.paneIds[currentIndex - 1] : null;
+        const abovePane = abovePaneId ? (ctx.allNodes.get().get(abovePaneId) as PaneNode) : null;
+        const currentPane = ctx.allNodes.get().get(nodeId) as PaneNode;
+        aboveColor = abovePane?.bgColour || "white";
+        belowColor = currentPane?.bgColour || "white";
+      } else {
+        // Inserting after current pane
+        const belowPaneId =
+          currentIndex < sf.paneIds.length - 1 ? sf.paneIds[currentIndex + 1] : null;
+        const currentPane = ctx.allNodes.get().get(nodeId) as PaneNode;
+        const belowPane = belowPaneId ? (ctx.allNodes.get().get(belowPaneId) as PaneNode) : null;
+        aboveColor = currentPane?.bgColour || "white";
+        belowColor = belowPane?.bgColour || "white";
+      }
     }
+
+    // Override the template colors
+    template.bgColour = belowColor;
+    const svgFill = aboveColor === belowColor ? "black" : aboveColor;
+
+    if (template.bgPane) {
+      if (template.bgPane.breakDesktop) {
+        template.bgPane.breakDesktop.svgFill = svgFill;
+      }
+      if (template.bgPane.breakTablet) {
+        template.bgPane.breakTablet.svgFill = svgFill;
+      }
+      if (template.bgPane.breakMobile) {
+        template.bgPane.breakMobile.svgFill = svgFill;
+      }
+    }
+
+    // Add the modified template
+    ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+    ctx.notifyNode(`root`);
   };
 
   return (

@@ -16,6 +16,8 @@ interface AddPaneNewPanelProps {
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
   ctx?: NodesContext;
+  isStoryFragment?: boolean;
+  isContextPane?: boolean;
 }
 
 interface PreviewPane {
@@ -33,7 +35,14 @@ interface TemplateCategory {
 
 const ITEMS_PER_PAGE = 4;
 
-const AddPaneNewPanel = ({ nodeId, first, setMode, ctx }: AddPaneNewPanelProps) => {
+const AddPaneNewPanel = ({
+  nodeId,
+  first,
+  setMode,
+  ctx,
+  isStoryFragment = false,
+  isContextPane = false,
+}: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
@@ -86,9 +95,20 @@ const AddPaneNewPanel = ({ nodeId, first, setMode, ctx }: AddPaneNewPanelProps) 
 
   const handleTemplateInsert = (template: any, nodeId: string, first: boolean) => {
     if (ctx) {
-      const ownerId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
-      console.log(`insert not working`, ownerId, ctx);
-      ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+      const ownerId =
+        isStoryFragment || isContextPane
+          ? nodeId
+          : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+      const newPaneId = ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+      if (newPaneId) {
+        ctx.insertPaneId(
+          ownerId,
+          newPaneId,
+          isStoryFragment || isContextPane ? undefined : nodeId,
+          first ? "before" : "after"
+        );
+        ctx.notifyNode(`root`);
+      }
     }
   };
 

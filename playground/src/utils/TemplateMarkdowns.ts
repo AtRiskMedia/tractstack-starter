@@ -1,11 +1,7 @@
 import type { TemplateMarkdown, Theme } from "@/types.ts";
 import { getColor } from "@/utils/tailwind/tailwindColors.ts";
 
-export const getTemplateSimpleMarkdown = (
-  theme: Theme,
-  variant: string,
-  isOdd: boolean = false
-) => {
+export const getTemplateSimpleMarkdown = (theme: Theme) => {
   return {
     nodeType: "Markdown",
     id: "",

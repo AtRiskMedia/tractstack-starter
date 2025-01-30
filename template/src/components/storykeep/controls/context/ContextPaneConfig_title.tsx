@@ -81,6 +81,11 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: ContextPaneTitlePanelProps) 
             value={title}
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
               charCount < 20
                 ? "border-red-500 bg-red-50"

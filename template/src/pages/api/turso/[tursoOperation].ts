@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
 import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics.ts";
 import { streamEvents } from "@/utils/db/api/stream.ts";

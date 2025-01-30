@@ -8,9 +8,17 @@ interface AddPaneCodeHookPanelProps {
   nodeId: string;
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
+  isStoryFragment?: boolean;
+  isContextPane?: boolean;
 }
 
-const AddPaneCodeHookPanel = ({ nodeId, first, setMode }: AddPaneCodeHookPanelProps) => {
+const AddPaneCodeHookPanel = ({
+  nodeId,
+  first,
+  setMode,
+  isStoryFragment = false,
+  isContextPane = false,
+}: AddPaneCodeHookPanelProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const availableCodeHooks = codehookMap.get();

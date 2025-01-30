@@ -554,7 +554,7 @@ export function cleanStringUpper(s: string): string {
 }
 
 export function titleToSlug(title: string, maxLength: number = 50): string {
-  let slug = cleanString(title);
+  const slug = cleanString(title);
   if (slug.length <= maxLength) {
     return slug;
   }

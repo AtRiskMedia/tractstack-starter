@@ -12,9 +12,15 @@ interface AddPaneReUsePanelProps {
   nodeId: string;
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
+  isStoryFragment?: boolean;
 }
 
-const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) => {
+const AddPaneReUsePanel = ({
+  nodeId,
+  first,
+  setMode,
+  isStoryFragment = false,
+}: AddPaneReUsePanelProps) => {
   const [selected, setSelected] = useState<PaneContentMap | null>(null);
   const [previews, setPreviews] = useState<{ ctx: NodesContext; snapshot?: SnapshotData }[]>([]);
   const [query, setQuery] = useState("");
@@ -55,19 +61,15 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: selected.id }),
         });
-
         const result = await response.json();
         if (!result.success || !result.data.data.templatePane) {
           console.error("Failed to fetch pane:", result.error);
           return;
         }
-
         const paneNode = result.data.data.templatePane as PaneNode;
-        console.log(`not rendering`, paneNode);
         const ctx = new NodesContext();
         ctx.addNode(createEmptyStorykeep("tmp"));
         ctx.addNode({ ...paneNode, parentId: "tmp" });
-
         setPreviews([{ ctx }]);
       } catch (error) {
         console.error("Error fetching pane preview:", error);

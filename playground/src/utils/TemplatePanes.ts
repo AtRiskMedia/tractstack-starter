@@ -30,12 +30,7 @@ export const getTemplateVisualBreakPane = (variant: string) => {
   } as TemplatePane;
 };
 
-export const getTemplateSimplePane = (
-  theme: Theme,
-  variant: string,
-  brand: string,
-  useOdd: boolean = false
-) => {
+export const getTemplateSimplePane = (theme: Theme, brand: string, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
     title: "Simple Pane",
@@ -43,19 +38,19 @@ export const getTemplateSimplePane = (
     bgColour: tailwindToHex(
       getColor(
         {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
         },
         theme
       ),
       brand
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme, variant, useOdd),
+      ...getTemplateSimpleMarkdown(theme),
       nodes: [
         { ...TemplateH2Node, copy: "H2 node in simple pane" },
         { ...TemplatePNode, copy: "P node in simple pane" },
@@ -80,19 +75,19 @@ export const getTemplateMarkdownPane = (
     bgColour: tailwindToHex(
       getColor(
         {
-          light: "#fcfcfc",
-          "light-bw": "brand-2",
-          "light-bold": "brand-8",
-          dark: "#000000",
-          "dark-bw": "brand-1",
-          "dark-bold": "black",
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
         },
         theme
       ),
       brand
     ),
     markdown: {
-      ...getTemplateSimpleMarkdown(theme, variant, useOdd),
+      ...getTemplateSimpleMarkdown(theme),
       markdownBody: `## add a catchy title here\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n[Try it now!](try) &nbsp; [Learn more](learn)\n`,
     },
   } as TemplatePane;

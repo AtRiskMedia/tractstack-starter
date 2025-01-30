@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
 import { navigate } from "astro:transitions/client";
 import { Switch } from "@headlessui/react";

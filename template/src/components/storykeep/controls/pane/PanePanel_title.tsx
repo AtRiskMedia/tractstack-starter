@@ -67,6 +67,11 @@ const PaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
             value={title}
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
               charCount < 5
                 ? "border-red-500 bg-red-50"

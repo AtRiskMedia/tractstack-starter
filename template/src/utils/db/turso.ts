@@ -36,6 +36,12 @@ export interface ContextPaneFullRowData {
   files: ImageFileRowData[];
 }
 
+interface EnrichedPaneRowData extends PaneRowData {
+  markdown_body?: string;
+  files?: string;
+  weight?: number;
+}
+
 function ensureString(value: unknown): string {
   if (value === null || value === undefined) {
     throw new Error("Required string value is null or undefined");
@@ -671,10 +677,9 @@ export async function getStoryFragmentBySlugFullRowData(
       };
     }
 
-    // Parse the panes data
     const rawPanesData = sfRow.panes_data ? JSON.parse(String(sfRow.panes_data)) : [];
     const panesData = rawPanesData.filter(
-      (item: PaneRowData) => item.id !== null || item.slug !== null
+      (item: EnrichedPaneRowData) => item.id !== null || item.slug !== null
     );
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
@@ -682,8 +687,8 @@ export async function getStoryFragmentBySlugFullRowData(
     const processedFileIds = new Set<string>();
 
     // Process each pane and its related data
-    panesData.forEach((paneData: any) => {
-      // Add pane
+    panesData.forEach((paneData: EnrichedPaneRowData) => {
+      // Add pane (only include PaneRowData fields)
       panes.push({
         id: String(paneData.id),
         title: String(paneData.title),
@@ -708,18 +713,18 @@ export async function getStoryFragmentBySlugFullRowData(
       }
 
       // Process files
-      if (paneData.files) {
-        const paneFiles = JSON.parse(paneData.files);
-        paneFiles.forEach((file: any) => {
-          if (!processedFileIds.has(file.id)) {
+      const rawFiles = paneData.files ? JSON.parse(String(paneData.files)) : [];
+      if (Array.isArray(rawFiles)) {
+        rawFiles.forEach((file: ImageFileRowData) => {
+          if (!processedFileIds.has(String(file.id))) {
             files.push({
               id: String(file.id),
               filename: String(file.filename),
-              alt_description: String(file.alt_description),
+              alt_description: file.alt_description ? String(file.alt_description) : null,
               url: String(file.url),
               ...(file.src_set && { src_set: String(file.src_set) }),
-            });
-            processedFileIds.add(file.id);
+            } as ImageFileRowData);
+            processedFileIds.add(String(file.id));
           }
         });
       }

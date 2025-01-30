@@ -133,6 +133,11 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode, config }: StoryFragmentSlugPa
             value={slug}
             onChange={handleSlugChange}
             onBlur={handleSlugBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.currentTarget.blur();
+              }
+            }}
             readOnly={isHomeSlug}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
               isHomeSlug

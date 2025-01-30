@@ -931,6 +931,8 @@ export class NodesContext {
         ctx.addNodes([duplicatedPane]);
       },
     });
+
+    return duplicatedPaneId;
   }
 
   handleInsertSignal(tagName: string, nodeId: string) {
@@ -1333,6 +1335,57 @@ export class NodesContext {
     return result;
   }
 
+  insertPaneId(
+    storyfragmentId: string,
+    paneId: string,
+    insertId?: string,
+    location?: "before" | "after"
+  ) {
+    const storyfragment = this.allNodes.get().get(storyfragmentId) as StoryFragmentNode;
+    if (!storyfragment || storyfragment.nodeType !== "StoryFragment") {
+      console.warn("Invalid storyfragment ID in insertPaneId");
+      return;
+    }
+
+    const oldPaneIds = [...storyfragment.paneIds];
+
+    // If no insert reference, just append
+    if (!insertId) {
+      storyfragment.paneIds.push(paneId);
+    } else {
+      const insertIdx = storyfragment.paneIds.indexOf(insertId);
+      if (insertIdx === -1) {
+        console.warn("Insert reference pane not found in storyfragment");
+        return;
+      }
+
+      const targetIdx = location === "before" ? insertIdx : insertIdx + 1;
+      storyfragment.paneIds.splice(targetIdx, 0, paneId);
+    }
+
+    // Mark storyfragment as changed
+    storyfragment.isChanged = true;
+
+    // Add to history
+    this.history.addPatch({
+      op: PatchOp.REPLACE,
+      undo: (ctx) => {
+        const sf = ctx.allNodes.get().get(storyfragmentId) as StoryFragmentNode;
+        if (sf) {
+          sf.paneIds = oldPaneIds;
+          sf.isChanged = true;
+        }
+      },
+      redo: (ctx) => {
+        const sf = ctx.allNodes.get().get(storyfragmentId) as StoryFragmentNode;
+        if (sf) {
+          sf.paneIds = [...storyfragment.paneIds];
+          sf.isChanged = true;
+        }
+      },
+    });
+  }
+
   isSlugValid(slug: string, currentNodeId?: string): { isValid: boolean; error?: string } {
     // Early validation for empty slugs
     if (!slug || slug.length < 3) {
@@ -1362,7 +1415,7 @@ export class NodesContext {
     if (duplicateNode) {
       return {
         isValid: false,
-        error: `This URL is already in use by ${duplicateNode.nodeType === "Pane" ? "pane" : "page"}: ${(duplicateNode as any).title}`,
+        error: `This URL is already in use by ${duplicateNode.nodeType === "Pane" ? "pane" : "page"}: ${(duplicateNode as PaneNode).title}`,
       };
     }
     return { isValid: true };
