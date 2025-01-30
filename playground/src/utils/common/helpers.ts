@@ -553,6 +553,25 @@ export function cleanStringUpper(s: string): string {
     .replace(/\s/g, "");
 }
 
+export function titleToSlug(title: string, maxLength: number = 50): string {
+  let slug = cleanString(title);
+  if (slug.length <= maxLength) {
+    return slug;
+  }
+  const words = slug.split("-");
+  let result = "";
+  for (const word of words) {
+    if ((result + (result ? "-" : "") + word).length > maxLength) {
+      break;
+    }
+    result += (result ? "-" : "") + word;
+  }
+  if (!result) {
+    result = slug.slice(0, maxLength);
+  }
+  return result.replace(/-+$/, "");
+}
+
 export function sortULIDs(ulids: string[]) {
   return ulids.sort((a, b) => {
     const toBinary = (ulid: string) => {

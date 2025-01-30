@@ -1,18 +1,19 @@
 import { useState, useEffect } from "react";
-import { getCtx } from "@/store/nodes.ts";
+import type { Dispatch, SetStateAction, ChangeEvent } from "react";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { cloneDeep } from "@/utils/common/helpers.ts";
+import { cloneDeep, titleToSlug, findUniqueSlug } from "@/utils/common/helpers.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { contentMap } from "@/store/events.ts";
 import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
-import type { Dispatch, SetStateAction } from "react";
 import type { PaneNode } from "@/types";
 
-interface PaneTitlePanelProps {
+interface ContextPaneTitlePanelProps {
   nodeId: string;
   setMode?: Dispatch<SetStateAction<ContextPaneModeType>>;
 }
 
-const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
+const ContextPaneTitlePanel = ({ nodeId, setMode }: ContextPaneTitlePanelProps) => {
   const [title, setTitle] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -28,22 +29,33 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
     setCharCount(paneNode.title.length);
   }, [paneNode.title]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     if (newTitle.length <= 70) {
       // Prevent more than 70 chars
       setTitle(newTitle);
       setCharCount(newTitle.length);
-      setIsValid(newTitle.length >= 50 && newTitle.length <= 60);
+      setIsValid(newTitle.length >= 35 && newTitle.length <= 60);
       setWarning(newTitle.length > 60 && newTitle.length <= 70);
     }
   };
 
   const handleTitleBlur = () => {
-    if (title.length >= 30) {
+    if (title.length >= 20) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const updatedNode = { ...cloneDeep(paneNode), title, isChanged: true };
+      const existingSlugs = contentMap
+        .get()
+        .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+        .map((item) => item.slug);
+      const newSlug =
+        paneNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
+      const updatedNode = cloneDeep({
+        ...paneNode,
+        title,
+        ...(newSlug ? { slug: newSlug } : {}),
+        isChanged: true,
+      });
       ctx.modifyNodes([updatedNode]);
     }
   };
@@ -68,7 +80,7 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
             onChange={handleTitleChange}
             onBlur={handleTitleBlur}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
-              charCount < 30
+              charCount < 20
                 ? "border-red-500 bg-red-50"
                 : isValid
                   ? "border-green-500 bg-green-50"
@@ -76,10 +88,10 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
                     ? "border-yellow-500 bg-yellow-50"
                     : "border-gray-300"
             }`}
-            placeholder="Enter story fragment title (50-60 characters recommended)"
+            placeholder="Enter page title (35-60 characters recommended)"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {charCount < 30 ? (
+            {charCount < 20 ? (
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
             ) : isValid ? (
               <CheckIcon className="h-5 w-5 text-green-500" />
@@ -88,7 +100,7 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
             ) : null}
             <span
               className={`text-sm ${
-                charCount < 30
+                charCount < 20
                   ? "text-red-500"
                   : isValid
                     ? "text-green-500"
@@ -117,22 +129,17 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
               </li>
             </ul>
           </div>
-          <div className="mt-4 text-lg space-y-4">
-            <div className="text-gray-600">
-              Write a clear, descriptive title for this piece of content.{" "}
-            </div>
-            <div className="py-4">
-              {charCount < 5 && (
-                <span className="text-red-500">Title must be at least 5 characters</span>
-              )}
-              {charCount >= 5 && charCount < 10 && (
-                <span className="text-gray-500">
-                  Add {10 - charCount} more characters for optimal length
-                </span>
-              )}
-              {warning && <span className="text-yellow-500">Title is getting long</span>}
-              {isValid && <span className="text-green-500">Perfect title length!</span>}
-            </div>
+          <div className="py-4">
+            {charCount < 20 && (
+              <span className="text-red-500">Title must be at least 20 characters</span>
+            )}
+            {charCount >= 20 && charCount < 35 && (
+              <span className="text-gray-500">
+                Add {35 - charCount} more characters for optimal length
+              </span>
+            )}
+            {warning && <span className="text-yellow-500">Title is getting long</span>}
+            {isValid && <span className="text-green-500">Perfect title length!</span>}
           </div>
         </div>
       </div>

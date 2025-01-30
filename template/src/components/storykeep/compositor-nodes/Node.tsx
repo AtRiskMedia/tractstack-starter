@@ -1,6 +1,5 @@
 import { getCtx, NodesContext } from "@/store/nodes.ts";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
-import PaneTitlePanel from "@/components/storykeep/controls/pane/PanePanel_title";
 import { Pane } from "@/components/storykeep/compositor-nodes/nodes/Pane.tsx";
 import { PaneAdd } from "@/components/storykeep/compositor-nodes/nodes/Pane_add.tsx";
 import { PaneConfig } from "@/components/storykeep/compositor-nodes/nodes/Pane_config.tsx";
@@ -25,6 +24,7 @@ import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/storykeep/compositor-nodes/NodeWithGuid.tsx";
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
 import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragment/StoryFragmentConfigPanel";
+import StoryFragmentTitlePanel from "@/components/storykeep/controls/storyfragment/StoryFragmentPanel_title";
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import { memo, type ReactElement } from "react";
@@ -104,7 +104,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       return (
         <>
           {!(sf.slug && sf.title) ? (
-            <PaneTitlePanel nodeId={props.nodeId} />
+            <StoryFragmentTitlePanel nodeId={props.nodeId} />
           ) : (
             <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
           )}

@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction } from "react";
-import { getCtx } from "@/store/nodes.ts";
+import type { Dispatch, SetStateAction, ChangeEvent } from "react";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import type { StoryFragmentNode } from "@/types";
-import { cloneDeep } from "@/utils/common/helpers.ts";
-import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
+import { cloneDeep, titleToSlug, findUniqueSlug } from "@/utils/common/helpers.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { contentMap } from "@/store/events.ts";
+import { StoryFragmentMode, type StoryFragmentModeType, type StoryFragmentNode } from "@/types.ts";
 
 interface StoryFragmentTitlePanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<StoryFragmentModeType>>;
+  setMode?: Dispatch<SetStateAction<StoryFragmentModeType>>;
 }
 
 const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelProps) => {
@@ -28,13 +28,13 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
     setCharCount(storyfragmentNode.title.length);
   }, [storyfragmentNode.title]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     if (newTitle.length <= 70) {
       // Prevent more than 70 chars
       setTitle(newTitle);
       setCharCount(newTitle.length);
-      setIsValid(newTitle.length >= 50 && newTitle.length <= 60);
+      setIsValid(newTitle.length >= 35 && newTitle.length <= 60);
       setWarning(newTitle.length > 60 && newTitle.length <= 70);
     }
   };
@@ -43,7 +43,18 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
     if (title.length >= 20) {
       // Only update if meets minimum length
       const ctx = getCtx();
-      const updatedNode = cloneDeep({ ...storyfragmentNode, title, isChanged: true });
+      const existingSlugs = contentMap
+        .get()
+        .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+        .map((item) => item.slug);
+      const newSlug =
+        storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
+      const updatedNode = cloneDeep({
+        ...storyfragmentNode,
+        title,
+        ...(newSlug ? { slug: newSlug } : {}),
+        isChanged: true,
+      });
       ctx.modifyNodes([updatedNode]);
     }
   };
@@ -54,7 +65,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Page Title</h3>
           <button
-            onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+            onClick={() => setMode && setMode(StoryFragmentMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
             ← Go Back

@@ -28,7 +28,7 @@ const contentTypes = {
     createUrl: "/storykeep/content/tractstacks/create",
   },
   storyfragment: {
-    name: "Story Fragment",
+    name: "Web Page (Story Fragment)",
     browse: "Story Fragments",
     url: null,
     createUrl: "/create/edit",
