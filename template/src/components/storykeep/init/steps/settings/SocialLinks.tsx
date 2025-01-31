@@ -1,19 +1,16 @@
 import { useState, useCallback } from "react";
 import { Combobox } from "@headlessui/react";
 import { PlusIcon, XMarkIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
-import socialIcons from "../../../../../../config/socialIcons.json";
-
-const socialIconKeys = socialIcons.iconKeys;
+import { socialIconKeys } from "@/utils/common/socialIcons";
 
 interface SocialLinksProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-type SocialPlatform = keyof typeof socialIcons.icons;
-
+type SocialPlatform = keyof typeof socialIconKeys
 interface SocialLink {
-  platform: SocialPlatform;
+  platform: SocialPlatform
   url: string;
 }
 
@@ -25,7 +22,6 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
       .filter(Boolean)
       .map((link) => {
         const [platform, url] = link.split("|");
-        // Cast platform to SocialPlatform since we're confident it comes from our icons
         return { platform: platform as SocialPlatform, url };
       });
   });
@@ -35,11 +31,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     null
   );
 
-  // Create a type-safe version of usedPlatforms
-  const usedPlatforms = new Set(links.map((link) => link.platform));
-  const availablePlatforms = socialIconKeys.filter(
-    (platform): platform is SocialPlatform => !usedPlatforms.has(platform as SocialPlatform)
-  );
+  const availablePlatforms = socialIconKeys;
 
   const handlePlatformSelect = useCallback((platform: SocialPlatform) => {
     setPendingLink({ platform, url: "" });
@@ -51,7 +43,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
       if (!pendingLink || !url) return;
       const newLinks = [...links, { platform: pendingLink.platform, url }] as SocialLink[];
       setLinks(newLinks);
-      onChange(newLinks.map((link) => `${link.platform}|${link.url}`).join(","));
+      onChange(newLinks.map((link) => `${String(link.platform)}|${link.url}`).join(","));
       setPendingLink(null);
     },
     [links, onChange, pendingLink]
@@ -61,7 +53,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     (index: number, url: string) => {
       const newLinks = links.map((link, i) => (i === index ? { ...link, url } : link));
       setLinks(newLinks);
-      onChange(newLinks.map((link) => `${link.platform}|${link.url}`).join(","));
+      onChange(newLinks.map((link) => `${String(link.platform)}|${link.url}`).join(","));
     },
     [links, onChange]
   );
@@ -70,7 +62,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     (index: number) => {
       const newLinks = links.filter((_, i) => i !== index);
       setLinks(newLinks);
-      onChange(newLinks.map((link) => `${link.platform}|${link.url}`).join(","));
+      onChange(newLinks.map((link) => `${String(link.platform)}|${link.url}`).join(","));
     },
     [links, onChange]
   );
@@ -88,19 +80,19 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     <div className="space-y-4 max-w-lg">
       {links.map((link, index) => (
         <div key={index} className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md"
-            dangerouslySetInnerHTML={{
-              __html: socialIcons.icons[link.platform as SocialPlatform].replace(
-                "fill-transparent",
-                "fill-black"
-              ),
-            }}
-          />
-
+          <div className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md">
+            <img
+              src={`/socials/${String(link.platform)}.svg`}
+              alt={`${String(link.platform)} icon`}
+              width="24"
+              height="24"
+              className="h-6 w-6 scale-125"
+            />
+          </div>
           <input
             type="url"
             value={link.url}
+            autoComplete="off"
             onChange={(e) => updateLink(index, e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="https://"
@@ -119,19 +111,19 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
 
       {pendingLink && (
         <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md"
-            dangerouslySetInnerHTML={{
-              __html: socialIcons.icons[pendingLink.platform as SocialPlatform].replace(
-                "fill-transparent",
-                "fill-black"
-              ),
-            }}
-          />
-
+          <div className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md">
+            <img
+              src={`/socials/${String(pendingLink.platform)}.svg`}
+              alt={`${String(pendingLink.platform)} icon`}
+              width="24"
+              height="24"
+              className="h-6 w-6 scale-125"
+            />
+          </div>
           <input
             type="url"
             value={pendingLink.url}
+            autoComplete="off"
             onChange={(e) => setPendingLink({ ...pendingLink, url: e.target.value })}
             onBlur={(e) => handlePendingUrlChange(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -155,6 +147,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
           <div className="relative">
             <Combobox.Input
               className={baseInputClass}
+              autoComplete="off"
               placeholder="Select social platform..."
               displayValue={(platform: string) => platform}
               onChange={() => {}}
@@ -174,15 +167,16 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
                   `}
                 >
                   <div className="flex items-center gap-3">
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: socialIcons.icons[platform as SocialPlatform].replace(
-                          "fill-transparent",
-                          "fill-black"
-                        ),
-                      }}
-                    />
-                    <span className="text-mydarkgrey">{platform}</span>
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={`/socials/${platform}.svg`}
+                        alt={`${platform} icon`}
+                        width="24"
+                        height="24"
+                        className="h-6 w-6"
+                      />
+                      <span className="text-mydarkgrey">{platform}</span>
+                    </div>
                   </div>
                 </Combobox.Option>
               ))}

@@ -1,6 +1,6 @@
 ---
 import Link from "../nav/Link.astro";
-import { socialIcons, socialIconKeys } from "../../../utils/common/socialIcons";
+import { socialIconKeys } from "@/utils/common/socialIcons";
 
 interface Props {
   payload: string;
@@ -8,12 +8,10 @@ interface Props {
 
 const { payload } = Astro.props;
 
-// Type guard to ensure we have valid social entries
 function isSocialEntry(arr: string[]): arr is [string, string] | [string, string, string] {
   return arr.length >= 2 && arr.length <= 3;
 }
 
-// Split and filter in one step to ensure type safety
 const socials = payload
   .split(`,`)
   .map((s) => s.split(`|`))
@@ -27,12 +25,18 @@ const socials = payload
       .map((social) => (
         <Link
           href={social[1]}
-          className="my-1 p-2 hover:rotate-6"
+          className="group inline-block hover:text-myblue my-1 p-2 hover:rotate-6"
           target="_blank"
           title={social[2] ?? social[1]}
         >
-          <span class="inline-block h-6 w-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent xs:scale-110">
-            <Fragment set:html={socialIcons[social[0] as keyof typeof socialIcons]} />
+          <span>
+            <img
+              src={`/socials/${social[0]}.svg`}
+              alt={`${social[0]} icon`}
+              class="inline-block h-6 w-6 scale-125"
+              width="24"
+              height="24"
+            />
           </span>
         </Link>
       ))
