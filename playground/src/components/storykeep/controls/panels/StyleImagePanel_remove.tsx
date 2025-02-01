@@ -39,12 +39,13 @@ const StyleImageRemovePanel = ({ node, parentNode, className, childId }: BasePan
     const allNodes = ctx.allNodes.get();
 
     const targetNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+    const parentNodeClone = cloneDeep(parentNode);
 
-    if (!targetNode) return;
+    if (!targetNode || !parentNodeClone) return;
 
     // Remove from defaultClasses if present
-    if (parentNode.defaultClasses?.[targetNode.tagName]) {
-      const defaultClasses = parentNode.defaultClasses[targetNode.tagName];
+    if (parentNodeClone.defaultClasses?.[targetNode.tagName]) {
+      const defaultClasses = parentNodeClone.defaultClasses[targetNode.tagName];
       if (className in defaultClasses.mobile) delete defaultClasses.mobile[className];
       if (className in defaultClasses.tablet) delete defaultClasses.tablet[className];
       if (className in defaultClasses.desktop) delete defaultClasses.desktop[className];
@@ -82,8 +83,6 @@ const StyleImageRemovePanel = ({ node, parentNode, className, childId }: BasePan
         delete targetNode.overrideClasses;
       }
     }
-
-    const parentNodeClone = cloneDeep(parentNode);
 
     ctx.modifyNodes([
       { ...targetNode, isChanged: true },

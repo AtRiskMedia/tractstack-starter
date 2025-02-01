@@ -2,9 +2,7 @@
 import type { APIRoute } from "astro";
 import fs from "fs/promises";
 import path from "path";
-import { getConfig } from "../../../utils/core/config";
-//import { getUniqueTailwindClasses } from "../../../utils/db/utils";
-//import { generateOptimizedCss } from "../../../utils/tailwind/generateOptimizedCss";
+import { getConfig } from "@/utils/core/config";
 import { createRequire } from "module";
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
