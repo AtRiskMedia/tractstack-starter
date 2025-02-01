@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import ImageUpload from "../fields/ImageUpload";
+import { StylesMemory } from "../state/StylesMemory";
 import type { ImageParams } from "../fields/ImageUpload";
 import { getCtx } from "@/store/nodes";
 import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
@@ -347,6 +348,9 @@ const StyleImagePanel = ({
                 Add Style
               </button>
             </li>
+            <li>
+              <StylesMemory node={node} parentNode={parentNode} />
+            </li>
           </ul>
         </div>
       </div>
@@ -385,6 +389,9 @@ const StyleImagePanel = ({
                 Add Style
               </button>
             </li>
+            <li>
+              <StylesMemory node={containerNode} parentNode={parentNode} />
+            </li>
           </ul>
         </div>
       </div>
@@ -422,6 +429,9 @@ const StyleImagePanel = ({
               >
                 Add Style
               </button>
+            </li>
+            <li>
+              <StylesMemory node={outerContainerNode} parentNode={parentNode} />
             </li>
           </ul>
         </div>

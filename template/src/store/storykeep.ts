@@ -1,4 +1,6 @@
 import { map, atom } from "nanostores";
+import type { ControlPosition } from "react-draggable";
+import type { Root } from "hast";
 import { persistentAtom } from "@nanostores/persistent";
 import type {
   BeliefDatum,
@@ -26,10 +28,9 @@ import type {
   Theme,
   DesignType,
   SettingsPanelSignal,
-} from "../types";
-import { PUBLIC_THEME, toolAddModes } from "../constants";
-import type { ControlPosition } from "react-draggable";
-import type { Root } from "hast";
+  Tag,
+} from "@/types";
+import { PUBLIC_THEME, toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
 
 export const themeStore = persistentAtom<Theme>("theme-store", PUBLIC_THEME as Theme);
@@ -286,3 +287,32 @@ export const paneFragmentIds = map<Record<string, FieldWithHistory<string[]>>>()
 export const paneFragmentBgPane = map<Record<string, FieldWithHistory<BgPaneDatum>>>();
 export const paneFragmentBgColour = map<Record<string, FieldWithHistory<BgColourDatum>>>();
 export const paneFragmentMarkdown = map<Record<string, FieldWithHistory<MarkdownEditDatum>>>();
+
+type ElementStylesMemory = {
+  [key in Tag]?: {
+    mobile: Record<string, string>;
+    tablet: Record<string, string>;
+    desktop: Record<string, string>;
+  };
+};
+type ParentStylesMemory = {
+  parentClasses: Array<{
+    mobile: Record<string, string>;
+    tablet: Record<string, string>;
+    desktop: Record<string, string>;
+  }>;
+  bgColour: string | null;
+};
+type ButtonStylesMemory = {
+  buttonClasses: Record<string, string[]>;
+  buttonHoverClasses: Record<string, string[]>;
+};
+export const elementStylesMemoryStore = map<ElementStylesMemory>({});
+export const parentStylesMemoryStore = map<ParentStylesMemory>({
+  parentClasses: [],
+  bgColour: null,
+});
+export const buttonStylesMemoryStore = map<ButtonStylesMemory>({
+  buttonClasses: {},
+  buttonHoverClasses: {},
+});

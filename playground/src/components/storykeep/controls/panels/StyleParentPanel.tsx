@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
+import { StylesMemory } from "../state/StylesMemory";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
-import { isMarkdownPaneFragmentNode, isPaneNode } from "../../../../utils/nodes/type-guards";
+import { isMarkdownPaneFragmentNode, isPaneNode } from "@/utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { PaneNode, MarkdownPaneFragmentNode } from "../../../../types";
+import type { PaneNode, MarkdownPaneFragmentNode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface ParentStyles {
@@ -260,6 +261,9 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
             >
               Delete Layer
             </button>
+          </li>
+          <li>
+            <StylesMemory node={node} parentNode={parentNode} />
           </li>
         </ul>
       </div>

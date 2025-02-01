@@ -1,13 +1,14 @@
-import type { BasePanelProps } from "../SettingsPanel";
-import type { FlatNode } from "../../../../types";
 import { useMemo } from "react";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
+import { StylesMemory } from "../state/StylesMemory";
 import { settingsPanelStore } from "@/store/storykeep";
 import { isLinkNode } from "@/utils/nodes/type-guards";
 import { cloneDeep } from "@/utils/common/helpers";
 import { getCtx } from "@/store/nodes";
 import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames";
+import type { BasePanelProps } from "../SettingsPanel";
+import type { FlatNode } from "@/types";
 
 const getButtonStyleClasses = (style: ButtonStyle) => ({
   mobile: Object.entries(style).reduce(
@@ -283,6 +284,9 @@ const StyleLinkPanel = ({ node }: BasePanelProps) => {
                   >
                     Add Style
                   </button>
+                </li>
+                <li>
+                  <StylesMemory node={node} />
                 </li>
               </ul>
             </div>

@@ -8,9 +8,9 @@ interface SocialLinksProps {
   onChange: (value: string) => void;
 }
 
-type SocialPlatform = keyof typeof socialIconKeys
+type SocialPlatform = keyof typeof socialIconKeys;
 interface SocialLink {
-  platform: SocialPlatform
+  platform: SocialPlatform;
   url: string;
 }
 

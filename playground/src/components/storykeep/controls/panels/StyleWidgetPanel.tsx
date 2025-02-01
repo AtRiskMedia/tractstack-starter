@@ -1,10 +1,11 @@
 import { useMemo } from "react";
 import Cog6ToothIcon from "@heroicons/react/24/outline/Cog6ToothIcon";
+import { StylesMemory } from "../state/StylesMemory";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
-import { widgetMeta } from "../../../../constants";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
+import { widgetMeta } from "@/constants";
 import { settingsPanelStore } from "@/store/storykeep";
-import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import type { FlatNode, MarkdownPaneFragmentNode } from "@/types";
 
 interface StyleWidgetPanelProps {
   node: FlatNode;
@@ -308,6 +309,9 @@ const StyleWidgetPanel = ({
                   Add Style
                 </button>
               </li>
+              <li>
+                <StylesMemory node={node} parentNode={parentNode} />
+              </li>
             </ul>
           </div>
         </div>
@@ -347,6 +351,9 @@ const StyleWidgetPanel = ({
                 Add Style
               </button>
             </li>
+            <li>
+              <StylesMemory node={containerNode} parentNode={parentNode} />
+            </li>
           </ul>
         </div>
       </div>
@@ -384,6 +391,9 @@ const StyleWidgetPanel = ({
               >
                 Add Style
               </button>
+            </li>
+            <li>
+              <StylesMemory node={outerContainerNode} parentNode={parentNode} />
             </li>
           </ul>
         </div>

@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
-import { tagTitles } from "../../../../constants";
+import { StylesMemory } from "../state/StylesMemory";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
+import { tagTitles } from "@/constants";
 import { settingsPanelStore } from "@/store/storykeep";
-import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
+import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "@/types";
 
 interface StyleElementPanelProps {
   node: FlatNode;
@@ -120,6 +121,9 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
             >
               Add Style
             </button>
+          </li>
+          <li>
+            <StylesMemory node={node} parentNode={parentNode} />
           </li>
         </ul>
       </div>
