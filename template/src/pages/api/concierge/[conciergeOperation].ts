@@ -42,7 +42,6 @@ export const POST: APIRoute = async ({ request, params }) => {
           message: data.message,
           data: data.data,
         };
-        console.log(result);
         break;
       }
 
@@ -66,24 +65,24 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       }
 
-      case "env": {
-        const body = await request.json();
-        const response = await fetch(`${BACKEND_URL}/storykeep/env`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Concierge-Secret": CONCIERGE_SECRET,
-          },
-          body: JSON.stringify(body),
-        });
+      //case "env": {
+      //  const body = await request.json();
+      //  const response = await fetch(`${BACKEND_URL}/storykeep/env`, {
+      //    method: "POST",
+      //    headers: {
+      //      "Content-Type": "application/json",
+      //      "X-Concierge-Secret": CONCIERGE_SECRET,
+      //    },
+      //    body: JSON.stringify(body),
+      //  });
 
-        const data = await response.json();
-        result = {
-          success: true,
-          data: data.data,
-        };
-        break;
-      }
+      //  const data = await response.json();
+      //  result = {
+      //    success: true,
+      //    data: data.data,
+      //  };
+      //  break;
+      //}
 
       default:
         throw new Error(`Unknown operation: ${conciergeOperation}`);
