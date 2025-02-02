@@ -151,7 +151,7 @@ export default function BrandStep({
           OPEN_DEMO: initConfig.OPEN_DEMO || false,
           STYLES_VER: initConfig.STYLES_VER || `1`,
           HOME_SLUG: initConfig.HOME_SLUG || ``,
-          TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || `HELLO`,
+          TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || ``,
           THEME: initConfig.THEME || "light-bold",
           SOCIALS: initConfig.SOCIALS || "",
         });

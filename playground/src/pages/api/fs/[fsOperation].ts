@@ -306,6 +306,7 @@ export const POST: APIRoute = async ({ request, params }) => {
           try {
             const fileContent = await fs.readFile(filePath, "utf-8");
             currentConfig = JSON.parse(fileContent);
+            console.log(`currentConfig`,currentConfig)
           } catch {
             // File doesn't exist or can't be parsed, use empty object
           }
@@ -314,6 +315,7 @@ export const POST: APIRoute = async ({ request, params }) => {
             ...currentConfig,
             ...configUpdates,
           };
+          console.log(`newConfig`,newConfig)
 
           await fs.writeFile(filePath, JSON.stringify(newConfig, null, 2));
         }
