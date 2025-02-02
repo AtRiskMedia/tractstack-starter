@@ -10,10 +10,7 @@ interface PublishModalProps {
 
 const PUBLISH_CHECK_INTERVALS = [40000, 20000, 10000, 5000];
 
-export default function PublishModal({
-  onClose,
-  onPublishComplete,
-}: PublishModalProps) {
+export default function PublishModal({ onClose, onPublishComplete }: PublishModalProps) {
   const [stage, setStage] = useState<PublishStage>("TRIGGER_PUBLISH");
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);

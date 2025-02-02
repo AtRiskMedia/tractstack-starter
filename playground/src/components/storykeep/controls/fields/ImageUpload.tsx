@@ -27,9 +27,12 @@ interface ImageUploadProps {
 
 const generateRandomFilename = () => {
   const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return Array.from(crypto.getRandomValues(new Uint8Array(10)))
-    .map((x) => characters[x % characters.length])
-    .join("");
+  return (
+    Array.from({ length: 10 }, () => Math.floor(Math.random() * 256))
+      //Array.from(crypto.getRandomValues(new Uint8Array(10)))
+      .map((x) => characters[x % characters.length])
+      .join("")
+  );
 };
 
 export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadProps) => {

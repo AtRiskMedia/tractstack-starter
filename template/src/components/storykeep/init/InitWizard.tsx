@@ -206,28 +206,12 @@ export default function InitWizard({
     }
   };
 
-  // Create first Tract Stack
-  const handleInitializeContent = async () => {
-    try {
-      await fetch("/api/turso/initializeContent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      return true;
-    } catch (error) {
-      console.error("Error initializing content:", error);
-      throw error;
-    }
-  };
-
   // Step completion handler
   const handleStepComplete = useCallback(
     async (step: InitStep) => {
       try {
         setIsProcessing(true);
         setError(null);
-        if (step === "brand" && !hasHome) await handleInitializeContent();
         if (step === "publish") {
           if (!hasInit) setHasInitCompleted(true);
           if (configState.needsPublish.size > 0) {

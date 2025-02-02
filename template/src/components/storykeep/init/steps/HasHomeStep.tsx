@@ -18,7 +18,7 @@ export default function HasHomeStep({ isActive, onBack }: HasHomeStepProps) {
           <ArrowLeftIcon className="h-5 w-5 mr-1" />
           Back
         </button>
-        <h3 className="text-xl font-bold text-mydarkgrey">Create Home Page</h3>
+        <h3 className="text-xl font-bold text-mydarkgrey">Initialized</h3>
       </div>
 
       <div className="p-4 bg-myblue/5 rounded-lg">
