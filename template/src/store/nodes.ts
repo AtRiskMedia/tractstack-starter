@@ -914,7 +914,10 @@ export class NodesContext {
     const storyFragmentNode = ownerNode as StoryFragmentNode;
     let specificIdx = -1;
     let elIdx = -1;
+    let storyFragmentWasChanged: boolean = false;
+
     if(insertPaneId && location && storyFragmentNode) {
+      storyFragmentWasChanged = storyFragmentNode.isChanged || false;
       specificIdx = storyFragmentNode.paneIds.indexOf(insertPaneId);
       elIdx = specificIdx;
       if(elIdx === -1) {
@@ -928,6 +931,7 @@ export class NodesContext {
           specificIdx = Math.min(specificIdx + 1, storyFragmentNode.paneIds.length);
         }
       }
+      storyFragmentNode.isChanged = true;
     }
 
     // Add pane but manually as addNodes will skip pane addition due to storyfragments rule
@@ -945,19 +949,23 @@ export class NodesContext {
 
         if (storyFragmentNode && storyFragmentNode.nodeType === "StoryFragment" && Array.isArray(storyFragmentNode.paneIds)) {
           storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter((id: string) => id !== duplicatedPane.id);
+          storyFragmentNode.isChanged = storyFragmentWasChanged;
         }
 
         ctx.deleteNodes([duplicatedPane]);
       },
       redo: (ctx) => {
-        if(elIdx === -1) {
-          storyFragmentNode.paneIds.push(duplicatedPane.id);
-        } else {
-          if (location === "before") {
-            storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
+        if(storyFragmentNode) {
+          if (elIdx === -1) {
+            storyFragmentNode.paneIds.push(duplicatedPane.id);
           } else {
-            storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
+            if (location === "before") {
+              storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
+            } else {
+              storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
+            }
           }
+          storyFragmentNode.isChanged = true;
         }
 
         ctx.addNodes([duplicatedPane]);
