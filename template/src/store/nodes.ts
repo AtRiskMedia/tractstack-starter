@@ -847,7 +847,13 @@ export class NodesContext {
     location?: "before" | "after"
   ) {
     const ownerNode = this.allNodes.get().get(ownerId);
-    if (
+    if(ownerNode?.nodeType === "Pane") {
+      const pane = ownerNode as PaneNode;
+      if(!pane.isContextPane) {
+        return;
+      }
+    }
+    else if (
       ownerNode?.nodeType !== "StoryFragment" &&
       ownerNode?.nodeType !== "Root" &&
       ownerNode?.nodeType !== "File" &&
@@ -916,7 +922,7 @@ export class NodesContext {
     let elIdx = -1;
     let storyFragmentWasChanged: boolean = false;
 
-    if(insertPaneId && location && storyFragmentNode) {
+    if(insertPaneId && location && storyFragmentNode?.nodeType === "StoryFragment") {
       storyFragmentWasChanged = storyFragmentNode.isChanged || false;
       specificIdx = storyFragmentNode.paneIds.indexOf(insertPaneId);
       elIdx = specificIdx;
@@ -955,7 +961,7 @@ export class NodesContext {
         ctx.deleteNodes([duplicatedPane]);
       },
       redo: (ctx) => {
-        if(storyFragmentNode) {
+        if(storyFragmentNode?.nodeType === "StoryFragment") {
           if (elIdx === -1) {
             storyFragmentNode.paneIds.push(duplicatedPane.id);
           } else {
