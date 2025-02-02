@@ -948,37 +948,40 @@ export class NodesContext {
     this.addNodes(allNodes);
     this.notifyNode(ownerId);
 
-    this.history.addPatch({
-      op: PatchOp.ADD,
-      undo: (ctx) => {
-        ctx.deleteNodes(allNodes);
+    // likely context, no undo
+    if(ownerNode?.nodeType !== "Pane") {
+      this.history.addPatch({
+        op: PatchOp.ADD,
+        undo: (ctx) => {
+          ctx.deleteNodes(allNodes);
 
-        if (storyFragmentNode && storyFragmentNode.nodeType === "StoryFragment" && Array.isArray(storyFragmentNode.paneIds)) {
-          storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter((id: string) => id !== duplicatedPane.id);
-          storyFragmentNode.isChanged = storyFragmentWasChanged;
-        }
-
-        ctx.deleteNodes([duplicatedPane]);
-      },
-      redo: (ctx) => {
-        if(storyFragmentNode?.nodeType === "StoryFragment") {
-          if (elIdx === -1) {
-            storyFragmentNode.paneIds.push(duplicatedPane.id);
-          } else {
-            if (location === "before") {
-              storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
-            } else {
-              storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
-            }
+          if (storyFragmentNode && storyFragmentNode.nodeType === "StoryFragment" && Array.isArray(storyFragmentNode.paneIds)) {
+            storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter((id: string) => id !== duplicatedPane.id);
+            storyFragmentNode.isChanged = storyFragmentWasChanged;
           }
-          storyFragmentNode.isChanged = true;
-        }
 
-        ctx.addNodes([duplicatedPane]);
-        ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
-        ctx.addNodes(allNodes);
-      },
-    });
+          ctx.deleteNodes([duplicatedPane]);
+        },
+        redo: (ctx) => {
+          if (storyFragmentNode?.nodeType === "StoryFragment") {
+            if (elIdx === -1) {
+              storyFragmentNode.paneIds.push(duplicatedPane.id);
+            } else {
+              if (location === "before") {
+                storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
+              } else {
+                storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
+              }
+            }
+            storyFragmentNode.isChanged = true;
+          }
+
+          ctx.addNodes([duplicatedPane]);
+          ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
+          ctx.addNodes(allNodes);
+        },
+      });
+    }
 
     return duplicatedPaneId;
   }
