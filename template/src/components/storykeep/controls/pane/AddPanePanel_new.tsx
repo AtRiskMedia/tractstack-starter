@@ -101,12 +101,13 @@ const AddPaneNewPanel = ({
           : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
       const newPaneId = ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
       if (newPaneId) {
-        ctx.insertPaneId(
-          ownerId,
-          newPaneId,
-          isStoryFragment || isContextPane ? undefined : nodeId,
-          first ? "before" : "after"
-        );
+        // addTemplatePane already registers it in the parent node (usually storyfragment)
+        //ctx.insertPaneId(
+        //  ownerId,
+        //  newPaneId,
+        //  isStoryFragment || isContextPane ? undefined : nodeId,
+        //  first ? "before" : "after"
+        //);
         ctx.notifyNode(`root`);
       }
     }

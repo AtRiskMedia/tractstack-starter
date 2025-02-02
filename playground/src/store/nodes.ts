@@ -911,9 +911,26 @@ export class NodesContext {
       delete duplicatedPane.bgPane;
     }
 
+    const storyFragmentNode = ownerNode as StoryFragmentNode;
+    let specificIdx = -1;
+    if(insertPaneId && location && storyFragmentNode) {
+      specificIdx = storyFragmentNode.paneIds.indexOf(insertPaneId);
+      if(specificIdx === -1) {
+        storyFragmentNode.paneIds.push(duplicatedPane.id);
+      } else {
+        if (location === "before") {
+          storyFragmentNode.paneIds.insertBefore(specificIdx, [duplicatedPane.id]);
+          specificIdx = Math.max(0, specificIdx - 1);
+        } else {
+          storyFragmentNode.paneIds.insertAfter(specificIdx, [duplicatedPane.id]);
+          specificIdx = Math.min(specificIdx + 1, storyFragmentNode.paneIds.length);
+        }
+      }
+    }
+
     // Add pane but manually as addNodes will skip pane addition due to storyfragments rule
     this.addNode(duplicatedPane as PaneNode);
-    this.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
+    this.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
 
     // Add all child nodes
     this.addNodes(allNodes);
