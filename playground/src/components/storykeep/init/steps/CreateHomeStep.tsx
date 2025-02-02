@@ -8,13 +8,13 @@ interface HasHomeStepProps {
   onConfigUpdate: (updates: Record<string, unknown>) => void;
 }
 
-export default function HasHomeStep({ isActive }: HasHomeStepProps) {
+export default function HasHomeStep({ isActive, onBack }: HasHomeStepProps) {
   if (!isActive) return null;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-6">
-        <button disabled className="text-mydarkgrey hover:text-myblue flex items-center">
+        <button onClick={onBack} className="text-mydarkgrey hover:text-myblue flex items-center">
           <ArrowLeftIcon className="h-5 w-5 mr-1" />
           Back
         </button>

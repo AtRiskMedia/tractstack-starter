@@ -135,7 +135,6 @@ export default function PublishStep({
         <PublishModal
           onClose={() => setShowPublishModal(false)}
           onPublishComplete={handlePublishComplete}
-          initialLastBuild={lastBuild}
         />
       )}
     </div>

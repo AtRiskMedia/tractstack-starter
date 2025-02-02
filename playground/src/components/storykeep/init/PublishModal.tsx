@@ -6,7 +6,6 @@ type PublishStage = "TRIGGER_PUBLISH" | "AWAIT_PUBLISH" | "PUBLISHING" | "PUBLIS
 interface PublishModalProps {
   onClose: () => void;
   onPublishComplete?: () => void;
-  initialLastBuild: number;
 }
 
 const PUBLISH_CHECK_INTERVALS = [40000, 20000, 10000, 5000];
@@ -14,7 +13,6 @@ const PUBLISH_CHECK_INTERVALS = [40000, 20000, 10000, 5000];
 export default function PublishModal({
   onClose,
   onPublishComplete,
-  initialLastBuild,
 }: PublishModalProps) {
   const [stage, setStage] = useState<PublishStage>("TRIGGER_PUBLISH");
   const [error, setError] = useState<string | null>(null);
