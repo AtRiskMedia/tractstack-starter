@@ -1168,7 +1168,7 @@ export async function getUniqueTailwindClasses() {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
-    const { rows } = await client.execute(`SELECT id, options_payload FROM pane`);
+    const { rows } = await client.execute(`SELECT id, options_payload FROM panes`);
     return getTailwindWhitelist(rows);
   } catch (error) {
     console.error("Error fetching pane payloads:", error);

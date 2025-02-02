@@ -21,7 +21,7 @@ const TEMPLATE_DIR = path.join(ROOT_DIR, "template");
 const CORE_FILES = [
   "src",
   "public",
-  "config",  // Added config directory
+  "config", // Added config directory
   ".prettierrc",
   ".prettierignore",
   "astro.config.mjs",
@@ -33,20 +33,16 @@ const CORE_FILES = [
 ];
 
 // Paths to exclude from copying
-const EXCLUDED_PATHS = [
-  "public/images",
-  "config/init.json",
-  "config/turso.json"
-];
+const EXCLUDED_PATHS = ["public/images", "config/init.json", "config/turso.json"];
 
 async function shouldCopyFile(srcPath: string): Promise<boolean> {
   const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
-  
+
   // Check if path is in exclusion list
   const isExcluded = EXCLUDED_PATHS.some(
-    excludedPath => relativePath.startsWith(excludedPath) || relativePath === excludedPath
+    (excludedPath) => relativePath.startsWith(excludedPath) || relativePath === excludedPath
   );
-  
+
   return !isExcluded;
 }
 
