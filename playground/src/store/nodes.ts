@@ -913,16 +913,18 @@ export class NodesContext {
 
     const storyFragmentNode = ownerNode as StoryFragmentNode;
     let specificIdx = -1;
+    let elIdx = -1;
     if(insertPaneId && location && storyFragmentNode) {
       specificIdx = storyFragmentNode.paneIds.indexOf(insertPaneId);
-      if(specificIdx === -1) {
+      elIdx = specificIdx;
+      if(elIdx === -1) {
         storyFragmentNode.paneIds.push(duplicatedPane.id);
       } else {
         if (location === "before") {
-          storyFragmentNode.paneIds.insertBefore(specificIdx, [duplicatedPane.id]);
+          storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
           specificIdx = Math.max(0, specificIdx - 1);
         } else {
-          storyFragmentNode.paneIds.insertAfter(specificIdx, [duplicatedPane.id]);
+          storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
           specificIdx = Math.min(specificIdx + 1, storyFragmentNode.paneIds.length);
         }
       }
@@ -940,12 +942,27 @@ export class NodesContext {
       op: PatchOp.ADD,
       undo: (ctx) => {
         ctx.deleteNodes(allNodes);
+
+        if (storyFragmentNode && storyFragmentNode.nodeType === "StoryFragment" && Array.isArray(storyFragmentNode.paneIds)) {
+          storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter((id: string) => id !== duplicatedPane.id);
+        }
+
         ctx.deleteNodes([duplicatedPane]);
       },
       redo: (ctx) => {
-        ctx.addNodes(allNodes);
-        ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId);
+        if(elIdx === -1) {
+          storyFragmentNode.paneIds.push(duplicatedPane.id);
+        } else {
+          if (location === "before") {
+            storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
+          } else {
+            storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
+          }
+        }
+
         ctx.addNodes([duplicatedPane]);
+        ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
+        ctx.addNodes(allNodes);
       },
     });
 
