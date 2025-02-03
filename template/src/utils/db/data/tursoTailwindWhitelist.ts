@@ -2,10 +2,12 @@
 import type { BgPaneDatum, BgColourDatum, MarkdownPaneDatum } from "../../../types";
 
 export function getTailwindWhitelist(rows: any[]) {
+  console.log(`getTailwindWhitelist ${rows.length} rows`);
   if (!rows.length) return [];
 
   let whitelistString = ``;
   rows.forEach((r: any) => {
+    console.log(r);
     if (
       typeof r?.options_payload === `string` ||
       // allows already processed optionsPayload to be fed through

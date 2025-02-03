@@ -9,7 +9,9 @@ import type {
   ResourceRowData,
   StoryFragmentRowData,
 } from "@/store/nodesSerializer.ts";
+import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames";
 import type {
+  BaseNode,
   TractStackNode,
   StoryFragmentNode,
   PaneNode,
@@ -17,9 +19,49 @@ import type {
   MenuNode,
   ImageFileNode,
   ResourceNode,
+  FlatNode,
+  MarkdownPaneFragmentNode,
 } from "@/types.ts";
 
+// force regenerate the elementCss and parentCss[]
+const FORCE_CSS_REGEN = true;
+
 export class NodesDeserializer_Json implements NodesDeserializer {
+  private computeElementCss(
+    node: FlatNode,
+    parentNode: MarkdownPaneFragmentNode
+  ): string | undefined {
+    if (!("tagName" in node)) return undefined;
+    const tagNameStr = node.tagName;
+    const defaultClasses = parentNode.defaultClasses?.[tagNameStr];
+    if (!defaultClasses?.mobile) return undefined;
+    const [allClasses] = processClassesForViewports(defaultClasses, node.overrideClasses || {}, 1);
+    return allClasses[0];
+  }
+
+  private computeParentCss(node: MarkdownPaneFragmentNode): string[] {
+    if (!node.parentClasses) return [];
+    const parentCssArray: string[] = [];
+    node.parentClasses.forEach((layer) => {
+      const [allClasses] = processClassesForViewports(layer, {}, 1);
+      parentCssArray.push(allClasses[0]);
+    });
+    return parentCssArray;
+  }
+
+  private getClosestMarkdownAncestor(node: BaseNode, nodes: BaseNode[]): string | null {
+    let current = node;
+    while (current.parentId) {
+      const parent = nodes.find((n) => n.id === current.parentId);
+      if (!parent) break;
+      if (parent.nodeType === "Markdown") {
+        return parent.id;
+      }
+      current = parent;
+    }
+    return null;
+  }
+
   processTractStackRowData(rowData: TractStackRowData | undefined, loadData: LoadData) {
     if (!rowData) return;
     if (typeof loadData.tractstackNodes === `undefined`)
@@ -88,6 +130,39 @@ export class NodesDeserializer_Json implements NodesDeserializer {
     if (typeof loadData.paneNodes === `undefined`) loadData.paneNodes = [] as PaneNode[];
 
     const optionsPayload = JSON.parse(rowData.options_payload);
+
+    if (FORCE_CSS_REGEN && optionsPayload?.nodes) {
+      const allNodes = [...optionsPayload.nodes];
+
+      // Compute elementCss
+      allNodes.forEach((node) => {
+        if (node.nodeType === "TagElement" && node.parentId) {
+          const markdownParent = allNodes.find(
+            (n): n is MarkdownPaneFragmentNode =>
+              n.nodeType === "Markdown" && n.id === this.getClosestMarkdownAncestor(node, allNodes)
+          );
+
+          if (markdownParent) {
+            const flatNode = node as FlatNode;
+            const elementCss = this.computeElementCss(flatNode, markdownParent);
+            if (elementCss) {
+              flatNode.elementCss = elementCss;
+            }
+          }
+        }
+      });
+
+      // Compute parentCss
+      allNodes.forEach((node) => {
+        if (node.nodeType === "Markdown") {
+          const markdownNode = node as MarkdownPaneFragmentNode;
+          const parentCss = this.computeParentCss(markdownNode);
+          if (parentCss.length > 0) {
+            markdownNode.parentCss = parentCss;
+          }
+        }
+      });
+    }
 
     // Extract nodes and beliefs from options payload
     const childNodes = optionsPayload?.nodes || [];

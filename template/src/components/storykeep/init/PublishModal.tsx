@@ -41,6 +41,7 @@ export default function PublishModal({ onClose, onPublishComplete }: PublishModa
 
         switch (stage) {
           case "TRIGGER_PUBLISH":
+          {
             // Initiate publish
             const publishResponse = await fetch("/api/concierge/publish", {
               method: "POST",
@@ -52,6 +53,7 @@ export default function PublishModal({ onClose, onPublishComplete }: PublishModa
             setProgress(20);
             scheduleNextCheck(2000);
             break;
+            }
 
           case "AWAIT_PUBLISH":
             if (status.status === "building") {

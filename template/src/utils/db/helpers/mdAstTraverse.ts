@@ -107,11 +107,12 @@ export function mdAstTraverse(
 
       // Handle default CSS for elements
       const defaultClasses = optionsPayload?.classNames?.all?.[node.tagName];
-      if (defaultClasses && Array.isArray(defaultClasses) && defaultClasses.length > 1) {
-        // If there are multiple default classes, use the one corresponding to this element's count
-        const idx = elementCounts[node.tagName] % defaultClasses.length;
-        elementCss = defaultClasses[idx];
-      }
+      if (defaultClasses)
+        if (defaultClasses && Array.isArray(defaultClasses)) {
+          // If there are multiple default classes, use the one corresponding to this element's count
+          const idx = elementCounts[node.tagName] % defaultClasses.length;
+          elementCss = defaultClasses[idx];
+        } else if (defaultClasses) elementCss = defaultClasses;
       elementCounts[node.tagName]++;
     }
 

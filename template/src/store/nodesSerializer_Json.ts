@@ -1,4 +1,5 @@
 import { NodesContext } from "@/store/nodes.ts";
+import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames.ts";
 import { NodesSerializer, type SaveData, type LoadData } from "@/store/nodesSerializer.ts";
 import type {
   BaseNode,
@@ -10,10 +11,47 @@ import type {
   ImageFileNode,
   TractStackNode,
   StoryFragmentNode,
+  MarkdownPaneFragmentNode,
 } from "@/types.ts";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export class NodesSerializer_Json extends NodesSerializer {
+  protected computeElementCss(
+    node: FlatNode,
+    parentNode: MarkdownPaneFragmentNode
+  ): string | undefined {
+    if (!("tagName" in node)) return undefined;
+    const tagNameStr = node.tagName;
+    const defaultClasses = parentNode.defaultClasses?.[tagNameStr];
+    if (!defaultClasses?.mobile) return undefined;
+    const [allClasses] = processClassesForViewports(defaultClasses, node.overrideClasses || {}, 1);
+    return allClasses[0];
+  }
+
+  protected computeParentCss(node: MarkdownPaneFragmentNode): string[] {
+    if (!node.parentClasses) return [];
+    const parentCssArray: string[] = [];
+    node.parentClasses.forEach((layer) => {
+      const [allClasses] = processClassesForViewports(layer, {}, 1);
+      parentCssArray.push(allClasses[0]);
+    });
+    return parentCssArray;
+  }
+
+  // Helper to find closest markdown ancestor
+  private getClosestMarkdownAncestor(node: BaseNode, allNodes: BaseNode[]): string | null {
+    let current = node;
+    while (current.parentId) {
+      const parent = allNodes.find((n) => n.id === current.parentId);
+      if (!parent) break;
+      if (parent.nodeType === "Markdown") {
+        return parent.id;
+      }
+      current = parent;
+    }
+    return null;
+  }
+
   // this migrates allNodes (currently generated using helpers from old data model)
   // and saves as new data model
   migrateAll(ctx: NodesContext, nodes: LoadData): SaveData {
@@ -151,6 +189,35 @@ export class NodesSerializer_Json extends NodesSerializer {
     const paneNode = node as PaneNode;
     const allNodes = ctx.getNodesRecursively(paneNode).reverse();
 
+    // Compute elementCss
+    allNodes.forEach((node) => {
+      if (node.nodeType === "TagElement" && node.parentId) {
+        // Find the markdown parent
+        const markdownParent = allNodes.find(
+          (n): n is MarkdownPaneFragmentNode =>
+            n.nodeType === "Markdown" && n.id === this.getClosestMarkdownAncestor(node, allNodes)
+        );
+
+        if (markdownParent) {
+          const flatNode = node as FlatNode;
+          const elementCss = this.computeElementCss(flatNode, markdownParent);
+          if (elementCss) {
+            flatNode.elementCss = elementCss;
+          }
+        }
+      }
+    });
+    // Then compute parentCss for markdown nodes
+    allNodes.forEach((node) => {
+      if (node.nodeType === "Markdown") {
+        const markdownNode = node as MarkdownPaneFragmentNode;
+        const parentCss = this.computeParentCss(markdownNode);
+        if (parentCss.length > 0) {
+          markdownNode.parentCss = parentCss;
+        }
+      }
+    });
+
     // First check if it's a CodeHook pane
     if (
       allNodes.length === 1 &&
@@ -197,6 +264,7 @@ export class NodesSerializer_Json extends NodesSerializer {
     ctx: NodesContext,
     saveData: SaveData
   ) {
+    console.log(`processPaneData`, paneNode, allNodes);
     const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
 
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);

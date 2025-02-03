@@ -61,7 +61,6 @@ const AddPanePanel = ({
         nodeId={nodeId}
         first={first}
         setMode={setMode}
-        isStoryFragment={isStoryFragment}
       />
     );
   } else if (mode === PaneMode.CODEHOOK) {

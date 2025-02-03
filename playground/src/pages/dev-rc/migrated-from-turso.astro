@@ -32,6 +32,7 @@ deserializer.processStoryFragmentRowData(fullData.storyfragment, loadData);
 
 // Process panes and their related data
 fullData.panes.forEach((pane) => {
+  if (pane.options_payload) console.log(JSON.parse(pane.options_payload));
   deserializer.processPaneRowData(pane, loadData);
 });
 

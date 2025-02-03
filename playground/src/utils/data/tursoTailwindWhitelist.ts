@@ -2,6 +2,7 @@
 import type { BgPaneDatum, BgColourDatum, MarkdownPaneDatum } from "@/types";
 
 export function getTailwindWhitelist(rows: any[]) {
+  console.log(`DEPRECATED getTailwindWhitelist`, rows.length);
   if (!rows.length) return [];
 
   let whitelistString = ``;

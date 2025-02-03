@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
-import { getTailwindWhitelist } from "./data/tursoTailwindWhitelist";
+import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
 import type {
   TractStackRowData,
   ResourceRowData,

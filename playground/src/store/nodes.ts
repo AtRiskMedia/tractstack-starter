@@ -847,13 +847,12 @@ export class NodesContext {
     location?: "before" | "after"
   ) {
     const ownerNode = this.allNodes.get().get(ownerId);
-    if(ownerNode?.nodeType === "Pane") {
+    if (ownerNode?.nodeType === "Pane") {
       const pane = ownerNode as PaneNode;
-      if(!pane.isContextPane) {
+      if (!pane.isContextPane) {
         return;
       }
-    }
-    else if (
+    } else if (
       ownerNode?.nodeType !== "StoryFragment" &&
       ownerNode?.nodeType !== "Root" &&
       ownerNode?.nodeType !== "File" &&
@@ -922,11 +921,11 @@ export class NodesContext {
     let elIdx = -1;
     let storyFragmentWasChanged: boolean = false;
 
-    if(insertPaneId && location && storyFragmentNode?.nodeType === "StoryFragment") {
+    if (insertPaneId && location && storyFragmentNode?.nodeType === "StoryFragment") {
       storyFragmentWasChanged = storyFragmentNode.isChanged || false;
       specificIdx = storyFragmentNode.paneIds.indexOf(insertPaneId);
       elIdx = specificIdx;
-      if(elIdx === -1) {
+      if (elIdx === -1) {
         storyFragmentNode.paneIds.push(duplicatedPane.id);
       } else {
         if (location === "before") {
@@ -949,14 +948,20 @@ export class NodesContext {
     this.notifyNode(ownerId);
 
     // likely context, no undo
-    if(ownerNode?.nodeType !== "Pane") {
+    if (ownerNode?.nodeType !== "Pane") {
       this.history.addPatch({
         op: PatchOp.ADD,
         undo: (ctx) => {
           ctx.deleteNodes(allNodes);
 
-          if (storyFragmentNode && storyFragmentNode.nodeType === "StoryFragment" && Array.isArray(storyFragmentNode.paneIds)) {
-            storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter((id: string) => id !== duplicatedPane.id);
+          if (
+            storyFragmentNode &&
+            storyFragmentNode.nodeType === "StoryFragment" &&
+            Array.isArray(storyFragmentNode.paneIds)
+          ) {
+            storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter(
+              (id: string) => id !== duplicatedPane.id
+            );
             storyFragmentNode.isChanged = storyFragmentWasChanged;
           }
 
@@ -1043,7 +1048,7 @@ export class NodesContext {
     }
 
     const parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
-    let duplicatedNodes = cloneDeep(node) as TemplateNode;
+    const duplicatedNodes = cloneDeep(node) as TemplateNode;
     let flattenedNodes: TemplateNode[] = [];
 
     // Check if we need to wrap in ul/li structure

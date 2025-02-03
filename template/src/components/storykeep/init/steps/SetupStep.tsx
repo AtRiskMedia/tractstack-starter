@@ -38,8 +38,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
 
     if (isActive && hasConcierge) {
       checkConciergeStatus();
-    }
-    else setIsLoading(false)
+    } else setIsLoading(false);
   }, [isActive, hasConcierge]);
 
   if (!isActive) return null;

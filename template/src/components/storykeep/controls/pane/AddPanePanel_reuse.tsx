@@ -6,20 +6,18 @@ import { NodesContext, getCtx } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { PaneMode } from "./AddPanePanel";
-import type { PaneContentMap, PaneNode, StoryFragmentNode } from "@/types";
+import type { PaneContentMap,  StoryFragmentNode } from "@/types";
 
 interface AddPaneReUsePanelProps {
   nodeId: string;
   first: boolean;
   setMode: Dispatch<SetStateAction<PaneMode>>;
-  isStoryFragment?: boolean;
 }
 
 const AddPaneReUsePanel = ({
   nodeId,
   first,
   setMode,
-  isStoryFragment = false,
 }: AddPaneReUsePanelProps) => {
   const [selected, setSelected] = useState<PaneContentMap | null>(null);
   const [previews, setPreviews] = useState<{ ctx: NodesContext; snapshot?: SnapshotData }[]>([]);
@@ -66,13 +64,24 @@ const AddPaneReUsePanel = ({
           console.error("Failed to fetch pane:", result.error);
           return;
         }
-        const paneNode = result.data.data.templatePane as PaneNode;
+
+        // Create new context
         const ctx = new NodesContext();
+
+        // Add root node
         ctx.addNode(createEmptyStorykeep("tmp"));
-        ctx.addNode({ ...paneNode, parentId: "tmp" });
+
+        // Get the full template pane with all its content
+        const template = result.data.data.templatePane;
+
+        // Add the template to the context properly
+        ctx.addTemplatePane("tmp", template);
+
+        // Update previews with new context
         setPreviews([{ ctx }]);
       } catch (error) {
         console.error("Error fetching pane preview:", error);
+        setPreviews([]); // Clear previews on error
       }
     };
 

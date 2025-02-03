@@ -3,6 +3,9 @@ import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { codehookMap } from "@/store/events.ts";
 import { PaneMode } from "./AddPanePanel";
+import { getCtx } from "@/store/nodes.ts";
+import { ulid } from "ulid";
+import type { TemplatePane } from "@/types.ts";
 
 interface AddPaneCodeHookPanelProps {
   nodeId: string;
@@ -22,12 +25,36 @@ const AddPaneCodeHookPanel = ({
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const availableCodeHooks = codehookMap.get();
-
-  // Filter code hooks based on search query
   const filteredHooks =
     query === ""
       ? availableCodeHooks
       : availableCodeHooks.filter((hook) => hook.toLowerCase().includes(query.toLowerCase()));
+
+  const handleUseCodeHook = () => {
+    if (!selected) return;
+    const ctx = getCtx();
+    const template: TemplatePane = {
+      id: ulid(),
+      nodeType: "Pane",
+      title: selected,
+      slug: selected.toLowerCase().replace(/\s+/g, "-"),
+      isDecorative: false,
+      parentId: "",
+      codeHookTarget: selected,
+      isContextPane: isContextPane,
+    };
+    const targetId =
+      isStoryFragment || isContextPane
+        ? nodeId
+        : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+    const newPaneId = ctx.addTemplatePane(targetId, template, nodeId, first ? "before" : "after");
+    if (newPaneId) {
+      ctx.notifyNode("root");
+    }
+    setSelected(null);
+    setQuery("");
+    setMode(PaneMode.DEFAULT);
+  };
 
   return (
     <div className="p-0.5 shadow-inner">
@@ -116,10 +143,7 @@ const AddPaneCodeHookPanel = ({
           {selected && (
             <div className="flex flex-wrap gap-2 min-w-[200px]">
               <button
-                onClick={() => {
-                  console.log("Using code hook:", selected, "at position:", nodeId, first);
-                  // Add your code hook application logic here
-                }}
+                onClick={handleUseCodeHook}
                 className="px-3 py-2 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 focus:bg-cyan-700 transition-colors"
               >
                 Use Selected Hook

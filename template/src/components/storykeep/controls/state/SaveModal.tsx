@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
-import { getTailwindWhitelist } from "@/utils/data/tursoTailwindWhitelist";
 import type { SaveData } from "@/store/nodesSerializer";
 
 type SaveStage =
@@ -148,17 +147,11 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         setProgress(80);
 
         try {
-          // Extract classes from panes
-          const panes = saveData.panes || [];
-          const whitelistClasses = getTailwindWhitelist(panes);
-
-          // Call new Tailwind generation endpoint
           const response = await fetch("/api/tailwind/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ whitelist: whitelistClasses }),
+            body: JSON.stringify({}),
           });
-
           if (!response.ok) {
             throw new Error("Failed to generate Tailwind styles");
           }
