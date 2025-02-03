@@ -203,7 +203,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
 
                   return (
                     <tr key={page.id}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap h-20">
                         <img
                           src={
                             `socialImagePath` in page && page.socialImagePath
@@ -211,7 +211,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                               : "/static.jpg"
                           }
                           alt={page.title}
-                          className="w-24 h-14 object-cover rounded-md"
+                          className="object-contain"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
