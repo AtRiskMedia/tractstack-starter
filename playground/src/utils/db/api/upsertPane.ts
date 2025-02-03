@@ -1,9 +1,13 @@
 import { tursoClient } from "../client";
 import type { PaneRowData, MarkdownRowData } from "@/store/nodesSerializer";
 
+interface UpsertPaneRequest {
+  rowData: PaneRowData;
+  markdownData?: MarkdownRowData;
+}
+
 export async function upsertPane(
-  rowData: PaneRowData,
-  markdownData?: MarkdownRowData
+  requestData: UpsertPaneRequest
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const client = await tursoClient.getClient();
@@ -12,13 +16,13 @@ export async function upsertPane(
     }
 
     // Handle markdown update first if provided
-    if (markdownData) {
+    if (requestData.markdownData) {
       await client.execute({
-        sql: `INSERT INTO markdowns (id, markdown_body)
+        sql: `INSERT INTO markdowns (id, body)
               VALUES (?, ?)
               ON CONFLICT(id) DO UPDATE SET
-                markdown_body = excluded.markdown_body`,
-        args: [markdownData.id, markdownData.markdown_body],
+                body = excluded.body`,
+        args: [requestData.markdownData.id, requestData.markdownData.markdown_body],
       });
     }
 
@@ -38,15 +42,15 @@ export async function upsertPane(
               is_context_pane = excluded.is_context_pane,
               markdown_id = excluded.markdown_id`,
       args: [
-        rowData.id,
-        rowData.title,
-        rowData.slug,
-        rowData.pane_type,
-        rowData.created,
-        rowData.changed,
-        rowData.options_payload,
-        rowData.is_context_pane,
-        rowData.markdown_id || null,
+        requestData.rowData.id,
+        requestData.rowData.title,
+        requestData.rowData.slug,
+        requestData.rowData.pane_type,
+        requestData.rowData.created,
+        requestData.rowData.changed,
+        requestData.rowData.options_payload,
+        requestData.rowData.is_context_pane,
+        requestData.rowData.markdown_id || null,
       ],
     });
 

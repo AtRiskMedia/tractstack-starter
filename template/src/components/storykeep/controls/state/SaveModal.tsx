@@ -102,10 +102,36 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           setItemProgress({ currentItem: 0, totalItems: saveData.panes.length });
 
           for (let i = 0; i < saveData.panes.length; i++) {
+            const pane = saveData.panes[i];
+
+            // Extract markdown data from options_payload
+            const options = JSON.parse(pane.options_payload);
+            const markdownNode = options.nodes?.find((n: any) => n.nodeType === "Markdown");
+
+            const paneData = {
+              rowData: {
+                id: pane.id,
+                title: pane.title,
+                slug: pane.slug,
+                pane_type: pane.pane_type,
+                markdown_id: pane.markdown_id,
+                created: pane.created,
+                changed: pane.changed,
+                is_context_pane: pane.is_context_pane,
+                options_payload: pane.options_payload,
+              },
+              markdownData: markdownNode
+                ? {
+                    id: markdownNode.id,
+                    markdown_body: markdownNode.markdownBody,
+                  }
+                : undefined,
+            };
+
             const response = await fetch("/api/turso/upsertPane", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(saveData.panes[i]),
+              body: JSON.stringify(paneData),
             });
 
             if (!response.ok) {

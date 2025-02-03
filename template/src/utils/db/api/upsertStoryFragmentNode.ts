@@ -5,7 +5,6 @@ import type { StoryFragmentRowData } from "@/store/nodesSerializer";
 export async function upsertStoryFragmentNode(
   node: StoryFragmentNode
 ): Promise<{ success: boolean; error?: string }> {
-  console.log(`upsertStoryFragmentNode`, node);
   try {
     const client = await tursoClient.getClient();
     if (!client) {
@@ -62,14 +61,14 @@ export async function upsertStoryFragmentNode(
     if (node.paneIds && node.paneIds.length > 0) {
       // First delete existing relationships
       await client.execute({
-        sql: "DELETE FROM storyfragment_pane WHERE storyfragment_id = ?",
+        sql: "DELETE FROM storyfragment_panes WHERE storyfragment_id = ?",
         args: [node.id],
       });
 
       // Then insert new relationships
       for (const paneId of node.paneIds) {
         await client.execute({
-          sql: "INSERT INTO storyfragment_pane (storyfragment_id, pane_id) VALUES (?, ?)",
+          sql: "INSERT INTO storyfragment_panes (storyfragment_id, pane_id) VALUES (?, ?)",
           args: [node.id, paneId],
         });
       }

@@ -864,6 +864,7 @@ export class NodesContext {
     const duplicatedPaneId = ulid();
     duplicatedPane.id = duplicatedPaneId;
     duplicatedPane.parentId = ownerNode.id;
+    duplicatedPane.isChanged = true;
 
     // Track all nodes that need to be added
     let allNodes: BaseNode[] = [];
