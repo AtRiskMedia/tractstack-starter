@@ -13,9 +13,9 @@ class TailwindScanner:
         Initialize the scanner with file extensions to scan.
         
         Args:
-            extensions: List of file extensions to scan (e.g., ['.js', '.jsx', '.tsx', '.html'])
+            extensions: List of file extensions to scan (e.g., ['.js', '.jsx', '.tsx', '.astro', '.html'])
         """
-        self.extensions = extensions or ['.js', '.jsx', '.tsx', '.ts', '.html', '.vue', '.svelte']
+        self.extensions = extensions or ['.js', '.jsx', '.tsx', '.ts', '.astro', '.html', '.vue', '.svelte']
         
         # Common patterns where Tailwind classes might appear
         self.patterns = [

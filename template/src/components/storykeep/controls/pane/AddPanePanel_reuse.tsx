@@ -6,7 +6,7 @@ import { NodesContext, getCtx } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { PaneMode } from "./AddPanePanel";
-import type { PaneContentMap,  StoryFragmentNode } from "@/types";
+import type { PaneContentMap, StoryFragmentNode } from "@/types";
 
 interface AddPaneReUsePanelProps {
   nodeId: string;
@@ -14,11 +14,7 @@ interface AddPaneReUsePanelProps {
   setMode: Dispatch<SetStateAction<PaneMode>>;
 }
 
-const AddPaneReUsePanel = ({
-  nodeId,
-  first,
-  setMode,
-}: AddPaneReUsePanelProps) => {
+const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) => {
   const [selected, setSelected] = useState<PaneContentMap | null>(null);
   const [previews, setPreviews] = useState<{ ctx: NodesContext; snapshot?: SnapshotData }[]>([]);
   const [query, setQuery] = useState("");

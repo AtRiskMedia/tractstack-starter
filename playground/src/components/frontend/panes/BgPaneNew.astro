@@ -1,6 +1,6 @@
 ---
 import Svg from "./Svg.astro";
-import type { VisualBreakNode, VisualBreakData } from "../../../types";
+import type { VisualBreakNode, VisualBreakData } from "@/types";
 
 interface Props {
   payload: VisualBreakNode;
@@ -8,6 +8,7 @@ interface Props {
 
 const { payload } = Astro.props;
 
+// classNames = "md:hidden hidden md:block xl:hidden xl:block"
 const baseClasses = {
   mobile: `md:hidden`,
   tablet: `hidden md:block xl:hidden`,
@@ -24,14 +25,6 @@ function isVisualBreakData(data: string | true | VisualBreakData): data is Visua
 
 {
   breakpoints.map((breakpoint) => {
-    const isHidden =
-      payload[
-        `hiddenViewport${breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}` as keyof VisualBreakNode
-      ];
-    if (isHidden) {
-      return null;
-    }
-
     const breakData =
       payload[
         `break${breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}` as keyof VisualBreakNode

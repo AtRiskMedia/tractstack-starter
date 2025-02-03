@@ -56,13 +56,7 @@ const AddPanePanel = ({
       />
     );
   } else if (mode === PaneMode.REUSE && !isContextPane) {
-    return (
-      <AddPaneReUsePanel
-        nodeId={nodeId}
-        first={first}
-        setMode={setMode}
-      />
-    );
+    return <AddPaneReUsePanel nodeId={nodeId} first={first} setMode={setMode} />;
   } else if (mode === PaneMode.CODEHOOK) {
     return (
       <AddPaneCodeHookPanel
