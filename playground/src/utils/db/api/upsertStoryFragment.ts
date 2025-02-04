@@ -9,33 +9,7 @@ export async function upsertStoryFragment(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-    console.log(
-      `upsertStoryFragment`,
-      `INSERT INTO storyfragments (
-              id, title, slug, tractstack_id, created, changed,
-              menu_id, social_image_path, tailwind_background_colour
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              title = excluded.title,
-              slug = excluded.slug,
-              tractstack_id = excluded.tractstack_id,
-              changed = excluded.changed,
-              menu_id = excluded.menu_id,
-              social_image_path = excluded.social_image_path,
-              tailwind_background_colour = excluded.tailwind_background_colour`,
-      [
-        rowData.id,
-        rowData.title,
-        rowData.slug,
-        rowData.tractstack_id,
-        rowData.created,
-        rowData.changed,
-        rowData.menu_id || null,
-        rowData.social_image_path || null,
-        rowData.tailwind_background_colour || null,
-      ]
-    );
+
     // Update story fragment
     await client.execute({
       sql: `INSERT INTO storyfragments (

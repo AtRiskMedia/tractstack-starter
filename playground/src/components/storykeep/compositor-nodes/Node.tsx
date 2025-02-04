@@ -92,6 +92,7 @@ export const getType = (node: BaseNode | FlatNode): string => {
 
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
+  const isTmp = props.nodeId === `tmp`;
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
@@ -110,7 +111,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           )}
           <AnalyticsPanel nodeId={props.nodeId} />
           <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
-          {sf.slug && sf.title && sf.paneIds.length === 0 && (
+          {!isTmp && sf.slug && sf.title && sf.paneIds.length === 0 && (
             <AddPanePanel
               nodeId={props.nodeId}
               first={true}

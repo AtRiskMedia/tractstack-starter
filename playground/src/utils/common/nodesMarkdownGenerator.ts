@@ -164,13 +164,14 @@ export class MarkdownGenerator {
         const headerText = match[1];
         const headerNode = createNode("h4", currentParentId);
         createTextNode(headerText, headerNode.id);
+      } else if ((match = /^\* !\[(.*?)\]\((.*?)\)$/.exec(trimmed))) {
+        const [, alt /*, src*/] = match;
+        // this will use a placeholder image
+        createNode("img", currentParentId, { alt, src: `/static.jpg` });
       } else if ((match = /^\* (.*)$/.exec(trimmed))) {
         const listItemText = match[1];
         const listItemNode = createNode("li", currentParentId);
         createTextNode(listItemText, listItemNode.id);
-      } else if ((match = /^\!\[(.*?)\]\((.*?)\)$/.exec(trimmed))) {
-        const [, alt, src] = match;
-        createNode("img", currentParentId, { alt, fileId: src });
       } else if (trimmed.includes("[") && trimmed.includes("]") && trimmed.includes("(")) {
         const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
         let linkMatch;

@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
-import type { TemplatePane, TemplateMarkdown } from "@/types";
+import type { TemplateNode, TemplatePane } from "@/types";
 
 export async function getPaneTemplateNode(id: string) {
   try {
@@ -8,10 +7,7 @@ export async function getPaneTemplateNode(id: string) {
     if (!client) return { success: false, data: null, error: "Database client not available" };
 
     const { rows } = await client.execute({
-      sql: `SELECT p.*, m.id as markdown_id, m.body as markdown_body
-            FROM panes p
-            LEFT JOIN markdowns m ON p.markdown_id = m.id 
-            WHERE p.id = ?`,
+      sql: `SELECT * FROM panes WHERE id = ?`,
       args: [id],
     });
 
@@ -23,33 +19,63 @@ export async function getPaneTemplateNode(id: string) {
     }
 
     const optionsPayload =
-      typeof paneRow.options_payload === `string` ? JSON.parse(paneRow.options_payload) : null;
-    const markdownNode = optionsPayload?.nodes?.find((node: any) => node.type === "markdown");
+      typeof paneRow.options_payload === "string" ? JSON.parse(paneRow.options_payload) : null;
 
-    const templatePane: TemplatePane = {
-      nodeType: "Pane",
-      id: "",
-      parentId: "",
-      title: String(paneRow.title),
-      slug: String(paneRow.slug),
-      bgColour: optionsPayload?.bgColour || null,
-      isDecorative: optionsPayload?.isDecorative || false,
-      ...(paneRow.markdown_id &&
-        paneRow.markdown_body && {
-          markdown: {
-            nodeType: "Markdown",
-            id: "",
-            parentId: "",
-            type: "markdown",
-            markdownId: String(paneRow.markdown_id),
-            markdownBody: String(paneRow.markdown_body),
-            defaultClasses: markdownNode?.defaultClasses || {},
-            parentClasses: markdownNode?.parentClasses || [],
-          } as TemplateMarkdown,
-        }),
-    };
+    if (!optionsPayload?.nodes?.length) {
+      return { success: false, data: null, error: "No nodes found in options payload" };
+    }
 
-    return { success: true, data: { templatePane } };
+    if (optionsPayload.nodes[0].nodeType === "Markdown") {
+      const templatePane: TemplatePane = {
+        nodeType: "Pane",
+        id: String(paneRow.id),
+        parentId: "",
+        title: String(paneRow.title),
+        slug: String(paneRow.slug),
+        bgColour: optionsPayload.bgColour || null,
+        isDecorative: optionsPayload.isDecorative || false,
+        markdown: {
+          nodeType: "Markdown",
+          type: "markdown",
+          defaultClasses: optionsPayload.nodes[0].defaultClasses || {},
+          parentClasses: optionsPayload.nodes[0].parentClasses || [],
+          nodes: optionsPayload.nodes.slice(1).map((node: TemplateNode) => ({
+            ...node,
+            // Preserve original IDs
+            id: node.id,
+            parentId: node.parentId,
+          })),
+          // Preserve markdown node ID
+          id: optionsPayload.nodes[0].id,
+          parentId: optionsPayload.nodes[0].parentId,
+          markdownId: optionsPayload.nodes[0].markdownId,
+        },
+      };
+      return { success: true, data: { templatePane } };
+    } else if (optionsPayload.nodes[0].nodeType === "BgPane") {
+      const templatePane: TemplatePane = {
+        nodeType: "Pane",
+        id: String(paneRow.id),
+        parentId: "",
+        title: String(paneRow.title),
+        slug: String(paneRow.slug),
+        bgColour: optionsPayload.bgColour || null,
+        isDecorative: optionsPayload.isDecorative || false,
+        bgPane: {
+          nodeType: "BgPane",
+          type: "visual-break",
+          breakDesktop: optionsPayload.nodes[0].breakDesktop,
+          breakTablet: optionsPayload.nodes[0].breakTablet,
+          breakMobile: optionsPayload.nodes[0].breakMobile,
+          // Preserve bgPane node ID
+          id: optionsPayload.nodes[0].id,
+          parentId: optionsPayload.nodes[0].parentId,
+        },
+      };
+      return { success: true, data: { templatePane } };
+    }
+
+    return { success: false, data: null, error: "Unknown node type" };
   } catch (error) {
     console.error("Error in getPaneTemplateNode:", error);
     return {

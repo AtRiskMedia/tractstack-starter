@@ -861,7 +861,7 @@ export class NodesContext {
       return;
     }
     const duplicatedPane = cloneDeep(pane) as TemplatePane;
-    const duplicatedPaneId = ulid();
+    const duplicatedPaneId = pane?.id || ulid();
     duplicatedPane.id = duplicatedPaneId;
     duplicatedPane.parentId = ownerNode.id;
     duplicatedPane.isChanged = true;
@@ -872,7 +872,8 @@ export class NodesContext {
     // Handle markdown panes
     if (duplicatedPane.markdown) {
       duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
-      duplicatedPane.markdown.id = ulid();
+      duplicatedPane.markdown.id = pane?.markdown?.id || ulid();
+      duplicatedPane.markdown.markdownId = pane?.markdown?.markdownId || ulid();
       duplicatedPane.markdown.parentId = duplicatedPaneId;
 
       let markdownNodes: TemplateNode[] = [];
@@ -885,7 +886,7 @@ export class NodesContext {
       }
 
       // Process markdown nodes
-      if (
+      else if (
         typeof duplicatedPane.markdown !== `undefined` &&
         typeof duplicatedPane.markdown.id === `string`
       ) {

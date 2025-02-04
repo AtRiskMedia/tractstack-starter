@@ -16,7 +16,11 @@ export async function upsertPane(
     }
 
     // Handle markdown update first if provided
-    if (requestData.markdownData) {
+    if (
+      requestData.markdownData &&
+      requestData.markdownData.id &&
+      requestData.markdownData.markdown_body
+    ) {
       await client.execute({
         sql: `INSERT INTO markdowns (id, body)
               VALUES (?, ?)
@@ -25,7 +29,6 @@ export async function upsertPane(
         args: [requestData.markdownData.id, requestData.markdownData.markdown_body],
       });
     }
-
     // Update pane
     await client.execute({
       sql: `INSERT INTO panes (

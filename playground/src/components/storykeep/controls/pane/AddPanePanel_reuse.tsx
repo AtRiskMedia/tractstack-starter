@@ -84,6 +84,39 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
     fetchPanePreview();
   }, [selected]);
 
+  const handlePaneReuse = async (selectedPaneId: string, nodeId: string, first: boolean) => {
+    if (!selectedPaneId) return;
+
+    try {
+      // Fetch the pane template
+      const response = await fetch("/api/turso/getPaneTemplateNode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedPaneId }),
+      });
+      const result = await response.json();
+      if (!result.success || !result.data.data.templatePane) {
+        console.error("Failed to fetch pane:", result.error);
+        return;
+      }
+
+      // Get the template
+      const template = result.data.data.templatePane;
+
+      // Get context and insert the pane
+      const ctx = getCtx();
+      const ownerId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+      const newPaneId = ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+
+      if (newPaneId) {
+        ctx.notifyNode(`root`);
+        setMode(PaneMode.DEFAULT); // Close the panel after insertion
+      }
+    } catch (error) {
+      console.error("Error reusing pane:", error);
+    }
+  };
+
   return (
     <div className="p-0.5 shadow-inner">
       <div className="p-1.5 bg-white rounded-md w-full">
@@ -179,7 +212,9 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
             <div className="flex flex-wrap gap-2 min-w-[200px]">
               <button
                 onClick={() => {
-                  console.log("Reusing pane:", selected.id, "at position:", nodeId, first);
+                  if (selected) {
+                    handlePaneReuse(selected.id, nodeId, first);
+                  }
                 }}
                 className="px-3 py-2 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 focus:bg-cyan-700 transition-colors"
               >
