@@ -869,7 +869,7 @@ export class NodesContext {
     // Track all nodes that need to be added
     let allNodes: BaseNode[] = [];
 
-    // Handle markdown panes
+    // must generate nodes from markdown
     if (duplicatedPane.markdown) {
       duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
       duplicatedPane.markdown.id = pane?.markdown?.id || ulid();
@@ -883,9 +883,10 @@ export class NodesContext {
           duplicatedPane.markdown.markdownBody,
           duplicatedPane.markdown.id
         ) as TemplateNode[];
+        allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
       }
 
-      // Process markdown nodes
+      // Markdown already as nodes
       else if (
         typeof duplicatedPane.markdown !== `undefined` &&
         typeof duplicatedPane.markdown.id === `string`
