@@ -1,4 +1,4 @@
-import BgPane from "@/components/storykeep/compositor/BgPaneNew.tsx";
+import BgPane from "@/components/common/panes/BgPane.tsx";
 import { type NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes";
 import { viewportKeyStore } from "@/store/storykeep.ts";
