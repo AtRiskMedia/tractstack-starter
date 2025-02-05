@@ -103,6 +103,7 @@ export async function getGenerateAllNodes(): Promise<StoryKeepAllNodes | null> {
     const paneNodes = paneRows
       .map((row) => getPaneNodes(row))
       .filter((node): node is PaneNode => node !== null);
+
     const impressionNodes = paneRows
       .map((row) => getImpressionNode(row))
       .filter((node): node is ImpressionNode => node !== null);

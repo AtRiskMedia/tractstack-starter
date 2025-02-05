@@ -35,7 +35,7 @@ export function getPaneNodes(row: Row): PaneNode | null {
       nodeType: "Pane",
       slug: row.slug,
       parentId: null,
-      isDecorative: optionsPayload?.paneFragmentsPayload.some(
+      isDecorative: optionsPayload?.paneFragmentsPayload?.some(
         (item: any) => item.type === "bgPane"
       ),
       ...(row?.height_offset_desktop != 0
