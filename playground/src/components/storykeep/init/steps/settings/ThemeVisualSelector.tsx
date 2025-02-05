@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import DesignSnapshot from "@/components/storykeep/preview/DesignSnapshot.tsx";
-import { pageDesigns } from "@/utils/designs/paneDesigns.ts";
-import { themes } from "@/constants.ts";
-import type { Theme, Config } from "@/types.ts";
+import { NodesContext } from "@/store/nodes";
+import { NodesSnapshotRenderer } from "@/utils/nodes/NodesSnapshotRenderer";
+import { themes } from "@/constants";
+import { getIntroSectionDefault } from "@/utils/designs/templateMarkdownStyles";
+import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
+import type { Theme, Config } from "@/types";
 
 interface ThemeVisualSelectorProps {
   value: Theme;
@@ -20,40 +22,90 @@ const themeNames: Record<Theme, string> = {
   "dark-bold": "Dark Bold",
 };
 
-const getInitialSnapshots = () => ({
-  light: "",
-  "light-bw": "",
-  "light-bold": "",
-  dark: "",
-  "dark-bw": "",
-  "dark-bold": "",
-});
-
-const updateColors = (colorString: string) => {
-  const colors = colorString.split(",");
-  colors.forEach((color, index) => {
-    const varName = `--brand-${index + 1}`;
-    document.documentElement.style.setProperty(varName, `#${color}`);
-  });
-};
-
 export default function ThemeVisualSelector({
   value,
   onChange,
   config,
   brandString,
 }: ThemeVisualSelectorProps) {
-  const [snapshots, setSnapshots] = useState(getInitialSnapshots());
-  const [currentBrandString, setCurrentBrandString] = useState(brandString);
+  const [lastBrandString, setLastBrandString] = useState(brandString);
+  const [snapshots, setSnapshots] = useState<Record<Theme, string>>(() => {
+    return themes.reduce(
+      (acc, theme) => {
+        acc[theme] = "";
+        return acc;
+      },
+      {} as Record<Theme, string>
+    );
+  });
+  const [contexts, setContexts] = useState<Record<Theme, NodesContext>>(() => {
+    return themes.reduce(
+      (acc, theme) => {
+        const ctx = new NodesContext();
+        ctx.addNode(createEmptyStorykeep("tmp"));
+        const template = getIntroSectionDefault(theme, brandString, false, true);
+        ctx.addTemplatePane("tmp", template);
+        acc[theme] = ctx;
+        return acc;
+      },
+      {} as Record<Theme, NodesContext>
+    );
+  });
 
-  // Reset snapshots when brandString changes
+  // Reset snapshots and recreate contexts when brand colors change
   useEffect(() => {
-    if (currentBrandString !== brandString) {
-      updateColors(brandString);
-      setSnapshots(getInitialSnapshots());
-      setCurrentBrandString(brandString);
+    if (lastBrandString !== brandString) {
+      setSnapshots(() =>
+        themes.reduce(
+          (acc, theme) => {
+            acc[theme] = "";
+            return acc;
+          },
+          {} as Record<Theme, string>
+        )
+      );
+      setLastBrandString(brandString);
+      // Create new contexts with updated brand colors
+      const newContexts: Record<Theme, NodesContext> = themes.reduce(
+        (acc, theme) => {
+          const ctx = new NodesContext();
+          ctx.addNode(createEmptyStorykeep("tmp"));
+          const template = getIntroSectionDefault(theme, brandString, false, true);
+          ctx.addTemplatePane("tmp", template);
+          acc[theme] = ctx;
+          return acc;
+        },
+        {} as Record<Theme, NodesContext>
+      );
+      themes.forEach((theme) => {
+        const ctx = new NodesContext();
+        ctx.addNode(createEmptyStorykeep("tmp"));
+        const template = getIntroSectionDefault(theme, brandString, false, true);
+        ctx.addTemplatePane("tmp", template);
+        newContexts[theme] = ctx;
+      });
+      setContexts(newContexts);
     }
-  }, [brandString, currentBrandString]);
+  }, [brandString, lastBrandString]);
+
+  // Initialize contexts on first render
+  useEffect(() => {
+    const initialContexts: Record<Theme, NodesContext> = themes.reduce(
+      (acc, theme) => {
+        acc[theme] = new NodesContext();
+        return acc;
+      },
+      {} as Record<Theme, NodesContext>
+    );
+    themes.forEach((theme) => {
+      const ctx = new NodesContext();
+      ctx.addNode(createEmptyStorykeep("tmp"));
+      const template = getIntroSectionDefault(theme, brandString, false, true);
+      ctx.addTemplatePane("tmp", template);
+      initialContexts[theme] = ctx;
+    });
+    setContexts(initialContexts);
+  }, []);
 
   if (!config) {
     return null;
@@ -63,15 +115,17 @@ export default function ThemeVisualSelector({
   const thisConfig = {
     ...config,
     init: {
-      ...config?.init,
+      ...config.init,
       BRAND_COLOURS: brandString,
     },
   };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       {themes.map((theme) => {
-        const design = pageDesigns(theme, thisConfig).basic;
+        const ctx = contexts[theme];
+        if (!ctx) return null;
+
         return (
           <button
             type="button"
@@ -81,28 +135,32 @@ export default function ThemeVisualSelector({
               value === theme ? "ring-2 ring-myorange ring-offset-2" : ""
             }`}
           >
-            <div className="relative aspect-square w-full">
+            <div
+              className="relative h-auto w-full"
+              style={{
+                minHeight: `200px`,
+              }}
+            >
               {!snapshots[theme] ? (
                 <div className="absolute inset-0">
-                  <DesignSnapshot
-                    design={design}
-                    theme={theme}
-                    onComplete={(imageData) => {
-                      setSnapshots((prev) => ({ ...prev, [theme]: imageData }));
-                    }}
+                  <NodesSnapshotRenderer
+                    ctx={ctx}
                     config={thisConfig}
+                    onComplete={(data) => {
+                      setSnapshots((prev) => ({
+                        ...prev,
+                        [theme]: data.imageData,
+                      }));
+                    }}
+                    forceRegenerate={!snapshots[theme]}
                   />
                 </div>
-              ) : snapshots[theme] ? (
+              ) : (
                 <img
                   src={snapshots[theme]}
                   alt={`${themeNames[theme]} theme preview`}
-                  className="absolute inset-0 w-full h-full object-contain object-top rounded-lg"
+                  className="w-full h-full object-contain object-top rounded-lg"
                 />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-mylightgrey/10">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-myorange"></div>
-                </div>
               )}
             </div>
             <div className="absolute inset-x-0 bottom-0 p-2 bg-mydarkgrey text-white rounded-b-lg text-center">

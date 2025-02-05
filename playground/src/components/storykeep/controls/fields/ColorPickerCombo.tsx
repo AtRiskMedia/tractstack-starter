@@ -31,7 +31,7 @@ const ColorPickerCombo = ({
 }: ColorPickerProps) => {
   const [hexColor, setHexColor] = useState(defaultColor);
   const [selectedTailwindColor, setSelectedTailwindColor] = useState(() => {
-    return skipTailwind ? "" : hexToTailwind(defaultColor) || "";
+    return skipTailwind ? "" : hexToTailwind(defaultColor, config?.init?.BRAND_COLOURS) || "";
   });
   const [query, setQuery] = useState("");
 
@@ -48,7 +48,7 @@ const ColorPickerCombo = ({
       setHexColor(computedColor);
 
       if (!skipTailwind) {
-        const exactTailwindColor = hexToTailwind(computedColor);
+        const exactTailwindColor = hexToTailwind(computedColor, config?.init?.BRAND_COLOURS);
         if (exactTailwindColor) {
           setSelectedTailwindColor(exactTailwindColor);
           setQuery(exactTailwindColor);

@@ -52,6 +52,9 @@ export const getTailwindColorOptions = () => {
 };
 
 export const tailwindToHex = (tailwindColor: string, brand: string | null): string => {
+  // already hex?
+  if (tailwindColor.startsWith(`#`)) return tailwindColor;
+
   if (tailwindColor.startsWith("bg-brand-")) {
     const brandColor = getBrandColor(`var(--${tailwindColor.slice(3)})`, brand);
     if (brandColor) {
@@ -63,16 +66,6 @@ export const tailwindToHex = (tailwindColor: string, brand: string | null): stri
     if (brandColor) {
       return brandColor.startsWith("#") ? brandColor : `#${brandColor}`;
     }
-  }
-  if (tailwindColor in customColors) {
-    const color = customColors[tailwindColor as keyof typeof customColors];
-    if (color.startsWith("var(--")) {
-      const brandColor = getBrandColor(color, brand);
-      if (brandColor) {
-        return brandColor.startsWith("#") ? brandColor : `#${brandColor}`;
-      }
-    }
-    return color;
   }
 
   if (tailwindColor.startsWith("bg-")) {
@@ -86,10 +79,20 @@ export const tailwindToHex = (tailwindColor: string, brand: string | null): stri
     const shadeIndex = shade === "50" ? 0 : shade === "950" ? 10 : parseInt(shade) / 100 - 1;
     return tailwindColors[color as keyof typeof tailwindColors][shadeIndex];
   }
+  console.log(`getTailwindColor miss`, tailwindColor, brand);
   return tailwindColor.startsWith("#") ? tailwindColor : `#${tailwindColor}`;
 };
 
-export const hexToTailwind = (hexColor: string): string | null => {
+export const hexToTailwind = (hexColor: string, brand?: string | undefined): string | null => {
+  const brandColours = brand ? getBrandColours(brand) : [];
+  const lookupColor = hexColor.startsWith(`#`) ? hexColor.slice(1) : hexColor;
+  const brandIndex = brandColours.findIndex(
+    (color) => color.toLowerCase() === lookupColor.toLowerCase()
+  );
+  if (brandIndex !== -1) {
+    return `brand-${brandIndex + 1}`;
+  }
+
   for (const [colorName, colorHex] of Object.entries(customColors)) {
     if (colorHex.toLowerCase() === hexColor.toLowerCase()) {
       return colorName;

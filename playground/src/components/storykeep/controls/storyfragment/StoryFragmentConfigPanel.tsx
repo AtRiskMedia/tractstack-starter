@@ -60,14 +60,14 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   }
 
   const handleBgColorChange = (newColor: string) => {
-    const val = hexToTailwind(newColor);
+    const val = hexToTailwind(newColor, config?.init?.BRAND_COLOURS);
     const exactValPayload = val ? null : findClosestTailwindColor(newColor);
     const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
     if (exactVal || val) {
       const ctx = getCtx();
       const updatedNode = {
         ...cloneDeep(storyfragmentNode),
-        tailwindBgColour: exactVal || val || `#ffffff`,
+        tailwindBgColour: exactVal || val || `white`,
         isChanged: true,
       };
       ctx.modifyNodes([updatedNode]);
@@ -148,7 +148,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
               <ColorPickerCombo
                 title=""
                 defaultColor={tailwindToHex(
-                  storyfragmentNode.tailwindBgColour || "#ffffff",
+                  storyfragmentNode.tailwindBgColour || `white`,
                   config?.init?.BRAND_COLOURS || null
                 )}
                 onColorChange={handleBgColorChange}

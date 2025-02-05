@@ -79,7 +79,7 @@ const getPanel = (
       ) : null;
     case "style-parent":
       return markdownNode ? (
-        <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} />
+        <StyleParentPanel node={markdownNode} parentNode={paneNode} layer={layer} config={config} />
       ) : null;
     case "style-parent-add":
       return markdownNode ? (

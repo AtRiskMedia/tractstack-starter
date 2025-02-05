@@ -653,7 +653,7 @@ export class NodesContext {
         const storyFragment = node as StoryFragmentNode;
         return typeof storyFragment?.tailwindBgColour === `string`
           ? `bg-${storyFragment?.tailwindBgColour}`
-          : ``;
+          : `bg-white`;
       }
     }
     return "";

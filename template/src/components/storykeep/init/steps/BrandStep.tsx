@@ -105,7 +105,12 @@ export default function BrandStep({
     keyboardAccessible: false,
   });
 
-  const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>("default");
+  const matchingPreset = Object.entries(knownBrand).find(
+    ([, value]) => value === config?.init?.BRAND_COLOURS
+  )?.[0];
+  const [selectedBrandPreset, setSelectedBrandPreset] = useState<string>(
+    typeof matchingPreset === `undefined` ? `custom` : matchingPreset
+  );
   const [customColors, setCustomColors] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -137,10 +142,12 @@ export default function BrandStep({
       setCurrentValues(values);
       setInitialValues(values);
 
-      const matchingPreset = Object.entries(knownBrand).find(
-        ([, value]) => value === initConfig.BRAND_COLOURS
-      )?.[0];
-      setSelectedBrandPreset(matchingPreset || "default");
+      if (selectedBrandPreset !== `custom`) {
+        const matchingPreset = Object.entries(knownBrand).find(
+          ([, value]) => value === initConfig.BRAND_COLOURS
+        )?.[0];
+        setSelectedBrandPreset(matchingPreset || "default");
+      }
 
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS || !initConfig.STYLES_VER) {
         onConfigUpdate({
@@ -158,6 +165,23 @@ export default function BrandStep({
       }
     }
   }, [config, onConfigUpdate]);
+
+  // update css vars of brand colours
+  useEffect(() => {
+    const colors = currentValues.brandColors.split(",");
+    if (colors.length === 8) {
+      document.documentElement.style.setProperty("--brand-1", `#${colors[0]}`);
+      document.documentElement.style.setProperty("--brand-2", `#${colors[1]}`);
+      document.documentElement.style.setProperty("--brand-3", `#${colors[2]}`);
+      document.documentElement.style.setProperty("--brand-4", `#${colors[3]}`);
+      document.documentElement.style.setProperty("--brand-5", `#${colors[4]}`);
+      document.documentElement.style.setProperty("--brand-6", `#${colors[5]}`);
+      document.documentElement.style.setProperty("--brand-7", `#${colors[6]}`);
+      document.documentElement.style.setProperty("--brand-8", `#${colors[7]}`);
+    } else {
+      console.error("Invalid number of colors provided for brand colors");
+    }
+  }, [currentValues.brandColors]);
 
   if (!isActive) return null;
 
@@ -250,10 +274,7 @@ export default function BrandStep({
   const handleColorChange = (newValue: string) => {
     onConfigUpdate({ BRAND_COLOURS: newValue });
     setCurrentValues((prev) => ({ ...prev, brandColors: newValue }));
-    const matchingPreset = Object.entries(knownBrand).find(
-      ([, presetValue]) => presetValue === newValue
-    )?.[0];
-    setSelectedBrandPreset(matchingPreset || "custom");
+    setSelectedBrandPreset(`custom`);
   };
 
   const handleSubmit = async (e: FormEvent) => {
