@@ -413,6 +413,16 @@ export interface AuthValidationResult {
   errors?: string[];
 }
 
+export type SiteMap = {
+  id: string;
+  slug: string;
+  title: string;
+  created: Date;
+  changed: Date | null;
+  type: `StoryFragment` | `Pane`;
+  isContextPane?: boolean;
+};
+
 export type ContentMap = {
   id: string;
   slug: string;

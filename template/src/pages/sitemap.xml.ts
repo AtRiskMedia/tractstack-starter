@@ -1,8 +1,8 @@
-import { getContentMap } from "../utils/db/utils";
-import { dateToUnixTimestamp, formatDateToYYYYMMDD } from "../utils/common/helpers";
-import { getConfig } from "../utils/core/config";
+import { getSiteMap } from "@/utils/db/turso";
+import { dateToUnixTimestamp, formatDateToYYYYMMDD } from "@/utils/common/helpers";
+import { getConfig } from "@/utils/core/config";
 import type { APIRoute } from "astro";
-import type { ContentMap } from "../types";
+import type { SiteMap } from "../types";
 
 const config = await getConfig();
 const xmlTop = `
@@ -10,9 +10,9 @@ const xmlTop = `
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`.trim();
 const xmlBottom = `</urlset>`;
 
-const contentMap: ContentMap[] = await getContentMap();
+const contentMap: SiteMap[] = await getSiteMap();
 const entries = contentMap
-  .map((c: ContentMap) => {
+  .map((c: SiteMap) => {
     if (c.type === `StoryFragment`) {
       const thisPriority = c.slug === config?.init?.HOME_SLUG ? `1.0` : `0.8`;
       const thisUrl =

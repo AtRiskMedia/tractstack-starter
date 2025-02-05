@@ -12,6 +12,7 @@ import type {
   BeliefRowData,
 } from "@/store/nodesSerializer.ts";
 import type {
+  SiteMap,
   FullContentMap,
   BeliefContentMap,
   TractStackContentMap,
@@ -1173,5 +1174,52 @@ export async function getUniqueTailwindClasses() {
   } catch (error) {
     console.error("Error fetching pane payloads:", error);
     throw error;
+  }
+}
+
+export async function getSiteMap(): Promise<SiteMap[]> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return [];
+
+    const results = await Promise.all([
+      client.execute(
+        `SELECT 
+          id, title, slug, 'StoryFragment' as type
+          FROM storyfragments`
+      ),
+      client.execute({
+        sql: `SELECT id,title,slug,is_context_pane FROM panes WHERE is_context_pane = ?`,
+        args: [1],
+      }),
+    ]);
+    const [storyFragments, panes] = results;
+
+    // Combine and transform all results
+    const siteMap: SiteMap[] = [
+      // Add StoryFragments
+      ...storyFragments.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        type: "StoryFragment" as const,
+        created: new Date(row.created || Date.now()),
+        changed: row.changed ? new Date(row.changed) : null,
+      })),
+      // Add Panes
+      ...panes.rows.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        slug: row.slug,
+        type: "Pane" as const,
+        isContextPane: row.is_context_pane === 1,
+        created: new Date(row.created || Date.now()),
+        changed: row.changed ? new Date(row.changed) : null,
+      })),
+    ];
+    return siteMap;
+  } catch (error) {
+    console.log("Unable to fetch site map:", error);
+    return [];
   }
 }
