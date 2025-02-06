@@ -15,7 +15,7 @@ import {
 } from "@/store/storykeep.ts";
 import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import { debounce } from "@/utils/common/helpers";
-import ViewportSelector from "../header/ViewportSelector";
+import ViewportSelector from "./state/ViewportSelector";
 import SaveModal from "./state/SaveModal";
 
 const offset = 64 + 16 + 16;

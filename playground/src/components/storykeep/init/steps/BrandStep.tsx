@@ -149,14 +149,14 @@ export default function BrandStep({
         setSelectedBrandPreset(matchingPreset || "default");
       }
 
-      if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS || !initConfig.STYLES_VER) {
+      if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
           WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
           BRAND_COLOURS:
             initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
           OPEN_DEMO: initConfig.OPEN_DEMO || false,
-          STYLES_VER: initConfig.STYLES_VER || `1`,
+          STYLES_VER: initConfig.STYLES_VER || ``,
           HOME_SLUG: initConfig.HOME_SLUG || ``,
           TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || ``,
           THEME: initConfig.THEME || "light-bold",

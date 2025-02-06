@@ -13,7 +13,7 @@ import {
   TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
 import { getCtx, NodesContext } from "@/store/nodes.ts";
-import type { NodeTagProps } from "@/components/storykeep/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
+import type { NodeTagProps } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
 import { ulid } from "ulid";
 
 export const getTemplateNode = (value: ToolAddMode): TemplateNode => {

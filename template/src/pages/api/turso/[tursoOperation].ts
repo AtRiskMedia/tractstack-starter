@@ -7,7 +7,6 @@ import { unlockProfile } from "@/utils/db/api/unlock.ts";
 import { createProfile } from "@/utils/db/api/create.ts";
 import { updateProfile } from "@/utils/db/api/update.ts";
 import { executeQueries } from "@/utils/db/api/executeQueries.ts";
-import { getPaneDesigns } from "@/utils/db/api/paneDesigns.ts";
 import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
@@ -26,7 +25,6 @@ import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode.ts";
 import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode.ts";
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
-import { getUniqueTailwindClasses } from "@/utils/db/api/uniqueTailwindClasses.ts";
 import { initializeContent } from "@/utils/db/turso.ts";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
@@ -58,9 +56,6 @@ export const POST: APIRoute = async ({ request, params }) => {
         break;
       case "dashboardAnalytics":
         result = await dashboardAnalytics(body);
-        break;
-      case "uniqueTailwindClasses":
-        result = await getUniqueTailwindClasses(body);
         break;
       case "upsertFile":
         result = await upsertFile(body);
@@ -154,9 +149,6 @@ export const GET: APIRoute = async ({ params }) => {
         break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();
-        break;
-      case "paneDesigns":
-        result = await getPaneDesigns();
         break;
       default:
         if (tursoOperation === "read") {

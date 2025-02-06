@@ -1,0 +1,18 @@
+---
+import Node from "@/components/compositor-nodes/Node.astro";
+import { getCtx } from "@/store/nodes.ts";
+import type { FlatNode } from "@/types.ts";
+import EmptyNode from "./EmptyNode.astro";
+
+const { nodeId } = Astro.props;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+const Tag = node.tagName || EmptyNode;
+---
+
+<Tag class={getCtx().getNodeClasses(nodeId, `auto`)}>
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id) => <Node nodeId={id} />)
+  }
+</Tag>

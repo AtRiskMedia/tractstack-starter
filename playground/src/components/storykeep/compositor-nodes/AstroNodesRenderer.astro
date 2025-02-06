@@ -1,9 +1,0 @@
----
-import { getCtx } from "@/store/nodes.ts";
-import Node from "@/components/storykeep/compositor-nodes/Node.astro";
-
-const { id } = Astro.props;
-const rootId = id || getCtx().rootNodeId.get();
----
-
-<Node nodeId={rootId} />

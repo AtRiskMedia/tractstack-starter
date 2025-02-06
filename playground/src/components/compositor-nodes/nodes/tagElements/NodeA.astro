@@ -1,0 +1,16 @@
+---
+import { getCtx } from "@/store/nodes.ts";
+import Node from "@/components/compositor-nodes/Node.astro";
+import type { FlatNode } from "@/types.ts";
+
+const { nodeId } = Astro.props;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+---
+
+<a class={getCtx().getNodeClasses(nodeId, `auto`)} href={node.href}>
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
+</a>

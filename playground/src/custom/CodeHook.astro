@@ -1,10 +1,10 @@
 ---
-import type { ResourceDatum } from "@/types";
+import type { ResourceNode } from "@/types";
 import CustomHero from "./CustomHero.astro";
 
 export interface Props {
   target: string;
-  resources?: ResourceDatum[] | null;
+  resources?: ResourceNode[] | null;
   options?: string | null;
 }
 

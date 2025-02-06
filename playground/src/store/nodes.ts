@@ -33,9 +33,9 @@ import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames.
 import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
 import { NotificationSystem } from "@/store/notificationSystem.ts";
-import type { NodeProps } from "@/components/storykeep/compositor-nodes/Node.tsx";
-import type { ReactNodesRendererProps } from "@/components/storykeep/compositor-nodes/ReactNodesRenderer.tsx";
-import type { WidgetProps } from "@/components/storykeep/compositor-nodes/nodes/Widget.tsx";
+import type { NodeProps } from "@/components/compositor-nodes/Node.tsx";
+import type { ReactNodesRendererProps } from "@/components/compositor-nodes/ReactNodesRenderer.tsx";
+import type { WidgetProps } from "@/components/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";
 import { handleClickEventDefault } from "@/utils/nodes/handleClickEvent_default.ts";
 import allowInsert from "@/utils/nodes/allowInsert.ts";
