@@ -9,6 +9,7 @@ import OpenGraphSettings from "./settings/OpenGraphSettings";
 import SocialLinks from "./settings/SocialLinks";
 import { formatAndValidateUrl } from "@/utils/common/helpers.ts";
 import BrandImageUploads from "./settings/BrandImageUploads";
+import WordMarkMode from "./settings/WordMarkMode";
 import { knownBrand } from "@/constants.ts";
 import type { Config, InitConfig, Theme } from "@/types.ts";
 import type { FocusEvent, FormEvent } from "react";
@@ -22,6 +23,66 @@ interface BrandStepProps {
   onConfigUpdate: (updates: Record<string, unknown>) => void;
 }
 
+interface BrandFormValues {
+  siteUrl: string;
+  slogan: string;
+  footer: string;
+  brandColors: string;
+  theme: Theme;
+  gtag: string;
+  ogTitle: string;
+  ogAuthor: string;
+  ogDesc: string;
+  socialLinks: string;
+  og: string;
+  oglogo: string;
+  logo: string;
+  wordmark: string;
+  favicon: string;
+  keyboardAccessible: boolean;
+  wordmarkMode: string;
+}
+
+const getDefaultValues = (): BrandFormValues => ({
+  siteUrl: "",
+  slogan: "",
+  footer: "",
+  brandColors: knownBrand.default,
+  theme: "light-bold",
+  gtag: "",
+  ogTitle: "",
+  ogAuthor: "",
+  ogDesc: "",
+  socialLinks: "",
+  og: "",
+  oglogo: "",
+  logo: "",
+  wordmark: "",
+  favicon: "",
+  keyboardAccessible: false,
+  wordmarkMode: "default",
+});
+
+const fieldToConfigKey: Record<keyof BrandFormValues, string> = {
+  siteUrl: "SITE_URL",
+  slogan: "SLOGAN",
+  footer: "FOOTER",
+  brandColors: "BRAND_COLOURS",
+  theme: "THEME",
+  gtag: "GTAG",
+  ogTitle: "OGTITLE",
+  ogAuthor: "OGAUTHOR",
+  ogDesc: "OGDESC",
+  socialLinks: "SOCIALS",
+  og: "OG",
+  oglogo: "OGLOGO",
+  logo: "LOGO",
+  wordmark: "WORDMARK",
+  favicon: "FAVICON",
+  keyboardAccessible: "KEYBOARD_ACCESSIBLE",
+  wordmarkMode: "WORDMARK_MODE",
+};
+
 export default function BrandStep({
   onComplete,
   onBack,
@@ -33,77 +94,9 @@ export default function BrandStep({
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
 
-  const [currentValues, setCurrentValues] = useState<{
-    siteUrl: string;
-    slogan: string;
-    footer: string;
-    brandColors: string;
-    theme: Theme;
-    gtag: string;
-    ogTitle: string;
-    ogAuthor: string;
-    ogDesc: string;
-    socialLinks: string;
-    og: string;
-    oglogo: string;
-    logo: string;
-    wordmark: string;
-    favicon: string;
-    keyboardAccessible: boolean;
-  }>({
-    siteUrl: "",
-    slogan: "",
-    footer: "",
-    brandColors: knownBrand.default,
-    theme: "light-bold",
-    gtag: "",
-    ogTitle: "",
-    ogAuthor: "",
-    ogDesc: "",
-    socialLinks: "",
-    og: "",
-    oglogo: "",
-    logo: "",
-    wordmark: "",
-    favicon: "",
-    keyboardAccessible: false,
-  });
-
-  const [initialValues, setInitialValues] = useState<{
-    siteUrl: string;
-    slogan: string;
-    footer: string;
-    brandColors: string;
-    theme: Theme;
-    gtag: string;
-    ogTitle: string;
-    ogAuthor: string;
-    ogDesc: string;
-    socialLinks: string;
-    og: string;
-    oglogo: string;
-    logo: string;
-    wordmark: string;
-    favicon: string;
-    keyboardAccessible: boolean;
-  }>({
-    siteUrl: "",
-    slogan: "",
-    footer: "",
-    brandColors: knownBrand.default,
-    theme: "light-bold",
-    gtag: "",
-    ogTitle: "",
-    ogAuthor: "",
-    ogDesc: "",
-    socialLinks: "",
-    og: "",
-    oglogo: "",
-    logo: "",
-    wordmark: "",
-    favicon: "",
-    keyboardAccessible: false,
-  });
+  const defaultValues = getDefaultValues();
+  const [currentValues, setCurrentValues] = useState<BrandFormValues>(defaultValues);
+  const [initialValues, setInitialValues] = useState<BrandFormValues>(defaultValues);
 
   const matchingPreset = Object.entries(knownBrand).find(
     ([, value]) => value === config?.init?.BRAND_COLOURS
@@ -127,6 +120,7 @@ export default function BrandStep({
           initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
         theme: (initConfig.THEME as Theme) || "light-bold",
+        wordmarkMode: initConfig.WORDMARK_MODE || "default",
         ogTitle: initConfig.OGTITLE || "",
         ogAuthor: initConfig.OGAUTHOR || "",
         ogDesc: initConfig.OGDESC || "",
@@ -285,58 +279,20 @@ export default function BrandStep({
     setError(null);
 
     try {
-      const updates: Record<string, unknown> = {};
-
-      if (currentValues.siteUrl !== initialValues.siteUrl) {
-        updates.SITE_URL = currentValues.siteUrl;
-      }
-      if (currentValues.slogan !== initialValues.slogan) {
-        updates.SLOGAN = currentValues.slogan;
-      }
-      if (currentValues.footer !== initialValues.footer) {
-        updates.FOOTER = currentValues.footer;
-      }
-      if (currentValues.brandColors !== initialValues.brandColors) {
-        updates.BRAND_COLOURS = currentValues.brandColors;
-      }
-      if (currentValues.gtag !== initialValues.gtag) {
-        updates.GTAG = currentValues.gtag;
-      }
-      if (currentValues.ogTitle !== initialValues.ogTitle) {
-        updates.OGTITLE = currentValues.ogTitle;
-      }
-      if (currentValues.ogAuthor !== initialValues.ogAuthor) {
-        updates.OGAUTHOR = currentValues.ogAuthor;
-      }
-      if (currentValues.ogDesc !== initialValues.ogDesc) {
-        updates.OGDESC = currentValues.ogDesc;
-      }
-      if (currentValues.socialLinks !== initialValues.socialLinks) {
-        updates.SOCIALS = currentValues.socialLinks;
-      }
-      if (currentValues.wordmark !== initialValues.wordmark) {
-        updates.WORDMARK = currentValues.wordmark;
-      }
-      if (currentValues.logo !== initialValues.logo) {
-        updates.LOGO = currentValues.logo;
-      }
-      if (currentValues.og !== initialValues.og) {
-        updates.OG = currentValues.og;
-      }
-      if (currentValues.oglogo !== initialValues.oglogo) {
-        updates.OGLOGO = currentValues.oglogo;
-      }
-      if (currentValues.favicon !== initialValues.favicon) {
-        updates.FAVICON = currentValues.favicon;
-      }
-      if (currentValues.keyboardAccessible !== initialValues.keyboardAccessible) {
-        updates.KEYBOARD_ACCESSIBLE = currentValues.keyboardAccessible;
-      }
-
+      const updates = Object.entries(currentValues).reduce(
+        (acc, [field, value]) => {
+          const initialValue = initialValues[field as keyof BrandFormValues];
+          if (value !== initialValue) {
+            const configKey = fieldToConfigKey[field as keyof BrandFormValues];
+            acc[configKey] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, unknown>
+      );
       if (Object.keys(updates).length > 0) {
         onConfigUpdate(updates);
       }
-
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save changes");
@@ -478,6 +434,13 @@ export default function BrandStep({
               />
             </div>
           </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <WordMarkMode
+            value={currentValues.wordmarkMode}
+            onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
+          />
         </div>
 
         <div className="mt-8 pt-6 border-t border-myblue/10">
