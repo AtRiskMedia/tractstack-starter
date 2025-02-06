@@ -3,7 +3,7 @@ import { ViewTransitions } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso.ts";
-import type { FullContentMap, Config } from "@/types.ts";
+import type { Theme, FullContentMap, Config } from "@/types.ts";
 
 export interface Props {
   config: Config;
@@ -33,6 +33,7 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 const contentMap: FullContentMap[] = await getFullContentMap();
+console.log(config);
 ---
 
 <!doctype html>
@@ -127,6 +128,7 @@ const contentMap: FullContentMap[] = await getFullContentMap();
       payload={contentMap}
       availableCodeHooks={Object.keys(codeHookComponents)}
       brand={config.init.BRAND_COLOURS || ``}
+      theme={(config.init.THEME as Theme) || `light`}
       client:only="react"
     />
     <ViewTransitions />

@@ -6,7 +6,7 @@ import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
-import { brandColours } from "@/store/storykeep.ts";
+import { brandColours, preferredTheme } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
@@ -47,7 +47,7 @@ const AddPaneNewPanel = ({
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
-  const [selectedTheme, setSelectedTheme] = useState<Theme>("light");
+  const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [useOddVariant, setUseOddVariant] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(templateCategories[0]);
