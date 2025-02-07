@@ -11,14 +11,23 @@ export function eventStream() {
     try {
       const payload = events.get();
       if (payload.length) {
-        events.set([]);
         const result = await eventSync(payload);
         if (!result) {
-          console.log(`sync failed; events dropped`);
+          console.log(`sync failed; events dropped and session logged out`);
+          // Clear events store on sync failure
+          events.set([]);
+          // Clear auth settings as well since sync failed
+          Object.keys(auth.get()).forEach((key) => {
+            auth.setKey(key as keyof AuthSettings, undefined);
+          });
+        } else {
+          // Only clear events if sync was successful
+          events.set([]);
         }
       }
     } catch (e) {
       console.log(`error establishing concierge eventStream`, e);
+      // Clear auth settings on connection error
       Object.keys(auth.get()).forEach((key) => {
         auth.setKey(key as keyof AuthSettings, undefined);
       });
