@@ -112,16 +112,13 @@ export default function BrandStep({
     if (config?.init) {
       const initConfig = config.init as InitConfig;
 
-      // Only update values if they haven't been set yet (using initialValues as reference)
-      // or if essential config properties have changed
-      const shouldUpdateValues =
-        JSON.stringify(initialValues) === JSON.stringify(getDefaultValues()) ||
+      const hasEssentialChanges =
         initConfig.SITE_URL !== initialValues.siteUrl ||
         initConfig.BRAND_COLOURS !== initialValues.brandColors ||
         initConfig.THEME !== initialValues.theme ||
         initConfig.WORDMARK_MODE !== initialValues.wordmarkMode;
 
-      if (shouldUpdateValues) {
+      if (hasEssentialChanges) {
         const values = {
           siteUrl: initConfig.SITE_URL || "",
           slogan: initConfig.SLOGAN || "",
@@ -145,16 +142,8 @@ export default function BrandStep({
 
         setCurrentValues(values);
         setInitialValues(values);
-
-        if (selectedBrandPreset !== `custom`) {
-          const matchingPreset = Object.entries(knownBrand).find(
-            ([, value]) => value === initConfig.BRAND_COLOURS
-          )?.[0];
-          setSelectedBrandPreset(matchingPreset || "default");
-        }
       }
 
-      // Always ensure required config properties are set
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
@@ -170,7 +159,7 @@ export default function BrandStep({
         });
       }
     }
-  }, [config, onConfigUpdate, initialValues, selectedBrandPreset]);
+  }, [config, onConfigUpdate]);
 
   // update css vars of brand colours
   useEffect(() => {
