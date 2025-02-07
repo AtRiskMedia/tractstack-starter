@@ -30,21 +30,21 @@ if (!payload) {
 }
 
 const links = [];
-if (user?.isAdmin)
+if (user?.isAdmin || isPreviewMode)
   links.unshift({
     name: "Advanced Setup",
     description: "Your Story Keep Settings",
     featured: true,
     actionLisp: "(goto (storykeep settings))",
   });
-if (!user?.isAuthenticated)
+if (!user?.isAuthenticated && !isPreviewMode)
   links.unshift({
     name: "Login",
     description: "Enter your Story Keep",
     featured: true,
     actionLisp: "(goto (storykeep login))",
   });
-if (user?.isAuthenticated)
+if (user?.isAuthenticated && !isPreviewMode)
   links.unshift({
     name: "Logout",
     description: "Close this session",
