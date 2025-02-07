@@ -35,7 +35,6 @@ const BrandColorPicker = ({ value, onChange, onEditingChange }: BrandColorPicker
 
   const handleHexInput = useCallback(
     (value: string, index: number) => {
-      // Allow typing by updating the display value
       const cleaned = value
         .replace(/[^0-9A-Fa-f]/g, "")
         .toUpperCase()
@@ -44,7 +43,6 @@ const BrandColorPicker = ({ value, onChange, onEditingChange }: BrandColorPicker
       newHexInputs[index] = cleaned;
       setHexInputs(newHexInputs);
 
-      // Only update the actual color if we have a valid hex
       if (cleaned.length === 6) {
         const newColors = [...colors];
         newColors[index] = `#${cleaned}`;
@@ -59,23 +57,42 @@ const BrandColorPicker = ({ value, onChange, onEditingChange }: BrandColorPicker
   );
 
   return (
-    <div className="grid grid-cols-4 md:grid-cols-8 gap-4">
+    <div
+      className="grid grid-cols-4 md:grid-cols-8 gap-4"
+      role="group"
+      aria-label="Brand color selection"
+    >
       {colors.map((color, index) => (
-        <div key={index} className="flex flex-col items-center gap-2">
+        <div
+          key={index}
+          className="flex flex-col items-center gap-2"
+          role="group"
+          aria-label={`Color ${index + 1}`}
+        >
+          <label htmlFor={`brand-color-input-${index}`} className="sr-only">
+            Brand color {index + 1} hex value
+          </label>
           <ColorPickerWrapper
             id={`brand-color-${index}`}
             defaultColor={color}
             onColorChange={(newColor) => handleColorChange(newColor, index)}
             skipTailwind={true}
+            aria-label={`Color picker for brand color ${index + 1}`}
           />
           <input
+            id={`brand-color-input-${index}`}
             type="text"
             maxLength={6}
             value={hexInputs[index]}
             onChange={(e) => handleHexInput(e.target.value, index)}
             className="w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-myorange text-center font-mono uppercase"
             placeholder="FFFFFF"
+            aria-label={`Hex color value for brand color ${index + 1}`}
+            aria-describedby={`color-hint-${index}`}
           />
+          <span id={`color-hint-${index}`} className="sr-only">
+            Enter a 6-character hex color code without the # symbol
+          </span>
         </div>
       ))}
     </div>

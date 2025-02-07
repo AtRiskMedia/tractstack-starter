@@ -68,7 +68,7 @@ export default function BrandImageUploads({
       <div className="grid grid-cols-1 gap-6">
         {imageFields.map((field) => (
           <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-bold text-mydarkgrey flex items-center">
+            <span className="block text-sm font-bold text-mydarkgrey flex items-center">
               {field.description}
               <div className="relative ml-1 group">
                 <InformationCircleIcon className="h-5 w-5 text-myblue cursor-help" />
@@ -76,7 +76,7 @@ export default function BrandImageUploads({
                   <p className="text-sm text-mydarkgrey">{field.config.helpText}</p>
                 </div>
               </div>
-            </label>
+            </span>
             <BrandImageUpload
               id={field.id}
               value={field.value}

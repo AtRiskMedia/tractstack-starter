@@ -77,19 +77,31 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     "block rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange text-sm w-full";
 
   return (
-    <div className="space-y-4 max-w-lg">
+    <div className="space-y-4 max-w-lg" role="region" aria-label="Social media links">
       {links.map((link, index) => (
-        <div key={index} className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md">
+        <div
+          key={index}
+          className="flex items-center gap-3"
+          role="group"
+          aria-label={`${String(link.platform)} social link`}
+        >
+          <div
+            className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md"
+            aria-hidden="true"
+          >
             <img
               src={`/socials/${String(link.platform)}.svg`}
-              alt={`${String(link.platform)} icon`}
+              alt=""
               width="24"
               height="24"
               className="h-6 w-6 scale-125"
             />
           </div>
+          <label className="sr-only" htmlFor={`social-url-${index}`}>
+            {String(link.platform)} URL
+          </label>
           <input
+            id={`social-url-${index}`}
             type="url"
             value={link.url}
             autoComplete="off"
@@ -97,30 +109,43 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             onKeyDown={handleKeyDown}
             placeholder="https://"
             className={`${baseInputClass} flex-1`}
+            aria-label={`${String(link.platform)} profile URL`}
           />
 
           <button
             type="button"
             onClick={() => removeLink(index)}
             className="text-myorange hover:text-black p-2"
+            aria-label={`Remove ${String(link.platform)} link`}
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       ))}
 
       {pendingLink && (
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md">
+        <div
+          className="flex items-center gap-3"
+          role="group"
+          aria-label={`New ${String(pendingLink.platform)} link`}
+        >
+          <div
+            className="flex items-center justify-center w-12 h-12 bg-myorange/10 rounded-md"
+            aria-hidden="true"
+          >
             <img
               src={`/socials/${String(pendingLink.platform)}.svg`}
-              alt={`${String(pendingLink.platform)} icon`}
+              alt=""
               width="24"
               height="24"
               className="h-6 w-6 scale-125"
             />
           </div>
+          <label className="sr-only" htmlFor="pending-social-url">
+            {String(pendingLink.platform)} URL
+          </label>
           <input
+            id="pending-social-url"
             type="url"
             value={pendingLink.url}
             autoComplete="off"
@@ -129,6 +154,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             onKeyDown={handleKeyDown}
             placeholder="https://"
             className={`${baseInputClass} flex-1`}
+            aria-label={`Enter ${String(pendingLink.platform)} profile URL`}
             autoFocus
           />
 
@@ -136,14 +162,19 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             type="button"
             onClick={() => setPendingLink(null)}
             className="text-myorange hover:text-black p-2"
+            aria-label="Cancel adding new social link"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
 
       {isSelectingPlatform ? (
-        <Combobox onChange={handlePlatformSelect} value={null}>
+        <Combobox
+          onChange={handlePlatformSelect}
+          value={null}
+          aria-label="Select social media platform"
+        >
           <div className="relative">
             <Combobox.Input
               className={baseInputClass}
@@ -152,11 +183,15 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
               displayValue={(platform: string) => platform}
               onChange={() => {}}
               onKeyDown={handleKeyDown}
+              aria-label="Search social platforms"
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" />
+              <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
             </Combobox.Button>
-            <Combobox.Options className="absolute z-10 mt-1 w-full rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
+            <Combobox.Options
+              className="absolute z-10 mt-1 w-full rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
+              aria-label="Available social platforms"
+            >
               {availablePlatforms.map((platform) => (
                 <Combobox.Option
                   key={platform}
@@ -166,18 +201,23 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
                     ${active ? "bg-myorange/10" : ""}
                   `}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={`/socials/${platform}.svg`}
-                        alt={`${platform} icon`}
-                        width="24"
-                        height="24"
-                        className="h-6 w-6"
-                      />
-                      <span className="text-mydarkgrey">{platform}</span>
+                  {({ active, selected }) => (
+                    <div className="flex items-center gap-3" aria-selected={selected}>
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={`/socials/${platform}.svg`}
+                          alt=""
+                          width="24"
+                          height="24"
+                          className="h-6 w-6"
+                          aria-hidden="true"
+                        />
+                        <span className={`text-mydarkgrey ${active ? "font-medium" : ""}`}>
+                          {platform}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </Combobox.Option>
               ))}
             </Combobox.Options>
@@ -190,9 +230,10 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             onClick={() => setIsSelectingPlatform(true)}
             disabled={availablePlatforms.length === 0}
             className="flex items-center gap-2 text-myblue hover:text-myorange disabled:text-mydarkgrey"
+            aria-label="Add new social media link"
           >
-            <PlusIcon className="h-5 w-5" />
-            Add Social Link
+            <PlusIcon className="h-5 w-5" aria-hidden="true" />
+            <span>Add Social Link</span>
           </button>
         )
       )}

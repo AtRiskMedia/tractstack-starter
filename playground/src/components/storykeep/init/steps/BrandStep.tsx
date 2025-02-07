@@ -108,41 +108,53 @@ export default function BrandStep({
   const [images, setImages] = useState<Record<string, string>>({});
   const [isUploadingImages, setIsUploadingImages] = useState(false);
 
-  // Initialize values from config
   useEffect(() => {
     if (config?.init) {
       const initConfig = config.init as InitConfig;
-      const values = {
-        siteUrl: initConfig.SITE_URL || "",
-        slogan: initConfig.SLOGAN || "",
-        footer: initConfig.FOOTER || "",
-        brandColors:
-          initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
-        gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
-        theme: (initConfig.THEME as Theme) || "light-bold",
-        wordmarkMode: initConfig.WORDMARK_MODE || "default",
-        ogTitle: initConfig.OGTITLE || "",
-        ogAuthor: initConfig.OGAUTHOR || "",
-        ogDesc: initConfig.OGDESC || "",
-        socialLinks: initConfig.SOCIALS || "",
-        og: initConfig.OG || "",
-        oglogo: initConfig.OGLOGO || "",
-        logo: initConfig.LOGO || "",
-        wordmark: initConfig.WORDMARK || "",
-        favicon: initConfig.FAVICON || "",
-        keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || false,
-      };
 
-      setCurrentValues(values);
-      setInitialValues(values);
+      // Only update values if they haven't been set yet (using initialValues as reference)
+      // or if essential config properties have changed
+      const shouldUpdateValues =
+        JSON.stringify(initialValues) === JSON.stringify(getDefaultValues()) ||
+        initConfig.SITE_URL !== initialValues.siteUrl ||
+        initConfig.BRAND_COLOURS !== initialValues.brandColors ||
+        initConfig.THEME !== initialValues.theme ||
+        initConfig.WORDMARK_MODE !== initialValues.wordmarkMode;
 
-      if (selectedBrandPreset !== `custom`) {
-        const matchingPreset = Object.entries(knownBrand).find(
-          ([, value]) => value === initConfig.BRAND_COLOURS
-        )?.[0];
-        setSelectedBrandPreset(matchingPreset || "default");
+      if (shouldUpdateValues) {
+        const values = {
+          siteUrl: initConfig.SITE_URL || "",
+          slogan: initConfig.SLOGAN || "",
+          footer: initConfig.FOOTER || "",
+          brandColors:
+            initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+          gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
+          theme: (initConfig.THEME as Theme) || "light-bold",
+          wordmarkMode: initConfig.WORDMARK_MODE || "default",
+          ogTitle: initConfig.OGTITLE || "",
+          ogAuthor: initConfig.OGAUTHOR || "",
+          ogDesc: initConfig.OGDESC || "",
+          socialLinks: initConfig.SOCIALS || "",
+          og: initConfig.OG || "",
+          oglogo: initConfig.OGLOGO || "",
+          logo: initConfig.LOGO || "",
+          wordmark: initConfig.WORDMARK || "",
+          favicon: initConfig.FAVICON || "",
+          keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || false,
+        };
+
+        setCurrentValues(values);
+        setInitialValues(values);
+
+        if (selectedBrandPreset !== `custom`) {
+          const matchingPreset = Object.entries(knownBrand).find(
+            ([, value]) => value === initConfig.BRAND_COLOURS
+          )?.[0];
+          setSelectedBrandPreset(matchingPreset || "default");
+        }
       }
 
+      // Always ensure required config properties are set
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
@@ -158,7 +170,7 @@ export default function BrandStep({
         });
       }
     }
-  }, [config, onConfigUpdate]);
+  }, [config, onConfigUpdate, initialValues, selectedBrandPreset]);
 
   // update css vars of brand colours
   useEffect(() => {
@@ -305,8 +317,12 @@ export default function BrandStep({
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-6">
-        <button onClick={onBack} className="text-mydarkgrey hover:text-myblue flex items-center">
-          <ArrowLeftIcon className="h-5 w-5 mr-1" />
+        <button
+          onClick={onBack}
+          className="text-mydarkgrey hover:text-myblue flex items-center"
+          aria-label="Go back to previous step"
+        >
+          <ArrowLeftIcon className="h-5 w-5 mr-1" aria-hidden="true" />
           Back
         </button>
         <h3 className="text-xl font-bold text-mydarkgrey">Brand Customization</h3>
@@ -316,12 +332,16 @@ export default function BrandStep({
         {error && <div className="p-4 bg-myred/10 text-myred rounded-md">{error}</div>}
 
         <div className="space-y-4">
-          <label className="block">
+          <div className="block">
             <div className="flex items-center justify-between">
-              <span className="text-mydarkgrey font-bold">Site URL</span>
+              <label htmlFor="siteUrl" className="text-mydarkgrey font-bold">
+                Site URL
+              </label>
               {urlError && <span className="text-sm text-myred">{urlError}</span>}
             </div>
             <input
+              id="siteUrl"
+              name="siteUrl"
               type="url"
               value={currentValues.siteUrl}
               onChange={(e) => setCurrentValues((prev) => ({ ...prev, siteUrl: e.target.value }))}
@@ -329,12 +349,22 @@ export default function BrandStep({
               placeholder="https://example.com"
               className={`${commonInputClass} ${urlError ? "ring-myred/50" : ""}`}
               required
+              aria-describedby={urlError ? "siteUrl-error" : undefined}
             />
-          </label>
+            {urlError && (
+              <span id="siteUrl-error" className="sr-only">
+                {urlError}
+              </span>
+            )}
+          </div>
 
-          <label className="block">
-            <span className="text-mydarkgrey font-bold">Slogan</span>
+          <div className="block">
+            <label htmlFor="slogan" className="text-mydarkgrey font-bold">
+              Slogan
+            </label>
             <input
+              id="slogan"
+              name="slogan"
               type="text"
               value={currentValues.slogan}
               onChange={(e) => setCurrentValues((prev) => ({ ...prev, slogan: e.target.value }))}
@@ -342,11 +372,15 @@ export default function BrandStep({
               className={commonInputClass}
               required
             />
-          </label>
+          </div>
 
-          <label className="block">
-            <span className="text-mydarkgrey font-bold">Footer Text</span>
+          <div className="block">
+            <label htmlFor="footer" className="text-mydarkgrey font-bold">
+              Footer Text
+            </label>
             <input
+              id="footer"
+              name="footer"
               type="text"
               value={currentValues.footer}
               onChange={(e) => setCurrentValues((prev) => ({ ...prev, footer: e.target.value }))}
@@ -354,29 +388,38 @@ export default function BrandStep({
               className={commonInputClass}
               required
             />
-          </label>
+          </div>
 
-          <label className="block">
-            <span className="text-mydarkgrey font-bold">Google Analytics ID</span>
+          <div className="block">
+            <label htmlFor="gtag" className="text-mydarkgrey font-bold">
+              Google Analytics ID
+            </label>
             <input
+              id="gtag"
+              name="gtag"
               type="text"
               value={currentValues.gtag}
               onChange={(e) => setCurrentValues((prev) => ({ ...prev, gtag: e.target.value }))}
               placeholder="G-XXXXXXXXXX"
               className={commonInputClass}
+              aria-describedby="gtag-desc"
             />
-            <span className="text-sm text-mydarkgrey mt-1 block">
+            <span id="gtag-desc" className="text-sm text-mydarkgrey mt-1 block">
               Optional: Enter your Google Analytics 4 Measurement ID
             </span>
-          </label>
+          </div>
 
           <div className="space-y-2">
-            <span className="text-mydarkgrey font-bold block">Brand Colors</span>
+            <label htmlFor="brandPreset" className="text-mydarkgrey font-bold block">
+              Brand Colors
+            </label>
             <div className="space-y-4">
               <Combobox value={selectedBrandPreset} onChange={handleBrandPresetChange}>
                 <div className="relative max-w-xs">
                   <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-sm">
                     <Combobox.Input
+                      id="brandPreset"
+                      name="brandPreset"
                       className={`${commonInputClass} pr-10`}
                       displayValue={(preset: string) =>
                         preset.charAt(0).toUpperCase() + preset.slice(1)
@@ -387,6 +430,7 @@ export default function BrandStep({
                           handleBrandPresetChange(value);
                         }
                       }}
+                      aria-label="Select brand color preset"
                     />
                     <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
                       <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
@@ -445,7 +489,7 @@ export default function BrandStep({
 
         <div className="mt-8 pt-6 border-t border-myblue/10">
           <div className="space-y-2">
-            <label className="block text-sm font-normal text-mydarkgrey">Theme</label>
+            <span className="block text-sm font-normal text-mydarkgrey">Theme</span>
             <ThemeVisualSelector
               value={currentValues.theme as Theme}
               onChange={(theme) => setCurrentValues((prev) => ({ ...prev, theme }))}
@@ -507,12 +551,14 @@ export default function BrandStep({
               !currentValues.footer
             }
             className="px-4 py-2 text-white bg-myblue rounded hover:bg-black disabled:bg-mylightgrey"
+            aria-disabled={isProcessing}
           >
             {isProcessing ? "Saving..." : "Save and Continue"}
           </button>
           <a
             href="/storykeep"
             className="px-4 py-2 text-white bg-myblack rounded hover:bg-black disabled:bg-mylightgrey"
+            role="button"
           >
             Cancel
           </a>
