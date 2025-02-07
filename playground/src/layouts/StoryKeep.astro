@@ -33,7 +33,6 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 const contentMap: FullContentMap[] = await getFullContentMap();
-console.log(config);
 ---
 
 <!doctype html>

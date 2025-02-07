@@ -1,9 +1,39 @@
 import { defineMiddleware } from "astro:middleware";
-import { isAuthenticated, isAdmin, isOpenDemoMode } from "./utils/core/auth";
-import { getConfig, validateConfig } from "./utils/core/config";
-import type { AuthStatus } from "./types";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import type { AuthStatus } from "@/types";
+import { cssStore, updateCssStore } from "@/store/css";
+
+async function ensureCssStoreInitialized() {
+  const store = cssStore.get();
+  if (!store.content || !store.version) {
+    try {
+      await updateCssStore();
+      // Double check initialization worked
+      const updatedStore = cssStore.get();
+      if (!updatedStore.content) {
+        console.error("CSS store failed to initialize");
+        // Fall back to reading directly if store update failed
+        const filepath = path.join(process.cwd(), "public", "styles", "frontend.css");
+        const content = await fs.readFile(filepath, "utf-8");
+        const configPath = path.join(process.cwd(), "config", "init.json");
+        const config = JSON.parse(await fs.readFile(configPath, "utf-8"));
+        cssStore.set({
+          content,
+          version: config.STYLES_VER?.toString() || null,
+        });
+      }
+    } catch (error) {
+      console.error("Error initializing CSS store:", error);
+    }
+  }
+}
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Initialize CSS store if needed
+  await ensureCssStoreInitialized();
   // Get auth status from cookies - this is our source of truth
   const auth = await isAuthenticated(context);
   const isAdminUser = await isAdmin(context);

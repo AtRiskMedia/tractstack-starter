@@ -1,9 +1,10 @@
-import type { APIRoute } from "astro";
 import { createTailwindcss } from "@mhsdesign/jit-browser-tailwindcss";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "module";
 import { getUniqueTailwindClasses } from "@/utils/db/turso";
+import { updateCssStore } from "@/store/css";
+import type { APIRoute } from "astro";
 
 export const POST: APIRoute = async () => {
   try {
@@ -57,6 +58,7 @@ export const POST: APIRoute = async () => {
     const initConfig = JSON.parse(await fs.readFile(initConfigPath, "utf-8"));
     initConfig.STYLES_VER = Date.now();
     await fs.writeFile(initConfigPath, JSON.stringify(initConfig, null, 2));
+    await updateCssStore();
 
     return new Response(
       JSON.stringify({

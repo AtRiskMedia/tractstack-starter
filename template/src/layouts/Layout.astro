@@ -21,7 +21,7 @@ const {
 } = Astro.props;
 
 const stylesUrl = config.init.STYLES_VER
-  ? `/styles/frontend.css?v=${config?.init?.STYLES_VER}`
+  ? `/api/styles/frontend.css?v=${config?.init?.STYLES_VER}`
   : `/styles/app.css`;
 if (!config.init.STYLES_VER) console.log(`fallback to app.css; looks like you haven't saved yet`);
 const defaultFavIcon = `/favicon.ico`;
