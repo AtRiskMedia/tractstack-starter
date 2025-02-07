@@ -1,6 +1,6 @@
-import { auth } from "../../store/auth";
-import type { AuthSettings } from "../../store/auth";
-import type { SyncOptions } from "../../types";
+import { auth } from "@/store/auth";
+import type { AuthSettings } from "@/store/auth";
+import type { SyncOptions } from "@/types";
 
 interface SyncResponse {
   fingerprint: string;
@@ -46,6 +46,9 @@ export async function syncVisit(options: SyncOptions = {}): Promise<SyncResponse
     return result.data;
   } catch (error) {
     console.error("Error in syncVisit:", error);
+    Object.keys(auth.get()).forEach((key) => {
+      auth.setKey(key as keyof AuthSettings, undefined);
+    });
     throw error;
   }
 }
