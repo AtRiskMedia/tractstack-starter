@@ -112,6 +112,7 @@ export default function BrandStep({
     if (config?.init) {
       const initConfig = config.init as InitConfig;
 
+      // Keep this essential change detection since code base relies on it
       const hasEssentialChanges =
         initConfig.SITE_URL !== initialValues.siteUrl ||
         initConfig.BRAND_COLOURS !== initialValues.brandColors ||
@@ -120,30 +121,32 @@ export default function BrandStep({
 
       if (hasEssentialChanges) {
         const values = {
-          siteUrl: initConfig.SITE_URL || "",
-          slogan: initConfig.SLOGAN || "",
-          footer: initConfig.FOOTER || "",
-          brandColors:
-            initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
-          gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : "",
-          theme: (initConfig.THEME as Theme) || "light-bold",
-          wordmarkMode: initConfig.WORDMARK_MODE || "default",
-          ogTitle: initConfig.OGTITLE || "",
-          ogAuthor: initConfig.OGAUTHOR || "",
-          ogDesc: initConfig.OGDESC || "",
-          socialLinks: initConfig.SOCIALS || "",
-          og: initConfig.OG || "",
-          oglogo: initConfig.OGLOGO || "",
-          logo: initConfig.LOGO || "",
-          wordmark: initConfig.WORDMARK || "",
-          favicon: initConfig.FAVICON || "",
-          keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || false,
+          // Merge new config values with current values rather than replacing
+          ...currentValues,
+          siteUrl: initConfig.SITE_URL || currentValues.siteUrl,
+          slogan: initConfig.SLOGAN || currentValues.slogan,
+          footer: initConfig.FOOTER || currentValues.footer,
+          brandColors: initConfig.BRAND_COLOURS || currentValues.brandColors,
+          gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : currentValues.gtag,
+          theme: (initConfig.THEME as Theme) || currentValues.theme,
+          wordmarkMode: initConfig.WORDMARK_MODE || currentValues.wordmarkMode,
+          ogTitle: initConfig.OGTITLE || currentValues.ogTitle,
+          ogAuthor: initConfig.OGAUTHOR || currentValues.ogAuthor,
+          ogDesc: initConfig.OGDESC || currentValues.ogDesc,
+          socialLinks: initConfig.SOCIALS || currentValues.socialLinks,
+          og: initConfig.OG || currentValues.og,
+          oglogo: initConfig.OGLOGO || currentValues.oglogo,
+          logo: initConfig.LOGO || currentValues.logo,
+          wordmark: initConfig.WORDMARK || currentValues.wordmark,
+          favicon: initConfig.FAVICON || currentValues.favicon,
+          keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || currentValues.keyboardAccessible,
         };
 
         setCurrentValues(values);
         setInitialValues(values);
       }
 
+      // Keep the existing initialization code that project relies on
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
