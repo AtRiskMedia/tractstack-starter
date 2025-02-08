@@ -1,0 +1,35 @@
+---
+import { getConfig } from "@/utils/core/config.ts";
+import { getCtx } from "@/store/nodes.ts";
+import Node from "@/components/compositor-nodes/Node.astro";
+import { ButtonIsland } from "@/components/common/widgets/ButtonIsland";
+import { lispLexer } from "@/utils/concierge/lispLexer";
+import type { FlatNode } from "@/types.ts";
+
+const { nodeId } = Astro.props;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+
+const paneId = getCtx().getClosestNodeTypeFromId(nodeId, "Pane");
+const config = await getConfig();
+
+// First lexically analyze the lisp payload
+const buttonLispPayload = lispLexer(node.buttonPayload?.callbackPayload);
+
+const bunnyPayload = node.buttonPayload?.bunnyPayload;
+const targetUrl = bunnyPayload ? `#${bunnyPayload.slug}` : "#";
+---
+
+<ButtonIsland
+  client:visible
+  callbackPayload={buttonLispPayload}
+  targetUrl={targetUrl}
+  paneId={paneId}
+  config={config!}
+  className={node.elementCss || ""}
+>
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
+</ButtonIsland>

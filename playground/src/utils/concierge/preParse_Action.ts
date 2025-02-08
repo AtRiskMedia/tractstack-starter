@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { /* LispTokens, */ Config } from "../../types.ts";
+import type { /* LispTokens, */ Config } from "@/types.ts";
 
 export const preParseAction = (payload: any, slug: string, isContext: boolean, config: Config) => {
   const thisPayload = (payload && payload[0]) || false;

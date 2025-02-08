@@ -9,7 +9,7 @@ import TagElement from "./nodes/TagElement.astro";
 import NodeText from "./nodes/tagElements/NodeText.astro";
 import NodeImg from "./nodes/tagElements/NodeImg.astro";
 import NodeA from "./nodes/tagElements/NodeA.astro";
-import { NodeButton } from "@/components/compositor-nodes/nodes/tagElements/NodeButton.tsx";
+import NodeButton from "./nodes/tagElements/NodeButton.astro";
 import NodeBasicTag from "./nodes/tagElements/NodeBasicTag.astro";
 import EmptyNode from "./nodes/tagElements/EmptyNode.astro";
 import Widget from "./nodes/Widget.astro";
@@ -93,6 +93,8 @@ function getElement(type: string) {
       return NodeText;
     case "img":
       return NodeImg;
+    case "button":
+      return NodeButton;
     case "a":
       return NodeA;
     case "code":
@@ -111,9 +113,7 @@ const hookData = type === "code" ? parseCodeHook(node) : null;
 ---
 
 {
-  type === "button" ? (
-    <NodeButton nodeId={nodeId} client:visible />
-  ) : type === "code" && hookData ? (
+  type === "code" && hookData ? (
     <Widget {...hookData} nodeId={nodeId} />
   ) : (
     <RenderElement nodeId={nodeId} />
