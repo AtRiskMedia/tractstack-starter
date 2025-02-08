@@ -512,6 +512,17 @@ export class NodesContext {
     );
   }
 
+  getPaneSlug(nodeId: string): string | null {
+    const node = this.allNodes.get().get(nodeId);
+    if (!node || node.nodeType !== "Pane") {
+      return null;
+    }
+    if (!("slug" in node) || typeof node.slug !== "string") {
+      return null;
+    }
+    return node.slug;
+  }
+
   getNodeCodeHookPayload(
     nodeId: string
   ): { target: string; params?: Record<string, string> } | null {
