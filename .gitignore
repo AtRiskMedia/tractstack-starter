@@ -27,6 +27,8 @@ template/public/styles/frontend.css
 playground/public/styles/frontend.css
 playground/public/images
 playground/public/custom
+template/public/images
+template/public/custom
 
 # macOS-specific files
 .DS_Store
