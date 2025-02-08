@@ -7,6 +7,7 @@ import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
 import type { ResourceNode, CodeHookPayload } from "@/types.ts";
 
 const { nodeId } = Astro.props;
+const slug = getCtx().getPaneSlug(nodeId);
 const rawPayload = getCtx().getNodeCodeHookPayload(nodeId);
 const codeHookPayload =
   rawPayload && typeof rawPayload === "object" && "target" in rawPayload
@@ -48,21 +49,25 @@ const contentStyles = getCtx().getNodeStringStyles(nodeId, `auto`) + "; grid-are
 {
   codeHookPayload ? (
     <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
-      <CodeHook
-        target={codeHookPayload.target}
-        resources={resources}
-        options={codeHookPayload || null}
-      />
+      <div id={slug}>
+        <CodeHook
+          target={codeHookPayload.target}
+          resources={resources}
+          options={codeHookPayload || null}
+        />
+      </div>
     </div>
   ) : (
     <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
-      <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
-        <div class={contentClasses} style={contentStyles}>
-          {getCtx()
-            .getChildNodeIDs(nodeId)
-            .map((childId: string) => (
-              <Node nodeId={childId} />
-            ))}
+      <div id={slug}>
+        <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
+          <div class={contentClasses} style={contentStyles}>
+            {getCtx()
+              .getChildNodeIDs(nodeId)
+              .map((childId: string) => (
+                <Node nodeId={childId} />
+              ))}
+          </div>
         </div>
       </div>
     </div>
