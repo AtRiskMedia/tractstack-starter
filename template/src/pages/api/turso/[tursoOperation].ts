@@ -8,6 +8,7 @@ import { createProfile } from "@/utils/db/api/create.ts";
 import { updateProfile } from "@/utils/db/api/update.ts";
 import { executeQueries } from "@/utils/db/api/executeQueries.ts";
 import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
@@ -138,12 +139,19 @@ export const POST: APIRoute = async ({ request, params }) => {
   }
 };
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, request }) => {
   const { tursoOperation } = params;
 
   try {
     let result;
     switch (tursoOperation) {
+      case "getResourceNodes": {
+        const url = new URL(request.url);
+        const slugs = url.searchParams.get("slugs")?.split(/[,|]/).filter(Boolean);
+        const categories = url.searchParams.get("categories")?.split(/[,|]/).filter(Boolean);
+        result = await getResourceNodes({ slugs, categories });
+        break;
+      }
       case "getAllFiles":
         result = await getAllFiles();
         break;

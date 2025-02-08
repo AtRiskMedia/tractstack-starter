@@ -12,10 +12,12 @@ export type Tuple = [TupleValue] | [TupleValue, TupleValue] | [TupleValue, Tuple
 
 export interface CodeHookPayload {
   target: string;
-  url?: string | undefined;
-  options?: string | undefined;
-  height?: string | undefined;
-  width?: string | undefined;
+  params: {
+    url?: string;
+    options?: string;
+    height?: string;
+    width?: string;
+  };
 }
 
 export interface ResourceDatum {

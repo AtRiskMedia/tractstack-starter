@@ -1,11 +1,11 @@
 ---
-import type { ResourceNode } from "@/types";
+import type { ResourceNode, CodeHookPayload } from "@/types";
 import CustomHero from "./CustomHero.astro";
 
 export interface Props {
   target: string;
-  resources?: ResourceNode[] | null;
-  options?: string | null;
+  resources?: ResourceNode[];
+  options?: CodeHookPayload;
 }
 
 const { target /* resources, options */ } = Astro.props;
