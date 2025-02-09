@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { settingsPanelStore } from "@/store/storykeep";
 import ViewportComboBox from "../fields/ViewportComboBox";
-import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import { getCtx } from "../../../../store/nodes";
+import { tailwindClasses } from "@/utils/tailwind/tailwindClasses";
+import { getCtx } from "@/store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import type { FlatNode, MarkdownPaneFragmentNode } from "@/types";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleImageUpdatePanel = ({
@@ -21,6 +21,11 @@ const StyleImageUpdatePanel = ({
   const [mobileValue, setMobileValue] = useState<string>(``);
   const [tabletValue, setTabletValue] = useState<string>(``);
   const [desktopValue, setDesktopValue] = useState<string>(``);
+  const [pendingUpdate, setPendingUpdate] = useState<{
+    value: string;
+    viewport: "mobile" | "tablet" | "desktop";
+  } | null>(null);
+
   const friendlyName = tailwindClasses[className]?.title || className;
   const values = tailwindClasses[className]?.values || [];
   const isOuterContainer = node.tagName === "ul" || node.tagName === "ol";
@@ -62,6 +67,83 @@ const StyleImageUpdatePanel = ({
       setDesktopValue(defaults.desktop?.[className] || "");
     }
   }, [node, parentNode, className, childId, isImage]);
+
+  // Handle updates after state changes
+  useEffect(() => {
+    if (!pendingUpdate) return;
+
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+
+    if (isOverridden) {
+      // Get the correct target node based on what we're styling
+      const targetNodeId = node.id;
+      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
+
+      if (!targetNode) return;
+
+      const newOverrides = {
+        mobile: { ...(targetNode.overrideClasses?.mobile || {}) },
+        tablet: { ...(targetNode.overrideClasses?.tablet || {}) },
+        desktop: { ...(targetNode.overrideClasses?.desktop || {}) },
+      };
+
+      newOverrides[pendingUpdate.viewport][className] = pendingUpdate.value;
+      targetNode.overrideClasses = newOverrides;
+
+      switch (pendingUpdate.viewport) {
+        case "mobile":
+          setMobileValue(pendingUpdate.value);
+          break;
+        case "tablet":
+          setTabletValue(pendingUpdate.value);
+          break;
+        case "desktop":
+          setDesktopValue(pendingUpdate.value);
+          break;
+      }
+
+      ctx.modifyNodes([{ ...targetNode, isChanged: true }]);
+    } else {
+      const markdownNode = cloneDeep(allNodes.get(parentNode.id)) as MarkdownPaneFragmentNode;
+      if (!markdownNode?.defaultClasses) {
+        markdownNode.defaultClasses = {};
+      }
+
+      // Use the actual target node's tagName
+      const targetTagName = node.tagName;
+
+      // Initialize defaultClasses for this tagName if needed
+      if (!markdownNode.defaultClasses[targetTagName]) {
+        markdownNode.defaultClasses[targetTagName] = {
+          mobile: {},
+          tablet: {},
+          desktop: {},
+        };
+      }
+
+      // Add style to the correct tagName
+      markdownNode.defaultClasses[targetTagName][pendingUpdate.viewport][className] =
+        pendingUpdate.value;
+
+      // Update state values
+      switch (pendingUpdate.viewport) {
+        case "mobile":
+          setMobileValue(pendingUpdate.value);
+          break;
+        case "tablet":
+          setTabletValue(pendingUpdate.value);
+          break;
+        case "desktop":
+          setDesktopValue(pendingUpdate.value);
+          break;
+      }
+
+      ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
+    }
+
+    setPendingUpdate(null);
+  }, [pendingUpdate, isOverridden, node, parentNode, className]);
 
   const handleToggleOverride = useCallback(
     (checked: boolean) => {
@@ -137,56 +219,9 @@ const StyleImageUpdatePanel = ({
 
   const handleFinalChange = useCallback(
     (value: string, viewport: "mobile" | "tablet" | "desktop") => {
-      const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-
-      // Get the correct target node based on what we're styling
-      const targetNodeId = node.id; // We already have the correct node based on the action
-      const targetNode = cloneDeep(allNodes.get(targetNodeId)) as FlatNode;
-
-      if (!targetNode) return;
-
-      const markdownNode = {
-        ...cloneDeep(allNodes.get(parentNode.id)),
-      } as MarkdownPaneFragmentNode;
-      if (!markdownNode?.defaultClasses) {
-        markdownNode.defaultClasses = {};
-      }
-
-      // Use the actual target node's tagName
-      const targetTagName = targetNode.tagName;
-
-      if (isOverridden) {
-        // Handle override case...
-      } else {
-        // Initialize defaultClasses for this tagName if needed
-        if (!markdownNode.defaultClasses[targetTagName]) {
-          markdownNode.defaultClasses[targetTagName] = {
-            mobile: {},
-            tablet: {},
-            desktop: {},
-          };
-        }
-
-        // Add style to the correct tagName
-        markdownNode.defaultClasses[targetTagName][viewport][className] = value;
-
-        // Update state values
-        switch (viewport) {
-          case "mobile":
-            setMobileValue(value);
-            break;
-          case "tablet":
-            setTabletValue(value);
-            break;
-          case "desktop":
-            setDesktopValue(value);
-            break;
-        }
-        ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
-      }
+      setPendingUpdate({ value, viewport });
     },
-    [node, parentNode, className, isOverridden]
+    []
   );
 
   return (

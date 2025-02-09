@@ -19,6 +19,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
   const [selectedSubcommand, setSelectedSubcommand] = useState<string>("");
   const [param1, setParam1] = useState<string>("");
   const [param2, setParam2] = useState<string>("");
+  const [param3, setParam3] = useState<string>("");
   const [targetQuery, setTargetQuery] = useState("");
   const [subcommandQuery, setSubcommandQuery] = useState("");
   const [param1Query, setParam1Query] = useState("");
@@ -37,6 +38,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
             } else {
               if (parts.length > 1) setParam1(parts[1]);
               if (parts.length > 2) setParam2(parts[2]);
+              if (parts.length > 3) setParam3(parts[3]);
             }
           }
         }
@@ -46,13 +48,20 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
     }
   }, [value]);
 
-  const updateValue = (target: string, sub: string = "", p1: string = "", p2: string = "") => {
+  const updateValue = (
+    target: string,
+    sub: string = "",
+    p1: string = "",
+    p2: string = "",
+    p3: string = ""
+  ) => {
     let newValue = `(goto (${target}`;
     if (GOTO_TARGETS[target]?.subcommands) {
       if (sub) newValue += ` ${sub}`;
     } else {
       if (p1) newValue += ` ${p1}`;
       if (p2) newValue += ` ${p2}`;
+      if (p3) newValue += ` ${p3}`;
     }
     newValue += "))";
     onChange(newValue);
@@ -183,13 +192,17 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
             />
           );
         }
+        console.log(param1, param2, param3);
         return (
           !isParam1 && (
             <ActionBuilderTimeSelector
               value={value}
-              onSelect={(newValue) => {
+              videoId={param3}
+              onSelect={(newValue, videoId) => {
+                console.log(newValue, videoId);
                 setParam2(newValue);
-                updateValue(selectedTarget, "", param1, newValue);
+                if (videoId) setParam3(videoId);
+                updateValue(selectedTarget, "", param1, newValue, videoId);
               }}
               label="Select Start Time"
             />

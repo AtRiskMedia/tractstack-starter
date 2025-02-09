@@ -335,8 +335,10 @@ export const GOTO_TARGETS: GotoTargets = {
     name: "Bunny Video",
     requiresParam: true,
     requiresSecondParam: true,
+    requiresThirdParam: true,
     paramLabel: "StoryFragment Slug",
     param2Label: "Time (seconds)",
+    param3Label: "Video ID",
     description: "Play a Bunny video at specified time",
   },
   url: {

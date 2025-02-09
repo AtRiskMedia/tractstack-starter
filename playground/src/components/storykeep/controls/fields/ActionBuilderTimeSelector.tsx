@@ -17,7 +17,8 @@ interface Player {
 
 interface ActionBuilderTimeSelectorProps {
   value: string;
-  onSelect: (value: string) => void;
+  videoId: string;
+  onSelect: (value: string, videoId?: string) => void;
   label: string;
   placeholder?: string;
 }
@@ -30,7 +31,7 @@ interface TimeSelectModalProps {
 
 function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [playerInstance, setPlayerInstance] = useState<any>(null);
+  const [playerInstance, setPlayerInstance] = useState<Player | null>(null);
 
   useEffect(() => {
     // Create player instance
@@ -99,20 +100,52 @@ function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) 
 
 export default function ActionBuilderTimeSelector({
   value,
+  videoId,
   onSelect,
   label,
-  placeholder = `https://iframe.mediadelivery.net/embed/{library}/{videoId}`,
+  placeholder = "https://iframe.mediadelivery.net/embed/{library}/{videoId}",
 }: ActionBuilderTimeSelectorProps) {
-  const [videoUrl, setVideoUrl] = useState("");
+  console.log(videoId);
+  const [videoUrl, setVideoUrl] = useState(
+    videoId ? `https://iframe.mediadelivery.net/embed/${videoId}` : ``
+  );
   const [showModal, setShowModal] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  const extractVideoId = (url: string): string | null => {
+    try {
+      const match = url.match(/embed\/([^/]+\/[^/?]+)/);
+      return match ? match[1] : null;
+    } catch (e) {
+      console.error("Error extracting video ID:", e);
+      return null;
+    }
+  };
+
+  const handleUrlChange = (url: string) => {
+    setVideoUrl(url);
+    setValidationError(null);
+
+    const videoId = extractVideoId(url);
+    if (!videoId && url) {
+      setValidationError("Invalid Bunny Stream URL format");
+    }
+  };
 
   const handleTimeSelect = (time: string) => {
-    onSelect(time);
+    const videoId = extractVideoId(videoUrl);
+    if (videoId) {
+      onSelect(time, videoId);
+    } else {
+      onSelect(time);
+    }
     setShowModal(false);
   };
 
-  const isValidBunnyUrl = (url: string) => {
-    return url.startsWith("https://iframe.mediadelivery.net/embed/") && url.includes("/");
+  const isValidBunnyUrl = (url: string): boolean => {
+    return (
+      url.startsWith("https://iframe.mediadelivery.net/embed/") && extractVideoId(url) !== null
+    );
   };
 
   return (
@@ -121,11 +154,14 @@ export default function ActionBuilderTimeSelector({
         <label className="block text-sm text-gray-700">Bunny Video URL</label>
         <input
           type="text"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
+          className={`w-full rounded-md border ${
+            validationError ? "border-red-500" : "border-gray-300"
+          } px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue`}
           value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
+          onChange={(e) => handleUrlChange(e.target.value)}
           placeholder={placeholder}
         />
+        {validationError && <p className="text-sm text-red-500 mt-1">{validationError}</p>}
       </div>
 
       {isValidBunnyUrl(videoUrl) && (
@@ -135,6 +171,12 @@ export default function ActionBuilderTimeSelector({
             <div className="flex-1 text-sm text-gray-500">
               {value ? `Current start time: ${value}s` : "No start time selected"}
             </div>
+            <button
+              onClick={() => onSelect(value, videoId)}
+              className="px-4 py-2 bg-myblue text-white rounded hover:bg-orange-600"
+            >
+              Start at {value}s
+            </button>
             <button
               onClick={() => setShowModal(true)}
               className="px-4 py-2 bg-myorange text-white rounded hover:bg-orange-600"

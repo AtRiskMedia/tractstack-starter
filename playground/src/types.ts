@@ -990,6 +990,8 @@ interface SingleParamTarget extends BaseTarget {
   paramLabel: string;
   requiresSecondParam?: never;
   param2Label?: never;
+  requiresThirdParam?: never;
+  param3Label?: never;
   placeholder?: string;
 }
 
@@ -999,10 +1001,28 @@ interface DoubleParamTarget extends BaseTarget {
   paramLabel: string;
   requiresSecondParam: true;
   param2Label: string;
+  requiresThirdParam?: boolean;
+  param3Label?: string;
   placeholder?: never;
 }
 
-type TargetConfig = SimpleTarget | SubcommandTarget | SingleParamTarget | DoubleParamTarget;
+interface TripleParamTarget extends BaseTarget {
+  subcommands?: never;
+  requiresParam: true;
+  paramLabel: string;
+  requiresSecondParam: true;
+  param2Label: string;
+  requiresThirdParam: true;
+  param3Label: string;
+  placeholder?: never;
+}
+
+type TargetConfig =
+  | SimpleTarget
+  | SubcommandTarget
+  | SingleParamTarget
+  | DoubleParamTarget
+  | TripleParamTarget;
 
 type GotoTargets = {
   [key: string]: TargetConfig;

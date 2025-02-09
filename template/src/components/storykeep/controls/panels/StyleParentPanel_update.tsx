@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { settingsPanelStore } from "@/store/storykeep";
-import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import ViewportComboBox from "../fields/ViewportComboBox";
-import { getCtx } from "../../../../store/nodes";
+import { tailwindClasses } from "@/utils/tailwind/tailwindClasses";
+import { getCtx } from "@/store/nodes";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { MarkdownPaneFragmentNode } from "../../../../types";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import type { MarkdownPaneFragmentNode } from "@/types";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelProps) => {
@@ -15,6 +15,10 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
   const [mobileValue, setMobileValue] = useState<string>(``);
   const [tabletValue, setTabletValue] = useState<string>(``);
   const [desktopValue, setDesktopValue] = useState<string>(``);
+  const [pendingUpdate, setPendingUpdate] = useState<{
+    value: string;
+    viewport: "mobile" | "tablet" | "desktop";
+  } | null>(null);
 
   const friendlyName = tailwindClasses[className]?.title || className;
   const values = tailwindClasses[className]?.values || [];
@@ -28,60 +32,59 @@ const StyleParentUpdatePanel = ({ node, layer, className, config }: BasePanelPro
         expanded: true,
       });
   };
-
   const handleCancel = () => {
     resetStore();
   };
 
-  const handleFinalChange = useCallback(
-    (value: string, viewport: "mobile" | "tablet" | "desktop") => {
-      const ctx = getCtx();
-      const allNodes = ctx.allNodes.get();
-
-      // Get mutable copy of the node
-      const markdownNode = cloneDeep(allNodes.get(node.id) as MarkdownPaneFragmentNode);
-      if (!markdownNode || !isMarkdownPaneFragmentNode(markdownNode)) return;
-
-      // Layer is 1-based but array is 0-based
-      const layerIndex = layer - 1;
-      const layerClasses = markdownNode?.parentClasses?.[layerIndex];
-      if (!layerClasses) return;
-
-      switch (viewport) {
-        case "mobile":
-          setMobileValue(value);
-          layerClasses.mobile[className] = value;
-          break;
-        case "tablet":
-          setTabletValue(value);
-          layerClasses.tablet[className] = value;
-          break;
-        case "desktop":
-          setDesktopValue(value);
-          layerClasses.desktop[className] = value;
-          break;
-        default:
-          return;
-      }
-
-      // Update the node in the store
-      const updateNode = { ...markdownNode, isChanged: true };
-      ctx.modifyNodes([updateNode]);
-    },
-    [node, layer, className]
-  );
-
   // Initialize values from current node state
   useEffect(() => {
-    if (!node?.parentClasses?.[layer - 1]) return;
+    const layerIndex = layer - 1;
+    const layerClasses = node?.parentClasses?.[layerIndex];
+    if (!layerClasses) return;
 
-    const layerClasses = node.parentClasses[layer - 1];
-    if (layerClasses) {
-      setMobileValue(layerClasses.mobile[className] || "");
-      setTabletValue(layerClasses.tablet[className] || "");
-      setDesktopValue(layerClasses.desktop[className] || "");
-    }
+    setMobileValue(layerClasses.mobile[className] || "");
+    setTabletValue(layerClasses.tablet[className] || "");
+    setDesktopValue(layerClasses.desktop[className] || "");
   }, [node, layer, className]);
+
+  // Handle updates after state changes
+  useEffect(() => {
+    if (!pendingUpdate) return;
+
+    const ctx = getCtx();
+    const allNodes = ctx.allNodes.get();
+    const markdownNode = cloneDeep(allNodes.get(node.id)) as MarkdownPaneFragmentNode;
+    if (!markdownNode) return;
+
+    const layerIndex = layer - 1;
+    const layerClasses = markdownNode.parentClasses?.[layerIndex];
+    if (!layerClasses) return;
+
+    switch (pendingUpdate.viewport) {
+      case "mobile":
+        layerClasses.mobile[className] = pendingUpdate.value;
+        setMobileValue(pendingUpdate.value);
+        break;
+      case "tablet":
+        layerClasses.tablet[className] = pendingUpdate.value;
+        setTabletValue(pendingUpdate.value);
+        break;
+      case "desktop":
+        layerClasses.desktop[className] = pendingUpdate.value;
+        setDesktopValue(pendingUpdate.value);
+        break;
+    }
+
+    ctx.modifyNodes([{ ...markdownNode, isChanged: true }]);
+    setPendingUpdate(null);
+  }, [pendingUpdate, node.id, layer, className]);
+
+  const handleFinalChange = useCallback(
+    (value: string, viewport: "mobile" | "tablet" | "desktop") => {
+      setPendingUpdate({ value, viewport });
+    },
+    []
+  );
 
   return (
     <div className="space-y-4 z-50 isolate">

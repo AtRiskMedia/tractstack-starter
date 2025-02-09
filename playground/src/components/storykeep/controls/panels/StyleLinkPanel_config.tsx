@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { settingsPanelStore } from "@/store/storykeep";
 import { contentMap } from "@/store/events";
 import { getCtx } from "@/store/nodes";
@@ -32,82 +32,83 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
     storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
   const isContext = ctx.getIsContextPane(markdownId);
 
-  const updateStore = useCallback(() => {
-    if (!isInitialized) return;
-
-    const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
-    if (!linkNode || !markdownId) return;
-
-    const lexedPayload = lispLexer(callbackPayload);
-    const targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
-    const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
-    const isExternalUrl = typeof targetUrl === "string" && targetUrl.substring(0, 8) === "https://";
-
-    linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
-    linkNode.tagName = !targetUrl ? "button" : "a";
-    linkNode.buttonPayload = {
-      ...linkNode.buttonPayload,
-      callbackPayload,
-      buttonClasses: linkNode.buttonPayload?.buttonClasses ?? {},
-      buttonHoverClasses: linkNode.buttonPayload?.buttonHoverClasses ?? {},
-      ...(isExternalUrl ? { isExternalUrl: true } : {}),
-      ...(bunnyPayload ? { bunnyPayload } : {}),
-    };
-
-    ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
-  }, [isInitialized, callbackPayload, node.id, config]);
-
   // Initialize without triggering store update
   useEffect(() => {
     setCallbackPayload(node.buttonPayload?.callbackPayload || "");
     setIsInitialized(true);
   }, [node]);
 
-  const handleChange = (value: string) => {
-    setCallbackPayload(value);
+  // Handle updates when callback payload changes
+  useEffect(() => {
+    if (!isInitialized) return;
 
     // Analyze the value to see if it's a complete selection
     try {
-      const match = value.match(/\(goto\s+\(([^)]+)\)/);
+      const match = callbackPayload.match(/\(goto\s+\(([^)]+)\)/);
       if (match) {
         const parts = match[1].split(" ").filter(Boolean);
         if (parts.length > 0) {
           const target = parts[0];
           if (GOTO_TARGETS[target]) {
+            let shouldUpdate = false;
+
             // For URL type, always update (it's free form text)
             if (target === "url") {
-              updateStore();
-              return;
+              shouldUpdate = true;
             }
-
             // For subcommands, need both target and subcommand
-            if (GOTO_TARGETS[target].subcommands) {
-              if (parts.length > 1) {
-                updateStore();
-              }
-              return;
+            else if (GOTO_TARGETS[target].subcommands) {
+              shouldUpdate = parts.length > 1;
             }
-
             // For params, check if all required params are present
-            if (GOTO_TARGETS[target].requiresParam) {
-              if (GOTO_TARGETS[target].requiresSecondParam) {
-                if (parts.length > 2) {
-                  updateStore();
-                }
-              } else if (parts.length > 1) {
-                updateStore();
+            else if (GOTO_TARGETS[target].requiresParam) {
+              if (GOTO_TARGETS[target].requiresThirdParam) {
+                shouldUpdate = parts.length > 3;
+              } else if (GOTO_TARGETS[target].requiresSecondParam) {
+                shouldUpdate = parts.length > 2;
+              } else {
+                shouldUpdate = parts.length > 1;
               }
-              return;
+            }
+            // For simple targets with no additional requirements
+            else {
+              shouldUpdate = true;
             }
 
-            // For simple targets with no additional requirements
-            updateStore();
+            if (shouldUpdate) {
+              const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+              if (!linkNode || !markdownId) return;
+
+              const lexedPayload = lispLexer(callbackPayload);
+              const targetUrl =
+                lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
+              const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
+              const isExternalUrl =
+                typeof targetUrl === "string" && targetUrl.substring(0, 8) === "https://";
+
+              linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
+              linkNode.tagName = !targetUrl ? "button" : "a";
+              linkNode.buttonPayload = {
+                ...linkNode.buttonPayload,
+                callbackPayload,
+                buttonClasses: linkNode.buttonPayload?.buttonClasses ?? {},
+                buttonHoverClasses: linkNode.buttonPayload?.buttonHoverClasses ?? {},
+                ...(isExternalUrl ? { isExternalUrl: true } : {}),
+                ...(bunnyPayload ? { bunnyPayload } : {}),
+              };
+
+              ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
+            }
           }
         }
       }
     } catch (e) {
       console.error("Error analyzing action value:", e);
     }
+  }, [isInitialized, callbackPayload, node.id, config, allNodes, ctx, markdownId, slug, isContext]);
+
+  const handleChange = (value: string) => {
+    setCallbackPayload(value);
   };
 
   const handleCloseConfig = () => {
