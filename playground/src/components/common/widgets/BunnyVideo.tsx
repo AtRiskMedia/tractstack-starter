@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface Player {
   on(event: string, callback: (data: any) => void): void;
@@ -20,10 +20,10 @@ interface BunnyVideoProps {
   className?: string;
 }
 
-const BunnyVideo = ({ embedUrl, title, className = '' }: BunnyVideoProps) => {
+const BunnyVideo = ({ embedUrl, title, className = "" }: BunnyVideoProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const iframeId = 'bunny-stream-preview';
+  const iframeId = "bunny-stream-preview";
 
   useEffect(() => {
     setIsLoading(true);
@@ -35,24 +35,24 @@ const BunnyVideo = ({ embedUrl, title, className = '' }: BunnyVideoProps) => {
         const player = new window.playerjs.Player(iframeId);
 
         // When player is ready, set up event handlers
-        player.on('ready', () => {
+        player.on("ready", () => {
           setIsLoading(false);
-          
+
           // Handle playback errors
-          player.on('error', (err: any) => {
-            console.error('Bunny video error:', err);
-            setError('Failed to load video');
+          player.on("error", (err: any) => {
+            console.error("Bunny video error:", err);
+            setError("Failed to load video");
           });
         });
 
         return () => {
           if (player) {
-            player.off('error');
+            player.off("error");
           }
         };
       } catch (err) {
-        console.error('Error initializing Bunny player:', err);
-        setError('Failed to initialize video player');
+        console.error("Error initializing Bunny player:", err);
+        setError("Failed to initialize video player");
         setIsLoading(false);
       }
     };
@@ -64,9 +64,9 @@ const BunnyVideo = ({ embedUrl, title, className = '' }: BunnyVideoProps) => {
 
   // Build URL with default parameters for preview
   const videoUrl = new URL(embedUrl);
-  videoUrl.searchParams.set('autoplay', '0');
-  videoUrl.searchParams.set('preload', 'false');
-  videoUrl.searchParams.set('responsive', 'true');
+  videoUrl.searchParams.set("autoplay", "0");
+  videoUrl.searchParams.set("preload", "false");
+  videoUrl.searchParams.set("responsive", "true");
 
   return (
     <div className={`relative w-full ${className}`}>
@@ -78,12 +78,12 @@ const BunnyVideo = ({ embedUrl, title, className = '' }: BunnyVideoProps) => {
           </div>
         </div>
       )}
-      
+
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           <div className="text-center text-mydarkgrey">
             <span className="block text-sm">{error}</span>
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="mt-2 text-sm text-myblue hover:text-myorange"
             >
@@ -106,4 +106,3 @@ const BunnyVideo = ({ embedUrl, title, className = '' }: BunnyVideoProps) => {
 };
 
 export default BunnyVideo;
-

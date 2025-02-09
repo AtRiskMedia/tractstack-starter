@@ -2,7 +2,7 @@ import { YouTubeWrapper } from "@/components/frontend/widgets/YouTubeWrapper";
 import { Belief } from "@/components/frontend/widgets/Belief";
 import { IdentifyAs } from "@/components/frontend/widgets/IdentifyAs";
 import { ToggleBelief } from "@/components/frontend/widgets/ToggleBelief";
-import BunnyVideo from "@/components/common/widgets/BunnyVideo"
+import BunnyVideo from "@/components/common/widgets/BunnyVideo";
 import { SignUp } from "@/components/frontend/widgets/SignUp";
 import { memo, type ReactElement } from "react";
 import { getCtx, NodesContext } from "@/store/nodes.ts";
@@ -73,14 +73,11 @@ const getWidgetElement = (props: WidgetProps, classNames: string): ReactElement 
       );
 
     case "bunny":
-        return value1 ? (
-    <div className={`${classNames} pointer-events-none`}>
-      <BunnyVideo 
-        embedUrl={value1} 
-        title={value2 || 'Bunny Video'} 
-      />
-    </div>
-  ) : null;
+      return value1 ? (
+        <div className={`${classNames} pointer-events-none`}>
+          <BunnyVideo embedUrl={value1} title={value2 || "Bunny Video"} />
+        </div>
+      ) : null;
 
     default:
       return null;

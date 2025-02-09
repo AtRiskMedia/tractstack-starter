@@ -16,6 +16,8 @@ import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
 
 export const brandColours = atom<string>("10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3");
 export const preferredTheme = atom<Theme>("light");
+export const homeSlugStore = atom<string>("");
+export const tractstackSlugStore = atom<string>("");
 
 export const keyboardAccessible = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);

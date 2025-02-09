@@ -6,7 +6,7 @@ import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRipple
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import { storedDashboardAnalytics } from "@/store/storykeep.ts";
+import { storedDashboardAnalytics, homeSlugStore } from "@/store/storykeep.ts";
 import { classNames } from "@/utils/common/helpers.ts";
 import type { FullContentMap, HotItem } from "@/types.ts";
 
@@ -18,6 +18,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const itemsPerPage = 10;
 
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
+  const $homeSlug = useStore(homeSlugStore);
 
   useEffect(() => {
     setIsClient(true);
@@ -202,10 +203,16 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       <td className="px-6 py-4">
                         <div className="flex flex-col space-y-1">
                           <div className="text-md text-black truncate max-w-xs">{page.title}</div>
-                          <div className="text-xs text-mydarkgrey truncate max-w-xs">
-                            {page.slug}
-                            {page.type === "Pane" && page.isContext && " (Context Page)"}
-                          </div>
+                          {page.slug === $homeSlug ? (
+                            <span className="inline-flex w-fit items-center rounded-full bg-myblue px-2.5 py-0.5 text-xs font-bold text-slate-100">
+                              Home Page
+                            </span>
+                          ) : (
+                            <div className="text-xs text-mydarkgrey truncate max-w-xs">
+                              {page.slug}
+                              {page.type === "Pane" && page.isContext && " (Context Page)"}
+                            </div>
+                          )}
                           <div className="md:hidden text-sm text-mydarkgrey truncate max-w-xs flex justify-between items-center">
                             <span>{events} events</span>
                             <span>

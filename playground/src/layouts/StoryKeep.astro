@@ -134,6 +134,8 @@ const contentMap: FullContentMap[] = await getFullContentMap();
       availableCodeHooks={Object.keys(codeHookComponents)}
       brand={config.init.BRAND_COLOURS || ``}
       theme={(config.init.THEME as Theme) || `light`}
+      homeSlug={config.init.HOME_SLUG || ``}
+      tractstackSlug={config.init.TRACTSTACK_HOME_SLUG || ``}
       client:only="react"
     />
     <ViewTransitions />
