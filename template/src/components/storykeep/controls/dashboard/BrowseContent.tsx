@@ -166,12 +166,12 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                   >
                     Details
                   </th>
-                    <th
-                      scope="col"
-                      className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                    >
-                      Events
-                    </th>
+                  <th
+                    scope="col"
+                    className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
+                  >
+                    Events
+                  </th>
                   <th
                     scope="col"
                     className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
@@ -182,9 +182,9 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
               </thead>
               <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
                 {paginatedPages.map((page) => {
-                  const events = 
-                     $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
-                        ?.total_events || 0
+                  const events =
+                    $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
+                      ?.total_events || 0;
 
                   return (
                     <tr key={page.id}>
@@ -227,9 +227,9 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                           </div>
                         </div>
                       </td>
-                        <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-mydarkgrey">{events}</div>
-                        </td>
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-mydarkgrey">{events}</div>
+                      </td>
                       <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm font-bold">
                         <a
                           href={getContentUrl(page)}

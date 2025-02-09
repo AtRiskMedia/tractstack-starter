@@ -1,6 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, type KeyboardEvent } from "react";
 import { Combobox } from "@headlessui/react";
-import { PlusIcon, XMarkIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { socialIconKeys } from "@/utils/common/socialIcons";
 
 interface SocialLinksProps {
@@ -27,15 +29,23 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
   });
 
   const [isSelectingPlatform, setIsSelectingPlatform] = useState(false);
+  const [query, setQuery] = useState("");
   const [pendingLink, setPendingLink] = useState<{ platform: SocialPlatform; url: string } | null>(
     null
   );
 
   const availablePlatforms = socialIconKeys;
+  const filteredPlatforms =
+    query === ""
+      ? availablePlatforms
+      : availablePlatforms.filter((platform) =>
+          platform.toLowerCase().includes(query.toLowerCase())
+        );
 
   const handlePlatformSelect = useCallback((platform: SocialPlatform) => {
     setPendingLink({ platform, url: "" });
     setIsSelectingPlatform(false);
+    setQuery("");
   }, []);
 
   const handlePendingUrlChange = useCallback(
@@ -67,7 +77,25 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     [links, onChange]
   );
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const target = e.target as HTMLInputElement;
+      if (pendingLink) {
+        handlePendingUrlChange(target.value);
+      }
+    }
+  };
+
+  const handleComboboxKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setIsSelectingPlatform(false);
+      setQuery("");
+    }
+  };
+
+  const handleUrlKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
     }
@@ -106,7 +134,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             value={link.url}
             autoComplete="off"
             onChange={(e) => updateLink(index, e.target.value)}
-            onKeyDown={handleKeyDown}
+            onKeyDown={handleUrlKeyDown}
             placeholder="https://"
             className={`${baseInputClass} flex-1`}
             aria-label={`${String(link.platform)} profile URL`}
@@ -180,9 +208,9 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
               className={baseInputClass}
               autoComplete="off"
               placeholder="Select social platform..."
-              displayValue={(platform: string) => platform}
-              onChange={() => {}}
-              onKeyDown={handleKeyDown}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={handleComboboxKeyDown}
+              displayValue={() => query}
               aria-label="Search social platforms"
             />
             <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -192,7 +220,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
               className="absolute z-10 mt-1 w-full rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
               aria-label="Available social platforms"
             >
-              {availablePlatforms.map((platform) => (
+              {filteredPlatforms.map((platform) => (
                 <Combobox.Option
                   key={platform}
                   value={platform}

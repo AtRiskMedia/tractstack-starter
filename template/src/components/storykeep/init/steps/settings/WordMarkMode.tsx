@@ -1,5 +1,5 @@
 import { RadioGroup } from "@headlessui/react";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 
 interface WordMarkModeProps {
   value: string;
