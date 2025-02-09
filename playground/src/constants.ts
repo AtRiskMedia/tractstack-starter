@@ -215,7 +215,7 @@ export const widgetMeta: WidgetMeta = {
   },
   bunny: {
     title: `BunnyCDN Video Embed`,
-    valueLabels: ["Embed Code", "Title"],
+    valueLabels: ["Embed URL", "Title"],
     valueDefaults: ["*", "Descriptive Title"],
     multi: [false, false],
     isScale: [false, false],

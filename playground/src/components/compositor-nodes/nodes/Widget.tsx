@@ -1,8 +1,9 @@
-import { YouTubeWrapper } from "@/components/frontend/widgets/YouTubeWrapper.tsx";
-import { Belief } from "@/components/frontend/widgets/Belief.tsx";
-import { IdentifyAs } from "@/components/frontend/widgets/IdentifyAs.tsx";
-import { ToggleBelief } from "@/components/frontend/widgets/ToggleBelief.tsx";
-import { SignUp } from "@/components/frontend/widgets/SignUp.tsx";
+import { YouTubeWrapper } from "@/components/frontend/widgets/YouTubeWrapper";
+import { Belief } from "@/components/frontend/widgets/Belief";
+import { IdentifyAs } from "@/components/frontend/widgets/IdentifyAs";
+import { ToggleBelief } from "@/components/frontend/widgets/ToggleBelief";
+import BunnyVideo from "@/components/common/widgets/BunnyVideo"
+import { SignUp } from "@/components/frontend/widgets/SignUp";
 import { memo, type ReactElement } from "react";
 import { getCtx, NodesContext } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
@@ -72,7 +73,14 @@ const getWidgetElement = (props: WidgetProps, classNames: string): ReactElement 
       );
 
     case "bunny":
-      return <div className={`${classNames} pointer-events-none`}>Bunny Video</div>;
+        return value1 ? (
+    <div className={`${classNames} pointer-events-none`}>
+      <BunnyVideo 
+        embedUrl={value1} 
+        title={value2 || 'Bunny Video'} 
+      />
+    </div>
+  ) : null;
 
     default:
       return null;
