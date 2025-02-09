@@ -164,31 +164,19 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                     scope="col"
                     className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
                   >
-                    Title
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                  >
-                    Slug
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                  >
-                    Type
+                    Details
                   </th>
                   {showMostActive && (
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
+                      className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
                     >
                       Events
                     </th>
                   )}
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
+                    className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
                   >
                     Actions
                   </th>
@@ -214,23 +202,40 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                           className="object-contain"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-myblack truncate max-w-xs">{page.title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-mydarkgrey truncate max-w-xs">{page.slug}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-mydarkgrey">
-                          {page.type === "Pane" && page.isContext ? "Context" : "Page"}
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col space-y-1">
+                          <div className="text-md text-black truncate max-w-xs">{page.title}</div>
+                          <div className="text-xs text-mydarkgrey truncate max-w-xs">
+                            {page.slug}
+                            {page.type === "Pane" && page.isContext && " (Context Page)"}
+                          </div>
+                          <div className="md:hidden text-sm text-mydarkgrey truncate max-w-xs flex justify-between items-center">
+                            {showMostActive && <span>{events} events</span>}
+                            <span>
+                              <a
+                                href={getContentUrl(page)}
+                                className="text-myblue hover:text-myorange mr-3"
+                                title="View"
+                              >
+                                View
+                              </a>
+                              <a
+                                href={getContentUrl(page, true)}
+                                className="text-myblue hover:text-myorange"
+                                title="Edit"
+                              >
+                                Edit
+                              </a>
+                            </span>
+                          </div>
                         </div>
                       </td>
                       {showMostActive && (
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-mydarkgrey">{events}</div>
                         </td>
                       )}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
+                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm font-bold">
                         <a
                           href={getContentUrl(page)}
                           className="text-myblue hover:text-myorange mr-3 inline-block"
