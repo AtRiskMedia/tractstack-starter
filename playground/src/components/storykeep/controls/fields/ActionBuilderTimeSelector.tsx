@@ -195,12 +195,14 @@ export default function ActionBuilderTimeSelector({
             <div className="flex-1 text-sm text-gray-500">
               {value ? `Current start time: ${value}s` : "No start time selected"}
             </div>
-            <button
-              onClick={() => handleTimeSelect(value)}
-              className="px-4 py-2 bg-myblue text-white rounded hover:bg-orange-600"
-            >
-              Start at {value}s
-            </button>
+            {value !== "" && (
+              <button
+                onClick={() => handleTimeSelect(value)}
+                className="px-4 py-2 bg-myblue text-white rounded hover:bg-orange-600"
+              >
+                Start at {value}s
+              </button>
+            )}
             <button
               onClick={() => setShowModal(true)}
               className="px-4 py-2 bg-myorange text-white rounded hover:bg-orange-600"

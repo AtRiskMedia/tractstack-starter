@@ -108,7 +108,7 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
 
   const handleChange = (value: string) => {
     setCallbackPayload(value);
-    setTimeout(() => settingsPanelStore.set(null), 500);
+    //setTimeout(() => settingsPanelStore.set(null), 500);
   };
 
   const handleCloseConfig = () => {

@@ -9,7 +9,7 @@ const { videoUrl, title } = Astro.props;
 
 <astro-bunny-video data-src={videoUrl} data-title={title}>
   <div class="w-full">
-    <div id="video-container">
+    <div id="video-container" class="relative w-full" style="aspect-ratio: 16/9;">
       <!-- Player will be inserted here -->
     </div>
   </div>
@@ -45,12 +45,6 @@ const { videoUrl, title } = Astro.props;
     private getStartTime = (): string | null => {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get("t");
-    };
-
-    private adjustIframeHeight = (iframe: HTMLIFrameElement): void => {
-      const width = iframe.offsetWidth;
-      const height = width * (9 / 16);
-      iframe.style.height = `${height}px`;
     };
 
     private initializeVideo = (t: string = ""): void => {
@@ -91,7 +85,10 @@ const { videoUrl, title } = Astro.props;
 
       iframe.src = `${this.videoUrl}?${params.toString()}`;
       iframe.width = "100%";
-      iframe.style.aspectRatio = "16 / 9";
+      iframe.height = "100%";
+      iframe.style.position = "absolute";
+      iframe.style.top = "0";
+      iframe.style.left = "0";
       iframe.title = this.videoTitle;
       iframe.setAttribute("playsinline", "");
       iframe.setAttribute("allow", "autoplay; fullscreen");
@@ -116,7 +113,6 @@ const { videoUrl, title } = Astro.props;
 
         this.videoContainer.appendChild(iframe);
         this.currentIframe = iframe;
-        this.adjustIframeHeight(iframe);
 
         if (typeof startTime === "number") {
           setTimeout(() => {
@@ -124,8 +120,6 @@ const { videoUrl, title } = Astro.props;
           }, 1000);
         }
       }
-
-      window.addEventListener("resize", () => this.adjustIframeHeight(iframe));
 
       // Add error handling for playback issues
       window.addEventListener("message", (event) => {
