@@ -4,15 +4,17 @@ import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { GOTO_TARGETS } from "@/constants";
 import ActionBuilderSlugSelector from "./ActionBuilderSlugSelector";
+import ActionBuilderTimeSelector from "./ActionBuilderTimeSelector.tsx";
 import type { FullContentMap } from "@/types";
 
 interface ActionBuilderFieldProps {
   value: string;
   onChange: (value: string) => void;
   contentMap: FullContentMap[];
+  slug?: string;
 }
 
-const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldProps) => {
+const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilderFieldProps) => {
   const [selectedTarget, setSelectedTarget] = useState<string>("");
   const [selectedSubcommand, setSelectedSubcommand] = useState<string>("");
   const [param1, setParam1] = useState<string>("");
@@ -158,6 +160,39 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
                 className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
               />
             </div>
+          )
+        );
+
+      case "bunny":
+        if (isParam1 && slug) {
+          if (!value) setParam1(slug);
+          return (
+            <ActionBuilderSlugSelector
+              type="storyFragment"
+              value={value || slug}
+              onSelect={(newValue) => {
+                setParam1(newValue);
+                setParam2(""); // Reset time selection when story fragment changes
+                updateValue(selectedTarget, "", newValue, "");
+              }}
+              query={query}
+              setQuery={setQuery}
+              label="Select Story Fragment"
+              placeholder="Search story fragments..."
+              contentMap={contentMap}
+            />
+          );
+        }
+        return (
+          !isParam1 && (
+            <ActionBuilderTimeSelector
+              value={value}
+              onSelect={(newValue) => {
+                setParam2(newValue);
+                updateValue(selectedTarget, "", param1, newValue);
+              }}
+              label="Select Start Time"
+            />
           )
         );
 

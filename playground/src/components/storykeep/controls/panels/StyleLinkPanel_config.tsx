@@ -23,20 +23,20 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [callbackPayload, setCallbackPayload] = useState(node.buttonPayload?.callbackPayload || "");
 
+  const ctx = getCtx();
+  const allNodes = ctx.allNodes.get();
+  const markdownId = ctx.getClosestNodeTypeFromId(node.id, "Markdown");
+  const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
+  const storyFragment = storyFragmentId ? allNodes.get(storyFragmentId) : null;
+  const slug: string =
+    storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
+  const isContext = ctx.getIsContextPane(markdownId);
+
   const updateStore = useCallback(() => {
     if (!isInitialized) return;
 
-    const ctx = getCtx();
-    const allNodes = ctx.allNodes.get();
     const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
-    const markdownId = ctx.getClosestNodeTypeFromId(node.id, "Markdown");
     if (!linkNode || !markdownId) return;
-
-    const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
-    const storyFragment = storyFragmentId ? allNodes.get(storyFragmentId) : null;
-    const slug: string =
-      storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
-    const isContext = ctx.getIsContextPane(markdownId);
 
     const lexedPayload = lispLexer(callbackPayload);
     const targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
@@ -139,12 +139,9 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
               <ActionBuilderField
                 value={callbackPayload}
                 onChange={handleChange}
+                slug={slug}
                 contentMap={contentMap.get()}
               />
-              <p className="text-sm text-mydarkgrey mt-2">
-                Use a lisp expression like (goto (storyFragmentPane hello why-choose)) or an
-                https:// URL
-              </p>
             </div>
           </div>
         </div>

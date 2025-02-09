@@ -220,6 +220,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
                           value={link.actionLisp}
                           onChange={(value) => handleLinkChange(index, "actionLisp", value)}
                           contentMap={contentMap.get()}
+                          slug={storyfragmentNode.slug}
                         />
                       </div>
 
