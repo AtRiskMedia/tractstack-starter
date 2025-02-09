@@ -1,18 +1,5 @@
 import { useState, useEffect } from "react";
-
-interface Player {
-  on(event: string, callback: (data: any) => void): void;
-  off(event: string): void;
-  getCurrentTime(callback: (time: number) => void): void;
-}
-
-declare global {
-  interface Window {
-    playerjs: {
-      Player: new (elementId: string) => Player;
-    };
-  }
-}
+import { getBunnyPlayer } from "@/utils/bunny/player";
 
 interface BunnyVideoProps {
   embedUrl: string;
@@ -30,31 +17,28 @@ const BunnyVideo = ({ embedUrl, title, className = "" }: BunnyVideoProps) => {
     setError(null);
 
     const loadVideo = () => {
-      try {
-        // Create player instance
-        const player = new window.playerjs.Player(iframeId);
+      const player = getBunnyPlayer(iframeId);
 
-        // When player is ready, set up event handlers
-        player.on("ready", () => {
-          setIsLoading(false);
-
-          // Handle playback errors
-          player.on("error", (err: any) => {
-            console.error("Bunny video error:", err);
-            setError("Failed to load video");
-          });
-        });
-
-        return () => {
-          if (player) {
-            player.off("error");
-          }
-        };
-      } catch (err) {
-        console.error("Error initializing Bunny player:", err);
+      if (!player) {
         setError("Failed to initialize video player");
         setIsLoading(false);
+        return;
       }
+
+      // When player is ready, set up event handlers
+      player.on("ready", () => {
+        setIsLoading(false);
+
+        // Handle playback errors
+        player.on("error", (err: any) => {
+          console.error("Bunny video error:", err);
+          setError("Failed to load video");
+        });
+      });
+
+      return () => {
+        player.off("error");
+      };
     };
 
     // Small delay to ensure iframe is mounted

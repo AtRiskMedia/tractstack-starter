@@ -21,94 +21,94 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
   }
 
   const [isInitialized, setIsInitialized] = useState(false);
-  const [callbackPayload, setCallbackPayload] = useState(node.buttonPayload?.callbackPayload || "");
+  const [callbackPayload, setCallbackPayload] = useState("");
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const markdownId = ctx.getClosestNodeTypeFromId(node.id, "Markdown");
   const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
   const storyFragment = storyFragmentId ? allNodes.get(storyFragmentId) : null;
-  const slug: string =
-    storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
+  const slug = storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
   const isContext = ctx.getIsContextPane(markdownId);
 
-  // Initialize without triggering store update
+  // Initialize state with current node data
   useEffect(() => {
     setCallbackPayload(node.buttonPayload?.callbackPayload || "");
     setIsInitialized(true);
   }, [node]);
 
-  // Handle updates when callback payload changes
+  const updateNode = (newCallbackPayload: string) => {
+    try {
+      const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
+      if (!linkNode || !markdownId) return;
+
+      const lexedPayload = lispLexer(newCallbackPayload);
+      const targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
+      const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
+      const isExternalUrl = typeof targetUrl === "string" && targetUrl.startsWith("https://");
+
+      // Preserve existing button payload properties or initialize new ones
+      const existingButtonPayload = linkNode.buttonPayload || {
+        buttonClasses: {},
+        buttonHoverClasses: {},
+        callbackPayload: "",
+      };
+
+      linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
+      linkNode.tagName = !targetUrl ? "button" : "a";
+      linkNode.buttonPayload = {
+        ...existingButtonPayload,
+        callbackPayload: newCallbackPayload,
+        buttonClasses: existingButtonPayload.buttonClasses || {},
+        buttonHoverClasses: existingButtonPayload.buttonHoverClasses || {},
+        ...(isExternalUrl ? { isExternalUrl: true } : {}),
+        ...(bunnyPayload ? { bunnyPayload } : {}),
+      };
+
+      ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
+    } catch (error) {
+      console.error("Error updating node:", error);
+    }
+  };
+
+  // Process callback payload changes
   useEffect(() => {
     if (!isInitialized) return;
 
-    // Analyze the value to see if it's a complete selection
-    try {
-      const match = callbackPayload.match(/\(goto\s+\(([^)]+)\)/);
-      if (match) {
-        const parts = match[1].split(" ").filter(Boolean);
-        if (parts.length > 0) {
-          const target = parts[0];
-          if (GOTO_TARGETS[target]) {
-            let shouldUpdate = false;
+    const match = callbackPayload.match(/\(goto\s+\(([^)]+)\)/);
+    if (!match) return;
 
-            // For URL type, always update (it's free form text)
-            if (target === "url") {
-              shouldUpdate = true;
-            }
-            // For subcommands, need both target and subcommand
-            else if (GOTO_TARGETS[target].subcommands) {
-              shouldUpdate = parts.length > 1;
-            }
-            // For params, check if all required params are present
-            else if (GOTO_TARGETS[target].requiresParam) {
-              if (GOTO_TARGETS[target].requiresThirdParam) {
-                shouldUpdate = parts.length > 3;
-              } else if (GOTO_TARGETS[target].requiresSecondParam) {
-                shouldUpdate = parts.length > 2;
-              } else {
-                shouldUpdate = parts.length > 1;
-              }
-            }
-            // For simple targets with no additional requirements
-            else {
-              shouldUpdate = true;
-            }
+    const parts = match[1].split(" ").filter(Boolean);
+    if (parts.length === 0) return;
 
-            if (shouldUpdate) {
-              const linkNode = cloneDeep(allNodes.get(node.id)) as FlatNode;
-              if (!linkNode || !markdownId) return;
+    const target = parts[0];
+    const targetConfig = GOTO_TARGETS[target];
+    if (!targetConfig) return;
 
-              const lexedPayload = lispLexer(callbackPayload);
-              const targetUrl =
-                lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
-              const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
-              const isExternalUrl =
-                typeof targetUrl === "string" && targetUrl.substring(0, 8) === "https://";
+    let isComplete = false;
 
-              linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
-              linkNode.tagName = !targetUrl ? "button" : "a";
-              linkNode.buttonPayload = {
-                ...linkNode.buttonPayload,
-                callbackPayload,
-                buttonClasses: linkNode.buttonPayload?.buttonClasses ?? {},
-                buttonHoverClasses: linkNode.buttonPayload?.buttonHoverClasses ?? {},
-                ...(isExternalUrl ? { isExternalUrl: true } : {}),
-                ...(bunnyPayload ? { bunnyPayload } : {}),
-              };
-
-              ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
-            }
-          }
-        }
+    if (target === "url") {
+      isComplete = parts.length > 1;
+    } else if (targetConfig.subcommands) {
+      isComplete = parts.length > 1;
+    } else if (targetConfig.requiresParam) {
+      if (targetConfig.requiresSecondParam) {
+        isComplete = parts.length > 2;
+      } else {
+        isComplete = parts.length > 1;
       }
-    } catch (e) {
-      console.error("Error analyzing action value:", e);
+    } else {
+      isComplete = true;
     }
-  }, [isInitialized, callbackPayload, node.id, config, allNodes, ctx, markdownId, slug, isContext]);
+
+    if (isComplete) {
+      updateNode(callbackPayload);
+    }
+  }, [callbackPayload, isInitialized, node.id, config, allNodes, ctx, markdownId, slug, isContext]);
 
   const handleChange = (value: string) => {
     setCallbackPayload(value);
+    setTimeout(() => settingsPanelStore.set(null), 500);
   };
 
   const handleCloseConfig = () => {

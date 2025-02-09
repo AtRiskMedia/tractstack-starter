@@ -1061,3 +1061,25 @@ export interface ActivePaneMode {
   mode: string;
   panel: string;
 }
+
+export interface BunnyPlayer {
+  on(event: string, callback: (data: any) => void): void;
+  off(event: string): void;
+  getCurrentTime(callback: (time: number) => void): void;
+  setCurrentTime(time: number): void;
+}
+
+export interface PlayerJS {
+  Player: new (elementId: string) => BunnyPlayer;
+}
+
+declare global {
+  interface Window {
+    playerjs: PlayerJS;
+  }
+}
+
+// Export a type guard for checking playerjs existence
+export function hasPlayerJS(window: Window): window is Window & { playerjs: PlayerJS } {
+  return "playerjs" in window;
+}

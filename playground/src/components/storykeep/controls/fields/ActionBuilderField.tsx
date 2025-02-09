@@ -192,14 +192,12 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
             />
           );
         }
-        console.log(param1, param2, param3);
         return (
           !isParam1 && (
             <ActionBuilderTimeSelector
               value={value}
               videoId={param3}
               onSelect={(newValue, videoId) => {
-                console.log(newValue, videoId);
                 setParam2(newValue);
                 if (videoId) setParam3(videoId);
                 updateValue(selectedTarget, "", param1, newValue, videoId);

@@ -1,19 +1,5 @@
 import { useState, useEffect } from "react";
-
-// Add type definitions for Player.js
-declare global {
-  interface Window {
-    playerjs: {
-      Player: new (elementId: string) => Player;
-    };
-  }
-}
-
-interface Player {
-  on(event: string, callback: (data: any) => void): void;
-  off(event: string): void;
-  getCurrentTime(callback: (time: number) => void): void;
-}
+import { type BunnyPlayer, hasPlayerJS } from "@/types";
 
 interface ActionBuilderTimeSelectorProps {
   value: string;
@@ -31,9 +17,15 @@ interface TimeSelectModalProps {
 
 function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) {
   const [currentTime, setCurrentTime] = useState<number>(0);
-  const [playerInstance, setPlayerInstance] = useState<Player | null>(null);
+  const [manualTime, setManualTime] = useState<string>("");
+  const [playerInstance, setPlayerInstance] = useState<BunnyPlayer | null>(null);
 
   useEffect(() => {
+    if (!hasPlayerJS(window)) {
+      console.error("Player.js is not loaded");
+      return;
+    }
+
     // Create player instance
     const player = new window.playerjs.Player("bunny-stream-embed");
 
@@ -67,6 +59,21 @@ function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) 
     }
   };
 
+  const handleManualTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow non-negative numbers
+    if (/^\d*$/.test(value)) {
+      setManualTime(value);
+    }
+  };
+
+  const handleSeekToTime = () => {
+    const timeInSeconds = parseInt(manualTime);
+    if (!isNaN(timeInSeconds) && playerInstance) {
+      playerInstance.setCurrentTime(timeInSeconds);
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-3xl w-full">
@@ -82,16 +89,34 @@ function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) 
           allow="autoplay"
         />
 
-        <div className="flex justify-between items-center">
-          <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
-            Cancel
-          </button>
-          <button
-            onClick={handleGetCurrentTime}
-            className="px-4 py-2 bg-myorange text-white rounded hover:bg-orange-600"
-          >
-            Use Current Time {currentTime > 0 ? `(${currentTime}s)` : ""}
-          </button>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={manualTime}
+              onChange={handleManualTimeChange}
+              placeholder="Enter time in seconds"
+              className="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-myorange"
+            />
+            <button
+              onClick={handleSeekToTime}
+              className="px-4 py-2 bg-myblue text-white rounded hover:bg-blue-600"
+            >
+              Seek
+            </button>
+          </div>
+
+          <div className="flex justify-between items-center">
+            <button onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-800">
+              Cancel
+            </button>
+            <button
+              onClick={handleGetCurrentTime}
+              className="px-4 py-2 bg-myorange text-white rounded hover:bg-orange-600"
+            >
+              Use Current Time {currentTime > 0 ? `(${currentTime}s)` : ""}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -105,7 +130,6 @@ export default function ActionBuilderTimeSelector({
   label,
   placeholder = "https://iframe.mediadelivery.net/embed/{library}/{videoId}",
 }: ActionBuilderTimeSelectorProps) {
-  console.log(videoId);
   const [videoUrl, setVideoUrl] = useState(
     videoId ? `https://iframe.mediadelivery.net/embed/${videoId}` : ``
   );
@@ -172,7 +196,7 @@ export default function ActionBuilderTimeSelector({
               {value ? `Current start time: ${value}s` : "No start time selected"}
             </div>
             <button
-              onClick={() => onSelect(value, videoId)}
+              onClick={() => handleTimeSelect(value)}
               className="px-4 py-2 bg-myblue text-white rounded hover:bg-orange-600"
             >
               Start at {value}s
