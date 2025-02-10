@@ -13,6 +13,7 @@ import type {
   StoryFragmentNode,
   MarkdownPaneFragmentNode,
 } from "@/types.ts";
+import { hasButtonPayload } from "@/utils/nodes/type-guards";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
 export class NodesSerializer_Json extends NodesSerializer {
@@ -36,6 +37,45 @@ export class NodesSerializer_Json extends NodesSerializer {
       parentCssArray.push(allClasses[0]);
     });
     return parentCssArray;
+  }
+
+  protected computeButtonElementCss(node: FlatNode): string | undefined {
+    if (!node.buttonPayload) return undefined;
+
+    // Convert buttonClasses from Record<string, string[]> to viewport format
+    const buttonClassesViewport = {
+      mobile: this.convertButtonClassesToViewportFormat(node.buttonPayload.buttonClasses),
+      tablet: {},
+      desktop: {},
+    };
+
+    // Convert hover classes similarly
+    const hoverClassesViewport = {
+      mobile: this.convertButtonClassesToViewportFormat(node.buttonPayload.buttonHoverClasses),
+      tablet: {},
+      desktop: {},
+    };
+
+    // Process regular classes
+    const [allClasses] = processClassesForViewports(buttonClassesViewport, {}, 1);
+    const [allHoverClasses] = processClassesForViewports(hoverClassesViewport, {}, 1);
+
+    // Combine regular and hover classes
+    const baseClasses = allClasses[0];
+    const hoverClasses = allHoverClasses[0]
+      .split(" ")
+      .filter(Boolean)
+      .map((cls) => `hover:${cls}`)
+      .join(" ");
+
+    return [baseClasses, hoverClasses].filter(Boolean).join(" ");
+  }
+
+  private convertButtonClassesToViewportFormat(
+    classes: Record<string, string[]> | undefined
+  ): Record<string, string> {
+    if (!classes) return {};
+    return Object.fromEntries(Object.entries(classes).map(([key, values]) => [key, values[0]]));
   }
 
   // Helper to find closest markdown ancestor
@@ -203,6 +243,32 @@ export class NodesSerializer_Json extends NodesSerializer {
           const elementCss = this.computeElementCss(flatNode, markdownParent);
           if (elementCss) {
             flatNode.elementCss = elementCss;
+          }
+        }
+      }
+    });
+    // Compute button css
+    allNodes.forEach((node) => {
+      if (node.nodeType === "TagElement" && node.parentId) {
+        // Find the markdown parent
+        const markdownParent = allNodes.find(
+          (n): n is MarkdownPaneFragmentNode =>
+            n.nodeType === "Markdown" && n.id === this.getClosestMarkdownAncestor(node, allNodes)
+        );
+
+        if (markdownParent) {
+          const flatNode = node as FlatNode;
+          // Check for button/link first
+          if (hasButtonPayload(flatNode)) {
+            const buttonCss = this.computeButtonElementCss(flatNode);
+            if (buttonCss) {
+              flatNode.elementCss = buttonCss;
+            }
+          } else {
+            const elementCss = this.computeElementCss(flatNode, markdownParent);
+            if (elementCss) {
+              flatNode.elementCss = elementCss;
+            }
           }
         }
       }
