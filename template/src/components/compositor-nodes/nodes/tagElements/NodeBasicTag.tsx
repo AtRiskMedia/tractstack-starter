@@ -94,7 +94,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       const originalLinksStyles = getCtx(props)
         .getNodesRecursively(node)
         .filter(
-          (childNode) => "tagName" in childNode && typeof childNode.tagName === `string` && [`a`, `button`].includes(childNode.tagName)
+          (childNode) =>
+            "tagName" in childNode &&
+            typeof childNode.tagName === `string` &&
+            [`a`, `button`].includes(childNode.tagName)
         )
         .map((childNode) => childNode as FlatNode)
         .reverse();
