@@ -3,11 +3,11 @@ import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
-import { type JSX, useEffect, useRef, useState, createElement } from "react";
+import { type JSX, type RefObject, type FocusEvent, type MouseEvent, type KeyboardEvent,  useEffect, useRef, useState, createElement } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import type { FlatNode, PaneNode } from "@/types.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
+import type { FlatNode, PaneNode } from "@/types.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
@@ -68,7 +68,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     getCtx(props).handleInsertSignal(tagName, nodeId);
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLElement>) => {
+  const handleBlur = (e: FocusEvent<HTMLElement>) => {
     function reset() {
       wasFocused.current = false;
     }
@@ -109,6 +109,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         if (foundNode) {
           node.buttonPayload = foundNode.buttonPayload;
         } else if ([`a`, `button`].includes(node.tagName)) {
+          // if new link, open settings panel
           handleInsertSignal(node.tagName, node.id);
         }
       });
@@ -159,7 +160,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   if (showGuids.get()) {
     return (
       <div
-        ref={elementRef as React.RefObject<HTMLDivElement>}
+        ref={elementRef as RefObject<HTMLDivElement>}
         className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
         onClick={(e) => {
           getCtx(props).setClickedNodeId(nodeId);
@@ -179,25 +180,25 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       contentEditable: [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value),
       suppressContentEditableWarning: true,
       onBlur: handleBlur,
-      onClick: (e: React.MouseEvent) => e.stopPropagation(),
-      onMouseDown: (e: React.MouseEvent) => {
+      onClick: (e: MouseEvent) => e.stopPropagation(),
+      onMouseDown: (e: MouseEvent) => {
         getCtx(props).setClickedNodeId(nodeId);
         e.stopPropagation();
       },
-      onKeyDown: (e: React.KeyboardEvent) => {
+      onKeyDown: (e: KeyboardEvent) => {
         if (e.key === "Enter") {
           e.preventDefault();
           (e.currentTarget as HTMLElement).blur();
         }
       },
-      onFocus: (e: React.FocusEvent) => {
+      onFocus: (e: FocusEvent) => {
         if (!canEditText(props) || e.target.tagName === "BUTTON") {
           return;
         }
         wasFocused.current = true;
         originalTextRef.current = e.currentTarget.innerHTML;
       },
-      onDoubleClick: (e: React.MouseEvent) => {
+      onDoubleClick: (e: MouseEvent) => {
         getCtx(props).setClickedNodeId(nodeId, true);
         e.stopPropagation();
       },
