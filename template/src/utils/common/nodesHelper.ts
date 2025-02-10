@@ -151,7 +151,6 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
       parentId,
     });
   }
-
   return result;
 }
 
