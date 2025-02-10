@@ -12,6 +12,7 @@ import { getResourceNodes } from "@/utils/db/api/getResourceNodes.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
+import { getAllMenus } from "@/utils/db/api/getAllMenus.ts";
 import { upsertBelief } from "@/utils/db/api/upsertBelief.ts";
 import { upsertFile } from "@/utils/db/api/upsertFile.ts";
 import { upsertMenu } from "@/utils/db/api/upsertMenu.ts";
@@ -154,6 +155,9 @@ export const GET: APIRoute = async ({ params, request }) => {
       }
       case "getAllFiles":
         result = await getAllFiles();
+        break;
+      case "getAllMenus":
+        result = await getAllMenus();
         break;
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();

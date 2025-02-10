@@ -1,3 +1,4 @@
+import { persistentAtom } from "@nanostores/persistent";
 import { map, atom } from "nanostores";
 import type { ControlPosition } from "react-draggable";
 import type { Root } from "hast";
@@ -221,12 +222,36 @@ type ButtonStylesMemory = {
   buttonClasses: Record<string, string[]>;
   buttonHoverClasses: Record<string, string[]>;
 };
-export const elementStylesMemoryStore = map<ElementStylesMemory>({});
-export const parentStylesMemoryStore = map<ParentStylesMemory>({
-  parentClasses: [],
-  bgColour: null,
-});
-export const buttonStylesMemoryStore = map<ButtonStylesMemory>({
-  buttonClasses: {},
-  buttonHoverClasses: {},
-});
+
+export const elementStylesMemoryStore = persistentAtom<ElementStylesMemory>(
+  "element-styles-memory:",
+  {},
+  {
+    encode: JSON.stringify,
+    decode: JSON.parse,
+  }
+);
+
+export const parentStylesMemoryStore = persistentAtom<ParentStylesMemory>(
+  "parent-styles-memory:",
+  {
+    parentClasses: [],
+    bgColour: null,
+  },
+  {
+    encode: JSON.stringify,
+    decode: JSON.parse,
+  }
+);
+
+export const buttonStylesMemoryStore = persistentAtom<ButtonStylesMemory>(
+  "button-styles-memory:",
+  {
+    buttonClasses: {},
+    buttonHoverClasses: {},
+  },
+  {
+    encode: JSON.stringify,
+    decode: JSON.parse,
+  }
+);

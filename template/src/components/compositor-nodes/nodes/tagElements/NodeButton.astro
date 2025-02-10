@@ -8,6 +8,23 @@ import type { FlatNode } from "@/types.ts";
 
 const { nodeId } = Astro.props;
 const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+const childNodeIDs = getCtx().getChildNodeIDs(node?.parentId ?? "");
+const currentIndex = childNodeIDs.indexOf(nodeId);
+const nextNode =
+  currentIndex < childNodeIDs.length - 1
+    ? (getCtx()
+        .allNodes.get()
+        .get(childNodeIDs[currentIndex + 1]) as FlatNode)
+    : null;
+const needsTrailingSpace =
+  nextNode &&
+  nextNode.tagName === "text" &&
+  !(
+    nextNode.copy?.startsWith(".") ||
+    nextNode.copy?.startsWith(",") ||
+    nextNode.copy?.startsWith(";") ||
+    nextNode.copy?.startsWith(":")
+  );
 
 const paneId = getCtx().getClosestNodeTypeFromId(nodeId, "Pane");
 const config = await getConfig();
@@ -31,4 +48,4 @@ const isVideo = !!node.buttonPayload?.bunnyPayload;
       .getChildNodeIDs(nodeId)
       .map((id: string) => <Node nodeId={id} />)
   }
-</ButtonIsland>
+</ButtonIsland>{needsTrailingSpace && " "}

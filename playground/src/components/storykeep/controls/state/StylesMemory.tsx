@@ -53,14 +53,13 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
           buttonClasses: node.buttonPayload.buttonClasses || {},
           buttonHoverClasses: node.buttonPayload.buttonHoverClasses || {},
         };
-        const memoryState = buttonStyles;
-        setIsMatchingMemory(isDeepEqual(current, memoryState));
+        setIsMatchingMemory(isDeepEqual(current, buttonStyles));
         break;
       }
       case "element": {
         if (!parentNode || !isMarkdownPaneFragmentNode(parentNode) || !("tagName" in node)) break;
-        const tagName = node.tagName;
-        const memoryStyles = elementStyles[tagName as Tag];
+        const tagName = node.tagName as Tag;
+        const memoryStyles = elementStyles[tagName];
         if (!memoryStyles) {
           setIsMatchingMemory(false);
           break;
@@ -86,7 +85,7 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
       case "parent": {
         if (!isMarkdownPaneFragmentNode(node) || !isPaneNode(parentNode)) break;
         parentStylesMemoryStore.set({
-          parentClasses: typeof node.parentClasses !== `undefined` ? [...node.parentClasses] : [],
+          parentClasses: node.parentClasses ? [...node.parentClasses] : [],
           bgColour: parentNode?.bgColour || null,
         });
         break;
@@ -94,25 +93,26 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
       case "button": {
         if (!isLinkNode(node) || !node.buttonPayload) break;
         buttonStylesMemoryStore.set({
-          buttonClasses: node.buttonPayload.buttonClasses || {},
-          buttonHoverClasses: node.buttonPayload.buttonHoverClasses || {},
+          buttonClasses: cloneDeep(node.buttonPayload.buttonClasses || {}),
+          buttonHoverClasses: cloneDeep(node.buttonPayload.buttonHoverClasses || {}),
         });
         break;
       }
       case "element": {
         if (!parentNode || !isMarkdownPaneFragmentNode(parentNode) || !("tagName" in node)) break;
-        const tagName = node.tagName;
+        const tagName = node.tagName as Tag;
         const defaultClasses = parentNode.defaultClasses?.[tagName];
         const overrideClasses = node.overrideClasses;
 
-        elementStylesMemoryStore.set({
+        const newStyles = {
           ...elementStyles,
           [tagName]: {
             mobile: { ...(defaultClasses?.mobile || {}), ...(overrideClasses?.mobile || {}) },
             tablet: { ...(defaultClasses?.tablet || {}), ...(overrideClasses?.tablet || {}) },
             desktop: { ...(defaultClasses?.desktop || {}), ...(overrideClasses?.desktop || {}) },
           },
-        });
+        };
+        elementStylesMemoryStore.set(newStyles);
         break;
       }
     }
@@ -130,9 +130,12 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
         if (!memoryState) break;
         const updatedNode = cloneDeep(node);
         const updatedParent = cloneDeep(parentNode);
-        if (typeof memoryState.parentClasses !== `undefined`)
+        if (memoryState.parentClasses) {
           updatedNode.parentClasses = cloneDeep(memoryState.parentClasses);
-        if (typeof memoryState.bgColour === `string`) updatedParent.bgColour = memoryState.bgColour;
+        }
+        if (typeof memoryState.bgColour === "string") {
+          updatedParent.bgColour = memoryState.bgColour;
+        }
         ctx.modifyNodes([
           { ...updatedNode, isChanged: true },
           { ...updatedParent, isChanged: true },
@@ -141,16 +144,15 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
       }
       case "button": {
         if (!isLinkNode(node)) break;
-        const memoryState = buttonStyles;
-        if (!memoryState) break;
+        if (!buttonStyles) break;
 
         const updatedNode = cloneDeep(node);
         if (!updatedNode.buttonPayload) break;
 
         updatedNode.buttonPayload = {
           ...updatedNode.buttonPayload,
-          buttonClasses: cloneDeep(memoryState.buttonClasses),
-          buttonHoverClasses: cloneDeep(memoryState.buttonHoverClasses),
+          buttonClasses: cloneDeep(buttonStyles.buttonClasses),
+          buttonHoverClasses: cloneDeep(buttonStyles.buttonHoverClasses),
         };
 
         ctx.modifyNodes([{ ...updatedNode, isChanged: true }]);

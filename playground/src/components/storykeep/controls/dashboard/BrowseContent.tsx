@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { Combobox } from "@headlessui/react";
 import { Switch } from "@headlessui/react";
-import CursorArrowRippleIcon from "@heroicons/react/24/outline/CursorArrowRippleIcon";
-import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { storedDashboardAnalytics, homeSlugStore } from "@/store/storykeep.ts";
@@ -23,6 +21,11 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, showMostActive]);
 
   // Ensure we have a valid array to work with
   const safeContentMap = Array.isArray(contentMap) ? contentMap : [];
@@ -50,6 +53,14 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     });
 
   const totalPages = Math.ceil(filteredPages.length / itemsPerPage);
+
+  // Ensure current page doesn't exceed total pages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
   const paginatedPages = filteredPages.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage

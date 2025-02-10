@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Combobox } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -21,34 +21,45 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
   const allNodes = ctx.allNodes.get();
   const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
 
+  const [menus, setMenus] = useState<MenuNode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedMenuId, setSelectedMenuId] = useState<string | null>(
     storyfragmentNode?.menuId || null
   );
   const [query, setQuery] = useState("");
-
-  // Track menu content in state for reactivity
   const [menuContent, setMenuContent] = useState<MenuNode | null>(null);
 
-  // Get all menu nodes from the context
-  const menuNodes = useMemo(() => {
-    return Array.from(allNodes.values()).filter(
-      (node): node is MenuNode => node.nodeType === "Menu"
-    );
-  }, [allNodes]);
-
-  // Update menu content when selection changes
   useEffect(() => {
-    const menu = selectedMenuId
-      ? menuNodes.find((menu) => menu.id === selectedMenuId) || null
-      : null;
-    setMenuContent(menu);
-  }, [selectedMenuId, menuNodes]);
+    const fetchMenus = async () => {
+      try {
+        const response = await fetch("/api/turso/getAllMenus");
+        const data = await response.json();
 
-  // Filter menu nodes based on search query
+        if (!data.success) {
+          throw new Error(data.error || "Failed to fetch menus");
+        }
+
+        setMenus(data.data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch menus");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenus();
+  }, []);
+
+  useEffect(() => {
+    const menu = selectedMenuId ? menus.find((menu) => menu.id === selectedMenuId) || null : null;
+    setMenuContent(menu);
+  }, [selectedMenuId, menus]);
+
   const filteredMenus =
     query === ""
-      ? menuNodes
-      : menuNodes.filter((menu) => menu.title.toLowerCase().includes(query.toLowerCase()));
+      ? menus
+      : menus.filter((menu) => menu.title.toLowerCase().includes(query.toLowerCase()));
 
   const handleMenuSelect = (menuId: string | null) => {
     const updatedNode = {
@@ -107,6 +118,9 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
     setMenuContent(updatedMenu);
   };
 
+  if (loading) return <div className="px-3.5 py-6">Loading menus...</div>;
+  if (error) return <div className="px-3.5 py-6 text-red-500">Error: {error}</div>;
+
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
       <div className="px-3.5">
@@ -128,7 +142,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
                   className="w-full rounded-md border border-mydarkgrey py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue text-sm"
                   onChange={(event) => setQuery(event.target.value)}
                   displayValue={(id: string | null) =>
-                    menuNodes.find((menu) => menu.id === id)?.title || ""
+                    menus.find((menu) => menu.id === id)?.title || ""
                   }
                   placeholder="Select a menu..."
                 />

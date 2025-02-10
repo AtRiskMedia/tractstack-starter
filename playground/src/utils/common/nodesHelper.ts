@@ -63,18 +63,93 @@ export const canEditText = (props: NodeTagProps): boolean => {
 };
 
 export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
+  // Clean input text - collapse multiple spaces and handle special characters
   text = text
-    .replace(/&nbsp;|\u00A0/g, "")
-    .replace("<br>", "")
+    .replace(/&nbsp;|\u00A0/g, " ")
+    .replace(/<br>/g, "")
     .replace(/\[\[(.+?)\]\]/g, "<a>$1</a>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*(.+?)\*(?![^<]*?<\/a>)/g, "<em>$1</em>");
 
+  // Get initial nodes
   const nodes = extractNodes(text, parentId);
 
+  // Merge consecutive text nodes and handle spaces
   const mergedNodes = mergeConsecutiveNodes(parentId, nodes);
+
+  // Extract text into separate nodes and handle spacing
   const finalNodes = extractTextIntoSeparateNodes(mergedNodes);
+
   return finalNodes;
+}
+
+function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] {
+  const mergedNodes: FlatNode[] = [];
+  let lastNode: FlatNode | null = null;
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    if (!node.copy?.length) {
+      continue;
+    }
+
+    if (
+      lastNode &&
+      node.tagName === lastNode.tagName &&
+      node.parentId === lastNode.parentId &&
+      ["text", "em", "strong"].includes(node.tagName)
+    ) {
+      // Merge text content, ensuring single spaces between words
+      const combinedText = `${lastNode.copy || ""} ${node.copy || ""}`.replace(/\s+/g, " ");
+      lastNode.copy = combinedText;
+    } else {
+      mergedNodes.push(node);
+      lastNode = node;
+    }
+  }
+
+  return mergedNodes;
+}
+
+function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
+  const result: FlatNode[] = [];
+
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+
+    if (["em", "strong", "a"].includes(node.tagName)) {
+      // Create the wrapper node
+      const wrapperNode = { ...node };
+      delete wrapperNode.copy;
+      result.push(wrapperNode);
+
+      // Create the text content node
+      if (node.copy) {
+        result.push({
+          id: ulid(),
+          parentId: wrapperNode.id,
+          copy: node.copy.trim(),
+          tagName: "text",
+          nodeType: "TagElement",
+        } as FlatNode);
+      }
+
+      // Add space after if needed
+      if (i < nodes.length - 1 && nodes[i + 1].tagName !== "text") {
+        result.push({
+          id: ulid(),
+          parentId: node.parentId,
+          copy: " ",
+          tagName: "text",
+          nodeType: "TagElement",
+        } as FlatNode);
+      }
+    } else {
+      result.push(node);
+    }
+  }
+
+  return result;
 }
 
 function extractHref(str: string) {
@@ -152,64 +227,6 @@ function extractNodes(inputString: string, parentId: string): FlatNode[] {
     });
   }
   return result;
-}
-
-function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    if (["em", "strong", "a"].includes(node.tagName)) {
-      const nodesToInsert = [
-        {
-          id: ulid(),
-          parentId: node.id,
-          copy: node.copy,
-          tagName: "text",
-          nodeType: "TagElement",
-        } as FlatNode,
-      ];
-      if (node.tagName === "a") {
-        // add extra space
-        nodesToInsert.push({
-          id: ulid(),
-          parentId: node.parentId,
-          copy: " ",
-          tagName: "text",
-          nodeType: "TagElement",
-        } as FlatNode);
-      }
-      nodes.insertAfter(i, nodesToInsert);
-      node.copy = undefined;
-    }
-  }
-  return nodes;
-}
-
-function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] {
-  const mergedNodes: FlatNode[] = [];
-  let lastNode: FlatNode | null = null;
-
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    if (node.copy?.length === 0) {
-      nodes.splice(i, 1);
-      --i;
-      continue;
-    }
-    if (
-      lastNode &&
-      node.tagName === lastNode.tagName &&
-      node.parentId === lastNode.parentId &&
-      ["em", "text", "strong"].includes(node.tagName)
-    ) {
-      // Merge copy content into the last node
-      lastNode.copy = (lastNode.copy || "") + (node.copy || "");
-    } else {
-      mergedNodes.push(node);
-      lastNode = node;
-    }
-  }
-
-  return mergedNodes;
 }
 
 export function moveNodeAtLocationInContext(
