@@ -14,15 +14,12 @@ const config = await getConfig();
 
 // First lexically analyze the lisp payload
 const buttonLispPayload = lispLexer(node.buttonPayload?.callbackPayload);
-
-const bunnyPayload = node.buttonPayload?.bunnyPayload;
-const targetUrl = bunnyPayload ? `#${bunnyPayload.slug}` : "#";
 ---
 
 <ButtonIsland
   client:visible
   callbackPayload={buttonLispPayload}
-  targetUrl={targetUrl}
+  targetUrl={node.href || `#`}
   paneId={paneId}
   config={config!}
   className={node.elementCss || ""}

@@ -24,10 +24,11 @@ export function handleActionButtonClick({
   if (bunny) {
     const videoContainer = document.getElementById("video-container");
     if (videoContainer) {
-      videoContainer.scrollIntoView({ behavior: "smooth" });
+      //videoContainer.scrollIntoView({ behavior: "smooth" });
       dispatchUpdateVideoEvent(`${bunny.t}s`);
     }
     if (event) events.set([...events.get(), event]);
+    return;
   }
 
   // Handle URL navigation and scroll

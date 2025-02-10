@@ -14,7 +14,6 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
 
   const ctx = getCtx(props);
   const node = ctx.allNodes.get().get(nodeId);
-  console.log(node);
   const childNodeIDs = ctx.getChildNodeIDs(node?.parentId ?? "");
   const isFirstChild = childNodeIDs[0] === nodeId;
   const isLastChild = childNodeIDs[childNodeIDs.length - 1] === nodeId;

@@ -55,7 +55,7 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
       };
 
       linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
-      linkNode.tagName = !targetUrl ? "button" : "a";
+      linkNode.tagName = !targetUrl || bunnyPayload ? "button" : "a";
       linkNode.buttonPayload = {
         ...existingButtonPayload,
         callbackPayload: newCallbackPayload,

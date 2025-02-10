@@ -54,20 +54,8 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean, c
           );
           break;
         case `bunny`:
+          if (parameterTwo && parameterThree) return `/${parameterTwo}?t=${parameterThree}s`;
           return null;
-        //if (parameterTwo && parameterThree) {
-        //  if (parameterTwo !== config?.init?.HOME_SLUG)
-        //    return `/${parameterTwo}?t=${parameterThree}s#bunny`;
-        //  return `/?t=${parameterThree}s#bunny`;
-        //}
-        //console.log(`LispActionPayload preParse misfire on goto`, payload);
-        //break;
-        case `bunnyContext`:
-          return null;
-        //if (parameterTwo && parameterThree)
-        //  return `/context/${parameterTwo}?t=${parameterThree}s#bunny`;
-        //console.log(`LispActionPayload preParse misfire on goto`, payload);
-        //break;
         case `url`:
           return parameterTwo;
         default:

@@ -33,9 +33,15 @@ export const preParseClicked = (id: string, payload: any, config: Config) => {
             targetSlug: parameterTwo,
           };
 
-        case `storykeep`:
         case `bunny`:
-        case `bunnyContext`:
+          return {
+            id: id,
+            type: `StartVideo`,
+            verb: `WATCHED`,
+            targetSlug: parameterTwo,
+          };
+
+        case `storykeep`:
         case `context`:
         case `concierge`:
         case `product`:
