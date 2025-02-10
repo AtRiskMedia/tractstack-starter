@@ -24,9 +24,20 @@ if (!validation.isValid || !config) {
 
 const { slug } = Astro.params;
 const lookup = slug || config?.init?.HOME_SLUG;
+
+const url = new URL(Astro.request.url);
+const searchParams = url.search;
+const hashFragment = url.hash;
+const getRedirectUrl = (base: string) => {
+  let redirectUrl = base;
+  if (searchParams) redirectUrl += searchParams;
+  if (hashFragment) redirectUrl += hashFragment;
+  return redirectUrl;
+};
 if (slug === config.init?.HOME_SLUG) {
-  return Astro.redirect("/");
+  return Astro.redirect(getRedirectUrl("/"));
 }
+
 if (!lookup) return Astro.redirect("/404");
 if (!isValidContentPath(lookup)) {
   return new Response(null, {
