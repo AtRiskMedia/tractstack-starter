@@ -159,25 +159,13 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                     scope="col"
                     className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider w-32"
                   >
-                    Preview
+                    OG
                   </th>
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
                   >
                     Details
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                  >
-                    Events
-                  </th>
-                  <th
-                    scope="col"
-                    className="hidden md:table-cell px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                  >
-                    Actions
                   </th>
                 </tr>
               </thead>
@@ -202,18 +190,18 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col space-y-1">
-                          <div className="text-md text-black truncate max-w-xs">{page.title}</div>
+                          <div className="text-md text-black truncate">{page.title}</div>
                           {page.slug === $homeSlug ? (
                             <span className="inline-flex w-fit items-center rounded-full bg-myblue px-2.5 py-0.5 text-xs font-bold text-slate-100">
                               Home Page
                             </span>
                           ) : (
-                            <div className="text-xs text-mydarkgrey truncate max-w-xs">
+                            <div className="text-xs text-mydarkgrey truncate">
                               {page.slug}
                               {page.type === "Pane" && page.isContext && " (Context Page)"}
                             </div>
                           )}
-                          <div className="md:hidden text-sm text-mydarkgrey truncate max-w-xs flex justify-between items-center">
+                          <div className="text-sm text-mydarkgrey truncate flex justify-start items-start gap-x-6">
                             <span>{events} events</span>
                             <span>
                               <a
@@ -233,25 +221,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                             </span>
                           </div>
                         </div>
-                      </td>
-                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-mydarkgrey">{events}</div>
-                      </td>
-                      <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm font-bold">
-                        <a
-                          href={getContentUrl(page)}
-                          className="text-myblue hover:text-myorange mr-3 inline-block"
-                          title="View"
-                        >
-                          <CursorArrowRippleIcon className="h-5 w-5" />
-                        </a>
-                        <a
-                          href={getContentUrl(page, true)}
-                          className="text-myblue hover:text-myorange inline-block"
-                          title="Edit"
-                        >
-                          <BeakerIcon className="h-5 w-5" />
-                        </a>
                       </td>
                     </tr>
                   );
