@@ -3,7 +3,17 @@ import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
-import { type JSX, type RefObject, type FocusEvent, type MouseEvent, type KeyboardEvent,  useEffect, useRef, useState, createElement } from "react";
+import {
+  type JSX,
+  type RefObject,
+  type FocusEvent,
+  type MouseEvent,
+  type KeyboardEvent,
+  useEffect,
+  useRef,
+  useState,
+  createElement,
+} from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
