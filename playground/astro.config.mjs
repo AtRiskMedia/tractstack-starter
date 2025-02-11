@@ -1,6 +1,5 @@
 import { defineConfig } from "astro/config";
 import node from "@astrojs/node";
-import prefetch from "@astrojs/prefetch";
 import react from "@astrojs/react";
 
 export default defineConfig({
@@ -8,6 +7,7 @@ export default defineConfig({
   adapter: node({
     mode: "standalone",
   }),
+  prefetch: true,
   image: {
     remotePatterns: [
       {
@@ -16,5 +16,5 @@ export default defineConfig({
       },
     ],
   },
-  integrations: [react(), prefetch()],
+  integrations: [react()],
 });

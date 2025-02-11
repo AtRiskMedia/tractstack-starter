@@ -19,7 +19,7 @@ export type DraggableElementProps = {
 export const InsertDraggableElement = memo((props: DraggableElementProps) => {
   const [dragPos, setDragPos] = useState<ControlPosition>({ x: 0, y: 0 });
   const dragging = useRef<boolean>(false);
-  const domRef = useRef(null);
+  const domRef = useRef<HTMLDivElement>(null);
 
   const handleClick = () => {
     if (props.onClicked && props.el) {
@@ -29,7 +29,7 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
 
   useEffect(() => {
     const handleMouseMove: EventListener = (event) => {
-      const mouseEvent = event as unknown as MouseEvent; // Type assertion to MouseEvent
+      const mouseEvent = event as unknown as MouseEvent;
       const x = mouseEvent.clientX + window.scrollX;
       const y = mouseEvent.clientY + window.scrollY;
       if (dragging.current) {
@@ -47,7 +47,7 @@ export const InsertDraggableElement = memo((props: DraggableElementProps) => {
 
   return (
     <Draggable
-      nodeRef={domRef}
+      nodeRef={domRef as unknown as React.RefObject<HTMLElement>}
       defaultPosition={{ x: dragPos.x, y: dragPos.y }}
       position={dragPos}
       onMouseDown={handleClick}

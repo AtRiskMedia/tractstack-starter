@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso.ts";
@@ -138,7 +138,7 @@ const contentMap: FullContentMap[] = await getFullContentMap();
       tractstackSlug={config.init.TRACTSTACK_HOME_SLUG || ``}
       client:only="react"
     />
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="w-full">
     <div

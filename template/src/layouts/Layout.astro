@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import type { Config } from "../types";
 
 export interface Props {
@@ -170,7 +170,7 @@ const gtagUrl =
       });
     </script>
 
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="w-full">
     <div

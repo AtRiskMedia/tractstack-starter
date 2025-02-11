@@ -6,7 +6,7 @@ interface DropdownDirection {
   maxHeight: number;
 }
 
-export function useDropdownDirection(triggerRef: RefObject<HTMLElement>): DropdownDirection {
+export function useDropdownDirection(triggerRef: RefObject<HTMLElement | null>): DropdownDirection {
   const [state, setState] = useState<DropdownDirection>({
     openAbove: false,
     maxHeight: 300,

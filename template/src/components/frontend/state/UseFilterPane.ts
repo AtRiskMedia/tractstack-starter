@@ -79,7 +79,7 @@ export function useFilterPane(
   const [ready, setReady] = useState(false);
   const [overrideWithhold, setOverrideWithhold] = useState(false);
   const isFirstRender = useRef(true);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Evaluate beliefs when dependencies change
   useEffect(() => {
@@ -139,7 +139,10 @@ export function useFilterPane(
 
     // Handle smooth scrolling
     if (isVisible && !isFirstRender.current && ready) {
-      scrollTimeoutRef.current = smoothScrollToPane(thisPane, 20, 50);
+      const timeoutId = smoothScrollToPane(thisPane, 20, 50);
+      if (timeoutId) {
+        scrollTimeoutRef.current = timeoutId;
+      }
     }
 
     isFirstRender.current = false;

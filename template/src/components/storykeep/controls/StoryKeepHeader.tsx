@@ -43,13 +43,13 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   // Use a ref to track the RAF ID
-  const rafId = useRef<number>();
+  const rafId = useRef<number | null>(null);
 
   // Set mounted state after initial render
   useEffect(() => {
     setMounted(true);
     return () => {
-      if (rafId.current) {
+      if (rafId.current !== null) {
         cancelAnimationFrame(rafId.current);
       }
     };
