@@ -120,9 +120,10 @@ if [ -f "$STORYKEEP_PATH/package.json" ]; then
         .[1] as $local |
         $template + {
           "dependencies": merge_unique($template.dependencies; $local.dependencies),
-          "devDependencies": merge_unique($template.devDependencies; $local.devDependencies),
-          "packageManager": $local.packageManager
-        }
+          "devDependencies": merge_unique($template.devDependencies; $local.devDependencies)
+        } + 
+        if $local.packageManager then {"packageManager": $local.packageManager} else {} end +
+        if $local.name then {"name": $local.name} else {} end
       ' "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
         mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
         echo -e "${green}Successfully updated package.json${reset}"
