@@ -21,7 +21,7 @@ const TEMPLATE_DIR = path.join(ROOT_DIR, "template");
 const CORE_FILES = [
   "src",
   "public",
-  "config", // Added config directory
+  "config",
   ".prettierrc",
   ".prettierignore",
   "astro.config.mjs",
@@ -33,7 +33,7 @@ const CORE_FILES = [
 ];
 
 // Paths to exclude from copying
-const EXCLUDED_PATHS = ["public/images", "config/init.json", "config/turso.json"];
+const EXCLUDED_PATHS = ["public/images", "config/init.json", "config/turso.json","public/styles/frontend.css"];
 
 async function shouldCopyFile(srcPath: string): Promise<boolean> {
   const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
@@ -83,21 +83,6 @@ async function prepareTemplate() {
       } else {
         console.warn(`Warning: ${file} not found in playground directory`);
       }
-    }
-
-    // Copy app.css to frontend.css
-    console.log("Copying app.css to frontend.css...");
-    const stylesSrc = path.join(PLAYGROUND_DIR, "public", "styles", "app.css");
-    const stylesDest = path.join(TEMPLATE_DIR, "public", "styles", "frontend.css");
-
-    // Ensure the destination directory exists
-    await fs.ensureDir(path.dirname(stylesDest));
-
-    if (fs.existsSync(stylesSrc)) {
-      await fs.copy(stylesSrc, stylesDest);
-      console.log("Copied app.css to frontend.css");
-    } else {
-      console.warn("Warning: app.css not found in playground directory");
     }
 
     // Copy and modify package.json
