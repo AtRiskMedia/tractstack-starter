@@ -48,3 +48,10 @@ template/public/custom
 !.vscode/settings.json
 .idea/*
 !.idea/tractstack.iml
+
+# custom files
+**/config/init.json
+**/config/turso.json
+**/public/custom/
+**/public/images/
+**/public/styles/frontend.css

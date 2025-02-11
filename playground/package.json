@@ -1,8 +1,10 @@
 {
   "name": "tractstack",
-  "type": "module",
-  "version": "0.1.0",
+  "description": "free web press",
+  "author": "At Risk Media",
+  "version": "1.0.0-rc.1",
   "license": "FSL-1.1-MIT",
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",

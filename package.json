@@ -1,9 +1,10 @@
 {
   "name": "tractstack-root",
-  "description": "no-code website builder and content marketing platform",
+  "description": "free web press",
   "author": "At Risk Media",
-  "private": true,
+  "version": "1.0.0-rc.1",
   "license": "FSL-1.1-MIT",
+  "private": true,
   "scripts": {
     "dev": "pnpm --filter playground dev",
     "build": "pnpm -r build",

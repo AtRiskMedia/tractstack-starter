@@ -33,7 +33,12 @@ const CORE_FILES = [
 ];
 
 // Paths to exclude from copying
-const EXCLUDED_PATHS = ["public/images", "config/init.json", "config/turso.json","public/styles/frontend.css"];
+const EXCLUDED_PATHS = [
+  "public/images",
+  "config/init.json",
+  "config/turso.json",
+  "public/styles/frontend.css",
+];
 
 async function shouldCopyFile(srcPath: string): Promise<boolean> {
   const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
