@@ -14,7 +14,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # environment variables
-.env
+old.env
 .env.production
 
 # macOS-specific files
@@ -22,3 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# config
+playground/config/turso.ts
+playground/config/config.ts

@@ -1,34 +1,40 @@
 ---
-import StoryFragmentWrapper from "../components/StoryFragmentWrapper.astro";
-import ImpressionWrapper from "../components/ImpressionWrapper";
-import Layout from "../layouts/Layout.astro";
-import Header from "../components/Header.astro";
-import HeaderWidget from "../custom/HeaderWidget.astro";
-import Footer from "../components/Footer.astro";
-import { getStoryFragmentBySlug, isTursoReady, isContentReady } from "../api/turso";
-import { ENABLE_HEADER_WIDGET } from "../constants";
-import { getSetupChecks } from "../utils/setupChecks";
-import { isValidContentPath } from "../utils/routeValidation";
-import type { AuthStatus, Current } from "../types";
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import AstroNodesRenderer from "@/components/compositor-nodes/AstroNodesRenderer.astro";
+import Layout from "@/layouts/Layout.astro";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
+import { getStoryFragmentBySlugFullRowData } from "@/utils/db/turso.ts";
+import HeaderWidget from "@/custom/HeaderWidget.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import AddStoryStep from "@/components/common/state/StoryStep.tsx";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import type { AuthStatus, ImpressionDatum, ResourceNode } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
 
-// user authenticated?
 const user = Astro.locals.user as AuthStatus;
-
-// confirm set-up
-const { hasTurso, hasConcierge } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
 
-// which storyfragment?
 const { slug } = Astro.params;
-const lookup = slug || import.meta.env.PUBLIC_HOME;
+const lookup = slug || config?.init?.HOME_SLUG;
 
-// Validate the route parameter
-if (slug === import.meta.env.PUBLIC_HOME) return Astro.redirect("/");
+if (slug === config.init?.HOME_SLUG) {
+  const url = new URL(Astro.request.url);
+  const searchParams = url.search;
+  const hashFragment = url.hash;
+  let redirectUrl = `/`;
+  if (searchParams) redirectUrl += searchParams;
+  if (hashFragment) redirectUrl += hashFragment;
+  return Astro.redirect(redirectUrl);
+}
+
 if (!lookup) return Astro.redirect("/404");
 if (!isValidContentPath(lookup)) {
   return new Response(null, {
@@ -37,75 +43,117 @@ if (!isValidContentPath(lookup)) {
   });
 }
 
-// get and validate storyfragment datum
-const storyfragment = await getStoryFragmentBySlug(lookup);
-if (!storyfragment) {
+// Get all the data from Turso
+const fullData = await getStoryFragmentBySlugFullRowData(lookup);
+if (!fullData) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
 
-// id for this storyfragment
-const current: Current = storyfragment
-  ? {
-      id: storyfragment.id,
-      slug: storyfragment.slug,
-      title: storyfragment.title,
-      parentId: storyfragment.tractStackId,
-      parentSlug: storyfragment.tractStackSlug,
-      parentTitle: storyfragment.tractStackTitle,
+// Get resource nodes for HeaderWidget if enabled
+let headerResources: ResourceNode[] = [];
+const requiredResources = config.init.HEADER_WIDGET_RESOURCE_CATEGORY;
+if (typeof requiredResources === `string` && config.init?.HEADER_WIDGET_RESOURCE_CATEGORY) {
+  try {
+    const categories = requiredResources.split(/[|,]/).filter(Boolean);
+    if (categories.length > 0) {
+      headerResources = await getResourceNodes({ categories });
     }
-  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+  } catch (error) {
+    console.error("Error fetching header resources:", error);
+  }
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+deserializer.processTractStackRowData(fullData.tractstack, loadData);
+deserializer.processStoryFragmentRowData(fullData.storyfragment, loadData);
+fullData.panes.forEach((pane) => {
+  deserializer.processPaneRowData(pane, loadData);
+});
+if (fullData.menu) {
+  deserializer.processMenuRowData(fullData.menu, loadData);
+}
+//fullData.files.forEach((file) => {
+//  deserializer.processImageFileRowData(file, loadData);
+//});
+
+// Build the node tree from the loaded data
+getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
+
+// Get the story fragment node for rendering
+const storyfragmentNode = getCtx().getStoryFragmentNodeBySlug(lookup);
+if (!storyfragmentNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+const impressionNodes = getCtx().getImpressionNodesForPanes(
+  storyfragmentNode.paneIds
+) as ImpressionDatum[];
 ---
 
-{
-  storyfragment ? (
-    <Layout
-      title={storyfragment.title}
-      pubDatetime={storyfragment.created}
-      modDatetime={storyfragment.changed}
-      ogImage={
-        typeof storyfragment?.socialImagePath === `string`
-          ? storyfragment.socialImagePath
-          : undefined
-      }
+<Layout
+  title={storyfragmentNode.title}
+  pubDatetime={storyfragmentNode.created || new Date()}
+  modDatetime={storyfragmentNode.changed || new Date()}
+  ogImage={typeof storyfragmentNode?.socialImagePath === `string`
+    ? storyfragmentNode.socialImagePath
+    : undefined}
+  config={config}
+>
+  {config?.init?.ENABLE_HEADER_WIDGET && <HeaderWidget slug={lookup} resources={headerResources} />}
+
+  <Header
+    title={storyfragmentNode.title}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
+    slug={lookup}
+    isContext={false}
+    isEditable={true}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+  <AddStoryStep
+    id={storyfragmentNode.id}
+    slug={storyfragmentNode.slug}
+    title={storyfragmentNode.title}
+    isContextPane={false}
+    client:only="react"
+  />
+
+  <main id="main-content" class="w-full overflow-hidden">
+    <div
+      class={typeof storyfragmentNode.tailwindBgColour === `string`
+        ? `bg-${storyfragmentNode.tailwindBgColour}`
+        : ``}
     >
-      {ENABLE_HEADER_WIDGET ? (
-        <HeaderWidget slug={lookup} resources={storyfragment.resourcesPayload.headerWidget} />
-      ) : null}
-      <Header
-        title={storyfragment.title}
-        menu={storyfragment.menuPayload}
-        slug={lookup}
-        isContext={false}
-        isEditable={true}
-        impressions={storyfragment.impressions}
-        user={user}
+      <AstroNodesRenderer id={storyfragmentNode.id} />
+    </div>
+  </main>
+
+  {
+    impressionNodes && (
+      <ImpressionWrapper
+        slug={storyfragmentNode.slug}
+        isContext={true}
+        payload={impressionNodes}
+        config={config}
+        client:idle
       />
-      <main id="main-content" class="w-full overflow-hidden">
-        <StoryFragmentWrapper
-          tailwindBgColour={storyfragment.tailwindBgColour}
-          panesPayload={storyfragment.panesPayload}
-          current={current}
-          resourcesPayload={storyfragment.resourcesPayload}
-        />
-      </main>
-      {storyfragment.impressions?.length ? (
-        <ImpressionWrapper
-          slug={storyfragment.slug}
-          isContext={true}
-          payload={storyfragment.impressions}
-          client:idle
-        />
-      ) : null}
-      <Footer
-        created={storyfragment.created}
-        menu={storyfragment.menuPayload}
-        backToTop={true}
-        slug={lookup}
-        isContext={false}
-      />
-    </Layout>
-  ) : null
-}
+    )
+  }
+
+  <Footer
+    created={storyfragmentNode.created || new Date()}
+    menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
+    backToTop={true}
+    slug={lookup}
+    isContext={false}
+    config={config}
+  />
+</Layout>

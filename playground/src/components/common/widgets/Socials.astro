@@ -1,0 +1,44 @@
+---
+import Link from "../nav/Link.astro";
+import { socialIconKeys } from "@/utils/common/socialIcons";
+
+interface Props {
+  payload: string;
+}
+
+const { payload } = Astro.props;
+
+function isSocialEntry(arr: string[]): arr is [string, string] | [string, string, string] {
+  return arr.length >= 2 && arr.length <= 3;
+}
+
+const socials = payload
+  .split(`,`)
+  .map((s) => s.split(`|`))
+  .filter(isSocialEntry);
+---
+
+<div class="flex flex-wrap justify-center gap-3">
+  {
+    socials
+      .filter((social) => socialIconKeys.includes(social[0]))
+      .map((social) => (
+        <Link
+          href={social[1]}
+          className="group inline-block hover:text-myblue my-1 p-2 hover:rotate-6"
+          target="_blank"
+          title={social[2] ?? social[1]}
+        >
+          <span>
+            <img
+              src={`/socials/${social[0]}.svg`}
+              alt={`${social[0]} icon`}
+              class="inline-block h-6 w-6 scale-125"
+              width="24"
+              height="24"
+            />
+          </span>
+        </Link>
+      ))
+  }
+</div>

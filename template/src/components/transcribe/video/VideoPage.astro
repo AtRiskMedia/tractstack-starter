@@ -1,0 +1,31 @@
+---
+interface Props {
+  videoSrc: string;
+}
+
+const { videoSrc } = Astro.props;
+---
+
+<iframe
+  id="tractstack-stream-embed"
+  src={videoSrc}
+  loading="lazy"
+  class="mx-auto border-0 top-0 h-[400px] w-[720px]"
+  width="720"
+  height="400"
+  allow="accelerometer; gyroscope; encrypted-media; picture-in-picture;"
+  allowfullscreen="true"
+>
+</iframe>
+
+<script>
+  // no declaration available for player.js, would be good to generate one once done
+  //@ts-ignore
+  import { Player } from "player.js";
+  import { $videoPlayer } from "../../../store/transcribe/appState";
+  const player = new Player("tractstack-stream-embed");
+
+  player.on("ready", () => {
+    $videoPlayer.set(player);
+  });
+</script>

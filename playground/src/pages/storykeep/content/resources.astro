@@ -1,0 +1,82 @@
+---
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import ResourcesTable from "@/components/storykeep/controls/manage/ResourcesTable.tsx";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
+import { getAllResourcesRowData } from "@/utils/db/turso.ts";
+import type { AuthStatus, MenuDatum } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const canonicalURL = `/storykeep/content/images`;
+const menuPayload: MenuDatum = {
+  id: `storykeep`,
+  title: "Story Keep Menu",
+  theme: "default",
+  optionsPayload: [
+    {
+      name: "Dashboard",
+      description: "Your Story Keep Dashboard",
+      featured: true,
+      actionLisp: "(goto (storykeep dashboard))",
+    },
+    {
+      name: "Logout",
+      description: "Close this session",
+      featured: true,
+      actionLisp: "(goto (storykeep logout))",
+    },
+  ],
+};
+
+// Get all the data from Turso
+const resourcesRowData = await getAllResourcesRowData();
+if (!resourcesRowData) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+resourcesRowData.forEach((resource) => {
+  deserializer.processResourceRowData(resource, loadData);
+});
+---
+
+<StoryKeep title="Manage Resources" canonicalURL={canonicalURL} config={config}>
+  <Header
+    title="Manage Resources"
+    menu={menuPayload}
+    slug="storykeep-manage-resources"
+    isContext={false}
+    user={user}
+    isStoryKeep={true}
+    isEditable={false}
+    config={config}
+  />
+  <main id="main-content" class="min-h-screen">
+    <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
+      <div class="py-1.5 bg-white px-3.5">
+        <ResourcesTable resources={loadData?.resourceNodes || []} client:only="react" />
+      </div>
+    </div>
+  </main>
+  <Footer
+    menu={menuPayload}
+    backToTop={true}
+    slug={`storykeep-manage-resources`}
+    isContext={false}
+    config={config}
+  />
+</StoryKeep>

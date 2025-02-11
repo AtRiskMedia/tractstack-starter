@@ -1,82 +1,108 @@
 ---
-import ContextPaneWrapper from "../../components/ContextPaneWrapper.astro";
-import ImpressionWrapper from "../../components/ImpressionWrapper";
-import Layout from "../../layouts/Layout.astro";
-import Header from "../../components/Header.astro";
-import Footer from "../../components/Footer.astro";
-import { getContextPaneBySlug, isTursoReady, isContentReady } from "../../api/turso";
-import { isValidContentPath } from "../../utils/routeValidation";
-import { getSetupChecks } from "../../utils/setupChecks";
-import type { Current, AuthStatus } from "../../types";
+import { isValidContentPath } from "@/utils/common/routeValidation.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import AstroNodesRenderer from "@/components/compositor-nodes/AstroNodesRenderer.astro";
+import Layout from "@/layouts/Layout.astro";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
+import { getContextPaneBySlugFullRowData } from "@/utils/db/turso.ts";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import AddStoryStep from "@/components/common/state/StoryStep.tsx";
+import { Close } from "@/components/frontend/nav/Close.tsx";
+import type { AuthStatus, ImpressionDatum } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
 
-// user authenticated?
 const user = Astro.locals.user as AuthStatus;
-
-// confirm set-up
-const { hasConcierge, hasTurso } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
 
+// validate context pane?
 const { slug } = Astro.params;
-
-// Validate the route parameter
-if (!isValidContentPath(slug)) {
+if (!slug || !isValidContentPath(slug)) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
 
-const pane = slug ? await getContextPaneBySlug(slug) : null;
-if (!pane) {
+// Get all the data from Turso
+const fullData = await getContextPaneBySlugFullRowData(slug);
+if (!fullData) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
   });
 }
 
-// id for this context pane
-const current: Current = pane
-  ? {
-      id: pane.id,
-      slug: pane.slug,
-      title: pane.title,
-    }
-  : { id: `unknown`, slug: `unknown`, title: `unknown` };
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+fullData.panes.forEach((pane) => {
+  deserializer.processPaneRowData(pane, loadData);
+});
+
+// Build the node tree from the loaded data
+getCtx().buildNodesTreeFromRowDataMadeNodes(loadData);
+
+// Get the context pane node for rendering
+const paneNode = getCtx().getContextPaneNodeBySlug(slug);
+
+if (!paneNode) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const impressionNodes = getCtx().getImpressionNodesForPanes([paneNode.id]) as ImpressionDatum[];
 ---
 
-{
-  pane && pane?.panePayload ? (
-    <Layout title={pane.title} pubDatetime={pane.created} modDatetime={pane.changed}>
-      <Header
-        title={pane.title}
-        slug={pane.slug}
+<Layout
+  title={paneNode.title}
+  pubDatetime={paneNode.created}
+  modDatetime={paneNode.changed}
+  config={config}
+>
+  <Header
+    title={paneNode.title}
+    slug={paneNode.slug}
+    isContext={true}
+    isEditable={true}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+  <AddStoryStep
+    id={paneNode.id}
+    slug={paneNode.slug}
+    title={paneNode.title}
+    isContextPane={true}
+    client:only="react"
+  />
+  <main id="main-content" class="min-h-screen">
+    <AstroNodesRenderer id={paneNode.id} />
+    <Close client:only="react" />
+  </main>
+  {
+    impressionNodes && (
+      <ImpressionWrapper
+        payload={impressionNodes}
+        slug={paneNode.slug}
         isContext={true}
-        isEditable={true}
-        impressions={pane.impressions}
-        user={user}
+        config={config}
+        client:only="react"
       />
-      <main id="main-content" class="min-h-screen">
-        <ContextPaneWrapper
-          pane={pane.panePayload}
-          resources={pane.resourcesPayload}
-          codeHookOptions={pane.codeHookOptions}
-          current={current}
-        />
-      </main>
-      {pane.impressions?.length ? (
-        <ImpressionWrapper
-          payload={pane.impressions}
-          slug={pane.slug}
-          isContext={true}
-          client:load
-        />
-      ) : null}
-      <Footer created={pane.created} slug={pane.slug} isContext={true} />
-    </Layout>
-  ) : null
-}
+    )
+  }
+  <Footer
+    created={paneNode.created || new Date()}
+    slug={paneNode.slug}
+    isContext={true}
+    config={config}
+  />
+</Layout>

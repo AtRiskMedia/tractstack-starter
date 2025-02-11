@@ -1,4 +1,4 @@
-import { events, panesVisible, current } from "../../store/events";
+import { events, panesVisible } from "../../store/events";
 import { THRESHOLD_READ, THRESHOLD_GLOSSED } from "../../constants";
 
 export async function eventProcessQueue() {
@@ -12,12 +12,10 @@ export async function eventProcessQueue() {
       if (verb) {
         const event = {
           id: id,
-          parentId: current.get().id || undefined,
           type: `Pane`,
           verb: verb,
           duration: diff,
         };
-        //console.log(`=force-event`, event);
         events.set([...events.get(), event]);
       }
     }

@@ -1,0 +1,12 @@
+---
+import { getCtx } from "@/store/nodes.ts";
+import Node from "@/components/compositor-nodes/Node.astro";
+
+const { nodeId } = Astro.props;
+---
+
+{
+  getCtx()
+    .getChildNodeIDs(nodeId)
+    .map((id: string) => <Node nodeId={id} />)
+}

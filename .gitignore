@@ -14,8 +14,21 @@ pnpm-debug.log*
 
 # environment variables
 **/.env
-**/.env.production
+**/.env.*
+!playground/.env.template
 !template/.env
+
+# unique config
+playground/config/init.json
+playground/config/turso.json
+
+# public
+template/public/styles/frontend.css
+playground/public/styles/frontend.css
+playground/public/images
+playground/public/custom
+template/public/images
+template/public/custom
 
 # macOS-specific files
 .DS_Store
@@ -29,3 +42,9 @@ pnpm-debug.log*
 # fonts
 **/fonts/*
 !**/fonts/Inter*
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+.idea/*
+!.idea/tractstack.iml

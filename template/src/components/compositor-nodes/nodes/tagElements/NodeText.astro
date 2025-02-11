@@ -1,0 +1,11 @@
+---
+import { getCtx } from "@/store/nodes.ts";
+import type { FlatNode } from "@/types.ts";
+
+const { nodeId } = Astro.props;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+const parentNode = node.parentId ? (getCtx().allNodes.get().get(node.parentId) as FlatNode) : null;
+const isLink = parentNode && [`a`, `button`].includes(parentNode.tagName);
+---
+
+{node?.copy?.trim() === `` ? "\u00A0 " : node?.copy || ``}{isLink ? `` : " "}

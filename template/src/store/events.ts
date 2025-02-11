@@ -1,12 +1,14 @@
 import { map, atom } from "nanostores";
-import type { Current, EventStream, StoryStep, ContentMap, PanesVisible } from "../types";
+import type { Current, EventStream, StoryStep, FullContentMap, PanesVisible } from "../types";
 
 export const events = atom<EventStream[]>([]);
-export const contentMap = atom<ContentMap[]>([]);
+export const contentMap = atom<FullContentMap[]>([]);
+export const codehookMap = atom<string[]>([]);
 export const current = atom<Current>({
   id: ``,
   slug: ``,
   title: ``,
+  isContextPane: false,
 });
 export const storySteps = atom<StoryStep[]>([]);
 export const loaded = atom<boolean>(false);

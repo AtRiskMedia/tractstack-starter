@@ -1,0 +1,192 @@
+---
+export interface Props {
+  videoUrl: string;
+  title: string;
+}
+
+const { videoUrl, title } = Astro.props;
+---
+
+<astro-bunny-video data-src={videoUrl} data-title={title}>
+  <div class="w-full">
+    <div id="video-container" class="relative w-full" style="aspect-ratio: 16/9;">
+      <!-- Player will be inserted here -->
+    </div>
+  </div>
+</astro-bunny-video>
+
+<script>
+  class AstroBunnyVideo extends HTMLElement {
+    private currentIframe: HTMLIFrameElement | null = null;
+    private videoContainer: HTMLElement | null = null;
+    private retryAttempts: number = 0;
+    private maxRetries: number = 3;
+    private videoUrl: string;
+    private videoTitle: string;
+    private playbackStrategies = [
+      {}, // Default strategy
+      { token: "false" },
+      { playlist: "false" },
+      { token: "false", playlist: "false" },
+    ];
+    private currentStrategy = 0;
+
+    constructor() {
+      super();
+      this.videoUrl = this.dataset.src || "";
+      this.videoTitle = this.dataset.title || "";
+
+      this.initializeVideo();
+
+      document.addEventListener("astro:page-load", this.handlePageLoad);
+      document.addEventListener("updateVideo", this.handleUpdateVideo as EventListener);
+    }
+
+    private getStartTime = (): string | null => {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("t");
+    };
+
+    private initializeVideo = (t: string = ""): void => {
+      console.log(
+        `[BunnyVideo] Initializing with strategy ${this.currentStrategy + 1}/${this.playbackStrategies.length}`
+      );
+
+      if (!this.videoContainer) {
+        this.videoContainer = this.querySelector("#video-container");
+      }
+
+      if (this.currentIframe && this.videoContainer) {
+        this.videoContainer.removeChild(this.currentIframe);
+        this.currentIframe = null;
+      }
+
+      const regex = /^(\d+)s$/;
+      const match = t?.match(regex);
+      const startTime = match && match[1] && parseInt(match[1]);
+
+      const iframe = document.createElement("iframe");
+
+      // Build base parameters
+      const params = new URLSearchParams({
+        autoplay: typeof startTime === "number" ? "1" : "0",
+        loop: "false",
+        muted: "false",
+        preload: typeof startTime === "number" ? "true" : "false",
+        responsive: "true",
+        t: (startTime || 0).toString(),
+      });
+
+      // Add strategy parameters
+      const strategy = this.playbackStrategies[this.currentStrategy];
+      Object.entries(strategy).forEach(([key, value]) => {
+        params.set(key, value);
+      });
+
+      iframe.src = `${this.videoUrl}?${params.toString()}`;
+      iframe.width = "100%";
+      iframe.height = "100%";
+      iframe.style.position = "absolute";
+      iframe.style.top = "0";
+      iframe.style.left = "0";
+      iframe.title = this.videoTitle;
+      iframe.setAttribute("playsinline", "");
+      iframe.setAttribute("allow", "autoplay; fullscreen");
+
+      const showLoading = () => {
+        const loader = document.createElement("div");
+        loader.className =
+          "absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 text-white";
+        loader.innerHTML =
+          '<div class="text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div><div>Loading video...</div></div>';
+        return loader;
+      };
+
+      if (this.videoContainer) {
+        const loader = showLoading();
+        this.videoContainer.appendChild(loader);
+
+        iframe.onload = () => {
+          console.log("[BunnyVideo] Iframe loaded");
+          loader.remove();
+        };
+
+        this.videoContainer.appendChild(iframe);
+        this.currentIframe = iframe;
+
+        if (typeof startTime === "number") {
+          setTimeout(() => {
+            iframe.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 1000);
+        }
+      }
+
+      // Add error handling for playback issues
+      window.addEventListener("message", (event) => {
+        if (event.source === iframe.contentWindow) {
+          if (event.data.type === "mediaError" && event.data.fatal) {
+            console.log("[BunnyVideo] Playback error detected, trying next strategy");
+            this.handlePlaybackError();
+          }
+        }
+      });
+    };
+
+    private handlePlaybackError = (): void => {
+      if (this.currentStrategy < this.playbackStrategies.length - 1) {
+        this.currentStrategy++;
+        this.initializeVideo(this.getStartTime() || "");
+      } else if (this.retryAttempts < this.maxRetries) {
+        this.retryAttempts++;
+        this.currentStrategy = 0;
+        setTimeout(() => this.initializeVideo(this.getStartTime() || ""), 1000);
+      } else {
+        this.showError();
+      }
+    };
+
+    private showError = (): void => {
+      if (!this.videoContainer) return;
+
+      const errorDiv = document.createElement("div");
+      errorDiv.className =
+        "absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 text-white p-4 text-center";
+      errorDiv.innerHTML = `
+        <div>
+          <p class="mb-2">Unable to play video at this time.</p>
+          <button onclick="this.closest('astro-bunny-video').retryVideo()" 
+                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded">
+            Try Again
+          </button>
+        </div>
+      `;
+
+      while (this.videoContainer.firstChild) {
+        this.videoContainer.removeChild(this.videoContainer.firstChild);
+      }
+      this.videoContainer.appendChild(errorDiv);
+    };
+
+    private handleUpdateVideo = (event: CustomEvent): void => {
+      const { startTime } = event.detail;
+      this.initializeVideo(startTime);
+    };
+
+    private handlePageLoad = (): void => {
+      this.initializeVideo(this.getStartTime() || "");
+    };
+
+    retryVideo = (): void => {
+      this.retryAttempts = 0;
+      this.currentStrategy = 0;
+      this.initializeVideo(this.getStartTime() || "");
+    };
+
+    disconnectedCallback(): void {
+      document.removeEventListener("astro:page-load", this.handlePageLoad);
+      document.removeEventListener("updateVideo", this.handleUpdateVideo as EventListener);
+    }
+  }
+
+  customElements.define("astro-bunny-video", AstroBunnyVideo);
+</script>

@@ -1,0 +1,44 @@
+---
+import Svg from "./Svg.astro";
+import type { VisualBreakNode, VisualBreakData } from "@/types";
+
+interface Props {
+  payload: VisualBreakNode;
+}
+
+const { payload } = Astro.props;
+
+// classNames = "md:hidden hidden md:block xl:hidden xl:block"
+const baseClasses = {
+  mobile: `md:hidden`,
+  tablet: `hidden md:block xl:hidden`,
+  desktop: `hidden xl:block`,
+} as const;
+
+type Viewport = "mobile" | "tablet" | "desktop";
+const breakpoints: Viewport[] = ["mobile", "tablet", "desktop"];
+
+function isVisualBreakData(data: string | true | VisualBreakData): data is VisualBreakData {
+  return typeof data === "object" && data !== null && "collection" in data && "image" in data;
+}
+---
+
+{
+  breakpoints.map((breakpoint) => {
+    const breakData =
+      payload[
+        `break${breakpoint.charAt(0).toUpperCase() + breakpoint.slice(1)}` as keyof VisualBreakNode
+      ];
+    if (!breakData || !isVisualBreakData(breakData)) return null;
+
+    return (
+      <div class={baseClasses[breakpoint]} style={{ fill: breakData.svgFill || "none" }}>
+        <Svg
+          shapeName={`${breakData.collection}${breakData.image}`}
+          viewportKey={breakpoint}
+          id={`${breakpoint}-${breakData.collection}${breakData.image}`}
+        />
+      </div>
+    );
+  })
+}

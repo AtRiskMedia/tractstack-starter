@@ -1,0 +1,75 @@
+---
+import CodeHook from "@/custom/CodeHook.astro";
+import { getCtx } from "@/store/nodes.ts";
+import Node from "../Node.astro";
+import Filter from "@/components/frontend/state/Filter.tsx";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import type { ResourceNode, CodeHookPayload } from "@/types.ts";
+
+const { nodeId } = Astro.props;
+const slug = getCtx().getPaneSlug(nodeId);
+const rawPayload = getCtx().getNodeCodeHookPayload(nodeId);
+const codeHookPayload =
+  rawPayload && typeof rawPayload === "object" && "target" in rawPayload
+    ? (rawPayload as CodeHookPayload)
+    : null;
+
+// Parse the options if they exist
+let resources: ResourceNode[] = [];
+if (codeHookPayload?.params?.options) {
+  try {
+    const options = JSON.parse(codeHookPayload.params.options);
+    const slugs = options.slugs?.split(/[|,]/).filter(Boolean);
+    const categories = options.category?.split(/[|,]/).filter(Boolean);
+    if (slugs || categories) {
+      resources = await getResourceNodes({ slugs, categories });
+    }
+  } catch (error) {
+    console.error("Error parsing options or fetching resources:", error);
+  }
+}
+
+const beliefs = getCtx().getPaneBeliefs(nodeId);
+const isDecorative = getCtx().getPaneIsDecorative(nodeId);
+const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, `auto`)}`;
+const contentClasses = "relative w-full h-auto justify-self-start";
+const contentStyles = getCtx().getNodeStringStyles(nodeId, `auto`) + "; grid-area: 1/1/1/1";
+---
+
+{
+  beliefs !== null && (
+    <Filter
+      client:load
+      id={nodeId}
+      heldBeliefsFilter={beliefs.heldBeliefs}
+      withheldBeliefsFilter={beliefs.withheldBeliefs}
+    />
+  )
+}
+{
+  codeHookPayload ? (
+    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
+      <div id={slug}>
+        <CodeHook
+          target={codeHookPayload.target}
+          resources={resources}
+          options={codeHookPayload || null}
+        />
+      </div>
+    </div>
+  ) : (
+    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
+      <div id={slug}>
+        <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
+          <div class={contentClasses} style={contentStyles}>
+            {getCtx()
+              .getChildNodeIDs(nodeId)
+              .map((childId: string) => (
+                <Node nodeId={childId} />
+              ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}

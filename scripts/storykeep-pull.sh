@@ -112,8 +112,19 @@ if [ -f "$STORYKEEP_PATH/package.json" ]; then
     if jq '.' "$TEMPLATE_DIR/package.json" >/dev/null 2>&1 &&
       jq '.' "$STORYKEEP_PATH/package.json" >/dev/null 2>&1; then
       echo -e "\n${blue}Attempting to merge package.json files...${reset}"
-      if jq -s '.[0] * .[1] | del(.scripts.prepare) | del(.devDependencies.husky)' \
-        "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
+      if jq -s '
+        def merge_unique($base; $extra):
+          $base + ($extra | to_entries | map(select(.key as $k | $base[$k] | not)) | from_entries);
+        
+        .[0] as $template |
+        .[1] as $local |
+        $template + {
+          "dependencies": merge_unique($template.dependencies; $local.dependencies),
+          "devDependencies": merge_unique($template.devDependencies; $local.devDependencies)
+        } + 
+        if $local.packageManager then {"packageManager": $local.packageManager} else {} end +
+        if $local.name then {"name": $local.name} else {} end
+      ' "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
         mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
         echo -e "${green}Successfully updated package.json${reset}"
       else
@@ -125,6 +136,14 @@ if [ -f "$STORYKEEP_PATH/package.json" ]; then
   else
     echo -e "${yellow}Warning: One or both package.json files not found, skipping update${reset}"
   fi
+fi
+
+# Install updated packages
+echo -e "${blue}Installing updated packages...${reset}"
+cd "$STORYKEEP_PATH" && pnpm install
+if [ $? -ne 0 ]; then
+  echo -e "${red}Error: Failed to install packages${reset}"
+  exit 1
 fi
 
 echo -e "${green}Story Keep update complete!${reset}"

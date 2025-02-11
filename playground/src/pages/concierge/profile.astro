@@ -1,31 +1,36 @@
 ---
+import { getConfig, validateConfig } from "../../utils/core/config";
 import Layout from "../../layouts/Layout.astro";
-import Header from "../../components/Header.astro";
-import Footer from "../../components/Footer.astro";
-import { InformationCircle } from "../../components/icons/InformationCircle";
-import { RememberMeToggle } from "../../components/other/RememberMeToggle";
-import { ProfileSwitch } from "../../components/other/ProfileSwitch";
-import { isTursoReady, isContentReady } from "../../api/turso";
-import { getSetupChecks } from "../../utils/setupChecks";
+import Header from "../../components/common/Header.astro";
+import Footer from "../../components/common/Footer.astro";
+import { InformationCircle } from "../../components/frontend/icons/InformationCircle";
+import { RememberMeToggle } from "../../components/common/state/RememberMeToggle";
+import { ProfileSwitch } from "../../components/frontend/profile/ProfileSwitch";
 import type { AuthStatus } from "../../types";
 
-// user authenticated?
 const user = Astro.locals.user as AuthStatus;
-
-// confirm set-up
-const { hasConcierge, hasTurso } = getSetupChecks();
-const notPreviewNotReady = hasConcierge && !hasTurso;
-const hasTursoReady = !notPreviewNotReady ? await isTursoReady() : false;
-const hasContentReady = !notPreviewNotReady ? await isContentReady() : false;
-if (!hasTursoReady || !hasContentReady) {
-  return Astro.redirect("/storykeep");
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
 }
 
-const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
+const gtag = config?.init?.GTAG || false;
 ---
 
-<Layout title="Configure your Session" pubDatetime={new Date()} modDatetime={new Date()}>
-  <Header title="Configure your Session" slug="profile" isContext={false} user={user} />
+<Layout
+  title="Configure your Session"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  config={config}
+>
+  <Header
+    title="Configure your Session"
+    slug="profile"
+    isContext={false}
+    user={user}
+    config={config}
+  />
   <main id="main-content">
     <div class="px-6 font-main text-xl py-24">
       <div class="max-w-3xl mx-auto">
@@ -43,11 +48,11 @@ const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
               <InformationCircle classes="w-5 h-5 text-mydarkgrey/50" />
             </span>
           </h3>
-          <RememberMeToggle client:load />
-          <ProfileSwitch client:load />
+          <RememberMeToggle client:only="react" />
+          <ProfileSwitch client:only="react" />
 
           {
-            googleSiteVerification ? (
+            gtag ? (
               <p class="pt-12 text-mydarkgrey">
                 <em>This site uses Google Analytics.</em> Please refer to
                 <a
@@ -74,5 +79,5 @@ const googleSiteVerification = import.meta.env.PUBLIC_GOOGLE_SITE_VERIFICATION;
       </div>
     </div>
   </main>
-  <Footer created={new Date()} slug="profile" isContext={false} />
+  <Footer created={new Date()} slug="profile" isContext={false} config={config} />
 </Layout>

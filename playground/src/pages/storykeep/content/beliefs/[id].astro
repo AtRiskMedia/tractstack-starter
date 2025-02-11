@@ -1,0 +1,103 @@
+---
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import BeliefEditor from "@/components/storykeep/controls/manage/BeliefEditor.tsx";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json.ts";
+import { getBeliefByIdRowData } from "@/utils/db/turso.ts";
+import type { AuthStatus, BeliefNode, MenuNode } from "@/types.ts";
+import type { LoadData } from "@/store/nodesSerializer.ts";
+
+const { id } = Astro.params;
+const create = id === "create";
+
+const user = Astro.locals.user as AuthStatus;
+const config = await getConfig();
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+const canonicalURL = `/storykeep/content/beliefs/${id}`;
+const menuPayload: MenuNode = {
+  id: `storykeep`,
+  parentId: null,
+  nodeType: `Menu`,
+  title: "Story Keep Menu",
+  theme: "default",
+  optionsPayload: [
+    {
+      name: "Dashboard",
+      description: "Your Story Keep Dashboard",
+      featured: true,
+      actionLisp: "(goto (storykeep dashboard))",
+    },
+    {
+      name: "Logout",
+      description: "Close this session",
+      featured: true,
+      actionLisp: "(goto (storykeep logout))",
+    },
+  ],
+};
+
+// Get all the data from Turso
+const beliefRowData = id ? await getBeliefByIdRowData(id) : null;
+if (!beliefRowData && !create) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+// Initialize deserializer
+const deserializer = new NodesDeserializer_Json();
+const loadData: LoadData = {};
+if (beliefRowData) deserializer.processBeliefRowData(beliefRowData, loadData);
+const defaultBelief: BeliefNode = {
+  id: ``,
+  parentId: null,
+  nodeType: `Belief` as const,
+  slug: ``,
+  title: ``,
+  scale: ``,
+};
+const belief = loadData?.beliefNodes?.length ? loadData.beliefNodes.at(0) : defaultBelief;
+if (!belief) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+---
+
+<StoryKeep
+  title={create ? "Create New Belief" : `Edit Belief: ${belief.title}`}
+  canonicalURL={canonicalURL}
+  config={config}
+>
+  <Header
+    title={create ? "Create New Belief" : `Edit Belief: ${belief.title}`}
+    menu={menuPayload}
+    slug={`storykeep-manage-belief-${id}`}
+    isContext={false}
+    user={user}
+    isStoryKeep={true}
+    isEditable={false}
+    config={config}
+  />
+  <main id="main-content" class="min-h-screen">
+    <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
+      <div class="py-1.5 bg-white px-3.5">
+        <BeliefEditor belief={belief} create={create} client:only="react" />
+      </div>
+    </div>
+  </main>
+  <Footer
+    menu={menuPayload}
+    backToTop={true}
+    slug={`storykeep-manage-belief-${id}`}
+    isContext={false}
+    config={config}
+  />
+</StoryKeep>

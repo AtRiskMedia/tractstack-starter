@@ -1,0 +1,17 @@
+---
+import { getCtx } from "@/store/nodes.ts";
+import Node from "@/components/compositor-nodes/Node.astro";
+
+const { nodeId } = Astro.props;
+---
+
+<div
+  class={getCtx().getNodeClasses(nodeId, `auto`)}
+  style={getCtx().getNodeStringStyles(nodeId, `auto`)}
+>
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
+</div>

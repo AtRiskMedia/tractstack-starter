@@ -21,15 +21,35 @@ const TEMPLATE_DIR = path.join(ROOT_DIR, "template");
 const CORE_FILES = [
   "src",
   "public",
+  "config",
   ".prettierrc",
   ".prettierignore",
   "astro.config.mjs",
   "tailwind.config.cjs",
   "tsconfig.json",
-  "env.d.ts",
   "README.md",
   "LICENSE.md",
+  "Dockerfile.example",
 ];
+
+// Paths to exclude from copying
+const EXCLUDED_PATHS = ["public/images", "config/init.json", "config/turso.json","public/styles/frontend.css"];
+
+async function shouldCopyFile(srcPath: string): Promise<boolean> {
+  const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
+
+  // Check if path is in exclusion list
+  const isExcluded = EXCLUDED_PATHS.some(
+    (excludedPath) => relativePath.startsWith(excludedPath) || relativePath === excludedPath
+  );
+
+  return !isExcluded;
+}
+
+async function copyWithExclusions(src: string, dest: string) {
+  const filter = (srcPath: string) => shouldCopyFile(srcPath);
+  await fs.copy(src, dest, { filter });
+}
 
 async function prepareTemplate() {
   try {
@@ -53,7 +73,12 @@ async function prepareTemplate() {
       const dest = path.join(TEMPLATE_DIR, file);
 
       if (fs.existsSync(src)) {
-        await fs.copy(src, dest);
+        if (file === "public" || file === "config") {
+          // Use custom copy function with exclusions for public and config directories
+          await copyWithExclusions(src, dest);
+        } else {
+          await fs.copy(src, dest);
+        }
         console.log(`Copied ${file}`);
       } else {
         console.warn(`Warning: ${file} not found in playground directory`);

@@ -1,0 +1,51 @@
+---
+import { getConfig } from "@/utils/core/config.ts";
+import { getCtx } from "@/store/nodes.ts";
+import Node from "@/components/compositor-nodes/Node.astro";
+import { ButtonIsland } from "@/components/common/widgets/ButtonIsland";
+import { lispLexer } from "@/utils/concierge/lispLexer";
+import type { FlatNode } from "@/types.ts";
+
+const { nodeId } = Astro.props;
+const node = getCtx().allNodes.get().get(nodeId) as FlatNode;
+const childNodeIDs = getCtx().getChildNodeIDs(node?.parentId ?? "");
+const currentIndex = childNodeIDs.indexOf(nodeId);
+const nextNode =
+  currentIndex < childNodeIDs.length - 1
+    ? (getCtx()
+        .allNodes.get()
+        .get(childNodeIDs[currentIndex + 1]) as FlatNode)
+    : null;
+const needsTrailingSpace =
+  nextNode &&
+  nextNode.tagName === "text" &&
+  !(
+    nextNode.copy?.startsWith(".") ||
+    nextNode.copy?.startsWith(",") ||
+    nextNode.copy?.startsWith(";") ||
+    nextNode.copy?.startsWith(":")
+  );
+
+const paneId = getCtx().getClosestNodeTypeFromId(nodeId, "Pane");
+const config = await getConfig();
+
+// First lexically analyze the lisp payload
+const buttonLispPayload = lispLexer(node.buttonPayload?.callbackPayload);
+const isVideo = !!node.buttonPayload?.bunnyPayload;
+---
+
+<ButtonIsland
+  client:visible
+  callbackPayload={buttonLispPayload}
+  targetUrl={node.href || `#`}
+  paneId={paneId}
+  config={config!}
+  isVideo={isVideo}
+  className={node.elementCss || ""}
+>
+  {
+    getCtx()
+      .getChildNodeIDs(nodeId)
+      .map((id: string) => <Node nodeId={id} />)
+  }
+</ButtonIsland>{needsTrailingSpace && " "}

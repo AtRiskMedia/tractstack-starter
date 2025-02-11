@@ -1,0 +1,43 @@
+---
+import Layout from "@/layouts/StoryKeep.astro";
+import { tursoClient } from "@/utils/db/client";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import InitWizard from "@/components/storykeep/init/InitWizard";
+
+const config = await getConfig();
+const validation = await validateConfig(config);
+
+// already initialized
+if (validation.isValid && config) {
+  return Astro.redirect("/storykeep");
+}
+
+// Create a secure version of validation
+const secureValidation = {
+  isValid: validation.isValid,
+  hasPassword: validation.hasPassword,
+  capabilities: validation.capabilities,
+  errors: validation.errors,
+  config,
+};
+let error = "";
+try {
+  await tursoClient.getClient();
+} catch (e) {
+  console.error("Database initialization error:", e);
+  error = e instanceof Error ? e.message : "Unknown error";
+}
+---
+
+<Layout title="Initialize Site" config={config!}>
+  <main>
+    {error && <div class="error">{error}</div>}
+    <InitWizard
+      client:only="react"
+      config={config}
+      hasConcierge={validation.capabilities.hasConcierge}
+      validation={secureValidation}
+      init={true}
+    />
+  </main>
+</Layout>
