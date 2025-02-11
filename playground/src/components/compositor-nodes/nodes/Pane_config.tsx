@@ -2,6 +2,7 @@ import { viewportKeyStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import ConfigPanePanel from "@/components/storykeep/controls/pane/ConfigPanePanel.tsx";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
+import { CodeHookContainer } from "./Pane";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
 
@@ -45,10 +46,7 @@ export const PaneConfig = (props: NodeProps) => {
             }}
           >
             {codeHookPayload ? (
-              <>
-                <em>Code Hook:</em>
-                {JSON.stringify(codeHookPayload, null, 2)}
-              </>
+              <CodeHookContainer payload={codeHookPayload} />
             ) : (
               <RenderChildren children={children} nodeProps={props} />
             )}

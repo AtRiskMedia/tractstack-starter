@@ -5,6 +5,33 @@ import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyti
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
 
+export const CodeHookContainer = ({
+  payload,
+}: {
+  payload: { target: string; params?: Record<string, string> };
+}) => (
+  <div className="w-full p-6 my-4bg-gray-50">
+    <div className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-6 bg-slate-50">
+      <h3 className="text-lg text-gray-700">
+        Code Hook: <span className="font-action font-bold">{payload.target}</span>
+      </h3>
+    </div>
+    {payload.params && (
+      <div className="space-y-2">
+        {Object.entries(payload.params).map(
+          ([key, value]) =>
+            value && (
+              <div key={key} className="flex items-start">
+                <span className="font-medium text-gray-600 min-w-24">{key}:</span>
+                <span className="text-gray-800 ml-2">{value}</span>
+              </div>
+            )
+        )}
+      </div>
+    )}
+  </div>
+);
+
 export const Pane = (props: NodeProps) => {
   const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
@@ -27,29 +54,6 @@ export const Pane = (props: NodeProps) => {
     });
     return unsubscribe;
   }, []);
-
-  const CodeHookContainer = ({ payload }: { payload: { target: string; params?: Record<string, string> } }) => (
-    <div className="w-full p-6 my-4bg-gray-50">
-      <div className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-6 bg-slate-50">
-        <h3 className="text-lg text-gray-700">
-          Code Hook: <span className="font-action font-bold">{payload.target}</span>
-        </h3>
-      </div>
-      {payload.params && (
-        <div className="space-y-2">
-          {Object.entries(payload.params).map(
-            ([key, value]) =>
-              value && (
-                <div key={key} className="flex items-start">
-                  <span className="font-medium text-gray-600 min-w-24">{key}:</span>
-                  <span className="text-gray-800 ml-2">{value}</span>
-                </div>
-              )
-          )}
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div id={getPaneId()} className="pane">

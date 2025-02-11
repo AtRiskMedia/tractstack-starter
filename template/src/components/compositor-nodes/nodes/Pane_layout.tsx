@@ -2,6 +2,7 @@ import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
+import { CodeHookContainer } from "./Pane";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
 
@@ -27,7 +28,6 @@ export const PaneLayout = (props: NodeProps) => {
     return unsubscribe;
   }, []);
 
-  // todo naz - make pane more modular
   return (
     <div id={getPaneId()} className="pane min-h-16">
       <div id={getCtx(props).getNodeSlug(props.nodeId)} className={wrapperClasses}>
@@ -58,10 +58,7 @@ export const PaneLayout = (props: NodeProps) => {
             <PuzzlePieceIcon className="h-10 w-10 text-white" />
           </button>
           {codeHookPayload ? (
-            <>
-              <em>Code Hook:</em>
-              {JSON.stringify(codeHookPayload, null, 2)}
-            </>
+            <CodeHookContainer payload={codeHookPayload} />
           ) : (
             <RenderChildren children={children} nodeProps={props} />
           )}
