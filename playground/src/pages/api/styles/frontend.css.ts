@@ -3,10 +3,10 @@ import { cssStore } from "@/store/css";
 
 export const GET: APIRoute = async ({ request }) => {
   const store = cssStore.get();
-  
+
   // Get requested version from URL if present
   const url = new URL(request.url);
-  const requestedVersion = url.searchParams.get('v');
+  const requestedVersion = url.searchParams.get("v");
 
   // Set cache control headers
   const headers = new Headers({

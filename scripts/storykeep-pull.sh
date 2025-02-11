@@ -112,8 +112,11 @@ if [ -f "$STORYKEEP_PATH/package.json" ]; then
     if jq '.' "$TEMPLATE_DIR/package.json" >/dev/null 2>&1 &&
       jq '.' "$STORYKEEP_PATH/package.json" >/dev/null 2>&1; then
       echo -e "\n${blue}Attempting to merge package.json files...${reset}"
-      if jq -s '.[0] * .[1] | del(.scripts.prepare) | del(.devDependencies.husky)' \
-        "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
+      if jq -s '
+        .[1] * .[0] | 
+        .dependencies = (.dependencies + (.[1].dependencies | to_entries | map(select(.key as $k | .[0].dependencies[$k] | not)) | from_entries)) | 
+        .devDependencies = (.devDependencies + (.[1].devDependencies | to_entries | map(select(.key as $k | .[0].devDependencies[$k] | not)) | from_entries))
+      ' "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
         mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
         echo -e "${green}Successfully updated package.json${reset}"
       else
