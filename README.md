@@ -15,11 +15,18 @@ Tract Stack is built on [Astro](https://astro.build/)
 Please visit [docs](https://tractstack.org)
 For production deployment you'll need to prepare your server.
 
-## Building + serving
+### Quick start
 
-`docker build --network=host -t tractstack .`
+```bash
+pnpm create astro@latest my-tractstack-site \
+  --template AtRiskMedia/tractstack-starter/template \
+  --typescript strict \
+  --install \
+  --package-manager pnpm
 
-`docker run --net=host -v $(pwd)/config:/app/config -d --restart unless-stopped tractstack`
+cd my-tractstack-site
+pnpm dev
+```
 
 ## Queries?
 
