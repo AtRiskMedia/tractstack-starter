@@ -6,7 +6,7 @@ RUN apt-get update && \
     apt-get install -y openssl python3 make g++ && \
     rm -rf /var/lib/apt/lists/*
 # Install pnpm globally
-RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 # Install dependencies
