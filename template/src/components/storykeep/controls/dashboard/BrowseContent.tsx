@@ -168,7 +168,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                   key={page.id}
                   className="bg-mywhite rounded-lg shadow p-2 flex items-center space-x-3"
                 >
-                  <div className="relative w-1/3 h-16">
+                  <div className="relative w-1/3 h-24">
                     <img
                       src={
                         `socialImagePath` in page && page.socialImagePath
@@ -177,7 +177,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       }
                       alt={page.title}
                       className="absolute top-0 left-0 w-full h-full object-cover rounded-md"
-                      style={{ aspectRatio: "1200/630" }} // Sets the aspect ratio to 1200x630
                     />
                   </div>
                   <div className="flex-1 flex flex-col justify-between overflow-hidden">
