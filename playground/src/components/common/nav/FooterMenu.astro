@@ -46,11 +46,10 @@ const allLinks = additionalLinks.concat(featuredLinks);
         <a
           href={item.to}
           class:list={[
-            "px-4 py-2 rounded-md text-lg shadow-sm transition-all duration-200",
-            "hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange",
+            "px-3.5 py-1.5 rounded text-lg shadow-sm transition-colors z-10 whitespace-nowrap",
             item.featured
-              ? "bg-myorange text-white hover:bg-myblue"
-              : "bg-white text-mydarkgrey hover:bg-myorange/20 hover:text-black border border-mydarkgrey/20",
+              ? "bg-cyan-700 text-white hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white"
+              : "bg-white text-cyan-700 hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white",
           ]}
           title={item.description}
         >

@@ -13,7 +13,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [showMostActive, setShowMostActive] = useState(false);
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20; // Increased to show more items per page
 
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $homeSlug = useStore(homeSlugStore);
@@ -22,15 +22,12 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     setIsClient(true);
   }, []);
 
-  // Reset pagination when filters change
   useEffect(() => {
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset pagination when filters change
   }, [query, showMostActive]);
 
-  // Ensure we have a valid array to work with
   const safeContentMap = Array.isArray(contentMap) ? contentMap : [];
 
-  // Filter content to include both StoryFragments and Panes with isContext=true
   const filteredPages = safeContentMap
     .filter((item) => {
       const matchesType =
@@ -54,7 +51,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
 
   const totalPages = Math.ceil(filteredPages.length / itemsPerPage);
 
-  // Ensure current page doesn't exceed total pages
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages);
@@ -68,7 +64,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
 
   if (!isClient) return null;
 
-  // Helper function to generate the correct URL based on content type
   const getContentUrl = (page: FullContentMap, isEdit = false) => {
     const basePath =
       page.type === "Pane" && page.isContext ? `/context/${page.slug}` : `/${page.slug}`;
@@ -76,7 +71,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h3 className="text-xl font-bold font-action px-3.5">Browse Pages</h3>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3.5 space-y-4 md:space-y-0 md:space-x-6">
         <div className="relative w-full md:w-1/3 xl:w-1/4">
@@ -162,82 +157,64 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
         <div className="text-center py-12 text-mydarkgrey">No pages found</div>
       ) : (
         <>
-          <div className="bg-mywhite rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-mylightgrey/20">
-              <thead className="bg-mylightgrey/20">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider w-32"
-                  >
-                    OG
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs text-mydarkgrey uppercase tracking-wider"
-                  >
-                    Details
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-                {paginatedPages.map((page) => {
-                  const events =
-                    $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
-                      ?.total_events || 0;
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paginatedPages.map((page) => {
+              const events =
+                $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
+                  ?.total_events || 0;
 
-                  return (
-                    <tr key={page.id}>
-                      <td className="px-6 py-4 whitespace-nowrap h-20">
-                        <img
-                          src={
-                            `socialImagePath` in page && page.socialImagePath
-                              ? page.socialImagePath
-                              : "/static.jpg"
-                          }
-                          alt={page.title}
-                          className="object-contain"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col space-y-1">
-                          <div className="text-md text-black truncate">{page.title}</div>
-                          {page.slug === $homeSlug ? (
-                            <span className="inline-flex w-fit items-center rounded-full bg-myblue px-2.5 py-0.5 text-xs font-bold text-slate-100">
-                              Home Page
-                            </span>
-                          ) : (
-                            <div className="text-xs text-mydarkgrey truncate">
-                              {page.slug}
-                              {page.type === "Pane" && page.isContext && " (Context Page)"}
-                            </div>
-                          )}
-                          <div className="text-sm text-mydarkgrey truncate flex justify-start items-start gap-x-6">
-                            <span>{events} events</span>
-                            <span>
-                              <a
-                                href={getContentUrl(page)}
-                                className="text-myblue hover:text-myorange mr-3"
-                                title="View"
-                              >
-                                View
-                              </a>
-                              <a
-                                href={getContentUrl(page, true)}
-                                className="text-myblue hover:text-myorange"
-                                title="Edit"
-                              >
-                                Edit
-                              </a>
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              return (
+                <div
+                  key={page.id}
+                  className="bg-mywhite rounded-lg shadow p-2 flex items-center space-x-3"
+                >
+                  <div className="relative w-1/3 h-16">
+                    <img
+                      src={
+                        `socialImagePath` in page && page.socialImagePath
+                          ? page.socialImagePath
+                          : "/static.jpg"
+                      }
+                      alt={page.title}
+                      className="absolute top-0 left-0 w-full h-full object-cover rounded-md"
+                      style={{ aspectRatio: "1200/630" }} // Sets the aspect ratio to 1200x630
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col justify-between overflow-hidden">
+                    <div className="text-sm text-black truncate">{page.title}</div>
+                    <div className="text-xs text-mydarkgrey truncate">
+                      {page.slug}
+                      {page.type === "Pane" && page.isContext && " (Context Page)"}
+                    </div>
+                    {page.slug === $homeSlug && (
+                      <span className="inline-flex w-fit items-center rounded-full bg-myblue px-1 py-0.5 text-xs font-bold text-slate-100">
+                        Home
+                      </span>
+                    )}
+                    <div className="text-xs text-mydarkgrey flex justify-between items-center mt-1">
+                      <span>{events} events</span>
+                      <span className="flex space-x-1">
+                        <a
+                          href={getContentUrl(page)}
+                          className="text-myblue hover:text-myorange"
+                          title="View"
+                        >
+                          View
+                        </a>
+                        /
+                        <a
+                          href={getContentUrl(page, true)}
+                          className="text-myblue hover:text-myorange"
+                          title="Edit"
+                        >
+                          Edit
+                        </a>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {totalPages > 1 && (
