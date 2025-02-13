@@ -1,5 +1,6 @@
 ---
-import type { ResourceNode, CodeHookPayload } from "@/types";
+//import { getFullContentMap } from "@/utils/db/turso.ts";
+import type { /* FullContentMap,*/ ResourceNode, CodeHookPayload } from "@/types";
 import CustomHero from "./CustomHero.astro";
 
 export interface Props {
@@ -9,6 +10,7 @@ export interface Props {
 }
 
 const { target /* resources, options */ } = Astro.props;
+//const contentMap: FullContentMap[] = await getFullContentMap();
 
 export const components = {
   "custom-hero": true,
