@@ -19,13 +19,26 @@ class TailwindScanner:
         
         # Common patterns where Tailwind classes might appear
         self.patterns = [
-            r'className=["\']([^"\']*)["\']',  # React/JSX className
-            r'class=["\']([^"\']*)["\']',      # HTML/Vue class
-            r'classList\.add\(["\']([^"\']*)["\']', # classList.add()
-            r'classList\.toggle\(["\']([^"\']*)["\']', # classList.toggle()
-            r'twMerge\(["\']([^"\']*)["\']',   # twMerge from tailwind-merge
-            r'clsx\({[^}]*["\']([^"\']*)["\']', # clsx with objects
-            r'cn\({[^}]*["\']([^"\']*)["\']',   # cn utility function
+            # React/HTML/Vue class attributes
+            r'className=["\']([^"\']*)["\']',  
+            r'class=["\']([^"\']*)["\']',
+            
+            # Direct string matches to catch string literals and concatenation
+            r'"([^"]*)"',   # Double quotes
+            r'\'([^\']*)\''  # Single quotes
+            r'`([^`]*)`',   # Template literals
+            
+            # Class manipulation methods
+            r'classList\.add\(["\']([^"\']*)["\']',
+            r'classList\.toggle\(["\']([^"\']*)["\']',
+            
+            # Utility functions
+            r'twMerge\(["\']([^"\']*)["\']',
+            r'clsx\({[^}]*["\']([^"\']*)["\']',
+            r'cn\({[^}]*["\']([^"\']*)["\']',
+            
+            # Framework specific
+            r'class:list=\{?\[?["\']([^"\']*)["\']'  # Astro
         ]
         
     def extract_classes_from_line(self, line: str) -> Set[str]:
@@ -45,7 +58,7 @@ class TailwindScanner:
                 # Split on whitespace and filter out empty strings
                 line_classes = [c.strip() for c in class_string.split() if c.strip()]
                 classes.update(line_classes)
-        
+       
         # Also look for classes in template literals or string concatenation
         template_matches = re.finditer(r'`([^`]*)`', line)
         for match in template_matches:
@@ -111,10 +124,12 @@ class TailwindScanner:
             json.dump({"safelist": safelist}, f, indent=2)
 
 def main():
-    # Get script location and set paths relative to it
-    script_dir = Path(__file__).resolve().parent.parent
-    source_dir = script_dir / 'playground' / 'src'
-    output_file = script_dir / 'playground' / 'config' / 'tailwindWhitelist.json'
+    # Get home directory
+    home_dir = Path.home()
+    
+    # Set paths relative to home directory
+    source_dir = home_dir / 'src' / 'tractstack-storykeep' / 'src'
+    output_file = home_dir / 'src' / 'tractstack-storykeep' / 'config' / 'tailwindWhitelist.json'
     
     # Create scanner
     scanner = TailwindScanner()
