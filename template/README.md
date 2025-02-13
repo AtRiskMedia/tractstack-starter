@@ -16,6 +16,7 @@ Please visit [docs](https://tractstack.org)
 For production deployment you'll need to prepare your server.
 
 ### Quick start
+
 ```bash
 pnpm create astro@latest my-tractstack-site \
   --template AtRiskMedia/tractstack-starter/template \

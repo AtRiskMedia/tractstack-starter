@@ -1,6 +1,22 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
+import {
+  getCachedContentMap,
+  setCachedContentMap,
+  getCachedStoryFragmentById,
+  getCachedStoryFragmentBySlug,
+  getCachedPaneById,
+  getCachedPaneBySlug,
+  getCachedMenuById,
+  getCachedMarkdownById,
+  getCachedTractStackById,
+  getCachedTractStackBySlug,
+  getCachedResourceById,
+  getCachedFileById,
+  getCachedBeliefById,
+  processBatchCache,
+} from "@/store/contentCache";
 import type {
   TractStackRowData,
   ResourceRowData,
@@ -28,7 +44,6 @@ export interface StoryFragmentFullRowData {
   menu: MenuRowData | null;
   panes: PaneRowData[];
   markdowns: MarkdownRowData[];
-  files: ImageFileRowData[];
 }
 
 export interface ContextPaneFullRowData {
@@ -54,12 +69,10 @@ export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
-
     const { rows } = await client.execute(
       `SELECT id, title, slug, social_image_path FROM tractstacks`
     );
-
-    return rows
+    const tractStacks = rows
       .map((row) => {
         if (!row.id || !row.title || !row.slug) return null;
         return {
@@ -72,6 +85,10 @@ export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
         } as TractStackRowData;
       })
       .filter((row): row is TractStackRowData => row !== null);
+    processBatchCache({
+      tractStacks,
+    });
+    return tractStacks;
   } catch (error) {
     console.error("Error fetching getAllTractStackRowData:", error);
     throw error;
@@ -79,6 +96,12 @@ export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
 }
 
 export async function getTractStackBySlugRowData(slug: string): Promise<TractStackRowData | null> {
+  // Check cache first
+  const cachedTractStack = getCachedTractStackBySlug(slug);
+  if (cachedTractStack) {
+    return cachedTractStack;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -87,7 +110,7 @@ export async function getTractStackBySlugRowData(slug: string): Promise<TractSta
       args: [slug],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
-      return {
+      const tractStack = {
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
@@ -95,15 +118,26 @@ export async function getTractStackBySlugRowData(slug: string): Promise<TractSta
           ? { social_image_path: rows[0].social_image_path }
           : {}),
       } as TractStackRowData;
+
+      // Update cache
+      processBatchCache({
+        tractStacks: [tractStack],
+      });
+
+      return tractStack;
     }
     return null;
   } catch (error) {
-    console.error("Error fetching getTractStackByIdRowData:", error);
+    console.error("Error fetching getTractStackBySlugRowData:", error);
     throw error;
   }
 }
 
 export async function getTractStackByIdRowData(id: string): Promise<TractStackRowData | null> {
+  // Check cache first
+  const cached = getCachedTractStackById(id);
+  if (cached) return cached;
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -112,7 +146,7 @@ export async function getTractStackByIdRowData(id: string): Promise<TractStackRo
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
-      return {
+      const tractStack = {
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
@@ -120,6 +154,13 @@ export async function getTractStackByIdRowData(id: string): Promise<TractStackRo
           ? { social_image_path: rows[0].social_image_path }
           : {}),
       } as TractStackRowData;
+
+      // Update cache
+      processBatchCache({
+        tractStacks: [tractStack],
+      });
+
+      return tractStack;
     }
     return null;
   } catch (error) {
@@ -149,6 +190,12 @@ export async function upsertTractStackByIdRowData(data: TractStackRowData): Prom
 }
 
 export async function getResourceByIdRowData(id: string): Promise<ResourceRowData | null> {
+  // Check cache first
+  const cachedResource = getCachedResourceById(id);
+  if (cachedResource) {
+    return cachedResource;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -158,7 +205,7 @@ export async function getResourceByIdRowData(id: string): Promise<ResourceRowDat
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
-      return {
+      const resource = {
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
@@ -169,6 +216,13 @@ export async function getResourceByIdRowData(id: string): Promise<ResourceRowDat
           : {}),
         ...(typeof rows[0].action_lisp === "string" ? { action_lisp: rows[0].action_lisp } : {}),
       } as ResourceRowData;
+
+      // Update cache
+      processBatchCache({
+        resources: [resource],
+      });
+
+      return resource;
     }
     return null;
   } catch (error) {
@@ -213,7 +267,7 @@ export async function getAllMenusRowData(): Promise<MenuRowData[]> {
     const client = await tursoClient.getClient();
     if (!client) return [];
     const { rows } = await client.execute(`SELECT id, title, theme, options_payload FROM menus`);
-    return rows
+    const menus = rows
       .map((row) => {
         if (!row.id || !row.title) return null;
         return {
@@ -224,6 +278,10 @@ export async function getAllMenusRowData(): Promise<MenuRowData[]> {
         } as MenuRowData;
       })
       .filter((row): row is MenuRowData => row !== null);
+    processBatchCache({
+      menus,
+    });
+    return menus;
   } catch (error) {
     console.error("Error fetching getAllMenusRowData:", error);
     throw error;
@@ -231,6 +289,12 @@ export async function getAllMenusRowData(): Promise<MenuRowData[]> {
 }
 
 export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null> {
+  // Check cache first
+  const cachedMenu = getCachedMenuById(id);
+  if (cachedMenu) {
+    return cachedMenu;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -239,12 +303,19 @@ export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title) {
-      return {
+      const menu = {
         id: rows[0].id,
         title: rows[0].title,
         theme: rows[0].theme,
         options_payload: rows[0].options_payload,
       } as MenuRowData;
+
+      // Update cache
+      processBatchCache({
+        menus: [menu],
+      });
+
+      return menu;
     }
     return null;
   } catch (error) {
@@ -280,7 +351,7 @@ export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
     const { rows } = await client.execute(
       `SELECT id, filename, alt_description, url, src_set FROM files`
     );
-    return rows
+    const files = rows
       .map((row) => {
         if (!row.id || !row.filename) return null;
         return {
@@ -292,6 +363,10 @@ export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
         } as ImageFileRowData;
       })
       .filter((row): row is ImageFileRowData => row !== null);
+    processBatchCache({
+      files,
+    });
+    return files;
   } catch (error) {
     console.error("Error fetching getAllFilesRowData:", error);
     throw error;
@@ -299,6 +374,12 @@ export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
 }
 
 export async function getFileByIdRowData(id: string): Promise<ImageFileRowData | null> {
+  // Check cache first
+  const cachedFile = getCachedFileById(id);
+  if (cachedFile) {
+    return cachedFile;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -307,13 +388,20 @@ export async function getFileByIdRowData(id: string): Promise<ImageFileRowData |
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].filename) {
-      return {
+      const file = {
         id: rows[0].id,
         filename: rows[0].filename,
         alt_description: rows[0].alt_description,
         url: rows[0].url,
-        ...(typeof rows[0].src_set === "boolean" ? { src_set: rows[0].src_set } : {}),
+        ...(typeof rows[0].src_set === "string" ? { src_set: rows[0].src_set } : {}),
       } as ImageFileRowData;
+
+      // Update cache
+      processBatchCache({
+        files: [file],
+      });
+
+      return file;
     }
     return null;
   } catch (error) {
@@ -344,6 +432,12 @@ export async function upsertFileByIdRowData(data: ImageFileRowData): Promise<boo
 }
 
 export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null> {
+  // Check cache first
+  const cachedPane = getCachedPaneById(id);
+  if (cachedPane) {
+    return cachedPane;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -353,7 +447,7 @@ export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title) {
-      return {
+      const pane = {
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
@@ -364,6 +458,13 @@ export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null
         options_payload: rows[0].options_payload,
         is_context_pane: rows[0].is_context_pane,
       } as PaneRowData;
+
+      // Update cache
+      processBatchCache({
+        panes: [pane],
+      });
+
+      return pane;
     }
     return null;
   } catch (error) {
@@ -407,6 +508,12 @@ export async function upsertPaneByIdRowData(data: PaneRowData): Promise<boolean>
 }
 
 export async function getMarkdownByIdRowData(id: string): Promise<MarkdownRowData | null> {
+  // Check cache first
+  const cachedMarkdown = getCachedMarkdownById(id);
+  if (cachedMarkdown) {
+    return cachedMarkdown;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -415,10 +522,17 @@ export async function getMarkdownByIdRowData(id: string): Promise<MarkdownRowDat
       args: [id],
     });
     if (rows.length > 0 && rows[0].id) {
-      return {
+      const markdown = {
         id: rows[0].id,
         markdown_body: rows[0].body,
       } as MarkdownRowData;
+
+      // Update cache
+      processBatchCache({
+        markdowns: [markdown],
+      });
+
+      return markdown;
     }
     return null;
   } catch (error) {
@@ -462,9 +576,13 @@ export async function upsertPaneFileRelation(pane_id: string, file_id: string): 
   }
 }
 
-export async function getStoryFragmentByIdRowData(
+export async function getCachedStoryFragmentByIdRowData(
   id: string
 ): Promise<StoryFragmentRowData | null> {
+  // Check cache first
+  const cached = getCachedStoryFragmentById(id);
+  if (cached) return cached;
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -489,7 +607,7 @@ export async function getStoryFragmentByIdRowData(
 
     const pane_ids = paneRows.map((row) => row.pane_id);
 
-    return {
+    const storyFragment = {
       id: rows[0].id,
       title: rows[0].title,
       slug: rows[0].slug,
@@ -505,6 +623,13 @@ export async function getStoryFragmentByIdRowData(
         ? { tailwind_background_colour: rows[0].tailwind_background_colour }
         : {}),
     } as StoryFragmentRowData;
+
+    // Update cache
+    processBatchCache({
+      storyFragments: [storyFragment],
+    });
+
+    return storyFragment;
   } catch (error) {
     console.error("Error fetching getStoryFragmentByIdRowData:", error);
     throw error;
@@ -569,6 +694,44 @@ export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData)
 export async function getStoryFragmentBySlugFullRowData(
   slug: string
 ): Promise<StoryFragmentFullRowData | null> {
+  // Check cache first
+  const storyFragment = getCachedStoryFragmentBySlug(slug);
+  if (storyFragment) {
+    // Need to verify we have all related data
+    const tractstack = getCachedTractStackById(storyFragment.tractstack_id);
+    const menu = storyFragment.menu_id ? getCachedMenuById(storyFragment.menu_id) : null;
+    const panes = storyFragment.pane_ids.map((id) => getCachedPaneById(id));
+    const markdowns: MarkdownRowData[] = [];
+
+    // Check if we have all panes and their related data
+    const allPanesFound = panes.every((pane) => {
+      if (!pane) return false;
+      // Check markdown if exists
+      if (pane.markdown_id) {
+        const markdown = getCachedMarkdownById(pane.markdown_id);
+        if (!markdown) return false;
+        markdowns.push(markdown);
+      }
+      // TODO: Check files for each pane
+      // Would need to parse options_payload to get file IDs
+      // but we don't actually need the file ids in the tree
+      // so better to remove from query altogether
+      // same with markdown i believe
+      return true;
+    });
+
+    if (tractstack && (!storyFragment.menu_id || menu) && allPanesFound) {
+      return {
+        storyfragment: storyFragment,
+        tractstack,
+        menu,
+        panes: panes.filter((p): p is PaneRowData => p !== null),
+        markdowns,
+      };
+    }
+  }
+
+  // else load from Turso
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -580,21 +743,7 @@ export async function getStoryFragmentBySlugFullRowData(
           SELECT 
             p.*,
             sp.weight,
-            m.body as markdown_body,
-            (
-              SELECT json_group_array(
-                json_object(
-                  'id', f.id,
-                  'filename', f.filename,
-                  'alt_description', f.alt_description,
-                  'url', f.url,
-                  'src_set', f.src_set
-                )
-              )
-              FROM file_panes fp
-              JOIN files f ON fp.file_id = f.id
-              WHERE fp.pane_id = p.id
-            ) as pane_files
+            m.body as markdown_body
           FROM storyfragment_panes sp
           JOIN panes p ON sp.pane_id = p.id
           LEFT JOIN markdowns m ON p.markdown_id = m.id
@@ -623,7 +772,6 @@ export async function getStoryFragmentBySlugFullRowData(
               'is_context_pane', op.is_context_pane,
               'markdown_id', op.markdown_id,
               'markdown_body', op.markdown_body,
-              'files', op.pane_files,
               'weight', op.weight
             )
           ) as panes_data
@@ -684,8 +832,6 @@ export async function getStoryFragmentBySlugFullRowData(
     );
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
-    const files: ImageFileRowData[] = [];
-    const processedFileIds = new Set<string>();
 
     // Process each pane and its related data
     panesData.forEach((paneData: EnrichedPaneRowData) => {
@@ -712,23 +858,15 @@ export async function getStoryFragmentBySlugFullRowData(
           markdown_body: String(paneData.markdown_body),
         });
       }
+    });
 
-      // Process files
-      const rawFiles = paneData.files ? JSON.parse(String(paneData.files)) : [];
-      if (Array.isArray(rawFiles)) {
-        rawFiles.forEach((file: ImageFileRowData) => {
-          if (!processedFileIds.has(String(file.id))) {
-            files.push({
-              id: String(file.id),
-              filename: String(file.filename),
-              alt_description: file.alt_description ? String(file.alt_description) : null,
-              url: String(file.url),
-              ...(file.src_set && { src_set: String(file.src_set) }),
-            } as ImageFileRowData);
-            processedFileIds.add(String(file.id));
-          }
-        });
-      }
+    // Cache all the data before returning
+    processBatchCache({
+      storyFragments: [storyFragment],
+      tractStacks: [tractstack],
+      menus: menu ? [menu] : undefined,
+      panes,
+      markdowns,
     });
 
     return {
@@ -737,7 +875,6 @@ export async function getStoryFragmentBySlugFullRowData(
       menu,
       panes,
       markdowns,
-      files,
     };
   } catch (error) {
     console.error("Error in getStoryFragmentBySlugFullRowData:", error);
@@ -746,6 +883,11 @@ export async function getStoryFragmentBySlugFullRowData(
 }
 
 export async function getFullContentMap(): Promise<FullContentMap[]> {
+  // Check cache first
+  const cachedContent = getCachedContentMap();
+  if (cachedContent) {
+    return cachedContent;
+  }
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
@@ -786,7 +928,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
 
     const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
 
-    return rows.map((row) => {
+    const mappedData = rows.map((row) => {
       const base = {
         id: ensureString(row.id),
         title: ensureString(row.title),
@@ -842,6 +984,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           throw new Error(`Unknown type: ${row.type}`);
       }
     });
+    setCachedContentMap(mappedData);
+    return mappedData;
   } catch (error) {
     console.log("Unable to fetch content map:", error);
     return [];
@@ -852,13 +996,11 @@ export async function getAllResourcesRowData(): Promise<ResourceRowData[]> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
-
     const { rows } = await client.execute(
       `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
             FROM resources`
     );
-
-    return rows.map(
+    const resources = rows.map(
       (row) =>
         ({
           id: ensureString(row.id),
@@ -870,8 +1012,12 @@ export async function getAllResourcesRowData(): Promise<ResourceRowData[]> {
           ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
         }) as ResourceRowData
     );
+    processBatchCache({
+      resources,
+    });
+    return resources;
   } catch (error) {
-    console.error("Error fetching resources by category slug:", error);
+    console.error("Error fetching getAllResourcesRowData:", error);
     throw error;
   }
 }
@@ -975,11 +1121,70 @@ export async function getResourceBySlugRowData(slug: string): Promise<ResourceRo
 export async function getContextPaneBySlugFullRowData(
   slug: string
 ): Promise<ContextPaneFullRowData | null> {
+  // Check cache first
+  const pane = getCachedPaneBySlug(slug);
+  if (pane && pane.is_context_pane) {
+    // Need to verify we have all related data
+    const markdowns: MarkdownRowData[] = [];
+    let allDependenciesFound = true;
+
+    // Check markdown if exists
+    if (pane.markdown_id) {
+      const markdown = getCachedMarkdownById(pane.markdown_id);
+      if (!markdown) {
+        allDependenciesFound = false;
+      } else {
+        markdowns.push(markdown);
+      }
+    }
+
+    // Parse options_payload to check for file dependencies
+    const files: ImageFileRowData[] = [];
+    try {
+      const options = JSON.parse(pane.options_payload);
+      // Look for file references in nodes
+      if (options.nodes) {
+        const fileIds = new Set<string>();
+        // Recursively find file IDs in nodes
+        const findFileIds = (nodes: any[]) => {
+          nodes.forEach((node) => {
+            if (node.fileId) fileIds.add(node.fileId);
+            if (node.nodes) findFileIds(node.nodes);
+          });
+        };
+        findFileIds(options.nodes);
+
+        // Check if all files are in cache
+        for (const fileId of fileIds) {
+          const file = getCachedFileById(fileId);
+          if (!file) {
+            allDependenciesFound = false;
+            break;
+          } else {
+            files.push(file);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing options_payload:", e);
+      allDependenciesFound = false;
+    }
+
+    if (allDependenciesFound) {
+      return {
+        panes: [pane],
+        markdowns,
+        files,
+      };
+    }
+  }
+
+  // Cache miss or missing dependencies - load from Turso
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
 
-    // Get the context pane
+    // Get the context pane with all related data in a single query
     const { rows: paneRows } = await client.execute({
       sql: `SELECT 
               p.id, 
@@ -1032,7 +1237,7 @@ export async function getContextPaneBySlugFullRowData(
       },
     ];
 
-    // Get markdown if it exists
+    // Process markdown
     const markdowns: MarkdownRowData[] = [];
     if (paneRow.markdown_id && paneRow.markdown_body) {
       markdowns.push({
@@ -1041,7 +1246,7 @@ export async function getContextPaneBySlugFullRowData(
       });
     }
 
-    // Parse files JSON array
+    // Process files
     let files: ImageFileRowData[] = [];
     if (paneRow.files && typeof paneRow.files === "string") {
       try {
@@ -1058,6 +1263,13 @@ export async function getContextPaneBySlugFullRowData(
       }
     }
 
+    // Update cache with all fetched data
+    processBatchCache({
+      panes,
+      markdowns,
+      files,
+    });
+
     return {
       panes,
       markdowns,
@@ -1073,26 +1285,34 @@ export async function getAllBeliefRowData(): Promise<BeliefRowData[]> {
   try {
     const client = await tursoClient.getClient();
     if (!client) return [];
-    const query = {
-      sql: `SELECT id, title, slug, scale, custom_values 
-            FROM beliefs`,
-      args: [],
-    };
-    const { rows } = await client.execute(query);
-    return rows.map((row) => ({
+    const { rows } = await client.execute(`
+      SELECT id, title, slug, scale, custom_values 
+      FROM beliefs
+    `);
+    const beliefs = rows.map((row) => ({
       id: row.id as string,
       title: row.title as string,
       slug: row.slug as string,
       scale: row.scale as string,
       custom_values: row.custom_values as string | undefined,
     }));
+    processBatchCache({
+      beliefs,
+    });
+    return beliefs;
   } catch (error) {
-    console.error("Error fetching belief data:", error);
+    console.error("Error fetching getAllBeliefRowData:", error);
     throw error;
   }
 }
 
 export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | null> {
+  // Check cache first
+  const cachedBelief = getCachedBeliefById(id);
+  if (cachedBelief) {
+    return cachedBelief;
+  }
+
   try {
     const client = await tursoClient.getClient();
     if (!client) return null;
@@ -1102,7 +1322,7 @@ export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | 
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title) {
-      return {
+      const belief = {
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
@@ -1111,6 +1331,13 @@ export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | 
           ? { custom_values: rows[0].custom_values }
           : {}),
       } as BeliefRowData;
+
+      // Update cache
+      processBatchCache({
+        beliefs: [belief],
+      });
+
+      return belief;
     }
     return null;
   } catch (error) {
