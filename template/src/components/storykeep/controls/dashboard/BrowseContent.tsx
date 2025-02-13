@@ -13,7 +13,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [showMostActive, setShowMostActive] = useState(false);
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20; // Increased to show more items per page
+  const itemsPerPage = 16;
 
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $homeSlug = useStore(homeSlugStore);
@@ -168,7 +168,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                   key={page.id}
                   className="bg-mywhite rounded-lg shadow p-2 flex items-center space-x-3"
                 >
-                  <div className="relative w-1/3 h-24">
+                  <div className="relative w-1/3" style={{ paddingBottom: "17.5%" }}>
                     <img
                       src={
                         `socialImagePath` in page && page.socialImagePath
@@ -176,7 +176,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                           : "/static.jpg"
                       }
                       alt={page.title}
-                      className="absolute top-0 left-0 w-full h-full object-cover rounded-md"
+                      className="absolute inset-0 w-full h-full object-cover rounded-md"
                     />
                   </div>
                   <div className="flex-1 flex flex-col justify-between overflow-hidden">
