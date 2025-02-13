@@ -54,11 +54,13 @@ export function updateCacheStats(isHit: boolean) {
   });
 }
 
-export const contentMapStore = atom<{
-  items: FullContentMap[];
+type ContentMapStore = {
+  items: FullContentMap[] | null;
   lastUpdated: number | null;
-}>({
-  items: [],
+};
+
+export const contentMapStore = atom<ContentMapStore>({
+  items: null,
   lastUpdated: null,
 });
 
@@ -154,10 +156,10 @@ function touchCacheEntry<T>(entry: CacheEntry<T>): CacheEntry<T> {
   };
 }
 
-export function setCachedContentMap(items: FullContentMap[]) {
+export function setCachedContentMap(items: FullContentMap[] | null) {
   contentMapStore.set({
-    items,
-    lastUpdated: Date.now(),
+    items: items?.length ? items : null,
+    lastUpdated: items?.length ? Date.now() : null,
   });
 }
 
