@@ -149,7 +149,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
   }
 
   <Footer
-    created={storyfragmentNode.created || new Date()}
+    created={new Date()}
     menuId={storyfragmentNode?.hasMenu ? storyfragmentNode.menuId : null}
     backToTop={true}
     slug={lookup}
