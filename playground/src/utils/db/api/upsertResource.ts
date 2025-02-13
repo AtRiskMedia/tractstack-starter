@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { ResourceRowData } from "@/store/nodesSerializer";
 
 export async function upsertResource(
@@ -9,7 +10,6 @@ export async function upsertResource(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     await client.execute({
       sql: `INSERT INTO resources (id, title, slug, oneliner, options_payload, category_slug, action_lisp)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -30,7 +30,8 @@ export async function upsertResource(
         rowData.action_lisp || null,
       ],
     });
-
+    invalidateEntry("resource", rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertResource:", error);

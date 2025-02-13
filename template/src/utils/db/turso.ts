@@ -2,8 +2,9 @@ import { ulid } from "ulid";
 import { tursoClient } from "./client";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
 import {
-  getCachedContentMap,
+  invalidateEntry,
   setCachedContentMap,
+  getCachedContentMap,
   getCachedStoryFragmentById,
   getCachedStoryFragmentBySlug,
   getCachedPaneById,
@@ -182,6 +183,8 @@ export async function upsertTractStackByIdRowData(data: TractStackRowData): Prom
               social_image_path = excluded.social_image_path`,
       args: [data.id, data.title, data.slug, data.social_image_path || null],
     });
+    invalidateEntry("tractstack", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertTractStackByIdRowData:", error);
@@ -255,6 +258,8 @@ export async function upsertResourceByIdRowData(data: ResourceRowData): Promise<
         data.action_lisp || null,
       ],
     });
+    invalidateEntry("resource", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertResourceByIdRowData:", error);
@@ -337,6 +342,8 @@ export async function upsertMenuByIdRowData(data: MenuRowData): Promise<boolean>
               options_payload = excluded.options_payload`,
       args: [data.id, data.title, data.theme, data.options_payload],
     });
+    invalidateEntry("menu", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertMenuByIdRowData:", error);
@@ -424,6 +431,8 @@ export async function upsertFileByIdRowData(data: ImageFileRowData): Promise<boo
               src_set = excluded.src_set`,
       args: [data.id, data.filename, data.alt_description || null, data.url, data.src_set || null],
     });
+    invalidateEntry("file", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertFileByIdRowData:", error);
@@ -500,6 +509,8 @@ export async function upsertPaneByIdRowData(data: PaneRowData): Promise<boolean>
         data.markdown_id || null,
       ],
     });
+    invalidateEntry("pane", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertPaneByIdRowData:", error);
@@ -683,7 +694,8 @@ export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData)
         });
       }
     }
-
+    invalidateEntry("storyfragment", data.id);
+    setCachedContentMap([]);
     return true;
   } catch (error) {
     console.error("Error in upsertStoryFragmentByIdRowData:", error);

@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { StoryFragmentRowData } from "@/store/nodesSerializer";
 
 export async function upsertStoryFragment(
@@ -55,7 +56,8 @@ export async function upsertStoryFragment(
         });
       }
     }
-
+    invalidateEntry("storyfragment", rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertStoryFragment:", error);

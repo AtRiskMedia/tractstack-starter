@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { PaneRowData, MarkdownRowData } from "@/store/nodesSerializer";
 
 interface UpsertPaneRequest {
@@ -14,7 +15,6 @@ export async function upsertPane(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     // Handle markdown update first if provided
     if (
       requestData.markdownData &&
@@ -56,7 +56,8 @@ export async function upsertPane(
         requestData.rowData.markdown_id || null,
       ],
     });
-
+    invalidateEntry("pane", requestData.rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertPane:", error);

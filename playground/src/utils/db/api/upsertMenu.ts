@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { MenuRowData } from "@/store/nodesSerializer";
 
 export async function upsertMenu(
@@ -9,7 +10,6 @@ export async function upsertMenu(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     await client.execute({
       sql: `INSERT INTO menus (id, title, theme, options_payload)
             VALUES (?, ?, ?, ?)
@@ -19,7 +19,8 @@ export async function upsertMenu(
               options_payload = excluded.options_payload`,
       args: [rowData.id, rowData.title, rowData.theme, rowData.options_payload],
     });
-
+    invalidateEntry("menu", rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertMenu:", error);

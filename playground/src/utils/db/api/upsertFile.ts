@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { ImageFileRowData } from "@/store/nodesSerializer";
 
 export async function upsertFile(
@@ -9,7 +10,6 @@ export async function upsertFile(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     await client.execute({
       sql: `INSERT INTO files (id, filename, alt_description, url, src_set)
             VALUES (?, ?, ?, ?, ?)
@@ -26,7 +26,8 @@ export async function upsertFile(
         rowData.src_set || null,
       ],
     });
-
+    invalidateEntry("file", rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertFile:", error);

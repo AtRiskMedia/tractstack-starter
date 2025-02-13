@@ -1,4 +1,5 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { BeliefRowData } from "@/store/nodesSerializer";
 
 export async function upsertBelief(
@@ -9,7 +10,6 @@ export async function upsertBelief(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     await client.execute({
       sql: `INSERT INTO beliefs (id, title, slug, scale, custom_values)
             VALUES (?, ?, ?, ?, ?)
@@ -20,7 +20,8 @@ export async function upsertBelief(
               custom_values = excluded.custom_values`,
       args: [rowData.id, rowData.title, rowData.slug, rowData.scale, rowData.custom_values || null],
     });
-
+    invalidateEntry("belief", rowData.id);
+    setCachedContentMap([]);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertBelief:", error);
