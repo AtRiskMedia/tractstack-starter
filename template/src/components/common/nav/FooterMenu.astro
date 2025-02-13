@@ -37,13 +37,6 @@ const featuredLinks = thisPayload
     return item;
   });
 const allLinks = additionalLinks.concat(featuredLinks);
-
-const defaultClasses =
-  "px-3.5 py-1.5 rounded text-lg shadow-sm transition-colors z-10 whitespace-nowrap";
-const featuredClasses =
-  "bg-cyan-700 text-white hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white";
-const normalClasses =
-  "bg-white text-cyan-700 hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white";
 ---
 
 <div class="mx-auto max-w-4xl py-12 px-4">
@@ -52,7 +45,12 @@ const normalClasses =
       allLinks.map((item: MenuLinkDatum) => (
         <a
           href={item.to}
-          class:list={[defaultClasses, item.featured ? featuredClasses : normalClasses]}
+          class={
+            "px-3.5 py-1.5 rounded text-lg shadow-sm transition-colors z-10 whitespace-nowrap " +
+            (item.featured
+              ? "bg-cyan-700 text-white hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white"
+              : "bg-white text-cyan-700 hover:bg-myblack hover:text-white focus:bg-cyan-700 focus:text-white")
+          }
           title={item.description}
         >
           <span class="font-bold">{item.name}</span>
