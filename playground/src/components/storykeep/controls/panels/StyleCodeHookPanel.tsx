@@ -28,14 +28,22 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
   const [localTarget, setLocalTarget] = useState(node.codeHookTarget || "");
   const [query, setQuery] = useState("");
 
-  // Convert options object to array for better state management
-  const [localOptions, setLocalOptions] = useState<OptionState[]>(() =>
-    Object.entries(node.codeHookPayload || {}).map(([key, value]) => ({
-      key,
-      value,
-      isDirty: false,
-    }))
-  );
+  // Parse the nested options from JSON string
+  const [localOptions, setLocalOptions] = useState<OptionState[]>(() => {
+    try {
+      const payload = node.codeHookPayload || {};
+      const optionsStr = payload.options || "{}";
+      const parsedOptions = JSON.parse(optionsStr);
+      return Object.entries(parsedOptions).map(([key, value]) => ({
+        key,
+        value: String(value),
+        isDirty: false,
+      }));
+    } catch (error) {
+      console.error("Error parsing options:", error);
+      return [];
+    }
+  });
 
   // Debounced update to store
   const updateStore = useCallback(
@@ -44,14 +52,13 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
       const allNodes = ctx.allNodes.get();
       const paneNode = cloneDeep(allNodes.get(node.id)) as PaneNode;
       if (!paneNode) return;
+
       const updatedNode = {
         ...paneNode,
         codeHookTarget: target,
-        ...(Object.keys(options).length
-          ? {
-              codeHookPayload: options,
-            }
-          : {}),
+        codeHookPayload: {
+          options: JSON.stringify(options),
+        },
         isChanged: true,
       };
       ctx.modifyNodes([updatedNode]);
