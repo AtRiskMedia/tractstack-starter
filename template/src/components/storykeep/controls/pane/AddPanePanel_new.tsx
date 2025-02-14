@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
 import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
+import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { brandColours, preferredTheme } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
+import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
+import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
 
@@ -44,6 +47,8 @@ const AddPaneNewPanel = ({
   isContextPane = false,
 }: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
+  const [copyMode, setCopyMode] = useState<CopyMode>("design");
+  const [customMarkdown, setCustomMarkdown] = useState<string>(`...`);
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
@@ -71,13 +76,23 @@ const AddPaneNewPanel = ({
     const newPreviews = filteredTemplates.map((template, index: number) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
-      ctx.addTemplatePane("tmp", template);
-      return { ctx, template, index };
+      const thisTemplate =
+        copyMode === `custom`
+          ? {
+              ...template,
+              markdown: template.markdown && {
+                ...template.markdown,
+                markdownBody: customMarkdown,
+              },
+            }
+          : template;
+      ctx.addTemplatePane("tmp", thisTemplate);
+      return { ctx, template: thisTemplate, index };
     });
     setPreviews(newPreviews);
     setCurrentPage(0);
     setRenderedPages(new Set([0]));
-  }, [filteredTemplates]);
+  }, [filteredTemplates, customMarkdown, copyMode]);
 
   const totalPages = Math.ceil(previews.length / ITEMS_PER_PAGE);
 
@@ -95,11 +110,28 @@ const AddPaneNewPanel = ({
 
   const handleTemplateInsert = (template: any, nodeId: string, first: boolean) => {
     if (ctx) {
+      // If in blank mode, create a copy of template and wipe markdown content
+      // if custom mode, user markdown is used
+      const insertTemplate = [`blank`, `custom`].includes(copyMode)
+        ? {
+            ...template,
+            markdown: template.markdown && {
+              ...template.markdown,
+              markdownBody: copyMode === `blank` ? `...` : customMarkdown,
+            },
+          }
+        : template;
+
       const ownerId =
         isStoryFragment || isContextPane
           ? nodeId
           : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
-      const newPaneId = ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
+      const newPaneId = ctx.addTemplatePane(
+        ownerId,
+        insertTemplate,
+        nodeId,
+        first ? "before" : "after"
+      );
       if (newPaneId) ctx.notifyNode(`root`);
     }
   };
@@ -247,6 +279,13 @@ const AddPaneNewPanel = ({
               </div>
             </Combobox>
           </div>
+
+          <AddPaneNewCopyMode selected={copyMode} onChange={setCopyMode} />
+          {copyMode === "custom" && (
+            <div className="w-full mt-4">
+              <AddPaneNewCustomCopy value={customMarkdown} onChange={setCustomMarkdown} />
+            </div>
+          )}
         </div>
       </div>
 
