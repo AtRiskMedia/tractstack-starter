@@ -149,7 +149,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         if (create) {
           navigate(`/storykeep/manage/resource/${localResource.id}`);
         }
-      }, 7000);
+      }, 1000);
     } catch (error) {
       console.error("Error saving resource:", error);
     } finally {

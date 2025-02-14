@@ -1,5 +1,6 @@
 ---
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import {ulid} from "ulid"
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
@@ -57,7 +58,7 @@ if (!create && resourceRowData) {
   deserializer.processResourceRowData(resourceRowData, loadData);
 }
 const defaultResource: ResourceNode = {
-  id: ``,
+  id: ulid(),
   parentId: null,
   nodeType: `Resource` as const,
   title: ``,
