@@ -189,18 +189,18 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
               />
             </Switch>
           );
-        case "date":
-          return (
-            <input
-              type="datetime-local"
-              value={value ? new Date(value * 1000).toISOString().slice(0, -8) : ""}
-              onChange={(e) => {
-                const date = new Date(e.target.value);
-                handleOptionsPayloadChange(key, Math.floor(date.getTime() / 1000));
-              }}
-              className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-            />
-          );
+        //case "date":
+        //  return (
+        //    <input
+        //      type="datetime-local"
+        //      value={value ? new Date(value * 1000).toISOString().slice(0, -8) : ""}
+        //      onChange={(e) => {
+        //        const date = new Date(e.target.value);
+        //        handleOptionsPayloadChange(key, Math.floor(date.getTime() / 1000));
+        //      }}
+        //      className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+        //    />
+        //  );
         default:
           return (
             <input
