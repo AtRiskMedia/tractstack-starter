@@ -5,6 +5,7 @@ import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves.`;
 const defaultSectionBody = `### An incredible journey awaits... An incredible journey awaits... An incredible journey awaits...`;
 const defaultIntroBody = `## An incredible journey awaits\n\nAn incredible journey awaits... An incredible journey awaits...`;
+const defaultImageHeroBody = `1. ## An incredible journey awaits\n1. An incredible journey awaits... An incredible journey awaits...\n\n* ![Placeholder image](/static.jpg)\n`;
 
 export const templateCategories = [
   {
@@ -15,6 +16,7 @@ export const templateCategories = [
       ...templateCategories[2].getTemplates(theme, brand, useOdd),
       ...templateCategories[3].getTemplates(theme, brand, useOdd),
       ...templateCategories[4].getTemplates(theme, brand, useOdd),
+      ...templateCategories[5].getTemplates(theme, brand, useOdd),
     ],
   },
   {
@@ -57,6 +59,18 @@ export const templateCategories = [
       getSectionInverse(theme, brand, useOdd, true),
       getSectionBrand(theme, brand, useOdd),
       getSectionBrand(theme, brand, useOdd, true),
+    ],
+  },
+  {
+    id: "image-hero",
+    title: "Image Hero Section",
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      getImageHeroSectionDefault(theme, brand, useOdd),
+      getImageHeroSectionDefault(theme, brand, useOdd, true),
+      getImageHeroSectionOneColumn(theme, brand, useOdd),
+      getImageHeroSectionOneColumn(theme, brand, useOdd, true),
+      getImageHeroSectionCenter(theme, brand, useOdd),
+      getImageHeroSectionCenter(theme, brand, useOdd, true),
     ],
   },
 ] as const;
@@ -940,6 +954,29 @@ const getBaseIntroClasses = (theme: Theme) => ({
   },
 });
 
+const getBaseImageHeroClasses = (theme: Theme) => ({
+  ...getBaseIntroClasses(theme),
+});
+const getImageHeroBaseParentClasses = (): ParentClassesPayload => [
+  ...getIntroBaseParentClasses(),
+  {
+    mobile: {
+      display: "flex",
+      flexDIRECTION: "col",
+      alignITEMS: "center",
+      gap: "8",
+      p: "12",
+      textALIGN: "left",
+    },
+    tablet: {
+      gap: "12",
+    },
+    desktop: {
+      flexDIRECTION: "row",
+    },
+  },
+];
+
 const getIntroBaseParentClasses = (): ParentClassesPayload => [
   {
     mobile: {
@@ -1000,7 +1037,7 @@ export const getIntroSectionDefault = (
       },
       theme
     );
-    parentClasses[2].mobile.shadow = "inner";
+    parentClasses[2].mobile.shadow = "lg";
   }
 
   return {
@@ -1058,7 +1095,7 @@ export const getIntroSectionCenter = (
       },
       theme
     );
-    parentClasses[2].mobile.shadow = "inner";
+    parentClasses[2].mobile.shadow = "lg";
   }
 
   return {
@@ -1117,7 +1154,7 @@ export const getIntroSectionOneColumn = (
       },
       theme
     );
-    parentClasses[2].mobile.shadow = "inner";
+    parentClasses[2].mobile.shadow = "lg";
   }
 
   return {
@@ -1150,6 +1187,181 @@ export const getIntroSectionOneColumn = (
       defaultClasses: getBaseIntroClasses(theme),
       parentClasses,
       markdownBody: defaultIntroBody,
+    },
+  };
+};
+
+export const getImageHeroSectionDefault = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getImageHeroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "left";
+  parentClasses[2].mobile.textWRAP = "pretty";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "lg";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section",
+    slug: "intro-default",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseImageHeroClasses(theme),
+      parentClasses,
+      markdownBody: defaultImageHeroBody,
+    },
+  };
+};
+
+export const getImageHeroSectionCenter = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getImageHeroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "center";
+  parentClasses[2].mobile.textWRAP = "balance";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "lg";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section - centered",
+    slug: "intro-center",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseImageHeroClasses(theme),
+      parentClasses,
+      markdownBody: defaultImageHeroBody,
+    },
+  };
+};
+
+export const getImageHeroSectionOneColumn = (
+  theme: Theme,
+  brand: string,
+  useOdd: boolean = false,
+  bordered: boolean = false
+): TemplatePane => {
+  const parentClasses = getImageHeroBaseParentClasses();
+  parentClasses[2].mobile.textALIGN = "left";
+  parentClasses[2].mobile.textWRAP = "pretty";
+  parentClasses[2].mobile.maxW = "3xl";
+  if (bordered) {
+    parentClasses[2].mobile.bgCOLOR = getColor(
+      {
+        light: useOdd ? "brand-2" : "white",
+        "light-bw": useOdd ? "white" : "brand-2",
+        "light-bold": useOdd ? "brand-2" : "white",
+        dark: useOdd ? "black" : "brand-1",
+        "dark-bw": useOdd ? "black" : "brand-1",
+        "dark-bold": useOdd ? "brand-1" : "black",
+      },
+      theme
+    );
+    parentClasses[2].mobile.shadow = "lg";
+  }
+
+  return {
+    nodeType: "Pane",
+    id: "",
+    parentId: "",
+    isDecorative: false,
+    title: "Intro section - one column",
+    slug: "intro-onecolumn",
+    bgColour: tailwindToHex(
+      getColor(
+        {
+          light: !useOdd ? "brand-2" : "white",
+          "light-bw": !useOdd ? "white" : "brand-2",
+          "light-bold": !useOdd ? "brand-2" : "white",
+          dark: !useOdd ? "black" : "brand-1",
+          "dark-bw": !useOdd ? "black" : "brand-1",
+          "dark-bold": !useOdd ? "brand-1" : "black",
+        },
+        theme
+      ),
+      brand
+    ),
+    markdown: {
+      nodeType: "Markdown",
+      id: "",
+      parentId: "",
+      type: "markdown",
+      markdownId: ulid(),
+      defaultClasses: getBaseImageHeroClasses(theme),
+      parentClasses,
+      markdownBody: defaultImageHeroBody,
     },
   };
 };

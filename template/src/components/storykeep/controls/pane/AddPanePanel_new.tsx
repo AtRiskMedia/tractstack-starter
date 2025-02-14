@@ -55,7 +55,9 @@ const AddPaneNewPanel = ({
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [useOddVariant, setUseOddVariant] = useState(false);
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(templateCategories[0]);
+  const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(
+    templateCategories[first ? 3 : 0]
+  );
 
   const filteredTemplates = useMemo(() => {
     if (query === "") {

@@ -110,6 +110,7 @@ export class MarkdownGenerator {
 
   markdownToFlatNodes(markdown: string, parentId: string): FlatNode[] {
     const nodes: FlatNode[] = [];
+    let currentList: { type: "ol" | "ul"; nodeId: string } | null = null;
 
     const createTextNode = (text: string, parentId: string): FlatNode => {
       const textNodeId = ulid();
@@ -141,61 +142,137 @@ export class MarkdownGenerator {
       return node;
     };
 
-    // Markdown processing logic
+    // Process markdown line by line
     const lines = markdown.split(/\r?\n/);
-    const currentParentId: string | null = parentId;
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (!trimmed) continue; // Skip empty lines
-
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i].trim();
       let match;
 
-      if ((match = /^## (.*)$/.exec(trimmed))) {
-        const headerText = match[1];
-        const headerNode = createNode("h2", currentParentId);
-        createTextNode(headerText, headerNode.id);
-      } else if ((match = /^### (.*)$/.exec(trimmed))) {
-        const headerText = match[1];
-        const headerNode = createNode("h3", currentParentId);
-        createTextNode(headerText, headerNode.id);
-      } else if ((match = /^#### (.*)$/.exec(trimmed))) {
-        const headerText = match[1];
-        const headerNode = createNode("h4", currentParentId);
-        createTextNode(headerText, headerNode.id);
-      } else if ((match = /^\* !\[(.*?)\]\((.*?)\)$/.exec(trimmed))) {
-        const [, alt /*, src*/] = match;
-        // this will use a placeholder image
-        createNode("img", currentParentId, { alt, src: `/static.jpg` });
-      } else if ((match = /^\* (.*)$/.exec(trimmed))) {
-        const listItemText = match[1];
-        const listItemNode = createNode("li", currentParentId);
-        createTextNode(listItemText, listItemNode.id);
-      } else if (trimmed.includes("[") && trimmed.includes("]") && trimmed.includes("(")) {
-        const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
-        let linkMatch;
-        while ((linkMatch = linkRegex.exec(trimmed)) !== null) {
-          const [, linkText, href] = linkMatch;
-          const linkNode = createNode("a", currentParentId, { href });
-          createTextNode(linkText, linkNode.id);
+      // Skip empty lines but handle markdown spacing
+      if (!line) {
+        i++;
+        // Reset list context on double newline
+        if (i < lines.length && !lines[i].trim()) {
+          currentList = null;
+          i++;
         }
-      } else if ((match = /^\*\*(.*?)\*\*$/.exec(trimmed))) {
-        const boldText = match[1];
-        const boldNode = createNode("strong", currentParentId);
-        createTextNode(boldText, boldNode.id);
-      } else if ((match = /^\*(.*?)\*$/.exec(trimmed))) {
-        const italicText = match[1];
-        const italicNode = createNode("em", currentParentId);
-        createTextNode(italicText, italicNode.id);
-      } else if ((match = /^```([a-z]*)\n([\s\S]*?)\n```$/.exec(trimmed))) {
-        const [, code] = match;
-        createNode("code", currentParentId, { copy: code });
-      } else {
-        // Default case for paragraphs or plain text
-        const paragraphNode = createNode("p", currentParentId);
-        createTextNode(trimmed, paragraphNode.id);
+        continue;
       }
+
+      // Ordered list item with heading or paragraph
+      if ((match = /^(\d+)\.\s+(#{1,6}\s+)?(.*)$/.exec(line))) {
+        const [, , headingMarks, content] = match;
+
+        // Create ordered list container if needed
+        if (!currentList || currentList.type !== "ol") {
+          const olNode = createNode("ol", parentId);
+          currentList = { type: "ol", nodeId: olNode.id };
+        }
+
+        // Create list item with appropriate custom tag
+        const isHeading = headingMarks?.trim();
+        const tagNameCustom = isHeading ? `h${headingMarks.trim().length}` : "p";
+        const liNode = createNode("li", currentList.nodeId, { tagNameCustom });
+        createTextNode(content, liNode.id);
+
+        i++;
+        continue;
+      }
+
+      // Unordered list item with image
+      if ((match = /^\* !\[(.*?)\]\((.*?)\)$/.exec(line))) {
+        const [, alt, src] = match;
+
+        // Create unordered list container if needed
+        if (!currentList || currentList.type !== "ul") {
+          const ulNode = createNode("ul", parentId);
+          currentList = { type: "ul", nodeId: ulNode.id };
+        }
+
+        // Create list item and image
+        const liNode = createNode("li", currentList.nodeId);
+        createNode("img", liNode.id, { alt, src: src || "/static.jpg" });
+
+        i++;
+        continue;
+      }
+
+      // Regular unordered list item
+      if ((match = /^\* (.*)$/.exec(line))) {
+        const [, content] = match;
+
+        // Create unordered list container if needed
+        if (!currentList || currentList.type !== "ul") {
+          const ulNode = createNode("ul", parentId);
+          currentList = { type: "ul", nodeId: ulNode.id };
+        }
+
+        const liNode = createNode("li", currentList.nodeId);
+        createTextNode(content, liNode.id);
+
+        i++;
+        continue;
+      }
+
+      // Regular heading
+      if ((match = /^(#{1,6})\s+(.*)$/.exec(line))) {
+        const [, level, content] = match;
+        const headingNode = createNode(`h${level.length}`, parentId);
+        createTextNode(content, headingNode.id);
+        currentList = null;
+        i++;
+        continue;
+      }
+
+      // Links within text
+      if (line.includes("[") && line.includes("]") && line.includes("(")) {
+        const paragraphNode = createNode("p", parentId);
+        const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g;
+        let lastIndex = 0;
+        let content = "";
+
+        while ((match = linkRegex.exec(line)) !== null) {
+          // Add text before link
+          if (match.index > lastIndex) {
+            content += line.substring(lastIndex, match.index);
+          }
+
+          const [, linkText, href] = match;
+          const linkNode = createNode("a", paragraphNode.id, { href });
+          createTextNode(linkText, linkNode.id);
+
+          lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text
+        if (lastIndex < line.length) {
+          content += line.substring(lastIndex);
+        }
+
+        if (content) {
+          createTextNode(content, paragraphNode.id);
+        }
+
+        currentList = null;
+        i++;
+        continue;
+      }
+
+      // Code blocks
+      if ((match = /^```([a-z]*)\n([\s\S]*?)\n```$/.exec(line))) {
+        const [, , code] = match;
+        createNode("code", parentId, { copy: code });
+        currentList = null;
+        i++;
+        continue;
+      }
+
+      // Default to paragraph
+      const paragraphNode = createNode("p", parentId);
+      createTextNode(line, paragraphNode.id);
+      currentList = null;
+      i++;
     }
     return nodes;
   }

@@ -577,6 +577,7 @@ export class NodesContext {
   }
 
   getNodeClasses(nodeId: string, viewport: ViewportKey, depth: number = 0): string {
+    const isPreview = this.rootNodeId.get() === `tmp`;
     const node = this.allNodes.get().get(nodeId);
     if (!node) return "";
 
@@ -591,6 +592,7 @@ export class NodesContext {
               1
             );
 
+            if (isPreview) return desktop[0];
             switch (viewport) {
               case "desktop":
                 return desktop[0];
@@ -645,6 +647,7 @@ export class NodesContext {
                 (node as FlatNode)?.overrideClasses || {},
                 1
               );
+              if (isPreview) return desktop[0];
               switch (viewport) {
                 case "desktop":
                   return desktop[0];
