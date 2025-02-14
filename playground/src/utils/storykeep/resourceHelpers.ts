@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ResourceSetting } from "../../types";
+import type { ResourceSetting } from "@/types";
 
 import knownResourcesRaw from "../../../config/knownResources.json";
 
@@ -33,10 +33,10 @@ export function processResourceValue(key: string, value: any, setting: ResourceS
         return typeof value === "boolean" ? value : (defaultValue ?? false);
       case "number":
         return typeof value === "number" ? value : (defaultValue ?? 0);
-      case "date":
-        return typeof value === "number"
-          ? new Date(value * 1000).toISOString()
-          : (defaultValue ?? "");
+      //case "date":
+      //  return typeof value === "number"
+      //    ? new Date(value * 1000).toISOString()
+      //    : (defaultValue ?? "");
       default:
         return value;
     }
