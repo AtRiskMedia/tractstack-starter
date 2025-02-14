@@ -147,7 +147,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       setTimeout(() => {
         setSaveSuccess(false);
         if (create) {
-          navigate(`/storykeep/manage/resource/${localResource.slug}`);
+          navigate(`/storykeep/content/resources/${localResource.slug}`);
         }
       }, 1000);
     } catch (error) {
