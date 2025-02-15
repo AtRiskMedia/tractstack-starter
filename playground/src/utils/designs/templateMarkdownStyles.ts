@@ -5,7 +5,7 @@ import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
 const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves.`;
 const defaultSectionBody = `### An incredible journey awaits... An incredible journey awaits... An incredible journey awaits...`;
 const defaultIntroBody = `## An incredible journey awaits\n\nAn incredible journey awaits... An incredible journey awaits...`;
-const defaultImageHeroBody = `1. ## An incredible journey awaits\n1. An incredible journey awaits... An incredible journey awaits...\n\n* ![Placeholder image](/static.jpg)\n`;
+const defaultImageHeroBody = `1. ## An incredible journey awaits\n\n* ![Placeholder image](/static.jpg)\n`;
 
 export const templateCategories = [
   {
@@ -16,49 +16,45 @@ export const templateCategories = [
       ...templateCategories[2].getTemplates(theme, brand, useOdd),
       ...templateCategories[3].getTemplates(theme, brand, useOdd),
       ...templateCategories[4].getTemplates(theme, brand, useOdd),
-      ...templateCategories[5].getTemplates(theme, brand, useOdd),
     ],
   },
   {
     id: "paragraph",
-    title: "Just copy",
+    title: "Tell your story",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getParagraphDefault(theme, brand, useOdd),
-      getParagraphOneColumn(theme, brand, useOdd),
-      getParagraphCenter(theme, brand, useOdd),
-    ],
-  },
-  {
-    id: "paragraph-bordered",
-    title: "Just copy (bordered)",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getParagraphDefault(theme, brand, useOdd, true),
-      getParagraphOneColumn(theme, brand, useOdd, true),
-      getParagraphCenter(theme, brand, useOdd, true),
+      getJustCopyDesign(theme, brand, useOdd, false, `default`),
+      getJustCopyDesign(theme, brand, useOdd, true, `default`),
+      getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
+      getJustCopyDesign(theme, brand, useOdd, true, `onecol`),
+      getJustCopyDesign(theme, brand, useOdd, false, `center`),
+      getJustCopyDesign(theme, brand, useOdd, true, `center`),
     ],
   },
   {
     id: "intro",
-    title: "Intro Section",
+    title: "Page Intro sections",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getIntroSectionDefault(theme, brand, useOdd),
-      getIntroSectionDefault(theme, brand, useOdd, true),
-      getIntroSectionOneColumn(theme, brand, useOdd),
-      getIntroSectionOneColumn(theme, brand, useOdd, true),
-      getIntroSectionCenter(theme, brand, useOdd),
-      getIntroSectionCenter(theme, brand, useOdd, true),
+      getIntroDesign(theme, brand, useOdd, false, `default`),
+      getIntroDesign(theme, brand, useOdd, true, `default`),
+      getIntroDesign(theme, brand, useOdd, false, `onecol`),
+      getIntroDesign(theme, brand, useOdd, true, `onecol`),
+      getIntroDesign(theme, brand, useOdd, false, `center`),
+      getIntroDesign(theme, brand, useOdd, true, `center`),
     ],
   },
   {
     id: "section",
-    title: "Title Section",
+    title: "Sub-title sections",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getSectionDefault(theme, brand, useOdd),
-      getSectionDefault(theme, brand, useOdd, true),
-      getSectionInverse(theme, brand, useOdd),
-      getSectionInverse(theme, brand, useOdd, true),
-      getSectionBrand(theme, brand, useOdd),
-      getSectionBrand(theme, brand, useOdd, true),
+      getSubTitleDesign(theme, brand, useOdd, false, `default`),
+      getSubTitleDesign(theme, brand, useOdd, true, `default`),
+      getSubTitleDesign(theme, brand, useOdd, false, `onecol`),
+      getSubTitleDesign(theme, brand, useOdd, true, `onecol`),
+      getSubTitleDesign(theme, brand, useOdd, false, `center`),
+      getSubTitleDesign(theme, brand, useOdd, true, `center`),
+      getSubTitleDesign(theme, brand, useOdd, false, `default-brand`),
+      getSubTitleDesign(theme, brand, useOdd, false, `onecol-brand`),
+      getSubTitleDesign(theme, brand, useOdd, false, `center-brand`),
     ],
   },
   {
@@ -67,10 +63,6 @@ export const templateCategories = [
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
       getImageHeroSectionDefault(theme, brand, useOdd),
       getImageHeroSectionDefault(theme, brand, useOdd, true),
-      getImageHeroSectionOneColumn(theme, brand, useOdd),
-      getImageHeroSectionOneColumn(theme, brand, useOdd, true),
-      getImageHeroSectionCenter(theme, brand, useOdd),
-      getImageHeroSectionCenter(theme, brand, useOdd, true),
     ],
   },
 ] as const;
@@ -93,17 +85,17 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       textSIZE: "3xl",
       lineHEIGHT: "snug",
       fontFACE: "action",
-      pt: "9",
+      pt: "6",
       pb: "2.5",
     },
     tablet: {
       textSIZE: "5xl",
-      pt: "14",
+      pt: "9",
       pb: "3.5",
     },
     desktop: {
       textSIZE: "6xl",
-      pt: "20",
+      pt: "12",
     },
   },
   h3: {
@@ -122,16 +114,16 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "xl",
       fontFACE: "action",
-      pt: "9",
+      pt: "6",
       pb: "2.5",
     },
     tablet: {
       textSIZE: "3xl",
-      pt: "14",
+      pt: "9",
       pb: "3.5",
     },
     desktop: {
-      pt: "20",
+      pt: "12",
     },
   },
   h4: {
@@ -221,37 +213,91 @@ const getBaseParentClasses = (): ParentClassesPayload => {
   ];
 };
 
-function getParagraphDefault(
+function getJustCopyDesign(
   theme: Theme,
   brand: string,
   useOdd: boolean,
-  bordered: boolean = false
+  bordered: boolean = false,
+  variant: string = `default`
 ): TemplatePane {
+  let title = "";
+  let slug = "";
   const baseClasses = getBaseParentClasses();
-  baseClasses[2].mobile.textALIGN = "left";
-  baseClasses[2].mobile.textWRAP = "pretty";
-  if (bordered) {
-    baseClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    baseClasses[2].mobile.shadow = "md";
+  switch (variant) {
+    case `onecol`: {
+      title = !bordered ? "Copy goes here - one column" : "Copy goes here with border - one column";
+      slug = !bordered ? "paragraph-onecol" : "paragraph-onecol-bordered";
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      baseClasses[2].mobile.maxW = "3xl";
+      if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    case `center`: {
+      title = !bordered ? "Copy goes here - centered" : "Copy goes here with border - centered";
+      slug = !bordered ? "paragraph-centered" : "paragraph-centered-bordered";
+      baseClasses[2].mobile.textALIGN = "center";
+      baseClasses[2].mobile.textWRAP = "balance";
+      if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    default: {
+      title = !bordered ? "Copy goes here" : "Copy goes here with border";
+      slug = !bordered ? "paragraph-default" : "paragraph-default-bordered";
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        baseClasses[2].mobile.shadow = "md";
+      }
+    }
   }
 
   return {
     nodeType: "Pane",
+    title,
+    slug,
     id: "",
     parentId: "",
     isDecorative: false,
-    title: !bordered ? "Copy goes here" : "Copy goes here with border",
-    slug: !bordered ? "paragraph-default" : "paragraph-default-bordered",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -279,28 +325,247 @@ function getParagraphDefault(
   };
 }
 
-function getParagraphCenter(
+function getSubTitleDesign(
   theme: Theme,
   brand: string,
   useOdd: boolean,
-  bordered: boolean = false
+  bordered: boolean = false,
+  variant: string = `default`
 ): TemplatePane {
   const baseClasses = getBaseParentClasses();
-  baseClasses[2].mobile.textALIGN = "center";
-  baseClasses[2].mobile.textWRAP = "balance";
-  if (bordered) {
-    baseClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    baseClasses[2].mobile.shadow = "md";
+  let title = "";
+  let slug = "";
+  let bgColour = "";
+  let textCOLOR = "";
+
+  switch (variant) {
+    case `onecol`: {
+      title = !bordered ? "Title section One Column" : "Title section one column with border";
+      slug = !bordered ? "section-onecol" : "section-onecol-bordered";
+      textCOLOR = getColor(
+        {
+          light: "black",
+          "light-bw": "black",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
+        },
+        theme
+      );
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-2" : "white",
+            "light-bw": !useOdd ? "white" : "brand-2",
+            "light-bold": !useOdd ? "brand-2" : "white",
+            dark: !useOdd ? "black" : "brand-1",
+            "dark-bw": !useOdd ? "black" : "brand-1",
+            "dark-bold": !useOdd ? "brand-1" : "black",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      baseClasses[2].mobile.maxW = "3xl";
+      if (bordered) {
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    case `center`: {
+      title = !bordered ? "Title section centered" : "Title section centered with border";
+      slug = !bordered ? "section-center" : "section-center-bordered";
+      textCOLOR = getColor(
+        {
+          light: "black",
+          "light-bw": "black",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
+        },
+        theme
+      );
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-2" : "white",
+            "light-bw": !useOdd ? "white" : "brand-2",
+            "light-bold": !useOdd ? "brand-2" : "white",
+            dark: !useOdd ? "black" : "brand-1",
+            "dark-bw": !useOdd ? "black" : "brand-1",
+            "dark-bold": !useOdd ? "brand-1" : "black",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "center";
+      baseClasses[2].mobile.textWRAP = "balance";
+      if (bordered) {
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    case `onecol-brand`: {
+      (title = "Title section v2 one column"),
+        (slug = "section-onecol-brand"),
+        (textCOLOR = getColor(
+          {
+            light: "black",
+            "light-bw": "black",
+            "light-bold": "black",
+            dark: "black",
+            "dark-bw": "black",
+            "dark-bold": "black",
+          },
+          theme
+        ));
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-3" : "brand-4",
+            "light-bw": !useOdd ? "brand-3" : "brand-4",
+            "light-bold": !useOdd ? "brand-3" : "brand-4",
+            dark: !useOdd ? "brand-3" : "brand-4",
+            "dark-bw": !useOdd ? "brand-3" : "brand-4",
+            "dark-bold": !useOdd ? "brand-3" : "brand-4",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      baseClasses[2].mobile.maxW = "3xl";
+      if (bordered) {
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    case `center-brand`: {
+      (title = "Title section v2 centered"),
+        (slug = "section-center-brand"),
+        (textCOLOR = getColor(
+          {
+            light: "black",
+            "light-bw": "black",
+            "light-bold": "black",
+            dark: "black",
+            "dark-bw": "black",
+            "dark-bold": "black",
+          },
+          theme
+        ));
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-3" : "brand-4",
+            "light-bw": !useOdd ? "brand-3" : "brand-4",
+            "light-bold": !useOdd ? "brand-3" : "brand-4",
+            dark: !useOdd ? "brand-3" : "brand-4",
+            "dark-bw": !useOdd ? "brand-3" : "brand-4",
+            "dark-bold": !useOdd ? "brand-3" : "brand-4",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "center";
+      baseClasses[2].mobile.textWRAP = "balance";
+      if (bordered) {
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    case `default-brand`: {
+      (title = "Title section v2"),
+        (slug = "section-default-brand"),
+        (textCOLOR = getColor(
+          {
+            light: "black",
+            "light-bw": "black",
+            "light-bold": "black",
+            dark: "black",
+            "dark-bw": "black",
+            "dark-bold": "black",
+          },
+          theme
+        ));
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-3" : "brand-4",
+            "light-bw": !useOdd ? "brand-3" : "brand-4",
+            "light-bold": !useOdd ? "brand-3" : "brand-4",
+            dark: !useOdd ? "brand-3" : "brand-4",
+            "dark-bw": !useOdd ? "brand-3" : "brand-4",
+            "dark-bold": !useOdd ? "brand-3" : "brand-4",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      if (bordered) {
+        baseClasses[2].mobile.shadow = "md";
+      }
+      break;
+    }
+
+    default: {
+      title = !bordered ? "Title section" : "Title section with border";
+      slug = !bordered ? "section-default" : "section-default-bordered";
+      textCOLOR = getColor(
+        {
+          light: "black",
+          "light-bw": "black",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
+        },
+        theme
+      );
+      bgColour = tailwindToHex(
+        getColor(
+          {
+            light: !useOdd ? "brand-2" : "white",
+            "light-bw": !useOdd ? "white" : "brand-2",
+            "light-bold": !useOdd ? "brand-2" : "white",
+            dark: !useOdd ? "black" : "brand-1",
+            "dark-bw": !useOdd ? "black" : "brand-1",
+            "dark-bold": !useOdd ? "brand-1" : "black",
+          },
+          theme
+        ),
+        brand
+      );
+      baseClasses[2].mobile.textALIGN = "left";
+      baseClasses[2].mobile.textWRAP = "pretty";
+      if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        baseClasses[2].mobile.shadow = "md";
+      }
+    }
   }
 
   return {
@@ -308,551 +573,67 @@ function getParagraphCenter(
     id: "",
     parentId: "",
     isDecorative: false,
-    title: !bordered ? "Copy goes here - centered" : "Copy goes here with border - centered",
-    slug: !bordered ? "paragraph-centered" : "paragraph-centered-bordered",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
-        },
-        theme
-      ),
-      brand
-    ),
+    title,
+    slug,
+    bgColour,
     markdown: {
       nodeType: "Markdown",
       id: "",
       parentId: "",
       type: "markdown",
       markdownId: ulid(),
-      defaultClasses: getBaseParagraphClasses(theme),
+      defaultClasses: {
+        h2: {
+          mobile: {
+            fontWEIGHT: "bold",
+            textCOLOR,
+            textSIZE: "3xl",
+            fontFACE: "action",
+          },
+          tablet: {
+            textSIZE: "5xl",
+          },
+          desktop: {
+            textSIZE: "6xl",
+          },
+        },
+        h3: {
+          mobile: {
+            fontWEIGHT: "bold",
+            textCOLOR,
+            textSIZE: "2xl",
+            fontFACE: "action",
+          },
+          tablet: {
+            textSIZE: "3xl",
+          },
+          desktop: {},
+        },
+        h4: {
+          mobile: {
+            textCOLOR,
+            textSIZE: "xl",
+            fontFACE: "action",
+          },
+          tablet: {
+            textSIZE: "2xl",
+          },
+          desktop: {},
+        },
+        p: {
+          mobile: {
+            textCOLOR,
+            textSIZE: "lg",
+            py: "3",
+          },
+          tablet: {
+            textSIZE: "xl",
+            py: "4",
+          },
+          desktop: {},
+        },
+      },
       parentClasses: baseClasses,
-      markdownBody: defaultMarkdownBody,
-    },
-  };
-}
-
-function getParagraphOneColumn(
-  theme: Theme,
-  brand: string,
-  useOdd: boolean,
-  bordered: boolean = false
-): TemplatePane {
-  const baseClasses = getBaseParentClasses();
-  baseClasses[2].mobile.textALIGN = "left";
-  baseClasses[2].mobile.textWRAP = "pretty";
-  baseClasses[2].mobile.maxW = "3xl";
-  if (bordered) {
-    baseClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    baseClasses[2].mobile.shadow = "md";
-  }
-
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: !bordered ? "Copy goes here - one column" : "Copy goes here with border - one column",
-    slug: !bordered ? "paragraph-onecol" : "paragraph-onecol-bordered",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: getBaseParagraphClasses(theme),
-      parentClasses: baseClasses,
-      markdownBody: defaultMarkdownBody,
-    },
-  };
-}
-
-const sectionParentClasses = [
-  {
-    mobile: {
-      my: "12",
-    },
-    tablet: {
-      my: "16",
-    },
-    desktop: {},
-  },
-  {
-    mobile: {
-      maxW: "2xl",
-      mx: "auto",
-      px: "8",
-      textALIGN: "center",
-    },
-    tablet: {
-      maxW: "3xl",
-    },
-    desktop: {
-      maxW: "5xl",
-    },
-  },
-] as ParentClassesPayload;
-const sectionExtraParentClasses = [
-  {
-    mobile: {
-      mx: "5",
-      my: "16",
-    },
-    tablet: {
-      maxW: "3xl",
-      mx: "10",
-    },
-    desktop: {
-      maxW: "5xl",
-    },
-  },
-  {
-    mobile: {
-      mx: "auto",
-      maxW: "none",
-    },
-    tablet: {
-      maxW: "screen-lg",
-    },
-    desktop: {
-      maxW: "screen-xl",
-    },
-  },
-  {
-    mobile: {
-      px: "9",
-      py: "10",
-    },
-    tablet: {
-      px: "14",
-    },
-    desktop: {
-      px: "32",
-    },
-  },
-] as ParentClassesPayload;
-
-function getSectionDefault(
-  theme: Theme,
-  brand: string,
-  useOdd: boolean,
-  bordered: boolean = false
-): TemplatePane {
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: !bordered ? "Title Section" : "Title Section with border",
-    slug: !bordered ? "section" : "section-bordered",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-5",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "brand-8",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSIZE: "3xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "5xl",
-          },
-          desktop: {
-            textSIZE: "6xl",
-          },
-        },
-        h3: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSIZE: "2xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "3xl",
-          },
-          desktop: {},
-        },
-        h4: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-5",
-                dark: "brand-4",
-                "dark-bw": "white",
-                "dark-bold": "brand-3",
-              },
-              theme
-            ),
-            textSIZE: "xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "2xl",
-          },
-          desktop: {},
-        },
-        p: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-7",
-                "light-bw": "brand-1",
-                "light-bold": "brand-7",
-                dark: "brand-6",
-                "dark-bw": "brand-2",
-                "dark-bold": "brand-8",
-              },
-              theme
-            ),
-            textSIZE: "lg",
-            py: "3",
-          },
-          tablet: {
-            textSIZE: "xl",
-            py: "4",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
-      markdownBody: defaultSectionBody,
-    },
-  };
-}
-
-function getSectionInverse(
-  theme: Theme,
-  brand: string,
-  useOdd: boolean,
-  bordered: boolean = false
-): TemplatePane {
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: !bordered ? "Title Section - inverse" : "Title Section with border - inverse",
-    slug: !bordered ? "section-inverse" : "section-inverse-bordered",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "black" : "brand-1",
-          "light-bw": !useOdd ? "black" : "brand-1",
-          "light-bold": !useOdd ? "brand-1" : "black",
-          dark: !useOdd ? "brand-2" : "white",
-          "dark-bw": !useOdd ? "white" : "brand-2",
-          "dark-bold": !useOdd ? "brand-2" : "white",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-4",
-                "light-bw": "brand-8",
-                "light-bold": "brand-3",
-                dark: "brand-5",
-                "dark-bw": "brand-1",
-                "dark-bold": "brand-5",
-              },
-              theme
-            ),
-            textSIZE: "3xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "5xl",
-          },
-          desktop: {
-            textSIZE: "6xl",
-          },
-        },
-        h3: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-4",
-                "light-bw": "white",
-                "light-bold": "brand-3",
-                dark: "brand-7",
-                "dark-bw": "brand-1",
-                "dark-bold": "brand-5",
-              },
-              theme
-            ),
-            textSIZE: "2xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "3xl",
-          },
-          desktop: {},
-        },
-        h4: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-4",
-                "light-bw": "white",
-                "light-bold": "brand-3",
-                dark: "brand-7",
-                "dark-bw": "brand-1",
-                "dark-bold": "brand-5",
-              },
-              theme
-            ),
-            textSIZE: "xl",
-            fontFACE: "action",
-          },
-          tablet: {
-            textSIZE: "2xl",
-          },
-          desktop: {},
-        },
-        p: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-6",
-                "light-bw": "brand-2",
-                "light-bold": "brand-8",
-                dark: "brand-7",
-                "dark-bw": "brand-1",
-                "dark-bold": "brand-7",
-              },
-              theme
-            ),
-            textSIZE: "lg",
-            py: "3",
-            textWRAP: "balance",
-          },
-          tablet: {
-            textSIZE: "xl",
-            py: "4",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
-      markdownBody: defaultSectionBody,
-    },
-  };
-}
-
-function getSectionBrand(
-  theme: Theme,
-  brand: string,
-  useOdd: boolean,
-  bordered: boolean = false
-): TemplatePane {
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: !bordered
-      ? "Title Section - brand colours"
-      : "Title Section with border - brand colours",
-    slug: !bordered ? "section-brand" : "section-brand-bordered",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-3" : "brand-4",
-          "light-bw": !useOdd ? "brand-3" : "brand-4",
-          "light-bold": !useOdd ? "brand-4" : "brand-3",
-          dark: !useOdd ? "brand-3" : "brand-4",
-          "dark-bw": !useOdd ? "brand-3" : "brand-4",
-          "dark-bold": !useOdd ? "brand-4" : "brand-3",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: {
-        h2: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-1",
-                "light-bw": "white",
-                "light-bold": "black",
-                dark: "brand-2",
-                "dark-bw": "white",
-                "dark-bold": "black",
-              },
-              theme
-            ),
-            textSIZE: "3xl",
-            fontFACE: "action",
-            textWRAP: "balance",
-          },
-          tablet: {
-            textSIZE: "5xl",
-          },
-          desktop: {
-            textSIZE: "6xl",
-          },
-        },
-        h3: {
-          mobile: {
-            fontWEIGHT: "bold",
-            textCOLOR: getColor(
-              {
-                light: "brand-1",
-                "light-bw": "white",
-                "light-bold": "black",
-                dark: "brand-2",
-                "dark-bw": "white",
-                "dark-bold": "black",
-              },
-              theme
-            ),
-            textSIZE: "2xl",
-            fontFACE: "action",
-            textWRAP: "balance",
-          },
-          tablet: {
-            textSIZE: "3xl",
-          },
-          desktop: {},
-        },
-        h4: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-1",
-                "light-bw": "white",
-                "light-bold": "black",
-                dark: "brand-2",
-                "dark-bw": "white",
-                "dark-bold": "black",
-              },
-              theme
-            ),
-            textSIZE: "xl",
-            fontFACE: "action",
-            textWRAP: "balance",
-          },
-          tablet: {
-            textSIZE: "2xl",
-          },
-          desktop: {},
-        },
-        p: {
-          mobile: {
-            textCOLOR: getColor(
-              {
-                light: "brand-1",
-                "light-bw": "white",
-                "light-bold": "black",
-                dark: "brand-2",
-                "dark-bw": "white",
-                "dark-bold": "black",
-              },
-              theme
-            ),
-            textSIZE: "lg",
-            py: "3",
-            textWRAP: "balance",
-          },
-          tablet: {
-            textSIZE: "xl",
-            py: "4",
-          },
-          desktop: {},
-        },
-      },
-      parentClasses: !bordered ? sectionParentClasses : sectionExtraParentClasses,
       markdownBody: defaultSectionBody,
     },
   };
@@ -954,29 +735,6 @@ const getBaseIntroClasses = (theme: Theme) => ({
   },
 });
 
-const getBaseImageHeroClasses = (theme: Theme) => ({
-  ...getBaseIntroClasses(theme),
-});
-const getImageHeroBaseParentClasses = (): ParentClassesPayload => [
-  ...getIntroBaseParentClasses(),
-  {
-    mobile: {
-      display: "flex",
-      flexDIRECTION: "col",
-      alignITEMS: "center",
-      gap: "8",
-      p: "12",
-      textALIGN: "left",
-    },
-    tablet: {
-      gap: "12",
-    },
-    desktop: {
-      flexDIRECTION: "row",
-    },
-  },
-];
-
 const getIntroBaseParentClasses = (): ParentClassesPayload => [
   {
     mobile: {
@@ -1016,28 +774,82 @@ const getIntroBaseParentClasses = (): ParentClassesPayload => [
   },
 ];
 
-export const getIntroSectionDefault = (
+export const getIntroDesign = (
   theme: Theme,
   brand: string,
   useOdd: boolean = false,
-  bordered: boolean = false
+  bordered: boolean = false,
+  variant: string = `default`
 ): TemplatePane => {
   const parentClasses = getIntroBaseParentClasses();
-  parentClasses[2].mobile.textALIGN = "left";
-  parentClasses[2].mobile.textWRAP = "pretty";
-  if (bordered) {
-    parentClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    parentClasses[2].mobile.shadow = "lg";
+  let title = "";
+  let slug = "";
+  switch (variant) {
+    case `center`: {
+      (title = !bordered ? "Intro section centered" : "Intro section centered with border"),
+        (slug = !bordered ? "intro-centered" : "intro-centered-bordered"),
+        (parentClasses[2].mobile.textALIGN = "center");
+      parentClasses[2].mobile.textWRAP = "balance";
+      if (bordered) {
+        parentClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        parentClasses[2].mobile.shadow = "lg";
+      }
+      break;
+    }
+
+    case `onecol`: {
+      (title = !bordered ? "Intro section one column" : "Intro section one column with border"),
+        (slug = !bordered ? "intro-onecol" : "intro-onecol-bordered"),
+        (parentClasses[2].mobile.textALIGN = "left");
+      parentClasses[2].mobile.textWRAP = "pretty";
+      parentClasses[2].mobile.maxW = "3xl";
+      if (bordered) {
+        parentClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        parentClasses[2].mobile.shadow = "lg";
+      }
+      break;
+    }
+
+    default: {
+      (title = !bordered ? "Intro section" : "Intro section with border"),
+        (slug = !bordered ? "intro-default" : "intro-default-bordered"),
+        (parentClasses[2].mobile.textALIGN = "left");
+      parentClasses[2].mobile.textWRAP = "pretty";
+      if (bordered) {
+        parentClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
+        parentClasses[2].mobile.shadow = "lg";
+      }
+    }
   }
 
   return {
@@ -1045,125 +857,8 @@ export const getIntroSectionDefault = (
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Intro section",
-    slug: "intro-default",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: getBaseIntroClasses(theme),
-      parentClasses,
-      markdownBody: defaultIntroBody,
-    },
-  };
-};
-
-export const getIntroSectionCenter = (
-  theme: Theme,
-  brand: string,
-  useOdd: boolean = false,
-  bordered: boolean = false
-): TemplatePane => {
-  const parentClasses = getIntroBaseParentClasses();
-  parentClasses[2].mobile.textALIGN = "center";
-  parentClasses[2].mobile.textWRAP = "balance";
-  if (bordered) {
-    parentClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    parentClasses[2].mobile.shadow = "lg";
-  }
-
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: "Intro section - centered",
-    slug: "intro-center",
-    bgColour: tailwindToHex(
-      getColor(
-        {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
-        },
-        theme
-      ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: getBaseIntroClasses(theme),
-      parentClasses,
-      markdownBody: defaultIntroBody,
-    },
-  };
-};
-
-export const getIntroSectionOneColumn = (
-  theme: Theme,
-  brand: string,
-  useOdd: boolean = false,
-  bordered: boolean = false
-): TemplatePane => {
-  const parentClasses = getIntroBaseParentClasses();
-  parentClasses[2].mobile.textALIGN = "left";
-  parentClasses[2].mobile.textWRAP = "pretty";
-  parentClasses[2].mobile.maxW = "3xl";
-  if (bordered) {
-    parentClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    parentClasses[2].mobile.shadow = "lg";
-  }
-
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: "Intro section - one column",
-    slug: "intro-onecolumn",
+    title,
+    slug,
     bgColour: tailwindToHex(
       getColor(
         {
@@ -1220,7 +915,7 @@ export const getImageHeroSectionDefault = (
     id: "",
     parentId: "",
     isDecorative: false,
-    title: "Intro section",
+    title: !bordered ? "Hero Image section" : "Hero Image section with border",
     slug: "intro-default",
     bgColour: tailwindToHex(
       getColor(
@@ -1249,119 +944,125 @@ export const getImageHeroSectionDefault = (
   };
 };
 
-export const getImageHeroSectionCenter = (
-  theme: Theme,
-  brand: string,
-  useOdd: boolean = false,
-  bordered: boolean = false
-): TemplatePane => {
-  const parentClasses = getImageHeroBaseParentClasses();
-  parentClasses[2].mobile.textALIGN = "center";
-  parentClasses[2].mobile.textWRAP = "balance";
-  if (bordered) {
-    parentClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    parentClasses[2].mobile.shadow = "lg";
-  }
-
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: "Intro section - centered",
-    slug: "intro-center",
-    bgColour: tailwindToHex(
-      getColor(
+const getBaseImageHeroClasses = (theme: Theme) => ({
+  h2: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
         {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
         },
         theme
       ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: getBaseImageHeroClasses(theme),
-      parentClasses,
-      markdownBody: defaultImageHeroBody,
+      textSIZE: "3xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
+      mb: "4",
+      maxW: "2xl",
     },
-  };
-};
-
-export const getImageHeroSectionOneColumn = (
-  theme: Theme,
-  brand: string,
-  useOdd: boolean = false,
-  bordered: boolean = false
-): TemplatePane => {
-  const parentClasses = getImageHeroBaseParentClasses();
-  parentClasses[2].mobile.textALIGN = "left";
-  parentClasses[2].mobile.textWRAP = "pretty";
-  parentClasses[2].mobile.maxW = "3xl";
-  if (bordered) {
-    parentClasses[2].mobile.bgCOLOR = getColor(
-      {
-        light: useOdd ? "brand-2" : "white",
-        "light-bw": useOdd ? "white" : "brand-2",
-        "light-bold": useOdd ? "brand-2" : "white",
-        dark: useOdd ? "black" : "brand-1",
-        "dark-bw": useOdd ? "black" : "brand-1",
-        "dark-bold": useOdd ? "brand-1" : "black",
-      },
-      theme
-    );
-    parentClasses[2].mobile.shadow = "lg";
-  }
-
-  return {
-    nodeType: "Pane",
-    id: "",
-    parentId: "",
-    isDecorative: false,
-    title: "Intro section - one column",
-    slug: "intro-onecolumn",
-    bgColour: tailwindToHex(
-      getColor(
+    tablet: {
+      textSIZE: "4xl",
+      mb: "6",
+    },
+    desktop: {
+      textSIZE: "5xl",
+      mb: "8",
+    },
+  },
+  p: {
+    mobile: {
+      textCOLOR: getColor(
         {
-          light: !useOdd ? "brand-2" : "white",
-          "light-bw": !useOdd ? "white" : "brand-2",
-          "light-bold": !useOdd ? "brand-2" : "white",
-          dark: !useOdd ? "black" : "brand-1",
-          "dark-bw": !useOdd ? "black" : "brand-1",
-          "dark-bold": !useOdd ? "brand-1" : "black",
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-7",
+          dark: "brand-8",
+          "dark-bw": "brand-2",
+          "dark-bold": "brand-8",
         },
         theme
       ),
-      brand
-    ),
-    markdown: {
-      nodeType: "Markdown",
-      id: "",
-      parentId: "",
-      type: "markdown",
-      markdownId: ulid(),
-      defaultClasses: getBaseImageHeroClasses(theme),
-      parentClasses,
-      markdownBody: defaultImageHeroBody,
+      textSIZE: "lg",
+      lineHEIGHT: "relaxed",
+      maxW: "xl",
+      mb: "6",
     },
-  };
-};
+    tablet: {
+      textSIZE: "xl",
+      mb: "8",
+    },
+    desktop: {
+      maxW: "2xl",
+      mb: "10",
+    },
+  },
+  li: {
+    mobile: {
+      fontWEIGHT: "bold",
+      textCOLOR: getColor(
+        {
+          light: "brand-7",
+          "light-bw": "brand-1",
+          "light-bold": "brand-5",
+          dark: "brand-4",
+          "dark-bw": "brand-8",
+          "dark-bold": "brand-3",
+        },
+        theme
+      ),
+      textSIZE: "3xl",
+      lineHEIGHT: "snug",
+      fontFACE: "action",
+    },
+    tablet: {
+      textSIZE: "4xl",
+    },
+    desktop: {
+      textSIZE: "5xl",
+    },
+  },
+  img: {
+    mobile: {
+      objectFIT: "cover",
+      mx: "auto",
+    },
+    tablet: {
+      maxH: "none",
+      h: "full",
+    },
+    desktop: {
+      w: "1/2",
+      borderL: "8",
+      borderCOLOR: "brand-3",
+    },
+  },
+});
+
+const getImageHeroBaseParentClasses = (): ParentClassesPayload => [
+  ...getIntroBaseParentClasses(),
+  {
+    mobile: {
+      display: "flex",
+      flexDIRECTION: "col",
+      gap: "8",
+      p: "6",
+    },
+    tablet: {
+      p: "12",
+      gap: "12",
+    },
+    desktop: {
+      flexDIRECTION: "row",
+      items: "center",
+      justify: "between",
+      gap: "0",
+      overflow: "hidden",
+      p: "0",
+    },
+  },
+];

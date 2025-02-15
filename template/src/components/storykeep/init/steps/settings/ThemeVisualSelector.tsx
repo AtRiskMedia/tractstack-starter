@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer } from "@/utils/nodes/NodesSnapshotRenderer";
 import { themes } from "@/constants";
-import { getIntroSectionDefault } from "@/utils/designs/templateMarkdownStyles";
+import { getIntroDesign } from "@/utils/designs/templateMarkdownStyles";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import type { Theme, Config } from "@/types";
 
@@ -43,7 +43,7 @@ export default function ThemeVisualSelector({
       (acc, theme) => {
         const ctx = new NodesContext();
         ctx.addNode(createEmptyStorykeep("tmp"));
-        const template = getIntroSectionDefault(theme, brandString, false, true);
+        const template = getIntroDesign(theme, brandString, false, true);
         ctx.addTemplatePane("tmp", template);
         acc[theme] = ctx;
         return acc;
@@ -70,7 +70,7 @@ export default function ThemeVisualSelector({
         (acc, theme) => {
           const ctx = new NodesContext();
           ctx.addNode(createEmptyStorykeep("tmp"));
-          const template = getIntroSectionDefault(theme, brandString, false, true);
+          const template = getIntroDesign(theme, brandString, false, true);
           ctx.addTemplatePane("tmp", template);
           acc[theme] = ctx;
           return acc;
@@ -80,7 +80,7 @@ export default function ThemeVisualSelector({
       themes.forEach((theme) => {
         const ctx = new NodesContext();
         ctx.addNode(createEmptyStorykeep("tmp"));
-        const template = getIntroSectionDefault(theme, brandString, false, true);
+        const template = getIntroDesign(theme, brandString, false, true);
         ctx.addTemplatePane("tmp", template);
         newContexts[theme] = ctx;
       });
@@ -100,7 +100,7 @@ export default function ThemeVisualSelector({
     themes.forEach((theme) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
-      const template = getIntroSectionDefault(theme, brandString, false, true);
+      const template = getIntroDesign(theme, brandString, false, true);
       ctx.addTemplatePane("tmp", template);
       initialContexts[theme] = ctx;
     });

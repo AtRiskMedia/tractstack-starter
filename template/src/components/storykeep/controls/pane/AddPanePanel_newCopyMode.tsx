@@ -18,10 +18,10 @@ export const AddPaneNewCopyMode = ({ selected, onChange }: AddPaneNewCopyModePro
 
   return (
     <div className="w-full pr-4">
-      <div className="mx-auto w-full max-w-4xl">
+      <div className="max-w-4xl">
         <RadioGroup value={selected} onChange={onChange}>
           <RadioGroup.Label className="sr-only">Copy Mode</RadioGroup.Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {modes.map((mode) => (
               <RadioGroup.Option
                 key={mode.id}

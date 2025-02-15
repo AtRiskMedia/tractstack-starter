@@ -36,7 +36,7 @@ interface TemplateCategory {
   getTemplates: (theme: Theme, brand: string, useOdd: boolean) => any[];
 }
 
-const ITEMS_PER_PAGE = 4;
+const ITEMS_PER_PAGE = 6;
 
 const AddPaneNewPanel = ({
   nodeId,
