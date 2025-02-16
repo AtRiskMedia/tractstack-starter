@@ -4,7 +4,6 @@ import { cloneDeep } from "@/utils/common/helpers";
 import type { PageDesign, StoryFragmentNode } from "@/types";
 
 interface ProcessedPage {
-  title: string;
   sections: PageSection[];
 }
 
@@ -20,24 +19,20 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
   const lines = markdown.split("\n");
   const sections: PageSection[] = [];
   let currentSection: PageSection | null = null;
-  let title = "";
   let currentParagraph = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    const h1Match = line.match(/^# (.*)/);
     const h2Match = line.match(/^## (.*)/);
     const h3Match = line.match(/^### (.*)/);
     const h4Match = line.match(/^#### (.*)/);
 
-    if (h1Match) {
-      title = h1Match[1];
-    } else if (h2Match && !currentSection) {
+    if (h2Match && !currentSection) {
       currentSection = {
         type: "intro",
         content: `## ${h2Match[1]}\n\n`,
-        children: [], // Initialize children as an empty array
+        children: [],
       };
     } else if (h3Match) {
       if (currentSection) {
@@ -50,7 +45,7 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
       currentSection = {
         type: "content",
         content: `### ${h3Match[1]}\n\n`,
-        children: [], // Initialize children as an empty array
+        children: [],
       };
     } else if (h4Match && currentSection) {
       if (currentParagraph) {
@@ -60,15 +55,30 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
       const subSection: PageSection = {
         type: "subcontent",
         content: `#### ${h4Match[1]}\n\n`,
-        children: [], // Subcontent can also have children if needed
+        children: [],
       };
       if (!currentSection.children) currentSection.children = [];
       currentSection.children.push(subSection);
+      // Reset currentParagraph to start collecting content for the subSection
+      currentParagraph = "";
     } else if (currentSection) {
+      // This part handles content for both H3 and H4 sections
       if (currentParagraph === "") {
         currentParagraph = line;
       } else {
         currentParagraph += "\n" + line;
+      }
+      // If we're in a subSection, we need to update its content directly
+      if (
+        currentSection.children &&
+        currentSection.children.length > 0 &&
+        currentSection.type === "content"
+      ) {
+        const lastChild = currentSection.children[currentSection.children.length - 1];
+        if (lastChild.type === "subcontent") {
+          lastChild.content += line + "\n";
+          currentParagraph = ""; // Reset since we've added it directly to subSection
+        }
       }
     }
   }
@@ -78,9 +88,17 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
     if (currentSection.type === "intro" && currentParagraph) {
       currentSection.content += currentParagraph.trim() + "\n\n";
     } else if (currentParagraph) {
-      if (currentSection.children && currentSection.children.length > 0) {
-        currentSection.children[currentSection.children.length - 1].content +=
-          currentParagraph.trim() + "\n\n";
+      if (
+        currentSection.children &&
+        currentSection.children.length > 0 &&
+        currentSection.type === "content"
+      ) {
+        const lastChild = currentSection.children[currentSection.children.length - 1];
+        if (lastChild.type === "subcontent") {
+          lastChild.content += currentParagraph.trim() + "\n\n";
+        } else {
+          currentSection.content += currentParagraph.trim() + "\n\n";
+        }
       } else {
         currentSection.content += currentParagraph.trim() + "\n\n";
       }
@@ -88,7 +106,7 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
     sections.push(currentSection);
   }
 
-  return { title, sections };
+  return { sections };
 }
 
 /**
@@ -140,10 +158,10 @@ export function createPagePanes(
  * Validates markdown structure matches expected page format
  */
 export function validatePageMarkdown(markdown: string): boolean {
-  const { title, sections } = parsePageMarkdown(markdown);
+  const { sections } = parsePageMarkdown(markdown);
 
-  // Must have title and at least one section
-  if (!title || sections.length === 0) return false;
+  // Must have at least one section
+  if (sections.length === 0) return false;
 
   // First section should be intro (H2)
   if (sections[0].type !== "intro") return false;
@@ -161,9 +179,9 @@ export function validatePageMarkdown(markdown: string): boolean {
  * Creates preview text of how markdown will be split into panes
  */
 export function getPagePreview(markdown: string): string {
-  const { title, sections } = parsePageMarkdown(markdown);
+  const { sections } = parsePageMarkdown(markdown);
 
-  let preview = `Title: ${title}\n\n`;
+  let preview = ``;
 
   sections.forEach((section, i) => {
     preview += `=== Pane ${i + 1} ===\n`;
@@ -193,7 +211,7 @@ export function buildPagePreview(markdown: string, design: PageDesign, ctx: Node
   const paneIds = createPagePanes(processedPage, design, ctx);
 
   // Update story fragment with panes
-  pageNode.title = processedPage.title;
+  pageNode.title = "";
   pageNode.slug = "preview";
   pageNode.paneIds = paneIds;
 }

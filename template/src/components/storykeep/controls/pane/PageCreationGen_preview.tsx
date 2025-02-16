@@ -73,8 +73,6 @@ export const PageCreationPreview = ({
 
       const pageNode = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
       if (pageNode) {
-        pageNode.title = processedPage.title;
-        pageNode.slug = "preview";
         pageNode.paneIds = paneIds;
       }
 
