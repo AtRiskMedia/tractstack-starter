@@ -135,6 +135,7 @@ const AddPaneNewPanel = ({
         first ? "before" : "after"
       );
       if (newPaneId) ctx.notifyNode(`root`);
+      console.log(newPaneId, ownerId, insertTemplate, nodeId, isStoryFragment);
     }
   };
 

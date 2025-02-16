@@ -213,7 +213,7 @@ const getBaseParentClasses = (): ParentClassesPayload => {
   ];
 };
 
-function getJustCopyDesign(
+export function getJustCopyDesign(
   theme: Theme,
   brand: string,
   useOdd: boolean,
@@ -325,7 +325,7 @@ function getJustCopyDesign(
   };
 }
 
-function getSubTitleDesign(
+export function getSubTitleDesign(
   theme: Theme,
   brand: string,
   useOdd: boolean,

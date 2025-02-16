@@ -1,3 +1,48 @@
 {
-  "genAiPrompt": "You are writing copy for a high traffic internet website. Write for an audience who is reading this website copy and is very interested in what it has to offer. Create a markdown summary of the given text following this structure: Start with a # Heading 1 web page title that's appropriate for SEO. Next a ## Heading 2 containing a catchy, concise title that encapsulates the main theme. Follow with a single paragraph that provides an overall short description, setting the context for the entire piece. Create 3-5 ### Heading 3 sections, each focusing on a key aspect or subtopic of the main theme. Each heading should be followed by one or two paragraphs expanding on that subtopic. Optionally, include a #### Heading 4 subsection under one or more of the ### Heading 3 sections if there's a need to dive deeper into a specific point. This should also be followed by one or two paragraphs. Ensure all content is in pure markdown format, without any HTML tags or special formatting. Adjust the number of sections and subsections based on the length and complexity of the original text: For shorter texts (under 500 words), use fewer sections. For longer texts (over 2000 words), use more sections and subsections. Keep the overall structure and flow coherent, ensuring each section logically leads to the next. Use paragraphs instead of bullet points or lists for the main content under each heading. Maintain a consistent tone and style throughout the summary, matching the original text's voice where appropriate. Aim for a comprehensive yet concise summary that captures the essence of the original text while adhering to this structured format."
+  "formatPrompt": "Create a markdown summary following this structure: Start with a # Heading 1 web page title that's appropriate for SEO. Next a ## Heading 2 containing a catchy, concise title that encapsulates the main theme. Follow with a single paragraph that provides an overall short description, setting the context for the entire piece. Create 3-5 ### Heading 3 sections, each focusing on a key aspect or subtopic of the main theme. Each heading should be followed by any appropriate number of paragraphs expanding on that subtopic. Optionally, include a #### Heading 4 subsection under one or more of the ### Heading 3 sections if there's a need to dive deeper into a specific point. This should also be followed by one or two paragraphs. Ensure all content is in pure markdown format, without any HTML tags or special formatting.",
+  "pagePrompts": {
+    "landing": "You are writing copy for a high-traffic internet website landing page. Write for an audience who is reading this website copy and is very interested in what it has to offer. Focus on compelling value propositions, clear benefits, and strong calls-to-action. Maintain a direct, engaging tone that builds trust and encourages conversion. Each section should naturally lead visitors toward taking action. Keep paragraphs concise and impactful.",
+    "longform": "You are writing an in-depth, long-form blog article or content piece of up to two thousand words. Take a comprehensive, authoritative approach that demonstrates deep expertise while remaining accessible. Build your argument methodically, using a clear narrative structure that guides readers through complex ideas. Focus on delivering valuable insights and thorough analysis. Use a professional yet conversational tone that maintains reader engagement throughout the extended length. Each section should build upon previous points while introducing new dimensions of the topic.",
+    "shortformcontext": "You are writing a focused, contextual page that needs to quickly orient and inform readers about a specific topic or concept in 500 words or less. Prioritize clarity and immediate relevance over comprehensive coverage. Use a direct, efficient writing style that frontloads key information. Keep sections brief but substantive, focusing on what readers need to know in this specific context. Maintain a helpful, straightforward tone that respects the reader's time while ensuring they grasp essential points.",
+    "product": "You are detailing a product page for an e-commerce site. Focus on highlighting unique selling points, specifications, and benefits of the product. Use persuasive language to showcase how the product solves problems or enhances the user's life. Include clear calls-to-action towards purchasing or adding to cart. Ensure the tone is enthusiastic yet informative, with concise sections for easy scanning.",
+    "aboutus": "You're crafting the 'About Us' page for a company website. Narrate the company's history, mission, vision, and values in a storytelling manner that resonates with visitors. Highlight key milestones, team culture, and what sets the company apart. Use a warm, approachable tone that builds trust and connection with the visitor. Include subtle calls-to-action encouraging contact or further exploration of the site.",
+    "contact": "You are writing for a contact page that must be approachable and reassuring. Outline all available contact methods clearly - phone, email, social media, etc. Provide concise instructions or forms for inquiries, emphasizing quick responses and customer satisfaction. Use a friendly, service-oriented tone to make potential clients feel welcome and valued.",
+    "service": "You are detailing a service page where clarity and benefit-focused content are key. Describe each service with emphasis on how it benefits the client, using case studies or testimonials if possible. Structure the content to guide the visitor from understanding the service to seeing its value, culminating in a strong call-to-action to get in touch or book a service. Keep the tone professional yet engaging.",
+    "faq": "You're compiling an FAQ page intended to preemptively answer common questions. Write in a straightforward, informative style, addressing questions succinctly but thoroughly. Organize questions by relevance or category for ease of use. Use a tone that reassures and educates, making users feel their queries are anticipated and valued."
+  },
+  "pagePromptsDetails": {
+    "landing": {
+      "title": "High-Traffic Landing Page",
+      "description": "Engage visitors with compelling offers and clear calls-to-action"
+    },
+    "longform": {
+      "title": "In-depth long-form Post",
+      "description": "Comprehensive, expert-driven analysis on complex topics"
+    },
+    "shortformcontext": {
+      "title": "Quick Context Piece",
+      "description": "Focused content delivering immediate clarity on specific concepts"
+    },
+    "product": {
+      "title": "Product Detail Page",
+      "description": "Highlighting unique features, benefits, and purchase options"
+    },
+    "aboutus": {
+      "title": "About Us",
+      "description": "Our story, mission, and what makes us unique"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "description": "Get in touch with us easily and confidently"
+    },
+    "service": {
+      "title": "Services Overview",
+      "description": "Explore how our services can benefit you"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions Page",
+      "description": "Answers to commonly asked questions"
+    }
+  },
+  "contextPrompt": "Using the following contextual information - both the broad topic/purpose you want to write about and any supporting details, documentation, or reference material - I will help craft appropriate content structured for your specific page type. Please provide both your high-level goal/topic and any relevant reference material you'd like incorporated:"
 }

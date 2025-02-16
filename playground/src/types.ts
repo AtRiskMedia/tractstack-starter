@@ -1083,3 +1083,14 @@ declare global {
 export function hasPlayerJS(window: Window): window is Window & { playerjs: PlayerJS } {
   return "playerjs" in window;
 }
+
+export type PageDesign = {
+  id: string;
+  title: string;
+  introDesign: any; // Will be TemplatePane
+  contentDesign: any; // Will be TemplatePane
+  visualBreaks?: {
+    odd: any; // Will be TemplatePane
+    even: any; // Will be TemplatePane
+  };
+};

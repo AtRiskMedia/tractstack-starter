@@ -136,6 +136,7 @@ const contentMap: FullContentMap[] = await getFullContentMap();
       theme={(config.init.THEME as Theme) || `light`}
       homeSlug={config.init.HOME_SLUG || ``}
       tractstackSlug={config.init.TRACTSTACK_HOME_SLUG || ``}
+      hasAssemblyAI={!!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY}
       client:only="react"
     />
     <ViewTransitions />

@@ -1,9 +1,20 @@
 import { AssemblyAI } from "assemblyai";
 
+// Valid final model options as a const
+export const VALID_FINAL_MODELS = [
+  "assemblyai/mistral-7b",
+  "anthropic/claude-3-opus",
+  "anthropic/claude-3-haiku",
+  "anthropic/claude-3-sonnet",
+  "anthropic/claude-3-5-sonnet",
+] as const;
+
+export type FinalModel = (typeof VALID_FINAL_MODELS)[number];
+
 interface LemurTaskParams {
   prompt: string;
   context?: string | Record<string, unknown>;
-  final_model?: string;
+  final_model?: FinalModel;
   input_text?: string;
   max_output_size?: number;
   temperature?: number;
@@ -21,14 +32,12 @@ export async function runLemurTask(params: LemurTaskParams) {
   }
 
   try {
+    // Default to claude-3-sonnet if no model specified
+    const final_model = params.final_model || "anthropic/claude-3-sonnet";
+
     const result = await client.lemur.task({
-      prompt: params.prompt,
-      context: params.context,
-      final_model: params.final_model,
-      input_text: params.input_text,
-      max_output_size: params.max_output_size,
-      temperature: params.temperature,
-      transcript_ids: params.transcript_ids,
+      ...params,
+      final_model,
     });
     return result;
   } catch (error) {

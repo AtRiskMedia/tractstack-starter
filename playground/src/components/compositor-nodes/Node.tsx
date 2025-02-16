@@ -1,5 +1,6 @@
 import { getCtx, NodesContext } from "@/store/nodes.ts";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
+import PageCreationSelector from "@/components/storykeep/controls/pane/PageCreationSelector";
 import { Pane } from "@/components/compositor-nodes/nodes/Pane.tsx";
 import { PaneAdd } from "@/components/compositor-nodes/nodes/Pane_add.tsx";
 import { PaneConfig } from "@/components/compositor-nodes/nodes/Pane_config.tsx";
@@ -96,7 +97,6 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
-    // generic nodes, not tag (html) elements
     case "Markdown":
       return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
 
@@ -107,17 +107,14 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           {!(sf.slug && sf.title) ? (
             <StoryFragmentTitlePanel nodeId={props.nodeId} />
           ) : (
-            <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
-          )}
-          <AnalyticsPanel nodeId={props.nodeId} />
-          <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
-          {!isPreview && sf.slug && sf.title && sf.paneIds.length === 0 && (
-            <AddPanePanel
-              nodeId={props.nodeId}
-              first={true}
-              ctx={getCtx(props)}
-              isStoryFragment={true}
-            />
+            <>
+              <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+              <AnalyticsPanel nodeId={props.nodeId} />
+              <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
+              {!isPreview && sf.slug && sf.title && sf.paneIds.length === 0 && (
+                <PageCreationSelector nodeId={props.nodeId} ctx={getCtx(props)} />
+              )}
+            </>
           )}
         </>
       );

@@ -5,6 +5,7 @@ import {
   preferredTheme,
   homeSlugStore,
   tractstackSlugStore,
+  hasAssemblyAIStore,
 } from "@/store/storykeep.ts";
 import type { Theme, FullContentMap } from "@/types.ts";
 
@@ -15,8 +16,10 @@ const SetMap = (props: {
   theme: Theme;
   homeSlug: string;
   tractstackSlug: string;
+  hasAssemblyAI: boolean;
 }) => {
-  const { payload, availableCodeHooks, brand, theme, homeSlug, tractstackSlug } = props;
+  const { payload, availableCodeHooks, brand, theme, homeSlug, tractstackSlug, hasAssemblyAI } =
+    props;
 
   useEffect(() => {
     contentMap.set(payload);
@@ -25,6 +28,7 @@ const SetMap = (props: {
     preferredTheme.set(theme);
     homeSlugStore.set(homeSlug);
     tractstackSlugStore.set(tractstackSlug);
+    hasAssemblyAIStore.set(hasAssemblyAI);
   }, []);
 
   return <div />;

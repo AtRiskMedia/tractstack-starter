@@ -19,6 +19,7 @@ export const brandColours = atom<string>("10120d,fcfcfc,f58333,c8df8c,293f58,a7b
 export const preferredTheme = atom<Theme>("light");
 export const homeSlugStore = atom<string>("");
 export const tractstackSlugStore = atom<string>("");
+export const hasAssemblyAIStore = atom<boolean>(false);
 
 export const keyboardAccessible = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
