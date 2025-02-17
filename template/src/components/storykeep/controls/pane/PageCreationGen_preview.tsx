@@ -18,10 +18,22 @@ import {
 function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
   return [
     {
-      id: "minimal",
-      title: "Minimal Layout",
+      id: "min-default",
+      title: "Default Layout, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `default`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `default`),
+    },
+    {
+      id: "min-onecol",
+      title: "One-Column Layout, Minimal",
+      introDesign: () => getIntroDesign(theme, brand, false, true, `onecol`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
+    },
+    {
+      id: "min-centered",
+      title: "Centered Layout, Minimal",
+      introDesign: () => getIntroDesign(theme, brand, false, true, `center`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `center`),
     },
   ];
 }

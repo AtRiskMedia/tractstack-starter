@@ -182,28 +182,25 @@ ${additionalInstructions}`;
             <textarea
               id="customPrompt"
               rows={6}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+              className="p-3.5 w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
               value={customizedPrompt}
               onChange={(e) => setCustomizedPrompt(e.target.value)}
-              maxLength={10000}
+              maxLength={1000}
             />
           </div>
 
           {/* Reference Context */}
           <div>
-            <label
-              htmlFor="referenceContext"
-              className="block text-sm font-bold text-gray-900 mb-2"
-            >
-              Reference Content
+            <label htmlFor="referenceContext" className="block text-sm font-bold text-gray-900">
+              Reference Content &ndash; copy and paste dump here; no formatting required...
             </label>
             <textarea
               id="referenceContext"
               rows={8}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+              className="p-3.5 w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
               value={referenceContext}
               onChange={(e) => setReferenceContext(e.target.value)}
-              maxLength={10000}
+              maxLength={8000}
               placeholder="Paste your reference content here..."
             />
           </div>
@@ -219,17 +216,16 @@ ${additionalInstructions}`;
             <textarea
               id="additionalInstructions"
               rows={4}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
+              className="p-3.5 w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
               value={additionalInstructions}
               onChange={(e) => setAdditionalInstructions(e.target.value)}
-              maxLength={10000}
+              maxLength={2000}
               placeholder="Any additional instructions or requirements..."
             />
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4">
-            <div className="text-sm text-gray-500">{referenceContext.length}/10,000 characters</div>
+          <div className="flex justify-end items-center pt-4">
             <div className="flex gap-4">
               <button
                 type="button"
@@ -330,7 +326,7 @@ ${additionalInstructions}`;
                       {generationStatus === "error"
                         ? "Try Again"
                         : generationStatus === "success"
-                          ? "Apply Content"
+                          ? "Continue"
                           : "Cancel"}
                     </button>
                   </div>
