@@ -18,18 +18,6 @@ pnpm-debug.log*
 !playground/.env.template
 !template/.env
 
-# unique config
-playground/config/init.json
-playground/config/turso.json
-
-# public
-template/public/styles/frontend.css
-playground/public/styles/frontend.css
-playground/public/images
-playground/public/custom
-template/public/images
-template/public/custom
-
 # macOS-specific files
 .DS_Store
 
