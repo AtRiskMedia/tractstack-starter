@@ -41,7 +41,11 @@ const EXCLUDED_PATHS = [
 ];
 
 // Empty files to create
-const EMPTY_FILES = ["config/init.json", "config/turso.json", "public/styles/frontend.css"];
+const EMPTY_FILES = [
+  "config/init.json",
+  "config/turso.json",
+  "public/styles/frontend.css",
+];
 
 async function shouldCopyFile(srcPath: string): Promise<boolean> {
   const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
@@ -63,12 +67,12 @@ async function createEmptyFiles() {
   console.log("Creating empty files...");
   for (const file of EMPTY_FILES) {
     const filePath = path.join(TEMPLATE_DIR, file);
-
+    
     // Ensure the directory exists
     await fs.ensureDir(path.dirname(filePath));
-
+    
     // Create the empty file with appropriate content
-    const content = file.endsWith(".json") ? "{}" : "";
+    const content = file.endsWith('.json') ? '{}' : '';
     await fs.writeFile(filePath, content);
     console.log(`Created empty file: ${file}`);
   }
