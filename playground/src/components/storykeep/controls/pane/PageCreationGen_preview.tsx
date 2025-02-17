@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
+import { Listbox, Transition } from "@headlessui/react";
+import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { themes } from "@/constants";
 import { NodesSnapshotRenderer } from "@/utils/nodes/NodesSnapshotRenderer";
 import { NodesContext } from "@/store/nodes";
@@ -18,8 +20,8 @@ function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
     {
       id: "minimal",
       title: "Minimal Layout",
-      introDesign: getIntroDesign(theme, brand, false),
-      contentDesign: getJustCopyDesign(theme, brand, false),
+      introDesign: () => getIntroDesign(theme, brand, false, true, `default`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `default`),
     },
   ];
 }
@@ -46,7 +48,6 @@ export const PageCreationPreview = ({
   nodeId,
   ctx,
 }: PageCreationPreviewProps) => {
-  console.log(`markdown`, JSON.stringify(markdownContent));
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(0);
   const [preview, setPreview] = useState<PreviewPane | null>(null);
@@ -91,66 +92,144 @@ export const PageCreationPreview = ({
   return (
     <div className="p-6 bg-white rounded-md">
       {/* Controls */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-6 space-y-4">
+        <div className="flex items-center gap-6">
+          {/* Theme Selector */}
           <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
-            <select
-              value={selectedTheme}
-              onChange={(e) => setSelectedTheme(e.target.value as Theme)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
-            >
-              {themes.map((theme) => (
-                <option key={theme} value={theme}>
-                  {theme.replace(/-/g, " ")}
-                </option>
-              ))}
-            </select>
+            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
+              <div className="relative mt-1">
+                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+                  <span className="block truncate capitalize">
+                    {selectedTheme.replace(/-/g, " ")}
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {themes.map((theme) => (
+                      <Listbox.Option
+                        key={theme}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
+                          }`
+                        }
+                        value={theme}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate capitalize ${
+                                selected ? "font-bold" : "font-normal"
+                              }`}
+                            >
+                              {theme.replace(/-/g, " ")}
+                            </span>
+                            {selected ? (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
           </div>
 
-          <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Layout</label>
-            <select
-              value={selectedDesignIndex}
-              onChange={(e) => setSelectedDesignIndex(Number(e.target.value))}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
-            >
-              {pageDesigns.map((design, idx) => (
-                <option key={design.id} value={idx}>
-                  {design.title}
-                </option>
-              ))}
-            </select>
+          {/* Layout Selector */}
+          <div className="w-64">
+            <Listbox value={selectedDesignIndex} onChange={setSelectedDesignIndex}>
+              <div className="relative mt-1">
+                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+                  <span className="block truncate">{pageDesigns[selectedDesignIndex].title}</span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {pageDesigns.map((design, idx) => (
+                      <Listbox.Option
+                        key={design.id}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
+                          }`
+                        }
+                        value={idx}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
+                            >
+                              {design.title}
+                            </span>
+                            {selected ? (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            ) : null}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={onBack}
-            className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Back
-          </button>
-          <button
-            onClick={() => preview?.ctx && onComplete(preview.ctx)}
-            className="px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
-            disabled={!preview?.ctx || !!error}
-          >
-            Apply Design
-          </button>
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-gray-500">
+            {error ? (
+              <span className="text-red-500">{error}</span>
+            ) : (
+              "Please select a theme and design template"
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={onBack}
+              className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => preview?.ctx && onComplete(preview.ctx)}
+              className="px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
+              disabled={!preview?.ctx || !!error}
+            >
+              Apply Design
+            </button>
+          </div>
         </div>
       </div>
 
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-
+      {/* Preview Area */}
       <div className="bg-gray-100 rounded-lg p-4">
         {!preview ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+          <div className="flex flex-col items-center justify-center h-96 bg-white shadow-lg rounded-lg">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600 mb-4"></div>
+            <p className="text-sm text-gray-500">Generating preview...</p>
           </div>
         ) : (
           <div className="bg-white shadow-lg">
@@ -163,14 +242,16 @@ export const PageCreationPreview = ({
                 />
               </div>
             ) : (
-              <NodesSnapshotRenderer
-                ctx={preview.ctx}
-                forceRegenerate={false}
-                onComplete={(data) => {
-                  setPreview((prev) => (prev ? { ...prev, snapshot: data } : null));
-                }}
-                outputWidth={800}
-              />
+              <div className="h-96">
+                <NodesSnapshotRenderer
+                  ctx={preview.ctx}
+                  forceRegenerate={false}
+                  onComplete={(data) => {
+                    setPreview((prev) => (prev ? { ...prev, snapshot: data } : null));
+                  }}
+                  outputWidth={800}
+                />
+              </div>
             )}
           </div>
         )}

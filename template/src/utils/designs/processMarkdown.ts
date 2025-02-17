@@ -1,6 +1,5 @@
 import { NodesContext } from "@/store/nodes";
 import { ulid } from "ulid";
-import { cloneDeep } from "@/utils/common/helpers";
 import type { PageDesign, StoryFragmentNode } from "@/types";
 
 interface ProcessedPage {
@@ -119,33 +118,29 @@ export function createPagePanes(
 ): string[] {
   const paneIds: string[] = [];
 
-  // First handle intro if exists
+  // Intro section uses the introDesign function with useOdd set to false
   const introSection = processedPage.sections.find((s) => s.type === "intro");
   if (introSection) {
-    const introPane = cloneDeep(design.introDesign);
+    const introPane = design.introDesign();
     introPane.id = ulid();
-    introPane.markdown.markdownBody = introSection.content;
+    introPane.markdown.markdownBody = introSection.content || "";
     const paneId = ctx.addTemplatePane("tmp", introPane);
     if (paneId) paneIds.push(paneId);
   }
 
-  // Then handle content sections with alternating styles
+  // Content sections - use the contentDesign function with alternating useOdd
   const contentSections = processedPage.sections.filter((s) => s.type === "content");
   contentSections.forEach((section, index) => {
-    const contentPane = cloneDeep(design.contentDesign);
+    const isEven = index % 2 !== 0;
+    const contentPane = design.contentDesign(!isEven);
     contentPane.id = ulid();
-    // Build content from section and its children
+
     let markdown = "";
     if (section.content) markdown += section.content + "\n\n";
     section.children?.forEach((child) => {
       markdown += child.content + "\n\n";
     });
     contentPane.markdown.markdownBody = markdown.trim();
-
-    // Alternate background color based on index if specified
-    if (design.contentDesign.bgColour && index % 2 !== 0) {
-      contentPane.bgColour = design.contentDesign.bgColour;
-    }
 
     const paneId = ctx.addTemplatePane("tmp", contentPane);
     if (paneId) paneIds.push(paneId);
