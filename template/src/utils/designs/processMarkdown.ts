@@ -1,6 +1,6 @@
 import { NodesContext } from "@/store/nodes";
 import { ulid } from "ulid";
-import type { PageDesign, StoryFragmentNode } from "@/types";
+import type { PageDesign, PaneNode,StoryFragmentNode } from "@/types";
 
 interface ProcessedPage {
   sections: PageSection[];
@@ -125,12 +125,53 @@ export function createPagePanes(
     introPane.id = ulid();
     introPane.markdown.markdownBody = introSection.content || "";
     const paneId = ctx.addTemplatePane("tmp", introPane);
-    if (paneId) paneIds.push(paneId);
+    if (paneId) {
+      paneIds.push(paneId);
+    }
   }
 
   // Content sections - use the contentDesign function with alternating useOdd
   const contentSections = processedPage.sections.filter((s) => s.type === "content");
   contentSections.forEach((section, index) => {
+    // Add visual break before content section if we have breaks defined and it's not the first content section
+    if (design.visualBreaks && index > 0) {
+      const isEven = (index - 1) % 2 === 0;
+      const breakTemplate = isEven ? design.visualBreaks.even() : design.visualBreaks.odd();
+      const lastPaneId = paneIds[paneIds.length - 1];
+
+      if (lastPaneId) {
+        // Get colors from surrounding panes
+        const abovePane = ctx.allNodes.get().get(lastPaneId) as PaneNode;
+        const aboveColor = abovePane?.bgColour || "white";
+
+        // Get the next content pane color by creating temp template
+        const nextContentPane = design.contentDesign(!isEven);
+        const belowColor = nextContentPane.bgColour;
+
+        // Regular breaks - take color of section above, SVG is color of section below
+        breakTemplate.bgColour = aboveColor;
+        const svgFill = belowColor;
+
+        if (breakTemplate.bgPane) {
+          if (breakTemplate.bgPane.breakDesktop) {
+            breakTemplate.bgPane.breakDesktop.svgFill = svgFill;
+          }
+          if (breakTemplate.bgPane.breakTablet) {
+            breakTemplate.bgPane.breakTablet.svgFill = svgFill;
+          }
+          if (breakTemplate.bgPane.breakMobile) {
+            breakTemplate.bgPane.breakMobile.svgFill = svgFill;
+          }
+        }
+
+        const breakPaneId = ctx.addTemplatePane("tmp", breakTemplate, lastPaneId, "after");
+        if (breakPaneId) {
+          paneIds.push(breakPaneId);
+        }
+      }
+    }
+
+    // Add the content section
     const isEven = index % 2 !== 0;
     const contentPane = design.contentDesign(!isEven);
     contentPane.id = ulid();
@@ -143,7 +184,47 @@ export function createPagePanes(
     contentPane.markdown.markdownBody = markdown.trim();
 
     const paneId = ctx.addTemplatePane("tmp", contentPane);
-    if (paneId) paneIds.push(paneId);
+    if (paneId) {
+      paneIds.push(paneId);
+    }
+
+    // Add visual break after last content section if we have breaks defined
+    if (design.visualBreaks && index === contentSections.length - 1) {
+      const isEven = index % 2 === 0;
+      const breakTemplate = isEven ? design.visualBreaks.even() : design.visualBreaks.odd();
+      const lastPaneId = paneIds[paneIds.length - 1];
+
+      if (lastPaneId) {
+        // Get colors for final break
+        const abovePane = ctx.allNodes.get().get(lastPaneId) as PaneNode;
+        const aboveColor = abovePane?.bgColour || "white";
+
+        // Get the next content pane color by creating temp template
+        const nextContentPane = design.contentDesign(!isEven);
+        const belowColor = nextContentPane.bgColour;
+
+        // Final break - inverted colors for bottom edge
+        breakTemplate.bgColour = aboveColor;
+        const svgFill = belowColor;
+
+        if (breakTemplate.bgPane) {
+          if (breakTemplate.bgPane.breakDesktop) {
+            breakTemplate.bgPane.breakDesktop.svgFill = svgFill;
+          }
+          if (breakTemplate.bgPane.breakTablet) {
+            breakTemplate.bgPane.breakTablet.svgFill = svgFill;
+          }
+          if (breakTemplate.bgPane.breakMobile) {
+            breakTemplate.bgPane.breakMobile.svgFill = svgFill;
+          }
+        }
+
+        const breakPaneId = ctx.addTemplatePane("tmp", breakTemplate, lastPaneId, "after");
+        if (breakPaneId) {
+          paneIds.push(breakPaneId);
+        }
+      }
+    }
   });
 
   return paneIds;

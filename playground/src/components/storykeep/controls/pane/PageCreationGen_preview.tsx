@@ -8,6 +8,7 @@ import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { brandColours, preferredTheme } from "@/store/storykeep.ts";
 import type { Theme, PageDesign, StoryFragmentNode } from "@/types";
 import type { SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
+import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
 import { getJustCopyDesign, getIntroDesign } from "@/utils/designs/templateMarkdownStyles";
 import {
   parsePageMarkdown,
@@ -19,19 +20,29 @@ function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
   return [
     {
       id: "min-default",
-      title: "Default Layout, Minimal",
+      title: "Default, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `default`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `default`),
     },
     {
+      id: "min-default-pretty",
+      title: "Default, Pretty",
+      introDesign: () => getIntroDesign(theme, brand, false, true, `default`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `default`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
+    },
+    {
       id: "min-onecol",
-      title: "One-Column Layout, Minimal",
+      title: "One-Column, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `onecol`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
     },
     {
       id: "min-centered",
-      title: "Centered Layout, Minimal",
+      title: "Centered, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `center`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `center`),
     },
