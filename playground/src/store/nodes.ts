@@ -880,6 +880,13 @@ export class NodesContext {
     duplicatedPane.parentId = ownerNode.id;
     duplicatedPane.isChanged = true;
 
+    if (this.rootNodeId.get() !== "tmp") {
+      if (ownerNode.nodeType === "StoryFragment" && "slug" in ownerNode) {
+        // Take storyfragment slug and last 4 chars of pane's ulid
+        duplicatedPane.slug = `${ownerNode.slug}-${duplicatedPaneId.slice(-4)}`;
+      }
+    }
+
     // Track all nodes that need to be added
     let allNodes: BaseNode[] = [];
 
