@@ -41,10 +41,30 @@ function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
     },
     {
+      id: "min-onecol-pretty",
+      title: "One-Column, Pretty",
+      introDesign: () => getIntroDesign(theme, brand, false, true, `onecol`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
+    },
+    {
       id: "min-centered",
       title: "Centered, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `center`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `center`),
+    },
+    {
+      id: "min-centered-pretty",
+      title: "Centered, Pretty",
+      introDesign: () => getIntroDesign(theme, brand, false, true, `center`),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `center`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
     },
   ];
 }
