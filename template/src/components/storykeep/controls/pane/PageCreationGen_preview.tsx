@@ -58,18 +58,14 @@ interface PreviewPane {
 
 interface PageCreationPreviewProps {
   markdownContent: string;
-  onComplete: (previewCtx: NodesContext) => void;
+  onComplete: (previewCtx: NodesContext, markdownContent: string, design: PageDesign) => void;
   onBack: () => void;
-  nodeId: string;
-  ctx: NodesContext;
 }
 
 export const PageCreationPreview = ({
   markdownContent,
   onComplete,
   onBack,
-  nodeId,
-  ctx,
 }: PageCreationPreviewProps) => {
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(0);
@@ -237,7 +233,10 @@ export const PageCreationPreview = ({
               Back
             </button>
             <button
-              onClick={() => preview?.ctx && onComplete(preview.ctx)}
+              onClick={() =>
+                preview?.ctx &&
+                onComplete(preview.ctx, markdownContent, pageDesigns[selectedDesignIndex])
+              }
               className="px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
               disabled={!preview?.ctx || !!error}
             >

@@ -12,6 +12,7 @@ import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
 import { ulid } from "ulid";
+import { getTractStackNode } from "@/utils/db/api/getTractStackNode";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { StoryFragmentNode } from "@/types";
 
@@ -35,13 +36,13 @@ if (slug === "create") {
       item.slug.toLowerCase() === config.init.TRACTSTACK_HOME_SLUG.toLowerCase()
   );
 
-  if (!homeTractstack) {
+  const tractstackNode = homeTractstack ? await getTractStackNode(homeTractstack.id) : null;
+  if (!homeTractstack || !tractstackNode) {
     return new Response(null, {
       status: 404,
       statusText: "Home TractStack not found",
     });
   }
-
   const storyFragmentNode = {
     id: ulid(),
     nodeType: "StoryFragment",
@@ -56,6 +57,7 @@ if (slug === "create") {
   } as StoryFragmentNode;
 
   loadData = {
+    tractstackNodes: [tractstackNode],
     storyfragmentNodes: [storyFragmentNode],
   };
 } else {

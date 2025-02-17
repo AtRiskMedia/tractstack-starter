@@ -144,6 +144,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
                 Add {50 - charCount} more characters for optimal length
               </span>
             )}
+            {` `}
             {warning && <span className="text-yellow-500">Title is getting long</span>}
             {isValid && <span className="text-green-500">Perfect title length!</span>}
           </div>

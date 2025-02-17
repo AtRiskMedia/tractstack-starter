@@ -1,6 +1,6 @@
 import { NodesContext } from "@/store/nodes";
 import { ulid } from "ulid";
-import type { PageDesign, PaneNode,StoryFragmentNode } from "@/types";
+import type { PageDesign, PaneNode, StoryFragmentNode } from "@/types";
 
 interface ProcessedPage {
   sections: PageSection[];
@@ -114,8 +114,10 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
 export function createPagePanes(
   processedPage: ProcessedPage,
   design: PageDesign,
-  ctx: NodesContext
+  ctx: NodesContext,
+  nodeId?: string
 ): string[] {
+  const ownerId = nodeId || ctx.rootNodeId.get();
   const paneIds: string[] = [];
 
   // Intro section uses the introDesign function with useOdd set to false
@@ -124,7 +126,7 @@ export function createPagePanes(
     const introPane = design.introDesign();
     introPane.id = ulid();
     introPane.markdown.markdownBody = introSection.content || "";
-    const paneId = ctx.addTemplatePane("tmp", introPane);
+    const paneId = ctx.addTemplatePane(ownerId, introPane);
     if (paneId) {
       paneIds.push(paneId);
     }
@@ -164,7 +166,7 @@ export function createPagePanes(
           }
         }
 
-        const breakPaneId = ctx.addTemplatePane("tmp", breakTemplate, lastPaneId, "after");
+        const breakPaneId = ctx.addTemplatePane(ownerId, breakTemplate, lastPaneId, "after");
         if (breakPaneId) {
           paneIds.push(breakPaneId);
         }
@@ -183,7 +185,7 @@ export function createPagePanes(
     });
     contentPane.markdown.markdownBody = markdown.trim();
 
-    const paneId = ctx.addTemplatePane("tmp", contentPane);
+    const paneId = ctx.addTemplatePane(ownerId, contentPane);
     if (paneId) {
       paneIds.push(paneId);
     }
@@ -219,7 +221,7 @@ export function createPagePanes(
           }
         }
 
-        const breakPaneId = ctx.addTemplatePane("tmp", breakTemplate, lastPaneId, "after");
+        const breakPaneId = ctx.addTemplatePane(ownerId, breakTemplate, lastPaneId, "after");
         if (breakPaneId) {
           paneIds.push(breakPaneId);
         }

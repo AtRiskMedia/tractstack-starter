@@ -39,6 +39,7 @@ export async function runLemurTask(params: LemurTaskParams) {
       ...params,
       final_model,
     });
+    console.log(`askLemur`, result);
     return result;
   } catch (error) {
     console.error("Error in runLemurTask:", error);

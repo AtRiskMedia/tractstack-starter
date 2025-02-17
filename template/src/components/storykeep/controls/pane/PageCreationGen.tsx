@@ -5,6 +5,8 @@ import { formatPrompt, pagePrompts, pagePromptsDetails } from "../../../../../co
 import PageCreationPreview from "./PageCreationGen_preview";
 import type { NodesContext } from "@/store/nodes";
 import type { FinalModel } from "@/utils/aai/askLemur";
+import type { StoryFragmentNode, PageDesign } from "@/types";
+import { parsePageMarkdown, createPagePanes } from "@/utils/designs/processMarkdown";
 
 type PromptType = keyof typeof pagePrompts;
 
@@ -56,33 +58,33 @@ Additional Instructions:
 ${additionalInstructions}`;
 
     try {
-      //const response = await fetch("/api/aai/askLemur", {
-      //  method: "POST",
-      //  headers: {
-      //    "Content-Type": "application/json",
-      //  },
-      //  body: JSON.stringify({
-      //    prompt: finalPrompt,
-      //    input_text: referenceContext,
-      //    final_model: "anthropic/claude-3-sonnet" as FinalModel,
-      //    temperature: 0.7,
-      //  }),
-      //});
+      const response = await fetch("/api/aai/askLemur", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: finalPrompt,
+          input_text: referenceContext,
+          final_model: "anthropic/claude-3-sonnet" as FinalModel,
+          temperature: 0.7,
+        }),
+      });
 
-      //if (!response.ok) {
-      //  throw new Error("Generation failed");
-      //}
+      if (!response.ok) {
+        throw new Error("Generation failed");
+      }
 
-      //const result = (await response.json()) as GenerationResponse;
+      const result = (await response.json()) as GenerationResponse;
 
-      //if (!result.success || !result.data?.response) {
-      //  throw new Error(result.error || "Generation failed");
-      //}
+      if (!result.success || !result.data?.response) {
+        throw new Error(result.error || "Generation failed");
+      }
 
-      //setGeneratedContent(result.data.response);
-      setGeneratedContent(
-        "## Unleash the Power of the Human-Animal Bond\n\nEmbark on an extraordinary journey that celebrates the profound connection between humans and their canine companions. Discover a world where heartwarming tales, expert insights, and transformative experiences converge, unveiling the magic that unfolds when two kindred spirits unite.\n\n### Pawsitive Care: Nurturing Your Furry Friend\n\nUnlock the secrets to providing your beloved pet with the utmost care and attention they deserve. Explore a treasure trove of expert tips and advice tailored to nurture their physical and mental well-being, ensuring a lifetime of happiness and companionship.\n\n### Enduring Connections: A Tale of Friendship and Growth\n\nJoin Dagr and his human companion as they navigate life's unexpected twists and turns, forging an unbreakable bond that transcends the boundaries of species. Witness their inspiring story of resilience, personal growth, and the transformative power of unconditional love.\n\n### Humane-Canine Bond: Exploring the Magical Connection\n\nDelve into the extraordinary realm where humans and animals connect on a profound level. Uncover the scientific and emotional underpinnings of this magical bond, and discover how it enriches our lives in ways we never imagined.\n\n#### Our Tale Begins Here!\nEmbark on a captivating journey that unveils the origins of Dagr's unique name and the spark that ignited this incredible adventure. Prepare to be inspired by the extraordinary bond that blossomed between a human and their canine companion.\n\n### Behind The Ink: Navigating Life's Challenges with Empathy\n\nGain invaluable insights from a sensitive soul who navigates life's complexities with introspection and empathy. Explore the rich tapestry of human experiences through the lens of an introverted and highly sensitive person, offering a unique perspective on mental health, self-discovery, and the healing power of the human-animal bond."
-      );
+      setGeneratedContent(result.data.response);
+      //setGeneratedContent(
+      //  "## Unleash the Power of the Human-Animal Bond\n\nEmbark on an extraordinary journey that celebrates the profound connection between humans and their canine companions. Discover a world where heartwarming tales, expert insights, and transformative experiences converge, unveiling the magic that unfolds when two kindred spirits unite.\n\n### Pawsitive Care: Nurturing Your Furry Friend\n\nUnlock the secrets to providing your beloved pet with the utmost care and attention they deserve. Explore a treasure trove of expert tips and advice tailored to nurture their physical and mental well-being, ensuring a lifetime of happiness and companionship.\n\n### Enduring Connections: A Tale of Friendship and Growth\n\nJoin Dagr and his human companion as they navigate life's unexpected twists and turns, forging an unbreakable bond that transcends the boundaries of species. Witness their inspiring story of resilience, personal growth, and the transformative power of unconditional love.\n\n### Humane-Canine Bond: Exploring the Magical Connection\n\nDelve into the extraordinary realm where humans and animals connect on a profound level. Uncover the scientific and emotional underpinnings of this magical bond, and discover how it enriches our lives in ways we never imagined.\n\n#### Our Tale Begins Here!\nEmbark on a captivating journey that unveils the origins of Dagr's unique name and the spark that ignited this incredible adventure. Prepare to be inspired by the extraordinary bond that blossomed between a human and their canine companion.\n\n### Behind The Ink: Navigating Life's Challenges with Empathy\n\nGain invaluable insights from a sensitive soul who navigates life's complexities with introspection and empathy. Explore the rich tapestry of human experiences through the lens of an introverted and highly sensitive person, offering a unique perspective on mental health, self-discovery, and the healing power of the human-animal bond."
+      //);
       setGenerationStatus("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -103,16 +105,36 @@ ${additionalInstructions}`;
     setGenerationStatus("idle");
   };
 
+  const handlePreviewApply = (
+    previewCtx: NodesContext,
+    markdownContent: string,
+    design: PageDesign
+  ) => {
+    // Get preview storyfragment and its panes
+    const previewStoryfragment = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
+    if (!previewStoryfragment) return;
+
+    // Process our markdown content into sections
+    const processedPage = parsePageMarkdown(markdownContent);
+    const paneIds = createPagePanes(processedPage, design, ctx, nodeId);
+
+    // Update the storyfragment with the new panes
+    const storyfragment = ctx.allNodes.get().get(nodeId) as StoryFragmentNode;
+    if (storyfragment) {
+      storyfragment.paneIds = paneIds;
+      storyfragment.isChanged = true;
+      ctx.modifyNodes([storyfragment]);
+      ctx.notifyNode("root");
+    }
+
+    setShowPreview(false);
+  };
+
   if (showPreview && generatedContent) {
     return (
       <PageCreationPreview
         markdownContent={generatedContent}
-        nodeId={nodeId}
-        ctx={ctx}
-        onComplete={(previewCtx) => {
-          // TODO: Apply the preview context to the actual node tree
-          console.log("Add to actual storyfragment", previewCtx);
-        }}
+        onComplete={handlePreviewApply}
         onBack={() => setShowPreview(false)}
       />
     );
@@ -200,7 +222,7 @@ ${additionalInstructions}`;
               className="p-3.5 w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-500 focus:ring-cyan-500"
               value={referenceContext}
               onChange={(e) => setReferenceContext(e.target.value)}
-              maxLength={8000}
+              maxLength={200000}
               placeholder="Paste your reference content here..."
             />
           </div>
