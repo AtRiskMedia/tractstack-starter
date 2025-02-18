@@ -967,11 +967,29 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
             type: "Pane" as const,
             isContext: Boolean(row.extra),
           } as PaneContentMap;
-        case "StoryFragment":
-          return {
+        case "StoryFragment": {
+          const baseData = {
             ...base,
             type: "StoryFragment" as const,
-            ...(row.extra && { socialImagePath: String(row.extra) }),
+          } as StoryFragmentContentMap;
+
+          if (row.extra) {
+            const socialImagePath = String(row.extra);
+            if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {
+              const originalExt = socialImagePath.split(".").pop();
+              const basePath = socialImagePath.replace(`.${originalExt}`, "");
+              baseData.socialImagePath = [
+                `${basePath}.webp 1200w`,
+                `${basePath}_600px.webp 600w`,
+                `${basePath}_300px.webp 300w`,
+              ].join(", ");
+            } else {
+              baseData.socialImagePath = socialImagePath;
+            }
+          }
+
+          return {
+            ...baseData,
             ...(row.parent_id && {
               parentId: String(row.parent_id),
               parentTitle: String(row.parent_title),
@@ -981,6 +999,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
               panes: String(row.pane_ids).split(","),
             }),
           } as StoryFragmentContentMap;
+        }
         case "TractStack":
           return {
             ...base,

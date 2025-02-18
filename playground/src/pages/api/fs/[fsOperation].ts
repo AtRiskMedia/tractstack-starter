@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "@/utils/core/config";
 import { createRequire } from "module";
+import { processImage } from "@/utils/core/processImage";
 
 const CONFIG_DIR = path.join(process.cwd(), "config");
 const ENV_FILE = path.join(process.cwd(), ".env");
@@ -211,6 +212,93 @@ export const POST: APIRoute = async ({ request, params }) => {
           throw new Error(
             `Failed to save image: ${err instanceof Error ? err.message : "Unknown error"}`
           );
+        }
+        break;
+      }
+
+      case "saveOgImage": {
+        const { data, filename } = await request.json();
+        const ogDir = path.join(process.cwd(), "public", "images", "og");
+        const thumbsDir = path.join(process.cwd(), "public", "images", "thumbs");
+
+        try {
+          // Ensure directories exist
+          await fs.mkdir(ogDir, { recursive: true });
+          await fs.mkdir(thumbsDir, { recursive: true });
+
+          // Convert base64 to buffer
+          const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
+          const buffer = Buffer.from(base64Data, "base64");
+
+          // Save original to og directory
+          await fs.writeFile(path.join(ogDir, filename), buffer);
+
+          // Process thumbnails
+          const processedImages = await processImage(buffer, filename);
+
+          // Save thumbnails
+          for (const image of processedImages) {
+            await fs.writeFile(path.join(thumbsDir, image.filename), image.buffer);
+          }
+
+          result = {
+            success: true,
+            path: `/images/og/${filename}`,
+            thumbnails: processedImages.map((img) => `/images/thumbs/${img.filename}`),
+          };
+        } catch (err) {
+          throw new Error(
+            `Failed to save OG image: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+        }
+        break;
+      }
+
+      case "deleteOgImage": {
+        const { path: imagePath } = await request.json();
+        const publicDir = path.join(process.cwd(), "public");
+        const filename = path.basename(imagePath);
+        const basename = path.basename(filename, path.extname(filename));
+
+        try {
+          // Delete original OG image
+          const ogPath = path.join(publicDir, imagePath);
+          await fs.unlink(ogPath);
+
+          // Delete thumbnail versions
+          const thumbsDir = path.join(publicDir, "images", "thumbs");
+          const thumbs = [
+            path.join(thumbsDir, `${basename}_600px.webp`),
+            path.join(thumbsDir, `${basename}_300px.webp`),
+          ];
+
+          await Promise.all(
+            thumbs.map(async (thumbPath) => {
+              try {
+                await fs.unlink(thumbPath);
+              } catch (err: any) {
+                // Ignore if thumbnail doesn't exist
+                if (err?.code !== "ENOENT") throw err;
+              }
+            })
+          );
+
+          result = {
+            success: true,
+            message: "OG image and thumbnails deleted successfully",
+          };
+        } catch (err: any) {
+          // If original file doesn't exist, consider it a success
+          if (err?.code === "ENOENT") {
+            result = {
+              success: true,
+              message: "Files already removed",
+            };
+          } else {
+            throw new Error(
+              `Failed to delete OG image: ${err instanceof Error ? err.message : "Unknown error"}`
+            );
+          }
         }
         break;
       }
