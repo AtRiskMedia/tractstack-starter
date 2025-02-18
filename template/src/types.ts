@@ -1094,3 +1094,12 @@ export type PageDesign = {
     even: any; // Will be TemplatePane
   };
 };
+
+export interface StoryfragmentAnalytics {
+  id: string;
+  slug: string;
+  total_actions: number;
+  unique_visitors: number;
+  last_24h_actions?: number;
+  last_7d_actions?: number;
+}

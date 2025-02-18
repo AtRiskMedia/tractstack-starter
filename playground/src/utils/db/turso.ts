@@ -37,6 +37,7 @@ import type {
   PaneContentMap,
   ResourceContentMap,
   MenuContentMap,
+  StoryfragmentAnalytics,
 } from "@/types.ts";
 
 export interface StoryFragmentFullRowData {
@@ -1461,4 +1462,42 @@ export async function getSiteMap(): Promise<SiteMap[]> {
     console.log("Unable to fetch site map:", error);
     return [];
   }
+}
+
+export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnalytics[]> {
+  const client = await tursoClient.getClient();
+  if (!client) return [];
+  const { rows } = await client.execute(`
+    SELECT 
+      sf.id,
+      sf.slug,
+      COUNT(DISTINCT a.fingerprint_id) as unique_visitors,
+      COUNT(a.id) as total_actions,
+      SUM(CASE 
+        WHEN a.created_at >= datetime('now', '-1 day') 
+        THEN 1 ELSE 0 
+      END) as last_24h_actions,
+      SUM(CASE 
+        WHEN a.created_at >= datetime('now', '-7 days') 
+        THEN 1 ELSE 0 
+      END) as last_7d_actions,
+      SUM(CASE 
+        WHEN a.created_at >= datetime('now', '-28 days') 
+        THEN 1 ELSE 0 
+      END) as last_28d_actions
+    FROM storyfragments sf
+    LEFT JOIN actions a ON 
+      a.object_id = sf.id AND 
+      a.object_type = 'StoryFragment'
+    GROUP BY sf.id, sf.slug
+  `);
+  return rows.map((row) => ({
+    id: String(row.id),
+    slug: String(row.slug),
+    total_actions: Number(row.total_actions || 0),
+    unique_visitors: Number(row.unique_visitors || 0),
+    last_24h_actions: Number(row.last_24h_actions || 0),
+    last_7d_actions: Number(row.last_7d_actions || 0),
+    last_28d_actions: Number(row.last_28d_actions || 0),
+  }));
 }
