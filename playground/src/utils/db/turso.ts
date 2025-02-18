@@ -976,16 +976,14 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           if (row.extra) {
             const socialImagePath = String(row.extra);
             if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {
-              const originalExt = socialImagePath.split(".").pop();
-              const basePath = socialImagePath.replace(`.${originalExt}`, "");
-              baseData.socialImagePath = [
-                `${basePath}.webp 1200w`,
-                `${basePath}_600px.webp 600w`,
-                `${basePath}_300px.webp 300w`,
+              baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp`;
+              baseData.thumbSrcSet = [
+                `/images/thumbs/${row.id}_1200px.webp 1200w`,
+                `/images/thumbs/${row.id}_600px.webp 600w`,
+                `/images/thumbs/${row.id}_300px.webp 300w`,
               ].join(", ");
-            } else {
-              baseData.socialImagePath = socialImagePath;
             }
+            baseData.socialImagePath = socialImagePath;
           }
 
           return {

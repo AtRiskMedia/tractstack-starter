@@ -176,6 +176,8 @@ export type StoryFragmentContentMap = ContentMapBase & {
   type: "StoryFragment";
   panes?: string[];
   socialImagePath?: string;
+  thumbSrc?: string;
+  thumbSrcSet?: string;
 };
 
 export type TractStackContentMap = ContentMapBase & {
