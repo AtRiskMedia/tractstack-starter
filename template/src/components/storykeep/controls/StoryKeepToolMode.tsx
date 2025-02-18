@@ -86,6 +86,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
 
   return (
     <>
+      <div className="text-xs text-center font-bold">mode:</div>
       {toolModes
         .filter(({ key }) => (isContext ? !skipIfContextPane.includes(key) : true))
         .map(({ key, Icon, title }) =>
