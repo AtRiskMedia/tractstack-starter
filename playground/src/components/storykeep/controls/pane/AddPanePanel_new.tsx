@@ -12,7 +12,7 @@ import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
 import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
-import {PaneMode} from "@/types"
+import { PaneMode } from "@/types";
 
 interface AddPaneNewPanelProps {
   nodeId: string;

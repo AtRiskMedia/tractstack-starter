@@ -5,7 +5,7 @@ import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
 import AddPaneCodeHookPanel from "./AddPanePanel_codehook";
 import { NodesContext } from "@/store/nodes";
-import {PaneMode} from "@/types"
+import { PaneMode } from "@/types";
 
 interface AddPanePanelProps {
   nodeId: string;

@@ -5,7 +5,7 @@ import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildr
 import { showGuids } from "@/store/development.ts";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-import type { FlatNode,NodeProps } from "@/types.ts";
+import type { FlatNode, NodeProps } from "@/types.ts";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 

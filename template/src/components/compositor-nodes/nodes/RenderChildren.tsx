@@ -1,6 +1,6 @@
 import Node from "@/components/compositor-nodes/Node.tsx";
 import { timestampNodeId } from "@/utils/common/helpers.ts";
-import type {NodeProps} from "@/types"
+import type { NodeProps } from "@/types";
 import type { ReactNodesRendererProps } from "@/components/compositor-nodes/ReactNodesRenderer.tsx";
 
 export type RenderChildrenProps = {

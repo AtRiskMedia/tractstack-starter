@@ -19,17 +19,23 @@ const {
   pubDatetime,
   modDatetime,
 } = Astro.props;
-
+console.log(config);
 const stylesUrl = config.init.STYLES_VER
   ? `/api/styles/frontend.css?v=${config?.init?.STYLES_VER}`
   : `/styles/app.css`;
 if (!config.init.STYLES_VER) console.log(`fallback to app.css; looks like you haven't saved yet`);
 const defaultFavIcon = `/favicon.ico`;
-const defaultSocialImageURL = ogImage || `/og.png`;
-const defaultSocialLogoURL = `/oglogo.png`;
-const defaultSocialTitle = typeof title === `string` && title ? title : `My first Tract Stack`;
-const defaultSocialAuthor = `Tract Stack`;
-const defaultSocialDesc = `No-code website builder and content marketing platform`;
+const defaultSocialImageURL = ogImage || config.init.OG || `/og.png`;
+const defaultSocialLogoURL = config.init.OGLOGO || `/oglogo.png`;
+const defaultSocialTitle =
+  typeof title === `string` && title
+    ? title
+    : typeof config.init.OGTITLE === `string`
+      ? config.init.OGTITLE
+      : `My first Tract Stack`;
+const defaultSocialAuthor = config.init.OGAUTHOR || `Tract Stack`;
+const defaultSocialDesc =
+  config.init.OGDESC || `No-code website builder and content marketing platform`;
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;

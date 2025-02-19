@@ -16,7 +16,7 @@ import {
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
-import type {NodeProps, FlatNode, PaneNode } from "@/types.ts";
+import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 

@@ -1,7 +1,7 @@
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
-import type { FlatNode,NodeProps } from "@/types"
+import type { FlatNode, NodeProps } from "@/types";
 
 export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
   const nodeId = props.nodeId;

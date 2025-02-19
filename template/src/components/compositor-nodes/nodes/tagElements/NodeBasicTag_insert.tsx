@@ -3,7 +3,7 @@ import { keyboardAccessible, toolAddModeStore, viewportKeyStore } from "@/store/
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import { type JSX, type MouseEvent, useEffect, useState } from "react";
-import type { NodeProps } from "@/types"
+import type { NodeProps } from "@/types";
 import { tagTitles } from "@/constants";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
 

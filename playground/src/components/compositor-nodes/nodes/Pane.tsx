@@ -3,7 +3,7 @@ import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyticsPanel.tsx";
 import { type CSSProperties, useEffect, useState } from "react";
-import { type NodeProps } from "@/types"
+import { type NodeProps } from "@/types";
 
 export const CodeHookContainer = ({
   payload,

@@ -28,9 +28,9 @@ import StoryFragmentTitlePanel from "@/components/storykeep/controls/storyfragme
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import { memo, type ReactElement } from "react";
-import type {NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
+import type { NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
-import {getType} from "@/utils/nodes/type-guards"
+import { getType } from "@/utils/nodes/type-guards";
 
 // Helper function to parse code hooks
 function parseCodeHook(node: BaseNode | FlatNode) {
@@ -142,14 +142,14 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
           )}
           <div className="py-0.5">
-          <ConfigPanePanel nodeId={node.id} />
-          {toolModeVal === `eraser` ? (
-            <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />
-          ) : toolModeVal === `layout` ? (
-            <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
-          ) : (
-            <Pane {...sharedProps} key={timestampNodeId(node.id)} />
-          )}
+            <ConfigPanePanel nodeId={node.id} />
+            {toolModeVal === `eraser` ? (
+              <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />
+            ) : toolModeVal === `layout` ? (
+              <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
+            ) : (
+              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+            )}
           </div>
           <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
         </>
@@ -229,4 +229,4 @@ const Node = memo((props: NodeProps) => {
   return getElement(node, props);
 });
 
-export default Node
+export default Node;

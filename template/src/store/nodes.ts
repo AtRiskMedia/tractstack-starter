@@ -26,7 +26,7 @@ import type {
   TractStackNode,
   ViewportKey,
   ActivePaneMode,
-  NodeProps
+  NodeProps,
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";

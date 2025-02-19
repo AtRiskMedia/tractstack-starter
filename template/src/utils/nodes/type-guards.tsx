@@ -135,5 +135,3 @@ export const getType = (node: BaseNode | FlatNode): string => {
   }
   return type;
 };
-
-

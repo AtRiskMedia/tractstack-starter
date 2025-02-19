@@ -1,5 +1,5 @@
 import BgPane from "@/components/common/panes/BgPane.tsx";
-import { type NodeProps } from "@/types"
+import { type NodeProps } from "@/types";
 import { getCtx } from "@/store/nodes";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import type { VisualBreakNode } from "@/types";

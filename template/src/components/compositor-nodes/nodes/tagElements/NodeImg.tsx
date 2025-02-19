@@ -1,5 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
-import type { FlatNode,NodeProps } from "@/types.ts";
+import type { FlatNode, NodeProps } from "@/types.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 
 export const NodeImg = (props: NodeProps) => {

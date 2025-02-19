@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toolAddModes } from "./constants";
 import type { ParagraphsResponse, SentencesResponse, Transcript } from "assemblyai";
-import {NodesContext} from "@/store/nodes"
+import { NodesContext } from "@/store/nodes";
 import type { WordSelection } from "@/store/transcribe/appState.ts";
 
 export interface ClassNamesPayloadValue {
@@ -1117,5 +1117,3 @@ export enum PaneMode {
   REUSE = "REUSE",
   CODEHOOK = "CODEHOOK",
 }
-
-
