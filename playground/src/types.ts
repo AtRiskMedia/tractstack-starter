@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toolAddModes } from "./constants";
 import type { ParagraphsResponse, SentencesResponse, Transcript } from "assemblyai";
+import {NodesContext} from "@/store/nodes"
 import type { WordSelection } from "@/store/transcribe/appState.ts";
 
 export interface ClassNamesPayloadValue {
@@ -329,15 +330,11 @@ export interface MarkdownLookupObj {
   [key: string | number]: { nth: number };
 }
 
-export type ToolModeVal =
-  | "default"
-  | "text"
-  | "insert"
-  | "eraser"
-  | "pane"
-  | "settings"
-  | "layout"
-  | "markdown";
+export type ToolModeVal = "default" | "text" | "insert" | "eraser" | "move" | "layout";
+//  | "pane"
+//  | "settings"
+//  | "layout"
+//  | "markdown";
 export type ToolMode = "insert" | "text" | "styles" | "settings" | "pane" | "eraser";
 export type ToolAddMode = (typeof toolAddModes)[number];
 
@@ -1105,3 +1102,20 @@ export interface StoryfragmentAnalytics {
   last_24h_actions?: number;
   last_7d_actions?: number;
 }
+
+export type NodeProps = {
+  nodeId: string;
+  config?: Config;
+  ctx?: NodesContext;
+  first?: boolean;
+};
+
+export enum PaneMode {
+  DEFAULT = "DEFAULT",
+  NEW = "NEW",
+  BREAK = "BREAK",
+  REUSE = "REUSE",
+  CODEHOOK = "CODEHOOK",
+}
+
+

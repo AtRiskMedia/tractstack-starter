@@ -1,8 +1,8 @@
-import { type NodeProps } from "@/components/compositor-nodes/Node";
 import { getCtx } from "@/store/nodes";
 import { viewportKeyStore } from "@/store/storykeep";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import { type NodeProps } from "@/types"
 
 export const NodeAEraser = (props: NodeProps) => {
   return (

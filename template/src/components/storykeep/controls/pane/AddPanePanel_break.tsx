@@ -2,11 +2,11 @@
 import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
-import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
+import { PaneMode } from "@/types";
 import type { PaneNode, StoryFragmentNode, TemplatePane } from "@/types";
 
 interface AddPaneBreakPanelProps {

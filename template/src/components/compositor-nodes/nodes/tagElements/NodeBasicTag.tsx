@@ -2,7 +2,6 @@ import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
-import { type NodeProps } from "@/components/compositor-nodes/Node.tsx";
 import {
   type JSX,
   type RefObject,
@@ -17,7 +16,7 @@ import {
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
-import type { FlatNode, PaneNode } from "@/types.ts";
+import type {NodeProps, FlatNode, PaneNode } from "@/types.ts";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 

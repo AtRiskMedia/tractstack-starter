@@ -3,10 +3,9 @@ import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
-import type { NodeProps } from "@/components/compositor-nodes/Node.tsx";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-import type { FlatNode } from "@/types.ts";
+import type { FlatNode,NodeProps } from "@/types.ts";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 

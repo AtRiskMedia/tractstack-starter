@@ -26,6 +26,7 @@ import type {
   TractStackNode,
   ViewportKey,
   ActivePaneMode,
+  NodeProps
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
@@ -33,7 +34,6 @@ import { processClassesForViewports } from "@/utils/nodes/reduceNodesClassNames.
 import type { BeliefDatum } from "../types.ts";
 import { ulid } from "ulid";
 import { NotificationSystem } from "@/store/notificationSystem.ts";
-import type { NodeProps } from "@/components/compositor-nodes/Node.tsx";
 import type { ReactNodesRendererProps } from "@/components/compositor-nodes/ReactNodesRenderer.tsx";
 import type { WidgetProps } from "@/components/compositor-nodes/nodes/Widget.tsx";
 import { cloneDeep, isDeepEqual } from "@/utils/common/helpers.ts";

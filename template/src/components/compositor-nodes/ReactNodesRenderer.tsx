@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getCtx, ROOT_NODE_NAME, type NodesContext } from "@/store/nodes.ts";
 import { timestampNodeId, stopLoadingAnimation } from "@/utils/common/helpers.ts";
-import { Node } from "@/components/compositor-nodes/Node.tsx";
+import Node from "@/components/compositor-nodes/Node.tsx";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { Config } from "@/types.ts";
 

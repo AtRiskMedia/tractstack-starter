@@ -387,7 +387,7 @@ const SettingsPanel = ({
   return (
     <div
       id="settings-panel"
-      className="transition-all fixed bottom-16 md:bottom-1 right-1 flex flex-col items-start"
+      className="z-50 transition-all fixed bottom-16 md:bottom-1 right-1 flex flex-col items-start"
     >
       <div className="inline space-x-2">
         <button

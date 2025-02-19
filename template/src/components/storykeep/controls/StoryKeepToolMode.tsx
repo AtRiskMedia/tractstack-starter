@@ -2,8 +2,8 @@ import { useEffect } from "react"; // Add this import
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
-import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
-import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
+//import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
+import ArrowsUpDownIcon from "@heroicons/react/24/outline/ArrowsUpDownIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 //import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 //import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
@@ -33,15 +33,15 @@ export const toolModes = [
     Icon: TrashIcon,
     title: "Erase element",
   },
+  //{
+  //  key: "pane" as const,
+  //  Icon: Square3Stack3DIcon,
+  //  title: "Insert Pane here",
+  //},
   {
-    key: "pane" as const,
-    Icon: Square3Stack3DIcon,
-    title: "Insert Pane here",
-  },
-  {
-    key: "settings" as const,
-    Icon: Cog8ToothIcon,
-    title: "Edit settings",
+    key: "move" as const,
+    Icon: ArrowsUpDownIcon,
+    title: "Move elements",
   },
   //{
   //  key: "layout" as const,

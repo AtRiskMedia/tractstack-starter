@@ -127,3 +127,13 @@ export function hasButtonPayload(node: BaseNode): node is LinkNode {
 export const hasBeliefPayload = (node: BaseNode): boolean =>
   ("heldBeliefs" in node && Object.keys(node.heldBeliefs || {}).length > 0) ||
   ("withheldBeliefs" in node && Object.keys(node.withheldBeliefs || {}).length > 0);
+
+export const getType = (node: BaseNode | FlatNode): string => {
+  let type = node.nodeType as string;
+  if ("tagName" in node) {
+    type = node.tagName;
+  }
+  return type;
+};
+
+

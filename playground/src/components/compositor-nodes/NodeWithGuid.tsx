@@ -1,7 +1,7 @@
 import { memo, type ReactElement } from "react";
-import { getType, type NodeProps } from "@/components/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
-import type { FlatNode } from "@/types.ts";
+import {getType} from "@/utils/nodes/type-guards"
+import type { NodeProps,FlatNode } from "@/types.ts";
 
 export type RenderableNodes = NodeProps & { element: ReactElement };
 

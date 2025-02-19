@@ -5,7 +5,7 @@ import { contentMap } from "@/store/events";
 import { NodesContext, getCtx } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
-import { PaneMode } from "./AddPanePanel";
+import { PaneMode } from "@/types";
 import type { PaneContentMap, StoryFragmentNode } from "@/types";
 
 interface AddPaneReUsePanelProps {

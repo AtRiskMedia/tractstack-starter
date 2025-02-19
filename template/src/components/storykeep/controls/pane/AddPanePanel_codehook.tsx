@@ -2,9 +2,9 @@ import { type Dispatch, type SetStateAction, Fragment, useState } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { codehookMap } from "@/store/events.ts";
-import { PaneMode } from "./AddPanePanel";
 import { getCtx } from "@/store/nodes.ts";
 import { ulid } from "ulid";
+import { PaneMode } from "@/types";
 import type { TemplatePane } from "@/types.ts";
 
 interface AddPaneCodeHookPanelProps {

@@ -56,8 +56,8 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   }
 
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="p-1.5 bg-white rounded-b-md w-full group">
+    <div className="pt-0.5 bg-mylightgrey">
+      <div className="p-1.5 bg-white rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div
             className={`flex flex-wrap gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}

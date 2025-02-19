@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toPng } from "html-to-image";
 import { blobToBase64, timestampNodeId } from "@/utils/common/helpers.ts";
-import { Node } from "@/components/compositor-nodes/Node.tsx";
+import Node from "@/components/compositor-nodes/Node.tsx";
 import type { Config } from "@/types.ts";
 import type { NodesContext } from "@/store/nodes.ts";
 

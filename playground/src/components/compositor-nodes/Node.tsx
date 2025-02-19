@@ -1,9 +1,8 @@
-import { getCtx, NodesContext } from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
 import PageCreationSelector from "@/components/storykeep/controls/pane/PageCreationSelector";
 import { Pane } from "@/components/compositor-nodes/nodes/Pane.tsx";
-import { PaneAdd } from "@/components/compositor-nodes/nodes/Pane_add.tsx";
-import { PaneConfig } from "@/components/compositor-nodes/nodes/Pane_config.tsx";
+import ConfigPanePanel from "@/components/storykeep/controls/pane/ConfigPanePanel.tsx";
 import { PaneEraser } from "@/components/compositor-nodes/nodes/Pane_eraser.tsx";
 import { PaneLayout } from "@/components/compositor-nodes/nodes/Pane_layout.tsx";
 import { Markdown } from "@/components/compositor-nodes/nodes/Markdown.tsx";
@@ -29,15 +28,9 @@ import StoryFragmentTitlePanel from "@/components/storykeep/controls/storyfragme
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import { memo, type ReactElement } from "react";
-import type { Config, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
+import type {NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
-
-export type NodeProps = {
-  nodeId: string;
-  config?: Config;
-  ctx?: NodesContext;
-  first?: boolean;
-};
+import {getType} from "@/utils/nodes/type-guards"
 
 // Helper function to parse code hooks
 function parseCodeHook(node: BaseNode | FlatNode) {
@@ -82,14 +75,6 @@ function parseCodeHook(node: BaseNode | FlatNode) {
 
   return null;
 }
-
-export const getType = (node: BaseNode | FlatNode): string => {
-  let type = node.nodeType as string;
-  if ("tagName" in node) {
-    type = node.tagName;
-  }
-  return type;
-};
 
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
@@ -147,28 +132,28 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             </div>
           </>
         );
-      if (toolModeVal === `eraser` && !isContextPane)
-        return <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />;
-      if (toolModeVal === `layout` && !isContextPane) {
-        return <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />;
-      } else if (toolModeVal === `settings` && !isContextPane)
-        return <PaneConfig {...sharedProps} key={timestampNodeId(node.id)} />;
-      else if (toolModeVal === `pane` && !isContextPane) {
-        const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
-        const storyFragment = getCtx(props)
-          .allNodes.get()
-          .get(storyFragmentId) as StoryFragmentNode;
-        const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
-        if (storyFragment)
-          return (
-            <PaneAdd
-              {...sharedProps}
-              first={firstPane === node.id}
-              key={timestampNodeId(node.id)}
-            />
-          );
-      }
-      return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
+
+      const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
+      const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;
+      const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
+      return (
+        <>
+          {storyFragment && firstPane === node.id && (
+            <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
+          )}
+          <div className="py-0.5">
+          <ConfigPanePanel nodeId={node.id} />
+          {toolModeVal === `eraser` ? (
+            <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />
+          ) : toolModeVal === `layout` ? (
+            <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
+          ) : (
+            <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+          )}
+          </div>
+          <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
+        </>
+      );
     }
 
     case "BgPane":
@@ -193,7 +178,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
         return (
           <NodeBasicTagEraser {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
         );
-      else if (toolModeVal === `settings`)
+      else if (toolModeVal === `move`)
         return (
           <NodeBasicTag_settings {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
         );
@@ -236,10 +221,12 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   }
 };
 
-export const Node = memo((props: NodeProps) => {
+const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   if (showGuids.get()) {
     return <NodeWithGuid {...props} element={getElement(node, props)} />;
   }
   return getElement(node, props);
 });
+
+export default Node

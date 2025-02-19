@@ -170,7 +170,7 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
       <h2 className="text-xl font-bold">Pane Outer Styles</h2>
 
       <ColorPickerCombo
-        title="Background Color"
+        title="Pane Background Color"
         defaultColor={settings.bgColor}
         onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
         config={config!}

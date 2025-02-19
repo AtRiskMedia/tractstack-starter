@@ -5,14 +5,7 @@ import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
 import AddPaneCodeHookPanel from "./AddPanePanel_codehook";
 import { NodesContext } from "@/store/nodes";
-
-export enum PaneMode {
-  DEFAULT = "DEFAULT",
-  NEW = "NEW",
-  BREAK = "BREAK",
-  REUSE = "REUSE",
-  CODEHOOK = "CODEHOOK",
-}
+import {PaneMode} from "@/types"
 
 interface AddPanePanelProps {
   nodeId: string;
@@ -70,9 +63,11 @@ const AddPanePanel = ({
   }
 
   return (
-    <div className="p-0.5 shadow-inner">
-      <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">Insert Pane</div>
+    <div className="pt-0.5 bg-mylightgrey">
+      <div className="py-0.5 bg-gray-300 flex gap-1 w-full group">
+        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
+          Insert Pane Here
+        </div>
         <div
           className={`flex gap-1 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
         >

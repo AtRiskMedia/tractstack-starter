@@ -3,7 +3,6 @@ import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragm
 import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
-import { PaneMode } from "./AddPanePanel";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
@@ -13,6 +12,7 @@ import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
 import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
+import {PaneMode} from "@/types"
 
 interface AddPaneNewPanelProps {
   nodeId: string;

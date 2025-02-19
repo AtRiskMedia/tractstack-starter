@@ -1,6 +1,5 @@
-import type { NodeProps } from "@/components/compositor-nodes/Node.tsx";
 import { getCtx } from "@/store/nodes.ts";
-import type { FlatNode } from "@/types.ts";
+import type { NodeProps,FlatNode } from "@/types.ts";
 
 export const NodeText = (props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
