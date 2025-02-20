@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { getCtx } from "@/store/nodes.ts";
@@ -10,19 +11,19 @@ import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { StoryFragmentMode } from "@/types";
 import type { StoryFragmentNode, Config } from "@/types.ts";
-import { StoryFragmentMode, type StoryFragmentModeType } from "@/types.ts";
 
 const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?: Config }) => {
-  const [mode, setMode] = useState<StoryFragmentModeType>(StoryFragmentMode.DEFAULT);
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
   const [storyfragmentNode, setStoryfragmentNode] = useState<StoryFragmentNode | null>(null);
+  const ctx = getCtx();
+  const $mode = typeof ctx !== `undefined` ? useStore(ctx.storyFragmentModeStore) : null;
+  const mode = $mode ? $mode[nodeId] : StoryFragmentMode.DEFAULT;
 
-  useEffect(() => {
-    setMode(StoryFragmentMode.DEFAULT);
-    setIsNodeAvailable(false);
-    setStoryfragmentNode(null);
-  }, [nodeId]);
+  const setMode = (newMode: StoryFragmentMode) => {
+    ctx.setStoryFragmentMode(nodeId, newMode);
+  };
 
   useEffect(() => {
     // Check for node availability

@@ -1037,15 +1037,30 @@ export type {
   GotoTargets,
 };
 
-export const StoryFragmentMode = {
-  DEFAULT: "DEFAULT",
-  TITLE: "TITLE",
-  SLUG: "SLUG",
-  MENU: "MENU",
-  OG: "OG",
-} as const;
+export enum PaneAddMode {
+  DEFAULT = "DEFAULT",
+  NEW = "NEW",
+  BREAK = "BREAK",
+  REUSE = "REUSE",
+  CODEHOOK = "CODEHOOK",
+}
 
-export type StoryFragmentModeType = (typeof StoryFragmentMode)[keyof typeof StoryFragmentMode];
+export enum PaneConfigMode {
+  DEFAULT = "DEFAULT",
+  TITLE = "TITLE",
+  SLUG = "SLUG",
+  PATH = "PATH",
+  IMPRESSION = "IMPRESSION",
+  CODEHOOK = "CODEHOOK",
+}
+
+export enum StoryFragmentMode {
+  DEFAULT = "DEFAULT",
+  TITLE = "TITLE",
+  SLUG = "SLUG",
+  MENU = "MENU",
+  OG = "OG",
+}
 
 export const ContextPaneMode = {
   DEFAULT: "DEFAULT",
@@ -1109,11 +1124,3 @@ export type NodeProps = {
   ctx?: NodesContext;
   first?: boolean;
 };
-
-export enum PaneMode {
-  DEFAULT = "DEFAULT",
-  NEW = "NEW",
-  BREAK = "BREAK",
-  REUSE = "REUSE",
-  CODEHOOK = "CODEHOOK",
-}

@@ -8,6 +8,7 @@ import {
 } from "../utils/nodes/type-guards";
 import { startLoadingAnimation } from "@/utils/common/helpers";
 import { settingsPanelStore } from "@/store/storykeep.ts";
+import { PaneAddMode, StoryFragmentMode } from "@/types";
 import type {
   BaseNode,
   FlatNode,
@@ -74,10 +75,28 @@ export class NodesContext {
     panel: "",
   });
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
+  paneAddMode = map<Record<string, PaneAddMode>>({});
 
   toolModeValStore = map<{ value: ToolModeVal }>({
     value: "default",
   });
+
+  setPaneAddMode(nodeId: string, mode: PaneAddMode) {
+    this.paneAddMode.setKey(nodeId, mode);
+  }
+  getPaneAddMode(nodeId: string): PaneAddMode {
+    return this.paneAddMode.get()[nodeId] || PaneAddMode.DEFAULT;
+  }
+
+  storyFragmentModeStore = map<Record<string, StoryFragmentMode>>({});
+
+  setStoryFragmentMode(nodeId: string, mode: StoryFragmentMode) {
+    this.storyFragmentModeStore.setKey(nodeId, mode);
+  }
+
+  getStoryFragmentMode(nodeId: string): StoryFragmentMode {
+    return this.storyFragmentModeStore.get()[nodeId] || StoryFragmentMode.DEFAULT;
+  }
 
   cleanNode(nodeId: string) {
     const node = this.allNodes.get().get(nodeId);
@@ -199,6 +218,7 @@ export class NodesContext {
   }
 
   clearAll() {
+    this.paneAddMode.set({});
     this.allNodes.get().clear();
     this.parentNodes.get().clear();
     this.impressionNodes.get().clear();

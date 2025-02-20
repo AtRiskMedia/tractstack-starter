@@ -1,17 +1,17 @@
-import { type Dispatch, type SetStateAction, Fragment, useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { contentMap } from "@/store/events";
 import { NodesContext, getCtx } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
-import { PaneMode } from "@/types";
+import { PaneAddMode } from "@/types";
 import type { PaneContentMap, StoryFragmentNode } from "@/types";
 
 interface AddPaneReUsePanelProps {
   nodeId: string;
   first: boolean;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: (mode: PaneAddMode) => void;
 }
 
 const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) => {
@@ -110,7 +110,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
 
       if (newPaneId) {
         ctx.notifyNode(`root`);
-        setMode(PaneMode.DEFAULT); // Close the panel after insertion
+        setMode(PaneAddMode.DEFAULT); // Close the panel after insertion
       }
     } catch (error) {
       console.error("Error reusing pane:", error);
@@ -123,7 +123,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-2 min-w-[200px]">
             <button
-              onClick={() => setMode(PaneMode.DEFAULT)}
+              onClick={() => setMode(PaneAddMode.DEFAULT)}
               className="flex-none w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
             >
               ← Go Back

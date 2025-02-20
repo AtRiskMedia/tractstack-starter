@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction, ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { cloneDeep, titleToSlug, findUniqueSlug } from "@/utils/common/helpers.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { contentMap } from "@/store/events.ts";
-import { StoryFragmentMode, type StoryFragmentModeType, type StoryFragmentNode } from "@/types.ts";
+import { StoryFragmentMode, type StoryFragmentNode } from "@/types.ts";
 
 interface StoryFragmentTitlePanelProps {
   nodeId: string;
-  setMode?: Dispatch<SetStateAction<StoryFragmentModeType>>;
+  setMode?: (mode: StoryFragmentMode) => void;
 }
 
 const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelProps) => {

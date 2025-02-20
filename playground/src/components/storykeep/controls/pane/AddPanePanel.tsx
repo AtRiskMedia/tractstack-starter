@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import AddPaneNewPanel from "./AddPanePanel_new";
 import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
 import AddPaneCodeHookPanel from "./AddPanePanel_codehook";
 import { NodesContext } from "@/store/nodes";
-import { PaneMode } from "@/types";
+import { PaneAddMode } from "@/types";
 
 interface AddPanePanelProps {
   nodeId: string;
@@ -22,12 +22,15 @@ const AddPanePanel = ({
   isStoryFragment = false,
   isContextPane = false,
 }: AddPanePanelProps) => {
-  const [mode, setMode] = useState<PaneMode>(PaneMode.DEFAULT);
+  const lookup = first ? `${nodeId}-0` : nodeId;
+  const $mode = typeof ctx !== `undefined` ? useStore(ctx.paneAddMode) : null;
+  const mode = $mode ? $mode[lookup] : PaneAddMode.DEFAULT;
 
-  useEffect(() => {
-    setMode(PaneMode.DEFAULT);
-  }, [nodeId]);
-  if (mode === PaneMode.NEW) {
+  const setMode = (newMode: PaneAddMode) => {
+    ctx?.setPaneAddMode(lookup, newMode);
+  };
+
+  if (mode === PaneAddMode.NEW) {
     return (
       <AddPaneNewPanel
         nodeId={nodeId}
@@ -38,7 +41,7 @@ const AddPanePanel = ({
         isContextPane={isContextPane}
       />
     );
-  } else if (mode === PaneMode.BREAK && !isContextPane) {
+  } else if (mode === PaneAddMode.BREAK && !isContextPane) {
     return (
       <AddPaneBreakPanel
         nodeId={nodeId}
@@ -48,9 +51,9 @@ const AddPanePanel = ({
         isStoryFragment={isStoryFragment}
       />
     );
-  } else if (mode === PaneMode.REUSE && !isContextPane) {
+  } else if (mode === PaneAddMode.REUSE && !isContextPane) {
     return <AddPaneReUsePanel nodeId={nodeId} first={first} setMode={setMode} />;
-  } else if (mode === PaneMode.CODEHOOK) {
+  } else if (mode === PaneAddMode.CODEHOOK) {
     return (
       <AddPaneCodeHookPanel
         nodeId={nodeId}
@@ -63,7 +66,7 @@ const AddPanePanel = ({
   }
 
   return (
-    <div className="pt-0.5 bg-mylightgrey">
+    <div className="px-0.5 pt-0.5 bg-mylightgrey">
       <div className="py-0.5 bg-gray-300 flex gap-1 w-full group">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           Insert Pane Here
@@ -72,7 +75,7 @@ const AddPanePanel = ({
           className={`flex gap-1 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
         >
           <button
-            onClick={() => setMode(PaneMode.NEW)}
+            onClick={() => setMode(PaneAddMode.NEW)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
             + Design New
@@ -80,13 +83,13 @@ const AddPanePanel = ({
           {!isContextPane && (
             <>
               <button
-                onClick={() => setMode(PaneMode.BREAK)}
+                onClick={() => setMode(PaneAddMode.BREAK)}
                 className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
               >
                 + Visual Break
               </button>
               <button
-                onClick={() => setMode(PaneMode.REUSE)}
+                onClick={() => setMode(PaneAddMode.REUSE)}
                 className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
               >
                 + Re-use existing pane
@@ -94,7 +97,7 @@ const AddPanePanel = ({
             </>
           )}
           <button
-            onClick={() => setMode(PaneMode.CODEHOOK)}
+            onClick={() => setMode(PaneAddMode.CODEHOOK)}
             className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
           >
             + Custom Code Hook

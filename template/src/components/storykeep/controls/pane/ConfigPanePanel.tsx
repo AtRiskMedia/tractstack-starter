@@ -9,17 +9,9 @@ import PaneSlugPanel from "./PanePanel_slug";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
+import { PaneConfigMode } from "@/types.ts";
 import type { PaneNode } from "@/types.ts";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-
-export enum PaneMode {
-  DEFAULT = "DEFAULT",
-  TITLE = "TITLE",
-  SLUG = "SLUG",
-  PATH = "PATH",
-  IMPRESSION = "IMPRESSION",
-  CODEHOOK = "CODEHOOK",
-}
 
 interface ConfigPanePanelProps {
   nodeId: string;
@@ -38,25 +30,27 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const buttonClass =
     "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
 
-  const [mode, setMode] = useState<PaneMode>((isActiveMode as PaneMode) || PaneMode.DEFAULT);
+  const [mode, setMode] = useState<PaneConfigMode>(
+    (isActiveMode as PaneConfigMode) || PaneConfigMode.DEFAULT
+  );
 
-  const setSaveMode = (newMode: PaneMode) => {
+  const setSaveMode = (newMode: PaneConfigMode) => {
     setMode(newMode);
     ctx.activePaneMode.set({ paneId: nodeId, mode: newMode, panel: `settings` });
   };
 
-  if (mode === PaneMode.TITLE) {
+  if (mode === PaneConfigMode.TITLE) {
     return <PaneTitlePanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === PaneMode.SLUG) {
+  } else if (mode === PaneConfigMode.SLUG) {
     return <PaneSlugPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === PaneMode.PATH) {
+  } else if (mode === PaneConfigMode.PATH) {
     return <PaneMagicPathPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === PaneMode.IMPRESSION) {
+  } else if (mode === PaneConfigMode.IMPRESSION) {
     return <PaneImpressionPanel nodeId={nodeId} setMode={setMode} />;
   }
 
   return (
-    <div className="pt-0.5 bg-mylightgrey">
+    <div className="pt-1.5 bg-mylightgrey">
       <div className="p-1.5 bg-white rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div
@@ -73,13 +67,16 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </button>
             ) : (
               <>
-                <button onClick={() => setSaveMode(PaneMode.TITLE)} className={buttonClass}>
+                <button onClick={() => setSaveMode(PaneConfigMode.TITLE)} className={buttonClass}>
                   Title: <strong>{paneNode.title}</strong>
                 </button>
-                <button onClick={() => setSaveMode(PaneMode.SLUG)} className={buttonClass}>
+                <button onClick={() => setSaveMode(PaneConfigMode.SLUG)} className={buttonClass}>
                   Slug: <strong>{paneNode.slug}</strong>
                 </button>
-                <button onClick={() => setSaveMode(PaneMode.IMPRESSION)} className={buttonClass}>
+                <button
+                  onClick={() => setSaveMode(PaneConfigMode.IMPRESSION)}
+                  className={buttonClass}
+                >
                   {impressionNodes.length ? (
                     <>
                       <CheckIcon className="w-4 h-4 inline" />
@@ -97,7 +94,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </>
             )}
             {!isContextPane && (
-              <button onClick={() => setSaveMode(PaneMode.PATH)} className={buttonClass}>
+              <button onClick={() => setSaveMode(PaneConfigMode.PATH)} className={buttonClass}>
                 {hasBeliefPayload(paneNode) ? (
                   <>
                     <CheckIcon className="w-4 h-4 inline" />

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { ulid } from "ulid";
 import { getCtx } from "@/store/nodes.ts";
-import { PaneMode } from "./ConfigPanePanel";
+import { PaneConfigMode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { Dispatch, SetStateAction } from "react";
 import type { PaneNode, BeliefNode } from "@/types";
@@ -12,7 +12,7 @@ type PathsType = Record<string, string[]>;
 
 interface PaneMagicPathPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: Dispatch<SetStateAction<PaneConfigMode>>;
 }
 
 const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
@@ -193,7 +193,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
           <h3 className="text-lg font-bold">Magic Paths</h3>
           <div className="space-x-2">
             <button
-              onClick={() => setMode(PaneMode.DEFAULT)}
+              onClick={() => setMode(PaneConfigMode.DEFAULT)}
               className="text-cyan-700 hover:text-black"
             >
               ← Go Back

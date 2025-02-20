@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
@@ -12,12 +12,12 @@ import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
 import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
-import { PaneMode } from "@/types";
+import { PaneAddMode } from "@/types";
 
 interface AddPaneNewPanelProps {
   nodeId: string;
   first: boolean;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: (mode: PaneAddMode) => void;
   ctx?: NodesContext;
   isStoryFragment?: boolean;
   isContextPane?: boolean;
@@ -143,7 +143,7 @@ const AddPaneNewPanel = ({
     <div className="p-0.5 shadow-inner">
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
-          onClick={() => setMode(PaneMode.DEFAULT)}
+          onClick={() => setMode(PaneAddMode.DEFAULT)}
           className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
         >
           ← Go Back

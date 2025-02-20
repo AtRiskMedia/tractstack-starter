@@ -9,11 +9,11 @@ import ActionBuilderField from "../fields/ActionBuilderField";
 import { contentMap } from "@/store/events";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { StoryFragmentNode, MenuNode, MenuLink } from "@/types";
-import { StoryFragmentMode, type StoryFragmentModeType } from "@/types";
+import { StoryFragmentMode } from "@/types";
 
 interface StoryFragmentMenuPanelProps {
   nodeId: string;
-  setMode: (mode: StoryFragmentModeType) => void;
+  setMode: (mode: StoryFragmentMode) => void;
 }
 
 const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps) => {

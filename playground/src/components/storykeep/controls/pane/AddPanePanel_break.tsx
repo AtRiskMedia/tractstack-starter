@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type Dispatch, type SetStateAction, useEffect, useState, useMemo, Fragment } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
-import { PaneMode } from "@/types";
+import { PaneAddMode } from "@/types";
 import type { PaneNode, StoryFragmentNode, TemplatePane } from "@/types";
 
 interface AddPaneBreakPanelProps {
   nodeId: string;
   first: boolean;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: (mode: PaneAddMode) => void;
   ctx?: NodesContext;
   isStoryFragment?: boolean;
 }
@@ -193,7 +193,7 @@ const AddPaneBreakPanel = ({
     <div className="p-0.5 shadow-inner">
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
-          onClick={() => setMode(PaneMode.DEFAULT)}
+          onClick={() => setMode(PaneAddMode.DEFAULT)}
           className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
         >
           ← Go Back

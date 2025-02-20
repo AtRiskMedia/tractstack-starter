@@ -78,7 +78,7 @@ function parseCodeHook(node: BaseNode | FlatNode) {
 
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
-  const isPreview = props.nodeId === `tmp`;
+  const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
@@ -113,15 +113,15 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       if (isContextPane)
         return (
           <>
-            {!(paneNode.slug && paneNode.title) ? (
+            {!isPreview && !(paneNode.slug && paneNode.title) ? (
               <ContextPaneTitlePanel nodeId={node.id} />
-            ) : (
+            ) : !isPreview ? (
               <ContextPanePanel nodeId={node.id} />
-            )}
-            <AnalyticsPanel nodeId={node.id} />
+            ) : null}
+            {!isPreview && <AnalyticsPanel nodeId={node.id} />}
             <div className="bg-white">
               <Pane {...sharedProps} key={timestampNodeId(node.id)} />
-              {paneNode.slug && paneNode.title && paneNodes.length === 0 && (
+              {!isPreview && paneNode.slug && paneNode.title && paneNodes.length === 0 && (
                 <AddPanePanel
                   nodeId={node.id}
                   first={true}
@@ -136,6 +136,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;
       const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
+      if (isPreview) return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
       return (
         <>
           {storyFragment && firstPane === node.id && (
@@ -151,7 +152,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
               <Pane {...sharedProps} key={timestampNodeId(node.id)} />
             )}
           </div>
-          <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
+          <AddPanePanel nodeId={node.id} first={false} ctx={getCtx(props)} />
         </>
       );
     }

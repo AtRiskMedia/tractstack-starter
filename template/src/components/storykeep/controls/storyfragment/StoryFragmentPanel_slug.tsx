@@ -5,12 +5,11 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import LockClosedIcon from "@heroicons/react/24/outline/LockClosedIcon";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { StoryFragmentMode } from "@/types.ts";
-import type { StoryFragmentNode, Config, StoryFragmentModeType } from "@/types.ts";
-import type { Dispatch, SetStateAction } from "react";
+import type { StoryFragmentNode, Config } from "@/types.ts";
 
 interface StoryFragmentSlugPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<StoryFragmentModeType>>;
+  setMode: (mode: StoryFragmentMode) => void;
   config: Config;
 }
 

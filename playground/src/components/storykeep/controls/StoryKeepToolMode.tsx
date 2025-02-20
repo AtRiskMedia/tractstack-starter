@@ -16,22 +16,22 @@ export const toolModes = [
   {
     key: "default" as const,
     Icon: CursorArrowRaysIcon,
-    title: "Edit text/styles",
+    title: "Text + styles",
   },
   {
     key: "text" as const,
     Icon: PencilIcon,
-    title: "Edit text",
+    title: "Write",
   },
   {
     key: "insert" as const,
     Icon: PlusIcon,
-    title: "Add element",
+    title: "Add *",
   },
   {
     key: "eraser" as const,
     Icon: TrashIcon,
-    title: "Erase element",
+    title: "Eraser",
   },
   //{
   //  key: "pane" as const,
@@ -41,7 +41,7 @@ export const toolModes = [
   {
     key: "move" as const,
     Icon: ArrowsUpDownIcon,
-    title: "Move elements",
+    title: "Drag drop",
   },
   //{
   //  key: "layout" as const,
@@ -62,6 +62,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
   const className =
     "w-8 h-8 py-1 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
   const classNameActive = "w-8 h-8 py-1.5 rounded-md bg-myblue text-white";
+  const currentToolMode = toolModes.find((mode) => mode.key === toolModeVal) ?? toolModes[0];
 
   const handleClick = (mode: ToolModeVal) => {
     ctx.toolModeValStore.set({ value: mode });
@@ -86,7 +87,9 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
 
   return (
     <>
-      <div className="text-xs text-center font-bold">mode:</div>
+      <div className="text-sm text-center font-bold h-16">mode:
+      <div className="pt-1.5 text-xs text-center font-action">{currentToolMode.title}</div>
+      </div>
       {toolModes
         .filter(({ key }) => (isContext ? !skipIfContextPane.includes(key) : true))
         .map(({ key, Icon, title }) =>

@@ -4,7 +4,8 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import type { StoryFragmentModeType, StoryFragmentNode } from "@/types";
+import { StoryFragmentMode } from "@/types";
+import type { StoryFragmentNode } from "@/types";
 import type { ChangeEvent } from "react";
 
 const TARGET_WIDTH = 1200;
@@ -13,7 +14,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
 interface StoryFragmentOgPanelProps {
   nodeId: string;
-  setMode: (mode: StoryFragmentModeType) => void;
+  setMode: (mode: StoryFragmentMode) => void;
 }
 
 const StoryFragmentOgPanel = ({ nodeId, setMode }: StoryFragmentOgPanelProps) => {
@@ -176,7 +177,10 @@ const StoryFragmentOgPanel = ({ nodeId, setMode }: StoryFragmentOgPanelProps) =>
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Social Share Image</h3>
-          <button onClick={() => setMode("DEFAULT")} className="text-myblue hover:text-black">
+          <button
+            onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+            className="text-myblue hover:text-black"
+          >
             ← Go Back
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getCtx } from "@/store/nodes.ts";
-import { PaneMode } from "./ConfigPanePanel";
+import { PaneConfigMode } from "@/types";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { cloneDeep } from "@/utils/common/helpers.ts";
@@ -9,7 +9,7 @@ import type { PaneNode } from "@/types";
 
 interface PaneSlugPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: Dispatch<SetStateAction<PaneConfigMode>>;
 }
 
 const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
@@ -100,7 +100,7 @@ const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Pane Slug</h3>
           <button
-            onClick={() => setMode(PaneMode.DEFAULT)}
+            onClick={() => setMode(PaneConfigMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
             ← Go Back

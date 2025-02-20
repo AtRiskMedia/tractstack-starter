@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { ulid } from "ulid";
 import { getCtx } from "@/store/nodes.ts";
-import { PaneMode } from "./ConfigPanePanel";
+import { PaneConfigMode } from "@/types";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ActionBuilderField from "../fields/ActionBuilderField";
@@ -13,7 +13,7 @@ import type { ImpressionNode, PaneNode } from "@/types";
 
 interface PaneImpressionPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: Dispatch<SetStateAction<PaneConfigMode>>;
 }
 
 const validateGotoAction = (value: string): boolean => {
@@ -151,7 +151,7 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
           isChanged: true,
         },
       ]);
-      setMode(PaneMode.DEFAULT);
+      setMode(PaneConfigMode.DEFAULT);
     }
   };
 
@@ -165,7 +165,7 @@ const PaneImpressionPanel = ({ nodeId, setMode }: PaneImpressionPanelProps) => {
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Impression Settings</h3>
           <button
-            onClick={() => setMode(PaneMode.DEFAULT)}
+            onClick={() => setMode(PaneConfigMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
             ← Go Back

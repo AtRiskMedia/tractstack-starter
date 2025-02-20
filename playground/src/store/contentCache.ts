@@ -11,7 +11,7 @@ import type {
 } from "@/store/nodesSerializer";
 import type { FullContentMap } from "@/types";
 
-const VERBOSE = false
+const VERBOSE = false;
 
 interface CacheEntry<T> {
   data: T;

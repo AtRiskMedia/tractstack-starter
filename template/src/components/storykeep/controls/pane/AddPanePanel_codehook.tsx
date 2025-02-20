@@ -1,16 +1,16 @@
-import { type Dispatch, type SetStateAction, Fragment, useState } from "react";
+import { Fragment, useState } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { codehookMap } from "@/store/events.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { ulid } from "ulid";
-import { PaneMode } from "@/types";
+import { PaneAddMode } from "@/types";
 import type { TemplatePane } from "@/types.ts";
 
 interface AddPaneCodeHookPanelProps {
   nodeId: string;
   first: boolean;
-  setMode: Dispatch<SetStateAction<PaneMode>>;
+  setMode: (mode: PaneAddMode) => void;
   isStoryFragment?: boolean;
   isContextPane?: boolean;
 }
@@ -53,7 +53,7 @@ const AddPaneCodeHookPanel = ({
     }
     setSelected(null);
     setQuery("");
-    setMode(PaneMode.DEFAULT);
+    setMode(PaneAddMode.DEFAULT);
   };
 
   return (
@@ -62,7 +62,7 @@ const AddPaneCodeHookPanel = ({
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-2 min-w-[200px]">
             <button
-              onClick={() => setMode(PaneMode.DEFAULT)}
+              onClick={() => setMode(PaneAddMode.DEFAULT)}
               className="flex-none w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
             >
               ← Go Back
