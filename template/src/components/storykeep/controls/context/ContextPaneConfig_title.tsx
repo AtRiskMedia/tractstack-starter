@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import type { Dispatch, SetStateAction, ChangeEvent } from "react";
+import type { ChangeEvent } from "react";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { cloneDeep, titleToSlug, findUniqueSlug } from "@/utils/common/helpers.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { contentMap } from "@/store/events.ts";
-import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
+import { ContextPaneMode } from "@/types.ts";
 import type { PaneNode } from "@/types";
 
 interface ContextPaneTitlePanelProps {
   nodeId: string;
-  setMode?: Dispatch<SetStateAction<ContextPaneModeType>>;
+  setMode?: (mode: ContextPaneMode) => void;
 }
 
 const ContextPaneTitlePanel = ({ nodeId, setMode }: ContextPaneTitlePanelProps) => {

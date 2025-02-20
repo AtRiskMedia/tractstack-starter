@@ -1,20 +1,22 @@
 import { useState, useEffect } from "react";
+import { useStore } from "@nanostores/react";
 import { getCtx } from "@/store/nodes.ts";
 import ContextPaneTitlePanel from "./ContextPaneConfig_title";
 import ContextPaneSlugPanel from "./ContextPaneConfig_slug";
 import type { PaneNode } from "@/types.ts";
-import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
+import { ContextPaneMode } from "@/types.ts";
 
 const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
-  const [mode, setMode] = useState<ContextPaneModeType>(ContextPaneMode.DEFAULT);
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
   const [paneNode, setPaneNode] = useState<PaneNode | null>(null);
 
-  useEffect(() => {
-    setMode(ContextPaneMode.DEFAULT);
-    setIsNodeAvailable(false);
-    setPaneNode(null);
-  }, [nodeId]);
+  const nodesCtx = getCtx();
+  const $mode = useStore(nodesCtx.contextPaneMode);
+  const mode = $mode[nodeId] || ContextPaneMode.DEFAULT;
+
+  const setMode = (newMode: ContextPaneMode) => {
+    nodesCtx.setContextPaneMode(nodeId, newMode);
+  };
 
   useEffect(() => {
     // Check for node availability

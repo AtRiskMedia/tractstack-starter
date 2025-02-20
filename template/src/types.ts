@@ -1037,6 +1037,12 @@ export type {
   GotoTargets,
 };
 
+export enum ContextPaneMode {
+  DEFAULT = "DEFAULT",
+  TITLE = "TITLE",
+  SLUG = "SLUG",
+}
+
 export enum PaneAddMode {
   DEFAULT = "DEFAULT",
   NEW = "NEW",
@@ -1061,14 +1067,6 @@ export enum StoryFragmentMode {
   MENU = "MENU",
   OG = "OG",
 }
-
-export const ContextPaneMode = {
-  DEFAULT: "DEFAULT",
-  TITLE: "TITLE",
-  SLUG: "SLUG",
-} as const;
-
-export type ContextPaneModeType = (typeof ContextPaneMode)[keyof typeof ContextPaneMode];
 
 export interface ActivePaneMode {
   paneId: string;

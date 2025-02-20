@@ -3,13 +3,12 @@ import { getCtx } from "@/store/nodes.ts";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import type { Dispatch, SetStateAction } from "react";
-import { ContextPaneMode, type ContextPaneModeType } from "@/types.ts";
+import { ContextPaneMode } from "@/types";
 import type { PaneNode } from "@/types";
 
 interface PaneSlugPanelProps {
   nodeId: string;
-  setMode: Dispatch<SetStateAction<ContextPaneModeType>>;
+  setMode: (mode: ContextPaneMode) => void;
 }
 
 const PaneSlugPanel = ({ nodeId, setMode }: PaneSlugPanelProps) => {
