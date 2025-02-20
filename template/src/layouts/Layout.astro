@@ -19,7 +19,7 @@ const {
   pubDatetime,
   modDatetime,
 } = Astro.props;
-console.log(config);
+
 const stylesUrl = config.init.STYLES_VER
   ? `/api/styles/frontend.css?v=${config?.init?.STYLES_VER}`
   : `/styles/app.css`;

@@ -11,6 +11,8 @@ import type {
 } from "@/store/nodesSerializer";
 import type { FullContentMap } from "@/types";
 
+const VERBOSE = false
+
 interface CacheEntry<T> {
   data: T;
   accessed: number;
@@ -46,8 +48,8 @@ export function updateCacheStats(isHit: boolean) {
   const currentHits = currentStats.hits + (isHit ? 1 : 0);
   const currentMisses = currentStats.misses + (isHit ? 0 : 1);
   const ratio = (currentHits / (currentHits + currentMisses)) * 100 || 0;
-  if (isHit) console.log(`🟢 Cache hit ${ratio}%`);
-  else console.log(`🔴 Cache miss ${ratio}%`);
+  if (VERBOSE && isHit) console.log(`🟢 Cache hit ${ratio}%`);
+  else if (VERBOSE) console.log(`🔴 Cache miss ${ratio}%`);
   cacheStatsStore.set({
     hits: currentStats.hits + (isHit ? 1 : 0),
     misses: currentStats.misses + (isHit ? 0 : 1),
