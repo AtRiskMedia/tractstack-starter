@@ -170,10 +170,9 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                 >
                   <div className="relative w-1/3" style={{ paddingBottom: "17.5%" }}>
                     <img
-                      src={
-                        `socialImagePath` in page && page.socialImagePath
-                          ? page.socialImagePath
-                          : "/static.jpg"
+                      src={`thumbSrc` in page && page.thumbSrc ? page.thumbSrc : "/static.jpg"}
+                      srcSet={
+                        `thumbSrcSet` in page && page.thumbSrcSet ? page.thumbSrcSet : undefined
                       }
                       alt={page.title}
                       className="absolute inset-0 w-full h-full object-cover rounded-md"

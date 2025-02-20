@@ -66,6 +66,7 @@ export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[]
   // Clean input text - collapse multiple spaces and handle special characters
   text = text
     .replace(/&nbsp;|\u00A0/g, " ")
+    .replace(/&amp;/g, "&")
     .replace(/<br>/g, "")
     .replace(/\[\[(.+?)\]\]/g, "<a>$1</a>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
