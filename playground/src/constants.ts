@@ -1,10 +1,12 @@
-import {
-  PencilIcon,
-  PaintBrushIcon,
-  Cog8ToothIcon,
-  TrashIcon,
-  Square3Stack3DIcon,
-} from "@heroicons/react/24/outline";
+import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
+import PaintBrushIcon from "@heroicons/react/24/outline/PaintBrushIcon";
+import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
+import ArrowsUpDownIcon from "@heroicons/react/24/outline/ArrowsUpDownIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
+
 import type { ResourceSetting, Tag, ToolMode, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
 import type { SubmitParams } from "assemblyai";
 
@@ -466,3 +468,46 @@ export const stopWords = new Set([
   "then",
   "once",
 ]);
+
+export const storykeepToolModes = [
+  {
+    key: "default" as const,
+    Icon: CursorArrowRaysIcon,
+    title: "Text + styles",
+  },
+  {
+    key: "text" as const,
+    Icon: PencilIcon,
+    title: "Write",
+  },
+  {
+    key: "insert" as const,
+    Icon: PlusIcon,
+    title: "Add *",
+  },
+  {
+    key: "eraser" as const,
+    Icon: TrashIcon,
+    title: "Eraser",
+  },
+  //{
+  //  key: "pane" as const,
+  //  Icon: Square3Stack3DIcon,
+  //  title: "Insert Pane here",
+  //},
+  {
+    key: "move" as const,
+    Icon: ArrowsUpDownIcon,
+    title: "Drag drop",
+  },
+  //{
+  //  key: "layout" as const,
+  //  Icon: PuzzlePieceIcon,
+  //  title: "Auto-layout design",
+  //},
+  //{
+  //  key: "markdown" as const,
+  //  Icon: BoltIcon,
+  //  title: "Edit plain text",
+  //},
+] as const;
