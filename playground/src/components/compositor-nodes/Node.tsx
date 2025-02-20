@@ -135,7 +135,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
       const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;
-      const firstPane = storyFragment.paneIds.length && storyFragment.paneIds[0];
+      const firstPane = storyFragment?.paneIds?.length && storyFragment.paneIds[0];
       if (isPreview) return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
       return (
         <>
