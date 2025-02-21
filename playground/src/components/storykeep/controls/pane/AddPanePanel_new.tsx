@@ -6,11 +6,14 @@ import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
-import { brandColours, preferredTheme } from "@/store/storykeep.ts";
+import {  cloneDeep } from "@/utils/common/helpers.ts";
+import { brandColours, preferredTheme, hasAssemblyAIStore } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
 import { AddPanePanel_newAICopy } from "./AddPanePanel_newAICopy";
 import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
 import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
+import { getTitleSlug } from "@/utils/aai/getTitleSlug";
+import { contentMap } from "@/store/events.ts";
 import { themes } from "@/constants.ts";
 import type { Theme } from "@/types";
 import { PaneAddMode } from "@/types";
@@ -48,6 +51,7 @@ const AddPaneNewPanel = ({
   isContextPane = false,
 }: AddPaneNewPanelProps) => {
   const brand = brandColours.get();
+  const hasAssemblyAI = hasAssemblyAIStore.get();
   const [copyMode, setCopyMode] = useState<CopyMode>("design");
   const [customMarkdown, setCustomMarkdown] = useState<string>(`...`);
   const [previews, setPreviews] = useState<PreviewPane[]>([]);
@@ -59,6 +63,7 @@ const AddPaneNewPanel = ({
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(
     templateCategories[first ? 3 : 0]
   );
+  const [isInserting, setIsInserting] = useState(false);
   const [aiContentGenerated, setAiContentGenerated] = useState(false);
   const shouldShowDesigns = copyMode !== "ai" || aiContentGenerated;
 
@@ -126,36 +131,79 @@ const AddPaneNewPanel = ({
     return previews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [previews, currentPage]);
 
-  const handleTemplateInsert = (template: any, nodeId: string, first: boolean) => {
-    if (ctx) {
-      // If in blank mode, create a copy of template and wipe markdown content
-      // if custom mode, user markdown is used
-      const insertTemplate = [`blank`, `custom`].includes(copyMode)
-        ? {
-            ...template,
-            markdown: template.markdown && {
-              ...template.markdown,
-              markdownBody: copyMode === `blank` ? `...` : customMarkdown,
-            },
+  const handleTemplateInsert = async (template: any, nodeId: string, first: boolean) => {
+    if (isInserting) return; // Prevent multiple clicks (as per your previous request)
+    setIsInserting(true);
+
+    try {
+      if (ctx) {
+        // Check if the template has markdown content
+        const hasMarkdownContent =
+          template?.markdown?.markdownBody &&
+          template.markdown.markdownBody.trim() !== "..." &&
+          template.markdown.markdownBody.trim().length > 0;
+
+        // If in blank mode, create a copy of template and wipe markdown content
+        // if custom mode, user markdown is used
+        const insertTemplate = [`blank`, `custom`].includes(copyMode)
+          ? {
+              ...cloneDeep(template),
+              markdown: template.markdown && {
+                ...template.markdown,
+                markdownBody: copyMode === `blank` ? `...` : customMarkdown,
+              },
+            }
+          : cloneDeep(template);
+
+        // Get the markdown content for title generation
+        const markdownContent = [`blank`].includes(copyMode)
+          ? null
+          : copyMode === `custom`
+            ? customMarkdown
+            : insertTemplate?.markdown?.markdownBody;
+
+        // Initialize title and slug
+        insertTemplate.title = "";
+        insertTemplate.slug = "";
+
+        // Only attempt title generation if we have real content and AssemblyAI is available
+        if (copyMode === `ai` && hasAssemblyAI && markdownContent && hasMarkdownContent) {
+          const existingSlugs = contentMap
+            .get()
+            .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+            .map((item) => item.slug);
+
+          const titleSlugResult = await getTitleSlug(markdownContent, existingSlugs);
+
+          if (titleSlugResult) {
+            insertTemplate.title = titleSlugResult.title;
+            insertTemplate.slug = titleSlugResult.slug;
           }
-        : template;
-      const ownerId =
-        isStoryFragment || isContextPane
-          ? nodeId
-          : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
-      if (isContextPane) {
-        insertTemplate.isContextPane = true;
-        ctx.addContextTemplatePane(ownerId, insertTemplate);
-      } else {
-        const newPaneId = ctx.addTemplatePane(
-          ownerId,
-          insertTemplate,
-          nodeId,
-          first ? "before" : "after"
-        );
-        if (newPaneId) ctx.notifyNode(`root`);
+        }
+
+        const ownerId =
+          isStoryFragment || isContextPane
+            ? nodeId
+            : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
+
+        if (isContextPane) {
+          insertTemplate.isContextPane = true;
+          ctx.addContextTemplatePane(ownerId, insertTemplate);
+        } else {
+          const newPaneId = ctx.addTemplatePane(
+            ownerId,
+            insertTemplate,
+            nodeId,
+            first ? "before" : "after"
+          );
+          if (newPaneId) ctx.notifyNode(`root`);
+        }
+        setMode(PaneAddMode.DEFAULT);
       }
-      setMode(PaneAddMode.DEFAULT);
+    } catch (error) {
+      console.error("Error inserting template:", error);
+    } finally {
+      setIsInserting(false);
     }
   };
 
@@ -334,8 +382,14 @@ const AddPaneNewPanel = ({
             {visiblePreviews.map((preview) => (
               <div
                 key={preview.index}
-                onClick={() => handleTemplateInsert(preview.template, nodeId, first)}
-                className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+                onClick={
+                  isInserting
+                    ? undefined
+                    : () => handleTemplateInsert(preview.template, nodeId, first)
+                }
+                className={`group bg-mywhite shadow-inner relative w-full rounded-sm ${
+                  isInserting ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                } transition-all duration-200 ${
                   preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
                 }`}
                 style={{

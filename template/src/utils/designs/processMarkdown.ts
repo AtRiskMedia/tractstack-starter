@@ -1,5 +1,7 @@
 import { NodesContext } from "@/store/nodes";
 import { ulid } from "ulid";
+import { getTitleSlug } from "@/utils/aai/getTitleSlug";
+import { contentMap } from "@/store/events";
 import type { PageDesign, PaneNode, StoryFragmentNode } from "@/types";
 
 interface ProcessedPage {
@@ -111,21 +113,45 @@ export function parsePageMarkdown(markdown: string): ProcessedPage {
 /**
  * Creates panes for a processed page using the selected design
  */
-export function createPagePanes(
+export async function createPagePanes(
   processedPage: ProcessedPage,
   design: PageDesign,
   ctx: NodesContext,
+  generateTitle: boolean,
   nodeId?: string
-): string[] {
+): Promise<string[]> {
   const ownerId = nodeId || ctx.rootNodeId.get();
   const paneIds: string[] = [];
+
+  // Get existing slugs to avoid duplicates (used when generating titles)
+  const existingSlugs = generateTitle
+    ? contentMap
+        .get()
+        .filter((item: { type: string }) => ["Pane", "StoryFragment"].includes(item.type))
+        .map((item: { slug: string }) => item.slug)
+    : [];
 
   // Intro section uses the introDesign function with useOdd set to false
   const introSection = processedPage.sections.find((s) => s.type === "intro");
   if (introSection) {
     const introPane = design.introDesign();
     introPane.id = ulid();
+    introPane.slug = "";
+    introPane.title = "";
     introPane.markdown.markdownBody = introSection.content || "";
+
+    // Generate title and slug if needed
+    if (generateTitle && introPane.markdown.markdownBody.trim().length > 0) {
+      const titleSlugResult = await getTitleSlug(introPane.markdown.markdownBody, existingSlugs);
+
+      if (titleSlugResult) {
+        introPane.title = titleSlugResult.title;
+        introPane.slug = titleSlugResult.slug;
+        // Add to existing slugs to ensure uniqueness for subsequent panes
+        existingSlugs.push(titleSlugResult.slug);
+      }
+    }
+
     const paneId = ctx.addTemplatePane(ownerId, introPane);
     if (paneId) {
       paneIds.push(paneId);
@@ -134,7 +160,10 @@ export function createPagePanes(
 
   // Content sections - use the contentDesign function with alternating useOdd
   const contentSections = processedPage.sections.filter((s) => s.type === "content");
-  contentSections.forEach((section, index) => {
+
+  for (let index = 0; index < contentSections.length; index++) {
+    const section = contentSections[index];
+
     // Add visual break before content section if we have breaks defined and it's not the first content section
     if (design.visualBreaks && index > 0) {
       const isEven = (index - 1) % 2 === 0;
@@ -177,6 +206,8 @@ export function createPagePanes(
     const isEven = index % 2 !== 0;
     const contentPane = design.contentDesign(!isEven);
     contentPane.id = ulid();
+    contentPane.slug = "";
+    contentPane.title = "";
 
     let markdown = "";
     if (section.content) markdown += section.content + "\n\n";
@@ -184,6 +215,18 @@ export function createPagePanes(
       markdown += child.content + "\n\n";
     });
     contentPane.markdown.markdownBody = markdown.trim();
+
+    // Generate title and slug if needed
+    if (generateTitle && contentPane.markdown.markdownBody.trim().length > 0) {
+      const titleSlugResult = await getTitleSlug(contentPane.markdown.markdownBody, existingSlugs);
+
+      if (titleSlugResult) {
+        contentPane.title = titleSlugResult.title;
+        contentPane.slug = titleSlugResult.slug;
+        // Add to existing slugs to ensure uniqueness for subsequent panes
+        existingSlugs.push(titleSlugResult.slug);
+      }
+    }
 
     const paneId = ctx.addTemplatePane(ownerId, contentPane);
     if (paneId) {
@@ -227,7 +270,7 @@ export function createPagePanes(
         }
       }
     }
-  });
+  }
 
   return paneIds;
 }
@@ -277,7 +320,11 @@ export function getPagePreview(markdown: string): string {
 /**
  * Builds a complete page preview in the provided context
  */
-export function buildPagePreview(markdown: string, design: PageDesign, ctx: NodesContext): void {
+export async function buildPagePreview(
+  markdown: string,
+  design: PageDesign,
+  ctx: NodesContext
+): Promise<void> {
   // Parse markdown into sections
   const processedPage = parsePageMarkdown(markdown);
 
@@ -286,7 +333,7 @@ export function buildPagePreview(markdown: string, design: PageDesign, ctx: Node
   if (!pageNode) return;
 
   // Create all panes using design
-  const paneIds = createPagePanes(processedPage, design, ctx);
+  const paneIds = await createPagePanes(processedPage, design, ctx, false);
 
   // Update story fragment with panes
   pageNode.title = "";

@@ -892,8 +892,10 @@ export class NodesContext {
     }
     const duplicatedPane = cloneDeep(pane) as TemplatePane;
     duplicatedPane.id = ownerId;
-    duplicatedPane.title = pane.title;
-    duplicatedPane.slug = pane.slug;
+    if (ownerNode && "title" in ownerNode && typeof ownerNode.title === `string`)
+      duplicatedPane.title = ownerNode.title;
+    if (ownerNode && "slug" in ownerNode && typeof ownerNode.slug === `string`)
+      duplicatedPane.slug = ownerNode.slug;
     duplicatedPane.isChanged = true;
 
     // Track all nodes that need to be added
@@ -961,9 +963,17 @@ export class NodesContext {
     duplicatedPane.isChanged = true;
 
     if (this.rootNodeId.get() !== "tmp") {
-      if (ownerNode.nodeType === "StoryFragment" && "slug" in ownerNode) {
+      if (
+        ownerNode.nodeType === "StoryFragment" &&
+        "slug" in ownerNode &&
+        "title" in ownerNode &&
+        typeof ownerNode.title === `string` &&
+        duplicatedPane.slug === "" &&
+        duplicatedPane.title === ""
+      ) {
         // Take storyfragment slug and last 4 chars of pane's ulid
         duplicatedPane.slug = `${ownerNode.slug}-${duplicatedPaneId.slice(-4)}`;
+        duplicatedPane.title = `${ownerNode.title.slice(0, 20)}-${duplicatedPaneId.slice(-4)}`;
       }
     }
 

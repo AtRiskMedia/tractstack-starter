@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { runLemurTask } from "../../../utils/aai/askLemur";
+import { runLemurTask } from "@/utils/aai/askLemur";
 
 export const POST: APIRoute = async ({ request, params }) => {
   try {

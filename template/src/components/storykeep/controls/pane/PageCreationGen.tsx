@@ -105,7 +105,7 @@ ${additionalInstructions}`;
     setGenerationStatus("idle");
   };
 
-  const handlePreviewApply = (
+  const handlePreviewApply = async (
     previewCtx: NodesContext,
     markdownContent: string,
     design: PageDesign
@@ -116,7 +116,7 @@ ${additionalInstructions}`;
 
     // Process our markdown content into sections
     const processedPage = parsePageMarkdown(markdownContent);
-    const paneIds = createPagePanes(processedPage, design, ctx, nodeId);
+    const paneIds = await createPagePanes(processedPage, design, ctx, true, nodeId);
 
     // Update the storyfragment with the new panes
     const storyfragment = ctx.allNodes.get().get(nodeId) as StoryFragmentNode;

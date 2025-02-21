@@ -17,8 +17,9 @@ export const getTemplateVisualBreakPane = (variant: string) => {
   };
   return {
     nodeType: "Pane",
-    title: "Visual Break Pane",
-    slug: "visual-break-pane",
+    title: "",
+    slug: "",
+    isDecorative: true,
     bgColour: "white",
     bgPane: {
       nodeType: "BgPane",
@@ -33,8 +34,8 @@ export const getTemplateVisualBreakPane = (variant: string) => {
 export const getTemplateSimplePane = (theme: Theme, brand: string, useOdd: boolean = false) => {
   return {
     nodeType: "Pane",
-    title: "Simple Pane",
-    slug: "simple-pane",
+    title: "",
+    slug: "",
     bgColour: tailwindToHex(
       getColor(
         {
@@ -70,8 +71,8 @@ export const getTemplateMarkdownPane = (
   console.log(`variant: ${variant}`);
   return {
     nodeType: "Pane",
-    title: "Simple Pane",
-    slug: "simple-pane",
+    title: "",
+    slug: "",
     bgColour: tailwindToHex(
       getColor(
         {

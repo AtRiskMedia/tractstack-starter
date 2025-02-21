@@ -1122,3 +1122,13 @@ export type NodeProps = {
   ctx?: NodesContext;
   first?: boolean;
 };
+
+export interface TitleResponse {
+  success: boolean;
+  data: {
+    response: {
+      title: string;
+      slug: string;
+    };
+  };
+}

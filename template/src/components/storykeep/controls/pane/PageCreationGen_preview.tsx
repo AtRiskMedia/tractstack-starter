@@ -109,20 +109,24 @@ export const PageCreationPreview = ({
 
       const processedPage = parsePageMarkdown(markdownContent);
       const design = pageDesigns[selectedDesignIndex];
-      const paneIds = createPagePanes(processedPage, design, previewCtx);
 
-      const pageNode = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
-      if (pageNode) {
-        pageNode.paneIds = paneIds;
-      }
+      // Use async/await in a self-executing async function
+      (async () => {
+        const paneIds = await createPagePanes(processedPage, design, previewCtx, false);
 
-      setPreview({
-        ctx: previewCtx,
-        design: design,
-        index: selectedDesignIndex,
-      });
+        const pageNode = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
+        if (pageNode) {
+          pageNode.paneIds = paneIds;
+        }
 
-      setError(null);
+        setPreview({
+          ctx: previewCtx,
+          design: design,
+          index: selectedDesignIndex,
+        });
+
+        setError(null);
+      })();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate preview");
     }
