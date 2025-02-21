@@ -107,10 +107,9 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
     case "Pane": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      const isContextPane = getCtx(props).getIsContextPane(node.id);
       const paneNodes = getCtx(props).getChildNodeIDs(node.id);
       const paneNode = node as PaneNode;
-      if (isContextPane)
+      if (paneNode.isContextPane)
         return (
           <>
             {!isPreview && !(paneNode.slug && paneNode.title) ? (
@@ -224,7 +223,8 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
 const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
-  if (showGuids.get()) {
+  const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
+  if (!isPreview && showGuids.get()) {
     return <NodeWithGuid {...props} element={getElement(node, props)} />;
   }
   return getElement(node, props);

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { getCtx } from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes";
+import { settingsPanelStore } from "@/store/storykeep";
 import ContextPaneTitlePanel from "./ContextPaneConfig_title";
 import ContextPaneSlugPanel from "./ContextPaneConfig_slug";
-import type { PaneNode } from "@/types.ts";
-import { ContextPaneMode } from "@/types.ts";
+import type { PaneNode } from "@/types";
+import { ContextPaneMode } from "@/types";
 
 const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
@@ -16,6 +17,7 @@ const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
 
   const setMode = (newMode: ContextPaneMode) => {
     nodesCtx.setContextPaneMode(nodeId, newMode);
+    settingsPanelStore.set(null);
   };
 
   useEffect(() => {

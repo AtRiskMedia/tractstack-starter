@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
+import { settingsPanelStore } from "@/store/storykeep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import { getCtx } from "@/store/nodes.ts";
@@ -10,9 +11,9 @@ import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
-import { cloneDeep } from "@/utils/common/helpers.ts";
+import { cloneDeep } from "@/utils/common/helpers";
 import { StoryFragmentMode } from "@/types";
-import type { StoryFragmentNode, Config } from "@/types.ts";
+import type { StoryFragmentNode, Config } from "@/types";
 
 const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?: Config }) => {
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
@@ -23,6 +24,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
 
   const setMode = (newMode: StoryFragmentMode) => {
     ctx.setStoryFragmentMode(nodeId, newMode);
+    settingsPanelStore.set(null);
   };
 
   useEffect(() => {

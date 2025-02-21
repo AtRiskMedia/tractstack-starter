@@ -139,18 +139,22 @@ const AddPaneNewPanel = ({
             },
           }
         : template;
-
       const ownerId =
         isStoryFragment || isContextPane
           ? nodeId
           : ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
-      const newPaneId = ctx.addTemplatePane(
-        ownerId,
-        insertTemplate,
-        nodeId,
-        first ? "before" : "after"
-      );
-      if (newPaneId) ctx.notifyNode(`root`);
+      if (isContextPane) {
+        insertTemplate.isContextPane = true;
+        ctx.addContextTemplatePane(ownerId, insertTemplate);
+      } else {
+        const newPaneId = ctx.addTemplatePane(
+          ownerId,
+          insertTemplate,
+          nodeId,
+          first ? "before" : "after"
+        );
+        if (newPaneId) ctx.notifyNode(`root`);
+      }
       setMode(PaneAddMode.DEFAULT);
     }
   };

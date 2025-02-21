@@ -882,6 +882,63 @@ export class NodesContext {
     this.notifications.notify(notifyNodeId, payload);
   }
 
+  addContextTemplatePane(ownerId: string, pane: TemplatePane) {
+    const ownerNode = this.allNodes.get().get(ownerId);
+    if (ownerNode?.nodeType === "Pane") {
+      const pane = ownerNode as PaneNode;
+      if (!pane.isContextPane) {
+        return;
+      }
+    }
+    const duplicatedPane = cloneDeep(pane) as TemplatePane;
+    duplicatedPane.id = ownerId;
+    duplicatedPane.title = pane.title;
+    duplicatedPane.slug = pane.slug;
+    duplicatedPane.isChanged = true;
+
+    // Track all nodes that need to be added
+    let allNodes: BaseNode[] = [];
+
+    // must generate nodes from markdown
+    if (duplicatedPane.markdown) {
+      duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
+      duplicatedPane.markdown.id = pane?.markdown?.id || ulid();
+      duplicatedPane.markdown.markdownId = pane?.markdown?.markdownId || ulid();
+      duplicatedPane.markdown.parentId = ownerId;
+
+      let markdownNodes: TemplateNode[] = [];
+      if (duplicatedPane.markdown.markdownBody) {
+        const markdownGen = new MarkdownGenerator(this);
+        markdownNodes = markdownGen.markdownToFlatNodes(
+          duplicatedPane.markdown.markdownBody,
+          duplicatedPane.markdown.id
+        ) as TemplateNode[];
+        allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
+      }
+
+      // Markdown already as nodes
+      else if (
+        typeof duplicatedPane.markdown !== `undefined` &&
+        typeof duplicatedPane.markdown.id === `string`
+      ) {
+        duplicatedPane?.markdown.nodes?.forEach((node) => {
+          const childrenNodes = this.setupTemplateNodeRecursively(
+            node,
+            duplicatedPane?.markdown?.id || ""
+          );
+          markdownNodes.push(...childrenNodes);
+        });
+        allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
+      }
+    }
+
+    this.addNode(duplicatedPane as PaneNode);
+    this.addNodes(allNodes);
+    this.notifyNode(ownerId);
+
+    return ownerId;
+  }
+
   addTemplatePane(
     ownerId: string,
     pane: TemplatePane,
@@ -889,12 +946,7 @@ export class NodesContext {
     location?: "before" | "after"
   ) {
     const ownerNode = this.allNodes.get().get(ownerId);
-    if (ownerNode?.nodeType === "Pane") {
-      const pane = ownerNode as PaneNode;
-      if (!pane.isContextPane) {
-        return;
-      }
-    } else if (
+    if (
       ownerNode?.nodeType !== "StoryFragment" &&
       ownerNode?.nodeType !== "Root" &&
       ownerNode?.nodeType !== "File" &&
@@ -999,46 +1051,43 @@ export class NodesContext {
     this.addNodes(allNodes);
     this.notifyNode(ownerId);
 
-    // likely context, no undo
-    if (ownerNode?.nodeType !== "Pane") {
-      this.history.addPatch({
-        op: PatchOp.ADD,
-        undo: (ctx) => {
-          ctx.deleteNodes(allNodes);
+    this.history.addPatch({
+      op: PatchOp.ADD,
+      undo: (ctx) => {
+        ctx.deleteNodes(allNodes);
 
-          if (
-            storyFragmentNode &&
-            storyFragmentNode.nodeType === "StoryFragment" &&
-            Array.isArray(storyFragmentNode.paneIds)
-          ) {
-            storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter(
-              (id: string) => id !== duplicatedPane.id
-            );
-            storyFragmentNode.isChanged = storyFragmentWasChanged;
-          }
+        if (
+          storyFragmentNode &&
+          storyFragmentNode.nodeType === "StoryFragment" &&
+          Array.isArray(storyFragmentNode.paneIds)
+        ) {
+          storyFragmentNode.paneIds = storyFragmentNode.paneIds.filter(
+            (id: string) => id !== duplicatedPane.id
+          );
+          storyFragmentNode.isChanged = storyFragmentWasChanged;
+        }
 
-          ctx.deleteNodes([duplicatedPane]);
-        },
-        redo: (ctx) => {
-          if (storyFragmentNode?.nodeType === "StoryFragment") {
-            if (elIdx === -1) {
-              storyFragmentNode.paneIds.push(duplicatedPane.id);
+        ctx.deleteNodes([duplicatedPane]);
+      },
+      redo: (ctx) => {
+        if (storyFragmentNode?.nodeType === "StoryFragment") {
+          if (elIdx === -1) {
+            storyFragmentNode.paneIds.push(duplicatedPane.id);
+          } else {
+            if (location === "before") {
+              storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
             } else {
-              if (location === "before") {
-                storyFragmentNode.paneIds.insertBefore(elIdx, [duplicatedPane.id]);
-              } else {
-                storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
-              }
+              storyFragmentNode.paneIds.insertAfter(elIdx, [duplicatedPane.id]);
             }
-            storyFragmentNode.isChanged = true;
           }
+          storyFragmentNode.isChanged = true;
+        }
 
-          ctx.addNodes([duplicatedPane]);
-          ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
-          ctx.addNodes(allNodes);
-        },
-      });
-    }
+        ctx.addNodes([duplicatedPane]);
+        ctx.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
+        ctx.addNodes(allNodes);
+      },
+    });
 
     return duplicatedPaneId;
   }

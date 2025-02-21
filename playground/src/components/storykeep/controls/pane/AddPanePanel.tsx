@@ -1,5 +1,5 @@
 import { useStore } from "@nanostores/react";
-import { keyboardAccessible } from "@/store/storykeep.ts";
+import { settingsPanelStore, keyboardAccessible } from "@/store/storykeep.ts";
 import AddPaneNewPanel from "./AddPanePanel_new";
 import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
@@ -28,6 +28,7 @@ const AddPanePanel = ({
 
   const setMode = (newMode: PaneAddMode) => {
     ctx?.setPaneAddMode(lookup, newMode);
+    settingsPanelStore.set(null);
   };
 
   if (mode === PaneAddMode.NEW) {
