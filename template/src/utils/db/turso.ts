@@ -1518,3 +1518,21 @@ export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnal
     last_28d_actions: Number(row.last_28d_actions || 0),
   }));
 }
+
+export async function logTokenUsage(tokensUsed: number): Promise<boolean> {
+  try {
+    const client = await tursoClient.getClient();
+    if (!client) return false;
+
+    await client.execute({
+      sql: `INSERT INTO aai_tokens_used (timestamp, tokens_used) 
+            VALUES (CURRENT_TIMESTAMP, ?)`,
+      args: [tokensUsed],
+    });
+    console.log(`Logged ${tokensUsed} tokens to aai_tokens_used table`);
+    return true;
+  } catch (error) {
+    console.error("Error logging token usage:", error);
+    return false;
+  }
+}

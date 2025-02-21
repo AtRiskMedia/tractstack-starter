@@ -55,6 +55,18 @@
     },
     "transcriptoverrides": {
       "sql": "CREATE TABLE IF NOT EXISTS transcript_overrides (id INTEGER PRIMARY KEY AUTOINCREMENT, transcript_id TEXT, data TEXT)"
+    },
+    "aai_tokens_used": {
+      "sql": "CREATE TABLE IF NOT EXISTS aai_tokens_used (id INTEGER PRIMARY KEY, timestamp DATETIME NOT NULL, tokens_used INTEGER NOT NULL)"
+    },
+    "storyfragment_topics": {
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_topics (id NUMERIC PRIMARY KEY, title TEXT NOT NULL)"
+    },
+    "storyfragment_has_topic": {
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_has_topic (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), topic_id NUMERIC NOT NULL REFERENCES storyfragment_topics(id))"
+    },
+    "storyfragment_details": {
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_details (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id))"
     }
   },
   "indexes": [
@@ -81,6 +93,11 @@
     "CREATE INDEX IF NOT EXISTS idx_panes_slug ON panes(slug)",
     "CREATE INDEX IF NOT EXISTS idx_resources_slug ON resources(slug)",
     "CREATE INDEX IF NOT EXISTS idx_resources_category ON resources(category_slug)",
-    "CREATE INDEX IF NOT EXISTS idx_storyfragment_panes_weight ON storyfragment_panes(weight)"
+    "CREATE INDEX IF NOT EXISTS idx_storyfragment_panes_weight ON storyfragment_panes(weight)",
+    "CREATE INDEX IF NOT EXISTS idx_aai_tokens_used_timestamp ON aai_tokens_used(timestamp)",
+    "CREATE INDEX IF NOT EXISTS idx_storyfragment_has_topic_storyfragment_id ON storyfragment_has_topic(storyfragment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_storyfragment_has_topic_topic_id ON storyfragment_has_topic(topic_id)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_storyfragment_has_topic_unique ON storyfragment_has_topic(storyfragment_id, topic_id)",
+    "CREATE INDEX IF NOT EXISTS idx_storyfragment_details_storyfragment_id ON storyfragment_details(storyfragment_id)"
   ]
 }

@@ -1,3 +1,4 @@
+import { trackLemurTokenUsage } from "./trackLemurTokenUsage";
 import { AssemblyAI } from "assemblyai";
 
 // Valid final model options as a const
@@ -39,7 +40,7 @@ export async function runLemurTask(params: LemurTaskParams) {
       ...params,
       final_model,
     });
-    console.log(`askLemur`, result);
+    await trackLemurTokenUsage(result);
     return result;
   } catch (error) {
     console.error("Error in runLemurTask:", error);
