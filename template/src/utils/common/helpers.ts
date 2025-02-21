@@ -555,3 +555,14 @@ export const formatAndValidateUrl = (
     };
   }
 };
+
+export function joinUrlPaths(base: string, path: string): string {
+  // Trim trailing slash from base
+  const trimmedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+
+  // Trim leading slash from path
+  const trimmedPath = path.startsWith("/") ? path.slice(1) : path;
+
+  // Join with a single slash
+  return `${trimmedBase}/${trimmedPath}`;
+}

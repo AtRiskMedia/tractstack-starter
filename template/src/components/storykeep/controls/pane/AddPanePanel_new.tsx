@@ -6,7 +6,7 @@ import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
-import {  cloneDeep } from "@/utils/common/helpers.ts";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import { brandColours, preferredTheme, hasAssemblyAIStore } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
 import { AddPanePanel_newAICopy } from "./AddPanePanel_newAICopy";

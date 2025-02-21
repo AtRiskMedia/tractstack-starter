@@ -3,6 +3,7 @@ import { ViewTransitions } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso.ts";
+import { joinUrlPaths } from "@/utils/common/helpers";
 import type { Theme, FullContentMap, Config } from "@/types.ts";
 
 export interface Props {
@@ -33,6 +34,7 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 const contentMap: FullContentMap[] = await getFullContentMap();
+const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 ---
 
 <!doctype html>
@@ -41,7 +43,7 @@ const contentMap: FullContentMap[] = await getFullContentMap();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={config?.init?.SITE_URL + canonicalURL} />
+    <link rel="canonical" href={fullCanonicalUrl} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
@@ -59,13 +61,13 @@ const contentMap: FullContentMap[] = await getFullContentMap();
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={config?.init?.SITE_URL + canonicalURL} />
+    <meta property="og:url" content={fullCanonicalUrl} />
     <meta property="og:image" content={socialImageWithVersion} />
     <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={config?.init?.SITE_URL + canonicalURL} />
+    <meta property="twitter:url" content={fullCanonicalUrl} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />

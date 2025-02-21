@@ -1,5 +1,6 @@
 ---
 import { ViewTransitions } from "astro:transitions";
+import { joinUrlPaths } from "@/utils/common/helpers";
 import type { Config } from "../types";
 
 export interface Props {
@@ -45,6 +46,7 @@ const gtagUrl =
   typeof gtag === `string` && gtag.length > 1
     ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
     : null;
+const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 ---
 
 <!doctype html>
@@ -53,7 +55,7 @@ const gtagUrl =
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
-    <link rel="canonical" href={config?.init?.SITE_URL + canonicalURL} />
+    <link rel="canonical" href={fullCanonicalUrl} />
     <meta name="generator" content={Astro.generator} />
 
     <!-- Custom styles -->
@@ -71,13 +73,13 @@ const gtagUrl =
     <meta property="og:title" content={defaultSocialTitle} />
     <meta property="og:type" content="website" />
     <meta property="og:description" content={defaultSocialDesc} />
-    <meta property="og:url" content={config?.init?.SITE_URL + canonicalURL} />
+    <meta property="og:url" content={fullCanonicalUrl} />
     <meta property="og:image" content={socialImageWithVersion} />
     <meta property="og:logo" content={socialLogoWithVersion} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content={config?.init?.SITE_URL + canonicalURL} />
+    <meta property="twitter:url" content={fullCanonicalUrl} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
     <meta property="twitter:image" content={defaultSocialLogoURL} />
