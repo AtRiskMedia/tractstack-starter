@@ -66,8 +66,8 @@ const AddPanePanel = ({
   }
 
   return (
-    <div className="px-0.5 pt-0.5 bg-mylightgrey">
-      <div className="py-0.5 bg-gray-300 flex gap-1 w-full group">
+    <div className="px-0.5 py-0.5 bg-mylightgrey">
+      <div className="p-0.5 bg-gray-300 flex gap-1 w-full group rounded-md">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           Insert Pane Here
         </div>

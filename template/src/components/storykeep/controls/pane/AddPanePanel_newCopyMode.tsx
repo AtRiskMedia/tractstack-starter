@@ -10,8 +10,8 @@ interface AddPaneNewCopyModeProps {
 
 export const AddPaneNewCopyMode = ({ selected, onChange }: AddPaneNewCopyModeProps) => {
   const modes = [
-    { id: "design", name: "Design Copy", description: "Use pre-designed copy templates" },
-    //{ id: "ai", name: "Write with AI", description: "Let AI help write your content" },
+    { id: "design", name: "Quick start", description: "Use pre-designed copy templates" },
+    { id: "ai", name: "Write with AI", description: "Let AI help write your content" },
     { id: "custom", name: "Provide your own Copy", description: "Write your own markdown content" },
     { id: "blank", name: "Blank", description: "Start with a styled blank slate" },
   ];
@@ -38,7 +38,7 @@ export const AddPaneNewCopyMode = ({ selected, onChange }: AddPaneNewCopyModePro
                       <div className="text-sm">
                         <RadioGroup.Label
                           as="p"
-                          className={`font-medium ${checked ? "text-white" : "text-gray-900"}`}
+                          className={`font-bold ${checked ? "text-white" : "text-gray-900"}`}
                         >
                           {mode.name}
                         </RadioGroup.Label>

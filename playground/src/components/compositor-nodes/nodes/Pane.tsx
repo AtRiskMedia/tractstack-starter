@@ -22,7 +22,7 @@ export const CodeHookContainer = ({
           ([key, value]) =>
             value && (
               <div key={key} className="flex items-start">
-                <span className="font-medium text-gray-600 min-w-24">{key}:</span>
+                <span className="font-bold text-gray-600 min-w-24">{key}:</span>
                 <span className="text-gray-800 ml-2">{value}</span>
               </div>
             )

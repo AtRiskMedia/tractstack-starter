@@ -240,7 +240,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
                           className="h-6 w-6"
                           aria-hidden="true"
                         />
-                        <span className={`text-mydarkgrey ${active ? "font-medium" : ""}`}>
+                        <span className={`text-mydarkgrey ${active ? "font-bold" : ""}`}>
                           {platform}
                         </span>
                       </div>

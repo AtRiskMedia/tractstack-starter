@@ -49,7 +49,7 @@ export default function WordMarkMode({ value, onChange }: WordMarkModeProps) {
                       <div className="text-sm">
                         <RadioGroup.Label
                           as="p"
-                          className={`font-medium ${checked ? "text-myorange" : "text-mydarkgrey"}`}
+                          className={`font-bold ${checked ? "text-myorange" : "text-mydarkgrey"}`}
                         >
                           {mode.title}
                         </RadioGroup.Label>

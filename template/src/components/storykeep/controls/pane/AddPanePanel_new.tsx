@@ -8,6 +8,7 @@ import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSna
 import { createEmptyStorykeep } from "@/utils/common/nodesHelper";
 import { brandColours, preferredTheme } from "@/store/storykeep.ts";
 import { templateCategories } from "@/utils/designs/templateMarkdownStyles";
+import { AddPanePanel_newAICopy } from "./AddPanePanel_newAICopy";
 import { AddPaneNewCopyMode, type CopyMode } from "./AddPanePanel_newCopyMode";
 import { AddPaneNewCustomCopy } from "./AddPanePanel_newCustomCopy";
 import { themes } from "@/constants.ts";
@@ -58,8 +59,13 @@ const AddPaneNewPanel = ({
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(
     templateCategories[first ? 3 : 0]
   );
+  const [aiContentGenerated, setAiContentGenerated] = useState(false);
+  const shouldShowDesigns = copyMode !== "ai" || aiContentGenerated;
 
   const filteredTemplates = useMemo(() => {
+    if (copyMode === `ai` || isContextPane)
+      return templateCategories[1].getTemplates(selectedTheme, brand, useOddVariant);
+
     if (query === "") {
       return selectedCategory.getTemplates(selectedTheme, brand, useOddVariant);
     }
@@ -72,14 +78,24 @@ const AddPaneNewPanel = ({
         template.title?.toLowerCase().includes(searchQuery) ||
         template.slug?.toLowerCase().includes(searchQuery)
     );
-  }, [selectedTheme, useOddVariant, query, selectedCategory]);
+  }, [selectedTheme, useOddVariant, query, selectedCategory, copyMode, isContextPane]);
+
+  useEffect(() => {
+    if (copyMode !== "ai") setAiContentGenerated(false);
+    if (copyMode !== "ai" || isContextPane) setSelectedCategory(templateCategories[1]);
+  }, [copyMode]);
+
+  const handleAiContentGenerated = (content: string) => {
+    setCustomMarkdown(content);
+    setAiContentGenerated(true);
+  };
 
   useEffect(() => {
     const newPreviews = filteredTemplates.map((template, index: number) => {
       const ctx = new NodesContext();
       ctx.addNode(createEmptyStorykeep("tmp"));
       const thisTemplate =
-        copyMode === `custom`
+        copyMode === "custom" || (copyMode === "ai" && aiContentGenerated)
           ? {
               ...template,
               markdown: template.markdown && {
@@ -135,6 +151,7 @@ const AddPaneNewPanel = ({
         first ? "before" : "after"
       );
       if (newPaneId) ctx.notifyNode(`root`);
+      setMode(PaneAddMode.DEFAULT);
     }
   };
 
@@ -246,125 +263,141 @@ const AddPaneNewPanel = ({
                   leaveTo="opacity-0"
                 >
                   <Combobox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {templateCategories.map((category) => (
-                      <Combobox.Option
-                        key={category.id}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-teal-600 text-white" : "text-gray-900"
-                          }`
-                        }
-                        value={category}
-                      >
-                        {({ selected, active }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {category.title}
-                            </span>
-                            {selected && (
+                    {(copyMode === `ai` ? [templateCategories[1]] : templateCategories).map(
+                      (category) => (
+                        <Combobox.Option
+                          key={category.id}
+                          className={({ active }) =>
+                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                              active ? "bg-teal-600 text-white" : "text-gray-900"
+                            }`
+                          }
+                          value={category}
+                        >
+                          {({ selected, active }) => (
+                            <>
                               <span
-                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                  active ? "text-white" : "text-teal-600"
-                                }`}
+                                className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                               >
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                {category.title}
                               </span>
-                            )}
-                          </>
-                        )}
-                      </Combobox.Option>
-                    ))}
+                              {selected && (
+                                <span
+                                  className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                                    active ? "text-white" : "text-teal-600"
+                                  }`}
+                                >
+                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </Combobox.Option>
+                      )
+                    )}
                   </Combobox.Options>
                 </Transition>
               </div>
             </Combobox>
           </div>
 
-          <AddPaneNewCopyMode selected={copyMode} onChange={setCopyMode} />
+          {!(copyMode === "ai" && aiContentGenerated) && (
+            <AddPaneNewCopyMode selected={copyMode} onChange={setCopyMode} />
+          )}
           {copyMode === "custom" && (
             <div className="w-full mt-4">
               <AddPaneNewCustomCopy value={customMarkdown} onChange={setCustomMarkdown} />
             </div>
           )}
-        </div>
-      </div>
-
-      <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
-        Click on a design to use:
-      </h3>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
-        {visiblePreviews.map((preview) => (
-          <div
-            key={preview.index}
-            onClick={() => handleTemplateInsert(preview.template, nodeId, first)}
-            className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
-              preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
-            }`}
-            style={{
-              ...(!preview.snapshot ? { minHeight: "200px" } : {}),
-            }}
-          >
-            {renderedPages.has(currentPage) && !preview.snapshot && (
-              <NodesSnapshotRenderer
-                ctx={preview.ctx}
-                forceRegenerate={false}
-                onComplete={(data) => {
-                  setPreviews((prev) =>
-                    prev.map((p) => (p.index === preview.index ? { ...p, snapshot: data } : p))
-                  );
-                }}
+          {copyMode === "ai" && !aiContentGenerated && (
+            <div className="w-full mt-4">
+              <AddPanePanel_newAICopy
+                onChange={handleAiContentGenerated}
+                isContextPane={isContextPane}
               />
-            )}
-            {preview.snapshot && (
-              <div className="p-0.5">
-                <img
-                  src={preview.snapshot.imageData}
-                  alt={`Template ${preview.index + 1}`}
-                  className="w-full"
-                />
-              </div>
-            )}
-            <div className="rounded-t-md absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
-              {preview.template.title}
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
 
-      <div className="flex justify-center items-center gap-2 mt-4 mb-2">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 0}
-          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Previous
-        </button>
-        <div className="flex gap-1">
-          {[...Array(totalPages)].map((_, index) => (
+      {shouldShowDesigns && (
+        <>
+          <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
+            Click on a design to use:
+          </h3>
+
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
+            {visiblePreviews.map((preview) => (
+              <div
+                key={preview.index}
+                onClick={() => handleTemplateInsert(preview.template, nodeId, first)}
+                className={`group bg-mywhite shadow-inner relative w-full rounded-sm cursor-pointer transition-all duration-200 ${
+                  preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
+                }`}
+                style={{
+                  ...(!preview.snapshot ? { minHeight: "200px" } : {}),
+                }}
+              >
+                {renderedPages.has(currentPage) && !preview.snapshot && (
+                  <NodesSnapshotRenderer
+                    ctx={preview.ctx}
+                    forceRegenerate={false}
+                    onComplete={(data) => {
+                      setPreviews((prev) =>
+                        prev.map((p) => (p.index === preview.index ? { ...p, snapshot: data } : p))
+                      );
+                    }}
+                  />
+                )}
+                {preview.snapshot && (
+                  <div className="p-0.5">
+                    <img
+                      src={preview.snapshot.imageData}
+                      alt={`Template ${preview.index + 1}`}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                <div className="rounded-t-md absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
+                  {preview.template.title}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center items-center gap-2 mt-4 mb-2">
             <button
-              key={index}
-              onClick={() => handlePageChange(index)}
-              className={`px-3 py-1 text-sm rounded transition-colors ${
-                currentPage === index
-                  ? "bg-cyan-700 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 0}
+              className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {index + 1}
+              Previous
             </button>
-          ))}
-        </div>
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages - 1}
-          className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Next
-        </button>
-      </div>
+            <div className="flex gap-1">
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handlePageChange(index)}
+                  className={`px-3 py-1 text-sm rounded transition-colors ${
+                    currentPage === index
+                      ? "bg-cyan-700 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages - 1}
+              className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
