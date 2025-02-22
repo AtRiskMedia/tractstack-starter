@@ -30,6 +30,11 @@ FROM node:20-slim AS runtime
 WORKDIR /app
 # Create necessary directories
 RUN mkdir -p /app/config /app/public/styles
+mkdir -p /home/"$USR"/src/tractstack-storykeep/public/images/og
+mkdir -p /home/"$USR"/src/tractstack-storykeep/public/images/thumbs
+mkdir -p /home/"$USR"/src/tractstack-storykeep/public/custom
+mkdir -p /home/"$USR"/src/tractstack-storykeep/public/styles
+chmod -R 777 /home/"$USR"/src/tractstack-storykeep/public
 # Copy the build artifacts from the build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/tailwind.config.cjs ./tailwind.config.cjs
