@@ -1,6 +1,9 @@
 import { tursoClient } from "../client";
 import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { StoryFragmentRowData } from "@/store/nodesSerializer";
+import { upsertTopic } from "./upsertTopic";
+import { linkTopicToStoryFragment } from "./linkTopicToStoryFragment";
+import { upsertStoryFragmentDetails } from "./upsertStoryFragmentDetails";
 
 export async function upsertStoryFragment(
   rowData: StoryFragmentRowData
@@ -56,6 +59,32 @@ export async function upsertStoryFragment(
         });
       }
     }
+
+    // Handle pending topics and details if provided
+    if (rowData.pendingTopics) {
+      const { topics, description } = rowData.pendingTopics;
+
+      // Process details
+      if (description) {
+        await upsertStoryFragmentDetails(rowData.id, description);
+      }
+
+      // Process topics
+      if (topics && Array.isArray(topics)) {
+        for (const topic of topics) {
+          if (!topic.title) continue;
+
+          // Ensure the topic exists in the database
+          const result = await upsertTopic(topic.title);
+
+          if (result.success && result.id > 0) {
+            // Link the topic to the story fragment
+            await linkTopicToStoryFragment(rowData.id, result.id);
+          }
+        }
+      }
+    }
+
     invalidateEntry("storyfragment", rowData.id);
     setCachedContentMap([]);
     return { success: true };

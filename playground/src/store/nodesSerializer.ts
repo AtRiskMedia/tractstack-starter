@@ -32,6 +32,10 @@ export type StoryFragmentRowData = {
   menu_id?: string;
   social_image_path?: string;
   tailwind_background_colour?: string;
+  pendingTopics?: {
+    topics: { id?: string; title: string }[];
+    description: string;
+  };
 };
 
 export type ImageFileRowData = {

@@ -1,7 +1,8 @@
 ---
 import { ViewTransitions } from "astro:transitions";
 import { joinUrlPaths } from "@/utils/common/helpers";
-import type { Config } from "../types";
+import { getFullContentMap } from "@/utils/db/turso.ts";
+import type { Config, FullContentMap } from "../types";
 
 export interface Props {
   config: Config;
@@ -10,6 +11,7 @@ export interface Props {
   pubDatetime?: Date;
   modDatetime?: Date | null;
   ogImage?: string;
+  id?: string;
 }
 
 const {
@@ -19,8 +21,20 @@ const {
   canonicalURL = Astro.url.pathname,
   pubDatetime,
   modDatetime,
+  id,
 } = Astro.props;
 
+const contentMap: FullContentMap[] = await getFullContentMap();
+let storyFragmentDescription;
+if (id) {
+  const storyFragment = contentMap.find(
+    (item) => item.id === id && item.type === "StoryFragment"
+  ) as (FullContentMap & { description?: string }) | undefined;
+
+  if (storyFragment && storyFragment.description) {
+    storyFragmentDescription = storyFragment.description;
+  }
+}
 const stylesUrl = config.init.STYLES_VER
   ? `/api/styles/frontend.css?v=${config?.init?.STYLES_VER}`
   : `/styles/app.css`;
@@ -36,7 +50,9 @@ const defaultSocialTitle =
       : `My first Tract Stack`;
 const defaultSocialAuthor = config.init.OGAUTHOR || `Tract Stack`;
 const defaultSocialDesc =
-  config.init.OGDESC || `No-code website builder and content marketing platform`;
+  storyFragmentDescription ||
+  config.init.OGDESC ||
+  `No-code website builder and content marketing platform`;
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;

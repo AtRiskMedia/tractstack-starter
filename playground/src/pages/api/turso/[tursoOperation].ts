@@ -28,6 +28,12 @@ import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode.
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
 import { initializeContent } from "@/utils/db/turso.ts";
+import { getAllTopics } from "@/utils/db/api/getAllTopics.ts";
+import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment.ts";
+import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment.ts";
+import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment.ts";
+import { upsertTopic } from "@/utils/db/api/upsertTopic.ts";
+import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails.ts";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -117,6 +123,15 @@ export const POST: APIRoute = async ({ request, params }) => {
         await initializeContent();
         result = true;
         break;
+      case "upsertTopic":
+        result = await upsertTopic(body.title);
+        break;
+      case "linkTopicToStoryFragment":
+        result = await linkTopicToStoryFragment(body.storyFragmentId, body.topicId);
+        break;
+      case "unlinkTopicFromStoryFragment":
+        result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId);
+        break;
       default:
         throw new Error(`Unknown operation: ${tursoOperation}`);
     }
@@ -162,6 +177,27 @@ export const GET: APIRoute = async ({ params, request }) => {
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes();
         break;
+      case "getAllTopics":
+        result = await getAllTopics();
+        break;
+      case "getTopicsForStoryFragment": {
+        const url = new URL(request.url);
+        const storyFragmentId = url.searchParams.get("storyFragmentId");
+        if (!storyFragmentId) {
+          throw new Error("Missing required parameter: storyFragmentId");
+        }
+        result = await getTopicsForStoryFragment(storyFragmentId);
+        break;
+      }
+      case "getStoryFragmentDetails": {
+        const url = new URL(request.url);
+        const storyFragmentId = url.searchParams.get("storyFragmentId");
+        if (!storyFragmentId) {
+          throw new Error("Missing required parameter: storyFragmentId");
+        }
+        result = await getStoryFragmentDetails(storyFragmentId);
+        break;
+      }
       default:
         if (tursoOperation === "read") {
           return POST({

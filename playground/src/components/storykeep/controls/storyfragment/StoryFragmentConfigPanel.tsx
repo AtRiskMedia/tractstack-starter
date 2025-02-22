@@ -3,6 +3,7 @@ import { useStore } from "@nanostores/react";
 import { settingsPanelStore } from "@/store/storykeep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import { getCtx } from "@/store/nodes.ts";
 import { findClosestTailwindColor } from "../fields/ColorPicker";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
@@ -10,6 +11,7 @@ import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
 import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
+import StoryFragmentTopicsPanel from "./StoryFragmentPanel_topics";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import { cloneDeep } from "@/utils/common/helpers";
 import { StoryFragmentMode } from "@/types";
@@ -86,6 +88,8 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     return <StoryFragmentMenuPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.OG) {
     return <StoryFragmentOgPanel nodeId={nodeId} setMode={setMode} />;
+  } else if (mode === StoryFragmentMode.TOPICS) {
+    return <StoryFragmentTopicsPanel nodeId={nodeId} setMode={setMode} />;
   }
 
   return (
@@ -142,6 +146,15 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
                 <span>Social Share Image</span>
               </>
             )}
+          </button>
+
+          {/* Topics control */}
+          <button
+            onClick={() => setMode(StoryFragmentMode.TOPICS)}
+            className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
+          >
+            <TagIcon className="w-4 h-4 mr-1" />
+            <span>Topics & Details</span>
           </button>
 
           {/* Color picker */}

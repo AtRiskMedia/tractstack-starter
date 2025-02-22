@@ -256,3 +256,10 @@ export const buttonStylesMemoryStore = persistentAtom<ButtonStylesMemory>(
     decode: JSON.parse,
   }
 );
+
+export const storyFragmentTopicsStore = map<{
+  [storyFragmentId: string]: {
+    description: string;
+    topics: { id?: string; title: string }[];
+  };
+}>({});

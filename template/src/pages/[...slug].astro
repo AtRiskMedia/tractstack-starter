@@ -104,6 +104,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
     ? storyfragmentNode.socialImagePath
     : undefined}
   config={config}
+  id={storyfragmentNode.id}
 >
   {config?.init?.ENABLE_HEADER_WIDGET && <HeaderWidget slug={lookup} resources={headerResources} />}
 

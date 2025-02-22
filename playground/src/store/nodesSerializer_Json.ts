@@ -13,6 +13,8 @@ import type {
   StoryFragmentNode,
   MarkdownPaneFragmentNode,
 } from "@/types.ts";
+import type { StoryFragmentRowData } from "@/store/nodesSerializer";
+import { storyFragmentTopicsStore } from "@/store/storykeep.ts";
 import { hasButtonPayload } from "@/utils/nodes/type-guards";
 import { MarkdownGenerator } from "@/utils/common/nodesMarkdownGenerator.ts";
 
@@ -203,8 +205,9 @@ export class NodesSerializer_Json extends NodesSerializer {
   processStoryFragmentNode(node: BaseNode | undefined, saveData: SaveData) {
     if (!node) return;
     const storyfragmentNode = node as StoryFragmentNode;
-    if (storyfragmentNode && storyfragmentNode.parentId)
-      saveData.storyfragments.push({
+    if (storyfragmentNode && storyfragmentNode.parentId) {
+      // Create the base story fragment data for saving
+      const storyFragmentData = {
         id: storyfragmentNode.id,
         tractstack_id: storyfragmentNode.parentId,
         slug: storyfragmentNode.slug,
@@ -221,7 +224,18 @@ export class NodesSerializer_Json extends NodesSerializer {
         ...(typeof storyfragmentNode.socialImagePath === `string`
           ? { social_image_path: storyfragmentNode.socialImagePath }
           : {}),
-      });
+      } as StoryFragmentRowData;
+
+      // Check for pending topics in the store
+      const pendingTopicsData = storyFragmentTopicsStore.get()[storyfragmentNode.id];
+      if (pendingTopicsData) {
+        // Add pending topics to the save data
+        storyFragmentData.pendingTopics = pendingTopicsData;
+      }
+
+      // Add to save data
+      saveData.storyfragments.push(storyFragmentData);
+    }
   }
 
   processPaneNode(ctx: NodesContext, node: BaseNode | undefined, saveData: SaveData) {

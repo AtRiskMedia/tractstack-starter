@@ -179,6 +179,7 @@ export type StoryFragmentContentMap = ContentMapBase & {
   socialImagePath?: string;
   thumbSrc?: string;
   thumbSrcSet?: string;
+  description?: string;
 };
 
 export type TractStackContentMap = ContentMapBase & {
@@ -1066,6 +1067,7 @@ export enum StoryFragmentMode {
   SLUG = "SLUG",
   MENU = "MENU",
   OG = "OG",
+  TOPICS = "TOPICS",
 }
 
 export interface ActivePaneMode {

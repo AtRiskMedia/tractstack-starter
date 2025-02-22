@@ -66,7 +66,7 @@
       "sql": "CREATE TABLE IF NOT EXISTS storyfragment_has_topic (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), topic_id NUMERIC NOT NULL REFERENCES storyfragment_topics(id))"
     },
     "storyfragment_details": {
-      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_details (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id))"
+      "sql": "CREATE TABLE IF NOT EXISTS storyfragment_details (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), description TEXT NOT NULL)"
     }
   },
   "indexes": [

@@ -906,37 +906,39 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     if (!client) return [];
 
     const queryParts = [
-      `SELECT id, id as slug, title, 'Menu' as type, theme as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
-       FROM menus`,
+      `SELECT id, id as slug, title, 'Menu' as type, theme as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
+   FROM menus`,
 
-      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
-       FROM panes`,
+      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
+   FROM panes`,
 
-      `SELECT id, slug, title, 'Resource' as type, category_slug as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
-       FROM resources`,
+      `SELECT id, slug, title, 'Resource' as type, category_slug as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
+   FROM resources`,
 
       `SELECT 
-         sf.id, 
-         sf.slug, 
-         sf.title, 
-         'StoryFragment' as type, 
-         sf.social_image_path as extra,
-         ts.id as parent_id,
-         ts.title as parent_title,
-         ts.slug as parent_slug,
-         (
-           SELECT GROUP_CONCAT(pane_id)
-           FROM storyfragment_panes sp
-           WHERE sp.storyfragment_id = sf.id
-         ) as pane_ids
-       FROM storyfragments sf
-       JOIN tractstacks ts ON sf.tractstack_id = ts.id`,
+     sf.id, 
+     sf.slug, 
+     sf.title, 
+     'StoryFragment' as type, 
+     sf.social_image_path as extra,
+     ts.id as parent_id,
+     ts.title as parent_title,
+     ts.slug as parent_slug,
+     (
+       SELECT GROUP_CONCAT(pane_id)
+       FROM storyfragment_panes sp
+       WHERE sp.storyfragment_id = sf.id
+     ) as pane_ids,
+     sfd.description
+   FROM storyfragments sf
+   JOIN tractstacks ts ON sf.tractstack_id = ts.id
+   LEFT JOIN storyfragment_details sfd ON sfd.storyfragment_id = sf.id`,
 
-      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
-       FROM tractstacks`,
+      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
+   FROM tractstacks`,
 
-      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids 
-       FROM beliefs`,
+      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
+   FROM beliefs`,
     ];
 
     const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
@@ -973,6 +975,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
             type: "StoryFragment" as const,
           } as StoryFragmentContentMap;
 
+          if (row.description && typeof row.description === `string`)
+            baseData.description = row.description;
           if (row.extra) {
             const socialImagePath = String(row.extra);
             if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {
