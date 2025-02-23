@@ -68,12 +68,13 @@ export const Pane = (props: NodeProps) => {
           className={contentClasses}
           style={contentStyles}
           onClick={(e) => {
-            getCtx(props).setClickedNodeId(props.nodeId, true);
+            if (!(codeHookPayload && codeHookTarget === `featured-content`))
+              getCtx(props).setClickedNodeId(props.nodeId, true);
             e.stopPropagation();
           }}
         >
           {codeHookPayload && codeHookTarget === `featured-content` ? (
-            <FeaturedContentSetup params={codeHookParams} />
+            <FeaturedContentSetup nodeId={props.nodeId} params={codeHookParams} />
           ) : codeHookPayload && codeHookTarget ? (
             <CodeHookContainer payload={{ target: codeHookTarget, params: codeHookParams }} />
           ) : (

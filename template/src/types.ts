@@ -180,6 +180,7 @@ export type StoryFragmentContentMap = ContentMapBase & {
   thumbSrc?: string;
   thumbSrcSet?: string;
   description?: string;
+  topics?: string[];
   changed?: string | null;
 };
 

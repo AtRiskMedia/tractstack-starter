@@ -896,7 +896,6 @@ export async function getStoryFragmentBySlugFullRowData(
 }
 
 export async function getFullContentMap(): Promise<FullContentMap[]> {
-  // Check cache first
   const cachedContent = getCachedContentMap();
   if (cachedContent) {
     return cachedContent;
@@ -917,7 +916,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         NULL as parent_slug, 
         NULL as changed,
         NULL as pane_ids, 
-        NULL as description 
+        NULL as description,
+        NULL as topics
       FROM menus`,
 
       `SELECT 
@@ -931,7 +931,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         NULL as parent_slug,
         NULL as changed,
         NULL as pane_ids, 
-        NULL as description 
+        NULL as description,
+        NULL as topics
       FROM panes`,
 
       `SELECT 
@@ -945,7 +946,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         NULL as parent_slug,
         NULL as changed,
         NULL as pane_ids, 
-        NULL as description 
+        NULL as description,
+        NULL as topics
       FROM resources`,
 
       `SELECT 
@@ -963,7 +965,13 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           FROM storyfragment_panes sp
           WHERE sp.storyfragment_id = sf.id
         ) as pane_ids,
-        sfd.description
+        sfd.description,
+        (
+          SELECT GROUP_CONCAT(st.title)
+          FROM storyfragment_has_topic sft
+          JOIN storyfragment_topics st ON sft.topic_id = st.id
+          WHERE sft.storyfragment_id = sf.id
+        ) as topics
       FROM storyfragments sf
       JOIN tractstacks ts ON sf.tractstack_id = ts.id
       LEFT JOIN storyfragment_details sfd ON sfd.storyfragment_id = sf.id`,
@@ -979,7 +987,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         NULL as parent_slug,
         NULL as changed,
         NULL as pane_ids, 
-        NULL as description 
+        NULL as description,
+        NULL as topics
       FROM tractstacks`,
 
       `SELECT 
@@ -993,7 +1002,8 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
         NULL as parent_slug,
         NULL as changed,
         NULL as pane_ids, 
-        NULL as description 
+        NULL as description,
+        NULL as topics
       FROM beliefs`,
     ];
 
@@ -1032,8 +1042,10 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
             changed: row.changed ? String(row.changed) : null,
           } as StoryFragmentContentMap;
 
-          if (row.description && typeof row.description === `string`)
+          if (row.description && typeof row.description === "string")
             baseData.description = row.description;
+          if (row.topics && typeof row.topics === "string")
+            baseData.topics = row.topics.split(",");
           if (row.extra) {
             const socialImagePath = String(row.extra);
             if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {
