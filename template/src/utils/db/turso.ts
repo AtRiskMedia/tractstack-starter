@@ -906,39 +906,95 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
     if (!client) return [];
 
     const queryParts = [
-      `SELECT id, id as slug, title, 'Menu' as type, theme as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
-   FROM menus`,
-
-      `SELECT id, slug, title, 'Pane' as type, is_context_pane as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
-   FROM panes`,
-
-      `SELECT id, slug, title, 'Resource' as type, category_slug as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
-   FROM resources`,
+      `SELECT 
+        id, 
+        id as slug, 
+        title, 
+        'Menu' as type, 
+        theme as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug, 
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description 
+      FROM menus`,
 
       `SELECT 
-     sf.id, 
-     sf.slug, 
-     sf.title, 
-     'StoryFragment' as type, 
-     sf.social_image_path as extra,
-     ts.id as parent_id,
-     ts.title as parent_title,
-     ts.slug as parent_slug,
-     (
-       SELECT GROUP_CONCAT(pane_id)
-       FROM storyfragment_panes sp
-       WHERE sp.storyfragment_id = sf.id
-     ) as pane_ids,
-     sfd.description
-   FROM storyfragments sf
-   JOIN tractstacks ts ON sf.tractstack_id = ts.id
-   LEFT JOIN storyfragment_details sfd ON sfd.storyfragment_id = sf.id`,
+        id, 
+        slug, 
+        title, 
+        'Pane' as type, 
+        is_context_pane as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description 
+      FROM panes`,
 
-      `SELECT id, slug, title, 'TractStack' as type, social_image_path as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
-   FROM tractstacks`,
+      `SELECT 
+        id, 
+        slug, 
+        title, 
+        'Resource' as type, 
+        category_slug as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description 
+      FROM resources`,
 
-      `SELECT id, slug, 'Belief' as title, 'Belief' as type, scale as extra, NULL as parent_id, NULL as parent_title, NULL as parent_slug, NULL as pane_ids, NULL as description 
-   FROM beliefs`,
+      `SELECT 
+        sf.id, 
+        sf.slug, 
+        sf.title, 
+        'StoryFragment' as type, 
+        sf.social_image_path as extra,
+        ts.id as parent_id,
+        ts.title as parent_title,
+        ts.slug as parent_slug,
+        sf.changed,
+        (
+          SELECT GROUP_CONCAT(pane_id)
+          FROM storyfragment_panes sp
+          WHERE sp.storyfragment_id = sf.id
+        ) as pane_ids,
+        sfd.description
+      FROM storyfragments sf
+      JOIN tractstacks ts ON sf.tractstack_id = ts.id
+      LEFT JOIN storyfragment_details sfd ON sfd.storyfragment_id = sf.id`,
+
+      `SELECT 
+        id, 
+        slug, 
+        title, 
+        'TractStack' as type, 
+        social_image_path as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description 
+      FROM tractstacks`,
+
+      `SELECT 
+        id, 
+        slug, 
+        'Belief' as title, 
+        'Belief' as type, 
+        scale as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description 
+      FROM beliefs`,
     ];
 
     const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
@@ -973,6 +1029,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
           const baseData = {
             ...base,
             type: "StoryFragment" as const,
+            changed: row.changed ? String(row.changed) : null,
           } as StoryFragmentContentMap;
 
           if (row.description && typeof row.description === `string`)
@@ -1505,13 +1562,29 @@ export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnal
       SUM(CASE 
         WHEN a.created_at >= datetime('now', '-28 days') 
         THEN 1 ELSE 0 
-      END) as last_28d_actions
+      END) as last_28d_actions,
+      COUNT(DISTINCT CASE 
+        WHEN a.created_at >= datetime('now', '-1 day') 
+        THEN a.fingerprint_id 
+        ELSE NULL
+      END) as last_24h_unique_visitors,
+      COUNT(DISTINCT CASE 
+        WHEN a.created_at >= datetime('now', '-7 days') 
+        THEN a.fingerprint_id 
+        ELSE NULL
+      END) as last_7d_unique_visitors,
+      COUNT(DISTINCT CASE 
+        WHEN a.created_at >= datetime('now', '-28 days') 
+        THEN a.fingerprint_id 
+        ELSE NULL
+      END) as last_28d_unique_visitors
     FROM storyfragments sf
     LEFT JOIN actions a ON 
       a.object_id = sf.id AND 
       a.object_type = 'StoryFragment'
     GROUP BY sf.id, sf.slug
   `);
+
   return rows.map((row) => ({
     id: String(row.id),
     slug: String(row.slug),
@@ -1520,6 +1593,9 @@ export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnal
     last_24h_actions: Number(row.last_24h_actions || 0),
     last_7d_actions: Number(row.last_7d_actions || 0),
     last_28d_actions: Number(row.last_28d_actions || 0),
+    last_24h_unique_visitors: Number(row.last_24h_unique_visitors || 0),
+    last_7d_unique_visitors: Number(row.last_7d_unique_visitors || 0),
+    last_28d_unique_visitors: Number(row.last_28d_unique_visitors || 0),
   }));
 }
 

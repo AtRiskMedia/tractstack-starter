@@ -11,6 +11,7 @@ import type {
   SettingsPanelSignal,
   Theme,
   Tag,
+  StoryfragmentAnalytics,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -263,3 +264,11 @@ export const storyFragmentTopicsStore = map<{
     topics: { id?: string; title: string }[];
   };
 }>({});
+
+export const storyfragmentAnalyticsStore = map<{
+  byId: Record<string, StoryfragmentAnalytics>;
+  lastUpdated: number | null;
+}>({
+  byId: {},
+  lastUpdated: null,
+});

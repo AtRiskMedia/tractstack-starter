@@ -180,6 +180,7 @@ export type StoryFragmentContentMap = ContentMapBase & {
   thumbSrc?: string;
   thumbSrcSet?: string;
   description?: string;
+  changed?: string | null;
 };
 
 export type TractStackContentMap = ContentMapBase & {
@@ -1114,8 +1115,12 @@ export interface StoryfragmentAnalytics {
   slug: string;
   total_actions: number;
   unique_visitors: number;
-  last_24h_actions?: number;
-  last_7d_actions?: number;
+  last_24h_actions: number;
+  last_7d_actions: number;
+  last_28d_actions: number;
+  last_24h_unique_visitors: number;
+  last_7d_unique_visitors: number;
+  last_28d_unique_visitors: number;
 }
 
 export type NodeProps = {

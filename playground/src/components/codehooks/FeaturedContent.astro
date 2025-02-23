@@ -1,0 +1,18 @@
+---
+import type { FullContentMap, CodeHookPayload, StoryfragmentAnalytics } from "@/types";
+
+export interface Props {
+  options?: CodeHookPayload;
+  contentMap: FullContentMap[];
+  storyfragmentAnalytics: StoryfragmentAnalytics[];
+}
+
+const { options, contentMap, storyfragmentAnalytics } = Astro.props;
+---
+
+<div>Featured Content</div>
+<div>
+  {JSON.stringify(options)}
+  <div>{JSON.stringify(storyfragmentAnalytics)}</div>
+  <div>{JSON.stringify(contentMap)}</div>
+</div>

@@ -2,6 +2,7 @@ import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyticsPanel.tsx";
+import FeaturedContentSetup from "@/components/codehooks/FeaturedContentSetup";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/types";
 
@@ -41,6 +42,11 @@ export const Pane = (props: NodeProps) => {
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);
+  const codeHookTarget = codeHookPayload?.target;
+  const codeHookParams =
+    codeHookPayload?.params?.options && typeof codeHookPayload.params.options === `string`
+      ? JSON.parse(codeHookPayload.params.options)
+      : null;
   const [children, setChildren] = useState<string[]>([
     ...getCtx(props).getChildNodeIDs(props.nodeId),
   ]);
@@ -66,8 +72,10 @@ export const Pane = (props: NodeProps) => {
             e.stopPropagation();
           }}
         >
-          {codeHookPayload ? (
-            <CodeHookContainer payload={codeHookPayload} />
+          {codeHookPayload && codeHookTarget === `featured-content` ? (
+            <FeaturedContentSetup params={codeHookParams} />
+          ) : codeHookPayload && codeHookTarget ? (
+            <CodeHookContainer payload={{ target: codeHookTarget, params: codeHookParams }} />
           ) : (
             <RenderChildren children={children} nodeProps={props} />
           )}

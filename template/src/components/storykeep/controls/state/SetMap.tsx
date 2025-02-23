@@ -6,11 +6,13 @@ import {
   homeSlugStore,
   tractstackSlugStore,
   hasAssemblyAIStore,
+  storyfragmentAnalyticsStore,
 } from "@/store/storykeep.ts";
-import type { Theme, FullContentMap } from "@/types.ts";
+import type { Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
 
 const SetMap = (props: {
   payload: FullContentMap[];
+  analytics: StoryfragmentAnalytics[];
   availableCodeHooks: string[];
   brand: string;
   theme: Theme;
@@ -18,8 +20,16 @@ const SetMap = (props: {
   tractstackSlug: string;
   hasAssemblyAI: boolean;
 }) => {
-  const { payload, availableCodeHooks, brand, theme, homeSlug, tractstackSlug, hasAssemblyAI } =
-    props;
+  const {
+    payload,
+    analytics,
+    availableCodeHooks,
+    brand,
+    theme,
+    homeSlug,
+    tractstackSlug,
+    hasAssemblyAI,
+  } = props;
 
   useEffect(() => {
     contentMap.set(payload);
@@ -29,6 +39,20 @@ const SetMap = (props: {
     homeSlugStore.set(homeSlug);
     tractstackSlugStore.set(tractstackSlug);
     hasAssemblyAIStore.set(hasAssemblyAI);
+    if (analytics.length > 0) {
+      const analyticsById = analytics.reduce(
+        (acc, item) => {
+          acc[item.id] = item;
+          return acc;
+        },
+        {} as Record<string, StoryfragmentAnalytics>
+      );
+
+      storyfragmentAnalyticsStore.set({
+        byId: analyticsById,
+        lastUpdated: Date.now(),
+      });
+    }
   }, []);
 
   return <div />;

@@ -36,6 +36,8 @@ export const THRESHOLD_GLOSSED = 7000;
 export const JWT_LIFETIME = 15 * 60 * 1000;
 export const IMPRESSIONS_DELAY = 5000;
 
+export const ANALYTICS_CACHE_TTL = 15 * 60 * 1000;
+
 export const collections = ["kCz"];
 
 export const tagTitles: Record<Tag, string> = {

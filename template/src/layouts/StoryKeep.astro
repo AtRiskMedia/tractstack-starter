@@ -2,9 +2,9 @@
 import { ViewTransitions } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
-import { getFullContentMap } from "@/utils/db/turso.ts";
+import { getFullContentMap, computeStoryfragmentAnalytics } from "@/utils/db/turso.ts";
 import { joinUrlPaths } from "@/utils/common/helpers";
-import type { Theme, FullContentMap, Config } from "@/types.ts";
+import type { Theme, FullContentMap, Config, StoryfragmentAnalytics } from "@/types.ts";
 
 export interface Props {
   config: Config;
@@ -35,6 +35,7 @@ const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 const contentMap: FullContentMap[] = await getFullContentMap();
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
+const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics();
 ---
 
 <!doctype html>
@@ -133,6 +134,7 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
 
     <SetMap
       payload={contentMap}
+      analytics={analyticsData}
       availableCodeHooks={Object.keys(codeHookComponents)}
       brand={config.init.BRAND_COLOURS || ``}
       theme={(config.init.THEME as Theme) || `light`}
