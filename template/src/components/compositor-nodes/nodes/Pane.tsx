@@ -3,6 +3,7 @@ import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyticsPanel.tsx";
 import FeaturedContentSetup from "@/components/codehooks/FeaturedContentSetup";
+import ListContentSetup from "@/components/codehooks/ListContentSetup";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/types";
 
@@ -68,13 +69,21 @@ export const Pane = (props: NodeProps) => {
           className={contentClasses}
           style={contentStyles}
           onClick={(e) => {
-            if (!(codeHookPayload && codeHookTarget === `featured-content`))
+            if (
+              !(
+                codeHookPayload &&
+                typeof codeHookTarget === `string` &&
+                [`list-content`, `featured-content`].includes(codeHookTarget)
+              )
+            )
               getCtx(props).setClickedNodeId(props.nodeId, true);
             e.stopPropagation();
           }}
         >
           {codeHookPayload && codeHookTarget === `featured-content` ? (
             <FeaturedContentSetup nodeId={props.nodeId} params={codeHookParams} />
+          ) : codeHookPayload && codeHookTarget === `list-content` ? (
+            <ListContentSetup nodeId={props.nodeId} params={codeHookParams} />
           ) : codeHookPayload && codeHookTarget ? (
             <CodeHookContainer payload={{ target: codeHookTarget, params: codeHookParams }} />
           ) : (

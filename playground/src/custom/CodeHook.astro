@@ -1,8 +1,9 @@
 ---
-import { getFullContentMap /*, computeStoryfragmentAnalytics */ } from "@/utils/db/turso.ts";
+import { getFullContentMap, computeStoryfragmentAnalytics } from "@/utils/db/turso.ts";
 import type { FullContentMap, ResourceNode, CodeHookPayload } from "@/types";
 import CustomHero from "./CustomHero.astro";
 import FeaturedContent from "../components/codehooks/FeaturedContent.astro";
+import ListContent from "../components/codehooks/ListContent.astro";
 
 export interface Props {
   target: string;
@@ -12,11 +13,12 @@ export interface Props {
 
 const { target, options /* resources */ } = Astro.props;
 const contentMap: FullContentMap[] = await getFullContentMap();
-//const storyfragmentAnalytics = await computeStoryfragmentAnalytics();
+const storyfragmentAnalytics = await computeStoryfragmentAnalytics();
 
 export const components = {
   "custom-hero": true,
   "featured-content": true,
+  "list-content": true,
 };
 
 // if passing props:
@@ -25,7 +27,13 @@ export const components = {
 ---
 
 {
-  target === "featured-content" ? (
+  target === "list-content" ? (
+    <ListContent
+      options={options}
+      contentMap={contentMap}
+      storyfragmentAnalytics={storyfragmentAnalytics}
+    />
+  ) : target === "featured-content" ? (
     <FeaturedContent options={options} contentMap={contentMap} />
   ) : target === "custom-hero" ? (
     <CustomHero />
