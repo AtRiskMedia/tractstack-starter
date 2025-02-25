@@ -49,7 +49,7 @@ const contentStyles = getCtx().getNodeStringStyles(nodeId, `auto`) + "; grid-are
 {
   codeHookPayload ? (
     <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
-      <div id={slug}>
+      <div id={slug} style={contentStyles}>
         <CodeHook
           target={codeHookPayload.target}
           resources={resources}

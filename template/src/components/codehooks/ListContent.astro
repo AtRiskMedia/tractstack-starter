@@ -63,9 +63,6 @@ storyfragmentAnalytics.forEach((item) => {
   viewsMap.set(item.id, item.total_actions);
 });
 
-// Convert viewsMap to a plain object for client-side use
-const viewsObject = Object.fromEntries(viewsMap);
-
 // Prepare data for both sort modes
 const sortedByRecent = [...filteredStories].sort((a, b) => {
   const dateA = a.changed ? new Date(a.changed).getTime() : 0;
@@ -104,21 +101,21 @@ function formatDate(dateString: string | null): string {
 }
 ---
 
-<div class="my-8 p-4">
+<div class="py-12 p-4 mx-auto max-w-7xl">
   <!-- View Mode Toggle -->
-  <div class="flex justify-end mb-4">
+  <div class="flex justify-center mb-4">
     <div class="inline-flex rounded-md shadow-sm" role="group">
       <button
         id="recent-toggle"
-        class={`px-4 py-2 text-sm font-medium ${defaultMode === "recent" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-l-md transition-colors`}
+        class={`px-4 py-2 text-sm font-bold ${defaultMode === "recent" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-l-md transition-colors`}
       >
-        Most Recent
+        Newest
       </button>
       <button
         id="popular-toggle"
-        class={`px-4 py-2 text-sm font-medium ${defaultMode === "popular" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-r-md transition-colors`}
+        class={`px-4 py-2 text-sm font-bold ${defaultMode === "popular" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-r-md transition-colors`}
       >
-        Most Popular
+        Most Active
       </button>
     </div>
   </div>
@@ -136,7 +133,7 @@ function formatDate(dateString: string | null): string {
     {
       initialStories.map((story) => (
         <a href={`/${story.slug}`} class="block group">
-          <div class="flex items-start space-x-4 group-hover:bg-slate-50 p-2 rounded-md">
+          <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
             {story.thumbSrc && (
               <img
                 src={story.thumbSrc}
@@ -155,14 +152,13 @@ function formatDate(dateString: string | null): string {
               {story.topics && story.topics.length > 0 && (
                 <div class="mt-1 flex flex-wrap gap-1">
                   {story.topics.slice(0, 3).map((topic) => (
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
                       {topic}
                     </span>
                   ))}
                 </div>
               )}
               <p class="text-mydarkgrey text-xs mt-1">
-                {viewsMap.get(story.id) && <span class="mr-2">{viewsMap.get(story.id)} views</span>}
                 {story.changed && formatDate(story.changed)}
               </p>
             </div>
@@ -179,7 +175,7 @@ function formatDate(dateString: string | null): string {
       {
         initialStories.slice(0, Math.ceil(initialStories.length / 2)).map((story) => (
           <a href={`/${story.slug}`} class="block group">
-            <div class="flex items-start space-x-4 group-hover:bg-slate-50 p-2 rounded-md">
+            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
               {story.thumbSrc && (
                 <img
                   src={story.thumbSrc}
@@ -198,16 +194,13 @@ function formatDate(dateString: string | null): string {
                 {story.topics && story.topics.length > 0 && (
                   <div class="mt-1 flex flex-wrap gap-1">
                     {story.topics.slice(0, 3).map((topic) => (
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
                         {topic}
                       </span>
                     ))}
                   </div>
                 )}
                 <p class="text-mydarkgrey text-xs mt-1">
-                  {viewsMap.get(story.id) && (
-                    <span class="mr-2">{viewsMap.get(story.id)} views</span>
-                  )}
                   {story.changed && formatDate(story.changed)}
                 </p>
               </div>
@@ -222,7 +215,7 @@ function formatDate(dateString: string | null): string {
       {
         initialStories.slice(Math.ceil(initialStories.length / 2)).map((story) => (
           <a href={`/${story.slug}`} class="block group">
-            <div class="flex items-start space-x-4 group-hover:bg-slate-50 p-2 rounded-md">
+            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
               {story.thumbSrc && (
                 <img
                   src={story.thumbSrc}
@@ -241,16 +234,13 @@ function formatDate(dateString: string | null): string {
                 {story.topics && story.topics.length > 0 && (
                   <div class="mt-1 flex flex-wrap gap-1">
                     {story.topics.slice(0, 3).map((topic) => (
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
                         {topic}
                       </span>
                     ))}
                   </div>
                 )}
                 <p class="text-mydarkgrey text-xs mt-1">
-                  {viewsMap.get(story.id) && (
-                    <span class="mr-2">{viewsMap.get(story.id)} views</span>
-                  )}
                   {story.changed && formatDate(story.changed)}
                 </p>
               </div>
@@ -268,14 +258,14 @@ function formatDate(dateString: string | null): string {
         <nav class="inline-flex rounded-md shadow-sm" aria-label="Pagination">
           <button
             id="prev-page"
-            class="px-4 py-2 text-sm font-medium text-myblack bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-bold text-myblack bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled
           >
             Previous
           </button>
           <button
             id="next-page"
-            class="px-4 py-2 text-sm font-medium text-white bg-myblue border border-myblue rounded-r-md hover:bg-myblue-dark disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-4 py-2 text-sm font-bold text-white bg-myblue border border-myblue rounded-r-md hover:bg-myblue-dark disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>
@@ -285,10 +275,7 @@ function formatDate(dateString: string | null): string {
   }
 </div>
 
-<script
-  is:inline
-  define:vars={{ sortedByRecent, sortedByPopular, pageSize, defaultMode, viewsObject }}
->
+<script is:inline define:vars={{ sortedByRecent, sortedByPopular, pageSize, defaultMode }}>
   // Client-side state
   let currentMode = defaultMode;
   let currentPage = 1;
@@ -344,7 +331,7 @@ function formatDate(dateString: string | null): string {
             .slice(0, 3)
             .map(
               (topic) =>
-                `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
               ${topic}
             </span>`
             )
@@ -355,7 +342,6 @@ function formatDate(dateString: string | null): string {
     // Format views and date
     const metaInfo = `
       <p class="text-mydarkgrey text-xs mt-1">
-        ${viewsObject[story.id] ? `<span class="mr-2">${viewsObject[story.id]} views</span>` : ""}
         ${story.changed ? formatDate(story.changed) : "Unknown date"}
       </p>
     `;
@@ -363,7 +349,7 @@ function formatDate(dateString: string | null): string {
     // Create the full HTML
     return `
       <a href="/${story.slug}" class="block group">
-        <div class="flex items-start space-x-4 group-hover:bg-slate-50 p-2 rounded-md">
+        <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
           ${
             story.thumbSrc
               ? `<img src="${story.thumbSrc}" alt="${story.title}" style="width:100px;height:auto;" class="rounded-md">`

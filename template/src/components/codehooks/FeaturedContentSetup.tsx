@@ -1,43 +1,33 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { RadioGroup } from "@headlessui/react";
-import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
-import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
 import { contentMap } from "@/store/events";
 import { storyfragmentAnalyticsStore } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
-import type { StoryFragmentContentMap, PaneNode } from "@/types";
+import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
+import type { StoryFragmentContentMap, PaneNode, Config } from "@/types";
 
 const sortModes = [
-  {
-    id: "ordered",
-    name: "Preferred Order",
-    description: "Manually arrange pages in your preferred order",
-  },
-  { id: "popularity", name: "Popularity", description: "Sort by most viewed pages" },
-  { id: "recent", name: "Most Recent", description: "Sort by recently updated pages" },
+  { id: "ordered", name: "Preferred Order", description: "Manually arrange pages" },
+  { id: "popularity", name: "Popularity", description: "Sort by most viewed" },
+  { id: "recent", name: "Most Recent", description: "Sort by recent updates" },
 ];
 
-const dragStyles = {
-  dragging: { opacity: 0.5, backgroundColor: "#f9fafb", border: "2px dashed #60a5fa" },
-  dropTarget: { backgroundColor: "#eff6ff", border: "2px solid #60a5fa" },
-  normal: {},
-};
-
-const FEATURED_DROP_ID = "featured-drop-target";
 const PER_PAGE = 20;
 
 interface FeaturedContentSetupProps {
   params?: Record<string, string>;
   nodeId: string;
+  config?: Config;
 }
 
-const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => {
+const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupProps) => {
   const $contentMap = useStore(contentMap);
   const $analytics = useStore(storyfragmentAnalyticsStore);
   const draggedRef = useRef<string | null>(null);
+  const isInitialMount = useRef(true);
 
   const [selectedMode, setSelectedMode] = useState(params?.defaultMode || "ordered");
   const [selectedFeaturedId, setSelectedFeaturedId] = useState(params?.featuredId || "");
@@ -52,6 +42,7 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
     dropTarget: null,
   });
   const [currentPage, setCurrentPage] = useState(1);
+  const [bgColor, setBgColor] = useState(params?.bgColor || "");
 
   const ctx = getCtx();
 
@@ -67,26 +58,25 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
     )
     .sort((a, b) => {
       if (selectedMode === "popularity") {
-        const aViews = $analytics.byId[a.id]?.total_actions || 0;
-        const bViews = $analytics.byId[b.id]?.total_actions || 0;
-        return bViews - aViews;
+        return (
+          ($analytics.byId[b.id]?.total_actions || 0) - ($analytics.byId[a.id]?.total_actions || 0)
+        );
       }
       if (selectedMode === "recent") {
-        const bDate = b.changed ? new Date(b.changed) : new Date(0);
-        const aDate = a.changed ? new Date(a.changed) : new Date(0);
-        return bDate.getTime() - aDate.getTime();
+        return new Date(b.changed || 0).getTime() - new Date(a.changed || 0).getTime();
       }
       const aIndex = selectedIds.indexOf(a.id);
       const bIndex = selectedIds.indexOf(b.id);
-      if (aIndex === -1 && bIndex === -1) return 0;
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
-      return aIndex - bIndex;
+      return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
     });
+
+  const featuredPage = $contentMap.find((item) => item.id === selectedFeaturedId) as
+    | StoryFragmentContentMap
+    | undefined;
 
   const topicMap = new Map<string, { count: number; pageIds: string[] }>();
   validPages.forEach((page) => {
-    if (page.topics && page.topics.length > 0) {
+    if (page.topics?.length) {
       page.topics.forEach((topic) => {
         const topicData = topicMap.get(topic) || { count: 0, pageIds: [] };
         topicData.count += 1;
@@ -104,264 +94,254 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
   const totalPages = Math.ceil(validPages.length / PER_PAGE);
   const paginatedPages = validPages.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
-  const featuredPage = selectedFeaturedId
-    ? ($contentMap.find((item) => item.id === selectedFeaturedId) as
-        | StoryFragmentContentMap
-        | undefined)
-    : undefined;
-
-  const getItemStyle = (id: string) => {
-    if (selectedMode !== "ordered") return dragStyles.normal;
-    if (dragState.dragging === id) return dragStyles.dragging;
-    if (dragState.dropTarget === id || dragState.dropTarget === FEATURED_DROP_ID)
-      return dragStyles.dropTarget;
-    return dragStyles.normal;
-  };
-
-  const updatePaneNode = (newFeaturedId: string, newSelectedIds: string[]) => {
-    if (nodeId) {
-      const allNodes = ctx.allNodes.get();
-      const paneNode = cloneDeep(allNodes.get(nodeId)) as PaneNode;
-      if (paneNode) {
-        const updatedNode = {
-          ...paneNode,
-          codeHookTarget: "featured-content",
-          codeHookPayload: {
-            options: JSON.stringify({
-              defaultMode: selectedMode,
-              featuredId: newFeaturedId,
-              storyfragmentIds: newSelectedIds.join(","),
-            }),
-          },
-          isChanged: true,
-        };
-        ctx.modifyNodes([updatedNode]);
-      }
+  const updatePaneNode = () => {
+    if (!nodeId) return;
+    const allNodes = ctx.allNodes.get();
+    const paneNode = cloneDeep(allNodes.get(nodeId)) as PaneNode;
+    if (paneNode) {
+      const updatedNode = {
+        ...paneNode,
+        codeHookTarget: "featured-content",
+        codeHookPayload: {
+          options: JSON.stringify({
+            defaultMode: selectedMode,
+            featuredId: selectedFeaturedId,
+            storyfragmentIds: selectedIds.join(","),
+            bgColor,
+          }),
+        },
+        bgColour: bgColor || undefined,
+        isChanged: true,
+      };
+      if (!bgColor) delete updatedNode.bgColour;
+      ctx.modifyNodes([updatedNode]);
     }
   };
 
-  const moveItem = (fromId: string, direction: "up" | "down") => {
-    const currentIndex = selectedIds.indexOf(fromId);
-    if (currentIndex === -1) return;
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timeoutId = setTimeout(updatePaneNode, 500);
+    return () => clearTimeout(timeoutId);
+  }, [selectedMode, selectedFeaturedId, selectedIds, bgColor]);
 
+  const moveItem = (id: string, direction: "up" | "down") => {
+    const currentIndex = selectedIds.indexOf(id);
+    if (currentIndex === -1) return;
     const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
     if (newIndex < 0 || newIndex >= selectedIds.length) return;
-
     const newOrder = [...selectedIds];
-    const [moving] = newOrder.splice(currentIndex, 1);
-    newOrder.splice(newIndex, 0, moving);
+    [newOrder[currentIndex], newOrder[newIndex]] = [newOrder[newIndex], newOrder[currentIndex]];
     setSelectedIds(newOrder);
-    updatePaneNode(selectedFeaturedId, newOrder);
   };
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    if (selectedMode !== "ordered") return;
     draggedRef.current = id;
     setDragState({ dragging: id, dropTarget: null });
-    e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", id);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, id: string) => {
-    if (selectedMode !== "ordered") return;
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    id: string,
+    isFeaturedDrop = false
+  ) => {
+    if (!draggedRef.current || draggedRef.current === id) return;
+    if (isFeaturedDrop || (selectedMode === "ordered" && selectedIds.includes(id))) {
+      e.preventDefault();
+      setDragState((prev) => ({ ...prev, dropTarget: id }));
+    }
+  };
+
+  const handleDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetId: string,
+    isFeaturedDrop = false
+  ) => {
+    e.preventDefault();
     const draggedId = draggedRef.current;
     if (!draggedId) return;
-    if (id !== FEATURED_DROP_ID && !selectedIds.includes(id)) return;
-    if (draggedId === id) return;
-    e.preventDefault();
-    setDragState((prev) => ({ ...prev, dropTarget: id }));
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDragLeave = () => {
-    setDragState((prev) => ({ ...prev, dropTarget: null }));
-  };
-
-  const handleDragEnd = () => {
-    draggedRef.current = null;
     setDragState({ dragging: null, dropTarget: null });
-  };
+    draggedRef.current = null;
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetId: string) => {
-    if (selectedMode !== "ordered") return;
-    e.preventDefault();
-    const draggedId = draggedRef.current;
-    if (!draggedId) {
-      handleDragEnd();
-      return;
-    }
-    console.log(targetId, draggedId, selectedIds);
-
-    if (targetId === FEATURED_DROP_ID) {
-      setSelectedFeaturedId(draggedId);
-      const newSelectedIds = selectedIds.includes(draggedId)
-        ? selectedIds
-        : [...selectedIds, draggedId];
-      setSelectedIds(newSelectedIds);
-      updatePaneNode(draggedId, newSelectedIds);
-      handleDragEnd();
+    if (isFeaturedDrop) {
+      if (selectedIds.includes(draggedId)) {
+        setSelectedFeaturedId(draggedId);
+      }
       return;
     }
 
-    if (!selectedIds.includes(targetId) || draggedId === targetId) {
-      handleDragEnd();
+    if (selectedMode !== "ordered" || draggedId === targetId || !selectedIds.includes(targetId))
       return;
-    }
-
     const fromIndex = selectedIds.indexOf(draggedId);
     const toIndex = selectedIds.indexOf(targetId);
-    if (fromIndex === -1 || toIndex === -1) {
-      handleDragEnd();
-      return;
-    }
-
     const newOrder = [...selectedIds];
     const [movedItem] = newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, movedItem);
     setSelectedIds(newOrder);
-    updatePaneNode(selectedFeaturedId, newOrder);
-    handleDragEnd();
   };
 
   const toggleInclude = (id: string) => {
-    let newSelectedIds: string[];
-    if (selectedIds.includes(id)) {
-      newSelectedIds = selectedIds.filter((i) => i !== id);
-      setSelectedIds(newSelectedIds);
-      if (selectedFeaturedId === id) {
-        setSelectedFeaturedId("");
-        updatePaneNode("", newSelectedIds);
-      } else {
-        updatePaneNode(selectedFeaturedId, newSelectedIds);
-      }
-    } else {
-      newSelectedIds = [...selectedIds, id];
-      setSelectedIds(newSelectedIds);
-      updatePaneNode(selectedFeaturedId, newSelectedIds);
+    const newSelectedIds = selectedIds.includes(id)
+      ? selectedIds.filter((i) => i !== id)
+      : [...selectedIds, id];
+    setSelectedIds(newSelectedIds);
+    if (selectedFeaturedId === id && !newSelectedIds.includes(id)) {
+      setSelectedFeaturedId("");
     }
   };
 
   const toggleFeatured = (id: string) => {
-    if (selectedFeaturedId === id) {
-      setSelectedFeaturedId("");
-      updatePaneNode("", selectedIds);
-    } else {
-      setSelectedFeaturedId(id);
-      const newSelectedIds = selectedIds.includes(id) ? selectedIds : [...selectedIds, id];
-      setSelectedIds(newSelectedIds);
-      updatePaneNode(id, newSelectedIds);
+    if (!selectedIds.includes(id)) {
+      setSelectedIds((prev) => [...prev, id]);
     }
+    setSelectedFeaturedId(selectedFeaturedId === id ? "" : id);
   };
 
   const handlePageChange = (direction: "prev" | "next") => {
-    if (direction === "prev" && currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    } else if (direction === "next" && currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    setCurrentPage((prev) =>
+      direction === "prev" && prev > 1
+        ? prev - 1
+        : direction === "next" && prev < totalPages
+          ? prev + 1
+          : prev
+    );
   };
 
   const handleTopicIncludeAll = (pageIds: string[]) => {
     const newSelectedIds = Array.from(new Set([...selectedIds, ...pageIds]));
     setSelectedIds(newSelectedIds);
-    updatePaneNode(selectedFeaturedId, newSelectedIds);
   };
 
-  const handleTopicExcludeAll = (topicName: string, pageIds: string[]) => {
-    console.log(
-      "Excluding topic:",
-      topicName,
-      "with pageIds:",
-      pageIds,
-      "from selectedIds:",
-      selectedIds
-    );
+  const handleTopicExcludeAll = (pageIds: string[]) => {
     const newSelectedIds = selectedIds.filter((id) => !pageIds.includes(id));
-    console.log("New selectedIds after exclude:", newSelectedIds);
-
-    // Check if selectedFeaturedId has the topic using full $contentMap
-    const featuredPageData = $contentMap.find((page) => page.id === selectedFeaturedId) as
-      | StoryFragmentContentMap
-      | undefined;
-    const shouldUnfeature = featuredPageData?.topics?.includes(topicName) || false;
-    const newFeaturedId = shouldUnfeature ? "" : selectedFeaturedId;
-
-    console.log(
-      "Featured page topics:",
-      featuredPageData?.topics,
-      "Should unfeature:",
-      shouldUnfeature,
-      "New featuredId:",
-      newFeaturedId
-    );
-
     setSelectedIds(newSelectedIds);
-    setSelectedFeaturedId(newFeaturedId);
-    updatePaneNode(newFeaturedId, newSelectedIds);
+    if (pageIds.includes(selectedFeaturedId)) {
+      setSelectedFeaturedId("");
+    }
   };
 
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
       <div className="bg-white rounded-lg shadow p-4">
-        <RadioGroup value={selectedMode} onChange={setSelectedMode}>
-          <RadioGroup.Label className="font-bold text-gray-700">Display Mode</RadioGroup.Label>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {sortModes.map((mode) => (
-              <RadioGroup.Option
-                key={mode.id}
-                value={mode.id}
-                className={({ active, checked }) =>
-                  classNames(
-                    "relative flex cursor-pointer rounded-lg border p-4",
-                    checked ? "border-myblue bg-myblue/5" : "border-gray-300",
-                    active ? "ring-2 ring-myblue ring-offset-2" : ""
-                  )
-                }
-              >
-                {({ checked }) => (
-                  <div className="flex flex-col">
-                    <span
-                      className={classNames(
-                        "block text-sm font-bold",
-                        checked ? "text-myblue" : "text-gray-900"
-                      )}
-                    >
-                      {mode.name}
-                    </span>
-                    <span className="mt-1 text-sm text-gray-500">{mode.description}</span>
-                  </div>
-                )}
-              </RadioGroup.Option>
-            ))}
+        <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-4">Settings</h3>
+        <div className="pt-4 space-y-4">
+          <div>
+            <RadioGroup value={selectedMode} onChange={setSelectedMode}>
+              <RadioGroup.Label className="block text-sm font-bold text-gray-700">
+                Sort Mode
+              </RadioGroup.Label>
+              <div className="mt-2 space-y-2">
+                {sortModes.map((mode) => (
+                  <RadioGroup.Option
+                    key={mode.id}
+                    value={mode.id}
+                    className={({ checked }) =>
+                      classNames(
+                        "flex items-center p-2 rounded-md cursor-pointer border",
+                        checked ? "bg-blue-50 border-blue-500" : "border-gray-300"
+                      )
+                    }
+                  >
+                    {({ checked }) => (
+                      <div className="flex-1">
+                        <span
+                          className={classNames(
+                            "text-sm font-bold",
+                            checked ? "text-blue-600" : "text-gray-900"
+                          )}
+                        >
+                          {mode.name}
+                        </span>
+                        <p className="text-xs text-gray-500">{mode.description}</p>
+                      </div>
+                    )}
+                  </RadioGroup.Option>
+                ))}
+              </div>
+            </RadioGroup>
           </div>
-        </RadioGroup>
+          <div>
+            <ColorPickerCombo
+              title="Background Color"
+              defaultColor={bgColor}
+              onColorChange={setBgColor}
+              config={config!}
+              allowNull={true}
+            />
+            <p className="mt-1 text-xs text-gray-500">Optional background color</p>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={classNames(
+          "bg-white rounded-lg shadow overflow-hidden",
+          dragState.dropTarget === "featured" ? "bg-blue-50 border-2 border-blue-500" : ""
+        )}
+        onDragOver={(e) => handleDragOver(e, "featured", true)}
+        onDrop={(e) => handleDrop(e, "featured", true)}
+      >
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900">Featured Page</h3>
+          <p className="mt-1 text-sm text-gray-500">Drag or select a page to feature</p>
+        </div>
+        {featuredPage ? (
+          <div className="p-4 flex items-center">
+            <img
+              src={featuredPage.thumbSrc}
+              srcSet={featuredPage.thumbSrcSet}
+              alt={featuredPage.title}
+              className="h-16 w-24 object-cover rounded flex-shrink-0"
+            />
+            <div className="ml-4 flex-1 min-w-0">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-bold text-gray-900 truncate">{featuredPage.title}</p>
+                <button
+                  onClick={() => toggleFeatured(featuredPage.id)}
+                  className="px-2 py-1 text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 rounded"
+                >
+                  Unfeature
+                </button>
+              </div>
+              <p className="mt-1 text-sm text-gray-500 line-clamp-1">{featuredPage.description}</p>
+              <div className="mt-1 text-xs text-gray-500">
+                {$analytics.byId[featuredPage.id]?.total_actions || 0} views
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 text-center text-sm text-gray-500">No featured page selected</div>
+        )}
       </div>
 
       {topics.length > 0 && (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-4 py-5 border-b border-gray-200">
-            <h3 className="text-lg font-bold leading-6 text-gray-900">Topics</h3>
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-bold text-gray-900">Topics</h3>
             <p className="mt-1 text-sm text-gray-500">Manage pages by topic</p>
           </div>
           <div className="divide-y divide-gray-200">
             {topics.map((topic) => (
-              <div key={topic.name} className="flex items-center justify-between p-4">
+              <div key={topic.name} className="p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-medium text-gray-900">{topic.name}</span>
+                  <span className="text-sm font-bold text-gray-900">{topic.name}</span>
                   <span className="ml-2 text-sm text-gray-500">({topic.count} pages)</span>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleTopicIncludeAll(topic.pageIds)}
-                    className="px-2 py-1 text-xs font-medium text-myblue hover:text-myblue-dark rounded-md bg-myblue/10"
+                    className="px-2 py-1 text-xs font-bold text-blue-600 bg-blue-100 hover:bg-blue-200 rounded"
                   >
-                    Include all
+                    Include All
                   </button>
                   <button
-                    onClick={() => handleTopicExcludeAll(topic.name, topic.pageIds)}
-                    className="px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 rounded-md bg-red-100"
+                    onClick={() => handleTopicExcludeAll(topic.pageIds)}
+                    className="px-2 py-1 text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 rounded"
                   >
-                    Exclude all
+                    Exclude All
                   </button>
                 </div>
               </div>
@@ -370,206 +350,98 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
         </div>
       )}
 
-      <div
-        className="bg-white rounded-lg shadow overflow-hidden border-2 border-dashed border-gray-300"
-        onDragOver={(e) => handleDragOver(e, FEATURED_DROP_ID)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, FEATURED_DROP_ID)}
-        style={
-          dragState.dropTarget === FEATURED_DROP_ID ? dragStyles.dropTarget : dragStyles.normal
-        }
-      >
-        <div className="px-4 py-5 border-b border-gray-200">
-          <h3 className="text-lg font-bold leading-6 text-gray-900">Featured Page</h3>
-          <p className="mt-1 text-sm text-gray-500">The currently featured page</p>
-        </div>
-        {featuredPage ? (
-          <div className="divide-y divide-gray-200">
-            <div key={featuredPage.id} className="flex items-center p-4">
-              <div className="relative h-16 w-24 flex-shrink-0">
-                <img
-                  src={featuredPage.thumbSrc}
-                  srcSet={featuredPage.thumbSrcSet}
-                  alt={featuredPage.title}
-                  className="absolute inset-0 h-full w-full object-cover rounded"
-                />
-              </div>
-              <div className="ml-4 flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="truncate text-sm font-bold text-gray-900">{featuredPage.title}</p>
-                  <div className="flex items-center space-x-4">
-                    <label className="inline-flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={true}
-                        onChange={() => toggleFeatured(featuredPage.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-myblue focus:ring-myblue"
-                      />
-                      <span className="text-sm text-gray-500">Feature</span>
-                    </label>
-                    <label className="inline-flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.includes(featuredPage.id)}
-                        onChange={() => toggleInclude(featuredPage.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-myblue focus:ring-myblue"
-                        disabled
-                      />
-                      <span className="text-sm text-gray-500">Include</span>
-                    </label>
-                  </div>
-                </div>
-                <div className="mt-1">
-                  <p className="text-sm text-gray-500 line-clamp-1">{featuredPage.description}</p>
-                </div>
-                {featuredPage.topics && featuredPage.topics.length > 0 && (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {featuredPage.topics.map((topic) => (
-                      <span
-                        key={topic}
-                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-1 flex items-center text-xs text-gray-500">
-                  {$analytics.byId[featuredPage.id] && (
-                    <span>{$analytics.byId[featuredPage.id].total_actions} views</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="p-4 text-center text-gray-500 text-sm">
-            Drop a page here to feature it
-          </div>
-        )}
-      </div>
-
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-4 py-5 border-b border-gray-200">
-          <h3 className="text-lg font-bold leading-6 text-gray-900">Available Pages</h3>
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-gray-900">Available Pages</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Select pages to include and choose one as featured
+            Pages ({paginatedPages.length} of {validPages.length})
           </p>
         </div>
         <div className="divide-y divide-gray-200">
           {paginatedPages.map((page) => {
             const isIncluded = selectedIds.includes(page.id);
-            const isFeatured = selectedFeaturedId === page.id;
-            const itemIndex = selectedIds.indexOf(page.id);
-            const analytics = $analytics.byId[page.id];
-
             return (
               <div
                 key={page.id}
-                draggable={selectedMode === "ordered"}
+                draggable
                 onDragStart={(e) => handleDragStart(e, page.id)}
                 onDragOver={(e) => handleDragOver(e, page.id)}
-                onDragLeave={handleDragLeave}
-                onDragEnd={handleDragEnd}
                 onDrop={(e) => handleDrop(e, page.id)}
-                style={getItemStyle(page.id)}
                 className={classNames(
-                  "flex items-center p-4",
-                  selectedMode === "ordered" && isIncluded ? "cursor-move" : ""
+                  "p-4 flex items-center",
+                  selectedMode === "ordered" && isIncluded ? "cursor-move" : "",
+                  dragState.dragging === page.id ? "opacity-50 bg-gray-100" : "",
+                  dragState.dropTarget === page.id ? "bg-blue-50 border-2 border-blue-500" : ""
                 )}
               >
-                <div className="relative h-16 w-24 flex-shrink-0">
-                  <img
-                    src={page.thumbSrc}
-                    srcSet={page.thumbSrcSet}
-                    alt={page.title}
-                    className="absolute inset-0 h-full w-full object-cover rounded"
-                  />
-                </div>
+                <img
+                  src={page.thumbSrc}
+                  srcSet={page.thumbSrcSet}
+                  alt={page.title}
+                  className="h-16 w-24 object-cover rounded flex-shrink-0"
+                />
                 <div className="ml-4 flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <p className="truncate text-sm font-bold text-gray-900">{page.title}</p>
-                    <div className="flex items-center space-x-4">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-bold text-gray-900 truncate">{page.title}</p>
+                    <div className="flex gap-2">
                       {selectedMode === "ordered" && isIncluded && (
-                        <div className="flex items-center space-x-1">
+                        <div className="flex gap-1">
                           <button
                             onClick={() => moveItem(page.id, "up")}
-                            disabled={itemIndex === 0}
+                            disabled={selectedIds.indexOf(page.id) === 0}
                             className={classNames(
-                              "p-1 rounded",
-                              itemIndex === 0
+                              "p-1",
+                              selectedIds.indexOf(page.id) === 0
                                 ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-500 hover:text-myblue"
+                                : "text-gray-500 hover:text-blue-600"
                             )}
                           >
-                            <ArrowUpIcon className="h-4 w-4" />
+                            ↑
                           </button>
                           <button
                             onClick={() => moveItem(page.id, "down")}
-                            disabled={itemIndex === selectedIds.length - 1}
+                            disabled={selectedIds.indexOf(page.id) === selectedIds.length - 1}
                             className={classNames(
-                              "p-1 rounded",
-                              itemIndex === selectedIds.length - 1
+                              "p-1",
+                              selectedIds.indexOf(page.id) === selectedIds.length - 1
                                 ? "text-gray-300 cursor-not-allowed"
-                                : "text-gray-500 hover:text-myblue"
+                                : "text-gray-500 hover:text-blue-600"
                             )}
                           >
-                            <ArrowDownIcon className="h-4 w-4" />
+                            ↓
                           </button>
                         </div>
                       )}
-                      <label className="inline-flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={isFeatured}
-                          onChange={() => toggleFeatured(page.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-myblue focus:ring-myblue"
-                        />
-                        <span className="text-sm text-gray-500">Feature</span>
-                      </label>
-                      <label className="inline-flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={isIncluded}
-                          onChange={() => toggleInclude(page.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-myblue focus:ring-myblue"
-                        />
-                        <span className="text-sm text-gray-500">Include</span>
-                      </label>
-                    </div>
-                  </div>
-                  <div className="mt-1">
-                    <p className="text-sm text-gray-500 line-clamp-1">{page.description}</p>
-                  </div>
-                  {page.topics && page.topics.length > 0 && (
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {page.topics.map((topic) => (
-                        <span
-                          key={topic}
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      {isIncluded && (
+                        <button
+                          onClick={() => toggleFeatured(page.id)}
+                          className={classNames(
+                            "px-2 py-1 text-xs font-bold rounded",
+                            selectedFeaturedId === page.id
+                              ? "bg-red-100 text-red-600 hover:bg-red-200"
+                              : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                          )}
                         >
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="mt-1 flex items-center text-xs text-gray-500">
-                    {analytics && (
-                      <>
-                        <span>{analytics.total_actions} views</span>
-                        {selectedMode === "recent" && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <span>
-                              Updated{" "}
-                              {page.changed
-                                ? new Date(page.changed).toLocaleDateString()
-                                : "Unknown"}
-                            </span>
-                          </>
+                          {selectedFeaturedId === page.id ? "Unfeature" : "Make Featured"}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => toggleInclude(page.id)}
+                        className={classNames(
+                          "px-2 py-1 text-xs font-bold rounded",
+                          isIncluded
+                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            : "bg-green-100 text-green-600 hover:bg-green-200"
                         )}
-                      </>
-                    )}
+                      >
+                        {isIncluded ? "Exclude" : "Include"}
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-500 line-clamp-1">{page.description}</p>
+                  <div className="mt-1 text-xs text-gray-500">
+                    {$analytics.byId[page.id]?.total_actions || 0} views • Updated{" "}
+                    {new Date(page.changed || 0).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -577,15 +449,15 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
           })}
         </div>
         {totalPages > 1 && (
-          <div className="flex justify-between px-4 py-3">
+          <div className="flex justify-between p-4">
             <button
               onClick={() => handlePageChange("prev")}
               disabled={currentPage === 1}
               className={classNames(
-                "px-4 py-2 text-sm font-medium rounded-md",
+                "px-4 py-2 text-sm font-bold rounded",
                 currentPage === 1
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-myblue text-white hover:bg-myblue-dark"
+                  ? "bg-gray-200 text-gray-500"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
               )}
             >
               Previous
@@ -597,10 +469,10 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
               onClick={() => handlePageChange("next")}
               disabled={currentPage === totalPages}
               className={classNames(
-                "px-4 py-2 text-sm font-medium rounded-md",
+                "px-4 py-2 text-sm font-bold rounded",
                 currentPage === totalPages
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-myblue text-white hover:bg-myblue-dark"
+                  ? "bg-gray-200 text-gray-500"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
               )}
             >
               Next

@@ -5,16 +5,18 @@ import { storyfragmentAnalyticsStore } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
-import type { StoryFragmentContentMap, PaneNode } from "@/types";
+import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
+import type { StoryFragmentContentMap, PaneNode, Config } from "@/types";
 
 const PER_PAGE = 20;
 
 interface ListContentSetupProps {
   params?: Record<string, string>;
   nodeId: string;
+  config?: Config;
 }
 
-const ListContentSetup = ({ params, nodeId }: ListContentSetupProps) => {
+const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => {
   const $contentMap = useStore(contentMap);
   const $analytics = useStore(storyfragmentAnalyticsStore);
 
@@ -28,6 +30,7 @@ const ListContentSetup = ({ params, nodeId }: ListContentSetupProps) => {
   );
   const [pageSize, setPageSize] = useState(params?.pageSize ? parseInt(params.pageSize) : 10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [bgColor, setBgColor] = useState(params?.bgColor || "");
 
   // Use a ref to track initial mount to prevent unnecessary updates
   const isInitialMount = useRef(true);
@@ -113,10 +116,18 @@ const ListContentSetup = ({ params, nodeId }: ListContentSetupProps) => {
               excludedIds: excludedIds.join(","),
               topics: selectedTopics.join(","),
               pageSize: pageSize,
+              bgColor: bgColor,
             }),
           },
+          bgColour: bgColor || undefined,
           isChanged: true,
         };
+
+        // If bgColor is empty, remove the property
+        if (!bgColor) {
+          delete updatedNode.bgColour;
+        }
+
         ctx.modifyNodes([updatedNode]);
       }
     }
@@ -134,7 +145,7 @@ const ListContentSetup = ({ params, nodeId }: ListContentSetupProps) => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [selectedMode, excludedIds, selectedTopics, pageSize]);
+  }, [selectedMode, excludedIds, selectedTopics, pageSize, bgColor]);
 
   // Toggle a page's exclusion status
   const toggleExclude = (id: string) => {
@@ -263,6 +274,19 @@ const ListContentSetup = ({ params, nodeId }: ListContentSetupProps) => {
             </select>
             <p className="mt-1 text-xs text-gray-500">
               Note: Users can toggle between views regardless of the default setting
+            </p>
+          </div>
+
+          <div>
+            <ColorPickerCombo
+              title="Background Color"
+              defaultColor={bgColor}
+              onColorChange={(color: string) => setBgColor(color)}
+              config={config!}
+              allowNull={true}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Set a background color for the content list section
             </p>
           </div>
         </div>
