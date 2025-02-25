@@ -1,18 +1,127 @@
 ---
-import type { FullContentMap, CodeHookPayload, StoryfragmentAnalytics } from "@/types";
+import type { FullContentMap, StoryFragmentContentMap, CodeHookPayload } from "@/types";
 
 export interface Props {
   options?: CodeHookPayload;
   contentMap: FullContentMap[];
-  storyfragmentAnalytics: StoryfragmentAnalytics[];
 }
 
-const { options, contentMap, storyfragmentAnalytics } = Astro.props;
+const { options, contentMap } = Astro.props;
+
+// Parse the options from the CodeHookPayload
+let parsedOptions;
+try {
+  parsedOptions = JSON.parse(options?.params?.options || "{}");
+} catch (e) {
+  console.error("Invalid options", e);
+  parsedOptions = { defaultMode: "ordered", featuredId: "", storyfragmentIds: "" };
+}
+
+const defaultMode = parsedOptions.defaultMode || "ordered";
+const featuredId = parsedOptions.featuredId || "";
+const storyfragmentIdsArray = parsedOptions.storyfragmentIds
+  ? parsedOptions.storyfragmentIds.split(",")
+  : [];
+
+// Find the featured story from the contentMap
+const featuredStory = contentMap.find(
+  (item) => item.id === featuredId && item.type === "StoryFragment"
+) as StoryFragmentContentMap;
+
+// Filter and sort the included stories, excluding the featured story
+let includedStories = contentMap.filter(
+  (item) =>
+    storyfragmentIdsArray.includes(item.id) &&
+    item.type === "StoryFragment" &&
+    item.id !== featuredId
+) as StoryFragmentContentMap[];
+
+// Sort included stories based on defaultMode
+if (defaultMode === "ordered") {
+  includedStories.sort(
+    (a, b) => storyfragmentIdsArray.indexOf(a.id) - storyfragmentIdsArray.indexOf(b.id)
+  );
+} else if (defaultMode === "recent") {
+  includedStories.sort((a, b) => {
+    const dateA = a.changed ? new Date(a.changed).getTime() : 0;
+    const dateB = b.changed ? new Date(b.changed).getTime() : 0;
+    return dateB - dateA;
+  });
+}
+
+// Limit to 5 stories for display
+const displayedStories = includedStories.slice(0, 5);
+
+// Function to format dates in a human-readable way
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "Unknown";
+  const date = new Date(dateString);
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(date);
+}
 ---
 
-<div>Featured Content</div>
-<div>
-  {JSON.stringify(options)}
-  <div>{JSON.stringify(storyfragmentAnalytics)}</div>
-  <div>{JSON.stringify(contentMap)}</div>
+<!-- Main container with responsive flex layout -->
+<div class="flex flex-col md:flex-row gap-4">
+  <!-- Left column (Featured Story) -->
+  <div class="md:w-3/5 p-4">
+    {
+      featuredStory ? (
+        <a href={`/${featuredStory.slug}`} class="block group">
+          <div class="space-y-6 group-hover:bg-slate-50 p-2">
+            <img
+              src={featuredStory.thumbSrc}
+              alt={featuredStory.title}
+              class="w-full h-auto object-cover rounded-lg"
+            />
+            <h2 class="text-2xl font-bold text-black group-hover:text-myblack transition-colors">
+              {featuredStory.title}
+            </h2>
+            <p class="text-myblack text-base">{featuredStory.description}</p>
+            <p class="text-mydarkgrey text-sm">
+              {featuredStory.changed && formatDate(featuredStory.changed)}
+            </p>
+          </div>
+        </a>
+      ) : (
+        <p class="text-myblue italic">No featured story selected.</p>
+      )
+    }
+  </div>
+
+  <!-- Right column (Included Stories) -->
+  <div class="md:w-2/5 p-4 bg-white border-t-2 border-slate-50 md:border-t-0 md:border-l-2">
+    {
+      displayedStories.length > 0 ? (
+        <div class="space-y-4">
+          {displayedStories.map((story) => (
+            <a href={`/${story.slug}`} class="block group">
+              <div class="flex items-start space-x-4 group-hover:bg-slate-50 p-1">
+                <img
+                  src={story.thumbSrc}
+                  alt={story.title}
+                  style="width: 100px; height: auto;"
+                  class="rounded-md"
+                />
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
+                    {story.title}
+                  </h3>
+                  <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
+                  <p class="text-mydarkgrey text-xs mt-1">
+                    {story.changed && formatDate(story.changed)}
+                  </p>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="text-myblue italic">No included stories available.</p>
+      )
+    }
+  </div>
 </div>

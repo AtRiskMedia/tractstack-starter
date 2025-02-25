@@ -1044,8 +1044,7 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
 
           if (row.description && typeof row.description === "string")
             baseData.description = row.description;
-          if (row.topics && typeof row.topics === "string")
-            baseData.topics = row.topics.split(",");
+          if (row.topics && typeof row.topics === "string") baseData.topics = row.topics.split(",");
           if (row.extra) {
             const socialImagePath = String(row.extra);
             if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {

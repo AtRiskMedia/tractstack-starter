@@ -11,7 +11,11 @@ import { cloneDeep } from "@/utils/common/helpers";
 import type { StoryFragmentContentMap, PaneNode } from "@/types";
 
 const sortModes = [
-  { id: "ordered", name: "Preferred Order", description: "Manually arrange pages in your preferred order" },
+  {
+    id: "ordered",
+    name: "Preferred Order",
+    description: "Manually arrange pages in your preferred order",
+  },
   { id: "popularity", name: "Popularity", description: "Sort by most viewed pages" },
   { id: "recent", name: "Most Recent", description: "Sort by recently updated pages" },
 ];
@@ -40,7 +44,10 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
   const [selectedIds, setSelectedIds] = useState<string[]>(
     params?.storyfragmentIds ? params.storyfragmentIds.split(",") : []
   );
-  const [dragState, setDragState] = useState<{ dragging: string | null; dropTarget: string | null }>({
+  const [dragState, setDragState] = useState<{
+    dragging: string | null;
+    dropTarget: string | null;
+  }>({
     dragging: null,
     dropTarget: null,
   });
@@ -98,13 +105,16 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
   const paginatedPages = validPages.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
   const featuredPage = selectedFeaturedId
-    ? ($contentMap.find((item) => item.id === selectedFeaturedId) as StoryFragmentContentMap | undefined)
+    ? ($contentMap.find((item) => item.id === selectedFeaturedId) as
+        | StoryFragmentContentMap
+        | undefined)
     : undefined;
 
-  const getItemStyle = (id: string ) => {
+  const getItemStyle = (id: string) => {
     if (selectedMode !== "ordered") return dragStyles.normal;
     if (dragState.dragging === id) return dragStyles.dragging;
-    if (dragState.dropTarget === id || dragState.dropTarget === FEATURED_DROP_ID) return dragStyles.dropTarget;
+    if (dragState.dropTarget === id || dragState.dropTarget === FEATURED_DROP_ID)
+      return dragStyles.dropTarget;
     return dragStyles.normal;
   };
 
@@ -184,7 +194,9 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
 
     if (targetId === FEATURED_DROP_ID) {
       setSelectedFeaturedId(draggedId);
-      const newSelectedIds = selectedIds.includes(draggedId) ? selectedIds : [...selectedIds, draggedId];
+      const newSelectedIds = selectedIds.includes(draggedId)
+        ? selectedIds
+        : [...selectedIds, draggedId];
       setSelectedIds(newSelectedIds);
       updatePaneNode(draggedId, newSelectedIds);
       handleDragEnd();
@@ -256,16 +268,32 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
   };
 
   const handleTopicExcludeAll = (topicName: string, pageIds: string[]) => {
-    console.log("Excluding topic:", topicName, "with pageIds:", pageIds, "from selectedIds:", selectedIds);
+    console.log(
+      "Excluding topic:",
+      topicName,
+      "with pageIds:",
+      pageIds,
+      "from selectedIds:",
+      selectedIds
+    );
     const newSelectedIds = selectedIds.filter((id) => !pageIds.includes(id));
     console.log("New selectedIds after exclude:", newSelectedIds);
 
     // Check if selectedFeaturedId has the topic using full $contentMap
-    const featuredPageData = $contentMap.find((page) => page.id === selectedFeaturedId) as StoryFragmentContentMap | undefined;
+    const featuredPageData = $contentMap.find((page) => page.id === selectedFeaturedId) as
+      | StoryFragmentContentMap
+      | undefined;
     const shouldUnfeature = featuredPageData?.topics?.includes(topicName) || false;
     const newFeaturedId = shouldUnfeature ? "" : selectedFeaturedId;
 
-    console.log("Featured page topics:", featuredPageData?.topics, "Should unfeature:", shouldUnfeature, "New featuredId:", newFeaturedId);
+    console.log(
+      "Featured page topics:",
+      featuredPageData?.topics,
+      "Should unfeature:",
+      shouldUnfeature,
+      "New featuredId:",
+      newFeaturedId
+    );
 
     setSelectedIds(newSelectedIds);
     setSelectedFeaturedId(newFeaturedId);
@@ -292,7 +320,12 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
               >
                 {({ checked }) => (
                   <div className="flex flex-col">
-                    <span className={classNames("block text-sm font-bold", checked ? "text-myblue" : "text-gray-900")}>
+                    <span
+                      className={classNames(
+                        "block text-sm font-bold",
+                        checked ? "text-myblue" : "text-gray-900"
+                      )}
+                    >
                       {mode.name}
                     </span>
                     <span className="mt-1 text-sm text-gray-500">{mode.description}</span>
@@ -342,7 +375,9 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
         onDragOver={(e) => handleDragOver(e, FEATURED_DROP_ID)}
         onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, FEATURED_DROP_ID)}
-        style={dragState.dropTarget === FEATURED_DROP_ID ? dragStyles.dropTarget : dragStyles.normal}
+        style={
+          dragState.dropTarget === FEATURED_DROP_ID ? dragStyles.dropTarget : dragStyles.normal
+        }
       >
         <div className="px-4 py-5 border-b border-gray-200">
           <h3 className="text-lg font-bold leading-6 text-gray-900">Featured Page</h3>
@@ -390,7 +425,10 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
                 {featuredPage.topics && featuredPage.topics.length > 0 && (
                   <div className="mt-1 flex flex-wrap gap-1">
                     {featuredPage.topics.map((topic) => (
-                      <span key={topic} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span
+                        key={topic}
+                        className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                      >
                         {topic}
                       </span>
                     ))}
@@ -405,14 +443,18 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
             </div>
           </div>
         ) : (
-          <div className="p-4 text-center text-gray-500 text-sm">Drop a page here to feature it</div>
+          <div className="p-4 text-center text-gray-500 text-sm">
+            Drop a page here to feature it
+          </div>
         )}
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="px-4 py-5 border-b border-gray-200">
           <h3 className="text-lg font-bold leading-6 text-gray-900">Available Pages</h3>
-          <p className="mt-1 text-sm text-gray-500">Select pages to include and choose one as featured</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Select pages to include and choose one as featured
+          </p>
         </div>
         <div className="divide-y divide-gray-200">
           {paginatedPages.map((page) => {
@@ -455,7 +497,9 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
                             disabled={itemIndex === 0}
                             className={classNames(
                               "p-1 rounded",
-                              itemIndex === 0 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-myblue"
+                              itemIndex === 0
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-gray-500 hover:text-myblue"
                             )}
                           >
                             <ArrowUpIcon className="h-4 w-4" />
@@ -465,7 +509,9 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
                             disabled={itemIndex === selectedIds.length - 1}
                             className={classNames(
                               "p-1 rounded",
-                              itemIndex === selectedIds.length - 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-myblue"
+                              itemIndex === selectedIds.length - 1
+                                ? "text-gray-300 cursor-not-allowed"
+                                : "text-gray-500 hover:text-myblue"
                             )}
                           >
                             <ArrowDownIcon className="h-4 w-4" />
@@ -498,7 +544,10 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
                   {page.topics && page.topics.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {page.topics.map((topic) => (
-                        <span key={topic} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <span
+                          key={topic}
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                        >
                           {topic}
                         </span>
                       ))}
@@ -512,7 +561,10 @@ const FeaturedContentSetup = ({ params, nodeId }: FeaturedContentSetupProps) => 
                           <>
                             <span className="mx-2">•</span>
                             <span>
-                              Updated {page.changed ? new Date(page.changed).toLocaleDateString() : "Unknown"}
+                              Updated{" "}
+                              {page.changed
+                                ? new Date(page.changed).toLocaleDateString()
+                                : "Unknown"}
                             </span>
                           </>
                         )}
