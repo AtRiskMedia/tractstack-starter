@@ -6,6 +6,13 @@ import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
 import { cssStore, updateCssStore } from "@/store/css";
 
+// Add these directories to handle dynamically uploaded files
+const DYNAMIC_DIRS = [
+  '/images/og',
+  '/images/thumbs',
+  '/custom'
+];
+
 async function ensureCssStoreInitialized() {
   const store = cssStore.get();
   if (!store.content || !store.version) {
@@ -32,6 +39,53 @@ async function ensureCssStoreInitialized() {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
+  // Check if this is a request for a dynamic file first
+  if (context.request.method === "GET") {
+    const url = new URL(context.request.url);
+    const pathname = url.pathname;
+    
+    // Check if this path is in one of our dynamic directories
+    if (DYNAMIC_DIRS.some(dir => pathname.startsWith(dir))) {
+      try {
+        // Construct the file path
+        const publicDir = path.join(process.cwd(), "public");
+        const filePath = path.join(publicDir, pathname);
+        
+        // Check if the file exists
+        await fs.access(filePath);
+        
+        // Determine content type based on file extension
+        const ext = path.extname(filePath).toLowerCase();
+        const contentTypeMap: Record<string, string> = {
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.gif': 'image/gif',
+          '.webp': 'image/webp',
+          '.svg': 'image/svg+xml',
+          '.ico': 'image/x-icon',
+          '.css': 'text/css',
+          '.js': 'text/javascript',
+        };
+        
+        const contentType = contentTypeMap[ext] || 'application/octet-stream';
+        
+        // Read and serve the file
+        const fileContent = await fs.readFile(filePath);
+        return new Response(fileContent, {
+          status: 200,
+          headers: {
+            'Content-Type': contentType,
+            'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+          }
+        });
+      } catch (error) {
+        // If file doesn't exist or there's an error reading it, continue with normal processing
+        // Don't log here as this is expected for files that don't exist
+      }
+    }
+  }
+
   // Initialize CSS store if needed
   await ensureCssStoreInitialized();
   // Get auth status from cookies - this is our source of truth
