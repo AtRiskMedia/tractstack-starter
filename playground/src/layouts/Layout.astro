@@ -57,10 +57,10 @@ const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 
-const gtag = config?.init?.GTAG || false;
+const gtagId = config?.init?.GTAG || false;
 const gtagUrl =
-  typeof gtag === `string` && gtag.length > 1
-    ? `https://www.googletagmanager.com/gtag/js?id=${gtag}`
+  typeof gtagId === `string` && gtagId.length > 1
+    ? `https://www.googletagmanager.com/gtag/js?id=${gtagId}`
     : null;
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 ---
@@ -118,26 +118,30 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
 
     <!-- Google Analytics -->
     {gtagUrl && <script async src={gtagUrl} is:inline />}
-    <script is:inline define:vars={{ gtag }}>
-      if (gtag) {
-        // Define gtag function type
-        window.dataLayer = window.dataLayer || [];
-        function gtag() {
-          window.dataLayer.push(arguments);
-        }
-        window.gtag = gtag;
+    <script is:inline>
+      (function () {
+        const gtagId = "{gtagId}";
 
-        document.addEventListener("astro:page-load", () => {
-          if (window.gtag) {
-            gtag("js", new Date());
-            gtag("config", gtag, {
-              page_title: document.title,
-              page_path: window.location.pathname,
-              page_location: window.location.href,
-            });
+        if (gtagId) {
+          // Define gtag function
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            window.dataLayer.push(arguments);
           }
-        });
-      }
+          window.gtag = gtag;
+
+          document.addEventListener("astro:page-load", () => {
+            if (window.gtag) {
+              gtag("js", new Date());
+              gtag("config", gtagId, {
+                page_title: document.title,
+                page_path: window.location.pathname,
+                page_location: window.location.href,
+              });
+            }
+          });
+        }
+      })();
     </script>
 
     <!-- Tract Stack Concierge -->
