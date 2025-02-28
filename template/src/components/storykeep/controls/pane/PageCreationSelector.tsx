@@ -3,8 +3,10 @@ import { RadioGroup } from "@headlessui/react";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckCircleIcon";
 import CubeTransparentIcon from "@heroicons/react/24/outline/CubeTransparentIcon";
 import DocumentIcon from "@heroicons/react/24/outline/DocumentIcon";
+import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
 import AddPanePanel from "./AddPanePanel";
 import PageCreationGen from "./PageCreationGen";
+import PageCreationSpecial from "./PageCreationSpecial";
 import { hasAssemblyAIStore } from "@/store/storykeep";
 import type { NodesContext } from "@/store/nodes";
 
@@ -14,7 +16,7 @@ interface PageCreationSelectorProps {
 }
 
 type CreationMode = {
-  id: "design" | "generate";
+  id: "design" | "generate" | "featured";
   name: string;
   description: string;
   icon: typeof DocumentIcon;
@@ -39,17 +41,28 @@ const getModes = (hasAssemblyAI: boolean) => [
         },
       ]
     : []),
+  {
+    id: "featured",
+    name: "Featured Content home page",
+    description:
+      "A layout with a prominent hero section showcasing a featured article and grid of additional top articles. (Be sure to create some articles first!)",
+    icon: NewspaperIcon,
+    active: true,
+  },
 ];
 
 export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps) => {
   const [selected, setSelected] = useState<CreationMode["id"]>("design");
   const [showTemplates, setShowTemplates] = useState(false);
   const [showGen, setShowGen] = useState(false);
+  const [showFeatured, setShowFeatured] = useState(false);
   const modes = getModes(hasAssemblyAIStore.get());
 
   const handleModeSelect = (mode: CreationMode["id"]) => {
     setSelected(mode);
     setShowTemplates(false);
+    setShowGen(false);
+    setShowFeatured(false);
   };
 
   const handleContinue = () => {
@@ -57,12 +70,15 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
       setShowTemplates(true);
     } else if (selected === "generate") {
       setShowGen(true);
+    } else if (selected === "featured") {
+      setShowFeatured(true);
     }
   };
 
   if (showTemplates)
     return <AddPanePanel nodeId={nodeId} first={true} ctx={ctx} isStoryFragment={true} />;
   else if (showGen) return <PageCreationGen nodeId={nodeId} ctx={ctx} />;
+  else if (showFeatured) return <PageCreationSpecial nodeId={nodeId} ctx={ctx} />;
 
   return (
     <div className="p-0.5 shadow-inner">
