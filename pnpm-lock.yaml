@@ -147,6 +147,9 @@ importers:
       recharts:
         specifier: ^2.15.0
         version: 2.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
@@ -163,9 +166,6 @@ importers:
         specifier: 3.23.8
         version: 3.23.8
     devDependencies:
-      '@astrojs/prefetch':
-        specifier: ^0.4.1
-        version: 0.4.1
       '@divriots/jampack':
         specifier: 0.23.4
         version: 0.23.4(@swc/helpers@0.5.15)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -220,9 +220,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: 0.6.8
         version: 0.6.8(prettier-plugin-astro@0.14.1)(prettier@3.3.3)
-      sharp:
-        specifier: 0.33.5
-        version: 0.33.5
       typescript:
         specifier: 5.6.3
         version: 5.6.3
@@ -328,6 +325,9 @@ importers:
       recharts:
         specifier: ^2.15.0
         version: 2.15.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      sharp:
+        specifier: 0.33.5
+        version: 0.33.5
       tinycolor2:
         specifier: 1.6.0
         version: 1.6.0
@@ -401,9 +401,6 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: 0.6.8
         version: 0.6.8(prettier-plugin-astro@0.14.1)(prettier@3.3.3)
-      sharp:
-        specifier: 0.33.5
-        version: 0.33.5
       typescript:
         specifier: 5.6.3
         version: 5.6.3

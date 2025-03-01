@@ -128,29 +128,13 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
               window.dataLayer.push(arguments);
             };
 
-          // Initial pageview
+          // Full GA implementation
           window.gtag("js", new Date());
-          console.log("Initial pageview sent with ID:", gtagId);
-          window.gtag("config", gtagId, {
-            page_title: document.title,
-            page_path: window.location.pathname,
-            page_location: window.location.href,
-          });
+          window.gtag("config", gtagId);
 
-          let isInitialLoad = true;
-
-          document.addEventListener("astro:page-load", () => {
-            if (isInitialLoad) {
-              console.log("Skipping initial astro:page-load");
-              isInitialLoad = false;
-              return;
-            }
-            console.log("View Transition pageview sent with ID:", gtagId);
-            window.gtag("config", gtagId, {
-              page_title: document.title,
-              page_path: window.location.pathname,
-              page_location: window.location.href,
-            });
+          // Handle View Transitions
+          document.addEventListener("astro:after-swap", () => {
+            window.gtag("config", gtagId);
           });
         }
       })();
