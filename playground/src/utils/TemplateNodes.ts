@@ -5,7 +5,7 @@ export const TemplateH2Node = {
   tagName: "h2",
   nodes: [
     {
-      copy: "H2 node",
+      copy: "Catchy title",
       tagName: "text",
     },
   ],
@@ -16,7 +16,7 @@ export const TemplateH3Node = {
   tagName: "h3",
   nodes: [
     {
-      copy: "H3 node",
+      copy: "Catchy sub-title",
       tagName: "text",
     },
   ],
@@ -27,7 +27,7 @@ export const TemplateH4Node = {
   tagName: "h4",
   nodes: [
     {
-      copy: "h4 node",
+      copy: "Catchy sub-title",
       tagName: "text",
     },
   ],
@@ -38,7 +38,7 @@ export const TemplatePNode = {
   tagName: "p",
   nodes: [
     {
-      copy: "P node",
+      copy: "...",
       tagName: "text",
     },
   ],
@@ -49,7 +49,7 @@ export const TemplateOLNode = {
   tagName: "ol",
   nodes: [
     {
-      copy: "OL node",
+      copy: "...",
       tagName: "text",
     },
   ],
@@ -60,7 +60,7 @@ export const TemplateULNode = {
   tagName: "ul",
   nodes: [
     {
-      copy: "UL node",
+      copy: "...",
       tagName: "text",
     },
   ],
@@ -71,7 +71,7 @@ export const TemplateLINode = {
   tagName: "li",
   nodes: [
     {
-      copy: "LI node",
+      copy: "...",
       tagName: "text",
     },
   ],

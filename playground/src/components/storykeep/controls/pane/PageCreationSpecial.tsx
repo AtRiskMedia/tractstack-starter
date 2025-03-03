@@ -182,9 +182,11 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
 
   return (
     <div className="p-6 bg-white rounded-md">
-      {/* Controls Section */}
+      <div className="mb-6 space-y-6 italic text-mydarkgrey">
+        <strong>Note:</strong> when editing web pages (story fragments) be sure to click on Topics
+        &amp; Details for each page; (if you see no articles, that's why!)
+      </div>
       <div className="mb-6 space-y-6">
-        {/* Layout Selection with Radio Buttons */}
         <div>
           <RadioGroup value={selectedLayout} onChange={setSelectedLayout}>
             <RadioGroup.Label className="text-lg font-bold">Select Layout</RadioGroup.Label>
@@ -214,7 +216,6 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
           </RadioGroup>
         </div>
 
-        {/* Visual Break Selection - Only show if complete-home layout is selected */}
         {selectedLayout === "complete-home" && (
           <div>
             <div className="text-lg font-bold mb-2">Select Visual Break Style</div>
@@ -245,7 +246,6 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
         )}
       </div>
 
-      {/* Preview Section */}
       <div className="bg-white border rounded-lg shadow-md p-4 mt-8">
         <h3 className="text-lg font-bold mb-4">Preview</h3>
 
@@ -275,7 +275,6 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
         )}
       </div>
 
-      {/* Action buttons */}
       <div className="mt-6 flex justify-end gap-3">
         <button
           onClick={() => window.history.back()}
