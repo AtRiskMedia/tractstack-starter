@@ -19,8 +19,13 @@ async function readFrontendCss(): Promise<string | null> {
     const filepath = path.join(process.cwd(), "public", "styles", "frontend.css");
     const content = await fs.readFile(filepath, "utf-8");
     return content;
-  } catch (error) {
-    console.error("Error reading frontend.css:", error);
+  } catch (error: unknown) {
+    // Log a more user-friendly message for expected first-run conditions
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      console.log("frontend.css not found - this is normal for first run");
+    } else {
+      console.error("Error reading frontend.css:", error);
+    }
     return null;
   }
 }
@@ -35,15 +40,19 @@ export async function updateCssStore() {
     const configPath = path.join(process.cwd(), "config", "init.json");
     const config = JSON.parse(await fs.readFile(configPath, "utf-8"));
     version = config.STYLES_VER?.toString() || null;
-  } catch (error) {
-    console.error("Error reading STYLES_VER:", error);
+  } catch (error: unknown) {
+    // Log a more user-friendly message for expected first-run conditions
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      console.log("init.json not found - this is normal for first run");
+    } else {
+      console.error("Error reading STYLES_VER:", error);
+    }
   }
 
+  // Always set the store even if values are null
+  // This prevents repeated attempts to read missing files
   cssStore.set({
     content: frontendCss,
     version,
   });
 }
-
-// Initialize store on module load
-updateCssStore().catch(console.error);

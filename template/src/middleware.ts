@@ -14,22 +14,19 @@ async function ensureCssStoreInitialized() {
   if (!store.content || !store.version) {
     try {
       await updateCssStore();
-      // Double check initialization worked
-      const updatedStore = cssStore.get();
-      if (!updatedStore.content) {
-        console.error("CSS store failed to initialize");
-        // Fall back to reading directly if store update failed
-        const filepath = path.join(process.cwd(), "public", "styles", "frontend.css");
-        const content = await fs.readFile(filepath, "utf-8");
-        const configPath = path.join(process.cwd(), "config", "init.json");
-        const config = JSON.parse(await fs.readFile(configPath, "utf-8"));
-        cssStore.set({
-          content,
-          version: config.STYLES_VER?.toString() || null,
-        });
-      }
-    } catch (error) {
-      console.error("Error initializing CSS store:", error);
+      // No need to check if it worked - updateCssStore now always sets the store
+      // even if the values are null, so we won't get stuck in a loop
+    } catch (error: unknown) {
+      // Just log the error and continue - fallback CSS will be used
+      console.log(
+        "CSS store initialization error, using default CSS files:",
+        error instanceof Error ? error.message : String(error)
+      );
+      // Make sure we set something in the store to prevent repeated attempts
+      cssStore.set({
+        content: null,
+        version: null,
+      });
     }
   }
 }
