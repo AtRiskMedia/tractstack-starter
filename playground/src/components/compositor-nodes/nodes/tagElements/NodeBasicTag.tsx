@@ -8,6 +8,7 @@ import {
   type FocusEvent,
   type MouseEvent,
   type KeyboardEvent,
+  type ClipboardEvent,
   useEffect,
   useRef,
   useState,
@@ -77,6 +78,34 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     getCtx(props).handleInsertSignal(tagName, nodeId);
   };
 
+  // Handle paste events to strip formatting
+  const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
+    // Prevent the default paste behavior which would include formatting
+    e.preventDefault();
+
+    // Get plain text from clipboard
+    const text = e.clipboardData.getData("text/plain");
+
+    // Insert text at cursor position
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      const textNode = document.createTextNode(text);
+      range.insertNode(textNode);
+
+      // Move cursor to end of inserted text
+      range.setStartAfter(textNode);
+      range.setEndAfter(textNode);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } else {
+      // Fallback if selection API is not working
+      const el = e.currentTarget;
+      el.textContent = (el.textContent || "") + text;
+    }
+  };
+
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
     function reset() {
       wasFocused.current = false;
@@ -90,17 +119,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     const node = getCtx(props).allNodes.get().get(nodeId);
 
     reset();
-    let newText = e.currentTarget.innerHTML;
-
-    // Remove any marker spans we've added for space protection
-    newText = newText.replace(/<span[^>]*class="space-marker"[^>]*>[^<]*<\/span>/gi, "");
-    newText = newText.replace(
-      /<span[^>]*style="[^"]*font-size:\s*0[^"]*"[^>]*>[^<]*<\/span>/gi,
-      ""
-    );
-
-    // Normalize any non-breaking spaces to regular spaces
-    newText = newText.replace(/&nbsp;|\u00A0/g, " ");
+    const newText = e.currentTarget.innerHTML;
 
     if (newText === originalTextRef.current) {
       getCtx(props).notifyNode(node?.parentId || "");
@@ -142,6 +161,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         } as PaneNode;
         getCtx(props).modifyNodes([paneNode]);
       }
+      //getCtx(props).nodeToNotify(nodeId, "Pane");
 
       getCtx(props).history.addPatch({
         op: PatchOp.REMOVE,
@@ -156,6 +176,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             } as PaneNode;
             getCtx(props).modifyNodes([paneNode]);
           }
+          //ctx.nodeToNotify(nodeId, "Pane");
         },
         redo: (ctx) => {
           ctx.deleteChildren(nodeId);
@@ -168,6 +189,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             } as PaneNode;
             getCtx(props).modifyNodes([paneNode]);
           }
+          //ctx.nodeToNotify(nodeId, "Pane");
         },
       });
     }
@@ -195,6 +217,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
       contentEditable: [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value),
       suppressContentEditableWarning: true,
+      onPaste: handlePaste, // Add the paste event handler
       onBlur: handleBlur,
       onClick: (e: MouseEvent) => e.stopPropagation(),
       onMouseDown: (e: MouseEvent) => {
