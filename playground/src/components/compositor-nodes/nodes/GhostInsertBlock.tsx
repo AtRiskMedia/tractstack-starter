@@ -1,12 +1,12 @@
-import { memo, useState } from "react";
-import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants.ts";
-import { settingsPanelStore } from "@/store/storykeep.ts";
-import { getCtx } from "@/store/nodes.ts";
-import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
-import type { NodeProps, ToolAddMode, FlatNode, Tag } from "@/types";
+import { memo, useMemo, useState } from "react";
+import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants";
+import { settingsPanelStore } from "@/store/storykeep";
+import { getCtx } from "@/store/nodes";
+import { getTemplateNode } from "@/utils/common/nodesHelper";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { toTag } from "@/utils/nodes/type-guards";
+import allowInsert from "@/utils/nodes/allowInsert";
+import type { NodeProps, ToolAddMode, FlatNode, Tag } from "@/types";
 
 type GhostInsertBlockProps = NodeProps & {
   isEmpty: boolean;
@@ -17,78 +17,45 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   const { isEmpty, lastChildId } = props;
   const [showInsertOptions, setShowInsertOptions] = useState(false);
 
-  const checkAllowInsert = (targetId: string, newTagName: ToolAddMode): boolean => {
-    if (!targetId) return true; // If no target (empty), insertion is allowed
+  const parentNode = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
+  const lastChildNode = lastChildId
+    ? (getCtx(props).allNodes.get().get(lastChildId) as FlatNode)
+    : null;
 
-    const targetNode = getCtx(props).allNodes.get().get(targetId) as FlatNode;
-    if (!targetNode || !("tagName" in targetNode)) {
-      return false;
-    }
-
-    // Get child nodes to check insertion context
-    const markdownId = props.nodeId;
-    const tagNameIds = getCtx(props).getChildNodeIDs(markdownId);
-
-    // Convert to Tag types for proper allowInsert checking
-    const tagNames = tagNameIds
-      .map((id) => {
-        const name = getCtx(props).getNodeTagName(id);
-        return toTag(name);
-      })
-      .filter((name): name is Tag => name !== null);
-
-    const offset = tagNameIds.indexOf(targetId);
-    const tagName = toTag(targetNode.tagName as string);
-    const addTagName = toTag(newTagName);
-
-    if (!tagName || !addTagName) {
-      return false;
-    }
-
-    // Check insertion position constraints
-    const allowInsertAfter =
-      tagNames.length > offset
-        ? getCtx(props).allowInsert(targetId, newTagName).allowInsertAfter
-        : getCtx(props).allowInsert(targetId, newTagName).allowInsertAfter;
-
-    return allowInsertAfter;
-  };
+  const allowedModes = useMemo(() => {
+    const contextNode = isEmpty ? parentNode : lastChildNode;
+    if (!contextNode) return [];
+    return toolAddModes.filter((mode) =>
+      typeof contextNode.tagName === `string`
+        ? allowInsert(contextNode, contextNode.tagName as Tag, mode as Tag, undefined)
+        : false
+    );
+  }, [isEmpty, lastChildId, parentNode, lastChildNode]);
 
   const handleInsert = (mode: ToolAddMode, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent event bubbling
-
+    e.stopPropagation();
     const templateNode = getTemplateNode(mode);
     let newNodeId: string | null = null;
-
     try {
       if (isEmpty) {
-        newNodeId = getCtx(props).addTemplateNode(props.nodeId, templateNode);
-      } else if (lastChildId) {
-        // Check if we're allowed to insert after this specific node
-        const canInsert = checkAllowInsert(lastChildId, mode);
-
-        if (canInsert) {
-          // Use the correct target for insertion
-          newNodeId = getCtx(props).addTemplateNode(
-            lastChildId,
-            templateNode,
-            lastChildId,
-            "after"
-          );
-        } else {
-          // Fallback: Try to add to the parent directly
-          newNodeId = getCtx(props).addTemplateNode(props.nodeId, templateNode);
+        if (!allowedModes.includes(mode)) {
+          console.warn(`Insertion of ${mode} not allowed in empty container`);
+          return;
         }
+        newNodeId = getCtx(props).addTemplateNode(props.nodeId, templateNode);
+      } else if (lastChildId && lastChildNode) {
+        if (!allowedModes.includes(mode)) {
+          console.warn(`Insertion of ${mode} after ${lastChildNode.tagName} not allowed`);
+          return;
+        }
+        newNodeId = getCtx(props).addTemplateNode(lastChildId, templateNode, lastChildId, "after");
       }
-
-      // Signal the appropriate handler for this node type
       if (newNodeId && templateNode.tagName) {
         getCtx(props).handleInsertSignal(templateNode.tagName, newNodeId);
       }
     } catch (error) {
-      // Silent error handling
+      console.error("Insertion failed:", error);
     }
-
     setShowInsertOptions(false);
   };
 
@@ -97,18 +64,31 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
     setShowInsertOptions(false);
   };
 
-  // Element selection buttons - text elements and non-text elements with proper differentiation
-  const ElementButtons = () => (
-    <div className="grid grid-cols-3 gap-2 p-2">
-      {toolAddModes
-        .filter((mode) => mode !== "p" && mode !== "h2" && mode !== "h3" && mode !== "h4")
+  const TextElementButtons = () => (
+    <div className="flex space-x-2 p-2">
+      {["p", "h2", "h3", "h4"]
+        .filter((mode) => allowedModes.includes(mode as ToolAddMode))
         .map((mode) => (
           <button
             key={mode}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleInsert(mode, e);
-            }}
+            onClick={(e) => handleInsert(mode as ToolAddMode, e)}
+            className="px-3 py-2 border rounded hover:bg-cyan-50 hover:border-cyan-300"
+          >
+            {toolAddModeTitles[mode as ToolAddMode]}
+          </button>
+        ))}
+    </div>
+  );
+
+  const ElementButtons = () => (
+    <div className="grid grid-cols-3 gap-2 p-2">
+      {toolAddModes
+        .filter((mode) => !["p", "h2", "h3", "h4"].includes(mode))
+        .filter((mode) => allowedModes.includes(mode))
+        .map((mode) => (
+          <button
+            key={mode}
+            onClick={(e) => handleInsert(mode, e)}
             className="p-2 border rounded hover:bg-cyan-50 hover:border-cyan-300 flex flex-col items-center"
           >
             {toolAddModesIcons[mode] ? (
@@ -126,25 +106,11 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
     </div>
   );
 
-  // Basic text elements options
-  const TextElementButtons = () => (
-    <div className="flex space-x-2 p-2">
-      {["p", "h2", "h3", "h4"].map((mode) => (
-        <button
-          key={mode}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleInsert(mode as ToolAddMode, e);
-          }}
-          className="px-3 py-2 border rounded hover:bg-cyan-50 hover:border-cyan-300"
-        >
-          {toolAddModeTitles[mode as ToolAddMode]}
-        </button>
-      ))}
-    </div>
-  );
+  // Check if there are any allowed non-text elements
+  const hasAllowedElements = toolAddModes
+    .filter((mode) => !["p", "h2", "h3", "h4"].includes(mode))
+    .some((mode) => allowedModes.includes(mode));
 
-  // Empty state display
   if (isEmpty) {
     return (
       <div className="my-4">
@@ -159,13 +125,17 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
             </button>
             <div className="text-center mb-3 text-gray-700 font-bold">Add content</div>
             <TextElementButtons />
-            <div className="text-center my-2 text-gray-500 text-sm">or</div>
-            <ElementButtons />
+            {hasAllowedElements && (
+              <>
+                <div className="text-center my-2 text-gray-500 text-sm">or</div>
+                <ElementButtons />
+              </>
+            )}
           </div>
         ) : (
           <button
             onClick={(e) => {
-              e.stopPropagation(); // Prevent event bubbling
+              e.stopPropagation();
               settingsPanelStore.set(null);
               setShowInsertOptions(true);
             }}
@@ -183,7 +153,6 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
     );
   }
 
-  // Non-empty state - show a button to add more content
   return (
     <div className="my-4">
       {showInsertOptions ? (
@@ -197,13 +166,17 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
           </button>
           <div className="text-center mb-3 text-gray-700 font-bold">Add content</div>
           <TextElementButtons />
-          <div className="text-center my-2 text-gray-500 text-sm">or</div>
-          <ElementButtons />
+          {hasAllowedElements && (
+            <>
+              <div className="text-center my-2 text-gray-500 text-sm">or</div>
+              <ElementButtons />
+            </>
+          )}
         </div>
       ) : (
         <button
           onClick={(e) => {
-            e.stopPropagation(); // Prevent event bubbling
+            e.stopPropagation();
             settingsPanelStore.set(null);
             setShowInsertOptions(true);
           }}
