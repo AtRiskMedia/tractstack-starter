@@ -90,7 +90,17 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     const node = getCtx(props).allNodes.get().get(nodeId);
 
     reset();
-    const newText = e.currentTarget.innerHTML;
+    let newText = e.currentTarget.innerHTML;
+
+    // Remove any marker spans we've added for space protection
+    newText = newText.replace(/<span[^>]*class="space-marker"[^>]*>[^<]*<\/span>/gi, "");
+    newText = newText.replace(
+      /<span[^>]*style="[^"]*font-size:\s*0[^"]*"[^>]*>[^<]*<\/span>/gi,
+      ""
+    );
+
+    // Normalize any non-breaking spaces to regular spaces
+    newText = newText.replace(/&nbsp;|\u00A0/g, " ");
 
     if (newText === originalTextRef.current) {
       getCtx(props).notifyNode(node?.parentId || "");
@@ -132,7 +142,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         } as PaneNode;
         getCtx(props).modifyNodes([paneNode]);
       }
-      //getCtx(props).nodeToNotify(nodeId, "Pane");
 
       getCtx(props).history.addPatch({
         op: PatchOp.REMOVE,
@@ -147,7 +156,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             } as PaneNode;
             getCtx(props).modifyNodes([paneNode]);
           }
-          //ctx.nodeToNotify(nodeId, "Pane");
         },
         redo: (ctx) => {
           ctx.deleteChildren(nodeId);
@@ -160,7 +168,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             } as PaneNode;
             getCtx(props).modifyNodes([paneNode]);
           }
-          //ctx.nodeToNotify(nodeId, "Pane");
         },
       });
     }
