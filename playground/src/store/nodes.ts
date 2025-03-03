@@ -1320,53 +1320,138 @@ export class NodesContext {
   }
 
   deleteNode(nodeId: string) {
-    const node = this.allNodes.get().get(nodeId) as BaseNode;
-    if (!node) {
+    // Get the original node
+    const originalNode = this.allNodes.get().get(nodeId) as FlatNode;
+    if (!originalNode) {
       return;
     }
 
-    const parentId = node.parentId;
-    const toDelete = this.getNodesRecursively(node).reverse();
-    const closestMarkdownId = this.getClosestNodeTypeFromId(node.id, "Markdown");
+    // Track if we're redirecting deletion
+    let targetNodeId = nodeId;
+    let targetNode = originalNode;
+
+    // Case 1: Node is an LI - check if it's the last one in a list
+    if (
+      originalNode.nodeType === "TagElement" &&
+      "tagName" in originalNode &&
+      originalNode.tagName === "li" &&
+      originalNode.parentId
+    ) {
+      const listNode = this.allNodes.get().get(originalNode.parentId) as FlatNode;
+
+      if (
+        listNode &&
+        "tagName" in listNode &&
+        (listNode.tagName === "ul" || listNode.tagName === "ol")
+      ) {
+        // Check if this LI is the last/only one
+        const listChildren = this.getChildNodeIDs(listNode.id);
+        const isLastLi = listChildren.length === 1 && listChildren[0] === nodeId;
+
+        if (isLastLi) {
+          // Redirect deletion to the list
+          targetNodeId = listNode.id;
+          targetNode = listNode;
+        }
+      }
+    }
+
+    // Case 2: Node is an image or code inside an LI
+    else if (
+      originalNode.nodeType === "TagElement" &&
+      "tagName" in originalNode &&
+      (originalNode.tagName === "img" || originalNode.tagName === "code")
+    ) {
+      // Find parent LI
+      const liParentId = this.getParentNodeByTagNames(nodeId, ["li"]);
+
+      if (liParentId) {
+        const liNode = this.allNodes.get().get(liParentId) as FlatNode;
+
+        // Check if this is the only child of the LI
+        const liChildren = this.getChildNodeIDs(liParentId);
+
+        // Calculate if content is the only significant child
+        // (there might be text nodes with whitespace)
+        const significantChildrenCount = liChildren.filter((childId) => {
+          const child = this.allNodes.get().get(childId) as FlatNode;
+          if (!child) return false;
+
+          // Skip text nodes with only whitespace
+          if (child.tagName === "text" && (!child.copy || child.copy.trim() === "")) {
+            return false;
+          }
+          return true;
+        }).length;
+
+        const isOnlySignificantChild = significantChildrenCount === 1;
+
+        if (isOnlySignificantChild && liNode?.parentId) {
+          // Find list container (UL/OL)
+          const listNode = this.allNodes.get().get(liNode.parentId) as FlatNode;
+
+          if (
+            listNode &&
+            "tagName" in listNode &&
+            (listNode.tagName === "ul" || listNode.tagName === "ol")
+          ) {
+            // Check if this LI is the last/only one
+            const listChildren = this.getChildNodeIDs(listNode.id);
+            const isLastLi = listChildren.length === 1 && listChildren[0] === liParentId;
+
+            if (isLastLi) {
+              // Redirect deletion to the list
+              targetNodeId = listNode.id;
+              targetNode = listNode;
+            } else {
+              // Redirect to the LI instead
+              targetNodeId = liParentId;
+              targetNode = liNode;
+            }
+          }
+        }
+      }
+    }
+
+    // Continue with normal deletion logic using the target node
+    const parentId = targetNode.parentId;
+    const toDelete = this.getNodesRecursively(targetNode).reverse();
+    const closestMarkdownId = this.getClosestNodeTypeFromId(targetNode.id, "Markdown");
 
     this.deleteNodes(toDelete);
     let paneIdx: number = -1;
 
-    // if this was a pane node then we need to update storyfragment as it tracks panes
+    // Process based on node type
     if (parentId !== null) {
-      if (node.nodeType === "Pane") {
+      if (targetNode.nodeType === "Pane") {
         const storyFragment = this.allNodes.get().get(parentId) as StoryFragmentNode;
         if (storyFragment) {
-          paneIdx = storyFragment.paneIds.indexOf(nodeId);
+          paneIdx = storyFragment.paneIds.indexOf(targetNodeId);
           storyFragment.paneIds.splice(paneIdx, 1);
         }
-        // let pane notify to it's parent for updates (likely storyfragment)
         this.notifyNode(parentId);
-      } else if (node.nodeType === "TagElement") {
-        // regular nodes should notify closest markdown
+      } else if (targetNode.nodeType === "TagElement") {
         this.notifyNode(closestMarkdownId);
       } else {
         this.notifyNode(parentId);
       }
     } else {
-      // we deleted the node without a parent, send a notification to the root and let storykeep handle it
-      // it might be safe to refresh the whole page
-      if (nodeId === this.rootNodeId.get()) {
-        // if we actually deleted the root then clear it up
+      if (targetNodeId === this.rootNodeId.get()) {
         this.rootNodeId.set("");
       }
       this.notifyNode(ROOT_NODE_NAME);
     }
 
+    // Add to history for undo/redo
     this.history.addPatch({
       op: PatchOp.REMOVE,
       undo: (ctx) => {
         ctx.addNodes(toDelete);
-        if (node.nodeType === "Pane" && parentId !== null) {
+        if (targetNode.nodeType === "Pane" && parentId !== null) {
           const storyFragment = this.allNodes.get().get(parentId) as StoryFragmentNode;
           if (storyFragment) {
-            storyFragment.paneIds.insertBefore(paneIdx, [parentId]);
-            this.linkChildToParent(nodeId, parentId, paneIdx);
+            storyFragment.paneIds.insertBefore(paneIdx, [targetNodeId]);
+            this.linkChildToParent(targetNodeId, parentId, paneIdx);
           }
         }
       },
