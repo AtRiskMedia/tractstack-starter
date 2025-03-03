@@ -65,14 +65,14 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   };
 
   const TextElementButtons = () => (
-    <div className="flex space-x-2 p-2">
+    <div className="flex flex-wrap gap-2 p-2">
       {["p", "h2", "h3", "h4"]
         .filter((mode) => allowedModes.includes(mode as ToolAddMode))
         .map((mode) => (
           <button
             key={mode}
             onClick={(e) => handleInsert(mode as ToolAddMode, e)}
-            className="px-3 py-2 border rounded hover:bg-cyan-50 hover:border-cyan-300"
+            className="px-3 py-2 bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:bg-cyan-600 hover:text-white hover:border-cyan-700 transition-colors"
           >
             {toolAddModeTitles[mode as ToolAddMode]}
           </button>
@@ -81,7 +81,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   );
 
   const ElementButtons = () => (
-    <div className="grid grid-cols-3 gap-2 p-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
       {toolAddModes
         .filter((mode) => !["p", "h2", "h3", "h4"].includes(mode))
         .filter((mode) => allowedModes.includes(mode))
@@ -89,7 +89,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
           <button
             key={mode}
             onClick={(e) => handleInsert(mode, e)}
-            className="p-2 border rounded hover:bg-cyan-50 hover:border-cyan-300 flex flex-col items-center"
+            className="p-2 bg-white text-gray-800 border border-gray-300 rounded shadow-sm hover:bg-cyan-600 hover:text-white hover:border-cyan-700 transition-colors flex flex-col items-center"
           >
             {toolAddModesIcons[mode] ? (
               <img
@@ -115,15 +115,17 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
     return (
       <div className="my-4">
         {showInsertOptions ? (
-          <div className="border-2 border-dashed border-cyan-600 rounded-lg bg-white p-4 relative">
-            <button
-              onClick={handleClose}
-              className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100"
-              title="Close"
-            >
-              <XMarkIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
-            </button>
-            <div className="text-center mb-3 text-gray-700 font-bold">Add content</div>
+          <div className="bg-white text-gray-800 border-2 border-cyan-600 rounded-lg shadow-lg p-3">
+            <div className="flex justify-between items-center mb-3 border-b pb-2">
+              <h3 className="font-bold text-lg">Add content</h3>
+              <button
+                onClick={handleClose}
+                className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
+                title="Close"
+              >
+                <XMarkIcon className="h-5 w-5 text-gray-700" />
+              </button>
+            </div>
             <TextElementButtons />
             {hasAllowedElements && (
               <>
@@ -139,13 +141,13 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
               settingsPanelStore.set(null);
               setShowInsertOptions(true);
             }}
-            className="w-full p-6 border-2 border-dashed border-cyan-600 rounded-lg hover:bg-cyan-50 transition-colors"
+            className="w-full p-6 border-2 border-dashed border-cyan-500 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition-colors group dark:bg-cyan-900 dark:border-cyan-600 dark:hover:bg-cyan-800"
           >
             <div className="flex flex-col items-center justify-center space-y-2">
-              <div className="p-2 bg-cyan-100 rounded-full">
-                <PlusIcon className="h-6 w-6 text-cyan-700" />
+              <div className="p-2 bg-cyan-100 rounded-full group-hover:bg-cyan-200 dark:bg-cyan-800 dark:group-hover:bg-cyan-700">
+                <PlusIcon className="h-6 w-6 text-cyan-700 dark:text-cyan-300" />
               </div>
-              <div className="text-gray-600">Add content</div>
+              <div className="font-medium text-cyan-800 dark:text-cyan-300">Add content</div>
             </div>
           </button>
         )}
@@ -156,15 +158,17 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   return (
     <div className="my-4">
       {showInsertOptions ? (
-        <div className="border-2 border-dashed border-cyan-600 rounded-lg bg-white p-4 relative">
-          <button
-            onClick={handleClose}
-            className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-100"
-            title="Close"
-          >
-            <XMarkIcon className="h-5 w-5 text-gray-500 hover:text-gray-700" />
-          </button>
-          <div className="text-center mb-3 text-gray-700 font-bold">Add content</div>
+        <div className="bg-white text-gray-800 border-2 border-cyan-600 rounded-lg shadow-lg p-3">
+          <div className="flex justify-between items-center mb-3 border-b pb-2">
+            <h3 className="font-bold text-lg">Add content</h3>
+            <button
+              onClick={handleClose}
+              className="p-1 rounded-full bg-gray-200 hover:bg-gray-300"
+              title="Close"
+            >
+              <XMarkIcon className="h-5 w-5 text-gray-700" />
+            </button>
+          </div>
           <TextElementButtons />
           {hasAllowedElements && (
             <>
@@ -180,11 +184,13 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
             settingsPanelStore.set(null);
             setShowInsertOptions(true);
           }}
-          className="w-full py-3 border border-dashed border-cyan-600 rounded hover:bg-cyan-50 transition-colors"
+          className="w-full py-3 border border-dashed border-cyan-500 bg-cyan-50 rounded hover:bg-cyan-100 transition-colors group dark:bg-cyan-900 dark:border-cyan-600 dark:hover:bg-cyan-800"
         >
           <div className="flex items-center justify-center space-x-2">
-            <PlusIcon className="h-5 w-5 text-cyan-700" />
-            <span className="text-sm text-gray-600">Add new element</span>
+            <PlusIcon className="h-5 w-5 text-cyan-700 dark:text-cyan-300" />
+            <span className="text-sm font-medium text-cyan-800 dark:text-cyan-300">
+              Add new element
+            </span>
           </div>
         </button>
       )}

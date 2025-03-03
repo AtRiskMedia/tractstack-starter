@@ -77,7 +77,7 @@ export class NodesContext {
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
   toolModeValStore = map<{ value: ToolModeVal }>({
-    value: "default",
+    value: "text",
   });
 
   paneAddMode = map<Record<string, PaneAddMode>>({});
@@ -165,6 +165,12 @@ export class NodesContext {
     switch (toolModeVal) {
       case `default`:
         handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
+        break;
+      case `text`:
+        // Only handle double-clicks in text mode like default mode
+        if (dblClick) {
+          handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
+        }
         break;
       case `eraser`:
         this.handleEraseEvent(node.id);
@@ -1126,7 +1132,7 @@ export class NodesContext {
         });
         break;
     }
-    this.toolModeValStore.set({ value: "default" });
+    this.toolModeValStore.set({ value: "text" });
   }
 
   addTemplateImpressionNode(targetId: string, node: ImpressionNode) {

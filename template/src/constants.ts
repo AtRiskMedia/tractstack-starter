@@ -5,7 +5,6 @@ import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
 import ArrowsUpDownIcon from "@heroicons/react/24/outline/ArrowsUpDownIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 
 import type { ResourceSetting, Tag, ToolMode, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
 import type { SubmitParams } from "assemblyai";
@@ -474,23 +473,27 @@ export const stopWords = new Set([
 export const storykeepToolModes = [
   {
     key: "default" as const,
-    Icon: CursorArrowRaysIcon,
+    Icon: PaintBrushIcon,
     title: "Text + styles",
+    description: "Click to edit text or styles",
   },
   {
     key: "text" as const,
     Icon: PencilIcon,
     title: "Write",
+    description: "Click to edit text; dbl-click for styles",
   },
   {
     key: "insert" as const,
     Icon: PlusIcon,
     title: "Add *",
+    description: "Add new element, e.g. paragraph or image",
   },
   {
     key: "eraser" as const,
     Icon: TrashIcon,
     title: "Eraser",
+    description: "Erase any element(s)",
   },
   //{
   //  key: "pane" as const,
@@ -500,7 +503,8 @@ export const storykeepToolModes = [
   {
     key: "move" as const,
     Icon: ArrowsUpDownIcon,
-    title: "Drag drop",
+    title: "Move *",
+    description: "Keyboard accessible re-order",
   },
   //{
   //  key: "layout" as const,

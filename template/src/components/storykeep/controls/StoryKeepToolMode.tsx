@@ -46,13 +46,15 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
       </div>
       {storykeepToolModes
         .filter(({ key }) => (isContext ? !skipIfContextPane.includes(key) : true))
-        .map(({ key, Icon, title }) =>
-          key === toolModeVal ? (
-            <Icon key={key} title={title} className={classNameActive} />
-          ) : (
-            <Icon key={key} title={title} className={className} onClick={() => handleClick(key)} />
-          )
-        )}
+        .map(({ key, Icon, description }) => (
+          <div title={description} key={key}>
+            {key === toolModeVal ? (
+              <Icon className={classNameActive} />
+            ) : (
+              <Icon className={className} onClick={() => handleClick(key)} />
+            )}
+          </div>
+        ))}
     </>
   );
 };

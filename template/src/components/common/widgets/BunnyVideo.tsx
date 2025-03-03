@@ -17,6 +17,13 @@ const BunnyVideo = ({ embedUrl, title, className = "" }: BunnyVideoProps) => {
     setError(null);
 
     const loadVideo = () => {
+      // Skip player setup if there's no valid URL
+      if (!isValidUrl(embedUrl)) {
+        setError("Invalid video URL");
+        setIsLoading(false);
+        return;
+      }
+
       const player = getBunnyPlayer(iframeId);
 
       if (!player) {
@@ -46,11 +53,49 @@ const BunnyVideo = ({ embedUrl, title, className = "" }: BunnyVideoProps) => {
     return () => clearTimeout(timeoutId);
   }, [embedUrl]);
 
+  // Check if a string is a valid URL
+  const isValidUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Render placeholder when URL is invalid
+  if (!isValidUrl(embedUrl)) {
+    return (
+      <div
+        className={`w-full aspect-video bg-gray-100 flex items-center justify-center ${className}`}
+      >
+        <div className="text-center p-4">
+          <div className="text-mydarkgrey mb-2">Video URL not set</div>
+          <div className="text-sm text-mygrey">
+            Configure this widget with a valid Bunny Stream URL
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Build URL with default parameters for preview
-  const videoUrl = new URL(embedUrl);
-  videoUrl.searchParams.set("autoplay", "0");
-  videoUrl.searchParams.set("preload", "false");
-  videoUrl.searchParams.set("responsive", "true");
+  let videoUrl;
+  try {
+    videoUrl = new URL(embedUrl);
+    videoUrl.searchParams.set("autoplay", "0");
+    videoUrl.searchParams.set("preload", "false");
+    videoUrl.searchParams.set("responsive", "true");
+  } catch (e) {
+    // This should never happen due to our check above, but just in case
+    return (
+      <div
+        className={`w-full aspect-video bg-gray-100 flex items-center justify-center ${className}`}
+      >
+        <div className="text-center text-mydarkgrey">Invalid video URL</div>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative w-full ${className}`}>
