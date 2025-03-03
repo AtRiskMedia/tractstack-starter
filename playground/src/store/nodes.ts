@@ -1412,7 +1412,6 @@ export class NodesContext {
     const newLocationNode = this.allNodes.get().get(insertNodeId);
     if (!newLocationNode) return;
 
-    // same nodes do nothing
     if (nodeId === insertNodeId) return;
 
     if (node.nodeType !== newLocationNode.nodeType) {
@@ -1423,9 +1422,19 @@ export class NodesContext {
     }
 
     const oldParentId = node.parentId || "";
-
-    const oldParentNodes = this.getChildNodeIDs(node.parentId || "");
+    const oldParentNodes = this.getChildNodeIDs(oldParentId);
     const originalIdx = oldParentNodes.indexOf(nodeId);
+
+    // Capture original state for history
+    let originalPaneIds: string[] | null = null;
+    if (node.nodeType === "Pane") {
+      const storyFragmentId = this.getClosestNodeTypeFromId(node.id, "StoryFragment");
+      const storyFragment = this.allNodes.get().get(storyFragmentId) as StoryFragmentNode;
+      if (storyFragment) {
+        originalPaneIds = [...storyFragment.paneIds];
+      }
+    }
+
     moveNodeAtLocationInContext(
       oldParentNodes,
       originalIdx,
@@ -1436,22 +1445,48 @@ export class NodesContext {
       node,
       this
     );
-    const parentNode = this.nodeToNotify(newLocationNode?.parentId || "", newLocationNode.nodeType);
-    this.notifyNode(parentNode || "");
+
+    // Persist changes using cloneDeep and modifyNodes
+    if (node.nodeType === "Pane") {
+      const storyFragmentId = this.getClosestNodeTypeFromId(node.id, "StoryFragment");
+      const storyFragment = cloneDeep(
+        this.allNodes.get().get(storyFragmentId)
+      ) as StoryFragmentNode;
+      if (storyFragment) {
+        this.modifyNodes([{ ...storyFragment, isChanged: true }]);
+      }
+    } else {
+      const parentNode = this.nodeToNotify(
+        newLocationNode?.parentId || "",
+        newLocationNode.nodeType
+      );
+      this.notifyNode(parentNode || "");
+    }
 
     this.history.addPatch({
       op: PatchOp.REPLACE,
       undo: (ctx) => {
-        // Undo the move operation
         const oldParentNodes = ctx.getChildNodeIDs(node.parentId || "");
         const newParentNodes = ctx.getChildNodeIDs(newLocationNode.parentId || "");
         if (newParentNodes) {
           newParentNodes.splice(newParentNodes.indexOf(nodeId), 1);
         }
         if (oldParentNodes) {
-          oldParentNodes.insertBefore(originalIdx, [nodeId]); // Insert back to old position
+          oldParentNodes.insertBefore(originalIdx, [nodeId]);
         }
         node.parentId = oldParentId;
+
+        if (node.nodeType === "Pane" && originalPaneIds) {
+          const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
+          const storyFragment = cloneDeep(
+            ctx.allNodes.get().get(storyFragmentId)
+          ) as StoryFragmentNode;
+          if (storyFragment) {
+            storyFragment.paneIds = [...originalPaneIds];
+            this.modifyNodes([{ ...storyFragment, isChanged: true }]);
+          }
+        }
+
         const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
         ctx.notifyNode(parentNode || "");
       },
@@ -1466,6 +1501,16 @@ export class NodesContext {
           node,
           ctx
         );
+
+        if (node.nodeType === "Pane") {
+          const storyFragmentId = ctx.getClosestNodeTypeFromId(node.id, "StoryFragment");
+          const storyFragment = cloneDeep(
+            ctx.allNodes.get().get(storyFragmentId)
+          ) as StoryFragmentNode;
+          if (storyFragment) {
+            this.modifyNodes([{ ...storyFragment, isChanged: true }]);
+          }
+        }
       },
     });
   }
