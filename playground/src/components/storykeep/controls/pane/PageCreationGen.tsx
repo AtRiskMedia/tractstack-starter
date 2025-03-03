@@ -31,6 +31,7 @@ export const PageCreationGen = ({ nodeId, ctx }: PageCreationGenProps) => {
   const [referenceContext, setReferenceContext] = useState("");
   const [additionalInstructions, setAdditionalInstructions] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   const [generationStatus, setGenerationStatus] = useState<GenerationStatus>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -82,9 +83,6 @@ ${additionalInstructions}`;
       }
 
       setGeneratedContent(result.data.response);
-      //setGeneratedContent(
-      //  "## Unleash the Power of the Human-Animal Bond\n\nEmbark on an extraordinary journey that celebrates the profound connection between humans and their canine companions. Discover a world where heartwarming tales, expert insights, and transformative experiences converge, unveiling the magic that unfolds when two kindred spirits unite.\n\n### Pawsitive Care: Nurturing Your Furry Friend\n\nUnlock the secrets to providing your beloved pet with the utmost care and attention they deserve. Explore a treasure trove of expert tips and advice tailored to nurture their physical and mental well-being, ensuring a lifetime of happiness and companionship.\n\n### Enduring Connections: A Tale of Friendship and Growth\n\nJoin Dagr and his human companion as they navigate life's unexpected twists and turns, forging an unbreakable bond that transcends the boundaries of species. Witness their inspiring story of resilience, personal growth, and the transformative power of unconditional love.\n\n### Humane-Canine Bond: Exploring the Magical Connection\n\nDelve into the extraordinary realm where humans and animals connect on a profound level. Uncover the scientific and emotional underpinnings of this magical bond, and discover how it enriches our lives in ways we never imagined.\n\n#### Our Tale Begins Here!\nEmbark on a captivating journey that unveils the origins of Dagr's unique name and the spark that ignited this incredible adventure. Prepare to be inspired by the extraordinary bond that blossomed between a human and their canine companion.\n\n### Behind The Ink: Navigating Life's Challenges with Empathy\n\nGain invaluable insights from a sensitive soul who navigates life's complexities with introspection and empathy. Explore the rich tapestry of human experiences through the lens of an introverted and highly sensitive person, offering a unique perspective on mental health, self-discovery, and the healing power of the human-animal bond."
-      //);
       setGenerationStatus("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -110,24 +108,38 @@ ${additionalInstructions}`;
     markdownContent: string,
     design: PageDesign
   ) => {
-    // Get preview storyfragment and its panes
-    const previewStoryfragment = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
-    if (!previewStoryfragment) return;
+    if (isApplying) return; // Prevent multiple clicks
 
-    // Process our markdown content into sections
-    const processedPage = parsePageMarkdown(markdownContent);
-    const paneIds = await createPagePanes(processedPage, design, ctx, true, nodeId);
+    setIsApplying(true);
 
-    // Update the storyfragment with the new panes
-    const storyfragment = ctx.allNodes.get().get(nodeId) as StoryFragmentNode;
-    if (storyfragment) {
-      storyfragment.paneIds = paneIds;
-      storyfragment.isChanged = true;
-      ctx.modifyNodes([storyfragment]);
-      ctx.notifyNode("root");
+    try {
+      // Get preview storyfragment and its panes
+      const previewStoryfragment = previewCtx.allNodes.get().get("tmp") as StoryFragmentNode;
+      if (!previewStoryfragment) {
+        setIsApplying(false);
+        return;
+      }
+
+      // Process our markdown content into sections
+      const processedPage = parsePageMarkdown(markdownContent);
+      const paneIds = await createPagePanes(processedPage, design, ctx, true, nodeId);
+
+      // Update the storyfragment with the new panes
+      const storyfragment = ctx.allNodes.get().get(nodeId) as StoryFragmentNode;
+      if (storyfragment) {
+        storyfragment.paneIds = paneIds;
+        storyfragment.isChanged = true;
+        ctx.modifyNodes([storyfragment]);
+        ctx.notifyNode("root");
+      }
+
+      setShowPreview(false);
+    } catch (error) {
+      console.error("Error applying design:", error);
+      // You might want to show an error message to the user here
+    } finally {
+      setIsApplying(false);
     }
-
-    setShowPreview(false);
   };
 
   if (showPreview && generatedContent) {
@@ -136,6 +148,7 @@ ${additionalInstructions}`;
         markdownContent={generatedContent}
         onComplete={handlePreviewApply}
         onBack={() => setShowPreview(false)}
+        isApplying={isApplying}
       />
     );
   }

@@ -80,12 +80,14 @@ interface PageCreationPreviewProps {
   markdownContent: string;
   onComplete: (previewCtx: NodesContext, markdownContent: string, design: PageDesign) => void;
   onBack: () => void;
+  isApplying?: boolean;
 }
 
 export const PageCreationPreview = ({
   markdownContent,
   onComplete,
   onBack,
+  isApplying = false,
 }: PageCreationPreviewProps) => {
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(0);
@@ -252,7 +254,8 @@ export const PageCreationPreview = ({
           <div className="flex gap-2">
             <button
               onClick={onBack}
-              className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isApplying}
             >
               Back
             </button>
@@ -261,10 +264,17 @@ export const PageCreationPreview = ({
                 preview?.ctx &&
                 onComplete(preview.ctx, markdownContent, pageDesigns[selectedDesignIndex])
               }
-              className="px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
-              disabled={!preview?.ctx || !!error}
+              className={`px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+              disabled={!preview?.ctx || !!error || isApplying}
             >
-              Apply Design
+              {isApplying ? (
+                <>
+                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
+                  <span>Applying...</span>
+                </>
+              ) : (
+                "Apply Design"
+              )}
             </button>
           </div>
         </div>
