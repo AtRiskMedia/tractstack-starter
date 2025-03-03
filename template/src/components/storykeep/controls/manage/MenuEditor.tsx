@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
+import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
@@ -16,7 +17,7 @@ interface MenuEditorProps {
 }
 
 export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps) {
-  const [localMenu, setLocalMenu] = useState<MenuNode>(menu);
+  const [localMenu, setLocalMenu] = useState<MenuNode>(create ? { ...menu, id: ulid() } : menu);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

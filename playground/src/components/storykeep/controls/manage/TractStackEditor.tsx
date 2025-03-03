@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
+import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
@@ -12,7 +13,9 @@ interface TractStackEditorProps {
 }
 
 export default function TractStackEditor({ tractstack, create }: TractStackEditorProps) {
-  const [localTractStack, setLocalTractStack] = useState<TractStackNode>(tractstack);
+  const [localTractStack, setLocalTractStack] = useState<TractStackNode>(
+    create ? { ...tractstack, id: ulid() } : tractstack
+  );
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);

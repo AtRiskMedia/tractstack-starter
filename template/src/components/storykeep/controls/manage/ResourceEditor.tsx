@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from "react";
+import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";
 import { Switch } from "@headlessui/react";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
@@ -54,6 +55,7 @@ const EditableKey = ({
 export default function ResourceEditor({ resource, create, contentMap }: ResourceEditorProps) {
   const [localResource, setLocalResource] = useState<ResourceNode>({
     ...resource,
+    ...(create ? { id: ulid() } : {}),
     actionLisp: resource.actionLisp || "", // Ensure actionLisp is initialized to empty string if invalid
   });
   const [unsavedChanges, setUnsavedChanges] = useState(false);

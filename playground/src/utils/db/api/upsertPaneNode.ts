@@ -5,7 +5,6 @@ import type { PaneRowData } from "@/store/nodesSerializer";
 export async function upsertPaneNode(
   node: PaneNode
 ): Promise<{ success: boolean; error?: string }> {
-  console.log(`upsertPaneNode`, node);
   try {
     const client = await tursoClient.getClient();
     if (!client) {

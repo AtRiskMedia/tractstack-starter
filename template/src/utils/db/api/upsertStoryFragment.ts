@@ -52,7 +52,6 @@ export async function upsertStoryFragment(
 
       // Then insert new relationships
       for (let i = 0; i < rowData.pane_ids.length; i++) {
-        console.log(`linking panes`, [rowData.id, rowData.pane_ids[i], i]);
         await client.execute({
           sql: "INSERT INTO storyfragment_panes (storyfragment_id, pane_id, weight) VALUES (?, ?, ?)",
           args: [rowData.id, rowData.pane_ids[i], i],
