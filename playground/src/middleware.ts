@@ -105,9 +105,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   await ensureCssStoreInitialized();
 
   // **Step 5: Authentication and authorization with tenant context**
-  const auth = isAuthenticated(context); // No await, function is synchronous
-  const isAdminUser = isAdmin(context); // No await, function is synchronous
-  const isOpenDemo = isOpenDemoMode(context); // No await, function is synchronous
+  const auth = isAuthenticated(context);
+  const isAdminUser = isAdmin(context);
+  const isOpenDemo = isOpenDemoMode(context);
 
   context.locals.user = {
     isAuthenticated: auth,
@@ -116,7 +116,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } as AuthStatus;
 
   // **Step 6: Config validation with tenant-specific config path**
-  const config = await getConfig(context.locals.tenant.paths.configPath); // Assumes getConfig accepts configPath
+  const config = await getConfig(context.locals.tenant.paths.configPath);
   const validation = await validateConfig(config);
   const isInitialized =
     (config?.init as Record<string, unknown>)?.SITE_INIT === true &&
