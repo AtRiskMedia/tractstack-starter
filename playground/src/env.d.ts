@@ -8,5 +8,14 @@ declare namespace App {
       isAdmin: boolean;
       isOpenDemo: boolean;
     };
+    tenant?: {
+      id: string;
+      paths: {
+        dbPath: string;
+        configPath: string;
+        publicPath: string;
+      };
+    };
+    config?: Record<string, any>;
   }
 }

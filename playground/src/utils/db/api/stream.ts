@@ -1,14 +1,18 @@
 import { tursoClient } from "../client";
 import { processEventStream } from "@/utils/events/processEventStream.ts";
 import type { EventPayload, EventStream, Referrer } from "@/types.ts";
+import type { APIContext } from "@/types";
 
-export async function streamEvents(payload: {
-  fingerprint?: string;
-  visitId?: string;
-  events: EventStream[];
-  referrer?: Referrer;
-}) {
-  const client = await tursoClient.getClient();
+export async function streamEvents(
+  payload: {
+    fingerprint?: string;
+    visitId?: string;
+    events: EventStream[];
+    referrer?: Referrer;
+  },
+  context?: APIContext
+): Promise<{ message: string }> {
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("No database connection");
   }

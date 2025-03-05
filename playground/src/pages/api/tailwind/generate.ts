@@ -1,14 +1,25 @@
+import type { APIRoute } from "astro";
+import type { APIContext } from "@/types";
+import { withTenantContext } from "@/utils/api/middleware";
 import { createTailwindcss } from "@mhsdesign/jit-browser-tailwindcss";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "module";
 import { getUniqueTailwindClasses } from "@/utils/db/turso";
 import { updateCssStore } from "@/store/css";
-import type { APIRoute } from "astro";
 
-export const POST: APIRoute = async () => {
+export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
+  const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+  if (isMultiTenant) {
+    return new Response("CSS generation disabled in multi-tenant mode", { status: 403 });
+  }
+
+  const tenantPaths = context.locals.tenant?.paths || {
+    configPath: path.join(process.cwd(), "config"),
+    publicPath: path.join(process.cwd(), "public"),
+  };
+
   try {
-    // Get Tailwind config
     const tailwindConfigPath = path.join(process.cwd(), "tailwind.config.cjs");
     const require = createRequire(import.meta.url);
     const tailwindConfig = require(tailwindConfigPath);
@@ -16,45 +27,33 @@ export const POST: APIRoute = async () => {
       throw new Error("Theme object not found in Tailwind config.");
     }
 
-    // Get core whitelist from config
-    const whitelistPath = path.join(process.cwd(), "config", "tailwindWhitelist.json");
+    const whitelistPath = path.join(tenantPaths.configPath, "tailwindWhitelist.json");
     const whitelistContent = await fs.readFile(whitelistPath, "utf-8");
     const { safelist: storykeepWhitelistArr } = JSON.parse(whitelistContent);
 
-    // Get all classes from Turso
-    const dbClasses = await getUniqueTailwindClasses();
-
-    // Create complete whitelist combining core and database classes
+    const dbClasses = await getUniqueTailwindClasses(context);
     const fullWhitelist = [...new Set([...dbClasses, ...storykeepWhitelistArr])];
 
-    // Generate Tailwind CSS styles
     const tailwindCss = createTailwindcss({ tailwindConfig });
-
-    // Generate frontend styles (all classes)
     const frontendHtmlContent = [`<span class="${fullWhitelist.join(" ")}"></span>`];
     const frontendCss = await tailwindCss.generateStylesFromContent(
-      `@tailwind base;
-       @tailwind utilities;`,
+      `@tailwind base; @tailwind utilities;`,
       frontendHtmlContent
     );
 
-    // Generate app styles (just storykeep whitelist)
     const appHtmlContent = [`<span class="${storykeepWhitelistArr.join(" ")}"></span>`];
     const appCss = await tailwindCss.generateStylesFromContent(
-      `@tailwind base;
-       @tailwind utilities;`,
+      `@tailwind base; @tailwind utilities;`,
       appHtmlContent
     );
 
-    // Write CSS files
-    const stylesDir = path.join(process.cwd(), "public", "styles");
+    const stylesDir = path.join(tenantPaths.publicPath, "styles");
     await Promise.all([
       fs.writeFile(path.join(stylesDir, "frontend.css"), frontendCss),
       fs.writeFile(path.join(stylesDir, "app.css"), appCss),
     ]);
 
-    // Update STYLES_VER in init config
-    const initConfigPath = path.join(process.cwd(), "config", "init.json");
+    const initConfigPath = path.join(tenantPaths.configPath, "init.json");
     const initConfig = JSON.parse(await fs.readFile(initConfigPath, "utf-8"));
     initConfig.STYLES_VER = Date.now();
     await fs.writeFile(initConfigPath, JSON.stringify(initConfig, null, 2));
@@ -79,4 +78,4 @@ export const POST: APIRoute = async () => {
       { status: 500 }
     );
   }
-};
+});

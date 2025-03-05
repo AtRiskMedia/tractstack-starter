@@ -1,5 +1,6 @@
 import { tursoClient } from "../client";
-import { xorEncrypt } from "../../../utils/common/xor";
+import { xorEncrypt } from "@/utils/common/xor";
+import type { APIContext } from "@/types";
 
 interface UpdateProfileParams {
   firstname: string;
@@ -17,16 +18,16 @@ interface UpdateProfileResponse {
 
 export async function updateProfile(
   params: UpdateProfileParams,
-  publicAuthSecret: string
+  publicAuthSecret: string,
+  context?: APIContext
 ): Promise<UpdateProfileResponse> {
-  const client = await tursoClient.getClient();
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("No database connection");
   }
 
   const { firstname, email, codeword, persona, bio, fingerprint } = params;
 
-  // Verify codeword matches before allowing update
   const { rows } = await client.execute({
     sql: `SELECT l.id, l.password_hash 
           FROM leads l 

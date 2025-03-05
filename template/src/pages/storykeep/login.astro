@@ -23,7 +23,7 @@ const url = new URL(Astro.request.url);
 redirectPath = url.searchParams.get("redirect") || "/";
 const forceLogin = url.searchParams.get("force") === "true";
 
-const authenticated = await isAuthenticated(Astro);
+const authenticated = isAuthenticated(Astro);
 
 if (authenticated && !forceLogin) {
   return Astro.redirect(redirectPath);

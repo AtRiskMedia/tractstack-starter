@@ -1,11 +1,13 @@
 import { tursoClient } from "@/utils/db/client";
 import type { Topic } from "./getAllTopics";
+import type { APIContext } from "@/types";
 
 export async function getTopicsForStoryFragment(
-  storyFragmentId: string
+  storyFragmentId: string,
+  context?: APIContext
 ): Promise<{ success: boolean; data: Topic[]; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, data: [], error: "Database client not available" };
     }

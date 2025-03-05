@@ -1,11 +1,13 @@
 import { tursoClient } from "../client";
 import type { PaneFileRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertPaneFile(
-  rowData: PaneFileRowData
+  rowData: PaneFileRowData,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }

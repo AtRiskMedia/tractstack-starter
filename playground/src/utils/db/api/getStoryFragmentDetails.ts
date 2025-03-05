@@ -1,14 +1,16 @@
 import { tursoClient } from "@/utils/db/client";
+import type { APIContext } from "@/types";
 
 export interface StoryFragmentDetails {
   description?: string;
 }
 
 export async function getStoryFragmentDetails(
-  storyFragmentId: string
+  storyFragmentId: string,
+  context?: APIContext
 ): Promise<{ success: boolean; data: StoryFragmentDetails | null; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, data: null, error: "Database client not available" };
     }
@@ -22,7 +24,6 @@ export async function getStoryFragmentDetails(
       return { success: true, data: null };
     }
 
-    // Make sure to handle details as string - convert to string if needed
     const description = typeof rows[0].description === "string" ? rows[0].description : "";
     if (description) return { success: true, data: { description } };
     else return { success: false, data: null };

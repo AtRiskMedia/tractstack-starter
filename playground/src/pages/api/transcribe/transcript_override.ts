@@ -1,14 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
+import type { APIContext } from "@/types";
+import { withTenantContext } from "@/utils/api/middleware";
 import type { ResultSet } from "@libsql/client";
 import { tursoClient } from "@/utils/db/client.ts";
 
-export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => {
-  const url = new URL(request.url);
-  const transcriptId = url.searchParams.get("transcript_id"); // Get the transcript ID from the query parameters
+export const GET: APIRoute = withTenantContext(async (context: APIContext): Promise<any> => {
+  const url = new URL(context.request.url);
+  const transcriptId = url.searchParams.get("transcript_id");
 
   try {
-    const db = await tursoClient.getClient();
+    const db = await tursoClient.getClient(context);
     const res = await db.execute({
       sql: "SELECT * from transcript_overrides WHERE transcript_id = ?",
       args: [transcriptId],
@@ -17,9 +19,7 @@ export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => 
     console.log(JSON.stringify(res, null, 2));
     return new Response(JSON.stringify(res.rows || []), {
       status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
@@ -29,20 +29,18 @@ export const GET: APIRoute = async ({ /* params, */ request }): Promise<any> => 
     );
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
   }
-};
+});
 
-export const PATCH: APIRoute = async ({ /* params, */ request }): Promise<any> => {
+export const PATCH: APIRoute = withTenantContext(async (context: APIContext): Promise<any> => {
   try {
-    const data = await request.json();
+    const data = await context.request.json();
     const transcriptId = data.transcriptId;
     const newDataJson = JSON.stringify(data.dataJson);
 
-    const db = await tursoClient.getClient();
+    const db = await tursoClient.getClient(context);
     const existingOverride = await db.execute({
       sql: "SELECT * from transcript_overrides WHERE transcript_id = ?",
       args: [transcriptId],
@@ -50,15 +48,12 @@ export const PATCH: APIRoute = async ({ /* params, */ request }): Promise<any> =
     let res: ResultSet;
     if (existingOverride.rows.length === 0) {
       res = await db.execute({
-        sql: `INSERT INTO transcript_overrides (transcript_id, data)
-                  VALUES (?, ?);`,
+        sql: `INSERT INTO transcript_overrides (transcript_id, data) VALUES (?, ?)`,
         args: [transcriptId, newDataJson],
       });
     } else {
       res = await db.execute({
-        sql: `UPDATE transcript_overrides
-                      SET data = ?
-                      WHERE transcript_id = ?`,
+        sql: `UPDATE transcript_overrides SET data = ? WHERE transcript_id = ?`,
         args: [newDataJson, transcriptId],
       });
     }
@@ -75,4 +70,4 @@ export const PATCH: APIRoute = async ({ /* params, */ request }): Promise<any> =
       headers: { "Content-Type": "application/json" },
     });
   }
-};
+});

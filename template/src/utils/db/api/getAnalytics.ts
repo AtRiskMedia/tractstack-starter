@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
 import type { LineDataSeries, LineDataPoint, PieDataItem, RawAnalytics } from "@/types.ts";
+import type { APIContext } from "@/types";
 
 function getDateFilter(duration: string): string {
   switch (duration) {
@@ -183,10 +184,11 @@ function getStoryFragmentQueries(
 export async function getAnalytics(
   id: string,
   type: "pane" | "storyfragment",
-  duration: string = "weekly"
+  duration: string = "weekly",
+  context?: APIContext
 ): Promise<RawAnalytics | null> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
 
     const dateFilter = getDateFilter(duration);
@@ -227,7 +229,6 @@ export async function getAnalytics(
       return acc;
     }, {});
 
-    // For story fragments, ensure we have an empty container if no direct actions exist
     if (type === "storyfragment" && !pieByObject[id]) {
       pieByObject[id] = {
         id,
@@ -264,7 +265,6 @@ export async function getAnalytics(
       return acc;
     }, {});
 
-    // For story fragments, ensure we have an empty container if no direct actions exist
     if (type === "storyfragment" && !lineByObject[id]) {
       lineByObject[id] = {
         id,
@@ -275,7 +275,6 @@ export async function getAnalytics(
       };
     }
 
-    // Fill missing intervals with zeros
     Object.values(lineByObject).forEach((obj: any) => {
       Object.values(obj.verbs).forEach((series: any) => {
         const existingIntervals = new Set(series.data.map((d: any) => d.x));

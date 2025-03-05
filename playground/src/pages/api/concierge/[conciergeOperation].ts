@@ -1,15 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
-import { getConfig, validateConfig } from "../../../utils/core/config";
+import { withTenantContext } from "@/utils/api/middleware";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import type { APIContext, Config } from "@/types";
 
 const BACKEND_URL = import.meta.env.PRIVATE_CONCIERGE_BASE_URL;
 const CONCIERGE_SECRET = import.meta.env.PRIVATE_CONCIERGE_AUTH_SECRET;
 
-export const POST: APIRoute = async ({ request, params }) => {
-  const { conciergeOperation } = params;
+export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
+  const { conciergeOperation } = context.params;
 
   try {
-    const config = await getConfig();
+    const config = (context.locals.config ||
+      (await getConfig(context.locals.tenant?.paths.configPath))) as Config | null;
     const validation = await validateConfig(config);
 
     if (!validation.capabilities.hasConcierge) {
@@ -27,7 +30,7 @@ export const POST: APIRoute = async ({ request, params }) => {
 
     let result;
     switch (conciergeOperation) {
-      case "status": {
+      case "status":
         const response = await fetch(`${BACKEND_URL}/storykeep/status`, {
           method: "GET",
           headers: {
@@ -35,7 +38,6 @@ export const POST: APIRoute = async ({ request, params }) => {
             "X-Concierge-Secret": CONCIERGE_SECRET,
           },
         });
-
         const data = await response.json();
         result = {
           success: true,
@@ -43,11 +45,9 @@ export const POST: APIRoute = async ({ request, params }) => {
           data: data.data,
         };
         break;
-      }
-
-      case "publish": {
-        const body = await request.json();
-        const response = await fetch(`${BACKEND_URL}/storykeep/publish`, {
+      case "publish":
+        const body = await context.request.json();
+        const publishResponse = await fetch(`${BACKEND_URL}/storykeep/publish`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -55,35 +55,13 @@ export const POST: APIRoute = async ({ request, params }) => {
           },
           body: JSON.stringify(body),
         });
-
-        const data = await response.json();
+        const publishData = await publishResponse.json();
         result = {
           success: true,
-          message: data.message,
-          receivedData: data.receivedData,
+          message: publishData.message,
+          receivedData: publishData.receivedData,
         };
         break;
-      }
-
-      //case "env": {
-      //  const body = await request.json();
-      //  const response = await fetch(`${BACKEND_URL}/storykeep/env`, {
-      //    method: "POST",
-      //    headers: {
-      //      "Content-Type": "application/json",
-      //      "X-Concierge-Secret": CONCIERGE_SECRET,
-      //    },
-      //    body: JSON.stringify(body),
-      //  });
-
-      //  const data = await response.json();
-      //  result = {
-      //    success: true,
-      //    data: data.data,
-      //  };
-      //  break;
-      //}
-
       default:
         throw new Error(`Unknown operation: ${conciergeOperation}`);
     }
@@ -105,16 +83,11 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
     );
   }
-};
+});
 
-// Also support GET for status operation
-export const GET: APIRoute = async ({ params }) => {
-  if (params.conciergeOperation === "status") {
-    return POST({
-      request: new Request("http://dummy"),
-      params,
-      redirect: () => new Response(),
-    } as any);
+export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
+  if (context.params.conciergeOperation === "status") {
+    return POST(context as any);
   }
 
   return new Response(
@@ -127,4 +100,4 @@ export const GET: APIRoute = async ({ params }) => {
       headers: { "Content-Type": "application/json" },
     }
   );
-};
+});

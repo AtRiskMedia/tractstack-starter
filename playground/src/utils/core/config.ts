@@ -12,15 +12,18 @@ import type {
 const CONFIG_FILES = ["init.json", "turso.json"];
 
 /**
- * Reads and parses a single config file
+ * Reads and parses a single config file from a specified config path
+ * @param configPath - The directory path containing the config file
+ * @param filename - The name of the config file to read
  */
-async function readConfigFile(filename: string): Promise<ConfigFile | null> {
+async function readConfigFile(configPath: string, filename: string): Promise<ConfigFile | null> {
   try {
-    const configPath = path.join(process.cwd(), "config", filename);
+    const filePath = path.join(configPath, filename);
+    console.log(`Reading config file: ${filePath}`);
 
     // Check if file exists
     try {
-      await fs.access(configPath);
+      await fs.access(filePath);
     } catch {
       // If file doesn't exist and it's init.json, return default structure
       if (filename === "init.json") {
@@ -33,14 +36,14 @@ async function readConfigFile(filename: string): Promise<ConfigFile | null> {
       return null;
     }
 
-    const fileContents = await fs.readFile(configPath, "utf-8");
+    const fileContents = await fs.readFile(filePath, "utf-8");
 
     return {
       name: filename,
       content: JSON.parse(fileContents),
     };
   } catch (error) {
-    console.error(`Error reading ${filename}:`, error);
+    console.error(`Error reading ${filename} from ${configPath}:`, error);
     return null;
   }
 }
@@ -67,15 +70,22 @@ function detectCapabilities(): SystemCapabilities {
 }
 
 /**
- * Gets configuration from all specified config files
+ * Gets configuration from all specified config files in the given or default config path
+ * @param configPath - Optional path to the config directory; defaults to "./config"
  */
-export async function getConfig(): Promise<Config | null> {
+export async function getConfig(configPath?: string): Promise<Config | null> {
+  const defaultConfigPath = path.join(process.cwd(), "config");
+  const actualConfigPath = configPath || defaultConfigPath;
+  console.log(`Loading config from: ${actualConfigPath}`);
+
   try {
-    const configFiles = await Promise.all(CONFIG_FILES.map((filename) => readConfigFile(filename)));
+    const configFiles = await Promise.all(
+      CONFIG_FILES.map((filename) => readConfigFile(actualConfigPath, filename))
+    );
     const validConfigs = configFiles.filter((config): config is ConfigFile => config !== null);
 
     if (validConfigs.length === 0) {
-      console.error("No valid config files found");
+      console.error("No valid config files found in", actualConfigPath);
       return null;
     }
 
@@ -90,7 +100,7 @@ export async function getConfig(): Promise<Config | null> {
 
     return mergedConfig;
   } catch (error) {
-    console.error("Error processing config files:", error);
+    console.error("Error processing config files from", actualConfigPath, ":", error);
     return null;
   }
 }

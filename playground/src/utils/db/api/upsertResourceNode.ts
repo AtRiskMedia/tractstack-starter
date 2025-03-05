@@ -1,9 +1,11 @@
 import { upsertResourceByIdRowData } from "../turso";
 import type { ResourceNode } from "@/types";
 import type { ResourceRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertResourceNode(
-  resourceNode: ResourceNode
+  resourceNode: ResourceNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const resourceData: ResourceRowData = {
@@ -20,7 +22,7 @@ export async function upsertResourceNode(
         : {}),
     };
 
-    await upsertResourceByIdRowData(resourceData);
+    await upsertResourceByIdRowData(resourceData, context);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertResource:", error);

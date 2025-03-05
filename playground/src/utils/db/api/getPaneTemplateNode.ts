@@ -1,9 +1,10 @@
 import { tursoClient } from "../client";
 import type { TemplateNode, TemplatePane } from "@/types";
+import type { APIContext } from "@/types";
 
-export async function getPaneTemplateNode(id: string) {
+export async function getPaneTemplateNode(id: string, context?: APIContext) {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return { success: false, data: null, error: "Database client not available" };
 
     const { rows } = await client.execute({
@@ -41,11 +42,9 @@ export async function getPaneTemplateNode(id: string) {
           parentClasses: optionsPayload.nodes[0].parentClasses || [],
           nodes: optionsPayload.nodes.slice(1).map((node: TemplateNode) => ({
             ...node,
-            // Preserve original IDs
             id: node.id,
             parentId: node.parentId,
           })),
-          // Preserve markdown node ID
           id: optionsPayload.nodes[0].id,
           parentId: optionsPayload.nodes[0].parentId,
           markdownId: optionsPayload.nodes[0].markdownId,
@@ -67,7 +66,6 @@ export async function getPaneTemplateNode(id: string) {
           breakDesktop: optionsPayload.nodes[0].breakDesktop,
           breakTablet: optionsPayload.nodes[0].breakTablet,
           breakMobile: optionsPayload.nodes[0].breakMobile,
-          // Preserve bgPane node ID
           id: optionsPayload.nodes[0].id,
           parentId: optionsPayload.nodes[0].parentId,
         },

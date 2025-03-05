@@ -1,10 +1,12 @@
 import type { APIRoute } from "astro";
+import type { APIContext } from "@/types";
+import { withTenantContext } from "@/utils/api/middleware";
 import { runLemurTask } from "@/utils/aai/askLemur";
 
-export const POST: APIRoute = async ({ request, params }) => {
+export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
   try {
-    const { aaiOperation } = params;
-    const body = await request.json();
+    const { aaiOperation } = context.params;
+    const body = await context.request.json();
 
     let result;
     switch (aaiOperation) {
@@ -12,9 +14,8 @@ export const POST: APIRoute = async ({ request, params }) => {
         if (!body.prompt) {
           throw new Error("prompt is required for LeMUR task");
         }
-        result = await runLemurTask(body);
+        result = await runLemurTask(body, context);
         break;
-
       default:
         throw new Error(`Unknown operation: ${aaiOperation}`);
     }
@@ -24,7 +25,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error(`Error in AssemblyAI ${params.aaiOperation} route:`, error);
+    console.error(`Error in AssemblyAI ${context.params.aaiOperation} route:`, error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -36,4 +37,4 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
     );
   }
-};
+});

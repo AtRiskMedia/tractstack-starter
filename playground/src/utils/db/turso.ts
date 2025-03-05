@@ -39,6 +39,7 @@ import type {
   MenuContentMap,
   StoryfragmentAnalytics,
 } from "@/types.ts";
+import type { APIContext } from "@/types"; // Added for context typing
 
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
@@ -67,9 +68,9 @@ function ensureString(value: unknown): string {
   return String(value);
 }
 
-export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
+export async function getAllTractStackRowData(context?: APIContext): Promise<TractStackRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(
       `SELECT id, title, slug, social_image_path FROM tractstacks`
@@ -97,7 +98,10 @@ export async function getAllTractStackRowData(): Promise<TractStackRowData[]> {
   }
 }
 
-export async function getTractStackBySlugRowData(slug: string): Promise<TractStackRowData | null> {
+export async function getTractStackBySlugRowData(
+  slug: string,
+  context?: APIContext
+): Promise<TractStackRowData | null> {
   // Check cache first
   const cachedTractStack = getCachedTractStackBySlug(slug);
   if (cachedTractStack) {
@@ -105,7 +109,7 @@ export async function getTractStackBySlugRowData(slug: string): Promise<TractSta
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id,title,slug,social_image_path FROM tractstacks WHERE slug = ?`,
@@ -135,13 +139,16 @@ export async function getTractStackBySlugRowData(slug: string): Promise<TractSta
   }
 }
 
-export async function getTractStackByIdRowData(id: string): Promise<TractStackRowData | null> {
+export async function getTractStackByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<TractStackRowData | null> {
   // Check cache first
   const cached = getCachedTractStackById(id);
   if (cached) return cached;
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id,title,slug,social_image_path FROM tractstacks WHERE id = ?`,
@@ -171,9 +178,12 @@ export async function getTractStackByIdRowData(id: string): Promise<TractStackRo
   }
 }
 
-export async function upsertTractStackByIdRowData(data: TractStackRowData): Promise<boolean> {
+export async function upsertTractStackByIdRowData(
+  data: TractStackRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO tractstacks (id, title, slug, social_image_path)
@@ -193,7 +203,10 @@ export async function upsertTractStackByIdRowData(data: TractStackRowData): Prom
   }
 }
 
-export async function getResourceByIdRowData(id: string): Promise<ResourceRowData | null> {
+export async function getResourceByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<ResourceRowData | null> {
   // Check cache first
   const cachedResource = getCachedResourceById(id);
   if (cachedResource) {
@@ -201,7 +214,7 @@ export async function getResourceByIdRowData(id: string): Promise<ResourceRowDat
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp 
@@ -235,9 +248,12 @@ export async function getResourceByIdRowData(id: string): Promise<ResourceRowDat
   }
 }
 
-export async function upsertResourceByIdRowData(data: ResourceRowData): Promise<boolean> {
+export async function upsertResourceByIdRowData(
+  data: ResourceRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO resources (id, title, slug, category_slug, oneliner, options_payload, action_lisp)
@@ -268,9 +284,9 @@ export async function upsertResourceByIdRowData(data: ResourceRowData): Promise<
   }
 }
 
-export async function getAllMenusRowData(): Promise<MenuRowData[]> {
+export async function getAllMenusRowData(context?: APIContext): Promise<MenuRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(`SELECT id, title, theme, options_payload FROM menus`);
     const menus = rows
@@ -294,7 +310,10 @@ export async function getAllMenusRowData(): Promise<MenuRowData[]> {
   }
 }
 
-export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null> {
+export async function getMenuByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<MenuRowData | null> {
   // Check cache first
   const cachedMenu = getCachedMenuById(id);
   if (cachedMenu) {
@@ -302,7 +321,7 @@ export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, title, theme, options_payload FROM menus WHERE id = ?`,
@@ -330,9 +349,12 @@ export async function getMenuByIdRowData(id: string): Promise<MenuRowData | null
   }
 }
 
-export async function upsertMenuByIdRowData(data: MenuRowData): Promise<boolean> {
+export async function upsertMenuByIdRowData(
+  data: MenuRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO menus (id, title, theme, options_payload)
@@ -352,9 +374,9 @@ export async function upsertMenuByIdRowData(data: MenuRowData): Promise<boolean>
   }
 }
 
-export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
+export async function getAllFilesRowData(context?: APIContext): Promise<ImageFileRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(
       `SELECT id, filename, alt_description, url, src_set FROM files`
@@ -381,7 +403,10 @@ export async function getAllFilesRowData(): Promise<ImageFileRowData[]> {
   }
 }
 
-export async function getFileByIdRowData(id: string): Promise<ImageFileRowData | null> {
+export async function getFileByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<ImageFileRowData | null> {
   // Check cache first
   const cachedFile = getCachedFileById(id);
   if (cachedFile) {
@@ -389,7 +414,7 @@ export async function getFileByIdRowData(id: string): Promise<ImageFileRowData |
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, filename, alt_description, url, src_set FROM files WHERE id = ?`,
@@ -418,9 +443,12 @@ export async function getFileByIdRowData(id: string): Promise<ImageFileRowData |
   }
 }
 
-export async function upsertFileByIdRowData(data: ImageFileRowData): Promise<boolean> {
+export async function upsertFileByIdRowData(
+  data: ImageFileRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO files (id, filename, alt_description, url, src_set)
@@ -441,7 +469,10 @@ export async function upsertFileByIdRowData(data: ImageFileRowData): Promise<boo
   }
 }
 
-export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null> {
+export async function getPaneByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<PaneRowData | null> {
   // Check cache first
   const cachedPane = getCachedPaneById(id);
   if (cachedPane) {
@@ -449,7 +480,7 @@ export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, title, slug, pane_type, created, changed, options_payload, is_context_pane, markdown_id 
@@ -483,9 +514,12 @@ export async function getPaneByIdRowData(id: string): Promise<PaneRowData | null
   }
 }
 
-export async function upsertPaneByIdRowData(data: PaneRowData): Promise<boolean> {
+export async function upsertPaneByIdRowData(
+  data: PaneRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO panes (id, title, slug, pane_type, created, changed, options_payload, is_context_pane, markdown_id)
@@ -519,7 +553,10 @@ export async function upsertPaneByIdRowData(data: PaneRowData): Promise<boolean>
   }
 }
 
-export async function getMarkdownByIdRowData(id: string): Promise<MarkdownRowData | null> {
+export async function getMarkdownByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<MarkdownRowData | null> {
   // Check cache first
   const cachedMarkdown = getCachedMarkdownById(id);
   if (cachedMarkdown) {
@@ -527,7 +564,7 @@ export async function getMarkdownByIdRowData(id: string): Promise<MarkdownRowDat
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, body FROM markdowns WHERE id = ?`,
@@ -553,9 +590,13 @@ export async function getMarkdownByIdRowData(id: string): Promise<MarkdownRowDat
   }
 }
 
-export async function upsertMarkdownRowData(id: string, markdown_body: string): Promise<boolean> {
+export async function upsertMarkdownRowData(
+  id: string,
+  markdown_body: string,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO markdowns (id, body) 
@@ -571,9 +612,13 @@ export async function upsertMarkdownRowData(id: string, markdown_body: string): 
   }
 }
 
-export async function upsertPaneFileRelation(pane_id: string, file_id: string): Promise<boolean> {
+export async function upsertPaneFileRelation(
+  pane_id: string,
+  file_id: string,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
     await client.execute({
       sql: `INSERT INTO file_panes (file_id, pane_id)
@@ -589,14 +634,15 @@ export async function upsertPaneFileRelation(pane_id: string, file_id: string): 
 }
 
 export async function getCachedStoryFragmentByIdRowData(
-  id: string
+  id: string,
+  context?: APIContext
 ): Promise<StoryFragmentRowData | null> {
   // Check cache first
   const cached = getCachedStoryFragmentById(id);
   if (cached) return cached;
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
 
     // Get the storyfragment base data
@@ -648,9 +694,12 @@ export async function getCachedStoryFragmentByIdRowData(
   }
 }
 
-export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData): Promise<boolean> {
+export async function upsertStoryFragmentByIdRowData(
+  data: StoryFragmentRowData,
+  context?: APIContext
+): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
 
     // First insert/update the storyfragment
@@ -705,7 +754,8 @@ export async function upsertStoryFragmentByIdRowData(data: StoryFragmentRowData)
 }
 
 export async function getStoryFragmentBySlugFullRowData(
-  slug: string
+  slug: string,
+  context?: APIContext
 ): Promise<StoryFragmentFullRowData | null> {
   // Check cache first
   const storyFragment = getCachedStoryFragmentBySlug(slug);
@@ -725,11 +775,6 @@ export async function getStoryFragmentBySlugFullRowData(
         if (!markdown) return false;
         markdowns.push(markdown);
       }
-      // TODO: Check files for each pane
-      // Would need to parse options_payload to get file IDs
-      // but we don't actually need the file ids in the tree
-      // so better to remove from query altogether
-      // same with markdown i believe
       return true;
     });
 
@@ -746,7 +791,7 @@ export async function getStoryFragmentBySlugFullRowData(
 
   // else load from Turso
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
 
     // First get story fragment data with tractstack and menu in a single query
@@ -895,13 +940,13 @@ export async function getStoryFragmentBySlugFullRowData(
   }
 }
 
-export async function getFullContentMap(): Promise<FullContentMap[]> {
+export async function getFullContentMap(context?: APIContext): Promise<FullContentMap[]> {
   const cachedContent = getCachedContentMap();
   if (cachedContent) {
     return cachedContent;
   }
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
 
     const queryParts = [
@@ -1094,9 +1139,9 @@ export async function getFullContentMap(): Promise<FullContentMap[]> {
   }
 }
 
-export async function getAllResourcesRowData(): Promise<ResourceRowData[]> {
+export async function getAllResourcesRowData(context?: APIContext): Promise<ResourceRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(
       `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
@@ -1125,10 +1170,11 @@ export async function getAllResourcesRowData(): Promise<ResourceRowData[]> {
 }
 
 export async function getResourcesByCategorySlugRowData(
-  categorySlug: string
+  categorySlug: string,
+  context?: APIContext
 ): Promise<ResourceRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
 
     const { rows } = await client.execute({
@@ -1156,9 +1202,12 @@ export async function getResourcesByCategorySlugRowData(
   }
 }
 
-export async function getResourcesBySlugsRowData(slugs: string[]): Promise<ResourceRowData[]> {
+export async function getResourcesBySlugsRowData(
+  slugs: string[],
+  context?: APIContext
+): Promise<ResourceRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
 
     // Create placeholders for the IN clause
@@ -1190,9 +1239,12 @@ export async function getResourcesBySlugsRowData(slugs: string[]): Promise<Resou
   }
 }
 
-export async function getResourceBySlugRowData(slug: string): Promise<ResourceRowData | null> {
+export async function getResourceBySlugRowData(
+  slug: string,
+  context?: APIContext
+): Promise<ResourceRowData | null> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
 
     const { rows } = await client.execute({
@@ -1221,7 +1273,8 @@ export async function getResourceBySlugRowData(slug: string): Promise<ResourceRo
 }
 
 export async function getContextPaneBySlugFullRowData(
-  slug: string
+  slug: string,
+  context?: APIContext
 ): Promise<ContextPaneFullRowData | null> {
   // Check cache first
   const pane = getCachedPaneBySlug(slug);
@@ -1283,7 +1336,7 @@ export async function getContextPaneBySlugFullRowData(
 
   // Cache miss or missing dependencies - load from Turso
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
 
     // Get the context pane with all related data in a single query
@@ -1383,9 +1436,9 @@ export async function getContextPaneBySlugFullRowData(
   }
 }
 
-export async function getAllBeliefRowData(): Promise<BeliefRowData[]> {
+export async function getAllBeliefRowData(context?: APIContext): Promise<BeliefRowData[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(`
       SELECT id, title, slug, scale, custom_values 
@@ -1408,7 +1461,10 @@ export async function getAllBeliefRowData(): Promise<BeliefRowData[]> {
   }
 }
 
-export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | null> {
+export async function getBeliefByIdRowData(
+  id: string,
+  context?: APIContext
+): Promise<BeliefRowData | null> {
   // Check cache first
   const cachedBelief = getCachedBeliefById(id);
   if (cachedBelief) {
@@ -1416,7 +1472,7 @@ export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | 
   }
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
       sql: `SELECT id, title, slug, scale, custom_values 
@@ -1448,8 +1504,8 @@ export async function getBeliefByIdRowData(id: string): Promise<BeliefRowData | 
   }
 }
 
-export async function initializeContent(): Promise<void> {
-  const client = await tursoClient.getClient();
+export async function initializeContent(context?: APIContext): Promise<void> {
+  const client = await tursoClient.getClient(context);
   if (client) {
     try {
       // Create tractstack first and get its id
@@ -1494,9 +1550,9 @@ export async function initializeContent(): Promise<void> {
   }
 }
 
-export async function getUniqueTailwindClasses() {
+export async function getUniqueTailwindClasses(context?: APIContext) {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
     const { rows } = await client.execute(`SELECT id, options_payload FROM panes`);
     return getTailwindWhitelist(rows);
@@ -1506,9 +1562,9 @@ export async function getUniqueTailwindClasses() {
   }
 }
 
-export async function getSiteMap(): Promise<SiteMap[]> {
+export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return [];
 
     const results = await Promise.all([
@@ -1553,8 +1609,10 @@ export async function getSiteMap(): Promise<SiteMap[]> {
   }
 }
 
-export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnalytics[]> {
-  const client = await tursoClient.getClient();
+export async function computeStoryfragmentAnalytics(
+  context?: APIContext
+): Promise<StoryfragmentAnalytics[]> {
+  const client = await tursoClient.getClient(context);
   if (!client) return [];
   const { rows } = await client.execute(`
     SELECT 
@@ -1610,9 +1668,9 @@ export async function computeStoryfragmentAnalytics(): Promise<StoryfragmentAnal
   }));
 }
 
-export async function logTokenUsage(tokensUsed: number): Promise<boolean> {
+export async function logTokenUsage(tokensUsed: number, context?: APIContext): Promise<boolean> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return false;
 
     await client.execute({

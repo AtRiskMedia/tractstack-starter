@@ -1,6 +1,7 @@
 import { tursoClient } from "../client";
 import { ulid } from "ulid";
 import { xorEncrypt } from "../../../utils/common/xor";
+import type { APIContext } from "@/types";
 
 interface CreateProfileParams {
   firstname: string;
@@ -18,16 +19,16 @@ interface CreateProfileResponse {
 
 export async function createProfile(
   params: CreateProfileParams,
-  publicAuthSecret: string
+  publicAuthSecret: string,
+  context?: APIContext
 ): Promise<CreateProfileResponse> {
-  const client = await tursoClient.getClient();
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("No database connection");
   }
 
   const { firstname, email, codeword, persona, bio, fingerprint } = params;
 
-  // Check if email already exists
   const { rows: existing } = await client.execute({
     sql: "SELECT id FROM leads WHERE email = ?",
     args: [email],

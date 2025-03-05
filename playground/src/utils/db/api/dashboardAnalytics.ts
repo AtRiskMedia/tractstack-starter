@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { tursoClient } from "../client";
-import type { DashboardAnalytics } from "../../../types";
+import type { DashboardAnalytics } from "@/types";
+import type { APIContext } from "@/types";
 
-export async function dashboardAnalytics(duration: string = "weekly"): Promise<DashboardAnalytics> {
-  const client = await tursoClient.getClient();
+export async function dashboardAnalytics(
+  duration: string = "weekly",
+  context?: APIContext
+): Promise<DashboardAnalytics> {
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("Database connection failed");
   }
 
-  // Helper function to get date filter based on duration
   function getDateFilter(duration: string): string {
     switch (duration) {
       case "daily":
@@ -21,7 +24,6 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
     }
   }
 
-  // Get basic stats for all durations
   const statsQuery = {
     sql: `
      SELECT
@@ -35,7 +37,6 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   };
   const { rows: statsRows } = await client.execute(statsQuery);
 
-  // Get time series data based on duration
   const timeInterval = duration === "daily" ? "hour" : "day";
   const intervalLimit = duration === "daily" ? 24 : duration === "weekly" ? 7 : 28;
 
@@ -78,7 +79,6 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   };
   const { rows: lineRows } = await client.execute(lineQuery);
 
-  // Get hot content (both story fragments and context panes)
   const hotQuery = {
     sql: `
      SELECT 
@@ -97,14 +97,12 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
   };
   const { rows: hotRows } = await client.execute(hotQuery);
 
-  // Process stats data
   const stats = {
     daily: Number(statsRows[0]?.daily || 0),
     weekly: Number(statsRows[0]?.weekly || 0),
     monthly: Number(statsRows[0]?.monthly || 0),
   };
 
-  // Process line chart data
   const lineData = new Map<string, { id: string; data: { x: number; y: number }[] }>();
 
   lineRows.forEach((row: any) => {
@@ -127,7 +125,6 @@ export async function dashboardAnalytics(duration: string = "weekly"): Promise<D
     }
   });
 
-  // Process hot content data
   const hotContent = hotRows.map((row: any) => ({
     id: row.id,
     type: row.type,

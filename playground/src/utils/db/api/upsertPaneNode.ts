@@ -1,17 +1,18 @@
 import { tursoClient } from "../client";
 import type { PaneNode } from "@/types";
 import type { PaneRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertPaneNode(
-  node: PaneNode
+  node: PaneNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
 
-    // Prepare options payload
     const optionsPayload = {
       isDecorative: node.isDecorative || false,
       ...(typeof node.bgColour === "string" ? { bgColour: node.bgColour } : {}),
@@ -43,7 +44,6 @@ export async function upsertPaneNode(
         : {}),
     };
 
-    // Transform PaneNode to PaneRowData
     const rowData: PaneRowData = {
       id: node.id,
       title: node.title,
@@ -55,7 +55,6 @@ export async function upsertPaneNode(
       is_context_pane: node.isContextPane ? 1 : 0,
     };
 
-    // Perform upsert operation
     await client.execute({
       sql: `INSERT INTO panes (
               id, title, slug, pane_type, created, changed,

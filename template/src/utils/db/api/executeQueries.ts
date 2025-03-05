@@ -1,18 +1,19 @@
 import { tursoClient } from "../client";
-import type { TursoQuery } from "../../../types";
+import type { TursoQuery } from "@/types";
 import type { ResultSet } from "@libsql/client";
+import type { APIContext } from "@/types";
 
 export async function executeQueries(
-  queries: TursoQuery[]
+  queries: TursoQuery[],
+  context?: APIContext
 ): Promise<{ success: boolean; results: ResultSet[] }> {
   const results: ResultSet[] = [];
 
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) return { success: false, results: [] };
 
     for (const query of queries) {
-      //console.log(`skipping:`, query);
       const result = await client.execute(query);
       results.push(result);
     }

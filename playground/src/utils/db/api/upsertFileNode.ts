@@ -1,9 +1,11 @@
 import { upsertFileByIdRowData } from "../turso";
 import type { ImageFileNode } from "@/types";
 import type { ImageFileRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertFileNode(
-  fileNode: ImageFileNode
+  fileNode: ImageFileNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const fileData: ImageFileRowData = {
@@ -14,7 +16,7 @@ export async function upsertFileNode(
       ...(typeof fileNode.srcSet === "string" ? { src_set: fileNode.srcSet } : {}),
     };
 
-    await upsertFileByIdRowData(fileData);
+    await upsertFileByIdRowData(fileData, context);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertFile:", error);

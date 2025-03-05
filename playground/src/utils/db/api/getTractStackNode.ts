@@ -2,9 +2,13 @@ import { getTractStackByIdRowData } from "../turso";
 import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
 import type { TractStackNode } from "@/types";
 import type { LoadData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
-export async function getTractStackNode(id: string): Promise<TractStackNode | null> {
-  const tractstackRowData = await getTractStackByIdRowData(id);
+export async function getTractStackNode(
+  id: string,
+  context?: APIContext
+): Promise<TractStackNode | null> {
+  const tractstackRowData = await getTractStackByIdRowData(id, context);
   if (!tractstackRowData) {
     return null;
   }
