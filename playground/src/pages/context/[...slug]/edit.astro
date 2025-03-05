@@ -15,7 +15,7 @@ import { ulid } from "ulid";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { PaneNode } from "@/types";
 
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

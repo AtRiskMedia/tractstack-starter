@@ -30,22 +30,34 @@ class TursoClientManager {
   }
 
   async getClient(context?: APIContext): Promise<Client> {
+    // Important: We must preserve the tenant ID from the context
     const tenantId = context?.locals?.tenant?.id || "default";
     const tenantPaths = context?.locals?.tenant?.paths || {
       configPath: this.defaultConfigPath,
       dbPath: this.defaultDbDir,
     };
 
+    // For debugging - log tenant info
+    console.log(
+      `DB Client: Tenant ID=${tenantId}, ConfigPath=${tenantPaths.configPath}, DBPath=${tenantPaths.dbPath}`
+    );
+
     if (this.initPromises.has(tenantId)) {
       await this.initPromises.get(tenantId);
       const client = this.clients.get(tenantId);
-      if (!client) throw new TursoError("Client not found after initialization");
+      if (!client)
+        throw new TursoError(`Client not found after initialization for tenant ${tenantId}`);
       return client;
     }
 
     if (!this.initialized.get(tenantId)) {
       this.initPromises.set(tenantId, this.initialize(tenantId, tenantPaths));
-      await this.initPromises.get(tenantId);
+      try {
+        await this.initPromises.get(tenantId);
+      } catch (error) {
+        this.initPromises.delete(tenantId);
+        throw error;
+      }
       this.initPromises.delete(tenantId);
     }
 
@@ -57,15 +69,23 @@ class TursoClientManager {
   }
 
   private async getLocalDbPath(dbPath: string, tenantId: string): Promise<string> {
+    console.log(`Getting local DB path for tenant ${tenantId} at base path ${dbPath}`);
+
     const tenantDbDir = path.join(dbPath, tenantId);
-    await fs.mkdir(tenantDbDir, { recursive: true });
-    const dbFilePath = path.join(tenantDbDir, "tractstack.db");
+
     try {
-      await fs.access(dbFilePath);
-    } catch {
-      await fs.writeFile(dbFilePath, "");
+      await fs.mkdir(tenantDbDir, { recursive: true });
+      const dbFilePath = path.join(tenantDbDir, "tractstack.db");
+      try {
+        await fs.access(dbFilePath);
+      } catch {
+        await fs.writeFile(dbFilePath, "");
+      }
+      return dbFilePath;
+    } catch (error) {
+      console.error(`Failed to create or access database path for tenant ${tenantId}:`, error);
+      throw new TursoError(`Database path error for tenant ${tenantId}`);
     }
-    return dbFilePath;
   }
 
   private hasTursoCredentials(tenantId: string): boolean {
@@ -118,6 +138,8 @@ class TursoClientManager {
     tenantId: string,
     tenantPaths: { configPath: string; dbPath: string }
   ): Promise<void> {
+    console.log(`Initializing DB for tenant ${tenantId} with paths:`, tenantPaths);
+
     try {
       let client: Client;
       // First check if multi-tenant mode is enabled
@@ -154,7 +176,14 @@ class TursoClientManager {
         }
       }
 
-      await client.execute("SELECT 1");
+      // Test database connection
+      try {
+        await client.execute("SELECT 1");
+      } catch (error) {
+        console.error(`Database connection test failed for tenant ${tenantId}:`, error);
+        throw new TursoError(`Database connection failed for tenant ${tenantId}`);
+      }
+
       const tursoPath = path.join(tenantPaths.configPath, "turso.json");
       let needsInit = true;
 
@@ -168,7 +197,12 @@ class TursoClientManager {
       }
 
       if (needsInit) {
-        await this.initializeSchema(client, tenantId, tenantPaths.configPath);
+        try {
+          await this.initializeSchema(client, tenantId, tenantPaths.configPath);
+        } catch (error) {
+          console.error(`Schema initialization failed for tenant ${tenantId}:`, error);
+          throw new TursoError(`Schema initialization failed for tenant ${tenantId}`);
+        }
       }
 
       this.clients.set(tenantId, client);

@@ -3,7 +3,7 @@ import { StoryEditor } from "../../../../components/transcribe/story/StoryEditor
 import { getConfig, validateConfig } from "../../../../utils/core/config";
 import Layout from "../../../../layouts/Layout.astro";
 
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

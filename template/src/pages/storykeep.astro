@@ -12,7 +12,7 @@ import { getFullContentMap } from "@/utils/db/turso.ts";
 import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "@/types.ts";
 
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 const isPreviewMode = !validation.capabilities.hasTurso || !validation.capabilities.hasConcierge;
 if (!validation.isValid || !config) {

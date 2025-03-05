@@ -19,7 +19,7 @@ import type { StoryFragmentNode } from "@/types";
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if ((!validation.isValid && slug !== `hello`) || !config) {
   return Astro.redirect("/storykeep/init");

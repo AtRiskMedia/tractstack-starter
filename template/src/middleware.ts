@@ -54,6 +54,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // **Step 2: Resolve tenant-specific paths**
   const resolved = await resolvePaths(tenantId);
 
+  // **For multi-tenant mode: If tenant doesn't exist, return 404 immediately**
+  if (isMultiTenant && (!resolved.exists || resolved.configPath === "")) {
+    console.log(`Tenant ${tenantId} not found or invalid - returning 404`);
+    return new Response(null, {
+      status: 404,
+      statusText: "Tenant Not Found",
+    });
+  }
+
   // **Step 3: Set tenant info in local context**
   context.locals.tenant = {
     id: tenantId,
@@ -120,7 +129,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // **Step 6: Config validation with tenant-specific config path**
   const config = await getConfig(context.locals.tenant.paths.configPath);
-  const validation = await validateConfig(config);
+  console.log("Processing request path:", context.url.pathname);
+  if (config) {
+    console.log("Final config being used:", config.init);
+  }
+
+  // Store tenant-specific validation result
+  const tenantValidation = await validateConfig(config);
+
+  // Common path for both single and multi-tenant mode continues below
   const isInitialized =
     (config?.init as Record<string, unknown>)?.SITE_INIT === true &&
     typeof import.meta.env.PRIVATE_ADMIN_PASSWORD === "string" &&
@@ -170,13 +187,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Handle uninitialized or invalid config
-  if (!validation.isValid && !validation.hasPassword) {
+  // For non-multi-tenant mode, or default tenant in multi-tenant mode
+  if (!tenantValidation.isValid && !tenantValidation.hasPassword) {
+    console.log("Init redirect check:", !tenantValidation.isValid, !tenantValidation.hasPassword);
     return context.redirect("/storykeep/init");
   }
 
   if (
-    !validation.isValid &&
-    validation.hasPassword &&
+    !tenantValidation.isValid &&
+    tenantValidation.hasPassword &&
     !auth &&
     context.url.pathname !== "/storykeep/login"
   ) {

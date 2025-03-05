@@ -13,7 +13,7 @@ const { id } = Astro.params;
 if (!id) return Astro.redirect("/404");
 
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

@@ -10,7 +10,7 @@ import type { AuthStatus, MenuNode } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

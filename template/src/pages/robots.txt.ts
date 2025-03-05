@@ -1,8 +1,10 @@
-import { getConfig } from "../utils/core/config";
+import { getConfigFromRequest } from "@/utils/core/contextConfig";
 import type { APIRoute } from "astro";
 
-const config = await getConfig();
-const robotsTxt = `
+export const GET: APIRoute = async ({ request }) => {
+  const config = await getConfigFromRequest(request);
+
+  const robotsTxt = `
 User-agent: *
 Disallow: /concierge/
 Allow: /
@@ -10,7 +12,6 @@ Allow: /
 Sitemap: ${new URL("sitemap.xml", config?.init?.SITE_URL).href}
 `.trim();
 
-export const GET: APIRoute = () => {
   return new Response(robotsTxt, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",

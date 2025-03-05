@@ -27,7 +27,7 @@ const needsTrailingSpace =
   );
 
 const paneId = getCtx().getClosestNodeTypeFromId(nodeId, "Pane");
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 
 // First lexically analyze the lisp payload
 const buttonLispPayload = lispLexer(node.buttonPayload?.callbackPayload);

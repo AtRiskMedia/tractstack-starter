@@ -22,7 +22,7 @@ export async function resolvePaths(tenantId: string = `default`): Promise<{
   }
   console.log(`Cache miss, resolving paths for tenant: ${tenantId}`);
 
-  // If not cached or doesn’t exist, resolve paths
+  // If not cached or doesn't exist, resolve paths
   let resolvedPaths: {
     id: string;
     dbPath: string;
@@ -36,28 +36,54 @@ export async function resolvePaths(tenantId: string = `default`): Promise<{
     const tenantBaseDir = path.join(process.cwd(), `tenants`, tenantId);
 
     try {
-      await fs.access(tenantBaseDir); // Check if tenant directory exists
-      resolvedPaths = {
-        id: tenantId,
-        dbPath: path.join(tenantBaseDir, `db`),
-        configPath: path.join(tenantBaseDir, `config`),
-        publicPath: path.join(tenantBaseDir, `public`),
-        lastAccessed: Date.now(),
-        exists: true,
-      };
+      // First check if the tenant directory exists
+      await fs.access(tenantBaseDir);
+
+      // Then check if required subdirectories exist
+      const configPathFull = path.join(tenantBaseDir, `config`);
+      const dbPathFull = path.join(tenantBaseDir, `db`);
+      const publicPathFull = path.join(tenantBaseDir, `public`);
+
+      try {
+        await fs.access(configPathFull);
+        await fs.access(dbPathFull);
+        await fs.access(publicPathFull);
+
+        // All paths exist, set up tenant
+        resolvedPaths = {
+          id: tenantId,
+          dbPath: dbPathFull,
+          configPath: configPathFull,
+          publicPath: publicPathFull,
+          lastAccessed: Date.now(),
+          exists: true,
+        };
+      } catch (error) {
+        // Some required subdirectories are missing
+        console.warn(`Tenant ${tenantId} has incomplete directory structure`);
+        resolvedPaths = {
+          id: tenantId,
+          dbPath: "", // Empty path to signal invalid config
+          configPath: "", // Empty path to signal invalid config
+          publicPath: "", // Empty path to signal invalid config
+          lastAccessed: Date.now(),
+          exists: false,
+        };
+      }
     } catch {
+      // Tenant directory doesn't exist
       console.warn(`Tenant ${tenantId} directory not found`);
       resolvedPaths = {
         id: tenantId,
-        dbPath: "",
-        configPath: "",
-        publicPath: "",
+        dbPath: "", // Empty path to signal invalid config
+        configPath: "", // Empty path to signal invalid config
+        publicPath: "", // Empty path to signal invalid config
         lastAccessed: Date.now(),
         exists: false,
       };
     }
   } else {
-    // Default tenant paths
+    // Default tenant paths - always considered to exist
     resolvedPaths = {
       id: "default",
       dbPath: path.join(process.cwd(), `.tractstack`),

@@ -3,7 +3,7 @@ import { isAuthenticated, setAuthenticated } from "../../utils/core/auth";
 import { getConfig, validateConfig } from "../../utils/core/config";
 
 // Validate config and environment
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 
 // If no password protection is set up, redirect to init
