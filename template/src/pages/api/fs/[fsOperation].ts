@@ -263,6 +263,19 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       }
       case "updateCss": {
+        const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+        if (isMultiTenant) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "CSS updates are disabled in multi-tenant mode",
+            }),
+            {
+              status: 403,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
         const { brandColors } = (await context.request.json()) as { brandColors: string };
         const cssPath = path.join(tenantPaths.publicPath, "styles", "custom.css");
         const cssContent = await fs.readFile(cssPath, "utf-8");

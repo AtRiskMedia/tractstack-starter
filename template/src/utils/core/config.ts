@@ -1,13 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { validateEnv } from "./env";
-import type {
-  InitConfig,
-  SystemCapabilities,
-  ConfigFile,
-  Config,
-  ValidationResult,
-} from "../../types";
+import type { InitConfig, SystemCapabilities, ConfigFile, Config, ValidationResult } from "@/types";
 
 const CONFIG_FILES = ["init.json", "turso.json"];
 
@@ -74,18 +68,31 @@ function detectCapabilities(): SystemCapabilities {
  * @param configPath - Optional path to the config directory; defaults to "./config"
  */
 export async function getConfig(configPath?: string): Promise<Config | null> {
-  const defaultConfigPath = path.join(process.cwd(), "config");
-  const actualConfigPath = configPath || defaultConfigPath;
-  console.log(`Loading config from: ${actualConfigPath}`);
+  // If no configPath is provided, use the default
+  if (!configPath) {
+    const defaultConfigPath = path.join(process.cwd(), "config");
+    console.log(`No config path provided, using default: ${defaultConfigPath}`);
+    return getConfigFromPath(defaultConfigPath);
+  }
+
+  // Otherwise, use the provided path without any fallback
+  return getConfigFromPath(configPath);
+}
+
+/**
+ * Internal function to get config from a specific path without fallbacks
+ */
+async function getConfigFromPath(configPath: string): Promise<Config | null> {
+  console.log(`Loading config from: ${configPath}`);
 
   try {
     const configFiles = await Promise.all(
-      CONFIG_FILES.map((filename) => readConfigFile(actualConfigPath, filename))
+      CONFIG_FILES.map((filename) => readConfigFile(configPath, filename))
     );
     const validConfigs = configFiles.filter((config): config is ConfigFile => config !== null);
 
     if (validConfigs.length === 0) {
-      console.error("No valid config files found in", actualConfigPath);
+      console.error("No valid config files found in", configPath);
       return null;
     }
 
@@ -100,7 +107,7 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
 
     return mergedConfig;
   } catch (error) {
-    console.error("Error processing config files from", actualConfigPath, ":", error);
+    console.error("Error processing config files from", configPath, ":", error);
     return null;
   }
 }

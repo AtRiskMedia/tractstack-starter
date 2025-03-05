@@ -43,3 +43,6 @@ pnpm-debug.log*
 **/public/custom/
 **/public/images/
 /playground/public/styles/frontend.css
+
+# multi-tenant
+/playground/tenants/*

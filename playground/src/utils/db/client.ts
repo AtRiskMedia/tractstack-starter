@@ -120,21 +120,38 @@ class TursoClientManager {
   ): Promise<void> {
     try {
       let client: Client;
-      if (this.hasTursoCredentials(tenantId)) {
-        const urlKey =
-          tenantId === "default"
-            ? "PRIVATE_TURSO_DATABASE_URL"
-            : `PRIVATE_TURSO_DATABASE_URL_${tenantId}`;
-        const tokenKey =
-          tenantId === "default"
-            ? "PRIVATE_TURSO_AUTH_TOKEN"
-            : `PRIVATE_TURSO_AUTH_TOKEN_${tenantId}`;
-        const url = import.meta.env[urlKey];
-        const authToken = import.meta.env[tokenKey];
-        client = createClient({ url, authToken });
-      } else {
+      // First check if multi-tenant mode is enabled
+      const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+
+      if (isMultiTenant) {
+        // In multi-tenant mode, always use local database regardless of credentials
         const localPath = await this.getLocalDbPath(tenantPaths.dbPath, tenantId);
+        console.log(
+          `Multi-tenant mode: Using local database for tenant ${tenantId} at ${localPath}`
+        );
         client = createClient({ url: `file:${localPath}` });
+      } else {
+        // In single-tenant mode, check for Turso credentials
+        if (this.hasTursoCredentials(tenantId)) {
+          const urlKey =
+            tenantId === "default"
+              ? "PRIVATE_TURSO_DATABASE_URL"
+              : `PRIVATE_TURSO_DATABASE_URL_${tenantId}`;
+          const tokenKey =
+            tenantId === "default"
+              ? "PRIVATE_TURSO_AUTH_TOKEN"
+              : `PRIVATE_TURSO_AUTH_TOKEN_${tenantId}`;
+          const url = import.meta.env[urlKey];
+          const authToken = import.meta.env[tokenKey];
+          console.log(`Single-tenant mode: Using Turso cloud database for tenant ${tenantId}`);
+          client = createClient({ url, authToken });
+        } else {
+          const localPath = await this.getLocalDbPath(tenantPaths.dbPath, tenantId);
+          console.log(
+            `Single-tenant mode: Using local database for tenant ${tenantId} at ${localPath}`
+          );
+          client = createClient({ url: `file:${localPath}` });
+        }
       }
 
       await client.execute("SELECT 1");
@@ -143,7 +160,8 @@ class TursoClientManager {
 
       try {
         const tursoConfig = JSON.parse(await fs.readFile(tursoPath, "utf-8"));
-        const isCloud = this.hasTursoCredentials(tenantId);
+        // For schema status, check if we're using cloud DB (only possible in single-tenant mode)
+        const isCloud = !isMultiTenant && this.hasTursoCredentials(tenantId);
         needsInit = isCloud ? !tursoConfig.TURSO_DB_INIT : true;
       } catch {
         needsInit = true;

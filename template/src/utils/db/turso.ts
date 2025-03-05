@@ -39,8 +39,12 @@ import type {
   MenuContentMap,
   StoryfragmentAnalytics,
 } from "@/types.ts";
-import type { APIContext } from "@/types"; // Added for context typing
+import type { APIContext } from "@/types";
 
+// Helper to check if multi-tenant mode is enabled
+const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+
+// Define interfaces for full row data
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
   tractstack: TractStackRowData;
@@ -61,6 +65,7 @@ interface EnrichedPaneRowData extends PaneRowData {
   weight?: number;
 }
 
+// Helper to ensure a value is a string
 function ensureString(value: unknown): string {
   if (value === null || value === undefined) {
     throw new Error("Required string value is null or undefined");
@@ -68,6 +73,7 @@ function ensureString(value: unknown): string {
   return String(value);
 }
 
+// Fetch all TractStacks
 export async function getAllTractStackRowData(context?: APIContext): Promise<TractStackRowData[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -88,9 +94,11 @@ export async function getAllTractStackRowData(context?: APIContext): Promise<Tra
         } as TractStackRowData;
       })
       .filter((row): row is TractStackRowData => row !== null);
-    processBatchCache({
-      tractStacks,
-    });
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ tractStacks });
+    }
     return tractStacks;
   } catch (error) {
     console.error("Error fetching getAllTractStackRowData:", error);
@@ -98,21 +106,22 @@ export async function getAllTractStackRowData(context?: APIContext): Promise<Tra
   }
 }
 
+// Fetch TractStack by slug
 export async function getTractStackBySlugRowData(
   slug: string,
   context?: APIContext
 ): Promise<TractStackRowData | null> {
-  // Check cache first
-  const cachedTractStack = getCachedTractStackBySlug(slug);
-  if (cachedTractStack) {
-    return cachedTractStack;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedTractStack = getCachedTractStackBySlug(slug);
+    if (cachedTractStack) return cachedTractStack;
   }
 
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
-      sql: `SELECT id,title,slug,social_image_path FROM tractstacks WHERE slug = ?`,
+      sql: `SELECT id, title, slug, social_image_path FROM tractstacks WHERE slug = ?`,
       args: [slug],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
@@ -120,16 +129,15 @@ export async function getTractStackBySlugRowData(
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
-        ...(typeof rows[0].social_image_path === `string`
+        ...(typeof rows[0].social_image_path === "string"
           ? { social_image_path: rows[0].social_image_path }
           : {}),
       } as TractStackRowData;
 
-      // Update cache
-      processBatchCache({
-        tractStacks: [tractStack],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ tractStacks: [tractStack] });
+      }
       return tractStack;
     }
     return null;
@@ -139,19 +147,22 @@ export async function getTractStackBySlugRowData(
   }
 }
 
+// Fetch TractStack by ID
 export async function getTractStackByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<TractStackRowData | null> {
-  // Check cache first
-  const cached = getCachedTractStackById(id);
-  if (cached) return cached;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cached = getCachedTractStackById(id);
+    if (cached) return cached;
+  }
 
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
     const { rows } = await client.execute({
-      sql: `SELECT id,title,slug,social_image_path FROM tractstacks WHERE id = ?`,
+      sql: `SELECT id, title, slug, social_image_path FROM tractstacks WHERE id = ?`,
       args: [id],
     });
     if (rows.length > 0 && rows[0].id && rows[0].title && rows[0].slug) {
@@ -159,16 +170,15 @@ export async function getTractStackByIdRowData(
         id: rows[0].id,
         title: rows[0].title,
         slug: rows[0].slug,
-        ...(typeof rows[0].social_image_path === `string`
+        ...(typeof rows[0].social_image_path === "string"
           ? { social_image_path: rows[0].social_image_path }
           : {}),
       } as TractStackRowData;
 
-      // Update cache
-      processBatchCache({
-        tractStacks: [tractStack],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ tractStacks: [tractStack] });
+      }
       return tractStack;
     }
     return null;
@@ -178,6 +188,7 @@ export async function getTractStackByIdRowData(
   }
 }
 
+// Upsert TractStack by ID
 export async function upsertTractStackByIdRowData(
   data: TractStackRowData,
   context?: APIContext
@@ -194,8 +205,12 @@ export async function upsertTractStackByIdRowData(
               social_image_path = excluded.social_image_path`,
       args: [data.id, data.title, data.slug, data.social_image_path || null],
     });
-    invalidateEntry("tractstack", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("tractstack", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertTractStackByIdRowData:", error);
@@ -203,14 +218,15 @@ export async function upsertTractStackByIdRowData(
   }
 }
 
+// Fetch Resource by ID
 export async function getResourceByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<ResourceRowData | null> {
-  // Check cache first
-  const cachedResource = getCachedResourceById(id);
-  if (cachedResource) {
-    return cachedResource;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedResource = getCachedResourceById(id);
+    if (cachedResource) return cachedResource;
   }
 
   try {
@@ -234,11 +250,10 @@ export async function getResourceByIdRowData(
         ...(typeof rows[0].action_lisp === "string" ? { action_lisp: rows[0].action_lisp } : {}),
       } as ResourceRowData;
 
-      // Update cache
-      processBatchCache({
-        resources: [resource],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ resources: [resource] });
+      }
       return resource;
     }
     return null;
@@ -248,6 +263,7 @@ export async function getResourceByIdRowData(
   }
 }
 
+// Upsert Resource by ID
 export async function upsertResourceByIdRowData(
   data: ResourceRowData,
   context?: APIContext
@@ -275,8 +291,12 @@ export async function upsertResourceByIdRowData(
         data.action_lisp || null,
       ],
     });
-    invalidateEntry("resource", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("resource", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertResourceByIdRowData:", error);
@@ -284,6 +304,7 @@ export async function upsertResourceByIdRowData(
   }
 }
 
+// Fetch all Menus
 export async function getAllMenusRowData(context?: APIContext): Promise<MenuRowData[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -300,9 +321,11 @@ export async function getAllMenusRowData(context?: APIContext): Promise<MenuRowD
         } as MenuRowData;
       })
       .filter((row): row is MenuRowData => row !== null);
-    processBatchCache({
-      menus,
-    });
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ menus });
+    }
     return menus;
   } catch (error) {
     console.error("Error fetching getAllMenusRowData:", error);
@@ -310,14 +333,15 @@ export async function getAllMenusRowData(context?: APIContext): Promise<MenuRowD
   }
 }
 
+// Fetch Menu by ID
 export async function getMenuByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<MenuRowData | null> {
-  // Check cache first
-  const cachedMenu = getCachedMenuById(id);
-  if (cachedMenu) {
-    return cachedMenu;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedMenu = getCachedMenuById(id);
+    if (cachedMenu) return cachedMenu;
   }
 
   try {
@@ -335,11 +359,10 @@ export async function getMenuByIdRowData(
         options_payload: rows[0].options_payload,
       } as MenuRowData;
 
-      // Update cache
-      processBatchCache({
-        menus: [menu],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ menus: [menu] });
+      }
       return menu;
     }
     return null;
@@ -349,6 +372,7 @@ export async function getMenuByIdRowData(
   }
 }
 
+// Upsert Menu by ID
 export async function upsertMenuByIdRowData(
   data: MenuRowData,
   context?: APIContext
@@ -365,8 +389,12 @@ export async function upsertMenuByIdRowData(
               options_payload = excluded.options_payload`,
       args: [data.id, data.title, data.theme, data.options_payload],
     });
-    invalidateEntry("menu", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("menu", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertMenuByIdRowData:", error);
@@ -374,6 +402,7 @@ export async function upsertMenuByIdRowData(
   }
 }
 
+// Fetch all Files
 export async function getAllFilesRowData(context?: APIContext): Promise<ImageFileRowData[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -393,9 +422,11 @@ export async function getAllFilesRowData(context?: APIContext): Promise<ImageFil
         } as ImageFileRowData;
       })
       .filter((row): row is ImageFileRowData => row !== null);
-    processBatchCache({
-      files,
-    });
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ files });
+    }
     return files;
   } catch (error) {
     console.error("Error fetching getAllFilesRowData:", error);
@@ -403,14 +434,15 @@ export async function getAllFilesRowData(context?: APIContext): Promise<ImageFil
   }
 }
 
+// Fetch File by ID
 export async function getFileByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<ImageFileRowData | null> {
-  // Check cache first
-  const cachedFile = getCachedFileById(id);
-  if (cachedFile) {
-    return cachedFile;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedFile = getCachedFileById(id);
+    if (cachedFile) return cachedFile;
   }
 
   try {
@@ -429,11 +461,10 @@ export async function getFileByIdRowData(
         ...(typeof rows[0].src_set === "string" ? { src_set: rows[0].src_set } : {}),
       } as ImageFileRowData;
 
-      // Update cache
-      processBatchCache({
-        files: [file],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ files: [file] });
+      }
       return file;
     }
     return null;
@@ -443,6 +474,7 @@ export async function getFileByIdRowData(
   }
 }
 
+// Upsert File by ID
 export async function upsertFileByIdRowData(
   data: ImageFileRowData,
   context?: APIContext
@@ -460,8 +492,12 @@ export async function upsertFileByIdRowData(
               src_set = excluded.src_set`,
       args: [data.id, data.filename, data.alt_description || null, data.url, data.src_set || null],
     });
-    invalidateEntry("file", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("file", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertFileByIdRowData:", error);
@@ -469,14 +505,15 @@ export async function upsertFileByIdRowData(
   }
 }
 
+// Fetch Pane by ID
 export async function getPaneByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<PaneRowData | null> {
-  // Check cache first
-  const cachedPane = getCachedPaneById(id);
-  if (cachedPane) {
-    return cachedPane;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedPane = getCachedPaneById(id);
+    if (cachedPane) return cachedPane;
   }
 
   try {
@@ -493,18 +530,17 @@ export async function getPaneByIdRowData(
         title: rows[0].title,
         slug: rows[0].slug,
         pane_type: rows[0].pane_type,
-        ...(typeof rows[0].markdown_id === `string` ? { markdown_id: rows[0].markdown_id } : {}),
+        ...(typeof rows[0].markdown_id === "string" ? { markdown_id: rows[0].markdown_id } : {}),
         created: rows[0].created,
         changed: rows[0].changed,
         options_payload: rows[0].options_payload,
         is_context_pane: rows[0].is_context_pane,
       } as PaneRowData;
 
-      // Update cache
-      processBatchCache({
-        panes: [pane],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ panes: [pane] });
+      }
       return pane;
     }
     return null;
@@ -514,6 +550,7 @@ export async function getPaneByIdRowData(
   }
 }
 
+// Upsert Pane by ID
 export async function upsertPaneByIdRowData(
   data: PaneRowData,
   context?: APIContext
@@ -544,8 +581,12 @@ export async function upsertPaneByIdRowData(
         data.markdown_id || null,
       ],
     });
-    invalidateEntry("pane", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("pane", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertPaneByIdRowData:", error);
@@ -553,14 +594,15 @@ export async function upsertPaneByIdRowData(
   }
 }
 
+// Fetch Markdown by ID
 export async function getMarkdownByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<MarkdownRowData | null> {
-  // Check cache first
-  const cachedMarkdown = getCachedMarkdownById(id);
-  if (cachedMarkdown) {
-    return cachedMarkdown;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedMarkdown = getCachedMarkdownById(id);
+    if (cachedMarkdown) return cachedMarkdown;
   }
 
   try {
@@ -576,11 +618,10 @@ export async function getMarkdownByIdRowData(
         markdown_body: rows[0].body,
       } as MarkdownRowData;
 
-      // Update cache
-      processBatchCache({
-        markdowns: [markdown],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ markdowns: [markdown] });
+      }
       return markdown;
     }
     return null;
@@ -590,6 +631,7 @@ export async function getMarkdownByIdRowData(
   }
 }
 
+// Upsert Markdown
 export async function upsertMarkdownRowData(
   id: string,
   markdown_body: string,
@@ -605,13 +647,14 @@ export async function upsertMarkdownRowData(
               body = excluded.body`,
       args: [id, markdown_body],
     });
-    return true;
+    return true; // Note: No cache invalidation here as markdowns aren't directly cached by ID
   } catch (error) {
     console.error("Error in upsertMarkdownRowData:", error);
     throw error;
   }
 }
 
+// Upsert Pane-File Relation
 export async function upsertPaneFileRelation(
   pane_id: string,
   file_id: string,
@@ -626,26 +669,28 @@ export async function upsertPaneFileRelation(
             ON CONFLICT(file_id, pane_id) DO NOTHING`,
       args: [file_id, pane_id],
     });
-    return true;
+    return true; // Note: No cache invalidation here as this relation isn't directly cached
   } catch (error) {
     console.error("Error in upsertPaneFileRelation:", error);
     throw error;
   }
 }
 
+// Fetch StoryFragment by ID
 export async function getCachedStoryFragmentByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<StoryFragmentRowData | null> {
-  // Check cache first
-  const cached = getCachedStoryFragmentById(id);
-  if (cached) return cached;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cached = getCachedStoryFragmentById(id);
+    if (cached) return cached;
+  }
 
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
 
-    // Get the storyfragment base data
     const { rows } = await client.execute({
       sql: `SELECT id, title, slug, tractstack_id, created, changed, menu_id, 
             social_image_path, tailwind_background_colour 
@@ -655,7 +700,6 @@ export async function getCachedStoryFragmentByIdRowData(
 
     if (rows.length === 0 || !rows[0].id) return null;
 
-    // Get the related pane IDs ordered by weight
     const { rows: paneRows } = await client.execute({
       sql: `SELECT pane_id FROM storyfragment_panes 
             WHERE storyfragment_id = ? 
@@ -682,11 +726,10 @@ export async function getCachedStoryFragmentByIdRowData(
         : {}),
     } as StoryFragmentRowData;
 
-    // Update cache
-    processBatchCache({
-      storyFragments: [storyFragment],
-    });
-
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ storyFragments: [storyFragment] });
+    }
     return storyFragment;
   } catch (error) {
     console.error("Error fetching getStoryFragmentByIdRowData:", error);
@@ -694,6 +737,7 @@ export async function getCachedStoryFragmentByIdRowData(
   }
 }
 
+// Upsert StoryFragment by ID
 export async function upsertStoryFragmentByIdRowData(
   data: StoryFragmentRowData,
   context?: APIContext
@@ -702,7 +746,6 @@ export async function upsertStoryFragmentByIdRowData(
     const client = await tursoClient.getClient(context);
     if (!client) return false;
 
-    // First insert/update the storyfragment
     await client.execute({
       sql: `INSERT INTO storyfragments 
             (id, title, slug, tractstack_id, created, changed, tailwind_background_colour, menu_id, social_image_path)
@@ -729,13 +772,11 @@ export async function upsertStoryFragmentByIdRowData(
       ],
     });
 
-    // Clear existing pane relationships
     await client.execute({
       sql: "DELETE FROM storyfragment_panes WHERE storyfragment_id = ?",
       args: [data.id],
     });
 
-    // Add new pane relationships if they exist
     if (data.pane_ids && data.pane_ids.length > 0) {
       for (const paneId of data.pane_ids) {
         await client.execute({
@@ -744,8 +785,12 @@ export async function upsertStoryFragmentByIdRowData(
         });
       }
     }
-    invalidateEntry("storyfragment", data.id);
-    setCachedContentMap([]);
+
+    // Invalidate cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      invalidateEntry("storyfragment", data.id);
+      setCachedContentMap([]);
+    }
     return true;
   } catch (error) {
     console.error("Error in upsertStoryFragmentByIdRowData:", error);
@@ -753,48 +798,46 @@ export async function upsertStoryFragmentByIdRowData(
   }
 }
 
+// Fetch StoryFragment by Slug with Full Data
 export async function getStoryFragmentBySlugFullRowData(
   slug: string,
   context?: APIContext
 ): Promise<StoryFragmentFullRowData | null> {
-  // Check cache first
-  const storyFragment = getCachedStoryFragmentBySlug(slug);
-  if (storyFragment) {
-    // Need to verify we have all related data
-    const tractstack = getCachedTractStackById(storyFragment.tractstack_id);
-    const menu = storyFragment.menu_id ? getCachedMenuById(storyFragment.menu_id) : null;
-    const panes = storyFragment.pane_ids.map((id) => getCachedPaneById(id));
-    const markdowns: MarkdownRowData[] = [];
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const storyFragment = getCachedStoryFragmentBySlug(slug);
+    if (storyFragment) {
+      const tractstack = getCachedTractStackById(storyFragment.tractstack_id);
+      const menu = storyFragment.menu_id ? getCachedMenuById(storyFragment.menu_id) : null;
+      const panes = storyFragment.pane_ids.map((id) => getCachedPaneById(id));
+      const markdowns: MarkdownRowData[] = [];
 
-    // Check if we have all panes and their related data
-    const allPanesFound = panes.every((pane) => {
-      if (!pane) return false;
-      // Check markdown if exists
-      if (pane.markdown_id) {
-        const markdown = getCachedMarkdownById(pane.markdown_id);
-        if (!markdown) return false;
-        markdowns.push(markdown);
+      const allPanesFound = panes.every((pane) => {
+        if (!pane) return false;
+        if (pane.markdown_id) {
+          const markdown = getCachedMarkdownById(pane.markdown_id);
+          if (!markdown) return false;
+          markdowns.push(markdown);
+        }
+        return true;
+      });
+
+      if (tractstack && (!storyFragment.menu_id || menu) && allPanesFound) {
+        return {
+          storyfragment: storyFragment,
+          tractstack,
+          menu,
+          panes: panes.filter((p): p is PaneRowData => p !== null),
+          markdowns,
+        };
       }
-      return true;
-    });
-
-    if (tractstack && (!storyFragment.menu_id || menu) && allPanesFound) {
-      return {
-        storyfragment: storyFragment,
-        tractstack,
-        menu,
-        panes: panes.filter((p): p is PaneRowData => p !== null),
-        markdowns,
-      };
     }
   }
 
-  // else load from Turso
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
 
-    // First get story fragment data with tractstack and menu in a single query
     const { rows: sfRows } = await client.execute({
       sql: `
         WITH ordered_panes AS (
@@ -847,7 +890,6 @@ export async function getStoryFragmentBySlugFullRowData(
 
     const sfRow = sfRows[0];
 
-    // Create base story fragment data
     const storyFragment: StoryFragmentRowData = {
       id: String(sfRow.id),
       title: String(sfRow.title),
@@ -855,7 +897,7 @@ export async function getStoryFragmentBySlugFullRowData(
       tractstack_id: String(sfRow.tractstack_id),
       created: String(sfRow.created),
       changed: String(sfRow.changed || sfRow.created),
-      pane_ids: [], // Will be populated from panes data
+      pane_ids: [],
       ...(sfRow.menu_id && { menu_id: String(sfRow.menu_id) }),
       ...(sfRow.social_image_path && { social_image_path: String(sfRow.social_image_path) }),
       ...(sfRow.tailwind_background_colour && {
@@ -863,7 +905,6 @@ export async function getStoryFragmentBySlugFullRowData(
       }),
     };
 
-    // Create tractstack data
     const tractstack: TractStackRowData = {
       id: String(sfRow.ts_id),
       title: String(sfRow.ts_title),
@@ -873,7 +914,6 @@ export async function getStoryFragmentBySlugFullRowData(
       }),
     };
 
-    // Create menu data if exists
     let menu: MenuRowData | null = null;
     if (sfRow.menu_id) {
       menu = {
@@ -891,9 +931,7 @@ export async function getStoryFragmentBySlugFullRowData(
     const panes: PaneRowData[] = [];
     const markdowns: MarkdownRowData[] = [];
 
-    // Process each pane and its related data
     panesData.forEach((paneData: EnrichedPaneRowData) => {
-      // Add pane (only include PaneRowData fields)
       panes.push({
         id: String(paneData.id),
         title: String(paneData.title),
@@ -906,10 +944,8 @@ export async function getStoryFragmentBySlugFullRowData(
         ...(paneData.markdown_id && { markdown_id: String(paneData.markdown_id) }),
       });
 
-      // Add to story fragment pane IDs
       if (paneData.id) storyFragment.pane_ids.push(String(paneData.id));
 
-      // Add markdown if exists
       if (paneData.markdown_id && paneData.markdown_body) {
         markdowns.push({
           id: String(paneData.markdown_id),
@@ -918,14 +954,16 @@ export async function getStoryFragmentBySlugFullRowData(
       }
     });
 
-    // Cache all the data before returning
-    processBatchCache({
-      storyFragments: [storyFragment],
-      tractStacks: [tractstack],
-      menus: menu ? [menu] : undefined,
-      panes,
-      markdowns,
-    });
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({
+        storyFragments: [storyFragment],
+        tractStacks: [tractstack],
+        menus: menu ? [menu] : undefined,
+        panes,
+        markdowns,
+      });
+    }
 
     return {
       storyfragment: storyFragment,
@@ -940,11 +978,14 @@ export async function getStoryFragmentBySlugFullRowData(
   }
 }
 
+// Fetch Full Content Map
 export async function getFullContentMap(context?: APIContext): Promise<FullContentMap[]> {
-  const cachedContent = getCachedContentMap();
-  if (cachedContent) {
-    return cachedContent;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedContent = getCachedContentMap();
+    if (cachedContent) return cachedContent;
   }
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -964,7 +1005,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as description,
         NULL as topics
       FROM menus`,
-
       `SELECT 
         id, 
         slug, 
@@ -979,7 +1019,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as description,
         NULL as topics
       FROM panes`,
-
       `SELECT 
         id, 
         slug, 
@@ -994,7 +1033,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as description,
         NULL as topics
       FROM resources`,
-
       `SELECT 
         sf.id, 
         sf.slug, 
@@ -1020,7 +1058,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
       FROM storyfragments sf
       JOIN tractstacks ts ON sf.tractstack_id = ts.id
       LEFT JOIN storyfragment_details sfd ON sfd.storyfragment_id = sf.id`,
-
       `SELECT 
         id, 
         slug, 
@@ -1035,7 +1072,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as description,
         NULL as topics
       FROM tractstacks`,
-
       `SELECT 
         id, 
         slug, 
@@ -1131,7 +1167,11 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
           throw new Error(`Unknown type: ${row.type}`);
       }
     });
-    setCachedContentMap(mappedData);
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      setCachedContentMap(mappedData);
+    }
     return mappedData;
   } catch (error) {
     console.log("Unable to fetch content map:", error);
@@ -1139,6 +1179,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
   }
 }
 
+// Fetch all Resources
 export async function getAllResourcesRowData(context?: APIContext): Promise<ResourceRowData[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -1159,9 +1200,11 @@ export async function getAllResourcesRowData(context?: APIContext): Promise<Reso
           ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
         }) as ResourceRowData
     );
-    processBatchCache({
-      resources,
-    });
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ resources });
+    }
     return resources;
   } catch (error) {
     console.error("Error fetching getAllResourcesRowData:", error);
@@ -1169,6 +1212,7 @@ export async function getAllResourcesRowData(context?: APIContext): Promise<Reso
   }
 }
 
+// Fetch Resources by Category Slug
 export async function getResourcesByCategorySlugRowData(
   categorySlug: string,
   context?: APIContext
@@ -1184,7 +1228,7 @@ export async function getResourcesByCategorySlugRowData(
       args: [categorySlug],
     });
 
-    return rows.map(
+    const resources = rows.map(
       (row) =>
         ({
           id: ensureString(row.id),
@@ -1196,12 +1240,19 @@ export async function getResourcesByCategorySlugRowData(
           ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
         }) as ResourceRowData
     );
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ resources });
+    }
+    return resources;
   } catch (error) {
     console.error("Error fetching resources by category slug:", error);
     throw error;
   }
 }
 
+// Fetch Resources by Slugs
 export async function getResourcesBySlugsRowData(
   slugs: string[],
   context?: APIContext
@@ -1210,9 +1261,7 @@ export async function getResourcesBySlugsRowData(
     const client = await tursoClient.getClient(context);
     if (!client) return [];
 
-    // Create placeholders for the IN clause
     const placeholders = slugs.map(() => "?").join(",");
-
     const { rows } = await client.execute({
       sql: `SELECT id, title, slug, category_slug, oneliner, options_payload, action_lisp
             FROM resources 
@@ -1220,8 +1269,7 @@ export async function getResourcesBySlugsRowData(
       args: slugs,
     });
 
-    // Transform each row into a ResourceRowData
-    return rows.map(
+    const resources = rows.map(
       (row) =>
         ({
           id: ensureString(row.id),
@@ -1233,12 +1281,19 @@ export async function getResourcesBySlugsRowData(
           ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
         }) as ResourceRowData
     );
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ resources });
+    }
+    return resources;
   } catch (error) {
     console.error("Error fetching resources by slugs:", error);
     return [];
   }
 }
 
+// Fetch Resource by Slug
 export async function getResourceBySlugRowData(
   slug: string,
   context?: APIContext
@@ -1257,7 +1312,7 @@ export async function getResourceBySlugRowData(
     if (rows.length === 0) return null;
 
     const row = rows[0];
-    return {
+    const resource = {
       id: ensureString(row.id),
       title: ensureString(row.title),
       slug: ensureString(row.slug),
@@ -1266,80 +1321,81 @@ export async function getResourceBySlugRowData(
       ...(typeof row.category_slug === "string" ? { category_slug: row.category_slug } : {}),
       ...(typeof row.action_lisp === "string" ? { action_lisp: row.action_lisp } : {}),
     } as ResourceRowData;
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ resources: [resource] });
+    }
+    return resource;
   } catch (error) {
     console.error("Error fetching resource by slug:", error);
     throw error;
   }
 }
 
+// Fetch Context Pane by Slug with Full Data
 export async function getContextPaneBySlugFullRowData(
   slug: string,
   context?: APIContext
 ): Promise<ContextPaneFullRowData | null> {
-  // Check cache first
-  const pane = getCachedPaneBySlug(slug);
-  if (pane && pane.is_context_pane) {
-    // Need to verify we have all related data
-    const markdowns: MarkdownRowData[] = [];
-    let allDependenciesFound = true;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const pane = getCachedPaneBySlug(slug);
+    if (pane && pane.is_context_pane) {
+      const markdowns: MarkdownRowData[] = [];
+      let allDependenciesFound = true;
 
-    // Check markdown if exists
-    if (pane.markdown_id) {
-      const markdown = getCachedMarkdownById(pane.markdown_id);
-      if (!markdown) {
-        allDependenciesFound = false;
-      } else {
-        markdowns.push(markdown);
-      }
-    }
-
-    // Parse options_payload to check for file dependencies
-    const files: ImageFileRowData[] = [];
-    try {
-      const options = JSON.parse(pane.options_payload);
-      // Look for file references in nodes
-      if (options.nodes) {
-        const fileIds = new Set<string>();
-        // Recursively find file IDs in nodes
-        const findFileIds = (nodes: any[]) => {
-          nodes.forEach((node) => {
-            if (node.fileId) fileIds.add(node.fileId);
-            if (node.nodes) findFileIds(node.nodes);
-          });
-        };
-        findFileIds(options.nodes);
-
-        // Check if all files are in cache
-        for (const fileId of fileIds) {
-          const file = getCachedFileById(fileId);
-          if (!file) {
-            allDependenciesFound = false;
-            break;
-          } else {
-            files.push(file);
-          }
+      if (pane.markdown_id) {
+        const markdown = getCachedMarkdownById(pane.markdown_id);
+        if (!markdown) {
+          allDependenciesFound = false;
+        } else {
+          markdowns.push(markdown);
         }
       }
-    } catch (e) {
-      console.error("Error parsing options_payload:", e);
-      allDependenciesFound = false;
-    }
 
-    if (allDependenciesFound) {
-      return {
-        panes: [pane],
-        markdowns,
-        files,
-      };
+      const files: ImageFileRowData[] = [];
+      try {
+        const options = JSON.parse(pane.options_payload);
+        if (options.nodes) {
+          const fileIds = new Set<string>();
+          const findFileIds = (nodes: any[]) => {
+            nodes.forEach((node) => {
+              if (node.fileId) fileIds.add(node.fileId);
+              if (node.nodes) findFileIds(node.nodes);
+            });
+          };
+          findFileIds(options.nodes);
+
+          for (const fileId of fileIds) {
+            const file = getCachedFileById(fileId);
+            if (!file) {
+              allDependenciesFound = false;
+              break;
+            } else {
+              files.push(file);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing options_payload:", e);
+        allDependenciesFound = false;
+      }
+
+      if (allDependenciesFound) {
+        return {
+          panes: [pane],
+          markdowns,
+          files,
+        };
+      }
     }
   }
 
-  // Cache miss or missing dependencies - load from Turso
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
 
-    // Get the context pane with all related data in a single query
     const { rows: paneRows } = await client.execute({
       sql: `SELECT 
               p.id, 
@@ -1377,7 +1433,6 @@ export async function getContextPaneBySlugFullRowData(
 
     const paneRow = paneRows[0];
 
-    // Convert to PaneRowData
     const panes: PaneRowData[] = [
       {
         id: ensureString(paneRow.id),
@@ -1392,7 +1447,6 @@ export async function getContextPaneBySlugFullRowData(
       },
     ];
 
-    // Process markdown
     const markdowns: MarkdownRowData[] = [];
     if (paneRow.markdown_id && paneRow.markdown_body) {
       markdowns.push({
@@ -1401,7 +1455,6 @@ export async function getContextPaneBySlugFullRowData(
       });
     }
 
-    // Process files
     let files: ImageFileRowData[] = [];
     if (paneRow.files && typeof paneRow.files === "string") {
       try {
@@ -1418,24 +1471,19 @@ export async function getContextPaneBySlugFullRowData(
       }
     }
 
-    // Update cache with all fetched data
-    processBatchCache({
-      panes,
-      markdowns,
-      files,
-    });
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ panes, markdowns, files });
+    }
 
-    return {
-      panes,
-      markdowns,
-      files,
-    };
+    return { panes, markdowns, files };
   } catch (error) {
     console.error("Error in getContextPaneBySlugFullRowData:", error);
     throw error;
   }
 }
 
+// Fetch all Beliefs
 export async function getAllBeliefRowData(context?: APIContext): Promise<BeliefRowData[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -1451,9 +1499,11 @@ export async function getAllBeliefRowData(context?: APIContext): Promise<BeliefR
       scale: row.scale as string,
       custom_values: row.custom_values as string | undefined,
     }));
-    processBatchCache({
-      beliefs,
-    });
+
+    // Update cache only if not in multi-tenant mode
+    if (!isMultiTenant) {
+      processBatchCache({ beliefs });
+    }
     return beliefs;
   } catch (error) {
     console.error("Error fetching getAllBeliefRowData:", error);
@@ -1461,14 +1511,15 @@ export async function getAllBeliefRowData(context?: APIContext): Promise<BeliefR
   }
 }
 
+// Fetch Belief by ID
 export async function getBeliefByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<BeliefRowData | null> {
-  // Check cache first
-  const cachedBelief = getCachedBeliefById(id);
-  if (cachedBelief) {
-    return cachedBelief;
+  // Check cache only if not in multi-tenant mode
+  if (!isMultiTenant) {
+    const cachedBelief = getCachedBeliefById(id);
+    if (cachedBelief) return cachedBelief;
   }
 
   try {
@@ -1490,11 +1541,10 @@ export async function getBeliefByIdRowData(
           : {}),
       } as BeliefRowData;
 
-      // Update cache
-      processBatchCache({
-        beliefs: [belief],
-      });
-
+      // Update cache only if not in multi-tenant mode
+      if (!isMultiTenant) {
+        processBatchCache({ beliefs: [belief] });
+      }
       return belief;
     }
     return null;
@@ -1504,17 +1554,16 @@ export async function getBeliefByIdRowData(
   }
 }
 
+// Initialize Content
 export async function initializeContent(context?: APIContext): Promise<void> {
   const client = await tursoClient.getClient(context);
   if (client) {
     try {
-      // Create tractstack first and get its id
       const tractStackId = ulid();
       await client.execute({
         sql: "INSERT INTO tractstacks (id, title, slug, social_image_path) VALUES (?, ?, ?, ?) ON CONFLICT (slug) DO NOTHING",
         args: [tractStackId, "Tract Stack", "HELLO", ""],
       });
-      // Create storyfragment linked to the tractstack
       const storyFragmentId = ulid();
       const now = new Date().toISOString();
       await client.execute({
@@ -1531,17 +1580,7 @@ export async function initializeContent(context?: APIContext): Promise<void> {
               ) 
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
               ON CONFLICT (slug) DO NOTHING`,
-        args: [
-          storyFragmentId, // id
-          "", // title
-          "hello", // slug
-          tractStackId, // tractstack_id
-          now, // created
-          now, // changed
-          null, // menu_id
-          null, // social_image_path
-          null, // tailwind_background_colour
-        ],
+        args: [storyFragmentId, "", "hello", tractStackId, now, now, null, null, null],
       });
     } catch (error) {
       console.error("Content initialization error:", error);
@@ -1550,6 +1589,7 @@ export async function initializeContent(context?: APIContext): Promise<void> {
   }
 }
 
+// Get Unique Tailwind Classes
 export async function getUniqueTailwindClasses(context?: APIContext) {
   try {
     const client = await tursoClient.getClient(context);
@@ -1562,6 +1602,7 @@ export async function getUniqueTailwindClasses(context?: APIContext) {
   }
 }
 
+// Get Site Map
 export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
   try {
     const client = await tursoClient.getClient(context);
@@ -1580,9 +1621,7 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
     ]);
     const [storyFragments, panes] = results;
 
-    // Combine and transform all results
     const siteMap: SiteMap[] = [
-      // Add StoryFragments
       ...storyFragments.rows.map((row: any) => ({
         id: row.id,
         title: row.title,
@@ -1591,7 +1630,6 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
         created: new Date(row.created || Date.now()),
         changed: row.changed ? new Date(row.changed) : null,
       })),
-      // Add Panes
       ...panes.rows.map((row: any) => ({
         id: row.id,
         title: row.title,
@@ -1609,6 +1647,7 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
   }
 }
 
+// Compute StoryFragment Analytics
 export async function computeStoryfragmentAnalytics(
   context?: APIContext
 ): Promise<StoryfragmentAnalytics[]> {
@@ -1668,6 +1707,7 @@ export async function computeStoryfragmentAnalytics(
   }));
 }
 
+// Log Token Usage
 export async function logTokenUsage(tokensUsed: number, context?: APIContext): Promise<boolean> {
   try {
     const client = await tursoClient.getClient(context);

@@ -102,7 +102,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Initialize CSS store
-  await ensureCssStoreInitialized();
+  if (import.meta.env.ENABLE_MULTI_TENANT !== "true") {
+    // Only initialize CSS store in single-tenant mode
+    await ensureCssStoreInitialized();
+  }
 
   // **Step 5: Authentication and authorization with tenant context**
   const auth = isAuthenticated(context);
