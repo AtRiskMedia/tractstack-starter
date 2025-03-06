@@ -1,4 +1,5 @@
 import { getSiteMap } from "@/utils/db/turso";
+import { getAPIContext } from "@/utils/api/astroContext";
 import { dateToUnixTimestamp, formatDateToYYYYMMDD } from "@/utils/common/helpers";
 import { getConfigFromRequest } from "@/utils/core/contextConfig";
 import type { APIRoute } from "astro";
@@ -6,13 +7,14 @@ import type { SiteMap } from "@/types";
 
 export const GET: APIRoute = async ({ request }) => {
   const config = await getConfigFromRequest(request);
+  const context = getAPIContext(Astro);
 
   const xmlTop = `
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`.trim();
   const xmlBottom = `</urlset>`;
 
-  const contentMap: SiteMap[] = await getSiteMap();
+  const contentMap: SiteMap[] = await getSiteMap(context);
   const entries = contentMap
     .map((c: SiteMap) => {
       if (c.type === `StoryFragment`) {

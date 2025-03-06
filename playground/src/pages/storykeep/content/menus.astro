@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
@@ -9,6 +10,7 @@ import { getAllMenusRowData } from "@/utils/db/turso.ts";
 import type { AuthStatus, MenuNode } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
+const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
@@ -40,7 +42,7 @@ const menuPayload: MenuNode = {
 };
 
 // Get all the data from Turso
-const menuRowData = await getAllMenusRowData();
+const menuRowData = await getAllMenusRowData(context);
 if (!menuRowData) {
   return new Response(null, {
     status: 404,

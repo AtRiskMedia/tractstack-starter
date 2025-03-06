@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
@@ -13,6 +14,7 @@ import type { LoadData } from "@/store/nodesSerializer.ts";
 const { id } = Astro.params;
 const create = id === "create";
 
+const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
@@ -43,7 +45,7 @@ const menuPayload: MenuNode = {
 };
 
 // Get all the data from Turso
-const menuRowData = id ? await getMenuByIdRowData(id) : null;
+const menuRowData = id ? await getMenuByIdRowData(id, context) : null;
 if (!menuRowData && !create) {
   return new Response(null, {
     status: 404,
@@ -72,7 +74,7 @@ if (!menu) {
 }
 
 // get storykeep datum
-const contentMap = await getFullContentMap();
+const contentMap = await getFullContentMap(context);
 ---
 
 <StoryKeep
