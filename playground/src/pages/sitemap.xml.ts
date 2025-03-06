@@ -1,13 +1,12 @@
 import { getSiteMap } from "@/utils/db/turso";
-import { getAPIContext } from "@/utils/api/astroContext";
 import { dateToUnixTimestamp, formatDateToYYYYMMDD } from "@/utils/common/helpers";
 import { getConfigFromRequest } from "@/utils/core/contextConfig";
+import { withTenantContext } from "@/utils/api/middleware";
 import type { APIRoute } from "astro";
-import type { SiteMap } from "@/types";
+import type { APIContext, SiteMap } from "@/types";
 
-export const GET: APIRoute = async ({ request }) => {
-  const config = await getConfigFromRequest(request);
-  const context = getAPIContext(Astro);
+export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
+  const config = await getConfigFromRequest(context.request);
 
   const xmlTop = `
 <?xml version="1.0" encoding="UTF-8"?>
@@ -64,4 +63,4 @@ export const GET: APIRoute = async ({ request }) => {
       "Content-Type": "application/xml",
     },
   });
-};
+});
