@@ -37,11 +37,6 @@ class TursoClientManager {
       dbPath: this.defaultDbDir,
     };
 
-    // For debugging - log tenant info
-    console.log(
-      `DB Client: Tenant ID=${tenantId}, ConfigPath=${tenantPaths.configPath}, DBPath=${tenantPaths.dbPath}`
-    );
-
     if (this.initPromises.has(tenantId)) {
       await this.initPromises.get(tenantId);
       const client = this.clients.get(tenantId);
@@ -69,8 +64,6 @@ class TursoClientManager {
   }
 
   private async getLocalDbPath(dbPath: string, tenantId: string): Promise<string> {
-    console.log(`Getting local DB path for tenant ${tenantId} at base path ${dbPath}`);
-
     try {
       // Ensure the directory exists
       await fs.mkdir(dbPath, { recursive: true });
@@ -140,8 +133,6 @@ class TursoClientManager {
     tenantId: string,
     tenantPaths: { configPath: string; dbPath: string }
   ): Promise<void> {
-    console.log(`Initializing DB for tenant ${tenantId} with paths:`, tenantPaths);
-
     try {
       let client: Client;
       // First check if multi-tenant mode is enabled
@@ -150,9 +141,6 @@ class TursoClientManager {
       if (isMultiTenant) {
         // In multi-tenant mode, always use local database regardless of credentials
         const localPath = await this.getLocalDbPath(tenantPaths.dbPath, tenantId);
-        console.log(
-          `Multi-tenant mode: Using local database for tenant ${tenantId} at ${localPath}`
-        );
         client = createClient({ url: `file:${localPath}` });
       } else {
         // In single-tenant mode, check for Turso credentials
@@ -167,13 +155,9 @@ class TursoClientManager {
               : `PRIVATE_TURSO_AUTH_TOKEN_${tenantId}`;
           const url = import.meta.env[urlKey];
           const authToken = import.meta.env[tokenKey];
-          console.log(`Single-tenant mode: Using Turso cloud database for tenant ${tenantId}`);
           client = createClient({ url, authToken });
         } else {
           const localPath = await this.getLocalDbPath(tenantPaths.dbPath, tenantId);
-          console.log(
-            `Single-tenant mode: Using local database for tenant ${tenantId} at ${localPath}`
-          );
           client = createClient({ url: `file:${localPath}` });
         }
       }

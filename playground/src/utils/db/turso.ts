@@ -1174,7 +1174,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
     }
     return mappedData;
   } catch (error) {
-    console.log("Unable to fetch content map:", error);
     return [];
   }
 }
@@ -1642,7 +1641,6 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
     ];
     return siteMap;
   } catch (error) {
-    console.log("Unable to fetch site map:", error);
     return [];
   }
 }
@@ -1718,7 +1716,6 @@ export async function logTokenUsage(tokensUsed: number, context?: APIContext): P
             VALUES (CURRENT_TIMESTAMP, ?)`,
       args: [tokensUsed],
     });
-    console.log(`Logged ${tokensUsed} tokens to aai_tokens_used table`);
     return true;
   } catch (error) {
     console.error("Error logging token usage:", error);

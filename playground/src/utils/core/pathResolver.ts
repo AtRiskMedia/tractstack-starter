@@ -14,13 +14,11 @@ export async function resolvePaths(tenantId: string = `default`): Promise<{
 
   // Check if tenant paths are cached and exist
   if (registry[tenantId] && registry[tenantId].exists) {
-    console.log(`Cache hit for tenant: ${tenantId}`);
     // Update lastAccessed timestamp and return cached data
     registry[tenantId].lastAccessed = Date.now();
     tenantRegistry.set(registry);
     return registry[tenantId];
   }
-  console.log(`Cache miss, resolving paths for tenant: ${tenantId}`);
 
   // If not cached or doesn't exist, resolve paths
   let resolvedPaths: {

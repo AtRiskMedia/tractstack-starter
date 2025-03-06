@@ -19,7 +19,6 @@ const CONFIG_FILES = ["init.json", "turso.json"];
 async function readConfigFile(configPath: string, filename: string): Promise<ConfigFile | null> {
   try {
     const filePath = path.join(configPath, filename);
-    console.log(`Reading config file: ${filePath}`);
 
     // Check if file exists
     try {
@@ -76,8 +75,6 @@ function detectCapabilities(): SystemCapabilities {
 export async function getConfig(configPath?: string): Promise<Config | null> {
   const defaultConfigPath = path.join(process.cwd(), "config");
   const actualConfigPath = configPath || defaultConfigPath;
-
-  console.log(`Loading config from: ${actualConfigPath}`);
 
   try {
     const configFiles = await Promise.all(
@@ -155,9 +152,6 @@ export async function validateConfig(config: Config | null): Promise<ValidationR
   const isInitialized =
     initConfig.SITE_INIT === true && initConfig.HOME_SLUG && initConfig.TRACTSTACK_HOME_SLUG;
   const hasValidHomeSlug = typeof initConfig.HOME_SLUG === "string";
-
-  console.log("InitConfig details:", initConfig);
-  console.log("isInitialized:", isInitialized, "hasValidHomeSlug:", hasValidHomeSlug);
 
   if (!isInitialized || !hasValidHomeSlug) {
     return {

@@ -17,10 +17,6 @@ async function ensureCssStoreInitialized() {
     try {
       await updateCssStore();
     } catch (error: unknown) {
-      console.log(
-        "CSS store initialization error, using default CSS files:",
-        error instanceof Error ? error.message : String(error)
-      );
       cssStore.set({
         content: null,
         version: null,
@@ -32,7 +28,6 @@ async function ensureCssStoreInitialized() {
 export const onRequest = defineMiddleware(async (context, next) => {
   // **Step 1: Determine tenant ID based on environment and hostname**
   const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
-  console.log(`Multi-tenant enabled: ${isMultiTenant}`);
   let tenantId = "default";
 
   if (isMultiTenant) {
@@ -49,14 +44,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
   }
-  console.log(`Using tenant ID: ${tenantId}`);
 
   // **Step 2: Resolve tenant-specific paths**
   const resolved = await resolvePaths(tenantId);
 
   // **For multi-tenant mode: If tenant doesn't exist, return 404 immediately**
   if (isMultiTenant && (!resolved.exists || resolved.configPath === "")) {
-    console.log(`Tenant ${tenantId} not found or invalid - returning 404`);
     return new Response(null, {
       status: 404,
       statusText: "Tenant Not Found",
@@ -68,7 +61,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     id: tenantId,
     paths: resolved,
   };
-  console.log(`Config path: ${context.locals.tenant.paths.configPath}`);
 
   // **Step 4: Handle dynamic file serving with tenant-specific public path**
   if (context.request.method === "GET") {
@@ -129,10 +121,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // **Step 6: Config validation with tenant-specific config path**
   const config = await getConfig(context.locals.tenant.paths.configPath);
-  console.log("Processing request path:", context.url.pathname);
-  if (config) {
-    console.log("Final config being used:", config.init);
-  }
 
   // Store tenant-specific validation result
   const tenantValidation = await validateConfig(config);
@@ -189,7 +177,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Handle uninitialized or invalid config
   // For non-multi-tenant mode, or default tenant in multi-tenant mode
   if (!tenantValidation.isValid && !tenantValidation.hasPassword) {
-    console.log("Init redirect check:", !tenantValidation.isValid, !tenantValidation.hasPassword);
     return context.redirect("/storykeep/init");
   }
 
