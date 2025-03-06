@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { isValidContentPath } from "@/utils/common/routeValidation.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
@@ -14,6 +15,7 @@ import { Close } from "@/components/frontend/nav/Close.tsx";
 import type { AuthStatus, ImpressionDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
+const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
@@ -31,7 +33,7 @@ if (!slug || !isValidContentPath(slug)) {
 }
 
 // Get all the data from Turso
-const fullData = await getContextPaneBySlugFullRowData(slug);
+const fullData = await getContextPaneBySlugFullRowData(slug, context);
 if (!fullData) {
   return new Response(null, {
     status: 404,

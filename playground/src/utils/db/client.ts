@@ -71,11 +71,13 @@ class TursoClientManager {
   private async getLocalDbPath(dbPath: string, tenantId: string): Promise<string> {
     console.log(`Getting local DB path for tenant ${tenantId} at base path ${dbPath}`);
 
-    const tenantDbDir = path.join(dbPath, tenantId);
-
     try {
-      await fs.mkdir(tenantDbDir, { recursive: true });
-      const dbFilePath = path.join(tenantDbDir, "tractstack.db");
+      // Ensure the directory exists
+      await fs.mkdir(dbPath, { recursive: true });
+
+      // Create the database file directly in the tenant's db directory
+      const dbFilePath = path.join(dbPath, "tractstack.db");
+
       try {
         await fs.access(dbFilePath);
       } catch {

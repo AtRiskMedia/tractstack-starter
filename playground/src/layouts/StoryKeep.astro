@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { ViewTransitions } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
@@ -24,6 +25,7 @@ const {
   modDatetime,
 } = Astro.props;
 
+const context = getAPIContext(Astro);
 const defaultFavIcon = `/favicon.ico`;
 const defaultSocialImageURL = ogImage || `/og.png`;
 const defaultSocialLogoURL = `/oglogo.png`;
@@ -33,9 +35,9 @@ const defaultSocialDesc = `No-code website builder and content marketing platfor
 const buildVersion = import.meta.env.BUILD_TIME || Date.now();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
-const contentMap: FullContentMap[] = await getFullContentMap();
+const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
-const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics();
+const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics(context);
 ---
 
 <!doctype html>

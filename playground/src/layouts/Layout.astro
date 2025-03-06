@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { ViewTransitions } from "astro:transitions";
 import { joinUrlPaths } from "@/utils/common/helpers";
 import { getFullContentMap } from "@/utils/db/turso.ts";
@@ -24,7 +25,8 @@ const {
   id,
 } = Astro.props;
 
-const contentMap: FullContentMap[] = await getFullContentMap();
+const context = getAPIContext(Astro);
+const contentMap: FullContentMap[] = await getFullContentMap(context);
 let storyFragmentDescription;
 if (id) {
   const storyFragment = contentMap.find(

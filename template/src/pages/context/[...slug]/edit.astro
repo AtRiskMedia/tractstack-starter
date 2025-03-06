@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import { getCtx } from "@/store/nodes.ts";
@@ -15,6 +16,7 @@ import { ulid } from "ulid";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { PaneNode } from "@/types";
 
+const context = getAPIContext(Astro);
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
@@ -45,7 +47,7 @@ if (slug === "create") {
     paneNodes: [paneNode],
   };
 } else {
-  const fullData = await getContextPaneBySlugFullRowData(slug);
+  const fullData = await getContextPaneBySlugFullRowData(slug, context);
   if (!fullData) {
     return new Response(null, {
       status: 404,

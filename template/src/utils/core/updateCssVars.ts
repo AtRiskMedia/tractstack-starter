@@ -9,11 +9,6 @@ interface CssUpdateResult {
 }
 
 export async function updateCssVars(brandColors: string): Promise<CssUpdateResult> {
-  if (import.meta.env.ENABLE_MULTI_TENANT === "true") {
-    return {
-      success: true,
-    };
-  }
   try {
     // Read existing CSS file
     const cssContent = await fs.readFile(CSS_FILE_PATH, "utf-8");

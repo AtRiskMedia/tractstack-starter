@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import { ReactNodesWrapper } from "@/components/compositor-nodes/ReactNodesWrapper";
@@ -16,6 +17,7 @@ import { getTractStackNode } from "@/utils/db/api/getTractStackNode";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { StoryFragmentNode } from "@/types";
 
+const context = getAPIContext(Astro);
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
@@ -61,7 +63,7 @@ if (slug === "create") {
     storyfragmentNodes: [storyFragmentNode],
   };
 } else {
-  const fullData = await getStoryFragmentBySlugFullRowData(slug);
+  const fullData = await getStoryFragmentBySlugFullRowData(slug, context);
   if (!fullData) {
     return new Response(null, {
       status: 404,
