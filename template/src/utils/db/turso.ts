@@ -42,7 +42,7 @@ import type {
 import type { APIContext } from "@/types";
 
 // Helper to check if multi-tenant mode is enabled
-const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
 
 // Define interfaces for full row data
 export interface StoryFragmentFullRowData {

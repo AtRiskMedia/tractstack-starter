@@ -28,8 +28,6 @@ const client = new AssemblyAI({
 
 export async function runLemurTask(params: LemurTaskParams, context: APIContext) {
   const tenantId = context.locals.tenant?.id || "default";
-  console.log(`runLemurTask: Tenant=${tenantId}`);
-
   if (!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY) {
     console.error(`AssemblyAI API key not configured for tenant ${tenantId}`);
     return null;

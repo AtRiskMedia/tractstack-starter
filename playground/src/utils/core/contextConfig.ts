@@ -2,7 +2,7 @@ import { getConfig } from "./config";
 import { resolvePaths } from "./pathResolver";
 
 export async function getConfigFromRequest(request: Request) {
-  const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   let tenantId = "default";
 
   if (isMultiTenant) {

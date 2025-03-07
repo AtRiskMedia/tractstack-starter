@@ -1,10 +1,11 @@
 ---
-import { isAuthenticated, setAuthenticated } from "../../utils/core/auth";
-import { getConfig, validateConfig } from "../../utils/core/config";
+import { isAuthenticated, setAuthenticated } from "@/utils/core/auth";
+import { getConfig, validateConfig } from "@/utils/core/config";
 
 // Validate config and environment
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
+const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
 
 // If no password protection is set up, redirect to init
 if (!validation.hasPassword) {
@@ -31,16 +32,35 @@ if (authenticated && !forceLogin) {
 
 if (Astro.request.method === "POST") {
   const data = await Astro.request.formData();
-  const password = data.get("password");
+  const password = data.get("password")?.toString();
 
-  // Check if password matches admin first, then editor
-  if (password === import.meta.env.PRIVATE_ADMIN_PASSWORD) {
-    setAuthenticated(Astro, true, true); // true for isAdmin
-    return Astro.redirect(redirectPath);
-  } else if (password === import.meta.env.PRIVATE_EDITOR_PASSWORD) {
-    setAuthenticated(Astro, true, false); // false for isAdmin
-    return Astro.redirect(redirectPath);
-  } else {
+  if (!password) {
+    loginError = true;
+    return;
+  }
+
+  try {
+    if (isMultiTenant && config?.init) {
+      const initConfig = config.init;
+      if (password === initConfig.ADMIN_PASSWORD) {
+        setAuthenticated(Astro, true, true);
+        return Astro.redirect(redirectPath);
+      } else if (password === initConfig.EDITOR_PASSWORD) {
+        setAuthenticated(Astro, true, false);
+        return Astro.redirect(redirectPath);
+      }
+    } else {
+      if (password === import.meta.env.PRIVATE_ADMIN_PASSWORD) {
+        setAuthenticated(Astro, true, true);
+        return Astro.redirect(redirectPath);
+      } else if (password === import.meta.env.PRIVATE_EDITOR_PASSWORD) {
+        setAuthenticated(Astro, true, false);
+        return Astro.redirect(redirectPath);
+      }
+    }
+    loginError = true;
+  } catch (error) {
+    console.error("Login error:", error);
     loginError = true;
   }
 }

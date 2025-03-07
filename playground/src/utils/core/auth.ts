@@ -40,24 +40,39 @@ export function setAuthenticated(
   isAdmin: boolean = false,
   isOpenDemo: boolean = false
 ) {
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   const tenantId = context.locals.tenant?.id || "default";
   const baseDomain = import.meta.env.SITE_DOMAIN || "tractstack.com";
-  const domain = tenantId === "default" ? baseDomain : `${tenantId}.sandbox.${baseDomain}`;
+  let domain: string | undefined;
+
+  if (isMultiTenant) {
+    if (tenantId === "localhost" && !import.meta.env.PROD) {
+      domain = undefined; // No domain for localhost in dev
+    } else {
+      domain = [`default`, `localhost`].includes(tenantId)
+        ? baseDomain
+        : `${tenantId}.sandbox.${baseDomain}`;
+    }
+  } else {
+    // Single-tenant mode: use no domain in dev, base domain in prod
+    domain = import.meta.env.PROD ? baseDomain : undefined;
+  }
 
   if (value) {
     let tokenValue = "authenticated";
     if (isAdmin) tokenValue = "admin";
     else if (isOpenDemo) tokenValue = "open_demo";
 
-    context.cookies.set("auth_token", tokenValue, {
+    const cookieOptions = {
       httpOnly: true,
       secure: import.meta.env.PROD,
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
-      maxAge: 60 * 60 * 24, // 24 hours
-      domain,
-    });
+      maxAge: 60 * 60 * 24,
+      ...(domain && { domain }),
+    };
+    context.cookies.set("auth_token", tokenValue, cookieOptions);
   } else {
-    context.cookies.delete("auth_token", { path: "/", domain });
+    context.cookies.delete("auth_token", { path: "/", ...(domain && { domain }) });
   }
 }

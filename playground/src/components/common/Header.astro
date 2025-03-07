@@ -40,6 +40,7 @@ const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
 const wordmarkIsSvg = wordmark.includes("svg");
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
+console.log(user);
 ---
 
 <header class="relative bg-white shadow-inner">

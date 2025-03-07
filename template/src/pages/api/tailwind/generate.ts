@@ -9,7 +9,7 @@ import { getUniqueTailwindClasses } from "@/utils/db/turso";
 import { updateCssStore } from "@/store/css";
 
 export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
-  const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   if (isMultiTenant) {
     return new Response("CSS generation disabled in multi-tenant mode", { status: 403 });
   }

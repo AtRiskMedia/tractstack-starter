@@ -100,6 +100,8 @@ export interface InitConfig {
   OGLOGO: string;
   FAVICON: string;
   KEYBOARD_ACCESSIBLE: boolean;
+  ADMIN_PASSWORD?: string;
+  EDITOR_PASSWORD?: string;
   [key: string]: unknown;
 }
 

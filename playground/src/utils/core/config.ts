@@ -48,17 +48,31 @@ async function readConfigFile(configPath: string, filename: string): Promise<Con
 }
 
 /**
- * Detects system capabilities based on environment configuration
+ * Detects system capabilities based on environment configuration and tenant config
+ * @param config - Optional config object to check for tenant-specific passwords
  */
-function detectCapabilities(): SystemCapabilities {
+function detectCapabilities(config?: Config | null): SystemCapabilities {
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+
+  // Check environment variables (always used in single-tenant mode)
   const hasTursoCredentials =
     !!import.meta.env.PRIVATE_TURSO_DATABASE_URL && !!import.meta.env.PRIVATE_TURSO_AUTH_TOKEN;
 
-  const hasPassword =
+  const hasEnvPassword =
     !!import.meta.env.PRIVATE_ADMIN_PASSWORD && !!import.meta.env.PRIVATE_EDITOR_PASSWORD;
 
   const hasConcierge =
     !!import.meta.env.PRIVATE_CONCIERGE_BASE_URL && !!import.meta.env.PRIVATE_CONCIERGE_AUTH_SECRET;
+
+  // Check config for passwords (used in multi-tenant mode)
+  let hasConfigPassword = false;
+  if (isMultiTenant && config?.init) {
+    const initConfig = config.init as InitConfig;
+    hasConfigPassword = !!initConfig.ADMIN_PASSWORD && !!initConfig.EDITOR_PASSWORD;
+  }
+
+  // In multi-tenant mode, use config passwords; in single-tenant mode use env passwords
+  const hasPassword = isMultiTenant ? hasConfigPassword : hasEnvPassword;
 
   return {
     hasTurso: hasTursoCredentials,
@@ -108,7 +122,9 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
  */
 export async function validateConfig(config: Config | null): Promise<ValidationResult> {
   const envValidation = validateEnv();
-  const capabilities = detectCapabilities();
+  const capabilities = detectCapabilities(config);
+
+  // Determine if we have passwords - either in env vars or in tenant config
   const hasPassword = capabilities.hasPassword;
 
   if (!envValidation.isValid) {

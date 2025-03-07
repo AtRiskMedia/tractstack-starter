@@ -3,7 +3,6 @@ import type { APIContext } from "@/types";
 
 export async function trackLemurTokenUsage(response: any, context: APIContext): Promise<void> {
   const tenantId = context.locals.tenant?.id || "default";
-  console.log(`trackLemurTokenUsage: Tenant=${tenantId}`);
 
   if (response && response.usage) {
     try {

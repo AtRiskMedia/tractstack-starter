@@ -27,13 +27,12 @@ async function ensureCssStoreInitialized() {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // **Step 1: Determine tenant ID based on environment and hostname**
-  const isMultiTenant = import.meta.env.ENABLE_MULTI_TENANT === "true";
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   let tenantId = "default";
 
   if (isMultiTenant) {
     const hostname = context.request.headers.get("host");
     if (hostname) {
-      // Check for localhost explicitly for testing
       if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
         tenantId = "localhost";
       } else {
@@ -103,8 +102,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Initialize CSS store
-  if (import.meta.env.ENABLE_MULTI_TENANT !== "true") {
-    // Only initialize CSS store in single-tenant mode
+  if (import.meta.env.PUBLIC_ENABLE_MULTI_TENANT !== "true") {
     await ensureCssStoreInitialized();
   }
 
@@ -122,21 +120,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // **Step 6: Config validation with tenant-specific config path**
   const config = await getConfig(context.locals.tenant.paths.configPath);
 
-  // Store tenant-specific validation result
   const tenantValidation = await validateConfig(config);
 
-  // Common path for both single and multi-tenant mode continues below
+  const hasPassword = isMultiTenant
+    ? !!(config?.init?.ADMIN_PASSWORD && config?.init?.EDITOR_PASSWORD)
+    : !!(import.meta.env.PRIVATE_ADMIN_PASSWORD && import.meta.env.PRIVATE_EDITOR_PASSWORD);
+
   const isInitialized =
-    (config?.init as Record<string, unknown>)?.SITE_INIT === true &&
-    typeof import.meta.env.PRIVATE_ADMIN_PASSWORD === "string" &&
-    import.meta.env.PRIVATE_ADMIN_PASSWORD;
+    (config?.init as Record<string, unknown>)?.SITE_INIT === true && hasPassword;
 
   const url = new URL(context.request.url);
   const forceLogin = url.searchParams.get("force") === "true";
 
   if (!isInitialized) return next();
 
-  // Define protected routes
+  // Define protected routes (unchanged)
   const adminProtectedRoutes = [
     "/storykeep/settings",
     ...(isInitialized ? ["/storykeep/init"] : []),
@@ -175,7 +173,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Handle uninitialized or invalid config
-  // For non-multi-tenant mode, or default tenant in multi-tenant mode
   if (!tenantValidation.isValid && !tenantValidation.hasPassword) {
     return context.redirect("/storykeep/init");
   }
@@ -191,7 +188,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  // **Step 7: Route protection logic**
+  // **Step 7: Route protection logic** (unchanged)
   const isProtectedRoute = protectedRoutes.some((route) =>
     route.includes("*")
       ? new RegExp("^" + route.replace("*", ".*")).test(context.url.pathname)
