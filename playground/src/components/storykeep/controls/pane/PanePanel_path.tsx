@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
-import { ulid } from "ulid";
+//import { ulid } from "ulid";
 import { getCtx } from "@/store/nodes.ts";
 import { PaneConfigMode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { Dispatch, SetStateAction } from "react";
 import type { PaneNode, BeliefNode } from "@/types";
 import MagicPathBuilder from "../fields/MagicPathBuilder";
-import BeliefEditor from "../manage/BeliefEditor";
+//import BeliefEditor from "../manage/BeliefEditor";
 
 type PathsType = Record<string, string[]>;
 
@@ -21,7 +21,7 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
   const [availableBeliefs, setAvailableBeliefs] = useState<BeliefNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isCreatingBelief, setIsCreatingBelief] = useState(false);
+  //const [isCreatingBelief, setIsCreatingBelief] = useState(false);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
@@ -149,42 +149,42 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
     );
   }
 
-  if (isCreatingBelief) {
-    const emptyBelief: BeliefNode = {
-      id: ulid(),
-      nodeType: "Belief",
-      parentId: null,
-      title: "",
-      slug: "",
-      scale: "",
-    };
+  //if (isCreatingBelief) {
+  //  const emptyBelief: BeliefNode = {
+  //    id: ulid(),
+  //    nodeType: "Belief",
+  //    parentId: null,
+  //    title: "",
+  //    slug: "",
+  //    scale: "",
+  //  };
 
-    return (
-      <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4 shadow-inner">
-        <div className="px-3.5">
-          <div className="flex justify-between mb-4">
-            <h3 className="text-lg font-bold">Create New Belief</h3>
-            <button
-              onClick={() => setIsCreatingBelief(false)}
-              className="text-cyan-700 hover:text-black"
-            >
-              ← Back to Magic Paths
-            </button>
-          </div>
-          <BeliefEditor
-            belief={emptyBelief}
-            create={true}
-            isEmbedded={true}
-            onComplete={() => {
-              setIsCreatingBelief(false);
-              fetchBeliefs();
-            }}
-            onCancel={() => setIsCreatingBelief(false)}
-          />
-        </div>
-      </div>
-    );
-  }
+  //  return (
+  //    <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4 shadow-inner">
+  //      <div className="px-3.5">
+  //        <div className="flex justify-between mb-4">
+  //          <h3 className="text-lg font-bold">Create New Belief</h3>
+  //          <button
+  //            onClick={() => setIsCreatingBelief(false)}
+  //            className="text-cyan-700 hover:text-black"
+  //          >
+  //            ← Back to Magic Paths
+  //          </button>
+  //        </div>
+  //        <BeliefEditor
+  //          belief={emptyBelief}
+  //          create={true}
+  //          isEmbedded={true}
+  //          onComplete={() => {
+  //            setIsCreatingBelief(false);
+  //            fetchBeliefs();
+  //          }}
+  //          onCancel={() => setIsCreatingBelief(false)}
+  //        />
+  //      </div>
+  //    </div>
+  //  );
+  //}
 
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4 shadow-inner">
@@ -231,14 +231,6 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
             <li>Use Match Any Value (*) to match any value for a belief</li>
             <li>For custom beliefs, you can edit available values using the check icon</li>
           </ul>
-          <div className="mt-4">
-            <button
-              onClick={() => setIsCreatingBelief(true)}
-              className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800"
-            >
-              Add New Belief
-            </button>
-          </div>
         </div>
       </div>
     </div>

@@ -32,24 +32,33 @@ const processFilter = (
   beliefs: BeliefStore[],
   shouldMatchAll: boolean = true
 ): boolean => {
-  let match = false;
-  let all = true;
+  // If no filters, return appropriate default
+  if (!filter || Object.keys(filter).length === 0) {
+    return shouldMatchAll;
+  }
 
-  for (const [key, value] of Object.entries(filter)) {
-    if (typeof value === "string") {
-      const matchingBelief = beliefs.find((belief) => matchesBelief(belief, key, value));
-      if (matchingBelief) match = true;
-      else all = false;
-    } else {
-      for (const v of value) {
-        const matchingBelief = beliefs.find((belief) => matchesBelief(belief, key, v));
-        if (matchingBelief) match = true;
-        else all = false;
-      }
+  for (const [key, valueOrValues] of Object.entries(filter)) {
+    const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
+
+    // Check if ANY of the values match for this belief tag
+    const anyValueMatches = values.some((value) =>
+      beliefs.some((belief) => matchesBelief(belief, key, value))
+    );
+
+    // For AND logic between tags (shouldMatchAll=true), one failure means overall failure
+    if (shouldMatchAll && !anyValueMatches) {
+      return false;
+    }
+
+    // For OR logic between tags (shouldMatchAll=false), one success means overall success
+    if (!shouldMatchAll && anyValueMatches) {
+      return true;
     }
   }
 
-  return shouldMatchAll ? match && all : match;
+  // If we get here with shouldMatchAll=true, all criteria were met
+  // If we get here with shouldMatchAll=false, no criteria were met
+  return shouldMatchAll;
 };
 
 // Memoized style objects
