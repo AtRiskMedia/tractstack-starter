@@ -3,12 +3,19 @@ import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
+import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import { storyFragmentTopicsStore } from "@/store/storykeep";
 import { StoryFragmentMode } from "@/types.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
+import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import type { StoryFragmentNode } from "@/types.ts";
 import type { MouseEventHandler, ChangeEvent } from "react";
+
+// Constants for image validation (same as in OG panel)
+const TARGET_WIDTH = 1200;
+const TARGET_HEIGHT = 630;
+const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
 interface Topic {
   id?: string | number;
@@ -28,9 +35,22 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
   const [details, setDetails] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [dataFetched, setDataFetched] = useState(false);
+
+  // Image handling states (from OG panel)
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
-  const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
+  const thisNode = allNodes.get(nodeId);
+
+  // Safely access storyfragmentNode
+  if (!thisNode || !isStoryFragmentNode(thisNode)) {
+    return null;
+  }
+  const storyfragmentNode = thisNode as StoryFragmentNode;
 
   // Use a ref to track initialization
   const initialized = useRef(false);
@@ -39,6 +59,41 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
   const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
   const storedData = $storyFragmentTopics[nodeId];
 
+  // Image validation function (same as in OG panel)
+  const validateImage = (file: File): Promise<{ isValid: boolean; error?: string }> => {
+    return new Promise((resolve) => {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        resolve({
+          isValid: false,
+          error: "Please upload only JPG or PNG files",
+        });
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        if (img.width !== TARGET_WIDTH || img.height !== TARGET_HEIGHT) {
+          resolve({
+            isValid: false,
+            error: `Image must be exactly ${TARGET_WIDTH}x${TARGET_HEIGHT} pixels. Uploaded image is ${img.width}x${img.height} pixels.`,
+          });
+        } else {
+          resolve({ isValid: true });
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({
+          isValid: false,
+          error: "Failed to load image for validation",
+        });
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  // Initialize data
   useEffect(() => {
     const fetchData = async () => {
       // Prevent multiple fetches
@@ -46,6 +101,9 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
 
       setLoading(true);
       try {
+        // Initialize image source from existing socialImagePath
+        setImageSrc(storyfragmentNode.socialImagePath || null);
+
         const topicsResponse = await fetch("/api/turso/getAllTopics");
         if (topicsResponse.ok) {
           const topicsData = await topicsResponse.json();
@@ -127,7 +185,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     };
 
     fetchData();
-  }, [nodeId, storedData]);
+  }, [nodeId, storedData, storyfragmentNode.socialImagePath]);
 
   // Update the store when topics or details change, but only after initial loading
   useEffect(() => {
@@ -148,6 +206,113 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     }
   }, [topics, details, nodeId, loading, dataFetched]);
 
+  // Image handling functions (from OG panel)
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleRemoveImage = async () => {
+    if (storyfragmentNode.socialImagePath) {
+      setIsProcessing(true);
+      try {
+        // Delete existing image
+        await fetch("/api/fs/deleteOgImage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path: storyfragmentNode.socialImagePath,
+          }),
+        });
+
+        const updatedNode = cloneDeep({
+          ...storyfragmentNode,
+          socialImagePath: null,
+          isChanged: true,
+        });
+        ctx.modifyNodes([updatedNode]);
+        setImageSrc(null);
+        setImageError(null);
+      } catch (err) {
+        setImageError("Failed to remove image");
+        console.error("Error removing image:", err);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+  };
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    setImageError(null);
+
+    try {
+      // Validate image dimensions and format
+      const validation = await validateImage(file);
+      if (!validation.isValid) {
+        setImageError(validation.error || "Invalid image");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Delete existing image if present
+      if (storyfragmentNode.socialImagePath) {
+        await fetch("/api/fs/deleteOgImage", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            path: storyfragmentNode.socialImagePath,
+          }),
+        });
+      }
+
+      // Create new filename using node ID and original extension
+      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filename = `${nodeId}.${fileExtension}`;
+      const imageDir = "/images/og";
+
+      // Read file as base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = (e) => resolve(e.target?.result as string);
+      });
+      reader.readAsDataURL(file);
+      const base64 = await base64Promise;
+
+      // Upload to filesystem
+      const response = await fetch("/api/fs/saveOgImage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: imageDir,
+          filename,
+          data: base64,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image");
+      }
+
+      const { path: savedPath } = await response.json();
+      const updatedNode = cloneDeep({
+        ...storyfragmentNode,
+        socialImagePath: savedPath,
+        isChanged: true,
+      });
+      ctx.modifyNodes([updatedNode]);
+      setImageSrc(savedPath);
+    } catch (err) {
+      setImageError("Failed to process image");
+      console.error("Error uploading image:", err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Topic handling functions
   const addTopic = (titleToAdd: string, sourceTopic?: Topic) => {
     if (!titleToAdd) return;
 
@@ -186,7 +351,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
             : false;
         const titleMatch = topic.title === topicToRemove.title;
         const isMatch = idMatch || titleMatch; // Match if either ID or title matches
-        return !isMatch; // Keep if it doesn’t match
+        return !isMatch; // Keep if it doesn't match
       });
       return newTopics;
     });
@@ -205,6 +370,11 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
       ctx.modifyNodes([updatedNode]);
     }
   };
+
+  // Check if prerequisites are met for showing topics
+  const hasDescription = details && details.trim().length > 0;
+  const hasImage = imageSrc !== null;
+  const canShowTopics = hasDescription && hasImage;
 
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
@@ -225,9 +395,93 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
         {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
 
         <div className="space-y-6">
+          <div className="py-2.5 mb-4 max-w-2xl">
+            <div className="p-3.5 border-2 border-dashed bg-slate-50">
+              <div className="text-base text-mydarkgrey leading-8">
+                <p>
+                  Once you've added a social share image and page description, this page can be
+                  included in Featured Content or List Content code hooks!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Share Image Section (from OG panel) */}
+          <div>
+            <h3 className="block text-sm font-bold text-gray-700 mb-2">
+              Social Share Image (required)
+            </h3>
+            <span className="block text-sm text-mydarkgrey mb-2">
+              Upload an image (required size: {TARGET_WIDTH}x{TARGET_HEIGHT}px)
+            </span>
+
+            <div className="flex items-center space-x-4">
+              <div className="relative w-64 aspect-[1.91/1] bg-mylightgrey/5 rounded-md overflow-hidden">
+                {imageSrc ? (
+                  <>
+                    <img
+                      src={imageSrc}
+                      alt="Open Graph preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={handleRemoveImage}
+                      disabled={isProcessing}
+                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-mylightgrey disabled:opacity-50"
+                    >
+                      <XMarkIcon className="w-4 h-4 text-mydarkgrey" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full border-2 border-dashed border-mydarkgrey/30 rounded-md">
+                    <span className="text-sm text-mydarkgrey">No image selected</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-grow">
+                <button
+                  onClick={handleUploadClick}
+                  disabled={isProcessing}
+                  className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+                >
+                  <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
+                  {isProcessing ? "Processing..." : imageSrc ? "Change Image" : "Upload Image"}
+                </button>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg,image/png"
+                  className="hidden"
+                />
+
+                {imageSrc && <p className="mt-2 text-xs text-mydarkgrey break-all">{imageSrc}</p>}
+
+                {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
+              </div>
+            </div>
+
+            <div className="text-sm text-mydarkgrey space-y-2 mt-2">
+              <p>This image will be used when your page is shared on social media.</p>
+              <p>Requirements:</p>
+              <ul className="list-disc ml-5 space-y-1">
+                <li>
+                  Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels
+                </li>
+                <li>Only JPG or PNG formats are accepted</li>
+                <li>Keep important content centered</li>
+                <li>Use clear, high-contrast imagery</li>
+                <li>Avoid small text</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Page Description Section */}
           <div>
             <label htmlFor="description" className="block text-sm font-bold text-gray-700 mb-1">
-              Page Description
+              Page Description (required)
             </label>
             <textarea
               id="description"
@@ -242,7 +496,8 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
             </p>
           </div>
 
-          {details && (
+          {/* Topics Section - only visible if prerequisites are met */}
+          {canShowTopics ? (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Topics</label>
 
@@ -255,11 +510,9 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
                   onChange={(e) => setNewTopicTitle(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTopic(newTopicTitle.trim());
-                        setNewTopicTitle("");
-                      }
+                      e.preventDefault();
+                      addTopic(newTopicTitle.trim());
+                      setNewTopicTitle("");
                     }
                   }}
                 />
@@ -294,44 +547,47 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
                   </p>
                 )}
               </div>
-              {details && (
-                <div className="mt-4">
-                  <h4 className="text-xs font-bold text-gray-700 mb-2">More Tags</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {existingTopics
-                      .filter(
-                        (existingTopic) =>
-                          !topics.some(
-                            (topic) =>
-                              topic.id === existingTopic.id ||
-                              topic.title.toLowerCase() === existingTopic.title.toLowerCase()
-                          )
-                      )
-                      .map((availableTopic) => (
-                        <button
-                          key={`available-${availableTopic.id || availableTopic.title}`}
-                          onClick={() => addTopic(availableTopic.title, availableTopic)}
-                          className="flex items-center bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full px-3 py-1 transition-colors"
-                        >
-                          <TagIcon className="h-3 w-3 text-gray-400 mr-1" />
-                          <span className="text-xs text-gray-600">{availableTopic.title}</span>
-                        </button>
-                      ))}
-                    {existingTopics.filter(
+              <div className="mt-4">
+                <h4 className="text-xs font-bold text-gray-700 mb-2">More Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {existingTopics
+                    .filter(
                       (existingTopic) =>
                         !topics.some(
                           (topic) =>
                             topic.id === existingTopic.id ||
                             topic.title.toLowerCase() === existingTopic.title.toLowerCase()
                         )
-                    ).length === 0 && (
-                      <p className="text-xs text-gray-500 italic">
-                        No additional topics available.
-                      </p>
-                    )}
-                  </div>
+                    )
+                    .map((availableTopic) => (
+                      <button
+                        key={`available-${availableTopic.id || availableTopic.title}`}
+                        onClick={() => addTopic(availableTopic.title, availableTopic)}
+                        className="flex items-center bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full px-3 py-1 transition-colors"
+                      >
+                        <TagIcon className="h-3 w-3 text-gray-400 mr-1" />
+                        <span className="text-xs text-gray-600">{availableTopic.title}</span>
+                      </button>
+                    ))}
+                  {existingTopics.filter(
+                    (existingTopic) =>
+                      !topics.some(
+                        (topic) =>
+                          topic.id === existingTopic.id ||
+                          topic.title.toLowerCase() === existingTopic.title.toLowerCase()
+                      )
+                  ).length === 0 && (
+                    <p className="text-xs text-gray-500 italic">No additional topics available.</p>
+                  )}
                 </div>
-              )}
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-amber-50 rounded-md border border-amber-200">
+              <p className="text-amber-800">
+                <strong>Both a page description and social share image are required</strong> before
+                you can add topics. Please complete both sections above to continue.
+              </p>
             </div>
           )}
         </div>
