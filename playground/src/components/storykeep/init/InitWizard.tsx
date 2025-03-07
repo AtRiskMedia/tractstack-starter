@@ -267,7 +267,6 @@ export default function InitWizard({
       });
     }
     const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
-    console.log(isMultiTenant, import.meta.env.PUBLIC_ENABLE_MULTI_TENANT);
     if (hasConcierge || isMultiTenant) {
       newSteps.push({
         id: "security",
