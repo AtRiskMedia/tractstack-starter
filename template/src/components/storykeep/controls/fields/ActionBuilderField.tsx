@@ -213,7 +213,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-2xl">
       <div className="space-y-2">
         <label className="block text-sm text-gray-700">Navigation Target</label>
         <Combobox
@@ -228,6 +228,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
         >
           <div className="relative">
             <Combobox.Input
+              autoComplete="off"
               className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
               onChange={(e) => setTargetQuery(e.target.value)}
               displayValue={(key: string) => GOTO_TARGETS[key]?.name || ""}
@@ -237,7 +238,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
             </Combobox.Button>
           </div>
 
-          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
             {Object.entries(GOTO_TARGETS)
               .filter(
                 ([key, data]) =>
@@ -292,6 +293,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
           >
             <div className="relative">
               <Combobox.Input
+                autoComplete="off"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
                 onChange={(e) => setSubcommandQuery(e.target.value)}
                 displayValue={(val: string) => val}
@@ -301,7 +303,7 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
               </Combobox.Button>
             </div>
 
-            <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
               {GOTO_TARGETS[selectedTarget]
                 .subcommands!.filter((cmd) =>
                   cmd.toLowerCase().includes(subcommandQuery.toLowerCase())

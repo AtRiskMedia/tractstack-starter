@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { type BunnyPlayer, hasPlayerJS } from "@/types";
+import type { ChangeEvent } from "react";
 
 interface ActionBuilderTimeSelectorProps {
   value: string;
@@ -59,7 +60,7 @@ function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) 
     }
   };
 
-  const handleManualTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleManualTimeChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Only allow non-negative numbers
     if (/^\d*$/.test(value)) {

@@ -21,12 +21,12 @@ const contentTypes = {
     url: "/storykeep/content/resources",
     createUrl: "/storykeep/content/resources/create",
   },
-  tractstack: {
-    name: "Tract Stack",
-    browse: "Tract Stacks",
-    url: "/storykeep/content/tractstacks",
-    createUrl: "/storykeep/content/tractstacks/create",
-  },
+  //tractstack: {
+  //  name: "Tract Stack",
+  //  browse: "Tract Stacks",
+  //  url: "/storykeep/content/tractstacks",
+  //  createUrl: "/storykeep/content/tractstacks/create",
+  //},
   storyfragment: {
     name: "Web Page (Story Fragment)",
     browse: "Story Fragments",
@@ -64,7 +64,7 @@ const ManageContent = () => {
         <div className="p-1.5 bg-white rounded-b-md w-full flex flex-wrap gap-4">
           <div className="w-full flex flex-wrap items-center gap-2">
             <div className={labelClass}>
-              <BeakerIcon className="w-6 h-6 mr-1" /> <strong>Special Content:</strong>
+              <BeakerIcon className="w-6 h-6 mr-1" /> <strong>Other Content types:</strong>
             </div>
             {Object.entries(contentTypes).map(
               ([key, content]) =>

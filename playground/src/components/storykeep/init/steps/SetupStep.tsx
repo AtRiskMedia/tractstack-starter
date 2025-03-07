@@ -55,7 +55,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
     <div className="space-y-6">
       <div className="p-4 bg-myblue/5 rounded-lg">
         <h3 className="text-xl font-bold text-mydarkgrey mb-4">
-          {hasConcierge ? "Setup Story Keep" : "Demo Mode"}
+          {hasConcierge ? "Setup Story Keep" : "You are in Sandbox/Preview Mode"}
         </h3>
 
         <div className="space-y-4 text-mydarkgrey">

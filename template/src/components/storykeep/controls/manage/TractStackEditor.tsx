@@ -77,6 +77,18 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
           {create ? "Create TractStack" : "Edit TractStack"}
         </h3>
 
+        <div className="py-2.5 mb-8 max-w-2xl">
+          <div className="p-3.5 border-2 border-dashed bg-slate-50">
+            <div className="text-base text-mydarkgrey leading-8">
+              <p>
+                Your website is a collection of pages. If, as a whole, the website itself is a
+                "funnel" we need some sort of 'container' around this for analytics collection and
+                tracking engagement. We call this a <strong>Tract Stack</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-6 max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 gap-4">
             <div>

@@ -6,7 +6,6 @@ import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import { cleanString } from "@/utils/common/helpers.ts";
 import ActionBuilderField from "@/components/storykeep/controls/fields/ActionBuilderField.tsx";
 import type { MenuNode, MenuLink, FullContentMap } from "@/types.ts";
 
@@ -17,7 +16,11 @@ interface MenuEditorProps {
 }
 
 export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps) {
-  const [localMenu, setLocalMenu] = useState<MenuNode>(create ? { ...menu, id: ulid() } : menu);
+  const [localMenu, setLocalMenu] = useState<MenuNode>({
+    ...menu,
+    theme: "default", // Always set to "default" until UI is added
+    id: create ? ulid() : menu.id,
+  });
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -41,7 +44,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
       ...prev,
       optionsPayload: [
         ...prev.optionsPayload,
-        { name: "", description: "", featured: false, actionLisp: "" },
+        { name: "", description: "", featured: true, actionLisp: "" },
       ],
     }));
     setUnsavedChanges(true);
@@ -107,25 +110,25 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Menu" : "Edit Menu"}
         </h3>
+        <div className="py-2.5 mb-8 max-w-2xl">
+          <div className="p-3.5 border-2 border-dashed bg-slate-50">
+            <div className="text-base text-mydarkgrey leading-8">
+              <p>
+                Remember to link this menu to each page (story fragment) where it's supposed to be!
+                And create as many menus as you like.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-6 max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-sm font-bold text-gray-800">Title</label>
+              <label className="block text-sm font-bold text-gray-800">Administrative Title</label>
               <input
                 type="text"
                 value={localMenu.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-800">Theme</label>
-              <input
-                type="text"
-                value={localMenu.theme}
-                onChange={(e) => handleChange("theme", cleanString(e.target.value))}
                 className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
               />
             </div>

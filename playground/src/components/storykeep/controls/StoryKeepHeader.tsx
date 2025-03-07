@@ -39,7 +39,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   const $viewportKey = useStore(viewportKeyStore);
   const $showAnalytics = useStore(showAnalytics);
   const $keyboardAccessible = useStore(keyboardAccessible);
-  const $contentMap = useStore(contentMap); // Subscribe to contentMap for saved nodes
+  const $contentMap = useStore(contentMap);
 
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -51,15 +51,15 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   const allNodes = ctx.allNodes.get();
   const node = allNodes.get(nodeId);
   const url =
-    node &&
-    `slug` in node && node?.nodeType === `StoryFragment`
+    node && `slug` in node && node?.nodeType === `StoryFragment`
       ? `/${node.slug}`
       : node && `slug` in node && node?.nodeType === `Pane`
         ? `/context/${node.slug}`
         : null;
 
   const savedNode = $contentMap.find((item) => item.id === nodeId);
-  const isVisitable = !!node && !!savedNode && `slug` in node && `slug` in savedNode && savedNode.slug === node.slug;
+  const isVisitable =
+    !!node && !!savedNode && `slug` in node && `slug` in savedNode && savedNode.slug === node.slug;
 
   const rafId = useRef<number | null>(null);
 
