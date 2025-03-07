@@ -172,19 +172,22 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         setStage("PROCESSING_STYLES");
         setProgress(80);
 
-        try {
-          const response = await fetch("/api/tailwind/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({}),
-          });
-          if (!response.ok) {
-            throw new Error("Failed to generate Tailwind styles");
+        const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+        // skip in multi-tenant
+        if (!isMultiTenant)
+          try {
+            const response = await fetch("/api/tailwind/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            });
+            if (!response.ok) {
+              throw new Error("Failed to generate Tailwind styles");
+            }
+          } catch (styleError) {
+            console.error("Style processing error:", styleError);
+            // Continue with save process even if style generation fails
           }
-        } catch (styleError) {
-          console.error("Style processing error:", styleError);
-          // Continue with save process even if style generation fails
-        }
 
         setProgress(100);
         setStage("COMPLETED");

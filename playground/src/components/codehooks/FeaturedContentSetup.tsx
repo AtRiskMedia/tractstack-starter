@@ -46,6 +46,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
 
   const ctx = getCtx();
 
+  // Get all valid story fragments with required fields
   const validPages = $contentMap
     .filter(
       (item): item is StoryFragmentContentMap =>
@@ -74,6 +75,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     | StoryFragmentContentMap
     | undefined;
 
+  // Build topic map
   const topicMap = new Map<string, { count: number; pageIds: string[] }>();
   validPages.forEach((page) => {
     if (page.topics?.length) {
@@ -149,7 +151,16 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     isFeaturedDrop = false
   ) => {
     if (!draggedRef.current || draggedRef.current === id) return;
-    if (isFeaturedDrop || (selectedMode === "ordered" && selectedIds.includes(id))) {
+
+    // Allow dropping on featured area for any valid page
+    if (isFeaturedDrop) {
+      e.preventDefault();
+      setDragState((prev) => ({ ...prev, dropTarget: id }));
+      return;
+    }
+
+    // For non-featured areas, only allow dropping if in ordered mode and target is in selected IDs
+    if (selectedMode === "ordered" && selectedIds.includes(id)) {
       e.preventDefault();
       setDragState((prev) => ({ ...prev, dropTarget: id }));
     }
@@ -167,9 +178,11 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     draggedRef.current = null;
 
     if (isFeaturedDrop) {
-      if (selectedIds.includes(draggedId)) {
-        setSelectedFeaturedId(draggedId);
+      // First ensure the page is included, then make it featured
+      if (!selectedIds.includes(draggedId)) {
+        setSelectedIds((prev) => [...prev, draggedId]);
       }
+      setSelectedFeaturedId(draggedId);
       return;
     }
 
@@ -194,10 +207,17 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
   };
 
   const toggleFeatured = (id: string) => {
-    if (!selectedIds.includes(id)) {
-      setSelectedIds((prev) => [...prev, id]);
+    if (selectedFeaturedId === id) {
+      // If already featured, just unfeatured it
+      setSelectedFeaturedId("");
+    } else {
+      // If not already featured, make sure it's included first
+      if (!selectedIds.includes(id)) {
+        setSelectedIds((prev) => [...prev, id]);
+      }
+      // Then set it as featured
+      setSelectedFeaturedId(id);
     }
-    setSelectedFeaturedId(selectedFeaturedId === id ? "" : id);
   };
 
   const handlePageChange = (direction: "prev" | "next") => {
@@ -286,7 +306,9 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
       >
         <div className="p-4 border-b border-gray-200">
           <h3 className="text-lg font-bold text-gray-900">Featured Page</h3>
-          <p className="mt-1 text-sm text-gray-500">Drag or select a page to feature</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Drag any page here to feature it (it will be automatically included)
+          </p>
         </div>
         {featuredPage ? (
           <div className="p-4 flex items-center">
@@ -313,7 +335,9 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
             </div>
           </div>
         ) : (
-          <div className="p-4 text-center text-sm text-gray-500">No featured page selected</div>
+          <div className="p-4 text-center text-sm text-gray-500">
+            No featured page selected. Drag a page here to feature it.
+          </div>
         )}
       </div>
 
@@ -412,19 +436,19 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                           </button>
                         </div>
                       )}
-                      {isIncluded && (
-                        <button
-                          onClick={() => toggleFeatured(page.id)}
-                          className={classNames(
-                            "px-2 py-1 text-xs font-bold rounded",
-                            selectedFeaturedId === page.id
-                              ? "bg-red-100 text-red-600 hover:bg-red-200"
-                              : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                          )}
-                        >
-                          {selectedFeaturedId === page.id ? "Unfeature" : "Make Featured"}
-                        </button>
-                      )}
+
+                      <button
+                        onClick={() => toggleFeatured(page.id)}
+                        className={classNames(
+                          "px-2 py-1 text-xs font-bold rounded",
+                          selectedFeaturedId === page.id
+                            ? "bg-red-100 text-red-600 hover:bg-red-200"
+                            : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                        )}
+                      >
+                        {selectedFeaturedId === page.id ? "Unfeature" : "Make Featured"}
+                      </button>
+
                       <button
                         onClick={() => toggleInclude(page.id)}
                         className={classNames(

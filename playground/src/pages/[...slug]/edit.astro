@@ -31,14 +31,16 @@ const canonicalURL = `/${slug}`;
 let loadData: LoadData = {};
 
 if (slug === "create") {
-  const contentMap = await getFullContentMap();
+  const contentMap = await getFullContentMap(context);
   const homeTractstack = contentMap.find(
     (item) =>
       item.type === "TractStack" &&
       item.slug.toLowerCase() === config.init.TRACTSTACK_HOME_SLUG.toLowerCase()
   );
 
-  const tractstackNode = homeTractstack ? await getTractStackNode(homeTractstack.id) : null;
+  const tractstackNode = homeTractstack
+    ? await getTractStackNode(homeTractstack.id, context)
+    : null;
   if (!homeTractstack || !tractstackNode) {
     return new Response(null, {
       status: 404,

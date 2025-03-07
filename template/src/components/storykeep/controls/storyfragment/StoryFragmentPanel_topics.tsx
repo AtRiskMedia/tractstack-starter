@@ -210,7 +210,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
-          <h3 className="text-lg font-bold">Topics & Details</h3>
+          <h3 className="text-lg font-bold">SEO ready</h3>
           <button
             onClick={() => {
               nodeIsChanged();
