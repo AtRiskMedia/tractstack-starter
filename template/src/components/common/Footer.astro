@@ -1,9 +1,9 @@
 ---
-import { getCtx } from "../../store/nodes";
+import { getCtx } from "@/store/nodes";
 import Socials from "./widgets/Socials.astro";
 import FooterMenu from "./nav/FooterMenu.astro";
 import Link from "./nav/Link.astro";
-import type { Config, MenuDatum } from "../../types";
+import type { Config, MenuDatum } from "@/types";
 
 export interface Props {
   slug: string;
@@ -25,6 +25,7 @@ const {
   config,
 } = Astro.props;
 const footer = config?.init?.FOOTER || ``;
+console.log(config?.init);
 const socials = typeof config?.init?.SOCIALS === "string" ? config.init.SOCIALS : "";
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
 const createdDate =
