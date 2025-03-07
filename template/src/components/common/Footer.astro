@@ -25,7 +25,6 @@ const {
   config,
 } = Astro.props;
 const footer = config?.init?.FOOTER || ``;
-console.log(config?.init);
 const socials = typeof config?.init?.SOCIALS === "string" ? config.init.SOCIALS : "";
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
 const createdDate =
