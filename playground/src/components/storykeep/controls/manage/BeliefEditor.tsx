@@ -396,6 +396,21 @@ export default function BeliefEditor({
                 When editing pages you can link pane visibility to these belief states; e.g. only
                 appears if visitor beliefs *.
               </p>
+              <ul>
+                <li>For "Identify As" widgets, use Custom Values; one for each 'persona' match</li>
+                <li>For "Toggle Belief" widgets, uses YES/NO.</li>
+              </ul>
+              <p>
+                Check out{" "}
+                <a
+                  className="underline text-myblue font-action font-bold hover:text-black"
+                  href="https://tractstack.org/recipes/adaptive/"
+                  target="_blank"
+                >
+                  our docs
+                </a>{" "}
+                for recipes!
+              </p>
             </div>
           </div>
         </div>

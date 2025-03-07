@@ -98,15 +98,15 @@ export const TemplateImgNode = {
 export const TemplateYoutubeNode = {
   nodeType: "TagElement",
   tagName: "code",
-  copy: "youtube(UFmzfIW1jZM|The Slap)",
-  codeHookParams: ["UFmzfIW1jZM", "The Slap"],
+  copy: "youtube(kJI4XdqiiAI|The Free Web Press)",
+  codeHookParams: ["kJI4XdqiiAI", "The Free Web Press"],
 } as TemplateNode;
 
 export const TemplateToggleNode = {
   nodeType: "TagElement",
   tagName: "code",
-  copy: "toggle(Awesome|This is so awesome, right?!)",
-  codeHookParams: ["Awesome", ["This is so awesome", "right?!"]],
+  copy: "toggle(BeliefTag|This is so awesome, right?!)",
+  codeHookParams: ["BeliefTag", "This is so awesome, right?!"],
 } as TemplateNode;
 
 export const TemplateBeliefNode = {
