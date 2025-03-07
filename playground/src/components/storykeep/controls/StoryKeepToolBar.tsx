@@ -6,6 +6,7 @@ import type { ToolMode, ToolAddMode } from "@/types.ts";
 
 const StoryKeepToolBar = () => {
   const ctx = getCtx();
+  const hasTitle = useStore(ctx.hasTitle);
   const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const { value: toolAddModeVal } = useStore(toolAddModeStore);
   const setToolMode = (newToolMode: ToolMode) => {
@@ -18,7 +19,7 @@ const StoryKeepToolBar = () => {
     ctx.notifyNode(`root`);
   };
 
-  if (toolModeVal !== "insert") {
+  if (toolModeVal !== "insert" || !hasTitle) {
     return null;
   }
 
