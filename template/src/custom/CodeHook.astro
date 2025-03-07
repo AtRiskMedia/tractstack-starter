@@ -1,9 +1,10 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { getFullContentMap, computeStoryfragmentAnalytics } from "@/utils/db/turso.ts";
 import type { FullContentMap, ResourceNode, CodeHookPayload } from "@/types";
 import CustomHero from "./CustomHero.astro";
-import FeaturedContent from "../components/codehooks/FeaturedContent.astro";
-import ListContent from "../components/codehooks/ListContent.astro";
+import FeaturedContent from "@/components/codehooks/FeaturedContent.astro";
+import ListContent from "@/components/codehooks/ListContent.astro";
 
 export interface Props {
   target: string;
@@ -12,8 +13,9 @@ export interface Props {
 }
 
 const { target, options /* resources */ } = Astro.props;
-const contentMap: FullContentMap[] = await getFullContentMap();
-const storyfragmentAnalytics = await computeStoryfragmentAnalytics();
+const context = getAPIContext(Astro);
+const contentMap: FullContentMap[] = await getFullContentMap(context);
+const storyfragmentAnalytics = await computeStoryfragmentAnalytics(context);
 
 export const components = {
   "custom-hero": true,
