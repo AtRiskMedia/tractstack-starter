@@ -36,10 +36,6 @@ class TursoClientManager {
       configPath: this.defaultConfigPath,
       dbPath: this.defaultDbDir,
     };
-    console.warn(`TursoClientManager.getClient called for tenant: ${tenantId}`);
-    console.warn(
-      `Using paths: ${JSON.stringify(context?.locals?.tenant?.paths || "default paths")}`
-    );
 
     if (this.initPromises.has(tenantId)) {
       await this.initPromises.get(tenantId);
