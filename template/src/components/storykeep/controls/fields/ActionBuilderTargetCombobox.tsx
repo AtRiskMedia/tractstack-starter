@@ -97,6 +97,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
       <Combobox value={value} onChange={onSelect}>
         <div className="relative">
           <Combobox.Input
+            autoComplete="off"
             className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
             onChange={(e) => setQuery(e.target.value)}
             displayValue={(slug: string) => {
@@ -238,6 +239,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
         >
           <div className="relative">
             <Combobox.Input
+              autoComplete="off"
               className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
               onChange={(e) => setTargetQuery(e.target.value)}
               displayValue={(key: string) => GOTO_TARGETS[key]?.name || ""}
@@ -303,6 +305,7 @@ const ActionBuilderField = ({ value, onChange, contentMap }: ActionBuilderFieldP
           >
             <div className="relative">
               <Combobox.Input
+                autoComplete="off"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
                 onChange={(e) => setSubcommandQuery(e.target.value)}
                 displayValue={(val: string) => val}

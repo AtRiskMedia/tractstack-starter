@@ -44,9 +44,9 @@ interface BrandFormValues {
 }
 
 const getDefaultValues = (): BrandFormValues => ({
-  siteUrl: "",
-  slogan: "",
-  footer: "",
+  siteUrl: "https://example.com",
+  slogan: "where ideas build community",
+  footer: 'Made with Tract Stack | the "free web press" where ideas build community',
   brandColors: knownBrand.default,
   theme: "light-bold",
   gtag: "",
@@ -59,7 +59,7 @@ const getDefaultValues = (): BrandFormValues => ({
   logo: "",
   wordmark: "",
   favicon: "",
-  keyboardAccessible: false,
+  keyboardAccessible: true,
   wordmarkMode: "default",
 });
 
@@ -285,9 +285,12 @@ export default function BrandStep({
     try {
       const updates = Object.entries(currentValues).reduce(
         (acc, [field, value]) => {
-          const initialValue = initialValues[field as keyof BrandFormValues];
-          if (value !== initialValue) {
-            const configKey = fieldToConfigKey[field as keyof BrandFormValues];
+          const configKey = fieldToConfigKey[field as keyof BrandFormValues];
+          const isEssentialField = ["SITE_URL", "SLOGAN", "FOOTER"].includes(configKey);
+          const configValue = config?.init
+            ? (config.init as Record<string, unknown>)[configKey]
+            : undefined;
+          if (isEssentialField || value !== configValue || configValue === undefined) {
             acc[configKey] = value;
           }
           return acc;

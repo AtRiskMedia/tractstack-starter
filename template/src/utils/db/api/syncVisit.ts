@@ -1,6 +1,7 @@
 import { tursoClient } from "../client";
 import { ulid } from "ulid";
 import type { SyncOptions } from "@/types";
+import type { APIContext } from "@/types";
 
 interface SyncVisitResponse {
   fingerprint: string;
@@ -9,13 +10,15 @@ interface SyncVisitResponse {
   knownLead: boolean;
 }
 
-export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse> {
-  const client = await tursoClient.getClient();
+export async function syncVisit(
+  payload: SyncOptions,
+  context?: APIContext
+): Promise<SyncVisitResponse> {
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("No database connection");
   }
 
-  // Create new fingerprint entry
   const fingerprintId = payload?.fingerprint || ulid();
   if (!payload?.fingerprint) {
     await client.execute({
@@ -24,7 +27,6 @@ export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse
     });
   }
 
-  // Handle campaign/referrer data if present
   let campaignId = null;
   if (payload.referrer?.utmCampaign) {
     const { rows: campaignRows } = await client.execute({
@@ -52,7 +54,6 @@ export async function syncVisit(payload: SyncOptions): Promise<SyncVisitResponse
     }
   }
 
-  // Create new visit entry if needed
   const visitId = payload?.visitId || ulid();
   if (!payload?.visitId) {
     await client.execute({

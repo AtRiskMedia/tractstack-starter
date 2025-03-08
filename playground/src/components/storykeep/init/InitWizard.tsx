@@ -257,23 +257,25 @@ export default function InitWizard({
         isLocked: !$store.completedSteps.includes("setup"),
       },
     ];
-    if (hasConcierge)
-      newSteps.push(
-        {
-          id: "integrations",
-          title: "Set Up Integrations",
-          description: "Connect external services and APIs",
-          isComplete: hasInit || $store.completedSteps.includes("integrations"),
-          isLocked: !$store.completedSteps.includes("brand"),
-        },
-        {
-          id: "security",
-          title: "Secure Your Site",
-          description: "Set up authentication and access control",
-          isComplete: hasInit || $store.completedSteps.includes("security"),
-          isLocked: !$store.completedSteps.includes("integrations"),
-        }
-      );
+    if (hasConcierge) {
+      newSteps.push({
+        id: "integrations",
+        title: "Set Up Integrations",
+        description: "Connect external services and APIs",
+        isComplete: hasInit || $store.completedSteps.includes("integrations"),
+        isLocked: !$store.completedSteps.includes("brand"),
+      });
+    }
+    const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+    if (hasConcierge || isMultiTenant) {
+      newSteps.push({
+        id: "security",
+        title: "Secure Your Site",
+        description: "Set up authentication and access control",
+        isComplete: hasInit || $store.completedSteps.includes("security"),
+        isLocked: !$store.completedSteps.includes(hasConcierge ? "integrations" : "brand"),
+      });
+    }
     if (requiresPublish)
       newSteps.push({
         id: "publish",

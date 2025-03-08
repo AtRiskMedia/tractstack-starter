@@ -256,7 +256,6 @@ export default function BeliefEditor({
     <>
       <div className="space-y-6">
         <div className="grid grid-cols-1 gap-4">
-          {/* Basic Fields */}
           {["title", "slug"].map((field) => (
             <div key={field}>
               <label className="block text-sm font-bold text-gray-800">
@@ -271,7 +270,6 @@ export default function BeliefEditor({
             </div>
           ))}
 
-          {/* Scale Field */}
           <div>
             <label className="block text-sm font-bold text-gray-800">Scale</label>
             {isEmbedded ? (
@@ -293,10 +291,8 @@ export default function BeliefEditor({
             )}
           </div>
 
-          {/* Scale Preview */}
           {renderScalePreview(localBelief.scale)}
 
-          {/* Custom Values Section */}
           {localBelief.scale === "custom" && (
             <div className="space-y-4">
               <div>
@@ -342,7 +338,6 @@ export default function BeliefEditor({
           )}
         </div>
 
-        {/* Action Buttons */}
         <div className="flex justify-end space-x-4">
           <button
             onClick={handleCancel}
@@ -361,7 +356,6 @@ export default function BeliefEditor({
           )}
         </div>
 
-        {/* Status Messages */}
         {(unsavedChanges || saveSuccess) && (
           <div className={`mt-4 p-4 rounded-md ${unsavedChanges ? "bg-amber-50" : "bg-green-50"}`}>
             {unsavedChanges ? (
@@ -391,6 +385,35 @@ export default function BeliefEditor({
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Belief" : "Edit Belief"}
         </h3>
+        <div className="py-2.5 mb-8 max-w-2xl">
+          <div className="p-3.5 border-2 border-dashed bg-slate-50">
+            <div className="text-base text-mydarkgrey leading-8">
+              <p>
+                <strong>Beliefs are what powers "magic paths".</strong>{" "}
+                <em>Provide a title, slug, and scale!</em>
+              </p>
+              <p>
+                When editing pages you can link pane visibility to these belief states; e.g. only
+                appears if visitor beliefs *.
+              </p>
+              <ul>
+                <li>For "Identify As" widgets, use Custom Values; one for each 'persona' match</li>
+                <li>For "Toggle Belief" widgets, uses YES/NO.</li>
+              </ul>
+              <p>
+                Check out{" "}
+                <a
+                  className="underline text-myblue font-action font-bold hover:text-black"
+                  href="https://tractstack.org/recipes/adaptive/"
+                  target="_blank"
+                >
+                  our docs
+                </a>{" "}
+                for recipes!
+              </p>
+            </div>
+          </div>
+        </div>
         {content}
       </div>
     </div>

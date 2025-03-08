@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { isValidContentPath } from "@/utils/common/routeValidation.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
@@ -15,8 +16,9 @@ import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
 import type { AuthStatus, ImpressionDatum, ResourceNode } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
+const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
@@ -43,7 +45,7 @@ if (!isValidContentPath(lookup)) {
 }
 
 // Get all the data from Turso
-const fullData = await getStoryFragmentBySlugFullRowData(lookup);
+const fullData = await getStoryFragmentBySlugFullRowData(lookup, context);
 if (!fullData) {
   return new Response(null, {
     status: 404,
@@ -58,7 +60,7 @@ if (typeof requiredResources === `string` && config.init?.HEADER_WIDGET_RESOURCE
   try {
     const categories = requiredResources.split(/[|,]/).filter(Boolean);
     if (categories.length > 0) {
-      headerResources = await getResourceNodes({ categories });
+      headerResources = await getResourceNodes({ categories }, context);
     }
   } catch (error) {
     console.error("Error fetching header resources:", error);
@@ -126,7 +128,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
     client:only="react"
   />
 
-  <main id="main-content" class="w-full overflow-hidden">
+  <main id="main-content" class="w-full">
     <div
       class={typeof storyfragmentNode.tailwindBgColour === `string`
         ? `bg-${storyfragmentNode.tailwindBgColour}`

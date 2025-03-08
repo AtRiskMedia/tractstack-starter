@@ -1,5 +1,6 @@
 import { tursoClient } from "../client";
-import { xorEncrypt } from "../../../utils/common/xor";
+import { xorEncrypt } from "@/utils/common/xor";
+import type { APIContext } from "@/types";
 
 interface UnlockParams {
   email?: string;
@@ -21,9 +22,10 @@ interface UnlockResponse {
 
 export async function unlockProfile(
   params: UnlockParams,
-  publicAuthSecret: string
+  publicAuthSecret: string,
+  context?: APIContext
 ): Promise<UnlockResponse> {
-  const client = await tursoClient.getClient();
+  const client = await tursoClient.getClient(context);
   if (!client) {
     throw new Error("No database connection");
   }

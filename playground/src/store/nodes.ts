@@ -66,6 +66,7 @@ export class NodesContext {
   allNodes = atom<Map<string, BaseNode>>(new Map<string, BaseNode>());
   impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
   parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
+  hasTitle = atom<boolean>(false);
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);

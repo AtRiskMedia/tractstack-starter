@@ -1,17 +1,18 @@
 import { tursoClient } from "../client";
 import type { StoryFragmentNode } from "@/types";
 import type { StoryFragmentRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertStoryFragmentNode(
-  node: StoryFragmentNode
+  node: StoryFragmentNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
 
-    // Transform StoryFragmentNode to StoryFragmentRowData
     const rowData: StoryFragmentRowData = {
       id: node.id,
       title: node.title,
@@ -29,7 +30,6 @@ export async function upsertStoryFragmentNode(
         : {}),
     };
 
-    // Perform upsert operation
     await client.execute({
       sql: `INSERT INTO storyfragments (
               id, title, slug, tractstack_id, created, changed,
@@ -57,15 +57,12 @@ export async function upsertStoryFragmentNode(
       ],
     });
 
-    // Handle pane relationships in storyfragment_pane table
     if (node.paneIds && node.paneIds.length > 0) {
-      // First delete existing relationships
       await client.execute({
         sql: "DELETE FROM storyfragment_panes WHERE storyfragment_id = ?",
         args: [node.id],
       });
 
-      // Then insert new relationships
       for (const paneId of node.paneIds) {
         await client.execute({
           sql: "INSERT INTO storyfragment_panes (storyfragment_id, pane_id) VALUES (?, ?)",

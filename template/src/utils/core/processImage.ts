@@ -1,5 +1,6 @@
 import sharp from "sharp";
 import path from "path";
+import type { APIContext } from "astro";
 
 interface ProcessedImage {
   width: number;
@@ -9,12 +10,14 @@ interface ProcessedImage {
 
 export async function processImage(
   inputBuffer: Buffer,
-  filename: string
+  filename: string,
+  context: APIContext
 ): Promise<ProcessedImage[]> {
+  const tenantId = context.locals.tenant?.id || "default";
+  console.log(`processImage: Tenant=${tenantId}`);
+
   try {
     const basename = path.basename(filename, path.extname(filename));
-
-    // Process image for each width
     const processed = await Promise.all(
       [1200, 600, 300].map(async (width) => {
         const buffer = await sharp(inputBuffer)
@@ -24,7 +27,6 @@ export async function processImage(
           })
           .webp({ quality: 80 })
           .toBuffer();
-
         return {
           width,
           buffer,
@@ -32,10 +34,9 @@ export async function processImage(
         };
       })
     );
-
     return processed;
   } catch (error) {
-    console.error("Error processing image:", error);
+    console.error(`Error processing image for tenant ${tenantId}:`, error);
     throw new Error(
       error instanceof Error
         ? `Failed to process image: ${error.message}`

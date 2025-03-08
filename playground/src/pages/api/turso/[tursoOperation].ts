@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIRoute } from "astro";
+import type { APIContext } from "@/types";
+import { withTenantContext } from "@/utils/api/middleware";
 import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics.ts";
 import { streamEvents } from "@/utils/db/api/stream.ts";
 import { syncVisit } from "@/utils/db/api/syncVisit.ts";
@@ -37,100 +39,99 @@ import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails.
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
-// Operations that don't require a request body
 const NO_BODY_OPERATIONS = ["initializeContent"] as const;
 
-export const POST: APIRoute = async ({ request, params }) => {
+export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
   try {
-    const { tursoOperation } = params;
+    const { tursoOperation } = context.params;
 
     const body = NO_BODY_OPERATIONS.includes(tursoOperation as (typeof NO_BODY_OPERATIONS)[number])
       ? undefined
-      : await request.json();
+      : await context.request.json();
 
     let result;
     switch (tursoOperation) {
       case "stream":
-        result = await streamEvents(body);
+        result = await streamEvents(body, context);
         break;
       case "syncVisit":
-        result = await syncVisit(body);
+        result = await syncVisit(body, context);
         break;
       case "executeQueries":
-        result = await executeQueries(body);
+        result = await executeQueries(body, context);
         break;
       case "analytics":
-        result = await getAnalytics(body.id, body.type, body.duration);
+        result = await getAnalytics(body.id, body.type, body.duration, context);
         break;
       case "dashboardAnalytics":
-        result = await dashboardAnalytics(body);
+        result = await dashboardAnalytics(body, context);
         break;
       case "upsertFile":
-        result = await upsertFile(body);
+        result = await upsertFile(body, context);
         break;
       case "upsertPane":
-        result = await upsertPane(body);
+        result = await upsertPane(body, context);
         break;
       case "upsertStoryFragment":
-        result = await upsertStoryFragment(body);
+        result = await upsertStoryFragment(body, context);
         break;
       case "upsertMenu":
-        result = await upsertMenu(body);
+        result = await upsertMenu(body, context);
         break;
       case "upsertResource":
-        result = await upsertResource(body);
+        result = await upsertResource(body, context);
         break;
       case "upsertTractStack":
-        result = await upsertTractStack(body);
+        result = await upsertTractStack(body, context);
         break;
       case "upsertBelief":
-        result = await upsertBelief(body);
+        result = await upsertBelief(body, context);
         break;
       case "upsertFileNode":
-        result = await upsertFileNode(body);
+        result = await upsertFileNode(body, context);
         break;
       case "upsertPaneNode":
-        result = await upsertPaneNode(body);
+        result = await upsertPaneNode(body, context);
         break;
       case "upsertStoryFragmentNode":
-        result = await upsertStoryFragmentNode(body);
+        result = await upsertStoryFragmentNode(body, context);
         break;
       case "upsertMenuNode":
-        result = await upsertMenuNode(body);
+        result = await upsertMenuNode(body, context);
         break;
       case "upsertResourceNode":
-        result = await upsertResourceNode(body);
+        result = await upsertResourceNode(body, context);
         break;
       case "upsertTractStackNode":
-        result = await upsertTractStackNode(body);
+        result = await upsertTractStackNode(body, context);
         break;
       case "upsertBeliefNode":
-        result = await upsertBeliefNode(body);
+        result = await upsertBeliefNode(body, context);
         break;
       case "getPaneTemplateNode":
-        result = await getPaneTemplateNode(body.id);
+        result = await getPaneTemplateNode(body.id, context);
         break;
       case "unlock":
-        result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
+        result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
         break;
       case "create":
-        result = await createProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
+        result = await createProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
         break;
       case "update":
-        result = await updateProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET);
+        result = await updateProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
         break;
       case "initializeContent":
-        await initializeContent();
+        await initializeContent(context);
         result = true;
         break;
       case "upsertTopic":
-        result = await upsertTopic(body.title);
+        result = await upsertTopic(body.title, context);
         break;
       case "linkTopicToStoryFragment":
-        result = await linkTopicToStoryFragment(body.storyFragmentId, body.topicId);
+        result = await linkTopicToStoryFragment(body.storyFragmentId, body.topicId, context);
         break;
       case "unlinkTopicFromStoryFragment":
-        result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId);
+        result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId, context);
         break;
       default:
         throw new Error(`Unknown operation: ${tursoOperation}`);
@@ -141,7 +142,7 @@ export const POST: APIRoute = async ({ request, params }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error(`Error in turso ${params.tursoOperation} route:`, error);
+    console.error(`Error in turso ${context.params.tursoOperation} route:`, error);
     return new Response(
       JSON.stringify({
         success: false,
@@ -153,58 +154,54 @@ export const POST: APIRoute = async ({ request, params }) => {
       }
     );
   }
-};
+});
 
-export const GET: APIRoute = async ({ params, request }) => {
-  const { tursoOperation } = params;
+export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
+  const { tursoOperation } = context.params;
 
   try {
     let result;
     switch (tursoOperation) {
       case "getResourceNodes": {
-        const url = new URL(request.url);
+        const url = new URL(context.request.url);
         const slugs = url.searchParams.get("slugs")?.split(/[,|]/).filter(Boolean);
         const categories = url.searchParams.get("categories")?.split(/[,|]/).filter(Boolean);
-        result = await getResourceNodes({ slugs, categories });
+        result = await getResourceNodes({ slugs, categories }, context);
         break;
       }
       case "getAllFiles":
-        result = await getAllFiles();
+        result = await getAllFiles(context);
         break;
       case "getAllMenus":
-        result = await getAllMenus();
+        result = await getAllMenus(context);
         break;
       case "getAllBeliefNodes":
-        result = await getAllBeliefNodes();
+        result = await getAllBeliefNodes(context);
         break;
       case "getAllTopics":
-        result = await getAllTopics();
+        result = await getAllTopics(context);
         break;
       case "getTopicsForStoryFragment": {
-        const url = new URL(request.url);
+        const url = new URL(context.request.url);
         const storyFragmentId = url.searchParams.get("storyFragmentId");
         if (!storyFragmentId) {
           throw new Error("Missing required parameter: storyFragmentId");
         }
-        result = await getTopicsForStoryFragment(storyFragmentId);
+        result = await getTopicsForStoryFragment(storyFragmentId, context);
         break;
       }
       case "getStoryFragmentDetails": {
-        const url = new URL(request.url);
+        const url = new URL(context.request.url);
         const storyFragmentId = url.searchParams.get("storyFragmentId");
         if (!storyFragmentId) {
           throw new Error("Missing required parameter: storyFragmentId");
         }
-        result = await getStoryFragmentDetails(storyFragmentId);
+        result = await getStoryFragmentDetails(storyFragmentId, context);
         break;
       }
       default:
         if (tursoOperation === "read") {
-          return POST({
-            request: new Request("http://dummy"),
-            params,
-            redirect: () => new Response(),
-          } as any);
+          return POST(context as any); // Type assertion for simplicity
         }
         throw new Error("Method not allowed");
     }
@@ -225,4 +222,4 @@ export const GET: APIRoute = async ({ params, request }) => {
       }
     );
   }
-};
+});

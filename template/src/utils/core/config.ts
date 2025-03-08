@@ -12,15 +12,17 @@ import type {
 const CONFIG_FILES = ["init.json", "turso.json"];
 
 /**
- * Reads and parses a single config file
+ * Reads and parses a single config file from a specified config path
+ * @param configPath - The directory path containing the config file
+ * @param filename - The name of the config file to read
  */
-async function readConfigFile(filename: string): Promise<ConfigFile | null> {
+async function readConfigFile(configPath: string, filename: string): Promise<ConfigFile | null> {
   try {
-    const configPath = path.join(process.cwd(), "config", filename);
+    const filePath = path.join(configPath, filename);
 
     // Check if file exists
     try {
-      await fs.access(configPath);
+      await fs.access(filePath);
     } catch {
       // If file doesn't exist and it's init.json, return default structure
       if (filename === "init.json") {
@@ -33,30 +35,44 @@ async function readConfigFile(filename: string): Promise<ConfigFile | null> {
       return null;
     }
 
-    const fileContents = await fs.readFile(configPath, "utf-8");
+    const fileContents = await fs.readFile(filePath, "utf-8");
 
     return {
       name: filename,
       content: JSON.parse(fileContents),
     };
   } catch (error) {
-    console.error(`Error reading ${filename}:`, error);
+    console.error(`Error reading ${filename} from ${configPath}:`, error);
     return null;
   }
 }
 
 /**
- * Detects system capabilities based on environment configuration
+ * Detects system capabilities based on environment configuration and tenant config
+ * @param config - Optional config object to check for tenant-specific passwords
  */
-function detectCapabilities(): SystemCapabilities {
+function detectCapabilities(config?: Config | null): SystemCapabilities {
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+
+  // Check environment variables (always used in single-tenant mode)
   const hasTursoCredentials =
     !!import.meta.env.PRIVATE_TURSO_DATABASE_URL && !!import.meta.env.PRIVATE_TURSO_AUTH_TOKEN;
 
-  const hasPassword =
+  const hasEnvPassword =
     !!import.meta.env.PRIVATE_ADMIN_PASSWORD && !!import.meta.env.PRIVATE_EDITOR_PASSWORD;
 
   const hasConcierge =
     !!import.meta.env.PRIVATE_CONCIERGE_BASE_URL && !!import.meta.env.PRIVATE_CONCIERGE_AUTH_SECRET;
+
+  // Check config for passwords (used in multi-tenant mode)
+  let hasConfigPassword = false;
+  if (isMultiTenant && config?.init) {
+    const initConfig = config.init as InitConfig;
+    hasConfigPassword = !!initConfig.ADMIN_PASSWORD && !!initConfig.EDITOR_PASSWORD;
+  }
+
+  // In multi-tenant mode, use config passwords; in single-tenant mode use env passwords
+  const hasPassword = isMultiTenant ? hasConfigPassword : hasEnvPassword;
 
   return {
     hasTurso: hasTursoCredentials,
@@ -67,15 +83,21 @@ function detectCapabilities(): SystemCapabilities {
 }
 
 /**
- * Gets configuration from all specified config files
+ * Gets configuration from all specified config files in the given or default config path
+ * @param configPath - Optional path to the config directory; defaults to "./config"
  */
-export async function getConfig(): Promise<Config | null> {
+export async function getConfig(configPath?: string): Promise<Config | null> {
+  const defaultConfigPath = path.join(process.cwd(), "config");
+  const actualConfigPath = configPath || defaultConfigPath;
+
   try {
-    const configFiles = await Promise.all(CONFIG_FILES.map((filename) => readConfigFile(filename)));
+    const configFiles = await Promise.all(
+      CONFIG_FILES.map((filename) => readConfigFile(actualConfigPath, filename))
+    );
     const validConfigs = configFiles.filter((config): config is ConfigFile => config !== null);
 
     if (validConfigs.length === 0) {
-      console.error("No valid config files found");
+      console.error("No valid config files found in", actualConfigPath);
       return null;
     }
 
@@ -90,7 +112,7 @@ export async function getConfig(): Promise<Config | null> {
 
     return mergedConfig;
   } catch (error) {
-    console.error("Error processing config files:", error);
+    console.error("Error processing config files from", actualConfigPath, ":", error);
     return null;
   }
 }
@@ -100,7 +122,9 @@ export async function getConfig(): Promise<Config | null> {
  */
 export async function validateConfig(config: Config | null): Promise<ValidationResult> {
   const envValidation = validateEnv();
-  const capabilities = detectCapabilities();
+  const capabilities = detectCapabilities(config);
+
+  // Determine if we have passwords - either in env vars or in tenant config
   const hasPassword = capabilities.hasPassword;
 
   if (!envValidation.isValid) {
@@ -144,6 +168,7 @@ export async function validateConfig(config: Config | null): Promise<ValidationR
   const isInitialized =
     initConfig.SITE_INIT === true && initConfig.HOME_SLUG && initConfig.TRACTSTACK_HOME_SLUG;
   const hasValidHomeSlug = typeof initConfig.HOME_SLUG === "string";
+
   if (!isInitialized || !hasValidHomeSlug) {
     return {
       isValid: false,

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { APIContext as AstroAPIContext } from "astro";
 import { toolAddModes } from "./constants";
 import type { ParagraphsResponse, SentencesResponse, Transcript } from "assemblyai";
 import { NodesContext } from "@/store/nodes";
@@ -99,6 +100,8 @@ export interface InitConfig {
   OGLOGO: string;
   FAVICON: string;
   KEYBOARD_ACCESSIBLE: boolean;
+  ADMIN_PASSWORD?: string;
+  EDITOR_PASSWORD?: string;
   [key: string]: unknown;
 }
 
@@ -1140,3 +1143,24 @@ export interface TitleResponse {
     };
   };
 }
+
+export interface AppLocals {
+  user?: {
+    isAuthenticated: boolean;
+    isAdmin: boolean;
+    isOpenDemo: boolean;
+  };
+  tenant?: {
+    id: string;
+    paths: {
+      dbPath: string;
+      configPath: string;
+      publicPath: string;
+    };
+  };
+  config?: Config;
+}
+
+export type APIContext = AstroAPIContext & {
+  locals: AppLocals;
+};

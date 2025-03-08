@@ -1,9 +1,11 @@
 import { upsertTractStackByIdRowData } from "../turso";
 import type { TractStackNode } from "@/types";
 import type { TractStackRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertTractStackNode(
-  tractStackNode: TractStackNode
+  tractStackNode: TractStackNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const tractStackData: TractStackRowData = {
@@ -15,7 +17,7 @@ export async function upsertTractStackNode(
         : {}),
     };
 
-    await upsertTractStackByIdRowData(tractStackData);
+    await upsertTractStackByIdRowData(tractStackData, context);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertTractStack:", error);

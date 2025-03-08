@@ -48,10 +48,6 @@ const { videoUrl, title } = Astro.props;
     };
 
     private initializeVideo = (t: string = ""): void => {
-      console.log(
-        `[BunnyVideo] Initializing with strategy ${this.currentStrategy + 1}/${this.playbackStrategies.length}`
-      );
-
       if (!this.videoContainer) {
         this.videoContainer = this.querySelector("#video-container");
       }
@@ -107,7 +103,6 @@ const { videoUrl, title } = Astro.props;
         this.videoContainer.appendChild(loader);
 
         iframe.onload = () => {
-          console.log("[BunnyVideo] Iframe loaded");
           loader.remove();
         };
 
@@ -125,7 +120,6 @@ const { videoUrl, title } = Astro.props;
       window.addEventListener("message", (event) => {
         if (event.source === iframe.contentWindow) {
           if (event.data.type === "mediaError" && event.data.fatal) {
-            console.log("[BunnyVideo] Playback error detected, trying next strategy");
             this.handlePlaybackError();
           }
         }

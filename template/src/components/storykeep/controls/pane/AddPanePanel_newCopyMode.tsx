@@ -1,5 +1,6 @@
 import { RadioGroup } from "@headlessui/react";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckCircleIcon";
+import { hasAssemblyAIStore } from "@/store/storykeep.ts";
 
 export type CopyMode = "design" | "ai" | "custom" | "blank";
 
@@ -9,12 +10,24 @@ interface AddPaneNewCopyModeProps {
 }
 
 export const AddPaneNewCopyMode = ({ selected, onChange }: AddPaneNewCopyModeProps) => {
-  const modes = [
+  const hasAssemblyAI = hasAssemblyAIStore.get();
+
+  const baseModesConfig = [
     { id: "design", name: "Quick start", description: "Use pre-designed copy templates" },
-    { id: "ai", name: "Write with AI", description: "Let AI help write your content" },
     { id: "custom", name: "Provide your own Copy", description: "Write your own markdown content" },
     { id: "blank", name: "Blank", description: "Start with a styled blank slate" },
   ];
+
+  const aiModeConfig = {
+    id: "ai",
+    name: "Write with AI",
+    description: "Let AI help write your content",
+  };
+
+  // Include "ai" mode only if hasAssemblyAI is true
+  const modes = hasAssemblyAI
+    ? [baseModesConfig[0], aiModeConfig, ...baseModesConfig.slice(1)]
+    : baseModesConfig;
 
   return (
     <div className="w-full pr-4">

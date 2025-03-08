@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import { ReactNodesWrapper } from "@/components/compositor-nodes/ReactNodesWrapper";
@@ -16,10 +17,11 @@ import { getTractStackNode } from "@/utils/db/api/getTractStackNode";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { StoryFragmentNode } from "@/types";
 
+const context = getAPIContext(Astro);
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if ((!validation.isValid && slug !== `hello`) || !config) {
   return Astro.redirect("/storykeep/init");
@@ -29,14 +31,16 @@ const canonicalURL = `/${slug}`;
 let loadData: LoadData = {};
 
 if (slug === "create") {
-  const contentMap = await getFullContentMap();
+  const contentMap = await getFullContentMap(context);
   const homeTractstack = contentMap.find(
     (item) =>
       item.type === "TractStack" &&
       item.slug.toLowerCase() === config.init.TRACTSTACK_HOME_SLUG.toLowerCase()
   );
 
-  const tractstackNode = homeTractstack ? await getTractStackNode(homeTractstack.id) : null;
+  const tractstackNode = homeTractstack
+    ? await getTractStackNode(homeTractstack.id, context)
+    : null;
   if (!homeTractstack || !tractstackNode) {
     return new Response(null, {
       status: 404,
@@ -61,7 +65,7 @@ if (slug === "create") {
     storyfragmentNodes: [storyFragmentNode],
   };
 } else {
-  const fullData = await getStoryFragmentBySlugFullRowData(slug);
+  const fullData = await getStoryFragmentBySlugFullRowData(slug, context);
   if (!fullData) {
     return new Response(null, {
       status: 404,

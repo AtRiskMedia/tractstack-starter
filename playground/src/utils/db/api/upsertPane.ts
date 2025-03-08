@@ -1,6 +1,7 @@
 import { tursoClient } from "../client";
 import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { PaneRowData, MarkdownRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 interface UpsertPaneRequest {
   rowData: PaneRowData;
@@ -8,14 +9,15 @@ interface UpsertPaneRequest {
 }
 
 export async function upsertPane(
-  requestData: UpsertPaneRequest
+  requestData: UpsertPaneRequest,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-    // Handle markdown update first if provided
+
     if (
       requestData.markdownData &&
       requestData.markdownData.id &&
@@ -29,7 +31,7 @@ export async function upsertPane(
         args: [requestData.markdownData.id, requestData.markdownData.markdown_body],
       });
     }
-    // Update pane
+
     await client.execute({
       sql: `INSERT INTO panes (
               id, title, slug, pane_type, created, changed,

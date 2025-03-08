@@ -108,6 +108,9 @@ export default function SecurityStep({
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [editorPassword, setEditorPassword] = useState<string | null>(null);
 
+  // Detect multi-tenant mode
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+
   if (!isActive) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,11 +118,21 @@ export default function SecurityStep({
 
     const updates: Record<string, string> = {};
 
+    // Add appropriate key names based on multi-tenant mode
     if (adminPassword !== null) {
-      updates.PRIVATE_ADMIN_PASSWORD = adminPassword;
+      if (isMultiTenant) {
+        updates.ADMIN_PASSWORD = adminPassword;
+      } else {
+        updates.PRIVATE_ADMIN_PASSWORD = adminPassword;
+      }
     }
+
     if (editorPassword !== null) {
-      updates.PRIVATE_EDITOR_PASSWORD = editorPassword;
+      if (isMultiTenant) {
+        updates.EDITOR_PASSWORD = editorPassword;
+      } else {
+        updates.PRIVATE_EDITOR_PASSWORD = editorPassword;
+      }
     }
 
     if (Object.keys(updates).length > 0) {

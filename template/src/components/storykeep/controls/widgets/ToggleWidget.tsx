@@ -14,10 +14,23 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
   const [beliefs, setBeliefs] = useState<BeliefNode[]>([]);
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
+  const [selectedBeliefTag, setSelectedBeliefTag] = useState<string>("");
+  const [currentPrompt, setCurrentPrompt] = useState<string>("");
 
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
   const prompt = String(params[1] || "");
+
+  // Check if beliefTag is the placeholder value
+  const isPlaceholder = beliefTag === "BeliefTag";
+
+  // Update local state when props change
+  useEffect(() => {
+    if (!isPlaceholder && beliefTag) {
+      setSelectedBeliefTag(beliefTag);
+    }
+    setCurrentPrompt(prompt);
+  }, [beliefTag, prompt, isPlaceholder]);
 
   useEffect(() => {
     async function fetchBeliefs() {
@@ -28,6 +41,21 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
     }
     fetchBeliefs();
   }, []);
+
+  const handleBeliefChange = (selectedValue: string) => {
+    setSelectedBeliefTag(selectedValue);
+    onUpdate([selectedValue, currentPrompt]);
+  };
+
+  const handlePromptChange = (value: string) => {
+    // Sanitize the input value (remove newlines and pipe characters)
+    const sanitizedValue = value.replace(/[\n\r|]/g, "");
+    setCurrentPrompt(sanitizedValue);
+
+    // Use the actual selected tag (from state) or the original belief tag as fallback
+    const tagToUse = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+    onUpdate([tagToUse, sanitizedValue]);
+  };
 
   if (isCreatingBelief || editingBeliefId) {
     const belief: BeliefNode = isCreatingBelief
@@ -74,28 +102,40 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
     );
   }
 
+  // Show beliefs that can be selected for the toggle
+  const filteredBeliefs = beliefs.filter((b) => b.scale === "yn" || b.scale === "tf");
+
+  // Find the selected belief (if any)
+  const selectedBelief = beliefs.find(
+    (b) => b.slug === (selectedBeliefTag || (isPlaceholder ? "" : beliefTag))
+  );
+
+  // Determine if we have a real selection - either from state or props
+  const hasRealSelection = !!selectedBelief || (!isPlaceholder && !!beliefTag);
+
+  // Calculate the current value to show in the select dropdown
+  const selectValue = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <select
-          value={beliefTag}
-          onChange={(e) => onUpdate([e.target.value, prompt])}
+          value={selectValue}
+          onChange={(e) => handleBeliefChange(e.target.value)}
           className="flex-1 rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700"
-          disabled={!!beliefTag}
+          disabled={hasRealSelection && !isPlaceholder}
         >
           <option value="">Select a belief</option>
-          {beliefs
-            .filter((b) => b.scale === "yn" || b.scale === "tf")
-            .map((b) => (
-              <option key={b.slug} value={b.slug}>
-                {b.title}
-              </option>
-            ))}
+          {filteredBeliefs.map((b) => (
+            <option key={b.slug} value={b.slug}>
+              {b.title}
+            </option>
+          ))}
         </select>
-        {beliefTag ? (
+        {hasRealSelection && !isPlaceholder ? (
           <button
             onClick={() => {
-              const belief = beliefs.find((b) => b.slug === beliefTag);
+              const belief = beliefs.find((b) => b.slug === selectValue);
               if (belief) setEditingBeliefId(belief.id);
             }}
             className="text-cyan-700 hover:text-black"
@@ -112,12 +152,8 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
         )}
       </div>
 
-      {beliefTag && (
-        <SingleParam
-          label="Question Prompt"
-          value={prompt}
-          onChange={(value) => onUpdate([beliefTag, value])}
-        />
+      {(hasRealSelection || selectedBeliefTag) && (
+        <SingleParam label="Question Prompt" value={currentPrompt} onChange={handlePromptChange} />
       )}
     </div>
   );

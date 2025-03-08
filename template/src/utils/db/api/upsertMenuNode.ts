@@ -1,9 +1,11 @@
 import { upsertMenuByIdRowData } from "../turso";
 import type { MenuNode } from "@/types";
 import type { MenuRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertMenuNode(
-  menuNode: MenuNode
+  menuNode: MenuNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const menuData: MenuRowData = {
@@ -13,7 +15,7 @@ export async function upsertMenuNode(
       options_payload: JSON.stringify(menuNode.optionsPayload),
     };
 
-    await upsertMenuByIdRowData(menuData);
+    await upsertMenuByIdRowData(menuData, context);
     return { success: true };
   } catch (error) {
     console.error("Error in upsertMenu:", error);

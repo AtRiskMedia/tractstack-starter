@@ -1,12 +1,14 @@
 import { tursoClient } from "../client";
 import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { BeliefRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertBelief(
-  rowData: BeliefRowData
+  rowData: BeliefRowData,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }

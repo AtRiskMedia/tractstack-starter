@@ -1,30 +1,28 @@
-import type { APIRoute } from "astro";
+import type { APIRoute, APIContext } from "astro";
+import { withTenantContext } from "@/utils/api/middleware";
 import { cssStore } from "@/store/css";
 
-export const GET: APIRoute = async ({ request }) => {
-  const store = cssStore.get();
+export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  if (isMultiTenant) {
+    return new Response("CSS generation disabled in multi-tenant mode", { status: 403 });
+  }
 
-  // Get requested version from URL if present
-  const url = new URL(request.url);
+  const store = cssStore.get();
+  const url = new URL(context.request.url);
   const requestedVersion = url.searchParams.get("v");
 
-  // Set cache control headers
   const headers = new Headers({
     "Content-Type": "text/css",
-    "Cache-Control": "public, max-age=31536000", // 1 year
+    "Cache-Control": "public, max-age=31536000",
   });
 
-  // If version matches store version, serve frontend.css
   if (store.version && requestedVersion === store.version && store.content) {
     if (store.version) {
       headers.set("ETag", `"${store.version}"`);
     }
-    return new Response(store.content, {
-      status: 200,
-      headers,
-    });
+    return new Response(store.content, { status: 200, headers });
   }
 
-  // If no CSS content is available, return 404
   return new Response("Not Found", { status: 404 });
-};
+});

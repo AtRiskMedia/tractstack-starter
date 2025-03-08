@@ -1,76 +1,62 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { APIContext } from "astro";
 import type { AuthValidationResult } from "../../types";
 
-export async function isAuthenticated(context: APIContext): Promise<boolean> {
+export function isAuthenticated(context: APIContext): boolean {
   const token = context.cookies.get("auth_token")?.value;
   return token === "authenticated" || token === "admin" || token === "open_demo";
 }
 
-export async function isAdmin(context: APIContext): Promise<boolean> {
+export function isAdmin(context: APIContext): boolean {
   const token = context.cookies.get("auth_token")?.value;
   return token === "admin";
 }
 
-export async function isOpenDemoMode(context: APIContext): Promise<boolean> {
+export function isOpenDemoMode(context: APIContext): boolean {
   const token = context.cookies.get("auth_token")?.value;
   return token === "open_demo";
 }
 
-export async function validateAuth(
-  config: Record<string, any> | null
-): Promise<AuthValidationResult> {
+interface Config {
+  init?: { OPEN_DEMO?: boolean };
+}
+
+export async function validateAuth(config: Config | null): Promise<AuthValidationResult> {
   if (!config) {
-    return {
-      isValid: false,
-      isOpenDemo: false,
-      errors: ["No configuration available"],
-    };
+    return { isValid: false, isOpenDemo: false, errors: ["No configuration available"] };
   }
 
   const initConfig = config.init;
   if (!initConfig) {
-    return {
-      isValid: false,
-      isOpenDemo: false,
-      errors: ["Missing init configuration"],
-    };
+    return { isValid: false, isOpenDemo: false, errors: ["Missing init configuration"] };
   }
 
   const isOpenDemo = !!initConfig.OPEN_DEMO;
-
-  return {
-    isValid: true,
-    isOpenDemo,
-  };
+  return { isValid: true, isOpenDemo };
 }
 
 export function setAuthenticated(
-  context: {
-    cookies: {
-      set: (name: string, value: string, options: Record<string, any>) => void;
-      delete: (name: string, options?: Record<string, any>) => void;
-    };
-  },
+  context: APIContext,
   value: boolean,
   isAdmin: boolean = false,
   isOpenDemo: boolean = false
 ) {
+  const isProd = import.meta.env.PROD;
+
   if (value) {
     let tokenValue = "authenticated";
-    if (isAdmin) {
-      tokenValue = "admin";
-    } else if (isOpenDemo) {
-      tokenValue = "open_demo";
-    }
+    if (isAdmin) tokenValue = "admin";
+    else if (isOpenDemo) tokenValue = "open_demo";
 
-    context.cookies.set("auth_token", tokenValue, {
+    // Simple cookie options without domain specification
+    const cookieOptions = {
       httpOnly: true,
-      secure: import.meta.env.PROD,
-      sameSite: "lax",
+      secure: isProd,
+      sameSite: "lax" as const,
       path: "/",
       maxAge: 60 * 60 * 24, // 24 hours
-    });
+    };
+
+    context.cookies.set("auth_token", tokenValue, cookieOptions);
   } else {
     context.cookies.delete("auth_token", { path: "/" });
   }

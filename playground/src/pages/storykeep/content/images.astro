@@ -1,4 +1,5 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import Header from "@/components/common/Header.astro";
@@ -9,8 +10,9 @@ import { getAllFilesRowData } from "@/utils/db/turso.ts";
 import type { AuthStatus, MenuDatum } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 
+const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
@@ -38,7 +40,7 @@ const menuPayload: MenuDatum = {
 };
 
 // Get all the data from Turso
-const imageRowData = await getAllFilesRowData();
+const imageRowData = await getAllFilesRowData(context);
 if (!imageRowData) {
   return new Response(null, {
     status: 404,

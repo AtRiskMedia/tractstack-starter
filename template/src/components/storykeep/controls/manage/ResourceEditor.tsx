@@ -223,6 +223,24 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Resource" : "Edit Resource"}
         </h3>
+        <div className="py-2.5 mb-8 max-w-2xl">
+          <div className="p-3.5 border-2 border-dashed bg-slate-50">
+            <div className="text-base text-mydarkgrey leading-8">
+              <p>
+                Think of these as custom content "payloads" or building blocks used to build dynamic
+                content experiences. Check{" "}
+                <a
+                  className="underline text-myblue font-action font-bold hover:text-black"
+                  href="https://freewebpress.org"
+                  target="_blank"
+                >
+                  our docs
+                </a>{" "}
+                for recipes!
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-6 max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 gap-4">

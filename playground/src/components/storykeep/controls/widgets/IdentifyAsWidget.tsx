@@ -7,18 +7,38 @@ import type { FlatNode, BeliefNode } from "@/types";
 
 interface IdentifyAsWidgetProps {
   node: FlatNode;
-  onUpdate: (params: string[]) => void;
+  onUpdate: (params: string[]) => void; // Changed from (string | string[])[] to string[]
 }
 
 export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetProps) {
   const [beliefs, setBeliefs] = useState<BeliefNode[]>([]);
   const [editingBeliefId, setEditingBeliefId] = useState<string | null>(null);
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
+  const [selectedBeliefTag, setSelectedBeliefTag] = useState<string>("");
+  const [targetValues, setTargetValues] = useState<string[]>([]);
+  const [currentPrompt, setCurrentPrompt] = useState<string>("");
 
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
-  const matchingValues = String(params[1] || "");
+  const matchingValues = params[1];
   const prompt = String(params[2] || "");
+
+  const isPlaceholder = beliefTag === "BeliefTag";
+  const isMatchingPlaceholder = matchingValues === "TARGET_VALUE";
+
+  useEffect(() => {
+    if (!isPlaceholder && beliefTag) {
+      setSelectedBeliefTag(beliefTag);
+    }
+    if (Array.isArray(matchingValues)) {
+      setTargetValues(matchingValues);
+    } else if (typeof matchingValues === "string" && !isMatchingPlaceholder) {
+      setTargetValues(matchingValues.split(",").map((val) => val.trim()));
+    } else {
+      setTargetValues([]);
+    }
+    setCurrentPrompt(prompt);
+  }, [beliefTag, matchingValues, prompt, isPlaceholder, isMatchingPlaceholder]);
 
   useEffect(() => {
     async function fetchBeliefs() {
@@ -29,6 +49,38 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
     }
     fetchBeliefs();
   }, []);
+
+  const handleBeliefChange = (selectedValue: string) => {
+    setSelectedBeliefTag(selectedValue);
+    // Convert targetValues array to string
+    onUpdate([selectedValue, targetValues.join(","), currentPrompt]);
+  };
+
+  const addCustomValueToTargets = (value: string) => {
+    if (!targetValues.includes(value)) {
+      const newValues = [...targetValues, value];
+      setTargetValues(newValues);
+      const tagToUse = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+      // Convert newValues array to string
+      onUpdate([tagToUse, newValues.join(","), currentPrompt]);
+    }
+  };
+
+  const removeTargetValue = (index: number) => {
+    const newValues = targetValues.filter((_, i) => i !== index);
+    setTargetValues(newValues);
+    const tagToUse = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+    // Convert newValues array to string
+    onUpdate([tagToUse, newValues.join(","), currentPrompt]);
+  };
+
+  const handlePromptChange = (value: string) => {
+    const sanitizedValue = value.replace(/[\n\r|]/g, "");
+    setCurrentPrompt(sanitizedValue);
+    const tagToUse = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+    // Convert targetValues array to string
+    onUpdate([tagToUse, targetValues.join(","), sanitizedValue]);
+  };
 
   if (isCreatingBelief || editingBeliefId) {
     const belief: BeliefNode = isCreatingBelief
@@ -41,7 +93,6 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
           slug: "",
           scale: "custom",
         };
-
     return (
       <div className="my-4">
         <div className="flex justify-between items-center mb-4">
@@ -75,70 +126,102 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
     );
   }
 
-  const selectedBelief = beliefs.find((b) => b.slug === beliefTag);
-  const hasCustomScale = selectedBelief?.scale === "custom";
+  const filteredBeliefs = beliefs.filter((b) => b.scale === "custom");
+  const selectedBelief = beliefs.find(
+    (b) => b.slug === (selectedBeliefTag || (isPlaceholder ? "" : beliefTag))
+  );
+  const hasRealSelection = !!selectedBelief || (!isPlaceholder && !!beliefTag);
+  const selectValue = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
+
+  // Calculate excluded values
+  const excludedValues =
+    selectedBelief?.customValues?.filter((value) => !targetValues.includes(value)) || [];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        {beliefTag ? (
-          <div className="flex-1 flex items-center justify-between px-2.5 py-1.5 bg-gray-100 rounded-md">
-            <span className="text-gray-900">{selectedBelief?.title}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditingBeliefId(selectedBelief?.id ?? null)}
-                className="text-cyan-700 hover:text-black"
-                title="Edit belief"
-              >
-                <BeakerIcon className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+        <select
+          value={selectValue}
+          onChange={(e) => handleBeliefChange(e.target.value)}
+          className="flex-1 rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700"
+        >
+          <option value="">Select a belief</option>
+          {filteredBeliefs.map((b) => (
+            <option key={b.slug} value={b.slug}>
+              {b.title}
+            </option>
+          ))}
+        </select>
+        {hasRealSelection ? (
+          <button
+            onClick={() => {
+              const belief = beliefs.find((b) => b.slug === selectValue);
+              if (belief) setEditingBeliefId(belief.id);
+            }}
+            className="text-cyan-700 hover:text-black"
+            title="Edit belief"
+          >
+            <BeakerIcon className="h-5 w-5" />
+          </button>
         ) : (
-          <>
-            <select
-              value={beliefTag}
-              onChange={(e) => onUpdate([e.target.value, "", prompt])}
-              className="flex-1 rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-cyan-700"
-            >
-              <option value="">Select a belief</option>
-              {beliefs
-                .filter((b) => b.scale === "custom")
-                .map((b) => (
-                  <option key={b.slug} value={b.slug}>
-                    {b.title}
-                  </option>
-                ))}
-            </select>
-            <button
-              onClick={() => setIsCreatingBelief(true)}
-              className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800"
-            >
-              Create New
-            </button>
-          </>
+          <button
+            onClick={() => setIsCreatingBelief(true)}
+            className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800"
+          >
+            Create New
+          </button>
         )}
       </div>
 
-      {beliefTag && hasCustomScale && selectedBelief?.customValues && (
-        <div className="space-y-1">
-          <label className="block text-sm text-gray-600">Associated Values</label>
-          <div className="flex flex-wrap gap-2">
-            {selectedBelief.customValues.map((value) => (
-              <div key={value} className="px-3 py-1 bg-gray-100 rounded-full text-sm">
-                {value}
+      {hasRealSelection && selectedBelief?.customValues && (
+        <>
+          <div className="space-y-1">
+            <label className="block text-sm text-gray-700 font-medium">Use Values</label>
+            {targetValues.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {targetValues.map((value, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center bg-blue-100 rounded-full overflow-hidden"
+                  >
+                    <span className="px-3 py-1 text-sm">{value}</span>
+                    <button
+                      onClick={() => removeTargetValue(index)}
+                      className="h-full px-2 bg-blue-200 text-blue-500 hover:text-blue-700 hover:bg-blue-300"
+                      title="Remove value"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <div className="text-sm text-gray-500 italic px-2">Select values to match on</div>
+            )}
           </div>
-        </div>
+
+          {excludedValues.length > 0 && (
+            <div className="space-y-1">
+              <label className="block text-sm text-gray-700 font-medium">Excluded</label>
+              <div className="flex flex-wrap gap-2">
+                {excludedValues.map((value) => (
+                  <button
+                    key={value}
+                    onClick={() => addCustomValueToTargets(value)}
+                    className="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200"
+                    title="Click to add to use values"
+                  >
+                    {value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
-      {beliefTag && (
-        <SingleParam
-          label="Question Prompt"
-          value={prompt}
-          onChange={(value) => onUpdate([beliefTag, matchingValues, value])}
-        />
+      {hasRealSelection && (
+        <SingleParam label="Question Prompt" value={currentPrompt} onChange={handlePromptChange} />
       )}
     </div>
   );

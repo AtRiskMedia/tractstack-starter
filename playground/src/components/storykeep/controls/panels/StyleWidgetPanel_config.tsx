@@ -40,10 +40,8 @@ function StyleWidgetConfigPanel({ node }: StyleWidgetConfigPanelProps) {
     const allNodes = ctx.allNodes.get();
     const widgetNode = allNodes.get(node.id);
     if (!widgetNode || !isWidgetNode(widgetNode) || !widgetId) return;
-
     const paramStrings = newParams.map((param) => param.toString());
     const newCopy = `${widgetId}(${paramStrings.join("|")})`;
-
     ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
   };
 

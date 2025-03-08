@@ -4,17 +4,17 @@ import type { StoryFragmentRowData } from "@/store/nodesSerializer";
 import { upsertTopic } from "./upsertTopic";
 import { linkTopicToStoryFragment } from "./linkTopicToStoryFragment";
 import { upsertStoryFragmentDetails } from "./upsertStoryFragmentDetails";
+import type { APIContext } from "@/types";
 
 export async function upsertStoryFragment(
-  rowData: StoryFragmentRowData
+  rowData: StoryFragmentRowData,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
-    // Update story fragment
     await client.execute({
       sql: `INSERT INTO storyfragments (
               id, title, slug, tractstack_id, created, changed,
@@ -42,15 +42,12 @@ export async function upsertStoryFragment(
       ],
     });
 
-    // Handle pane relationships
     if (rowData.pane_ids?.length > 0) {
-      // First delete existing relationships
       await client.execute({
         sql: "DELETE FROM storyfragment_panes WHERE storyfragment_id = ?",
         args: [rowData.id],
       });
 
-      // Then insert new relationships
       for (let i = 0; i < rowData.pane_ids.length; i++) {
         await client.execute({
           sql: "INSERT INTO storyfragment_panes (storyfragment_id, pane_id, weight) VALUES (?, ?, ?)",
@@ -59,26 +56,21 @@ export async function upsertStoryFragment(
       }
     }
 
-    // Handle pending topics and details if provided
     if (rowData.pendingTopics) {
       const { topics, description } = rowData.pendingTopics;
 
-      // Process details
       if (description) {
-        await upsertStoryFragmentDetails(rowData.id, description);
+        await upsertStoryFragmentDetails(rowData.id, description, context);
       }
 
-      // Process topics
       if (topics && Array.isArray(topics)) {
         for (const topic of topics) {
           if (!topic.title) continue;
 
-          // Ensure the topic exists in the database
-          const result = await upsertTopic(topic.title);
+          const result = await upsertTopic(topic.title, context);
 
           if (result.success && result.id > 0) {
-            // Link the topic to the story fragment
-            await linkTopicToStoryFragment(rowData.id, result.id);
+            await linkTopicToStoryFragment(rowData.id, result.id, context);
           }
         }
       }

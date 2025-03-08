@@ -5,24 +5,18 @@ import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
 import { cssStore, updateCssStore } from "@/store/css";
+import { resolvePaths } from "@/utils/core/pathResolver";
 
-// Add these directories to handle dynamically uploaded files
+// Dynamic directories for serving tenant-specific files
 const DYNAMIC_DIRS = ["/images/og", "/images/thumbs", "/custom"];
 
+// Ensure CSS store is initialized
 async function ensureCssStoreInitialized() {
   const store = cssStore.get();
   if (!store.content || !store.version) {
     try {
       await updateCssStore();
-      // No need to check if it worked - updateCssStore now always sets the store
-      // even if the values are null, so we won't get stuck in a loop
     } catch (error: unknown) {
-      // Just log the error and continue - fallback CSS will be used
-      console.log(
-        "CSS store initialization error, using default CSS files:",
-        error instanceof Error ? error.message : String(error)
-      );
-      // Make sure we set something in the store to prevent repeated attempts
       cssStore.set({
         content: null,
         version: null,
@@ -32,22 +26,53 @@ async function ensureCssStoreInitialized() {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // Check if this is a request for a dynamic file first
+  // **Step 1: Determine tenant ID based on environment and hostname**
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  let tenantId = "default";
+
+  if (isMultiTenant) {
+    const hostname = context.request.headers.get("host");
+    if (hostname) {
+      if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+        tenantId = "localhost";
+      } else {
+        const parts = hostname.split(".");
+        if (parts.length >= 3 && parts[1] === "sandbox" && parts[2] === "tractstack.com") {
+          tenantId = parts[0];
+        }
+      }
+    }
+  }
+
+  // **Step 2: Resolve tenant-specific paths**
+  const resolved = await resolvePaths(tenantId);
+
+  // **For multi-tenant mode: If tenant doesn't exist, return 404 immediately**
+  if (isMultiTenant && (!resolved.exists || resolved.configPath === "")) {
+    return new Response(null, {
+      status: 404,
+      statusText: "Tenant Not Found",
+    });
+  }
+
+  // **Step 3: Set tenant info in local context**
+  context.locals.tenant = {
+    id: tenantId,
+    paths: resolved,
+  };
+
+  // **Step 4: Handle dynamic file serving with tenant-specific public path**
   if (context.request.method === "GET") {
     const url = new URL(context.request.url);
     const pathname = url.pathname;
 
-    // Check if this path is in one of our dynamic directories
     if (DYNAMIC_DIRS.some((dir) => pathname.startsWith(dir))) {
       try {
-        // Construct the file path
-        const publicDir = path.join(process.cwd(), "public");
+        const publicDir = context.locals.tenant.paths.publicPath;
         const filePath = path.join(publicDir, pathname);
 
-        // Check if the file exists
         await fs.access(filePath);
 
-        // Determine content type based on file extension
         const ext = path.extname(filePath).toLowerCase();
         const contentTypeMap: Record<string, string> = {
           ".jpg": "image/jpeg",
@@ -62,57 +87,59 @@ export const onRequest = defineMiddleware(async (context, next) => {
         };
 
         const contentType = contentTypeMap[ext] || "application/octet-stream";
-
-        // Read and serve the file
         const fileContent = await fs.readFile(filePath);
         return new Response(fileContent, {
           status: 200,
           headers: {
             "Content-Type": contentType,
-            "Cache-Control": "public, max-age=31536000", // Cache for 1 year
+            "Cache-Control": "public, max-age=31536000", // 1-year cache
           },
         });
       } catch (error) {
-        // If file doesn't exist or there's an error reading it, continue with normal processing
-        // Don't log here as this is expected for files that don't exist
+        // File not found, proceed with normal request handling
       }
     }
   }
 
-  // Initialize CSS store if needed
-  await ensureCssStoreInitialized();
-  // Get auth status from cookies - this is our source of truth
-  const auth = await isAuthenticated(context);
-  const isAdminUser = await isAdmin(context);
-  const isOpenDemo = await isOpenDemoMode(context);
+  // Initialize CSS store
+  if (import.meta.env.PUBLIC_ENABLE_MULTI_TENANT !== "true") {
+    await ensureCssStoreInitialized();
+  }
 
-  // Set auth status in context.locals
+  // **Step 5: Authentication and authorization with tenant context**
+  const auth = isAuthenticated(context);
+  const isAdminUser = isAdmin(context);
+  const isOpenDemo = isOpenDemoMode(context);
+
   context.locals.user = {
     isAuthenticated: auth,
     isAdmin: isAdminUser,
     isOpenDemo,
   } as AuthStatus;
 
-  // Get config validation - note this is separate from auth
-  const config = await getConfig();
-  const validation = await validateConfig(config);
+  // **Step 6: Config validation with tenant-specific config path**
+  const config = await getConfig(context.locals.tenant.paths.configPath);
+
+  const tenantValidation = await validateConfig(config);
+
+  const hasPassword = isMultiTenant
+    ? !!(config?.init?.ADMIN_PASSWORD && config?.init?.EDITOR_PASSWORD)
+    : !!(import.meta.env.PRIVATE_ADMIN_PASSWORD && import.meta.env.PRIVATE_EDITOR_PASSWORD);
+
   const isInitialized =
-    (config?.init as Record<string, unknown>)?.SITE_INIT === true &&
-    typeof import.meta.env.PRIVATE_ADMIN_PASSWORD === `string` &&
-    import.meta.env.PRIVATE_ADMIN_PASSWORD;
+    (config?.init as Record<string, unknown>)?.SITE_INIT === true && hasPassword;
 
   const url = new URL(context.request.url);
   const forceLogin = url.searchParams.get("force") === "true";
 
   if (!isInitialized) return next();
 
-  // Admin-only routes
+  // Define protected routes (unchanged)
   const adminProtectedRoutes = [
     "/storykeep/settings",
     ...(isInitialized ? ["/storykeep/init"] : []),
   ];
 
-  // Editor and admin accessible routes
   const protectedRoutes = [
     "/*/edit",
     "/context/*/edit",
@@ -132,7 +159,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/api/turso/uniqueTailwindClasses",
   ];
 
-  // Routes that can be accessed in open demo mode
   const openProtectedRoutes = [
     "/*/edit",
     "/context/*/edit",
@@ -141,20 +167,19 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/api/turso/paneDesigns",
   ];
 
-  // Always allow access to login/logout pages if we have password protection
+  // Allow login/logout routes
   if (["/storykeep/login", "/storykeep/logout"].includes(context.url.pathname)) {
     return next();
   }
 
-  // If config is invalid and we don't have password protection, redirect to init
-  if (!validation.isValid && !validation.hasPassword) {
+  // Handle uninitialized or invalid config
+  if (!tenantValidation.isValid && !tenantValidation.hasPassword) {
     return context.redirect("/storykeep/init");
   }
 
-  // If config is invalid but we have password protection, require login first
   if (
-    !validation.isValid &&
-    validation.hasPassword &&
+    !tenantValidation.isValid &&
+    tenantValidation.hasPassword &&
     !auth &&
     context.url.pathname !== "/storykeep/login"
   ) {
@@ -163,31 +188,25 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  const isProtectedRoute = protectedRoutes.some((route) => {
-    if (route.includes("*")) {
-      const regex = new RegExp("^" + route.replace("*", ".*"));
-      return regex.test(context.url.pathname);
-    }
-    return context.url.pathname === route;
-  });
+  // **Step 7: Route protection logic** (unchanged)
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    route.includes("*")
+      ? new RegExp("^" + route.replace("*", ".*")).test(context.url.pathname)
+      : context.url.pathname === route
+  );
 
-  const isAdminRoute = adminProtectedRoutes.some((route) => {
-    if (route.includes("*")) {
-      const regex = new RegExp("^" + route.replace("*", ".*"));
-      return regex.test(context.url.pathname);
-    }
-    return context.url.pathname === route;
-  });
+  const isAdminRoute = adminProtectedRoutes.some((route) =>
+    route.includes("*")
+      ? new RegExp("^" + route.replace("*", ".*")).test(context.url.pathname)
+      : context.url.pathname === route
+  );
 
-  const isOpenProtectedRoute = openProtectedRoutes.some((route) => {
-    if (route.includes("*")) {
-      const regex = new RegExp("^" + route.replace("*", ".*"));
-      return regex.test(context.url.pathname);
-    }
-    return context.url.pathname === route;
-  });
+  const isOpenProtectedRoute = openProtectedRoutes.some((route) =>
+    route.includes("*")
+      ? new RegExp("^" + route.replace("*", ".*")).test(context.url.pathname)
+      : context.url.pathname === route
+  );
 
-  // Check admin access
   if (isAdminRoute && !isAdminUser) {
     if (context.url.pathname.startsWith("/api/")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -198,22 +217,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return context.redirect("/");
   }
 
-  // Handle protected routes
   if (!auth && isProtectedRoute) {
-    if (isOpenDemo) {
-      if (isOpenProtectedRoute) {
-        return next();
-      } else {
-        if (context.url.pathname.startsWith("/api/")) {
-          return new Response(JSON.stringify({ error: "Unauthorized" }), {
-            status: 401,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        return context.redirect("/");
-      }
+    if (isOpenDemo && isOpenProtectedRoute) {
+      return next();
     }
-
     if (context.url.pathname.startsWith("/api/")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -225,7 +232,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  // Redirect from login if already authenticated
   if (auth && !forceLogin && context.url.pathname === "/storykeep/login") {
     return context.redirect("/");
   }

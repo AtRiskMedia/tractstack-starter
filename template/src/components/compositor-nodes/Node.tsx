@@ -87,6 +87,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 
     case "StoryFragment": {
       const sf = node as StoryFragmentNode;
+      if (!isPreview) getCtx(props).hasTitle.set(!(!sf.slug || !sf.title));
       return (
         <>
           {!(sf.slug && sf.title) ? (
@@ -109,7 +110,8 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
       const paneNodes = getCtx(props).getChildNodeIDs(node.id);
       const paneNode = node as PaneNode;
-      if (paneNode.isContextPane)
+      if (paneNode.isContextPane) {
+        if (!isPreview) getCtx(props).hasTitle.set(!(!paneNode.slug || !paneNode.title));
         return (
           <>
             {!isPreview && !(paneNode.slug && paneNode.title) ? (
@@ -131,6 +133,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             </div>
           </>
         );
+      }
 
       const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;

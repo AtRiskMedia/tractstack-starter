@@ -1,17 +1,18 @@
 import { tursoClient } from "../client";
 import type { BeliefNode } from "@/types";
 import type { BeliefRowData } from "@/store/nodesSerializer";
+import type { APIContext } from "@/types";
 
 export async function upsertBeliefNode(
-  node: BeliefNode
+  node: BeliefNode,
+  context?: APIContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const client = await tursoClient.getClient();
+    const client = await tursoClient.getClient(context);
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
 
-    // Transform BeliefNode to BeliefRowData
     const rowData: BeliefRowData = {
       id: node.id,
       title: node.title,
@@ -20,7 +21,6 @@ export async function upsertBeliefNode(
       ...(Array.isArray(node.customValues) ? { custom_values: node.customValues.join(",") } : {}),
     };
 
-    // Perform upsert operation
     await client.execute({
       sql: `INSERT INTO beliefs (id, title, slug, scale, custom_values)
             VALUES (?, ?, ?, ?, ?)

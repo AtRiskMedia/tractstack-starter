@@ -1,10 +1,9 @@
 ---
 import Layout from "@/layouts/StoryKeep.astro";
-import { tursoClient } from "@/utils/db/client";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import InitWizard from "@/components/storykeep/init/InitWizard";
 
-const config = await getConfig();
+const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
 
 // already initialized
@@ -20,18 +19,17 @@ const secureValidation = {
   errors: validation.errors,
   config,
 };
-let error = "";
-try {
-  await tursoClient.getClient();
-} catch (e) {
-  console.error("Database initialization error:", e);
-  error = e instanceof Error ? e.message : "Unknown error";
-}
+//let error = "";
+//try {
+//  await tursoClient.getClient();
+//} catch (e) {
+//  console.error("Database initialization error:", e);
+//  error = e instanceof Error ? e.message : "Unknown error";
+//}
 ---
 
 <Layout title="Initialize Site" config={config!}>
   <main>
-    {error && <div class="error">{error}</div>}
     <InitWizard
       client:only="react"
       config={config}

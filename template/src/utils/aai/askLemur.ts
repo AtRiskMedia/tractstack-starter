@@ -1,7 +1,7 @@
 import { trackLemurTokenUsage } from "./trackLemurTokenUsage";
 import { AssemblyAI } from "assemblyai";
+import type { APIContext } from "@/types";
 
-// Valid final model options as a const
 export const VALID_FINAL_MODELS = [
   "assemblyai/mistral-7b",
   "anthropic/claude-3-opus",
@@ -26,24 +26,24 @@ const client = new AssemblyAI({
   apiKey: import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY,
 });
 
-export async function runLemurTask(params: LemurTaskParams) {
+export async function runLemurTask(params: LemurTaskParams, context: APIContext) {
+  const tenantId = context.locals.tenant?.id || "default";
   if (!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY) {
-    console.error("AssemblyAI API key not configured");
+    console.error(`AssemblyAI API key not configured for tenant ${tenantId}`);
     return null;
   }
 
   try {
-    // Default to claude-3-sonnet if no model specified
     const final_model = params.final_model || "anthropic/claude-3-sonnet";
-
     const result = await client.lemur.task({
       ...params,
       final_model,
     });
-    await trackLemurTokenUsage(result);
+    // Pass context to trackLemurTokenUsage for tenant-specific logging
+    await trackLemurTokenUsage(result, context);
     return result;
   } catch (error) {
-    console.error("Error in runLemurTask:", error);
+    console.error(`Error in runLemurTask for tenant ${tenantId}:`, error);
     throw error;
   }
 }
