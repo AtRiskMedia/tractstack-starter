@@ -18,6 +18,7 @@ export const ToggleBelief = ({
   const $heldBeliefsAll = useStore(heldBeliefs);
   const [isClient, setIsClient] = useState(true);
   const [enabled, setEnabled] = useState(false);
+
   const handleClick = () => {
     if (!readonly) {
       const event = {
