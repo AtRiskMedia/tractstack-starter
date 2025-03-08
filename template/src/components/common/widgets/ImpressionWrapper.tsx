@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import { panesVisible, showImpressions } from "../../../store/events";
-import { useInterval } from "../../../utils/common/useInterval";
+import { panesVisible, showImpressions } from "@/store/events";
+import { useInterval } from "@/utils/common/useInterval";
 import { Impression } from "./Impression";
-import { IMPRESSIONS_DELAY } from "../../../constants";
-import type { Config, ImpressionDatum } from "../../../types";
+import { useFloatingOnScroll } from "@/utils/common/useFloatingOnScroll";
+import { IMPRESSIONS_DELAY } from "@/constants";
+import type { Config, ImpressionDatum } from "@/types";
 
 const ImpressionWrapper = ({
   payload,
@@ -28,6 +29,15 @@ const ImpressionWrapper = ({
     undefined
   );
 
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  const { isFloating, opacity } = useFloatingOnScroll(headerRef, {
+    offset: 10,
+    floatingOpacity: 0.85,
+    normalOpacity: 1,
+    disabled: !icon,
+  });
+
   useInterval(() => {
     if (activeImpressions.length > offset + 1) {
       setCurrentImpression(activeImpressions[offset]);
@@ -39,7 +49,6 @@ const ImpressionWrapper = ({
   }, IMPRESSIONS_DELAY);
 
   useEffect(() => {
-    // these are the panes to watch for from inView
     const panesWatch = payload.map((p: ImpressionDatum) => p.parentId);
     const start = activeImpressions ? Object.keys(activeImpressions).length : 0;
     const alreadyActive = activeImpressions ? Object.keys(activeImpressions) : [];
@@ -59,7 +68,6 @@ const ImpressionWrapper = ({
     }
   }, [$inView]);
 
-  // show as aside
   if (!icon) {
     if (!currentImpression || !$show) return <aside />;
     return (
@@ -76,19 +84,29 @@ const ImpressionWrapper = ({
       </aside>
     );
   }
-  // or if visible impressions length = 0 show nothing
-  if (activeImpressions.length === 0) return <div />;
-  // else just show icon (for header)
+  if (activeImpressions.length === 0) return <div ref={headerRef} />;
+
+  if ($show) {
+    return <div ref={headerRef} />;
+  }
+
   return (
-    <button
-      type="button"
-      title="Click for notifications"
-      className="h-6 w-6 rounded-full bg-myblue/80 hover:bg-myorange/100 text-white flex justify-center items-center items motion-safe:animate-bounceIn"
-      onClick={() => showImpressions.set(!$show)}
-    >
-      <span className="sr-only">Show impressions</span>
-      <span>{activeImpressions.length}</span>
-    </button>
+    <div ref={headerRef}>
+      <button
+        type="button"
+        title="Click for notifications"
+        className={`h-6 w-6 rounded-full bg-myblue/80 hover:bg-myorange/100 text-white flex justify-center items-center items motion-safe:animate-bounceIn ${
+          isFloating ? "fixed top-4 right-4 z-50 transition-all duration-300" : ""
+        }`}
+        style={{ opacity: isFloating ? opacity : 1 }}
+        onMouseEnter={() => isFloating && (document.body.style.cursor = "pointer")}
+        onMouseLeave={() => isFloating && (document.body.style.cursor = "auto")}
+        onClick={() => showImpressions.set(!$show)}
+      >
+        <span className="sr-only">Show impressions</span>
+        <span>{activeImpressions.length}</span>
+      </button>
+    </div>
   );
 };
 
