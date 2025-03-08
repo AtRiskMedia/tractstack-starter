@@ -128,12 +128,14 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   );
 
   const showDebugPanel = () => {
+    settingsPanelStore.set(null);
     getCtx().toolModeValStore.set({ value: "default" });
     settingsPanelStore.set({ nodeId: ``, action: `debug`, expanded: true });
     getCtx().notifyNode(`root`);
   };
 
   const handleSave = () => {
+    settingsPanelStore.set(null);
     const dirtyNodes = ctx.getDirtyNodes();
     if (dirtyNodes.length === 0) {
       console.log("No changes to save");
@@ -148,6 +150,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   };
 
   const handleCancel = () => {
+    settingsPanelStore.set(null);
     if (canUndo) {
       if (window.confirm("You have unsaved changes. Are you sure you want to leave?")) {
         window.location.href = "/storykeep";
@@ -158,6 +161,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   };
 
   const visitPage = () => {
+    settingsPanelStore.set(null);
     if (!isVisitable) {
       alert("Please save the node first to visit the page.");
       return;
@@ -172,16 +176,19 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   };
 
   const handleUndo = () => {
+    settingsPanelStore.set(null);
     getCtx().history.undo();
     getCtx().notifyNode(ROOT_NODE_NAME);
   };
 
   const handleRedo = () => {
+    settingsPanelStore.set(null);
     getCtx().history.redo();
     getCtx().notifyNode(ROOT_NODE_NAME);
   };
 
   const toggleAnalytics = () => {
+    settingsPanelStore.set(null);
     showAnalytics.set(!$showAnalytics);
     getCtx().toolModeValStore.set({ value: "default" });
     settingsPanelStore.set(null);
@@ -189,6 +196,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   };
 
   const toggleKeyboardAccessible = () => {
+    settingsPanelStore.set(null);
     keyboardAccessible.set(!$keyboardAccessible);
     getCtx().notifyNode(ROOT_NODE_NAME);
   };

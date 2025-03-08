@@ -35,6 +35,38 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
   });
   const isSaving = useRef(false);
 
+  // Add event listener to disable scrolling when modal is open
+  useEffect(() => {
+    // Store original overflow setting
+    const originalOverflow = document.body.style.overflow;
+    // Prevent scrolling while modal is open
+    document.body.style.overflow = "hidden";
+
+    // Handler to prevent all keyboard shortcuts
+    const preventKeyboardShortcuts = (e: KeyboardEvent) => {
+      // Allow only tab navigation within the modal
+      if (e.key !== "Tab") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // Only allow Escape key to close the modal if save is completed or errored
+      if (e.key === "Escape" && (stage === "COMPLETED" || stage === "ERROR")) {
+        onClose();
+      }
+    };
+
+    // Prevent all keyboard shortcuts
+    window.addEventListener("keydown", preventKeyboardShortcuts, true);
+
+    return () => {
+      // Restore original overflow setting
+      document.body.style.overflow = originalOverflow;
+      // Remove keyboard event listener
+      window.removeEventListener("keydown", preventKeyboardShortcuts, true);
+    };
+  }, [onClose, stage]);
+
   useEffect(() => {
     const saveChanges = async () => {
       if (isSaving.current) return;
@@ -232,51 +264,94 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
     }
   };
 
+  const handleCloseClick = () => {
+    // Only allow close if save is completed or errored
+    if (stage === "COMPLETED" || stage === "ERROR") {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[10101] bg-black/50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4">
-        <h2 className="text-2xl font-bold mb-4">Saving Changes</h2>
+    <>
+      {/* Full screen blocking overlay - cannot be clicked through */}
+      <div
+        className="fixed inset-0 z-[10100] bg-transparent"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100vw",
+          height: "100vh",
+          pointerEvents: "all",
+          cursor: "not-allowed",
+          touchAction: "none",
+          userSelect: "none",
+        }}
+      />
 
-        <div className="mb-4">
-          <div className="h-2 bg-gray-200 rounded-full">
-            <div
-              className={classNames(
-                "h-full rounded-full transition-all duration-500",
-                stage === "COMPLETED" ? "bg-green-500" : "bg-blue-500",
-                stage === "ERROR" ? "bg-red-500" : ""
-              )}
-              style={{ width: `${progress}%` }}
-            />
+      {/* Modal overlay with visible background */}
+      <div
+        className="fixed inset-0 z-[10101] bg-black/50 flex items-center justify-center"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: "100vw",
+          height: "100vh",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4"
+          style={{ cursor: "default" }}
+        >
+          <h2 className="text-2xl font-bold mb-4">Saving Changes</h2>
+
+          <div className="mb-4">
+            <div className="h-2 bg-gray-200 rounded-full">
+              <div
+                className={classNames(
+                  "h-full rounded-full transition-all duration-500",
+                  stage === "COMPLETED" ? "bg-green-500" : "bg-blue-500",
+                  stage === "ERROR" ? "bg-red-500" : ""
+                )}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-        </div>
 
-        <p className="text-lg mb-4">{getStageDescription(stage)}</p>
+          <p className="text-lg mb-4">{getStageDescription(stage)}</p>
 
-        {(stage === "COMPLETED" || stage === "ERROR") && (
-          <div className="flex justify-end gap-2">
-            {stage === "ERROR" && (
+          {(stage === "COMPLETED" || stage === "ERROR") && (
+            <div className="flex justify-end gap-2">
+              {stage === "ERROR" && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Reload Page
+                </button>
+              )}
               <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={handleCloseClick}
+                className={classNames(
+                  "px-4 py-2 rounded",
+                  stage === "COMPLETED"
+                    ? "bg-green-500 hover:bg-green-600 text-white"
+                    : "bg-gray-500 hover:bg-gray-600 text-white"
+                )}
               >
-                Reload Page
+                {stage === "COMPLETED" ? "Close" : "Cancel"}
               </button>
-            )}
-            <button
-              onClick={onClose}
-              className={classNames(
-                "px-4 py-2 rounded",
-                stage === "COMPLETED"
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "bg-gray-500 hover:bg-gray-600 text-white"
-              )}
-            >
-              {stage === "COMPLETED" ? "Close" : "Cancel"}
-            </button>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
