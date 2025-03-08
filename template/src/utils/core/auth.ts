@@ -57,59 +57,27 @@ export function setAuthenticated(
 
   // Get environment information for debugging
   const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
-  const tenantId = context.locals.tenant?.id || "default";
-  const baseDomain = import.meta.env.SITE_DOMAIN || "tractstack.com";
   const isProd = import.meta.env.PROD;
-  const hostname = context.request.headers.get("host");
+  const hostname = context.request.headers.get("host") || "";
 
   console.log("[Auth Debug] Environment:", {
     isMultiTenant,
-    tenantId,
-    baseDomain,
     isProd,
     host: hostname,
   });
-
-  // **Step 1: Determine domain setting based on environment**
-  let domain: string | undefined;
-
-  if (isMultiTenant) {
-    console.log("[Auth Debug] Multi-tenant mode active");
-    if (
-      (hostname && hostname.includes("localhost")) ||
-      (hostname && hostname.includes("127.0.0.1")) ||
-      !isProd
-    ) {
-      console.log("[Auth Debug] Local development detected, not setting domain");
-      domain = undefined; // No domain for localhost in dev
-    } else {
-      if ([`default`, `localhost`].includes(tenantId)) {
-        domain = baseDomain;
-        console.log("[Auth Debug] Using base domain:", domain);
-      } else {
-        domain = `${tenantId}.sandbox.${baseDomain}`;
-        console.log("[Auth Debug] Using tenant subdomain:", domain);
-      }
-    }
-  } else {
-    // Single-tenant mode
-    console.log("[Auth Debug] Single-tenant mode active");
-    domain = isProd ? baseDomain : undefined;
-    console.log("[Auth Debug] Domain set to:", domain);
-  }
 
   if (value) {
     let tokenValue = "authenticated";
     if (isAdmin) tokenValue = "admin";
     else if (isOpenDemo) tokenValue = "open_demo";
 
+    // Set basic cookie options without domain - most compatible approach
     const cookieOptions = {
       httpOnly: true,
       secure: isProd,
       sameSite: "lax" as const,
       path: "/",
       maxAge: 60 * 60 * 24,
-      ...(domain ? { domain } : {}),
     };
 
     console.log("[Auth Debug] Setting cookie with options:", JSON.stringify(cookieOptions));
@@ -118,10 +86,7 @@ export function setAuthenticated(
     context.cookies.set("auth_token", tokenValue, cookieOptions);
     console.log("[Auth Debug] Cookie set complete");
   } else {
-    const deleteOptions = {
-      path: "/",
-      ...(domain ? { domain } : {}),
-    };
+    const deleteOptions = { path: "/" };
     console.log(
       "[Auth Debug] Deleting auth_token cookie with options:",
       JSON.stringify(deleteOptions)
