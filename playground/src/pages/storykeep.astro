@@ -46,7 +46,7 @@ if (!user?.isAuthenticated && !isPreviewMode)
     featured: true,
     actionLisp: "(goto (storykeep login))",
   });
-if (user?.isAuthenticated && !isPreviewMode)
+if (user?.isAuthenticated)
   links.unshift({
     name: "Logout",
     description: "Close this session",
