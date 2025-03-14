@@ -5,7 +5,7 @@ import { withTenantContext } from "@/utils/api/middleware";
 import type { APIRoute } from "astro";
 import type { APIContext, SiteMap } from "@/types";
 
-export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
+export const ALL: APIRoute = withTenantContext(async (context: APIContext) => {
   const config = await getConfigFromRequest(context.request);
 
   const xmlTop = `<?xml version="1.0" encoding="UTF-8"?>
@@ -57,8 +57,10 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
   const xmlBody = entries.join(``);
   const xml = `${xmlTop}${xmlBody}${xmlBottom}`;
 
-  // Force the content type and ensure no transformation
-  return new Response(xml, {
+  // Explicitly handle HEAD requests by returning no body, only headers
+  const body = context.request.method === "HEAD" ? null : xml;
+
+  return new Response(body, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600",
