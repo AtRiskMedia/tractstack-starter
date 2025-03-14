@@ -8,9 +8,8 @@ import type { APIContext, SiteMap } from "@/types";
 export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
   const config = await getConfigFromRequest(context.request);
 
-  const xmlTop = `
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`.trim();
+  const xmlTop = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
   const xmlBottom = `</urlset>`;
 
   const contentMap: SiteMap[] = await getSiteMap(context);
@@ -58,9 +57,14 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
   const xmlBody = entries.join(``);
   const xml = `${xmlTop}${xmlBody}${xmlBottom}`;
 
+  // Force the content type and ensure no transformation
   return new Response(xml, {
     headers: {
-      "Content-Type": "application/xml",
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 });
+
+export const prerender = false;
