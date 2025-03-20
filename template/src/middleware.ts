@@ -8,7 +8,7 @@ import { cssStore, updateCssStore } from "@/store/css";
 import { resolvePaths } from "@/utils/core/pathResolver";
 
 // Dynamic directories for serving tenant-specific files
-const DYNAMIC_DIRS = ["/images/og", "/images/thumbs", "/custom"];
+const DYNAMIC_DIRS = ["/images", "/custom"];
 
 // Ensure CSS store is initialized
 async function ensureCssStoreInitialized() {
