@@ -476,13 +476,6 @@ export default function BrandStep({
         </div>
 
         <div className="mt-8 pt-6 border-t border-myblue/10">
-          <WordMarkMode
-            value={currentValues.wordmarkMode}
-            onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
-          />
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-myblue/10">
           <div className="space-y-2">
             <span className="block text-sm font-normal text-mydarkgrey">Theme</span>
             <ThemeVisualSelector
@@ -492,6 +485,13 @@ export default function BrandStep({
               config={config!}
             />
           </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-myblue/10">
+          <WordMarkMode
+            value={currentValues.wordmarkMode}
+            onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
+          />
         </div>
 
         <div className="mt-8 pt-6 border-t border-myblue/10">
