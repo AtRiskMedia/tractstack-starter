@@ -10,7 +10,6 @@ import ColorPickerCombo from "../fields/ColorPickerCombo";
 import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
-import StoryFragmentOgPanel from "./StoryFragmentPanel_og";
 import StoryFragmentTopicsPanel from "./StoryFragmentPanel_topics";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import { cloneDeep } from "@/utils/common/helpers";
@@ -20,6 +19,8 @@ import type { StoryFragmentNode, Config } from "@/types";
 const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?: Config }) => {
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
   const [storyfragmentNode, setStoryfragmentNode] = useState<StoryFragmentNode | null>(null);
+  const [isSEOReady, setIsSEOReady] = useState(false);
+
   const ctx = getCtx();
   const $mode = typeof ctx !== `undefined` ? useStore(ctx.storyFragmentModeStore) : null;
   const mode = $mode ? $mode[nodeId] : StoryFragmentMode.DEFAULT;
@@ -60,25 +61,72 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     };
   }, [nodeId, isNodeAvailable]);
 
-  if (!isNodeAvailable || !storyfragmentNode) {
-    return null;
-  }
+  // Check if SEO is ready by fetching description
+  useEffect(() => {
+    if (!isNodeAvailable || !storyfragmentNode) return;
+
+    const checkSEOStatus = async () => {
+      try {
+        // Check for social image
+        const hasImage =
+          storyfragmentNode.socialImagePath !== null &&
+          storyfragmentNode.socialImagePath !== undefined;
+
+        if (!hasImage) {
+          setIsSEOReady(false);
+          return;
+        }
+
+        // Check for description
+        const detailsResponse = await fetch(
+          `/api/turso/getStoryFragmentDetails?storyFragmentId=${nodeId}`
+        );
+
+        if (detailsResponse.ok) {
+          const detailsData = await detailsResponse.json();
+          if (
+            detailsData.success &&
+            typeof detailsData?.data?.data?.description === `string` &&
+            detailsData.data.data.description.trim() !== ""
+          ) {
+            setIsSEOReady(true);
+          } else {
+            setIsSEOReady(false);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking SEO status:", err);
+        setIsSEOReady(false);
+      }
+    };
+
+    checkSEOStatus();
+  }, [nodeId, isNodeAvailable, storyfragmentNode?.socialImagePath]);
 
   const handleBgColorChange = (newColor: string) => {
+    if (!storyfragmentNode) return;
+
     const val = hexToTailwind(newColor, config?.init?.BRAND_COLOURS);
     const exactValPayload = val ? null : findClosestTailwindColor(newColor);
     const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
+
     if (exactVal || val) {
       const ctx = getCtx();
-      const updatedNode = {
+      // Make a proper clone that preserves the StoryFragmentNode type
+      const updatedNode: StoryFragmentNode = {
         ...cloneDeep(storyfragmentNode),
         tailwindBgColour: exactVal || val || `white`,
         isChanged: true,
       };
+
       ctx.modifyNodes([updatedNode]);
       setStoryfragmentNode(updatedNode);
     }
   };
+
+  if (!isNodeAvailable || !storyfragmentNode) {
+    return null;
+  }
 
   if (mode === StoryFragmentMode.TITLE) {
     return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
@@ -86,8 +134,6 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     return <StoryFragmentSlugPanel nodeId={nodeId} setMode={setMode} config={config!} />;
   } else if (mode === StoryFragmentMode.MENU) {
     return <StoryFragmentMenuPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === StoryFragmentMode.OG) {
-    return <StoryFragmentOgPanel nodeId={nodeId} setMode={setMode} />;
   } else if (mode === StoryFragmentMode.TOPICS) {
     return <StoryFragmentTopicsPanel nodeId={nodeId} setMode={setMode} />;
   }
@@ -130,30 +176,22 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             )}
           </button>
 
-          {/* Social Share control */}
-          <button
-            onClick={() => setMode(StoryFragmentMode.OG)}
-            className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
-          >
-            {storyfragmentNode.socialImagePath ? (
-              <>
-                <CheckIcon className="w-4 h-4" />
-                <span className="font-bold">Social Share Image</span>
-              </>
-            ) : (
-              <>
-                <XMarkIcon className="w-4 h-4" />
-                <span>Social Share Image</span>
-              </>
-            )}
-          </button>
-
+          {/* Topics control - with conditional styling based on configuration status */}
           <button
             onClick={() => setMode(StoryFragmentMode.TOPICS)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
           >
-            <TagIcon className="w-4 h-4 mr-1" />
-            <span>SEO ready?</span>
+            {isSEOReady ? (
+              <>
+                <CheckIcon className="w-4 h-4" />
+                <span className="font-bold">SEO Ready</span>
+              </>
+            ) : (
+              <>
+                <TagIcon className="w-4 h-4 mr-1" />
+                <span>SEO Ready?</span>
+              </>
+            )}
           </button>
 
           {/* Color picker */}

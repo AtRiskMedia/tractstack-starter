@@ -214,30 +214,16 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
   const handleRemoveImage = async () => {
     if (storyfragmentNode.socialImagePath) {
       setIsProcessing(true);
-      try {
-        // Delete existing image
-        await fetch("/api/fs/deleteOgImage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            path: storyfragmentNode.socialImagePath,
-          }),
-        });
-
-        const updatedNode = cloneDeep({
-          ...storyfragmentNode,
-          socialImagePath: null,
-          isChanged: true,
-        });
-        ctx.modifyNodes([updatedNode]);
-        setImageSrc(null);
-        setImageError(null);
-      } catch (err) {
-        setImageError("Failed to remove image");
-        console.error("Error removing image:", err);
-      } finally {
-        setIsProcessing(false);
-      }
+      // note: we do not delete the image, but no longer use it
+      const updatedNode = cloneDeep({
+        ...storyfragmentNode,
+        socialImagePath: null,
+        isChanged: true,
+      });
+      ctx.modifyNodes([updatedNode]);
+      setImageSrc(null);
+      setImageError(null);
+      setIsProcessing(false);
     }
   };
 
