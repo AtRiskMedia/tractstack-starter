@@ -32,7 +32,11 @@ const defaultSocialLogoURL = `/oglogo.png`;
 const defaultSocialTitle = typeof title === `string` && title ? title : `My first Tract Stack`;
 const defaultSocialAuthor = `Tract Stack`;
 const defaultSocialDesc = `No-code website builder and content marketing platform`;
-const buildVersion = import.meta.env.BUILD_TIME || Date.now();
+const buildVersion = (() => {
+  if (modDatetime) return modDatetime.getTime();
+  if (pubDatetime) return pubDatetime.getTime();
+  return Date.now();
+})();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 const contentMap: FullContentMap[] = await getFullContentMap(context);

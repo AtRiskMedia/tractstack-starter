@@ -60,7 +60,11 @@ const defaultSocialDesc =
   storyFragmentDescription ||
   config.init.OGDESC ||
   `No-code website builder and content marketing platform`;
-const buildVersion = import.meta.env.BUILD_TIME || Date.now();
+const buildVersion = (() => {
+  if (modDatetime) return modDatetime.getTime();
+  if (pubDatetime) return pubDatetime.getTime();
+  return Date.now();
+})();
 const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
 const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
 

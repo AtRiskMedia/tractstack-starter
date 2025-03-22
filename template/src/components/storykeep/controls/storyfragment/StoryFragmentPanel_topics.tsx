@@ -102,7 +102,11 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
       setLoading(true);
       try {
         // Initialize image source from existing socialImagePath
-        setImageSrc(storyfragmentNode.socialImagePath || null);
+        setImageSrc(
+          storyfragmentNode.socialImagePath
+            ? `${storyfragmentNode.socialImagePath}?v=${Date.now()}`
+            : null
+        );
 
         const topicsResponse = await fetch("/api/turso/getAllTopics");
         if (topicsResponse.ok) {
@@ -289,7 +293,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
         isChanged: true,
       });
       ctx.modifyNodes([updatedNode]);
-      setImageSrc(savedPath);
+      setImageSrc(`${savedPath}?v=${Date.now()}`);
     } catch (err) {
       setImageError("Failed to process image");
       console.error("Error uploading image:", err);

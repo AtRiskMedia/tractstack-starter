@@ -14,7 +14,6 @@ export async function processImage(
   context: APIContext
 ): Promise<ProcessedImage[]> {
   const tenantId = context.locals.tenant?.id || "default";
-  console.log(`processImage: Tenant=${tenantId}`);
 
   try {
     const basename = path.basename(filename, path.extname(filename));
