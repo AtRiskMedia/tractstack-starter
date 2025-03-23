@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
+import { generateOgImageWithFontLoading } from "@/utils/images/ogImageGenerator";
 import type { SaveData } from "@/store/nodesSerializer";
+import type { StoryFragmentNode } from "@/types";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 
 type SaveStage =
   | "PREPARING"
@@ -34,6 +37,13 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
     totalItems: 0,
   });
   const isSaving = useRef(false);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugMessages, setDebugMessages] = useState<string[]>([]);
+  const [debugImage, setDebugImage] = useState<string | null>(null);
+
+  const addDebugMessage = (message: string) => {
+    setDebugMessages((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
 
   // Add event listener to disable scrolling when modal is open
   useEffect(() => {
@@ -71,29 +81,39 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
     const saveChanges = async () => {
       if (isSaving.current) return;
       isSaving.current = true;
+      addDebugMessage("Starting save process");
 
       const ctx = getCtx();
       const serializer = new NodesSerializer_Json();
 
       try {
         // Process nodes through serializer first
+        addDebugMessage("Serializing nodes...");
         const saveResult = serializer.save(ctx);
         if (!saveResult) {
           console.log("No changes to save");
+          addDebugMessage("No changes detected to save");
           setStage("COMPLETED");
           return;
         }
 
         // Convert boolean result to SaveData
         const saveData = saveResult as unknown as SaveData;
+        addDebugMessage(
+          `Found data to save: Menus:${saveData.menus?.length}, Files:${saveData.files?.length}, Panes:${saveData.panes?.length}, Fragments:${saveData.storyfragments?.length}`
+        );
 
         // Save Menu nodes
         if (saveData.menus?.length > 0) {
           setStage("SAVING_MENUS");
           setProgress(10);
           setItemProgress({ currentItem: 0, totalItems: saveData.menus.length });
+          addDebugMessage(`Saving ${saveData.menus.length} menus`);
 
           for (let i = 0; i < saveData.menus.length; i++) {
+            addDebugMessage(
+              `Saving menu ${i + 1}/${saveData.menus.length}: ${saveData.menus[i].id}`
+            );
             const response = await fetch("/api/turso/upsertMenu", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -112,8 +132,12 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           setStage("SAVING_FILES");
           setProgress(20);
           setItemProgress({ currentItem: 0, totalItems: saveData.files.length });
+          addDebugMessage(`Saving ${saveData.files.length} files`);
 
           for (let i = 0; i < saveData.files.length; i++) {
+            addDebugMessage(
+              `Saving file ${i + 1}/${saveData.files.length}: ${saveData.files[i].id}`
+            );
             const response = await fetch("/api/turso/upsertFile", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -132,8 +156,12 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           setStage("SAVING_PANES");
           setProgress(30);
           setItemProgress({ currentItem: 0, totalItems: saveData.panes.length });
+          addDebugMessage(`Saving ${saveData.panes.length} panes`);
 
           for (let i = 0; i < saveData.panes.length; i++) {
+            addDebugMessage(
+              `Saving pane ${i + 1}/${saveData.panes.length}: ${saveData.panes[i].id}`
+            );
             const pane = saveData.panes[i];
 
             // Extract markdown data from options_payload
@@ -173,17 +201,84 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           }
         }
 
-        // Save StoryFragment nodes last
+        // Save Story Fragment nodes
         if (saveData.storyfragments?.length > 0) {
           setStage("SAVING_STORY_FRAGMENTS");
-          setProgress(70);
+          setProgress(50);
           setItemProgress({ currentItem: 0, totalItems: saveData.storyfragments.length });
+          addDebugMessage(`Saving ${saveData.storyfragments.length} story fragments`);
 
           for (let i = 0; i < saveData.storyfragments.length; i++) {
+            const fragment = saveData.storyfragments[i];
+            addDebugMessage(
+              `Processing fragment ${i + 1}/${saveData.storyfragments.length}: ${fragment.id}`
+            );
+
+            // Check if socialImagePath is not a string - meaning it will be set to null
+            // This is our trigger to generate a new OG image
+            if (typeof fragment.social_image_path !== "string") {
+              // Ensure it's explicitly null for the database to clear old values
+              fragment.social_image_path = null;
+
+              try {
+                // Get node to access its OG image parameters
+                const allNodes = ctx.allNodes.get();
+                const node = allNodes.get(fragment.id) as StoryFragmentNode;
+
+                if (node && fragment.title) {
+                  addDebugMessage("Getting OG parameters for generation");
+                  // Get OG image parameters from context
+                  const params = ctx.getOgImageParams(fragment.id);
+                  addDebugMessage(
+                    `OG params: text:${params.textColor}, bg:${params.bgColor}, font:${params.fontSize || "auto"}`
+                  );
+
+                  // Generate the image
+                  addDebugMessage("Generating OG image...");
+                  const imageData = await generateOgImageWithFontLoading(fragment.title, params);
+                  addDebugMessage("Image generation complete");
+
+                  // For debug visualization
+                  setDebugImage(imageData);
+
+                  // Prepare filename with node ID
+                  const filename = `${fragment.id}.png`;
+                  addDebugMessage(`Saving OG image with filename: ${filename}`);
+
+                  // Save image using existing endpoint
+                  const imgResponse = await fetch("/api/fs/saveOgImage", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      path: "/images/og",
+                      filename,
+                      data: imageData,
+                    }),
+                  });
+
+                  if (imgResponse.ok) {
+                    const { path } = await imgResponse.json();
+                    addDebugMessage(`OG image saved at: ${path}`);
+                  } else {
+                    addDebugMessage(`Failed to save OG image: ${imgResponse.status}`);
+                  }
+                }
+              } catch (imgError) {
+                addDebugMessage(
+                  `Error generating OG image: ${imgError instanceof Error ? imgError.message : String(imgError)}`
+                );
+                console.error("Error generating OG image:", imgError);
+                // Continue with save process even if image generation fails
+              }
+            }
+
+            addDebugMessage(
+              `Saving fragment: ${fragment.id}, socialImagePath: ${fragment.social_image_path}`
+            );
             const response = await fetch("/api/turso/upsertStoryFragment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(saveData.storyfragments[i]),
+              body: JSON.stringify(fragment),
             });
 
             if (!response.ok) {
@@ -194,6 +289,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         }
 
         // Mark all nodes as clean
+        addDebugMessage("Cleaning dirty nodes");
         ctx.getDirtyNodes().forEach((node) => {
           if (node.isChanged) {
             ctx.cleanNode(node.id);
@@ -203,11 +299,13 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         // Process Tailwind styles
         setStage("PROCESSING_STYLES");
         setProgress(80);
+        addDebugMessage("Processing styles");
 
         const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
         // skip in multi-tenant
         if (!isMultiTenant)
           try {
+            addDebugMessage("Generating Tailwind styles");
             const response = await fetch("/api/tailwind/generate", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -216,19 +314,26 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             if (!response.ok) {
               throw new Error("Failed to generate Tailwind styles");
             }
+            addDebugMessage("Tailwind styles generated successfully");
           } catch (styleError) {
+            addDebugMessage(
+              `Style processing error: ${styleError instanceof Error ? styleError.message : String(styleError)}`
+            );
             console.error("Style processing error:", styleError);
             // Continue with save process even if style generation fails
           }
 
         setProgress(100);
         setStage("COMPLETED");
+        addDebugMessage("Save process completed successfully");
         if (onSaveComplete) {
           onSaveComplete();
         }
       } catch (err) {
         setStage("ERROR");
-        setError(err instanceof Error ? err.message : "An unknown error occurred");
+        const errorMessage = err instanceof Error ? err.message : "An unknown error occurred";
+        setError(errorMessage);
+        addDebugMessage(`Error in save process: ${errorMessage}`);
         console.error("Error saving changes:", err);
       }
     };
@@ -306,10 +411,18 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full m-4"
+          className="bg-white p-8 rounded-lg shadow-xl w-full m-4 max-w-3xl max-h-[90vh] overflow-y-auto"
           style={{ cursor: "default" }}
         >
-          <h2 className="text-2xl font-bold mb-4">Saving Changes</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">Saving Changes</h2>
+            <button
+              onClick={() => setShowDebug(!showDebug)}
+              className="text-sm px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+            >
+              {showDebug ? "Hide Debug" : "Show Debug"}
+            </button>
+          </div>
 
           <div className="mb-4">
             <div className="h-2 bg-gray-200 rounded-full">
@@ -326,8 +439,51 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
           <p className="text-lg mb-4">{getStageDescription(stage)}</p>
 
+          {/* Debug section - only visible when showDebug is true */}
+          {showDebug && (
+            <div className="mt-4 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">Debug Information</h3>
+
+              {/* Generated image preview */}
+              {debugImage && (
+                <div className="mb-4">
+                  <h4 className="text-md font-medium mb-2">Generated OG Image Preview:</h4>
+                  <div className="relative">
+                    <img
+                      src={debugImage}
+                      alt="Generated OG Image"
+                      className="max-w-full h-auto border rounded"
+                      style={{ maxHeight: "200px" }}
+                    />
+                    <button
+                      onClick={() => setDebugImage(null)}
+                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow"
+                    >
+                      <XMarkIcon className="h-4 w-4 text-gray-600" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Debug log */}
+              <div>
+                <h4 className="text-md font-medium mb-2">Debug Log:</h4>
+                <div className="bg-gray-100 p-2 rounded text-xs font-mono max-h-60 overflow-y-auto">
+                  {debugMessages.map((msg, idx) => (
+                    <div key={idx} className="mb-1">
+                      {msg}
+                    </div>
+                  ))}
+                  {debugMessages.length === 0 && (
+                    <div className="text-gray-500">No log entries yet</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {(stage === "COMPLETED" || stage === "ERROR") && (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 mt-4">
               {stage === "ERROR" && (
                 <button
                   onClick={() => window.location.reload()}

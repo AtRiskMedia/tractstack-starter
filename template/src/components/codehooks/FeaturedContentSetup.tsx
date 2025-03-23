@@ -71,9 +71,9 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
       return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
     });
 
-  const featuredPage = $contentMap.find((item) => item.id === selectedFeaturedId) as
-    | StoryFragmentContentMap
-    | undefined;
+  const featuredPage = $contentMap.find(
+    (item) => item.id === selectedFeaturedId && item.type === "StoryFragment"
+  ) as StoryFragmentContentMap | undefined;
 
   // Build topic map
   const topicMap = new Map<string, { count: number; pageIds: string[] }>();
@@ -152,14 +152,12 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
   ) => {
     if (!draggedRef.current || draggedRef.current === id) return;
 
-    // Allow dropping on featured area for any valid page
     if (isFeaturedDrop) {
       e.preventDefault();
       setDragState((prev) => ({ ...prev, dropTarget: id }));
       return;
     }
 
-    // For non-featured areas, only allow dropping if in ordered mode and target is in selected IDs
     if (selectedMode === "ordered" && selectedIds.includes(id)) {
       e.preventDefault();
       setDragState((prev) => ({ ...prev, dropTarget: id }));
@@ -178,7 +176,6 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     draggedRef.current = null;
 
     if (isFeaturedDrop) {
-      // First ensure the page is included, then make it featured
       if (!selectedIds.includes(draggedId)) {
         setSelectedIds((prev) => [...prev, draggedId]);
       }
@@ -208,14 +205,11 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
 
   const toggleFeatured = (id: string) => {
     if (selectedFeaturedId === id) {
-      // If already featured, just unfeatured it
       setSelectedFeaturedId("");
     } else {
-      // If not already featured, make sure it's included first
       if (!selectedIds.includes(id)) {
         setSelectedIds((prev) => [...prev, id]);
       }
-      // Then set it as featured
       setSelectedFeaturedId(id);
     }
   };
@@ -235,12 +229,25 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     setSelectedIds(newSelectedIds);
   };
 
-  const handleTopicExcludeAll = (pageIds: string[]) => {
-    const newSelectedIds = selectedIds.filter((id) => !pageIds.includes(id));
+  const handleTopicExcludeAll = (topicName: string) => {
+    const idsToExclude = selectedIds.filter((id) => {
+      const page = $contentMap.find((p) => p.id === id);
+      if (page?.type === "StoryFragment") {
+        return (page as StoryFragmentContentMap).topics?.includes(topicName);
+      }
+      return false;
+    });
+
+    const newSelectedIds = selectedIds.filter((id) => !idsToExclude.includes(id));
     setSelectedIds(newSelectedIds);
-    if (pageIds.includes(selectedFeaturedId)) {
+
+    if (featuredPage && featuredPage.topics?.includes(topicName)) {
       setSelectedFeaturedId("");
     }
+  };
+
+  const getTopicIncludedCount = (pageIds: string[]) => {
+    return pageIds.filter((id) => selectedIds.includes(id)).length;
   };
 
   return (
@@ -310,7 +317,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
             Drag any page here to feature it (it will be automatically included)
           </p>
         </div>
-        {featuredPage ? (
+        {featuredPage && featuredPage.id ? (
           <div className="p-4 flex items-center">
             <img
               src={featuredPage.thumbSrc}
@@ -371,7 +378,10 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
               <div key={topic.name} className="p-4 flex items-center justify-between">
                 <div>
                   <span className="text-sm font-bold text-gray-900">{topic.name}</span>
-                  <span className="ml-2 text-sm text-gray-500">({topic.count} pages)</span>
+                  <span className="ml-2 text-sm text-gray-500">
+                    ({topic.count} pages, {getTopicIncludedCount(topic.pageIds)}/{topic.count}{" "}
+                    included)
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -381,7 +391,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                     Include All
                   </button>
                   <button
-                    onClick={() => handleTopicExcludeAll(topic.pageIds)}
+                    onClick={() => handleTopicExcludeAll(topic.name)}
                     className="px-2 py-1 text-xs font-bold text-red-600 bg-red-100 hover:bg-red-200 rounded"
                   >
                     Exclude All

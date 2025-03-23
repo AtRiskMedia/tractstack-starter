@@ -28,6 +28,7 @@ import type {
   ViewportKey,
   ActivePaneMode,
   NodeProps,
+  OgImageParams,
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
@@ -103,6 +104,27 @@ export class NodesContext {
   }
   getStoryFragmentMode(nodeId: string): StoryFragmentMode {
     return this.storyFragmentModeStore.get()[nodeId] || StoryFragmentMode.DEFAULT;
+  }
+
+  ogImageParamsStore = map<Record<string, OgImageParams>>({});
+
+  getOgImageParams(nodeId: string): OgImageParams {
+    const params = this.ogImageParamsStore.get()[nodeId];
+    return (
+      params || {
+        textColor: "#fcfcfc",
+        bgColor: "#10120d",
+        fontSize: undefined,
+      }
+    );
+  }
+
+  setOgImageParams(nodeId: string, params: Partial<OgImageParams>): void {
+    const currentParams = this.getOgImageParams(nodeId);
+    this.ogImageParamsStore.setKey(nodeId, {
+      ...currentParams,
+      ...params,
+    });
   }
 
   cleanNode(nodeId: string) {

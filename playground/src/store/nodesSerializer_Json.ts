@@ -223,7 +223,7 @@ export class NodesSerializer_Json extends NodesSerializer {
           : {}),
         ...(typeof storyfragmentNode.socialImagePath === `string`
           ? { social_image_path: storyfragmentNode.socialImagePath }
-          : {}),
+          : { social_image_path: null }),
       } as StoryFragmentRowData;
 
       // Check for pending topics in the store
@@ -329,10 +329,6 @@ export class NodesSerializer_Json extends NodesSerializer {
       this.processPaneData(paneNode, paneType, markdownNode, allNodes, ctx, saveData);
     } else {
       console.warn(`Could not determine pane type for pane ${paneNode.id}`);
-      console.log(
-        "Nodes structure:",
-        allNodes.map((n) => ({ id: n.id, type: n.nodeType }))
-      );
     }
   }
 
@@ -344,7 +340,6 @@ export class NodesSerializer_Json extends NodesSerializer {
     ctx: NodesContext,
     saveData: SaveData
   ) {
-    console.log(`processPaneData`, paneNode, allNodes);
     const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
 
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);

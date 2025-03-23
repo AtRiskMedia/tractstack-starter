@@ -30,7 +30,7 @@ export type StoryFragmentRowData = {
   changed: string;
   pane_ids: string[];
   menu_id?: string;
-  social_image_path?: string;
+  social_image_path?: string | null;
   tailwind_background_colour?: string;
   pendingTopics?: {
     topics: { id?: string; title: string }[];

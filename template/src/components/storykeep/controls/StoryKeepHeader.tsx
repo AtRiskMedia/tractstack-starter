@@ -138,7 +138,6 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
     settingsPanelStore.set(null);
     const dirtyNodes = ctx.getDirtyNodes();
     if (dirtyNodes.length === 0) {
-      console.log("No changes to save");
       return;
     }
     ctx.rootNodeId.set(nodeId);
@@ -146,7 +145,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
   };
 
   const handleSaveComplete = () => {
-    console.log(`SAVE COMPLETE`);
+    // do nothing
   };
 
   const handleCancel = () => {

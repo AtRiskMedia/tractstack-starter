@@ -6,7 +6,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "@/utils/core/config";
 import { createRequire } from "module";
-import { processImage } from "@/utils/core/processImage";
+import { processImage } from "@/utils/images/processImage";
 
 interface ConfigUpdatePayload {
   file: string;

@@ -7,10 +7,9 @@ import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import { getCtx } from "@/store/nodes.ts";
 import { findClosestTailwindColor } from "../fields/ColorPicker";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
-import StoryFragmentTitlePanel from "./StoryFragmentPanel_title";
 import StoryFragmentSlugPanel from "./StoryFragmentPanel_slug";
 import StoryFragmentMenuPanel from "./StoryFragmentPanel_menu";
-import StoryFragmentTopicsPanel from "./StoryFragmentPanel_topics";
+import StoryFragmentOpenGraphPanel from "./StoryFragmentPanel_og";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import { cloneDeep } from "@/utils/common/helpers";
 import { StoryFragmentMode } from "@/types";
@@ -67,17 +66,6 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
 
     const checkSEOStatus = async () => {
       try {
-        // Check for social image
-        const hasImage =
-          storyfragmentNode.socialImagePath !== null &&
-          storyfragmentNode.socialImagePath !== undefined;
-
-        if (!hasImage) {
-          setIsSEOReady(false);
-          return;
-        }
-
-        // Check for description
         const detailsResponse = await fetch(
           `/api/turso/getStoryFragmentDetails?storyFragmentId=${nodeId}`
         );
@@ -128,29 +116,25 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     return null;
   }
 
-  if (mode === StoryFragmentMode.TITLE) {
-    return <StoryFragmentTitlePanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === StoryFragmentMode.SLUG) {
+  if (mode === StoryFragmentMode.SLUG) {
     return <StoryFragmentSlugPanel nodeId={nodeId} setMode={setMode} config={config!} />;
   } else if (mode === StoryFragmentMode.MENU) {
     return <StoryFragmentMenuPanel nodeId={nodeId} setMode={setMode} />;
-  } else if (mode === StoryFragmentMode.TOPICS) {
-    return <StoryFragmentTopicsPanel nodeId={nodeId} setMode={setMode} />;
+  } else if (mode === StoryFragmentMode.OG) {
+    return <StoryFragmentOpenGraphPanel nodeId={nodeId} setMode={setMode} config={config} />;
   }
 
   return (
     <div className="mb-4">
       <div className="p-4 bg-white rounded-b-md w-full">
         <div className="flex items-center flex-wrap gap-2">
-          {/* Title control */}
           <button
-            onClick={() => setMode(StoryFragmentMode.TITLE)}
+            onClick={() => setMode(StoryFragmentMode.OG)}
             className="min-h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
           >
             Title: <span className="font-bold">{storyfragmentNode.title}</span>
           </button>
 
-          {/* Slug control */}
           <button
             onClick={() => setMode(StoryFragmentMode.SLUG)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200"
@@ -158,7 +142,6 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             Slug: <span className="font-bold">{storyfragmentNode.slug}</span>
           </button>
 
-          {/* Menu control */}
           <button
             onClick={() => setMode(StoryFragmentMode.MENU)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
@@ -176,9 +159,8 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             )}
           </button>
 
-          {/* Topics control - with conditional styling based on configuration status */}
           <button
-            onClick={() => setMode(StoryFragmentMode.TOPICS)}
+            onClick={() => setMode(StoryFragmentMode.OG)}
             className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
           >
             {isSEOReady ? (
@@ -194,7 +176,6 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             )}
           </button>
 
-          {/* Color picker */}
           {config && (
             <div className="flex items-center gap-2 h-9">
               <div className="text-md">Background Colour:</div>

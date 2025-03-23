@@ -103,7 +103,7 @@ if (!storyfragmentNode) {
   modDatetime={storyfragmentNode.changed || new Date()}
   ogImage={typeof storyfragmentNode?.socialImagePath === `string`
     ? storyfragmentNode.socialImagePath
-    : undefined}
+    : `/images/og/${storyfragmentNode.id}.png`}
   config={config}
   canonicalURL={canonicalURL}
 >

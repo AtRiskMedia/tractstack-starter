@@ -777,7 +777,7 @@ export interface StoryFragmentNode extends BaseNode {
   paneIds: string[];
   menuId?: string;
   tailwindBgColour?: string;
-  socialImagePath?: string;
+  socialImagePath?: string | null;
   created?: Date;
   changed?: Date;
   impressions?: ImpressionNode[];
@@ -1068,11 +1068,9 @@ export enum PaneConfigMode {
 
 export enum StoryFragmentMode {
   DEFAULT = "DEFAULT",
-  TITLE = "TITLE",
   SLUG = "SLUG",
   MENU = "MENU",
   OG = "OG",
-  TOPICS = "TOPICS",
 }
 
 export interface ActivePaneMode {
@@ -1164,3 +1162,9 @@ export interface AppLocals {
 export type APIContext = AstroAPIContext & {
   locals: AppLocals;
 };
+
+export interface OgImageParams {
+  textColor: string;
+  bgColor: string;
+  fontSize?: number;
+}

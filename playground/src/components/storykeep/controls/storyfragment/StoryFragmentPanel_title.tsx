@@ -7,12 +7,12 @@ import { getCtx } from "@/store/nodes.ts";
 import { contentMap } from "@/store/events.ts";
 import { StoryFragmentMode, type StoryFragmentNode } from "@/types.ts";
 
-interface StoryFragmentTitlePanelProps {
+interface StoryFragmentOpenGraphPanelProps {
   nodeId: string;
   setMode?: (mode: StoryFragmentMode) => void;
 }
 
-const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelProps) => {
+const StoryFragmentOpenGraphPanel = ({ nodeId, setMode }: StoryFragmentOpenGraphPanelProps) => {
   const [title, setTitle] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -40,7 +40,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   };
 
   const handleTitleBlur = () => {
-    if (title.length >= 20) {
+    if (title.length >= 10) {
       // Only update if meets minimum length
       const ctx = getCtx();
       const existingSlugs = contentMap
@@ -69,7 +69,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
               onClick={() => setMode && setMode(StoryFragmentMode.DEFAULT)}
               className="text-myblue hover:text-black"
             >
-              ← Go Back
+              ← Close Panel
             </button>
           )}
         </div>
@@ -86,7 +86,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
               }
             }}
             className={`w-full px-2 py-1 pr-16 rounded-md border ${
-              charCount < 20
+              charCount < 10
                 ? "border-red-500 bg-red-50"
                 : isValid
                   ? "border-green-500 bg-green-50"
@@ -97,7 +97,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             placeholder="Enter story fragment title (50-60 characters recommended)"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {charCount < 20 ? (
+            {charCount < 10 ? (
               <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
             ) : isValid ? (
               <CheckIcon className="h-5 w-5 text-green-500" />
@@ -106,7 +106,7 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             ) : null}
             <span
               className={`text-sm ${
-                charCount < 20
+                charCount < 10
                   ? "text-red-500"
                   : isValid
                     ? "text-green-500"
@@ -136,10 +136,10 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
             </ul>
           </div>
           <div className="py-4">
-            {charCount < 20 && (
-              <span className="text-red-500">Title must be at least 20 characters</span>
+            {charCount < 10 && (
+              <span className="text-red-500">Title must be at least 10 characters</span>
             )}
-            {charCount >= 20 && charCount < 50 && (
+            {charCount >= 10 && charCount < 50 && (
               <span className="text-gray-500">
                 Add {50 - charCount} more characters for optimal length
               </span>
@@ -154,4 +154,4 @@ const StoryFragmentTitlePanel = ({ nodeId, setMode }: StoryFragmentTitlePanelPro
   );
 };
 
-export default StoryFragmentTitlePanel;
+export default StoryFragmentOpenGraphPanel;

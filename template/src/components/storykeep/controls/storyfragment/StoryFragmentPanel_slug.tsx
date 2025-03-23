@@ -122,7 +122,7 @@ const StoryFragmentSlugPanel = ({ nodeId, setMode, config }: StoryFragmentSlugPa
             onClick={() => setMode(StoryFragmentMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
-            ← Go Back
+            ← Close Panel
           </button>
         </div>
 

@@ -130,7 +130,7 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
             onClick={() => setMode(StoryFragmentMode.DEFAULT)}
             className="text-myblue hover:text-black"
           >
-            ← Go Back
+            ← Close Panel
           </button>
         </div>
 

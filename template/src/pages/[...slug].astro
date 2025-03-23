@@ -104,7 +104,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
   modDatetime={storyfragmentNode.changed || new Date()}
   ogImage={typeof storyfragmentNode?.socialImagePath === `string`
     ? storyfragmentNode.socialImagePath
-    : undefined}
+    : `/images/og/${storyfragmentNode.id}.png`}
   config={config}
   id={storyfragmentNode.id}
 >

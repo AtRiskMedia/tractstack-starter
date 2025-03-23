@@ -1,9 +1,10 @@
 import { Fragment, useState } from "react";
 import { Combobox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
-import { codehookMap } from "@/store/events.ts";
-import { getCtx } from "@/store/nodes.ts";
 import { ulid } from "ulid";
+import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { codehookMap, contentMap } from "@/store/events.ts";
+import { getCtx } from "@/store/nodes.ts";
+import { findUniqueSlug } from "@/utils/common/helpers";
 import { PaneAddMode } from "@/types";
 import type { TemplatePane } from "@/types.ts";
 
@@ -24,6 +25,11 @@ const AddPaneCodeHookPanel = ({
 }: AddPaneCodeHookPanelProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const existingSlugs = contentMap
+    .get()
+    .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+    .map((item) => item.slug);
+
   const availableCodeHooks = codehookMap.get();
   const filteredHooks =
     query === ""
@@ -37,7 +43,7 @@ const AddPaneCodeHookPanel = ({
       id: ulid(),
       nodeType: "Pane",
       title: selected,
-      slug: selected.toLowerCase().replace(/\s+/g, "-"),
+      slug: findUniqueSlug(selected.toLowerCase().replace(/\s+/g, "-"), existingSlugs),
       isDecorative: false,
       parentId: "",
       codeHookTarget: selected,

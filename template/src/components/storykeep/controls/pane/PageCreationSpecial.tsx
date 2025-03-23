@@ -1,12 +1,14 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { RadioGroup } from "@headlessui/react";
+import { ulid } from "ulid";
 import FeaturedContentPreview from "@/components/codehooks/FeaturedContentPreview";
 import ListContentPreview from "@/components/codehooks/ListContentPreview";
 import VisualBreakPreview from "./VisualBreakPreview";
-import { ulid } from "ulid";
 import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
+import { contentMap } from "@/store/events.ts";
 import type { NodesContext } from "@/store/nodes";
+import { findUniqueSlug } from "@/utils/common/helpers";
 import type { StoryFragmentNode, TemplatePane } from "@/types";
 
 // Layout options with IDs, labels, and descriptions
@@ -47,6 +49,11 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
   const [selectedBreak, setSelectedBreak] = useState(breakVariants[0].id);
   const [isCreating, setIsCreating] = useState(false);
 
+  const existingSlugs = contentMap
+    .get()
+    .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+    .map((item) => item.slug);
+
   // Function to handle continue/apply button
   const handleApply = async () => {
     try {
@@ -67,7 +74,7 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
         id: ulid(),
         nodeType: "Pane",
         title: "Featured Content",
-        slug: `${storyfragment.slug}-featured-content`,
+        slug: findUniqueSlug(`featured-content`, existingSlugs),
         isDecorative: false,
         parentId: nodeId,
         codeHookTarget: "featured-content",

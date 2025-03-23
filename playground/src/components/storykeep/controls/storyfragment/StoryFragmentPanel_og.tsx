@@ -4,15 +4,17 @@ import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import { storyFragmentTopicsStore } from "@/store/storykeep";
 import { StoryFragmentMode } from "@/types.ts";
 import { getCtx } from "@/store/nodes.ts";
-import { cloneDeep } from "@/utils/common/helpers.ts";
+import { cloneDeep, findUniqueSlug, titleToSlug } from "@/utils/common/helpers.ts";
 import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
-import type { StoryFragmentNode } from "@/types.ts";
+import OgImagePreview from "../fields/OgImagePreview";
+import type { FullContentMap, StoryFragmentNode, Config } from "@/types.ts";
 import type { MouseEventHandler, ChangeEvent } from "react";
 
-// Constants for image validation (same as in OG panel)
 const TARGET_WIDTH = 1200;
 const TARGET_HEIGHT = 630;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
@@ -22,12 +24,21 @@ interface Topic {
   title: string;
 }
 
-interface StoryFragmentTopicsPanelProps {
+interface StoryFragmentOpenGraphPanelProps {
   nodeId: string;
   setMode: (mode: StoryFragmentMode) => void;
+  config?: Config;
 }
 
-const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelProps) => {
+const StoryFragmentOpenGraphPanel = ({
+  nodeId,
+  setMode,
+  config,
+}: StoryFragmentOpenGraphPanelProps) => {
+  const [title, setTitle] = useState("");
+  const [isValid, setIsValid] = useState(false);
+  const [warning, setWarning] = useState(false);
+  const [charCount, setCharCount] = useState(0);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [existingTopics, setExistingTopics] = useState<Topic[]>([]);
   const [newTopicTitle, setNewTopicTitle] = useState("");
@@ -35,31 +46,58 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
   const [details, setDetails] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [dataFetched, setDataFetched] = useState(false);
-
-  // Image handling states (from OG panel)
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const thisNode = allNodes.get(nodeId);
 
-  // Safely access storyfragmentNode
   if (!thisNode || !isStoryFragmentNode(thisNode)) {
     return null;
   }
   const storyfragmentNode = thisNode as StoryFragmentNode;
 
-  // Use a ref to track initialization
   const initialized = useRef(false);
 
-  // Get the topics store data
   const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
   const storedData = $storyFragmentTopics[nodeId];
 
-  // Image validation function (same as in OG panel)
+  useEffect(() => {
+    setTitle(storyfragmentNode.title);
+    setCharCount(storyfragmentNode.title.length);
+  }, [storyfragmentNode.title]);
+
+  const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    if (newTitle.length <= 70) {
+      setTitle(newTitle);
+      setCharCount(newTitle.length);
+      setIsValid(newTitle.length >= 35 && newTitle.length <= 60);
+      setWarning(newTitle.length > 60 && newTitle.length <= 70);
+    }
+  };
+
+  const handleTitleBlur = () => {
+    if (title.length >= 10) {
+      const ctx = getCtx();
+      const existingSlugs = (contentMap.get() as FullContentMap[])
+        .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
+        .map((item) => item.slug);
+      const newSlug =
+        storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
+      const updatedNode = cloneDeep({
+        ...storyfragmentNode,
+        title,
+        ...(newSlug ? { slug: newSlug } : {}),
+        isChanged: true,
+      });
+      ctx.modifyNodes([updatedNode]);
+    }
+  };
+
+  // Image validation function
   const validateImage = (file: File): Promise<{ isValid: boolean; error?: string }> => {
     return new Promise((resolve) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -93,21 +131,12 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     });
   };
 
-  // Initialize data
   useEffect(() => {
     const fetchData = async () => {
-      // Prevent multiple fetches
       if (initialized.current || dataFetched) return;
 
       setLoading(true);
       try {
-        // Initialize image source from existing socialImagePath
-        setImageSrc(
-          storyfragmentNode.socialImagePath
-            ? `${storyfragmentNode.socialImagePath}?v=${Date.now()}`
-            : null
-        );
-
         const topicsResponse = await fetch("/api/turso/getAllTopics");
         if (topicsResponse.ok) {
           const topicsData = await topicsResponse.json();
@@ -210,9 +239,19 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     }
   }, [topics, details, nodeId, loading, dataFetched]);
 
-  // Image handling functions (from OG panel)
+  // Image handling functions
   const handleUploadClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleCustomImageUpload = (path: string) => {
+    const updatedNode = cloneDeep({
+      ...storyfragmentNode,
+      socialImagePath: path,
+      isChanged: true,
+    });
+    ctx.modifyNodes([updatedNode]);
+    setImageError(null);
   };
 
   const handleRemoveImage = async () => {
@@ -225,7 +264,6 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
         isChanged: true,
       });
       ctx.modifyNodes([updatedNode]);
-      setImageSrc(null);
       setImageError(null);
       setIsProcessing(false);
     }
@@ -293,7 +331,6 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
         isChanged: true,
       });
       ctx.modifyNodes([updatedNode]);
-      setImageSrc(`${savedPath}?v=${Date.now()}`);
     } catch (err) {
       setImageError("Failed to process image");
       console.error("Error uploading image:", err);
@@ -361,16 +398,17 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
     }
   };
 
+  // Import helpers
+  const { contentMap } = { contentMap: { get: () => [] } };
+
   // Check if prerequisites are met for showing topics
   const hasDescription = details && details.trim().length > 0;
-  const hasImage = imageSrc !== null;
-  const canShowTopics = hasDescription && hasImage;
 
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
-          <h3 className="text-lg font-bold">SEO ready</h3>
+          <h3 className="text-lg font-bold">Page SEO</h3>
           <button
             onClick={() => {
               nodeIsChanged();
@@ -378,100 +416,92 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
             }}
             className="text-myblue hover:text-black"
           >
-            ← Go Back
+            ← Close Panel
           </button>
         </div>
 
         {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
 
         <div className="space-y-6">
-          <div className="py-2.5 mb-4 max-w-2xl">
-            <div className="p-3.5 border-2 border-dashed bg-slate-50">
-              <div className="text-base text-mydarkgrey leading-8">
-                <p>
-                  Once you've added a social share image and page description, this page can be
-                  included in Featured Content or List Content code hooks!
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Social Share Image Section (from OG panel) */}
           <div>
-            <h3 className="block text-sm font-bold text-gray-700 mb-2">
-              Social Share Image (required)
-            </h3>
-            <span className="block text-sm text-mydarkgrey mb-2">
-              Upload an image (required size: {TARGET_WIDTH}x{TARGET_HEIGHT}px)
-            </span>
-
-            <div className="flex items-center space-x-4">
-              <div className="relative w-64 aspect-[1.91/1] bg-mylightgrey/5 rounded-md overflow-hidden">
-                {imageSrc ? (
-                  <>
-                    <img
-                      src={imageSrc}
-                      alt="Open Graph preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={handleRemoveImage}
-                      disabled={isProcessing}
-                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-mylightgrey disabled:opacity-50"
-                    >
-                      <XMarkIcon className="w-4 h-4 text-mydarkgrey" />
-                    </button>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full border-2 border-dashed border-mydarkgrey/30 rounded-md">
-                    <span className="text-sm text-mydarkgrey">No image selected</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-grow">
-                <button
-                  onClick={handleUploadClick}
-                  disabled={isProcessing}
-                  className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+            <h3 className="block text-sm font-bold text-gray-700 mb-1">Page Title</h3>
+            <div className="relative">
+              <input
+                type="text"
+                value={title}
+                onChange={handleTitleChange}
+                onBlur={handleTitleBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                  }
+                }}
+                className={`w-full px-2 py-1 pr-16 rounded-md border ${
+                  charCount < 10
+                    ? "border-red-500 bg-red-50"
+                    : isValid
+                      ? "border-green-500 bg-green-50"
+                      : warning
+                        ? "border-yellow-500 bg-yellow-50"
+                        : "border-gray-300"
+                }`}
+                placeholder="Enter story fragment title (50-60 characters recommended)"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                {charCount < 10 ? (
+                  <ExclamationTriangleIcon className="h-5 w-5 text-red-500" />
+                ) : isValid ? (
+                  <CheckIcon className="h-5 w-5 text-green-500" />
+                ) : warning ? (
+                  <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />
+                ) : null}
+                <span
+                  className={`text-sm ${
+                    charCount < 10
+                      ? "text-red-500"
+                      : isValid
+                        ? "text-green-500"
+                        : warning
+                          ? "text-yellow-500"
+                          : "text-gray-500"
+                  }`}
                 >
-                  <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
-                  {isProcessing ? "Processing..." : imageSrc ? "Change Image" : "Upload Image"}
-                </button>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="image/jpeg,image/png"
-                  className="hidden"
-                />
-
-                {imageSrc && <p className="mt-2 text-xs text-mydarkgrey break-all">{imageSrc}</p>}
-
-                {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
+                  {charCount}/70
+                </span>
               </div>
             </div>
-
-            <div className="text-sm text-mydarkgrey space-y-2 mt-2">
-              <p>This image will be used when your page is shared on social media.</p>
-              <p>Requirements:</p>
-              <ul className="list-disc ml-5 space-y-1">
+            <div className="text-sm text-gray-600 space-y-2 mt-2">
+              <p>Write a clear, descriptive title that accurately represents your page content.</p>
+              <ul className="ml-4 space-y-1">
                 <li>
-                  Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels
+                  <CheckIcon className="h-4 w-4 inline mr-1" /> Include relevant keywords
                 </li>
-                <li>Only JPG or PNG formats are accepted</li>
-                <li>Keep important content centered</li>
-                <li>Use clear, high-contrast imagery</li>
-                <li>Avoid small text</li>
+                <li>
+                  <CheckIcon className="h-4 w-4 inline mr-1" /> Avoid unnecessary words like
+                  "welcome to" or "the"
+                </li>
+                <li>
+                  <CheckIcon className="h-4 w-4 inline mr-1" /> Unique titles across your website
+                </li>
               </ul>
+              <div className="py-2">
+                {charCount < 10 && (
+                  <span className="text-red-500">Title must be at least 20 characters</span>
+                )}
+                {charCount >= 10 && charCount < 35 && (
+                  <span className="text-gray-500">
+                    Add {35 - charCount} more characters for optimal length
+                  </span>
+                )}
+                {warning && <span className="text-yellow-500">Title is getting long</span>}
+                {isValid && <span className="text-green-500">Perfect title length!</span>}
+              </div>
             </div>
           </div>
 
-          {/* Page Description Section */}
           <div>
             <label htmlFor="description" className="block text-sm font-bold text-gray-700 mb-1">
-              Page Description (required)
+              Page Description
             </label>
             <textarea
               id="description"
@@ -486,8 +516,121 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
             </p>
           </div>
 
-          {/* Topics Section - only visible if prerequisites are met */}
-          {canShowTopics ? (
+          <div>
+            <h3 className="block text-sm font-bold text-gray-700 mb-2">Social Share Image</h3>
+
+            {storyfragmentNode.socialImagePath ? (
+              <>
+                <div className="flex items-start space-x-4">
+                  <div
+                    className="relative w-64 bg-mylightgrey/5 rounded-md overflow-hidden"
+                    style={{
+                      aspectRatio: 1.91 / 1,
+                    }}
+                  >
+                    <img
+                      src={storyfragmentNode.socialImagePath}
+                      alt="Open Graph preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={handleRemoveImage}
+                      disabled={isProcessing}
+                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-mylightgrey disabled:opacity-50"
+                    >
+                      <XMarkIcon className="w-4 h-4 text-mydarkgrey" />
+                    </button>
+                  </div>
+
+                  <div className="flex-grow">
+                    <button
+                      onClick={handleUploadClick}
+                      disabled={isProcessing}
+                      className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+                    >
+                      <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
+                      {isProcessing ? "Processing..." : "Replace Image"}
+                    </button>
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/jpeg,image/png"
+                      className="hidden"
+                    />
+
+                    <p className="mt-2 text-xs text-mydarkgrey break-all">
+                      {storyfragmentNode.socialImagePath}
+                    </p>
+                    {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
+                  </div>
+                </div>
+              </>
+            ) : config ? (
+              <OgImagePreview
+                nodeId={nodeId}
+                config={config}
+                onCustomImageUpload={handleCustomImageUpload}
+              />
+            ) : (
+              <>
+                <span className="block text-sm text-mydarkgrey mb-2">
+                  Upload an image (required size: {TARGET_WIDTH}x{TARGET_HEIGHT}px)
+                </span>
+
+                <div className="flex space-x-4">
+                  <div
+                    className="relative w-64 bg-mylightgrey/5 rounded-md overflow-hidden"
+                    style={{
+                      aspectRatio: 1.91 / 1,
+                    }}
+                  >
+                    <div className="flex items-center justify-center w-full h-full border-2 border-dashed border-mydarkgrey/30 rounded-md">
+                      <span className="text-sm text-mydarkgrey">No image selected</span>
+                    </div>
+                  </div>
+
+                  <div className="flex-grow">
+                    <button
+                      onClick={handleUploadClick}
+                      disabled={isProcessing}
+                      className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+                    >
+                      <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
+                      {isProcessing ? "Processing..." : "Upload Image"}
+                    </button>
+
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      accept="image/jpeg,image/png"
+                      className="hidden"
+                    />
+
+                    {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
+                  </div>
+                </div>
+
+                <div className="text-sm text-mydarkgrey space-y-2 mt-2">
+                  <p>This image will be used when your page is shared on social media.</p>
+                  <p>Requirements:</p>
+                  <ul className="list-disc ml-5 space-y-1">
+                    <li>
+                      Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels
+                    </li>
+                    <li>Only JPG or PNG formats are accepted</li>
+                    <li>Keep important content centered</li>
+                    <li>Use clear, high-contrast imagery</li>
+                    <li>Avoid small text</li>
+                  </ul>
+                </div>
+              </>
+            )}
+          </div>
+
+          {hasDescription ? (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Topics</label>
 
@@ -495,7 +638,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
                 <input
                   type="text"
                   className="flex-grow rounded-l-md border border-gray-300 shadow-sm p-2 focus:border-myblue focus:ring-myblue"
-                  placeholder="Add a topic..."
+                  placeholder="Add a new tag..."
                   value={newTopicTitle}
                   onChange={(e) => setNewTopicTitle(e.target.value)}
                   onKeyDown={(e) => {
@@ -538,7 +681,7 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
                 )}
               </div>
               <div className="mt-4">
-                <h4 className="text-xs font-bold text-gray-700 mb-2">More Tags</h4>
+                <h4 className="text-xs font-bold text-gray-700 mb-2">Available Tags</h4>
                 <div className="flex flex-wrap gap-2">
                   {existingTopics
                     .filter(
@@ -572,18 +715,11 @@ const StoryFragmentTopicsPanel = ({ nodeId, setMode }: StoryFragmentTopicsPanelP
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="p-4 bg-amber-50 rounded-md border border-amber-200">
-              <p className="text-amber-800">
-                <strong>Both a page description and social share image are required</strong> before
-                you can add topics. Please complete both sections above to continue.
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
   );
 };
 
-export default StoryFragmentTopicsPanel;
+export default StoryFragmentOpenGraphPanel;

@@ -1126,17 +1126,18 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
           if (row.description && typeof row.description === "string")
             baseData.description = row.description;
           if (row.topics && typeof row.topics === "string") baseData.topics = row.topics.split(",");
-          if (row.extra) {
-            const socialImagePath = String(row.extra);
-            if (socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))) {
-              baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp`;
-              baseData.thumbSrcSet = [
-                `/images/thumbs/${row.id}_1200px.webp 1200w`,
-                `/images/thumbs/${row.id}_600px.webp 600w`,
-                `/images/thumbs/${row.id}_300px.webp 300w`,
-              ].join(", ");
-            }
-            baseData.socialImagePath = socialImagePath;
+          const socialImagePath = row.extra ? String(row.extra) : null;
+          if (
+            !socialImagePath ||
+            socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))
+          ) {
+            baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp`;
+            baseData.thumbSrcSet = [
+              `/images/thumbs/${row.id}_1200px.webp 1200w`,
+              `/images/thumbs/${row.id}_600px.webp 600w`,
+              `/images/thumbs/${row.id}_300px.webp 300w`,
+            ].join(", ");
+            baseData.socialImagePath = socialImagePath || `/images/og/${row.id}.png`;
           }
 
           return {
