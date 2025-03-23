@@ -3,6 +3,7 @@ import { getCtx } from "@/store/nodes.ts";
 import Node from "@/components/compositor-nodes/Node.astro";
 
 const { nodeId } = Astro.props;
+const notEmptyPane = getCtx().getChildNodeIDs(nodeId).length > 0 || false;
 ---
 
 <div
@@ -10,8 +11,41 @@ const { nodeId } = Astro.props;
   style={getCtx().getNodeStringStyles(nodeId, `auto`)}
 >
   {
-    getCtx()
-      .getChildNodeIDs(nodeId)
-      .map((id: string) => <Node nodeId={id} />)
+    notEmptyPane ? (
+      getCtx()
+        .getChildNodeIDs(nodeId)
+        .map((id: string) => <Node nodeId={id} />)
+    ) : (
+      <div class="p-4 bg-myblue/5 rounded-lg">
+        <div class="space-y-4">
+          <div class="flex items-center justify-center p-8 border-2 border-dashed border-mylightgrey rounded-lg">
+            <div class="text-center">
+              <h3 class="text-lg font-bold text-mydarkgrey mb-2">Your Tract Stack is Ready!</h3>
+              <p class="text-mydarkgrey">
+                Please reference{" "}
+                <a
+                  href="https://tractstack.org"
+                  target="_blank"
+                  class="underline hover:text-black hover:underline-offset-4"
+                >
+                  our docs
+                </a>{" "}
+                for helpful info!
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+            <a
+              href="/storykeep"
+              data-astro-reload
+              class="px-4 py-2 text-white bg-myblue rounded hover:bg-black"
+            >
+              Enter
+            </a>
+          </div>
+        </div>
+      </div>
+    )
   }
 </div>
