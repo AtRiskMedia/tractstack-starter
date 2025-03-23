@@ -38,7 +38,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
     };
   }, []);
 
-  if (!hasTitle || !hasPanes) return null;
+  if (!hasTitle || (!hasPanes && !isContext)) return null;
   return (
     <>
       <div className="text-sm text-center font-bold h-16 text-mydarkgrey">

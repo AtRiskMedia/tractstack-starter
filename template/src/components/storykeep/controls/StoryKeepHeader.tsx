@@ -31,9 +31,14 @@ const getViewportFromWidth = (width: number): "mobile" | "tablet" | "desktop" =>
 interface StoryKeepHeaderProps {
   keyboardAccessibleEnabled: boolean;
   nodeId: string;
+  isContext: boolean;
 }
 
-const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderProps) => {
+const StoryKeepHeader = ({
+  keyboardAccessibleEnabled,
+  nodeId,
+  isContext = false,
+}: StoryKeepHeaderProps) => {
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
@@ -217,7 +222,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
 
   return (
     <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
-      {hasTitle && hasPanes && node && (
+      {hasTitle && (hasPanes || isContext) && node && (
         <>
           {viewportSelectorContent}
           {(canUndo || canRedo) && (
@@ -240,7 +245,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
       )}
 
       <div className="flex flex-wrap justify-center items-center gap-2">
-        {hasTitle && hasPanes && canUndo ? (
+        {hasTitle && (hasPanes || isContext) && canUndo ? (
           <>
             <button
               onClick={handleSave}
@@ -265,7 +270,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
         )}
       </div>
 
-      {hasTitle && hasPanes && node && (
+      {hasTitle && (hasPanes || isContext) && node && (
         <div className="flex flex-wrap justify-center items-center gap-2">
           <button onClick={toggleAnalytics} title="Toggle Interaction Analytics">
             <PresentationChartBarIcon

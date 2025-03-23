@@ -296,6 +296,8 @@ export class NodesContext {
 
       // then add storyfragmentNodes
       if (nodes?.storyfragmentNodes) this.addNodes(nodes.storyfragmentNodes);
+
+      this.updateHasPanesStatus();
     }
   }
 
@@ -315,6 +317,7 @@ export class NodesContext {
       if (nodes?.flatNodes) this.addNodes(nodes.flatNodes);
       // then storyfragment nodes will link pane nodes from above
       if (nodes?.storyfragmentNodes) this.addNodes(nodes.storyfragmentNodes);
+      this.updateHasPanesStatus();
     }
   }
 
@@ -366,6 +369,7 @@ export class NodesContext {
         }
       }
     }
+    this.updateHasPanesStatus();
   }
 
   addNodes(nodes: BaseNode[]) {

@@ -111,6 +111,7 @@ if (!storyfragmentNode) {
     <StoryKeepHeader
       keyboardAccessibleEnabled={config.init?.KEYBOARD_ACCESSIBLE || false}
       nodeId={storyfragmentNode.id}
+      isContext={false}
       client:only="react"
     />
     <PullAnalytics id={storyfragmentNode.id} client:only="react" />
