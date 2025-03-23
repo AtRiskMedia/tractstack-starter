@@ -24,6 +24,7 @@ const AddPanePanel = ({
 }: AddPanePanelProps) => {
   const lookup = first ? `${nodeId}-0` : nodeId;
   const $mode = typeof ctx !== `undefined` ? useStore(ctx.paneAddMode) : null;
+  const hasPanes = typeof ctx !== `undefined` ? useStore(ctx.hasPanes) : false;
   const mode = $mode ? $mode[lookup] : PaneAddMode.DEFAULT;
 
   const setMode = (newMode: PaneAddMode) => {
@@ -31,7 +32,7 @@ const AddPanePanel = ({
     settingsPanelStore.set(null);
   };
 
-  if (mode === PaneAddMode.NEW) {
+  if (mode === PaneAddMode.NEW || (!hasPanes && first)) {
     return (
       <AddPaneNewPanel
         nodeId={nodeId}
