@@ -241,7 +241,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
         </div>
         <div className="pt-4 space-y-4">
           <div>
-            <label htmlFor="page-size" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="page-size" className="block text-sm font-bold text-gray-700">
               Items per page
             </label>
             <select
@@ -259,7 +259,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
           </div>
 
           <div>
-            <label htmlFor="sort-mode" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="sort-mode" className="block text-sm font-bold text-gray-700">
               Default sort order
             </label>
             <select
@@ -312,13 +312,13 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                   const allTopicPageIds = topics.flatMap((t) => t.pageIds);
                   setExcludedIds((prev) => prev.filter((id) => !allTopicPageIds.includes(id)));
                 }}
-                className="px-3 py-1 text-sm font-medium text-myblue bg-myblue/10 hover:bg-myblue/20 rounded-md"
+                className="px-3 py-1 text-sm font-bold text-myblue bg-myblue/10 hover:bg-myblue/20 rounded-md"
               >
                 Include All Topics
               </button>
               <button
                 onClick={() => setSelectedTopics([])}
-                className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                className="px-3 py-1 text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
               >
                 Clear All
               </button>
@@ -328,20 +328,20 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
             {topics.map((topic) => (
               <div key={topic.name} className="flex items-center justify-between p-4">
                 <div className="flex items-center">
-                  <span className="text-sm font-medium text-gray-900">{topic.name}</span>
+                  <span className="text-sm font-bold text-gray-900">{topic.name}</span>
                   <span className="ml-2 text-sm text-gray-500">({topic.count} pages)</span>
                   {isTopicEffectivelySelected(topic.name) && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-myblue/10 text-myblue">
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-myblue/10 text-myblue">
                       Included
                     </span>
                   )}
                   {isTopicPartiallyExcluded(topic.name) && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
                       Partially Excluded
                     </span>
                   )}
                   {isTopicFullyExcluded(topic.name) && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800">
                       Excluded
                     </span>
                   )}
@@ -349,7 +349,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                 <div className="flex space-x-2">
                   <button
                     onClick={() => includeAllWithTopic(topic.name)}
-                    className={`px-2 py-1 text-xs font-medium ${
+                    className={`px-2 py-1 text-xs font-bold ${
                       isTopicEffectivelySelected(topic.name)
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                         : "text-myblue hover:text-myblue-dark bg-myblue/10 hover:bg-myblue/20"
@@ -360,7 +360,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                   </button>
                   <button
                     onClick={() => excludeAllWithTopic(topic.name)}
-                    className={`px-2 py-1 text-xs font-medium ${
+                    className={`px-2 py-1 text-xs font-bold ${
                       isTopicFullyExcluded(topic.name)
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                         : "text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200"
@@ -410,7 +410,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                       <div className="flex items-center space-x-4">
                         <button
                           onClick={() => toggleExclude(page.id)}
-                          className={`px-2 py-1 text-xs font-medium rounded ${
+                          className={`px-2 py-1 text-xs font-bold rounded ${
                             isExcluded
                               ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
                               : "bg-red-100 text-red-600 hover:bg-red-200"
@@ -429,7 +429,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                           <span
                             key={topic}
                             onClick={() => toggleTopicFilter(topic)}
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold cursor-pointer ${
                               selectedTopics.includes(topic)
                                 ? "bg-myblue/10 text-myblue"
                                 : "bg-gray-100 text-gray-800"
@@ -465,7 +465,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
               onClick={() => handlePageChange("prev")}
               disabled={currentPage === 1}
               className={classNames(
-                "px-4 py-2 text-sm font-medium rounded-md",
+                "px-4 py-2 text-sm font-bold rounded-md",
                 currentPage === 1
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-myblue text-white hover:bg-myblue-dark"
@@ -480,7 +480,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
               onClick={() => handlePageChange("next")}
               disabled={currentPage === totalPages}
               className={classNames(
-                "px-4 py-2 text-sm font-medium rounded-md",
+                "px-4 py-2 text-sm font-bold rounded-md",
                 currentPage === totalPages
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-myblue text-white hover:bg-myblue-dark"

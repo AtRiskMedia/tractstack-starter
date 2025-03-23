@@ -447,7 +447,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               {/* Generated image preview */}
               {debugImage && (
                 <div className="mb-4">
-                  <h4 className="text-md font-medium mb-2">Generated OG Image Preview:</h4>
+                  <h4 className="text-md font-bold mb-2">Generated OG Image Preview:</h4>
                   <div className="relative">
                     <img
                       src={debugImage}
@@ -467,7 +467,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
               {/* Debug log */}
               <div>
-                <h4 className="text-md font-medium mb-2">Debug Log:</h4>
+                <h4 className="text-md font-bold mb-2">Debug Log:</h4>
                 <div className="bg-gray-100 p-2 rounded text-xs font-mono max-h-60 overflow-y-auto">
                   {debugMessages.map((msg, idx) => (
                     <div key={idx} className="mb-1">

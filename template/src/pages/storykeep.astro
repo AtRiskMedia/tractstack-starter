@@ -7,6 +7,7 @@ import Footer from "@/components/common/Footer.astro";
 import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
 import BrowseContent from "@/components/storykeep/controls/dashboard/BrowseContent.tsx";
 import PullDashboardAnalytics from "@/components/storykeep/controls/recharts/PullDashboardAnalytics.tsx";
+import SelectHome from "@/components/storykeep/controls/dashboard/SelectHome.tsx";
 import ManageContent from "@/components/storykeep/controls/dashboard/ManageContent.tsx";
 import PageViewStats from "@/components/storykeep/controls/dashboard/PageViewStats.tsx";
 import { getFullContentMap } from "@/utils/db/turso.ts";
@@ -130,6 +131,7 @@ const impressions = user.isOpenDemo
       <div class="py-1.5 bg-white px-3.5">
         <div class="flex flex-col gap-y-12 mx-auto max-w-screen-xl">
           <PageViewStats client:only="react" />
+          <SelectHome contentMap={filterPayload} config={config} client:only="react" />
           <BrowseContent contentMap={filterPayload} client:only="react" />
           <ManageContent client:only="react" />
         </div>

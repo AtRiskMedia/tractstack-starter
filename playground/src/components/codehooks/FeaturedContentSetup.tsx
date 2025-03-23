@@ -358,7 +358,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                   d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M8 10h.01M12 14h.01M16 18h.01M18 8l-6-6-6 6H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2h-2l-2-2z"
                 />
               </svg>
-              <h3 className="text-sm font-medium text-gray-700">No Featured Article</h3>
+              <h3 className="text-sm font-bold text-gray-700">No Featured Article</h3>
               <p className="mt-1 text-xs text-gray-500">
                 Select a featured article from available pages or drag a page here
               </p>
@@ -412,7 +412,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
               {validPages.length} available)
             </p>
           </div>
-          <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-medium">
+          <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-bold">
             {selectedIds.length - (selectedFeaturedId ? 1 : 0)} / {validPages.length}
           </span>
         </div>

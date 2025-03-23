@@ -176,7 +176,7 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
       {hasRealSelection && selectedBelief?.customValues && (
         <>
           <div className="space-y-1">
-            <label className="block text-sm text-gray-700 font-medium">Use Values</label>
+            <label className="block text-sm text-gray-700 font-bold">Use Values</label>
             {targetValues.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {targetValues.map((value, index) => (
@@ -202,7 +202,7 @@ export default function IdentifyAsWidget({ node, onUpdate }: IdentifyAsWidgetPro
 
           {excludedValues.length > 0 && (
             <div className="space-y-1">
-              <label className="block text-sm text-gray-700 font-medium">Excluded</label>
+              <label className="block text-sm text-gray-700 font-bold">Excluded</label>
               <div className="flex flex-wrap gap-2">
                 {excludedValues.map((value) => (
                   <button

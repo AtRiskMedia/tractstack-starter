@@ -147,7 +147,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
               <div className="p-2 bg-cyan-100 rounded-full group-hover:bg-cyan-200 dark:bg-cyan-800 dark:group-hover:bg-cyan-700">
                 <PlusIcon className="h-6 w-6 text-cyan-700 dark:text-cyan-300" />
               </div>
-              <div className="font-medium text-cyan-800 dark:text-cyan-300">Add content</div>
+              <div className="font-bold text-cyan-800 dark:text-cyan-300">Add content</div>
             </div>
           </button>
         )}
@@ -188,7 +188,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
         >
           <div className="flex items-center justify-center space-x-2">
             <PlusIcon className="h-5 w-5 text-cyan-700 dark:text-cyan-300" />
-            <span className="text-sm font-medium text-cyan-800 dark:text-cyan-300">
+            <span className="text-sm font-bold text-cyan-800 dark:text-cyan-300">
               Add new element
             </span>
           </div>

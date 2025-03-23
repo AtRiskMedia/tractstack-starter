@@ -245,7 +245,7 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
                       height={60}
                     />
                   </div>
-                  <div className="text-center mt-1 text-sm font-medium">{breakVar.label}</div>
+                  <div className="text-center mt-1 text-sm font-bold">{breakVar.label}</div>
                 </div>
               ))}
             </div>
