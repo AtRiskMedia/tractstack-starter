@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useStore } from "@nanostores/react";
 import { settingsPanelStore, keyboardAccessible } from "@/store/storykeep.ts";
 import AddPaneNewPanel from "./AddPanePanel_new";
@@ -22,17 +23,19 @@ const AddPanePanel = ({
   isStoryFragment = false,
   isContextPane = false,
 }: AddPanePanelProps) => {
+  const [reset, setReset] = useState(false);
   const lookup = first ? `${nodeId}-0` : nodeId;
   const $mode = typeof ctx !== `undefined` ? useStore(ctx.paneAddMode) : null;
   const hasPanes = typeof ctx !== `undefined` ? useStore(ctx.hasPanes) : false;
   const mode = $mode ? $mode[lookup] : PaneAddMode.DEFAULT;
 
   const setMode = (newMode: PaneAddMode) => {
+    setReset(true);
     ctx?.setPaneAddMode(lookup, newMode);
     settingsPanelStore.set(null);
   };
 
-  if (mode === PaneAddMode.NEW || (!hasPanes && first)) {
+  if (mode === PaneAddMode.NEW || (!hasPanes && first && !reset)) {
     return (
       <AddPaneNewPanel
         nodeId={nodeId}
