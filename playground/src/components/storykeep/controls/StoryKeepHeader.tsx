@@ -48,6 +48,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
 
   const ctx = getCtx();
   const hasTitle = useStore(ctx.hasTitle);
+  const hasPanes = useStore(ctx.hasPanes);
   const allNodes = ctx.allNodes.get();
   const node = allNodes.get(nodeId);
   const url =
@@ -216,7 +217,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
 
   return (
     <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
-      {hasTitle && node && (
+      {hasTitle && hasPanes && node && (
         <>
           {viewportSelectorContent}
           {(canUndo || canRedo) && (
@@ -239,7 +240,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
       )}
 
       <div className="flex flex-wrap justify-center items-center gap-2">
-        {canUndo ? (
+        {hasTitle && hasPanes && canUndo ? (
           <>
             <button
               onClick={handleSave}
@@ -264,7 +265,7 @@ const StoryKeepHeader = ({ keyboardAccessibleEnabled, nodeId }: StoryKeepHeaderP
         )}
       </div>
 
-      {hasTitle && node && (
+      {hasTitle && hasPanes && node && (
         <div className="flex flex-wrap justify-center items-center gap-2">
           <button onClick={toggleAnalytics} title="Toggle Interaction Analytics">
             <PresentationChartBarIcon

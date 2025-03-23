@@ -68,6 +68,7 @@ export class NodesContext {
   impressionNodes = atom<Set<ImpressionNode>>(new Set<ImpressionNode>());
   parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
   hasTitle = atom<boolean>(false);
+  hasPanes = atom<boolean>(false);
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
@@ -125,6 +126,17 @@ export class NodesContext {
       ...currentParams,
       ...params,
     });
+  }
+
+  updateHasPanesStatus() {
+    const allNodes = this.allNodes.get();
+    const storyFragments = Array.from(allNodes.values()).filter(
+      (node) => node.nodeType === "StoryFragment"
+    );
+    const hasPanes = storyFragments.some(
+      (node) => "paneIds" in node && (node.paneIds as string[]).length > 0
+    );
+    this.hasPanes.set(hasPanes);
   }
 
   cleanNode(nodeId: string) {
@@ -908,6 +920,7 @@ export class NodesContext {
       notifyNodeId = ROOT_NODE_NAME;
     }
     if (nodeId === `root`) startLoadingAnimation();
+    this.updateHasPanesStatus();
     this.notifications.notify(notifyNodeId, payload);
   }
 

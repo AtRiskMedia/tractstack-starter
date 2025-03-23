@@ -9,6 +9,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
   const skipIfContextPane = [`pane`];
   const ctx = getCtx();
   const hasTitle = useStore(ctx.hasTitle);
+  const hasPanes = useStore(ctx.hasPanes);
   const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const className =
     "w-8 h-8 py-1 rounded-xl bg-white text-myblue hover:bg-mygreen/20 hover:text-black hover:rotate-3 cursor-pointer";
@@ -37,7 +38,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
     };
   }, []);
 
-  if (!hasTitle) return null;
+  if (!hasTitle || !hasPanes) return null;
   return (
     <>
       <div className="text-sm text-center font-bold h-16 text-mydarkgrey">
