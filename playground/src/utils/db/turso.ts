@@ -38,6 +38,7 @@ import type {
   ResourceContentMap,
   MenuContentMap,
   StoryfragmentAnalytics,
+  LeadMetrics,
 } from "@/types.ts";
 import type { APIContext } from "@/types";
 
@@ -1646,12 +1647,64 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
   }
 }
 
-// Compute StoryFragment Analytics
+export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[]> {
+  const client = await tursoClient.getClient(context);
+  if (!client) return [];
+
+  const { rows } = await client.execute(`
+    SELECT 
+      l.id,
+      l.first_name,
+      l.email,
+      l.contact_persona,
+      l.short_bio,
+      COUNT(DISTINCT v.id) as total_visits,
+      SUM(CASE WHEN a.verb = 'CLICKED' THEN 1 ELSE 0 END) as clicked_events,
+      SUM(CASE WHEN a.verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-1 day') THEN v.id ELSE NULL END) as last_24h_visits,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-7 days') THEN v.id ELSE NULL END) as last_7d_visits,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-28 days') THEN v.id ELSE NULL END) as last_28d_visits,
+      MAX(v.created_at) as last_activity
+    FROM 
+      leads l
+      LEFT JOIN fingerprints f ON l.id = f.lead_id
+      LEFT JOIN visits v ON f.id = v.fingerprint_id
+      LEFT JOIN actions a ON v.id = a.visit_id
+    GROUP BY 
+      l.id, l.first_name, l.email, l.contact_persona, l.short_bio
+    ORDER BY 
+      last_activity DESC
+  `);
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    first_name: String(row.first_name),
+    email: String(row.email),
+    contact_persona: String(row.contact_persona),
+    short_bio: row.short_bio ? String(row.short_bio) : undefined,
+    total_visits: Number(row.total_visits || 0),
+    clicked_events: Number(row.clicked_events || 0),
+    entered_events: Number(row.entered_events || 0),
+    last_24h_visits: Number(row.last_24h_visits || 0),
+    last_7d_visits: Number(row.last_7d_visits || 0),
+    last_28d_visits: Number(row.last_28d_visits || 0),
+    last_activity: String(row.last_activity || ""),
+  }));
+}
+
 export async function computeStoryfragmentAnalytics(
   context?: APIContext
 ): Promise<StoryfragmentAnalytics[]> {
   const client = await tursoClient.getClient(context);
   if (!client) return [];
+
+  // Get the total leads count
+  const { rows: leadRows } = await client.execute(`
+    SELECT COUNT(*) as total_leads FROM leads
+  `);
+
+  const totalLeads = Number(leadRows[0]?.total_leads || 0);
+
   const { rows } = await client.execute(`
     SELECT 
       sf.id,
@@ -1703,10 +1756,10 @@ export async function computeStoryfragmentAnalytics(
     last_24h_unique_visitors: Number(row.last_24h_unique_visitors || 0),
     last_7d_unique_visitors: Number(row.last_7d_unique_visitors || 0),
     last_28d_unique_visitors: Number(row.last_28d_unique_visitors || 0),
+    total_leads: totalLeads,
   }));
 }
 
-// Log Token Usage
 export async function logTokenUsage(tokensUsed: number, context?: APIContext): Promise<boolean> {
   try {
     const client = await tursoClient.getClient(context);

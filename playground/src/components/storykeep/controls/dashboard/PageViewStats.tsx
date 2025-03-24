@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
 import { storedDashboardAnalytics, storyfragmentAnalyticsStore } from "@/store/storykeep";
+import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
+import type { LeadMetrics } from "@/types";
 
 interface Stat {
   name: string;
@@ -18,6 +20,7 @@ function formatNumber(num: number): string {
 
 export default function PageViewStats() {
   const [isClient, setIsClient] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
 
@@ -39,6 +42,8 @@ export default function PageViewStats() {
     (sum, fragment) => sum + (fragment?.last_28d_unique_visitors || 0),
     0
   );
+  // Get total leads from the first analytics item (they all have the same value)
+  const totalLeads = analytics.length > 0 ? analytics[0]?.total_leads || 0 : 0;
 
   const stats: Stat[] = [
     {
@@ -64,6 +69,64 @@ export default function PageViewStats() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const downloadLeadsCSV = async () => {
+    if (isDownloading) return;
+
+    try {
+      setIsDownloading(true);
+
+      // Fetch lead metrics from the API
+      const response = await fetch("/api/turso/getLeadMetrics");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch lead metrics");
+      }
+
+      const result = await response.json();
+      const leadMetrics = result.data;
+
+      if (!leadMetrics || !leadMetrics.length) {
+        alert("No lead data available to download");
+        return;
+      }
+
+      // Get headers from the first lead object
+      const headers = Object.keys(leadMetrics[0]);
+
+      // Create CSV content
+      let csvContent = headers.join(",") + "\n";
+
+      // Add data rows
+      leadMetrics.forEach((lead: LeadMetrics) => {
+        const row = headers.map((header) => {
+          // Handle fields that might contain commas by wrapping in quotes
+          const value =
+            lead[header as keyof LeadMetrics] === null ||
+            lead[header as keyof LeadMetrics] === undefined
+              ? ""
+              : String(lead[header as keyof LeadMetrics]);
+          return value.includes(",") ? `"${value}"` : value;
+        });
+        csvContent += row.join(",") + "\n";
+      });
+
+      // Create and trigger download
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `leads-metrics-${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading lead metrics:", error);
+      alert("Failed to download lead metrics. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (!isClient) return null;
 
@@ -99,14 +162,38 @@ export default function PageViewStats() {
           ))}
         </div>
 
-        <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors mb-4">
-          <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
-          <dd className="mt-2">
-            <div className="text-2xl font-bold tracking-tight text-cyan-700">
-              {totalLifetimeVisitors === 0 ? "-" : formatNumber(totalLifetimeVisitors)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
+            <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
+            <dd className="mt-2">
+              <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                {totalLifetimeVisitors === 0 ? "-" : formatNumber(totalLifetimeVisitors)}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
+            </dd>
+          </div>
+
+          <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
+              {totalLeads > 0 && (
+                <button
+                  onClick={downloadLeadsCSV}
+                  disabled={isDownloading}
+                  className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
+                  {isDownloading ? "Downloading..." : "Download"}
+                </button>
+              )}
             </div>
-            <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
-          </dd>
+            <dd className="mt-2">
+              <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                {totalLeads === 0 ? "-" : formatNumber(totalLeads)}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Registered leads (emails collected)</div>
+            </dd>
+          </div>
         </div>
 
         <div className="p-4">

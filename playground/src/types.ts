@@ -1112,6 +1112,21 @@ export type PageDesign = {
   };
 };
 
+export interface LeadMetrics {
+  id: string;
+  first_name: string;
+  email: string;
+  contact_persona: string;
+  short_bio?: string;
+  total_visits: number;
+  clicked_events: number;
+  entered_events: number;
+  last_24h_visits: number;
+  last_7d_visits: number;
+  last_28d_visits: number;
+  last_activity: string;
+}
+
 export interface StoryfragmentAnalytics {
   id: string;
   slug: string;
@@ -1123,6 +1138,7 @@ export interface StoryfragmentAnalytics {
   last_24h_unique_visitors: number;
   last_7d_unique_visitors: number;
   last_28d_unique_visitors: number;
+  total_leads: number;
 }
 
 export type NodeProps = {

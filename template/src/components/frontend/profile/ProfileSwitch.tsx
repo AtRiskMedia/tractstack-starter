@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { success, loading, error, auth, profile } from "../../../store/auth";
+import { success, loading, error, auth, profile } from "@/store/auth";
 import { ProfileCreate } from "./ProfileCreate";
 import { ProfileEdit } from "./ProfileEdit";
 import { ProfileUnlock } from "./ProfileUnlock";

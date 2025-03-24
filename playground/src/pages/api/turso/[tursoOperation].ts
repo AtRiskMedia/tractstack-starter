@@ -12,6 +12,7 @@ import { executeQueries } from "@/utils/db/api/executeQueries.ts";
 import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
 import { getResourceNodes } from "@/utils/db/api/getResourceNodes.ts";
 import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
+import { getLeadMetrics } from "@/utils/db/api/getLeadMetrics.ts";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
 import { getAllMenus } from "@/utils/db/api/getAllMenus.ts";
@@ -169,6 +170,9 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         result = await getResourceNodes({ slugs, categories }, context);
         break;
       }
+      case "getLeadMetrics":
+        result = await getLeadMetrics(context);
+        break;
       case "getAllFiles":
         result = await getAllFiles(context);
         break;
