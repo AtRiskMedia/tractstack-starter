@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
+import { useStore } from "@nanostores/react";
 import { getCtx } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -19,7 +20,7 @@ interface ConfigPanePanelProps {
 
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
-  const activePaneMode = ctx.activePaneMode.get();
+  const activePaneMode = useStore(ctx.activePaneMode);
   const isActiveMode =
     activePaneMode.panel === `settings` && activePaneMode.paneId === nodeId && activePaneMode.mode;
   const allNodes = ctx.allNodes.get();
@@ -40,13 +41,13 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   };
 
   if (mode === PaneConfigMode.TITLE) {
-    return <PaneTitlePanel nodeId={nodeId} setMode={setMode} />;
+    return <PaneTitlePanel nodeId={nodeId} setMode={setSaveMode} />;
   } else if (mode === PaneConfigMode.SLUG) {
-    return <PaneSlugPanel nodeId={nodeId} setMode={setMode} />;
+    return <PaneSlugPanel nodeId={nodeId} setMode={setSaveMode} />;
   } else if (mode === PaneConfigMode.PATH) {
-    return <PaneMagicPathPanel nodeId={nodeId} setMode={setMode} />;
+    return <PaneMagicPathPanel nodeId={nodeId} setMode={setSaveMode} />;
   } else if (mode === PaneConfigMode.IMPRESSION) {
-    return <PaneImpressionPanel nodeId={nodeId} setMode={setMode} />;
+    return <PaneImpressionPanel nodeId={nodeId} setMode={setSaveMode} />;
   }
 
   return (

@@ -164,11 +164,11 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "lg",
       lineHEIGHT: "loose",
-      py: "1.5"
+      py: "1.5",
     },
     tablet: {
       textSIZE: "xl",
-      py: "2.5"
+      py: "2.5",
     },
     desktop: {},
   },
