@@ -142,12 +142,10 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       textSIZE: "xl",
       fontFACE: "action",
       pt: "4",
-      pb: "1.5",
     },
     tablet: {
       textSIZE: "2xl",
       pt: "6",
-      pb: "2.5",
     },
     desktop: {},
   },
@@ -166,9 +164,11 @@ const getBaseParagraphClasses = (theme: Theme) => ({
       ),
       textSIZE: "lg",
       lineHEIGHT: "loose",
+      py: "1.5"
     },
     tablet: {
       textSIZE: "xl",
+      py: "2.5"
     },
     desktop: {},
   },
@@ -614,9 +614,11 @@ export function getSubTitleDesign(
             textCOLOR,
             textSIZE: "xl",
             fontFACE: "action",
+            pt: "4",
           },
           tablet: {
             textSIZE: "2xl",
+            pt: "6",
           },
           desktop: {},
         },
@@ -624,11 +626,11 @@ export function getSubTitleDesign(
           mobile: {
             textCOLOR,
             textSIZE: "lg",
-            py: "3",
+            py: "1.5",
           },
           tablet: {
             textSIZE: "xl",
-            py: "4",
+            py: "2.5",
           },
           desktop: {},
         },
@@ -704,9 +706,11 @@ const getBaseIntroClasses = (theme: Theme) => ({
       textSIZE: "xl",
       lineHEIGHT: "snug",
       fontFACE: "action",
+      pt: "4",
     },
     tablet: {
       textSIZE: "2xl",
+      pt: "6",
     },
     desktop: {},
   },
@@ -725,11 +729,11 @@ const getBaseIntroClasses = (theme: Theme) => ({
       ),
       textSIZE: "lg",
       lineHEIGHT: "loose",
-      mt: "4",
+      py: "1.5",
     },
     tablet: {
       textSIZE: "xl",
-      mt: "5",
+      py: "2.5",
     },
     desktop: {},
   },
@@ -990,11 +994,11 @@ const getBaseImageHeroClasses = (theme: Theme) => ({
       textSIZE: "lg",
       lineHEIGHT: "relaxed",
       maxW: "xl",
-      mb: "6",
+      py: "1.5",
     },
     tablet: {
       textSIZE: "xl",
-      mb: "8",
+      py: "2.5",
     },
     desktop: {
       maxW: "2xl",
