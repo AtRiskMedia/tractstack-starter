@@ -12,6 +12,7 @@ import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
 import { PaneConfigMode } from "@/types.ts";
 import type { PaneNode } from "@/types.ts";
+import type { SetStateAction,Dispatch} from "react"
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 
 interface ConfigPanePanelProps {
@@ -35,9 +36,13 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     (isActiveMode as PaneConfigMode) || PaneConfigMode.DEFAULT
   );
 
-  const setSaveMode = (newMode: PaneConfigMode) => {
-    setMode(newMode);
-    ctx.activePaneMode.set({ paneId: nodeId, mode: newMode, panel: `settings` });
+  const setSaveMode: Dispatch<SetStateAction<PaneConfigMode>> = (newMode) => {
+    setMode(typeof newMode === "function" ? newMode(mode) : newMode);
+    ctx.activePaneMode.set({
+      paneId: nodeId,
+      mode: typeof newMode === "function" ? newMode(mode) : newMode,
+      panel: `settings`,
+    });
   };
 
   if (mode === PaneConfigMode.TITLE) {
