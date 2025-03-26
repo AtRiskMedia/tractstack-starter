@@ -9,6 +9,7 @@ import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTria
 import { storyFragmentTopicsStore } from "@/store/storykeep";
 import { StoryFragmentMode } from "@/types.ts";
 import { getCtx } from "@/store/nodes.ts";
+import { contentMap } from "@/store/events";
 import { cloneDeep, findUniqueSlug, titleToSlug } from "@/utils/common/helpers.ts";
 import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import OgImagePreview from "../fields/OgImagePreview";
@@ -85,6 +86,7 @@ const StoryFragmentOpenGraphPanel = ({
       const existingSlugs = (contentMap.get() as FullContentMap[])
         .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
         .map((item) => item.slug);
+      console.log(existingSlugs);
       const newSlug =
         storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
       const updatedNode = cloneDeep({
@@ -397,9 +399,6 @@ const StoryFragmentOpenGraphPanel = ({
       ctx.modifyNodes([updatedNode]);
     }
   };
-
-  // Import helpers
-  const { contentMap } = { contentMap: { get: () => [] } };
 
   // Check if prerequisites are met for showing topics
   const hasDescription = details && details.trim().length > 0;

@@ -4,6 +4,7 @@ import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildr
 import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyticsPanel.tsx";
 import FeaturedContentSetup from "@/components/codehooks/FeaturedContentSetup";
 import ListContentSetup from "@/components/codehooks/ListContentSetup";
+import BunnyVideoSetup from "@/components/codehooks/BunnyVideoSetup";
 import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/types";
 
@@ -73,7 +74,7 @@ export const Pane = (props: NodeProps) => {
               !(
                 codeHookPayload &&
                 typeof codeHookTarget === `string` &&
-                [`list-content`, `featured-content`].includes(codeHookTarget)
+                [`list-content`, `featured-content`, `bunny-video`].includes(codeHookTarget)
               )
             )
               getCtx(props).setClickedNodeId(props.nodeId, true);
@@ -84,6 +85,8 @@ export const Pane = (props: NodeProps) => {
             <FeaturedContentSetup nodeId={props.nodeId} params={codeHookParams} />
           ) : codeHookPayload && codeHookTarget === `list-content` ? (
             <ListContentSetup nodeId={props.nodeId} params={codeHookParams} />
+          ) : codeHookPayload && codeHookTarget === `bunny-video` ? (
+            <BunnyVideoSetup nodeId={props.nodeId} params={codeHookParams} />
           ) : codeHookPayload && codeHookTarget ? (
             <CodeHookContainer payload={{ target: codeHookTarget, params: codeHookParams }} />
           ) : (

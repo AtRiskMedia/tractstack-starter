@@ -81,7 +81,7 @@ const AddPanePanel = ({
         >
           <button
             onClick={() => setMode(PaneAddMode.NEW)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
           >
             + Design New
           </button>
@@ -89,13 +89,13 @@ const AddPanePanel = ({
             <>
               <button
                 onClick={() => setMode(PaneAddMode.BREAK)}
-                className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+                className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
               >
                 + Visual Break
               </button>
               <button
                 onClick={() => setMode(PaneAddMode.REUSE)}
-                className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+                className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
               >
                 + Re-use existing pane
               </button>
@@ -103,7 +103,7 @@ const AddPanePanel = ({
           )}
           <button
             onClick={() => setMode(PaneAddMode.CODEHOOK)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10"
+            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
           >
             + Custom Code Hook
           </button>

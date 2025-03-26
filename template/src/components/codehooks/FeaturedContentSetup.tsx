@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type DragEvent } from "react";
 import { useStore } from "@nanostores/react";
 import { RadioGroup } from "@headlessui/react";
 import { contentMap } from "@/store/events";
@@ -139,17 +139,13 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     setSelectedIds(newOrder);
   };
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, id: string) => {
+  const handleDragStart = (e: DragEvent<HTMLDivElement>, id: string) => {
     draggedRef.current = id;
     setDragState({ dragging: id, dropTarget: null });
     e.dataTransfer.setData("text/plain", id);
   };
 
-  const handleDragOver = (
-    e: React.DragEvent<HTMLDivElement>,
-    id: string,
-    isFeaturedDrop = false
-  ) => {
+  const handleDragOver = (e: DragEvent<HTMLDivElement>, id: string, isFeaturedDrop = false) => {
     if (!draggedRef.current || draggedRef.current === id) return;
 
     if (isFeaturedDrop) {
@@ -164,11 +160,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     }
   };
 
-  const handleDrop = (
-    e: React.DragEvent<HTMLDivElement>,
-    targetId: string,
-    isFeaturedDrop = false
-  ) => {
+  const handleDrop = (e: DragEvent<HTMLDivElement>, targetId: string, isFeaturedDrop = false) => {
     e.preventDefault();
     const draggedId = draggedRef.current;
     if (!draggedId) return;

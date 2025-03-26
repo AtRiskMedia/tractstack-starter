@@ -1,83 +1,262 @@
 ---
+import type { VideoMoment } from "@/types";
+
 export interface Props {
   videoUrl: string;
   title: string;
+  chapters?: VideoMoment[];
+  description?: string;
 }
 
-const { videoUrl, title } = Astro.props;
+const { videoUrl, title, chapters = [], description = "" } = Astro.props;
+const hasChapters = Array.isArray(chapters) && chapters.length > 0;
+
+const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
 ---
 
-<astro-bunny-video data-src={videoUrl} data-title={title}>
+<astro-bunny-video
+  data-src={videoUrl}
+  data-title={title}
+  data-has-chapters={hasChapters ? "true" : "false"}
+  data-chapters={serializedChapters}
+  data-description={description}
+>
   <div class="w-full">
-    <div id="video-container" class="relative w-full" style="aspect-ratio: 16/9;">
+    <div
+      id="video-container"
+      class="video-container relative w-full"
+      style="aspect-ratio: 16/9;"
+      data-player-container
+    >
       <!-- Player will be inserted here -->
+      {
+        hasChapters && (
+          <div class="chapter-title-container absolute top-4 right-4 bg-black/70 text-white px-3 py-1 rounded-md text-sm z-10 hidden">
+            <span class="chapter-title" />
+            <span class="read-more hidden text-blue-300 underline ml-1 text-xs">[Read More]</span>
+          </div>
+        )
+      }
     </div>
+
+    {
+      hasChapters && (
+        <div class="chapters-container mt-4 border border-gray-200 rounded-md overflow-hidden bg-white">
+          <div class="chapters-header px-4 py-2 bg-gray-50 cursor-pointer flex justify-between items-center">
+            <h3 class="text-sm font-medium text-gray-900">Video Chapters</h3>
+            <span class="toggle-text font-medium text-gray-700">Show Chapters</span>
+          </div>
+
+          <div class="chapters-content hidden">
+            <div class="current-chapter p-3 border-b border-gray-100">
+              <h4 class="current-chapter-title font-medium" />
+              <p class="current-chapter-description mt-1 text-sm text-gray-600" />
+            </div>
+
+            <ul class="chapters-list divide-y divide-gray-100" />
+          </div>
+        </div>
+      )
+    }
   </div>
 </astro-bunny-video>
 
 <script>
+  import { getBunnyPlayer } from "@/utils/bunny/player";
+  import { normalizeChapters } from "@/utils/bunny/chapters";
+  import { formatTime } from "@/utils/bunny/timeUtils";
+  import type { VideoMoment } from "@/types";
+
   class AstroBunnyVideo extends HTMLElement {
+    private videoUrl: string = "";
+    private videoTitle: string = "";
     private currentIframe: HTMLIFrameElement | null = null;
     private videoContainer: HTMLElement | null = null;
-    private retryAttempts: number = 0;
-    private maxRetries: number = 3;
-    private videoUrl: string;
-    private videoTitle: string;
-    private playbackStrategies = [
-      {}, // Default strategy
-      { token: "false" },
-      { playlist: "false" },
-      { token: "false", playlist: "false" },
-    ];
-    private currentStrategy = 0;
+    private player: any = null;
+    private hasChapters: boolean = false;
+    private chapters: VideoMoment[] = [];
+    private activeChapter: VideoMoment | null = null;
+    private chapterWatcher: ReturnType<typeof setInterval> | null = null;
+
+    private chapterTitleContainer: HTMLElement | null = null;
+    private chapterTitle: HTMLElement | null = null;
+    private chaptersHeader: HTMLElement | null = null;
+    private chaptersContent: HTMLElement | null = null;
+    private currentChapterTitle: HTMLElement | null = null;
+    private currentChapterDescription: HTMLElement | null = null;
+    private chaptersList: HTMLElement | null = null;
+    private handleTitleClick: ((e: MouseEvent) => void) | null = null;
+    private handleTitleKeydown: ((e: KeyboardEvent) => void) | null = null;
 
     constructor() {
       super();
       this.videoUrl = this.dataset.src || "";
       this.videoTitle = this.dataset.title || "";
+      this.hasChapters = this.dataset.hasChapters === "true";
+      if (this.hasChapters && this.dataset.chapters) {
+        try {
+          const rawChapters = JSON.parse(this.dataset.chapters);
+          this.chapters = normalizeChapters(rawChapters);
+        } catch (error) {
+          console.error("Error parsing chapters:", error);
+          this.chapters = [];
+          this.hasChapters = false;
+        }
+      }
+    }
 
-      this.initializeVideo();
-
+    connectedCallback() {
+      this.initializeVideo(this.getStartTime());
+      if (this.hasChapters) {
+        setTimeout(() => {
+          this.findUIElements();
+          this.setupChapters();
+        }, 100);
+      }
       document.addEventListener("astro:page-load", this.handlePageLoad);
       document.addEventListener("updateVideo", this.handleUpdateVideo as EventListener);
     }
 
-    private getStartTime = (): string | null => {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get("t");
-    };
+    disconnectedCallback() {
+      // Clean up chapter-specific events
+      this.cleanupChapterEvents();
 
-    private initializeVideo = (t: string = ""): void => {
-      if (!this.videoContainer) {
-        this.videoContainer = this.querySelector("#video-container");
+      // Stop the chapter watcher interval
+      if (this.chapterWatcher) {
+        clearInterval(this.chapterWatcher);
+        this.chapterWatcher = null;
       }
 
-      if (this.currentIframe && this.videoContainer) {
+      // Clean up player
+      if (this.player) {
+        // Remove all event listeners
+        this.player.off("ready");
+        this.player = null;
+      }
+
+      // Remove global event listeners
+      document.removeEventListener("astro:page-load", this.handlePageLoad);
+      document.removeEventListener("updateVideo", this.handleUpdateVideo as EventListener);
+
+      // Reset state
+      this.activeChapter = null;
+      this.currentIframe = null;
+    }
+
+    private findUIElements() {
+      this.videoContainer = this.querySelector(".video-container");
+      this.chapterTitleContainer = this.querySelector(".chapter-title-container");
+      this.chapterTitle = this.querySelector(".chapter-title");
+      this.chaptersHeader = this.querySelector(".chapters-header");
+      this.chaptersContent = this.querySelector(".chapters-content");
+      this.currentChapterTitle = this.querySelector(".current-chapter-title");
+      this.currentChapterDescription = this.querySelector(".current-chapter-description");
+      this.chaptersList = this.querySelector(".chapters-list");
+    }
+
+    private setupChapters() {
+      if (!this.hasChapters || this.chapters.length === 0) return;
+      this.setupChapterListeners();
+      this.renderChaptersList();
+      this.initializePlayerAPI();
+      const toggleText = this.chaptersHeader?.querySelector(".toggle-text");
+      if (toggleText && this.chaptersContent?.classList.contains("hidden")) {
+        toggleText.textContent = "Show Chapters";
+      }
+    }
+
+    private setupChapterListeners() {
+      if (this.chaptersHeader && this.chaptersContent) {
+        this.chaptersHeader.addEventListener("click", () => {
+          if (this.chaptersContent) {
+            const isHidden = this.chaptersContent.classList.contains("hidden");
+            this.chaptersContent.classList.toggle("hidden");
+            const toggleText = this.chaptersHeader?.querySelector(".toggle-text");
+            if (toggleText) {
+              toggleText.textContent = isHidden ? "Hide" : "Show Chapters";
+            }
+          }
+        });
+      }
+    }
+
+    private getStartTime(): string | null {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("t");
+    }
+
+    private initializeVideo(t: string | null = null): void {
+      if (!this.videoContainer) {
+        this.videoContainer = this.querySelector(".video-container");
+        if (!this.videoContainer) {
+          console.error("Video container not found");
+          return;
+        }
+      }
+
+      let startSeconds = 0;
+      if (t) {
+        const match = t.match(/^(\d+)s$/);
+        startSeconds = match && match[1] ? parseInt(match[1]) : 0;
+      }
+
+      // Check if we already have a valid player and iframe that we can use
+      if (
+        this.currentIframe &&
+        this.player &&
+        typeof this.player.setCurrentTime === "function" &&
+        startSeconds > 0
+      ) {
+        try {
+          // Seek to the specified time
+          this.player.setCurrentTime(startSeconds);
+
+          // Explicitly play the video after seeking
+          if (typeof this.player.play === "function") {
+            this.player.play();
+          } else {
+            // Fallback if play method doesn't exist: use the call method
+            this.player.call?.("play");
+          }
+
+          // Scroll the video into view
+          if (this.videoContainer) {
+            setTimeout(() => {
+              this.videoContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+          }
+
+          return; // Exit early, we've successfully used the existing player
+        } catch (error) {
+          console.error("Error seeking with player API:", error);
+          // Fall through to recreate the iframe
+        }
+      }
+
+      // If we reach here, we need to create or recreate the iframe
+      if (this.currentIframe && this.videoContainer.contains(this.currentIframe)) {
         this.videoContainer.removeChild(this.currentIframe);
         this.currentIframe = null;
       }
 
-      const regex = /^(\d+)s$/;
-      const match = t?.match(regex);
-      const startTime = match && match[1] && parseInt(match[1]);
+      // Reset the player reference since we're creating a new iframe
+      this.player = null;
 
       const iframe = document.createElement("iframe");
+      const iframeId = `bunny-player-${Math.random().toString(36).substring(2, 9)}`;
+      iframe.id = iframeId;
 
-      // Build base parameters
       const params = new URLSearchParams({
-        autoplay: typeof startTime === "number" ? "1" : "0",
+        autoplay: startSeconds > 0 ? "1" : "0",
         loop: "false",
         muted: "false",
-        preload: typeof startTime === "number" ? "true" : "false",
+        preload: "true",
         responsive: "true",
-        t: (startTime || 0).toString(),
       });
 
-      // Add strategy parameters
-      const strategy = this.playbackStrategies[this.currentStrategy];
-      Object.entries(strategy).forEach(([key, value]) => {
-        params.set(key, value);
-      });
+      if (startSeconds > 0) {
+        params.set("t", startSeconds.toString());
+      }
 
       iframe.src = `${this.videoUrl}?${params.toString()}`;
       iframe.width = "100%";
@@ -88,99 +267,459 @@ const { videoUrl, title } = Astro.props;
       iframe.title = this.videoTitle;
       iframe.setAttribute("playsinline", "");
       iframe.setAttribute("allow", "autoplay; fullscreen");
+      iframe.setAttribute("loading", "lazy");
 
-      const showLoading = () => {
-        const loader = document.createElement("div");
-        loader.className =
-          "absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 text-white";
-        loader.innerHTML =
-          '<div class="text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div><div>Loading video...</div></div>';
-        return loader;
-      };
+      const loader = document.createElement("div");
+      loader.className =
+        "absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 text-white";
+      loader.innerHTML =
+        '<div class="text-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div><div>Loading video...</div></div>';
 
-      if (this.videoContainer) {
-        const loader = showLoading();
-        this.videoContainer.appendChild(loader);
+      this.videoContainer.appendChild(loader);
+      this.videoContainer.appendChild(iframe);
+      this.currentIframe = iframe;
 
-        iframe.onload = () => {
-          loader.remove();
-        };
+      iframe.onload = () => {
+        loader.remove();
 
-        this.videoContainer.appendChild(iframe);
-        this.currentIframe = iframe;
+        // Initialize the player API for the new iframe
+        setTimeout(() => {
+          this.initializePlayerAPI();
+        }, 100); // Give a small delay to ensure iframe is fully loaded
 
-        if (typeof startTime === "number") {
+        // Scroll into view when loading a new video with a timestamp
+        if (startSeconds > 0 && this.videoContainer) {
           setTimeout(() => {
-            iframe.scrollIntoView({ behavior: "smooth", block: "center" });
-          }, 1000);
+            this.videoContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
+        }
+      };
+    }
+
+    private initializePlayerAPI(): void {
+      if (!this.currentIframe || !this.currentIframe.id) {
+        console.error("No iframe or iframe ID found");
+        return;
+      }
+      try {
+        if (typeof window.playerjs === "undefined") {
+          console.error("PlayerJS library not loaded");
+          return;
+        }
+        this.player = getBunnyPlayer(this.currentIframe.id);
+        this.player.on("ready", () => {
+          if (!this.player.pause) {
+            this.player.pause = () => {
+              this.player.call("pause");
+            };
+          }
+
+          if (!this.player.play) {
+            this.player.play = () => {
+              this.player.call("play");
+            };
+          }
+
+          if (this.hasChapters) {
+            this.startChapterTracking();
+          }
+        });
+      } catch (error) {
+        console.error("Failed to initialize player API:", error);
+        this.player = null;
+      }
+    }
+
+    private startChapterTracking(): void {
+      if (this.chapterWatcher) {
+        clearInterval(this.chapterWatcher);
+      }
+      this.chapterWatcher = setInterval(() => {
+        if (this.player) {
+          this.player.getCurrentTime((time: number) => {
+            this.checkCurrentTime(time);
+          });
+        }
+      }, 1000); // Poll once per second (1000ms)
+    }
+
+    private cleanupChapterEvents(): void {
+      if (!this.chapterTitleContainer) return;
+
+      // Clean up event listeners
+      if (this.handleTitleClick) {
+        this.chapterTitleContainer.removeEventListener("click", this.handleTitleClick);
+        this.handleTitleClick = null;
+      }
+
+      if (this.handleTitleKeydown) {
+        this.chapterTitleContainer.removeEventListener("keydown", this.handleTitleKeydown);
+        this.handleTitleKeydown = null;
+      }
+
+      // Reset UI attributes
+      this.chapterTitleContainer.setAttribute("data-linkable", "false");
+      this.chapterTitleContainer.style.cursor = "default";
+      this.chapterTitleContainer.setAttribute("role", "status");
+      this.chapterTitleContainer.removeAttribute("aria-label");
+      this.chapterTitleContainer.removeAttribute("tabIndex");
+
+      // Hide the "Read More" element
+      const readMoreElem = this.chapterTitleContainer.querySelector(".read-more");
+      if (readMoreElem) {
+        readMoreElem.classList.add("hidden");
+      }
+    }
+
+    private dispatchChapterChangeEvent(chapter: VideoMoment | null): void {
+      // Create a custom event with chapter data
+      const event = new CustomEvent("bunnyChapterChange", {
+        detail: {
+          chapter: chapter,
+          time: chapter ? this.player?.getCurrentTime(() => {}) : 0,
+          hasLinkedPane: chapter ? !!chapter.linkedPaneId : false,
+          linkedPaneId: chapter?.linkedPaneId,
+        },
+        bubbles: true,
+      });
+
+      // Dispatch the event from the container element
+      this.dispatchEvent(event);
+    }
+
+    private checkCurrentTime(currentTime: number): void {
+      const chapter = this.findActiveChapter(currentTime);
+      // Handle chapter transition
+      if (chapter) {
+        const isNewChapter =
+          !this.activeChapter || this.activeChapter.startTime !== chapter.startTime;
+
+        if (isNewChapter) {
+          // Clean up previous chapter's event handlers if needed
+          if (this.activeChapter) {
+            this.cleanupChapterEvents();
+          }
+
+          // Update active chapter
+          this.activeChapter = chapter;
+          this.updateChapter(chapter);
+          this.showChapterTitle(chapter);
+
+          // Dispatch a chapter change event for potential external integrations
+          this.dispatchChapterChangeEvent(chapter);
+        }
+      }
+      // Handle exiting a chapter
+      else if (!chapter && this.activeChapter) {
+        this.activeChapter = null;
+        this.hideChapterTitle();
+        this.cleanupChapterEvents();
+
+        // Dispatch a chapter exit event
+        this.dispatchChapterChangeEvent(null);
+      }
+    }
+
+    private findActiveChapter(currentTime: number): VideoMoment | null {
+      return (
+        this.chapters.find(
+          (chapter) =>
+            currentTime >= chapter.startTime && currentTime < (chapter.endTime || Infinity)
+        ) || null
+      );
+    }
+
+    private updateChapter(chapter: VideoMoment): void {
+      if (this.currentChapterTitle) this.currentChapterTitle.textContent = chapter.title;
+      if (this.currentChapterDescription) {
+        this.currentChapterDescription.textContent = chapter.description || "";
+        this.currentChapterDescription.style.display = chapter.description ? "block" : "none";
+      }
+      if (this.chaptersList) {
+        const items = this.chaptersList.querySelectorAll("li");
+        items.forEach((item) =>
+          item.classList.remove("bg-blue-50", "border-l-2", "border-blue-500")
+        );
+        const activeItem = this.chaptersList.querySelector(
+          `li[data-start-time="${chapter.startTime}"]`
+        );
+        if (activeItem) {
+          activeItem.classList.add("bg-blue-50", "border-l-2", "border-blue-500");
+          activeItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
         }
       }
 
-      // Add error handling for playback issues
-      window.addEventListener("message", (event) => {
-        if (event.source === iframe.contentWindow) {
-          if (event.data.type === "mediaError" && event.data.fatal) {
-            this.handlePlaybackError();
-          }
+      // Update linked pane status in chapter title container
+      if (this.chapterTitleContainer) {
+        const isLinkable = !!chapter.linkedPaneId;
+        this.chapterTitleContainer.setAttribute("data-linkable", isLinkable.toString());
+        this.chapterTitleContainer.style.cursor = isLinkable ? "pointer" : "default";
+
+        if (isLinkable) {
+          this.chapterTitleContainer.setAttribute("role", "button");
+          this.chapterTitleContainer.setAttribute("aria-label", `Go to section: ${chapter.title}`);
+          this.chapterTitleContainer.tabIndex = 0;
+        } else {
+          this.chapterTitleContainer.setAttribute("role", "status");
+          this.chapterTitleContainer.removeAttribute("aria-label");
+          this.chapterTitleContainer.removeAttribute("tabIndex");
+        }
+      }
+    }
+
+    private showChapterTitle(chapter: VideoMoment): void {
+      if (this.chapterTitle && this.chapterTitleContainer) {
+        this.chapterTitle.textContent = chapter.title || "Untitled Chapter";
+        this.chapterTitleContainer.classList.remove("hidden");
+
+        // Get the "Read More" element
+        const readMoreElem = this.chapterTitleContainer.querySelector(".read-more");
+
+        // Set up click handler for linked panes
+        if (chapter.linkedPaneId && readMoreElem) {
+          // Show the "Read More" text
+          readMoreElem.classList.remove("hidden");
+
+          // Remove previous event listener if it exists
+          this.chapterTitleContainer.removeEventListener(
+            "click",
+            this.handleTitleClick as EventListener
+          );
+          this.chapterTitleContainer.removeEventListener(
+            "keydown",
+            this.handleTitleKeydown as EventListener
+          );
+
+          // Set up event handlers with the current chapter's linked pane
+          this.handleTitleClick = (_: MouseEvent) =>
+            this.navigateToLinkedPane(chapter.linkedPaneId);
+          this.handleTitleKeydown = (e: Event) => {
+            const keyEvent = e as KeyboardEvent;
+            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+              e.preventDefault();
+              this.navigateToLinkedPane(chapter.linkedPaneId);
+            }
+          };
+
+          this.chapterTitleContainer.addEventListener("click", this.handleTitleClick);
+          this.chapterTitleContainer.addEventListener("keydown", this.handleTitleKeydown);
+        } else if (readMoreElem) {
+          // Hide the "Read More" text if there's no linked pane
+          readMoreElem.classList.add("hidden");
+        }
+      }
+    }
+
+    private navigateToLinkedPane(paneId: string | undefined): void {
+      if (!paneId) return;
+
+      // Find the pane element by ID
+      const paneElement = document.getElementById(`pane-${paneId}`);
+      if (!paneElement) {
+        console.warn(`Linked pane with id ${paneId} not found in document`);
+        return;
+      }
+
+      // Pause the video if it's playing
+      if (this.player) {
+        this.player.pause();
+      }
+
+      // Calculate scroll position
+      const headerOffset = 60; // Approximate header height, adjust as needed
+      const elementPosition = paneElement.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+      // Scroll to the element
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+
+      // Add a temporary highlight effect to the pane
+      paneElement.classList.add("chapter-linked-highlight");
+      setTimeout(() => {
+        paneElement.classList.remove("chapter-linked-highlight");
+      }, 2000);
+
+      // Focus the pane for accessibility
+      paneElement.setAttribute("tabindex", "-1");
+      paneElement.focus();
+      setTimeout(() => {
+        paneElement.removeAttribute("tabindex");
+      }, 2100);
+    }
+
+    private hideChapterTitle(): void {
+      if (this.chapterTitleContainer) {
+        this.chapterTitleContainer.classList.add("hidden");
+
+        // Hide the "Read More" element
+        const readMoreElem = this.chapterTitleContainer.querySelector(".read-more");
+        if (readMoreElem) {
+          readMoreElem.classList.add("hidden");
+        }
+
+        // Clean up event listeners
+        if (this.handleTitleClick) {
+          this.chapterTitleContainer.removeEventListener("click", this.handleTitleClick);
+        }
+        if (this.handleTitleKeydown) {
+          this.chapterTitleContainer.removeEventListener("keydown", this.handleTitleKeydown);
+        }
+      }
+    }
+
+    private renderChaptersList(): void {
+      if (!this.chaptersList || this.chapters.length === 0) return;
+      this.chaptersList.innerHTML = "";
+      const sortedChapters = [...this.chapters].sort((a, b) => a.startTime - b.startTime);
+      sortedChapters.forEach((chapter, index) => {
+        const li = document.createElement("li");
+        li.className = "p-3 hover:bg-gray-50 cursor-pointer";
+        li.dataset.startTime = chapter.startTime.toString();
+        const content = document.createElement("div");
+        content.className = "flex justify-between items-center";
+        const title = document.createElement("span");
+        title.className = "flex items-center";
+        const timeLabel = document.createElement("span");
+        timeLabel.className = "text-sm text-gray-500 ml-auto";
+        timeLabel.textContent = formatTime(chapter.startTime);
+        title.innerHTML = `<span class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs mr-2">${index + 1}</span> ${chapter.title}`;
+        content.appendChild(title);
+        content.appendChild(timeLabel);
+        li.appendChild(content);
+        li.addEventListener("click", () => this.seekToChapter(chapter));
+        if (this.chaptersList) {
+          this.chaptersList.appendChild(li);
         }
       });
-    };
+    }
 
-    private handlePlaybackError = (): void => {
-      if (this.currentStrategy < this.playbackStrategies.length - 1) {
-        this.currentStrategy++;
-        this.initializeVideo(this.getStartTime() || "");
-      } else if (this.retryAttempts < this.maxRetries) {
-        this.retryAttempts++;
-        this.currentStrategy = 0;
-        setTimeout(() => this.initializeVideo(this.getStartTime() || ""), 1000);
+    private seekToChapter(chapter: VideoMoment): void {
+      if (this.player) {
+        this.player.setCurrentTime(chapter.startTime);
+        this.player.play();
+        this.showChapterTitle(chapter);
+        this.updateChapter(chapter);
       } else {
-        this.showError();
+        this.initializeVideo(`${chapter.startTime}s`);
       }
-    };
-
-    private showError = (): void => {
-      if (!this.videoContainer) return;
-
-      const errorDiv = document.createElement("div");
-      errorDiv.className =
-        "absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 text-white p-4 text-center";
-      errorDiv.innerHTML = `
-        <div>
-          <p class="mb-2">Unable to play video at this time.</p>
-          <button onclick="this.closest('astro-bunny-video').retryVideo()" 
-                  class="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded">
-            Try Again
-          </button>
-        </div>
-      `;
-
-      while (this.videoContainer.firstChild) {
-        this.videoContainer.removeChild(this.videoContainer.firstChild);
-      }
-      this.videoContainer.appendChild(errorDiv);
-    };
+    }
 
     private handleUpdateVideo = (event: CustomEvent): void => {
-      const { startTime } = event.detail;
+      // Handle both old and new event formats
+      let startTime;
+      if (typeof event.detail === "object" && event.detail !== null) {
+        startTime = event.detail.startTime;
+      } else {
+        startTime = event.detail;
+      }
+
       this.initializeVideo(startTime);
     };
 
     private handlePageLoad = (): void => {
-      this.initializeVideo(this.getStartTime() || "");
+      if (this.currentIframe) this.initializeVideo(this.getStartTime());
     };
-
-    retryVideo = (): void => {
-      this.retryAttempts = 0;
-      this.currentStrategy = 0;
-      this.initializeVideo(this.getStartTime() || "");
-    };
-
-    disconnectedCallback(): void {
-      document.removeEventListener("astro:page-load", this.handlePageLoad);
-      document.removeEventListener("updateVideo", this.handleUpdateVideo as EventListener);
-    }
   }
 
   customElements.define("astro-bunny-video", AstroBunnyVideo);
 </script>
+
+<style>
+  .video-container {
+    position: relative;
+  }
+
+  .chapter-title-container {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 10;
+    transition: opacity 0.3s ease-in-out;
+    opacity: 1;
+  }
+
+  .chapter-title-container.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .chapter-title-container[data-linkable="true"] {
+    cursor: pointer;
+    padding-right: 16px;
+    transition: background-color 0.2s ease;
+  }
+
+  .chapter-title-container[data-linkable="true"]:hover,
+  .chapter-title-container[data-linkable="true"]:focus {
+    background-color: rgba(0, 0, 0, 0.9);
+  }
+
+  .chapter-title-container[data-linkable="true"]:hover .read-more,
+  .chapter-title-container[data-linkable="true"]:focus .read-more {
+    text-decoration: none;
+  }
+
+  .chapter-title-container .read-more {
+    display: none;
+  }
+
+  .chapter-title-container {
+    transition: opacity 0.5s ease-out;
+  }
+
+  .chapter-title-container.fade-out {
+    opacity: 0;
+  }
+
+  .chapter-title-container[data-linkable="true"] .read-more {
+    display: inline;
+  }
+
+  .chapter-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 250px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  .chapters-list li.bg-blue-50 {
+    background-color: #eff6ff;
+  }
+
+  .chapters-list li.border-l-2.border-blue-500 {
+    border-left: 2px solid #3b82f6;
+  }
+
+  @keyframes chapterLinkHighlight {
+    0% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+    30% {
+      box-shadow: 0 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+  }
+
+  .chapter-linked-highlight {
+    animation: chapterLinkHighlight 2s ease-out;
+    outline: 2px solid rgba(59, 130, 246, 0.5);
+    outline-offset: 4px;
+    position: relative;
+    z-index: 10;
+  }
+</style>

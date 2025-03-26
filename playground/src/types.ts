@@ -1084,6 +1084,8 @@ export interface BunnyPlayer {
   off(event: string): void;
   getCurrentTime(callback: (time: number) => void): void;
   setCurrentTime(time: number): void;
+  pause(): void;
+  call(method: string, ...args: any[]): void;
 }
 
 export interface PlayerJS {
@@ -1183,4 +1185,12 @@ export interface OgImageParams {
   textColor: string;
   bgColor: string;
   fontSize?: number;
+}
+
+export interface VideoMoment {
+  startTime: number; // in seconds
+  endTime: number; // in seconds
+  title: string;
+  description?: string;
+  linkedPaneId?: string;
 }
