@@ -84,8 +84,6 @@ export function parseMarkdownToNodes(html: string, parentId: string): FlatNode[]
     .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*(.+?)\*(?![^<]*?<\/a>)/g, "<em>$1</em>");
 
-  console.log("Parsing HTML:", html);
-
   // Use browser's DOM parser instead of character-by-character parsing
   const parser = new DOMParser();
   const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");

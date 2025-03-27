@@ -35,6 +35,50 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
 
+  // Track document clicks to detect clicks outside both components
+  useEffect(() => {
+    if (!showGhostText) return;
+
+  const handleClickOutside = (event: globalThis.MouseEvent) => {
+      // Don't handle if we're in the middle of a focus transition
+      if (focusTransitionRef.current) return;
+
+      // Don't handle if element is not editable
+      if (!isEditableMode || !supportsEditing) return;
+
+      const mainElement = elementRef.current;
+      // Find any ghost text elements
+      const ghostElements = document.querySelectorAll('[data-ghost-text]');
+      
+      // Check if the click was outside both the main element and all ghost elements
+      let clickedInsideGhost = false;
+      
+      for (let i = 0; i < ghostElements.length; i++) {
+        if (ghostElements[i].contains(event.target as Node)) {
+          clickedInsideGhost = true;
+          break;
+        }
+      }
+      
+      // If clicked outside both elements and ghost text is showing, hide it
+      if (
+        mainElement && 
+        !mainElement.contains(event.target as Node) && 
+        !clickedInsideGhost
+      ) {
+        setShowGhostText(false);
+        editIntentRef.current = false;
+      }
+    };
+
+    // Use mousedown instead of click to ensure it fires before blur
+    document.addEventListener('mousedown', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showGhostText, isEditableMode, supportsEditing]);
+
   useEffect(() => {
     // Subscribe to node updates
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
@@ -46,8 +90,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       if (editIntentRef.current && val !== nodeId) {
         editIntentRef.current = false;
         originalTextRef.current = "";
-        // Hide ghost text when clicking elsewhere
-        setShowGhostText(false);
       }
     });
 
@@ -330,7 +372,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     if (e.key === "Enter") {
       e.preventDefault();
-      handleBlur(e)
+      handleBlur(e as unknown as FocusEvent<HTMLElement>); // Type casting to simulate blur event
     }
     // Handle Tab key to navigate to ghost text
     else if (e.key === "Tab") {
@@ -400,6 +442,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   // Handle ghost text completion
   const handleGhostComplete = () => {
     setShowGhostText(false);
+    focusTransitionRef.current = false;
   };
 
   // For development/debugging with GUIDs visible
