@@ -1196,6 +1196,7 @@ export class NodesContext {
     insertNodeId?: string,
     location?: "before" | "after"
   ): string | null {
+    console.log(`addTemplateNode`, node);
     const targetNode = this.allNodes.get().get(targetId) as BaseNode;
     if (
       !targetNode ||
@@ -1203,10 +1204,20 @@ export class NodesContext {
     ) {
       return null;
     }
+    console.log(`targetNode`, targetNode);
 
     const parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
     const duplicatedNodes = cloneDeep(node) as TemplateNode;
     let flattenedNodes: TemplateNode[] = [];
+
+    // mark pane as changed
+    const paneNodeId = this.getClosestNodeTypeFromId(targetId, "Pane");
+    if (paneNodeId) {
+      const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+      if (paneNode) {
+        this.modifyNodes([{ ...paneNode, isChanged: true }]);
+      }
+    }
 
     // Check if we need to wrap in ul/li structure
     if (["img", "code"].includes(duplicatedNodes.tagName)) {
@@ -1265,7 +1276,6 @@ export class NodesContext {
             parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [newNodeId]);
           }
         }
-
         this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
         return duplicatedNodes.id;
       } else {
@@ -1304,13 +1314,13 @@ export class NodesContext {
             parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [liNode.id]);
           }
         }
-
         this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
         return duplicatedNodes.id;
       }
     } else {
       // For non-img/code nodes, just flatten and add normally
       flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
+      console.log(flattenedNodes);
       this.addNodes(flattenedNodes);
       this.history.addPatch({
         op: PatchOp.ADD,
@@ -1478,6 +1488,14 @@ export class NodesContext {
         this.notifyNode(parentId);
       } else if (targetNode.nodeType === "TagElement") {
         this.notifyNode(closestMarkdownId);
+        // mark pane as changed
+        const paneNodeId = this.getClosestNodeTypeFromId(closestMarkdownId, "Pane");
+        if (paneNodeId) {
+          const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+          if (paneNode) {
+            this.modifyNodes([{ ...paneNode, isChanged: true }]);
+          }
+        }
       } else {
         this.notifyNode(parentId);
       }

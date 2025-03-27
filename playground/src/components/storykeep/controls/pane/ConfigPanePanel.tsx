@@ -12,7 +12,7 @@ import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
 import { PaneConfigMode } from "@/types.ts";
 import type { PaneNode } from "@/types.ts";
-import type { SetStateAction,Dispatch} from "react"
+import type { SetStateAction, Dispatch } from "react";
 import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 
 interface ConfigPanePanelProps {
