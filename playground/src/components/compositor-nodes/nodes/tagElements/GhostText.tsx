@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
@@ -7,22 +7,19 @@ import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface GhostTextProps {
   parentId: string;
-  onComplete: (withText: boolean) => void;
-  onFocus?: () => void; // New callback
-  onBlur?: () => void; // New callback
+  onComplete: () => void;
+  onActivate?: () => void;
   ctx?: NodeProps["ctx"];
 }
 
-export const GhostText = ({ parentId, onComplete, onFocus, onBlur, ctx }: GhostTextProps) => {
+const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) => {
+  const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState("");
-  const [showPlaceholder, setShowPlaceholder] = useState(true);
   const ghostRef = useRef<HTMLDivElement>(null);
-  const isProcessingRef = useRef(false);
-
-  // Always use paragraph styles regardless of parent element type
   const nodeContext = ctx || getCtx();
+  const processingCompleteRef = useRef(false);
 
-  // Find any paragraph node to get its style, or use a basic style if none exists
+  // Find a paragraph node style to match the current document style
   const paragraphStyle = (() => {
     // Try to find a paragraph node in the Markdown parent
     const markdownId = nodeContext.getClosestNodeTypeFromId(parentId, "Markdown");
@@ -35,56 +32,93 @@ export const GhostText = ({ parentId, onComplete, onFocus, onBlur, ctx }: GhostT
         }
       }
     }
-    // Fallback to parent's styling if no paragraph found
+    // Fallback to parent's styling
     return nodeContext.getNodeClasses(parentId, viewportKeyStore.get().value);
   })();
 
-  useEffect(() => {
-    // When empty, show placeholder
-    setShowPlaceholder(!text);
-  }, [text]);
+  // Public method to activate the ghost text
+  const activate = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      if (onActivate) onActivate();
+    }
+  };
 
+  // Expose activate method via ref
+  useEffect(() => {
+    if (ghostRef.current) {
+      (ghostRef.current as any).activate = activate;
+    }
+  }, []);
+
+  // When we switch to editing mode, focus the editable div
+  useEffect(() => {
+    if (isEditing && ghostRef.current) {
+      // Need a small delay to ensure React has rendered the editable div
+      setTimeout(() => {
+        if (ghostRef.current) {
+          // Clear any previous content and set focus
+          ghostRef.current.innerText = "";
+          ghostRef.current.focus();
+
+          // Create a proper text node to ensure cursor is at the beginning
+          const textNode = document.createTextNode("");
+          ghostRef.current.appendChild(textNode);
+
+          // Set cursor at the beginning
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.setStart(textNode, 0);
+          range.collapse(true);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      }, 10);
+    }
+  }, [isEditing]);
+
+  // Handle key events in editable mode
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       e.preventDefault();
-      onComplete(false);
+      processingCompleteRef.current = true;
+      setIsEditing(false);
+      setText("");
+      onComplete();
     } else if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (text.trim()) {
         handleCommit();
       } else {
-        onComplete(false);
+        processingCompleteRef.current = true;
+        setIsEditing(false);
+        onComplete();
       }
     }
   };
 
+  // Handle blur events in editable mode
   const handleBlur = () => {
-    // Call the onBlur callback if provided
-    if (onBlur) onBlur();
-
-    // Only process if we have content and aren't already processing
-    if (isProcessingRef.current) return;
+    if (processingCompleteRef.current) {
+      // If we're already processing completion, don't re-trigger
+      processingCompleteRef.current = false;
+      return;
+    }
 
     if (text.trim()) {
       handleCommit();
     } else {
-      onComplete(false);
+      setIsEditing(false);
+      onComplete();
     }
   };
 
-  const handleFocus = () => {
-    // Call the onFocus callback if provided
-    if (onFocus) onFocus();
-
-    setShowPlaceholder(false);
-  };
-
+  // Create a new paragraph node with the entered text
   const handleCommit = () => {
-    if (isProcessingRef.current) return;
-    isProcessingRef.current = true;
+    processingCompleteRef.current = true;
 
     if (text.trim()) {
-      // Create a new paragraph node regardless of parent type
+      // Create a new paragraph template node
       const templateNode = getTemplateNode("p");
 
       // Set the text content
@@ -95,7 +129,6 @@ export const GhostText = ({ parentId, onComplete, onFocus, onBlur, ctx }: GhostT
       }
 
       // Add the node after the parent
-      const nodeContext = ctx || getCtx();
       nodeContext.addTemplateNode(parentId, templateNode, parentId, "after");
 
       // Mark the parent pane as changed
@@ -107,37 +140,61 @@ export const GhostText = ({ parentId, onComplete, onFocus, onBlur, ctx }: GhostT
         } as PaneNode;
         nodeContext.modifyNodes([paneNode]);
       }
+
+      // Reset and notify completion
+      setIsEditing(false);
+      setText("");
+      onComplete();
     }
-
-    // Notify completion with success status
-    onComplete(true);
-    isProcessingRef.current = false;
   };
 
+  // Handle input events in editable mode
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const newText = e.currentTarget.textContent || "";
-    setText(newText);
-    setShowPlaceholder(!newText);
+    setText(e.currentTarget.innerText || "");
   };
 
+  if (isEditing) {
+    // Editable version - after user has activated it
+    return (
+      <div
+        ref={ghostRef}
+        contentEditable
+        suppressContentEditableWarning
+        className={`${paragraphStyle} border-2 border-cyan-500 p-2 mt-2 mb-2 focus:outline-none min-h-[2em]`}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        onInput={handleInput}
+        data-ghost-text="true"
+        style={{ direction: "ltr", textAlign: "left" }}
+      ></div>
+    );
+  }
+
+  // Non-editable version - initial state
   return (
     <div
       ref={ghostRef}
-      contentEditable
-      suppressContentEditableWarning
-      className={`${paragraphStyle} border-2 border-dashed border-cyan-500 min-h-[2em] p-2 mt-2 mb-2 focus:outline-none relative`}
-      onBlur={handleBlur}
-      onFocus={handleFocus}
-      onKeyDown={handleKeyDown}
-      onInput={handleInput}
-      data-ghost-text="true"
+      className="mt-4 mb-4 p-3 border-2 border-dashed border-cyan-500 cursor-text text-gray-500 hover:bg-cyan-50 rounded flex items-center"
+      onClick={activate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === "Tab") {
+          e.preventDefault();
+          activate();
+        }
+      }}
+      tabIndex={0}
+      role="button"
+      aria-label="Continue writing (press Tab)"
+      data-ghost-text="placeholder"
     >
-      {/* Custom placeholder implementation for contentEditable */}
-      {showPlaceholder && (
-        <div className="absolute top-2 left-2 pointer-events-none text-gray-500">
-          Continue writing...
-        </div>
-      )}
+      <svg className="w-5 h-5 mr-2 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Press "Tab" to Continue writing...
     </div>
   );
 };

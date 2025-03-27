@@ -18,18 +18,22 @@ import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { PatchOp } from "@/store/nodesHistory.ts";
 import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
+import GhostText from "./GhostText";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
-  const editIntentRef = useRef<boolean>(false); // Track actual editing intention
+  const editIntentRef = useRef<boolean>(false);
   const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
   const originalTextRef = useRef<string>("");
   const elementRef = useRef<HTMLElement | null>(null);
   const doubleClickedRef = useRef<boolean>(false);
+  const [showGhostText, setShowGhostText] = useState(false);
 
   const Tag = props.tagName;
+  const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
+  const supportsEditing = canEditText(props);
 
   useEffect(() => {
     // Subscribe to node updates
@@ -42,62 +46,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       if (editIntentRef.current && val !== nodeId) {
         editIntentRef.current = false;
         originalTextRef.current = "";
+        // Hide ghost text when clicking elsewhere
+        setShowGhostText(false);
       }
     });
-
-    // Handle improved cursor placement for interactive elements
-    if (
-      elementRef.current &&
-      [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value)
-    ) {
-      const links = elementRef.current.querySelectorAll("a, button");
-
-      const clickHandler = (e: MouseEvent) => {
-        if (!editIntentRef.current) return;
-
-        // Only handle events when in edit mode
-        const linkEl = e.currentTarget as HTMLElement;
-        const parentEl = elementRef.current;
-
-        if (!parentEl || !linkEl) return;
-
-        // Determine if click was near edge of element to place cursor appropriately
-        const rect = linkEl.getBoundingClientRect();
-        const mouseX = (e as unknown as MouseEvent).clientX;
-
-        // Check if click was near the start or end of the element
-        if (mouseX - rect.left < 10) {
-          // Place cursor before the link
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.setStartBefore(linkEl);
-          range.collapse(true);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-          e.stopPropagation();
-        } else if (rect.right - mouseX < 10) {
-          // Place cursor after the link
-          const selection = window.getSelection();
-          const range = document.createRange();
-          range.setStartAfter(linkEl);
-          range.collapse(true);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-          e.stopPropagation();
-        }
-      };
-
-      links.forEach((link) => {
-        link.addEventListener("click", clickHandler as unknown as EventListener);
-      });
-
-      return () => {
-        links.forEach((link) => {
-          link.removeEventListener("click", clickHandler as unknown as EventListener);
-        });
-        unsubscribe();
-      };
-    }
 
     return unsubscribe;
   }, []);
@@ -244,14 +196,22 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     const node = getCtx(props).allNodes.get().get(nodeId);
 
-    // Reset edit state
-    editIntentRef.current = false;
-
+    // Handle content processing regardless of focus transition state
     const newHTML = e.currentTarget.innerHTML;
 
-    // No change, no need to process
+    // Keep edit intent if we're transitioning to ghost text
+    if (!focusTransitionRef.current) {
+      editIntentRef.current = false;
+    }
+
+    // No change, no need to process content
     if (newHTML === originalTextRef.current) {
       getCtx(props).notifyNode(node?.parentId || "");
+
+      // Only show ghost text if not already in a focus transition
+      if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
+        setShowGhostText(true);
+      }
       return;
     }
 
@@ -287,8 +247,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
               if (node.tagName === "a" && matchingOriginalNode.href) {
                 node.href = matchingOriginalNode.href;
               }
-              // this shouldn't run on existing links, only new ones
-              //setTimeout(() => handleInsertSignal(node.tagName, node.id), 10);
             } else {
               // This is a new interactive element, flag it for configuration
               setTimeout(() => handleInsertSignal(node.tagName, node.id), 0);
@@ -338,6 +296,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           },
         });
       }
+
+      // Show ghost text after editing is complete
+      if (isEditableMode && supportsEditing) {
+        setShowGhostText(true);
+      }
     } catch (error) {
       console.error("Error parsing edited content:", error);
       // Notify the parent node of the error
@@ -345,15 +308,54 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     }
   };
 
+  // Ref to track intentional focus transitions
+  const focusTransitionRef = useRef(false);
+  const ghostTextRef = useRef<HTMLElement | null>(null);
+
+  // Function to find and get a reference to the ghost text element
+  const getGhostTextElement = (): HTMLElement | null => {
+    const element = document.querySelector(
+      '[data-ghost-text="placeholder"], [data-ghost-text="true"]'
+    );
+    if (element && element instanceof HTMLElement) {
+      ghostTextRef.current = element;
+      return element;
+    }
+    return null;
+  };
+
   const handleKeyDown = (e: KeyboardEvent) => {
     // Mark as being edited on any keypress
     editIntentRef.current = true;
 
-    // Handle Enter key to commit edits
     if (e.key === "Enter") {
       e.preventDefault();
-      if (elementRef.current) {
-        elementRef.current.blur();
+      handleBlur(e)
+    }
+    // Handle Tab key to navigate to ghost text
+    else if (e.key === "Tab") {
+      e.preventDefault();
+
+      // Set the transition flag to prevent ghost text from disappearing on blur
+      focusTransitionRef.current = true;
+
+      // Make sure ghost text is visible
+      if (!showGhostText) {
+        setShowGhostText(true);
+
+        // Need to wait for ghost text to be rendered
+        setTimeout(() => {
+          const ghostElement = getGhostTextElement();
+          if (ghostElement && "activate" in ghostElement) {
+            (ghostElement as any).activate();
+          }
+        }, 50);
+      } else {
+        // Ghost text is already visible, focus and activate it
+        const ghostElement = getGhostTextElement();
+        if (ghostElement && "activate" in ghostElement) {
+          (ghostElement as any).activate();
+        }
       }
     }
   };
@@ -366,6 +368,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     // Save original HTML for comparison, but don't mark as editing yet
     // (wait for actual keypress or paste action)
     originalTextRef.current = e.currentTarget.innerHTML;
+
+    // Show ghost text as soon as the element receives focus
+    if (isEditableMode && supportsEditing) {
+      setShowGhostText(true);
+    }
   };
 
   const handleMouseDown = (e: MouseEvent) => {
@@ -390,39 +397,68 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     e.stopPropagation();
   };
 
+  // Handle ghost text completion
+  const handleGhostComplete = () => {
+    setShowGhostText(false);
+  };
+
   // For development/debugging with GUIDs visible
   if (showGuids.get()) {
     return (
-      <div
-        ref={elementRef as RefObject<HTMLDivElement>}
-        className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
-        onMouseDown={handleMouseDown}
-        onDoubleClick={handleDoubleClick}
-      >
-        <RenderChildren children={children} nodeProps={props} />
-      </div>
+      <>
+        <div
+          ref={elementRef as RefObject<HTMLDivElement>}
+          className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleDoubleClick}
+        >
+          <RenderChildren children={children} nodeProps={props} />
+        </div>
+
+        {showGhostText && isEditableMode && supportsEditing && (
+          <GhostText parentId={nodeId} onComplete={handleGhostComplete} ctx={props.ctx} />
+        )}
+      </>
     );
   }
 
   // Regular rendering
-  return createElement(
-    Tag,
-    {
-      ref: elementRef,
-      className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
-      contentEditable: [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value),
-      suppressContentEditableWarning: true,
-      onPaste: handlePaste,
-      onBlur: handleBlur,
-      onMouseDown: handleMouseDown,
-      onKeyDown: handleKeyDown,
-      onFocus: handleFocus,
-      onDoubleClick: handleDoubleClick,
-      // Mouse events that could indicate editing intent
-      onInput: () => {
-        editIntentRef.current = true;
-      },
-    },
-    <RenderChildren children={children} nodeProps={props} />
+  return (
+    <>
+      {createElement(
+        Tag,
+        {
+          ref: elementRef,
+          className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
+          contentEditable: isEditableMode,
+          suppressContentEditableWarning: true,
+          onPaste: handlePaste,
+          onBlur: handleBlur,
+          onMouseDown: handleMouseDown,
+          onKeyDown: handleKeyDown,
+          onFocus: handleFocus,
+          onDoubleClick: handleDoubleClick,
+          // Mouse events that could indicate editing intent
+          onInput: () => {
+            editIntentRef.current = true;
+          },
+        },
+        <RenderChildren children={children} nodeProps={props} />
+      )}
+
+      {showGhostText && isEditableMode && supportsEditing && (
+        <GhostText
+          parentId={nodeId}
+          onComplete={handleGhostComplete}
+          onActivate={() => {
+            // When ghost text is activated, reset the transition flag
+            focusTransitionRef.current = false;
+            // No longer editing the main content
+            editIntentRef.current = false;
+          }}
+          ctx={props.ctx}
+        />
+      )}
+    </>
   );
 };

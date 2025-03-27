@@ -1196,7 +1196,6 @@ export class NodesContext {
     insertNodeId?: string,
     location?: "before" | "after"
   ): string | null {
-    console.log(`addTemplateNode`, node);
     const targetNode = this.allNodes.get().get(targetId) as BaseNode;
     if (
       !targetNode ||
@@ -1204,7 +1203,6 @@ export class NodesContext {
     ) {
       return null;
     }
-    console.log(`targetNode`, targetNode);
 
     const parentId = this.getClosestNodeTypeFromId(targetId, "Markdown");
     const duplicatedNodes = cloneDeep(node) as TemplateNode;
@@ -1320,7 +1318,6 @@ export class NodesContext {
     } else {
       // For non-img/code nodes, just flatten and add normally
       flattenedNodes = this.setupTemplateNodeRecursively(duplicatedNodes, parentId);
-      console.log(flattenedNodes);
       this.addNodes(flattenedNodes);
       this.history.addPatch({
         op: PatchOp.ADD,
