@@ -44,7 +44,7 @@ const EXCLUDED_PATHS = [
 // Empty files to create
 const EMPTY_FILES = ["config/init.json", "config/turso.json", "public/styles/frontend.css"];
 
-// Empty directories to create
+// Empty directories to create (with .gitkeep files)
 const EMPTY_DIRECTORIES = [
   "public/images/og",
   "public/images/thumbs",
@@ -80,14 +80,21 @@ async function createEmptyFiles() {
     await fs.writeFile(filePath, content);
     console.log(`Created empty file: ${file}`);
   }
-  
-  console.log("Creating empty directories...");
+}
+
+async function createEmptyDirectoriesWithGitKeep() {
+  console.log("Creating empty directories with .gitkeep files...");
   for (const dir of EMPTY_DIRECTORIES) {
     const dirPath = path.join(TEMPLATE_DIR, dir);
     
     // Ensure the directory exists
     await fs.ensureDir(dirPath);
-    console.log(`Created empty directory: ${dir}`);
+    
+    // Create .gitkeep file inside
+    const gitkeepPath = path.join(dirPath, '.gitkeep');
+    await fs.writeFile(gitkeepPath, '');
+    
+    console.log(`Created directory with .gitkeep: ${dir}`);
   }
 }
 
@@ -125,8 +132,9 @@ async function prepareTemplate() {
       }
     }
 
-    // Create empty files and directories
+    // Create empty files and directories with .gitkeep
     await createEmptyFiles();
+    await createEmptyDirectoriesWithGitKeep();
 
     // Copy and modify package.json
     console.log("Processing package.json...");
