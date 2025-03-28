@@ -30,6 +30,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const elementRef = useRef<HTMLElement | null>(null);
   const doubleClickedRef = useRef<boolean>(false);
   const [showGhostText, setShowGhostText] = useState(false);
+  // Add a ref to track cursor position (primarily for Chrome)
+  const cursorPosRef = useRef<{ node: Node; offset: number } | null>(null);
 
   const Tag = props.tagName;
   const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
@@ -86,6 +88,65 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     return unsubscribe;
   }, []);
+
+  // Effect to restore cursor position after component updates in Chrome
+  useEffect(() => {
+    if (isEditableMode && editIntentRef.current && cursorPosRef.current && elementRef.current) {
+      // Use a slight delay to ensure DOM has updated
+      setTimeout(() => {
+        restoreCursorPosition();
+      }, 10);
+    }
+  });
+
+  const restoreCursorPosition = () => {
+    if (!cursorPosRef.current || !elementRef.current) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    try {
+      // Create a new range at the stored position
+      const range = document.createRange();
+
+      // If we have a reference to the exact node, use it
+      if (elementRef.current.contains(cursorPosRef.current.node)) {
+        // The node still exists in the DOM
+        range.setStart(cursorPosRef.current.node, cursorPosRef.current.offset);
+      } else {
+        // Find the first text node as fallback
+        const walkTreeForTextNode = (node: Node): Node | null => {
+          if (node.nodeType === Node.TEXT_NODE) return node;
+
+          for (let i = 0; i < node.childNodes.length; i++) {
+            const found = walkTreeForTextNode(node.childNodes[i]);
+            if (found) return found;
+          }
+
+          return null;
+        };
+
+        const textNode = walkTreeForTextNode(elementRef.current);
+        if (!textNode) return;
+
+        // Use the same relative position or the end of the text
+        const maxOffset = textNode.textContent?.length || 0;
+        range.setStart(textNode, Math.min(cursorPosRef.current.offset, maxOffset));
+      }
+
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } catch (e) {
+      console.log("Error restoring cursor position:", e);
+      // Silently fail if there's an issue with setting the selection
+    }
+
+    // Clear the saved position after attempting to restore it
+    if (!focusTransitionRef.current) {
+      cursorPosRef.current = null;
+    }
+  };
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
     getCtx(props).handleInsertSignal(tagName, nodeId);
@@ -402,13 +463,36 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     if (isEditableMode && supportsEditing) {
       setShowGhostText(true);
     }
+
+    // Try to restore cursor position if we had one saved
+    if (cursorPosRef.current) {
+      restoreCursorPosition();
+    }
   };
 
   const handleMouseDown = (e: MouseEvent) => {
-    // Just set the node as clicked, but don't yet mark as being edited
-    // (that happens on keypress or focus+click)
+    // Set the node as clicked
     getCtx(props).setClickedNodeId(nodeId);
     e.stopPropagation();
+  };
+
+  // Capture cursor position after click (works in Chrome)
+  const handleClick = () => {
+    if (!isEditableMode || !supportsEditing) return;
+    // Only try to capture cursor position in Chrome
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (selection) {
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          cursorPosRef.current = {
+            node: range.startContainer,
+            offset: range.startOffset,
+          };
+        }
+      }
+    }, 0);
+    editIntentRef.current = true;
   };
 
   const handleDoubleClick = (e: MouseEvent) => {
@@ -447,6 +531,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           ref={elementRef as RefObject<HTMLDivElement>}
           className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
           onMouseDown={handleMouseDown}
+          onClick={handleClick}
           onDoubleClick={handleDoubleClick}
         >
           <RenderChildren children={children} nodeProps={props} />
@@ -472,6 +557,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           onPaste: handlePaste,
           onBlur: handleBlur,
           onMouseDown: handleMouseDown,
+          onClick: handleClick,
           onKeyDown: handleKeyDown,
           onFocus: handleFocus,
           onDoubleClick: handleDoubleClick,

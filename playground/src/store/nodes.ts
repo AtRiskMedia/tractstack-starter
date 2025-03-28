@@ -137,18 +137,15 @@ export class NodesContext {
 
     // If another ghost is active, clear it first
     if (currentActiveId && currentActiveId !== nodeId) {
-      console.log(`Clearing active ghost ${currentActiveId} before activating ${nodeId}`);
       // Set to empty string to close any existing ghost
       this.ghostTextActiveId.set("");
 
       // After a short delay to allow the previous ghost to close,
       // set the new active ghost
       setTimeout(() => {
-        console.log(`Setting active ghost to ${nodeId}`);
         this.ghostTextActiveId.set(nodeId);
-      }, 100); // Use a slightly longer delay to be safe
+      }, 100);
     } else {
-      // No active ghost, set directly
       this.ghostTextActiveId.set(nodeId);
     }
   }
