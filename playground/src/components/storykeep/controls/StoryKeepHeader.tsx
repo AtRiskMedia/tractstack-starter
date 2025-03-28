@@ -144,6 +144,7 @@ const StoryKeepHeader = ({
     settingsPanelStore.set(null);
     const dirtyNodes = ctx.getDirtyNodes();
     if (dirtyNodes.length === 0) {
+      console.warn(`no unsaved changes found.`);
       return;
     }
     ctx.rootNodeId.set(nodeId);
