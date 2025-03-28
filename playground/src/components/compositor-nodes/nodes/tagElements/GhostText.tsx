@@ -254,15 +254,25 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       e.preventDefault();
       prepareToComplete();
     } else if (e.key === "Tab" && !e.shiftKey) {
+      // Check if the current text is empty
+      if (!text.trim()) {
+        // Allow the default tab behavior to continue
+        // This will naturally move focus to the next focusable element
+
+        // Just complete/unmount this ghost text without preventing default
+        prepareToComplete();
+
+        // Don't preventDefault() so tab works naturally
+        return;
+      }
+
+      // For non-empty text, continue with the existing behavior
       e.preventDefault();
 
       // If there's text, add it to paragraphs
-      if (text.trim()) {
-        // Add current text to paragraphs
-        setParagraphs((prev) => [...prev, text.trim()]);
-        // Clear current text field
-        setText("");
-      }
+      setParagraphs((prev) => [...prev, text.trim()]);
+      // Clear current text field
+      setText("");
 
       // If next ghost already exists, focus its placeholder
       if (showNextGhost) {
