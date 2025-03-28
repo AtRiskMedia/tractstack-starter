@@ -35,57 +35,48 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
 
-  // Track document clicks to detect clicks outside both components
+  useEffect(() => {
+    if (showGhostText) {
+      getCtx(props).setActiveGhost(nodeId);
+    }
+  }, [showGhostText]);
+
   useEffect(() => {
     if (!showGhostText) return;
 
-  const handleClickOutside = (event: globalThis.MouseEvent) => {
-      // Don't handle if we're in the middle of a focus transition
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
       if (focusTransitionRef.current) return;
-
-      // Don't handle if element is not editable
       if (!isEditableMode || !supportsEditing) return;
 
       const mainElement = elementRef.current;
-      // Find any ghost text elements
-      const ghostElements = document.querySelectorAll('[data-ghost-text]');
-      
-      // Check if the click was outside both the main element and all ghost elements
+      const ghostElements = document.querySelectorAll("[data-ghost-text]");
       let clickedInsideGhost = false;
-      
+
       for (let i = 0; i < ghostElements.length; i++) {
         if (ghostElements[i].contains(event.target as Node)) {
           clickedInsideGhost = true;
           break;
         }
       }
-      
+
       // If clicked outside both elements and ghost text is showing, hide it
-      if (
-        mainElement && 
-        !mainElement.contains(event.target as Node) && 
-        !clickedInsideGhost
-      ) {
+      if (mainElement && !mainElement.contains(event.target as Node) && !clickedInsideGhost) {
         setShowGhostText(false);
         editIntentRef.current = false;
       }
     };
 
-    // Use mousedown instead of click to ensure it fires before blur
-    document.addEventListener('mousedown', handleClickOutside);
-    
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showGhostText, isEditableMode, supportsEditing]);
 
   useEffect(() => {
-    // Subscribe to node updates
     const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
       setChildren(getCtx(props).getChildNodeIDs(nodeId));
     });
 
-    // Reset editing state when clicking elsewhere
     getCtx(props).clickedNodeId.subscribe((val) => {
       if (editIntentRef.current && val !== nodeId) {
         editIntentRef.current = false;
@@ -100,12 +91,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     getCtx(props).handleInsertSignal(tagName, nodeId);
   };
 
-  // Handle paste events to strip formatting
   const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
-    // Mark as being edited
     editIntentRef.current = true;
-
-    // Prevent the default paste behavior which would include formatting
     e.preventDefault();
 
     // Get plain text from clipboard
@@ -441,8 +428,15 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
   // Handle ghost text completion
   const handleGhostComplete = () => {
+    // Ensure we clear ghostText state first
     setShowGhostText(false);
     focusTransitionRef.current = false;
+
+    // Only clear the active ghost ID if it matches this component
+    // This prevents race conditions when switching between components
+    if (getCtx(props).ghostTextActiveId.get() === nodeId) {
+      getCtx(props).ghostTextActiveId.set("");
+    }
   };
 
   // For development/debugging with GUIDs visible

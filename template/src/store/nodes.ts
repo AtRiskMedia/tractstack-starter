@@ -71,6 +71,7 @@ export class NodesContext {
   hasPanes = atom<boolean>(false);
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
+  ghostTextActiveId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
   activePaneMode = atom<ActivePaneMode>({
     paneId: "",
@@ -126,6 +127,30 @@ export class NodesContext {
       ...currentParams,
       ...params,
     });
+  }
+
+  setActiveGhost(nodeId: string): void {
+    const currentActiveId = this.ghostTextActiveId.get();
+
+    // If this is already the active ghost, do nothing
+    if (currentActiveId === nodeId) return;
+
+    // If another ghost is active, clear it first
+    if (currentActiveId && currentActiveId !== nodeId) {
+      console.log(`Clearing active ghost ${currentActiveId} before activating ${nodeId}`);
+      // Set to empty string to close any existing ghost
+      this.ghostTextActiveId.set("");
+
+      // After a short delay to allow the previous ghost to close,
+      // set the new active ghost
+      setTimeout(() => {
+        console.log(`Setting active ghost to ${nodeId}`);
+        this.ghostTextActiveId.set(nodeId);
+      }, 100); // Use a slightly longer delay to be safe
+    } else {
+      // No active ghost, set directly
+      this.ghostTextActiveId.set(nodeId);
+    }
   }
 
   updateHasPanesStatus() {
@@ -203,7 +228,7 @@ export class NodesContext {
         break;
       case `text`:
         // Only handle double-clicks in text mode like default mode
-        if (dblClick) {
+        if (dblClick && ![`Pane`, `Parkdown`].includes(node.nodeType)) {
           handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         }
         break;
