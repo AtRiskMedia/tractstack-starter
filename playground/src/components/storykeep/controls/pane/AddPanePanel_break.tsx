@@ -187,6 +187,7 @@ const AddPaneBreakPanel = ({
     // Add the modified template
     ctx.addTemplatePane(ownerId, template, nodeId, first ? "before" : "after");
     ctx.notifyNode(`root`);
+    setMode(PaneAddMode.DEFAULT);
   };
 
   return (
