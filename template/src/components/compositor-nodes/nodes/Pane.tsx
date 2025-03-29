@@ -16,7 +16,8 @@ export const CodeHookContainer = ({
   <div className="w-full p-6 my-4bg-gray-50">
     <div className="mb-4 border-2 border-dashed border-gray-300 rounded-lg p-6 bg-slate-50">
       <h3 className="text-lg text-gray-700">
-        Code Hook: <span className="font-action font-bold">{payload.target}</span>
+        Code Hook:{" "}
+        <span className="font-action font-bold">{payload.target || `CodeHook not found!`}</span>
       </h3>
     </div>
     {payload.params && (
@@ -26,7 +27,7 @@ export const CodeHookContainer = ({
             value && (
               <div key={key} className="flex items-start">
                 <span className="font-bold text-gray-600 min-w-24">{key}:</span>
-                <span className="text-gray-800 ml-2">{value}</span>
+                <span className="text-gray-800 ml-2">{JSON.stringify(value)}</span>
               </div>
             )
         )}

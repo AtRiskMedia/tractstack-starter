@@ -52,9 +52,6 @@ export const canEditText = (props: NodeTagProps): boolean => {
   const self = getCtx(props).allNodes.get().get(nodeId) as FlatNode;
   if (self.tagName === "a") return false;
 
-  //const forbiddenChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["a"]);
-  //if (forbiddenChildren?.length > 0) return false;
-
   const parentIsButton = getCtx(props).getParentNodeByTagNames(nodeId, ["a"]);
   if (parentIsButton?.length > 0) return false;
 
@@ -62,172 +59,146 @@ export const canEditText = (props: NodeTagProps): boolean => {
   return true;
 };
 
-export function parseMarkdownToNodes(text: string, parentId: string): FlatNode[] {
-  // Clean input text - collapse multiple spaces and handle special characters
-  text = text
+export function parseMarkdownToNodes(html: string, parentId: string): FlatNode[] {
+  // Generate a base timestamp for unique IDs
+  let uniqueCounter = Date.now();
+
+  // Clean input text - handle special characters and markdown-like syntax
+  html = html
     .replace(/&nbsp;|\u00A0/g, " ")
     .replace(/&amp;/g, "&")
-    .replace(/<br>/g, "")
-    .replace(/\[\[(.+?)\]\]/g, "<a>$1</a>")
+    .replace(/<br>/g, "");
+
+  // Handle wiki-style [[link]] - add a unique placeholder href
+  html = html.replace(/\[\[([^\]]+?)\]\]/g, (_, content) => {
+    return `<a href="#placeholder-${uniqueCounter++}">${content}</a>`;
+  });
+
+  // Handle markdown-style [text](url) links
+  html = html.replace(/\[([^\]]+?)\]\(([^)]+?)\)/g, (_, text, url) => {
+    return `<a href="${url}">${text}</a>`;
+  });
+
+  // Handle other markdown formatting - avoid processing inside existing tags
+  html = html
     .replace(/(?<!<a[^>]*?>[^<]*)\*\*(.+?)\*\*(?![^<]*?<\/a>)/g, "<strong>$1</strong>")
     .replace(/(?<!<a[^>]*?>[^<]*)\*(.+?)\*(?![^<]*?<\/a>)/g, "<em>$1</em>");
 
-  // Get initial nodes
-  const nodes = extractNodes(text, parentId);
+  // Use browser's DOM parser instead of character-by-character parsing
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, "text/html");
 
-  // Merge consecutive text nodes and handle spaces
-  const mergedNodes = mergeConsecutiveNodes(parentId, nodes);
-
-  // Extract text into separate nodes and handle spacing
-  const finalNodes = extractTextIntoSeparateNodes(mergedNodes);
-
-  return finalNodes;
+  // Process the DOM tree
+  return extractNodesFromDOM(doc.body.firstElementChild as HTMLElement, parentId);
 }
 
-function mergeConsecutiveNodes(parentId: string, nodes: FlatNode[]): FlatNode[] {
-  const mergedNodes: FlatNode[] = [];
-  let lastNode: FlatNode | null = null;
-
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
-    if (!node.copy?.length) {
-      continue;
-    }
-
-    if (
-      lastNode &&
-      node.tagName === lastNode.tagName &&
-      node.parentId === lastNode.parentId &&
-      ["text", "em", "strong"].includes(node.tagName)
-    ) {
-      // Merge text content, ensuring single spaces between words
-      const combinedText = `${lastNode.copy || ""} ${node.copy || ""}`.replace(/\s+/g, " ");
-      lastNode.copy = combinedText;
-    } else {
-      mergedNodes.push(node);
-      lastNode = node;
-    }
-  }
-
-  return mergedNodes;
-}
-
-function extractTextIntoSeparateNodes(nodes: FlatNode[]): FlatNode[] {
+function extractNodesFromDOM(element: HTMLElement, parentId: string): FlatNode[] {
   const result: FlatNode[] = [];
 
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
+  // Process each child node
+  Array.from(element.childNodes).forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      // Handle text nodes - preserve text content but strip zero-width spaces
+      let text = child.textContent;
 
-    if (["em", "strong", "a"].includes(node.tagName)) {
-      // Create the wrapper node
-      const wrapperNode = { ...node };
-      delete wrapperNode.copy;
-      result.push(wrapperNode);
+      // Only skip if null or undefined, but keep empty strings and whitespace
+      if (text !== null && text !== undefined) {
+        // Remove zero-width spaces from beginning and end
+        text = text.replace(/^\u200B+|\u200B+$/g, "");
 
-      // Create the text content node
-      if (node.copy) {
         result.push({
           id: ulid(),
-          parentId: wrapperNode.id,
-          copy: node.copy.trim(),
-          tagName: "text",
+          parentId,
           nodeType: "TagElement",
+          tagName: "text",
+          copy: text,
         } as FlatNode);
+      }
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      const elem = child as HTMLElement;
+      const tagName = elem.tagName.toLowerCase();
+
+      // Skip any remaining space marker spans
+      if (
+        tagName === "span" &&
+        (elem.classList.contains("space-marker") ||
+          elem.getAttribute("style")?.includes("font-size: 0px"))
+      ) {
+        return;
       }
 
-      // Add space after if needed
-      if (i < nodes.length - 1 && nodes[i + 1].tagName !== "text") {
-        result.push({
-          id: ulid(),
-          parentId: node.parentId,
-          copy: " ",
-          tagName: "text",
-          nodeType: "TagElement",
-        } as FlatNode);
+      // Create node for this element
+      const nodeId = ulid();
+      const node: FlatNode = {
+        id: nodeId,
+        parentId,
+        nodeType: "TagElement",
+        tagName,
+      };
+
+      // Handle special attributes for different tags
+      if (tagName === "a") {
+        // Process anchor tags
+        node.href = (elem as HTMLAnchorElement).getAttribute("href") || undefined;
+
+        // Save classes for the link
+        const className = elem.getAttribute("class");
+        if (className) {
+          node.elementCss = className;
+        }
+
+        // Update attribute name for editable links
+        if (elem.hasAttribute("data-space-protected") || elem.hasAttribute("data-editable-link")) {
+          (node as any)["data-editable-link"] = "true";
+        }
+      } else if (tagName === "button") {
+        // Process button tags - preserve all attributes
+        const className = elem.getAttribute("class");
+        if (className) {
+          node.elementCss = className;
+        }
+
+        // Update attribute name for editable buttons
+        if (
+          elem.hasAttribute("data-space-protected") ||
+          elem.hasAttribute("data-editable-button")
+        ) {
+          (node as any)["data-editable-button"] = "true";
+        }
+
+        // Copy all data attributes
+        Array.from(elem.attributes).forEach((attr) => {
+          if (
+            attr.name.startsWith("data-") &&
+            attr.name !== "data-space-protected" &&
+            attr.name !== "data-editable-button"
+          ) {
+            (node as any)[attr.name] = attr.value;
+          }
+        });
+      } else if (tagName === "img") {
+        // Process image tags
+        node.src = (elem as HTMLImageElement).getAttribute("src") || undefined;
+        node.alt = (elem as HTMLImageElement).getAttribute("alt") || undefined;
       }
-    } else {
+
+      // Add this node
       result.push(node);
+
+      // Process children recursively with the new nodeId as parent
+      const childNodes = extractNodesFromDOM(elem, nodeId);
+      result.push(...childNodes);
     }
-  }
+  });
 
   return result;
 }
 
-function extractHref(str: string) {
-  const match = str.match(/href="([^"]*)"/);
-  return match ? match[1] : null;
-}
-
-function extractNodes(inputString: string, parentId: string): FlatNode[] {
-  const result: FlatNode[] = [];
-  const parentsStack: string[] = [];
-  const hrefs: string[] = [];
-  let buffer = "";
-  let inLink = false;
-
-  for (let i = 0; i < inputString.length; ++i) {
-    buffer += inputString[i];
-    if (inputString.startsWith("</a", i)) {
-      inLink = false;
-    }
-
-    if (inputString[i] === "<") {
-      if (!inLink) {
-        const parentType = parentsStack.length === 0 ? "text" : parentsStack.last();
-        buffer = buffer.replace("<", "").trim();
-        if (buffer.length > 0) {
-          result.push({
-            id: ulid(),
-            copy: buffer,
-            tagName: parentType,
-            nodeType: "TagElement",
-            href: hrefs.pop(),
-            parentId,
-          });
-        }
-      }
-
-      if (i + 1 < inputString.length && inputString[i + 1] == "/") {
-        parentsStack.pop();
-      }
-
-      if (inputString.startsWith("<a", i)) {
-        inLink = true;
-        buffer = "";
-        parentsStack.push("a");
-      } else if (inputString.startsWith("</a", i)) {
-        inLink = false;
-        parentsStack.pop();
-      } else if (!inLink) {
-        if (inputString.startsWith("<em", i)) {
-          parentsStack.push("em");
-        } else if (inputString.startsWith("<strong", i)) {
-          parentsStack.push("strong");
-        }
-      }
-      buffer = "";
-    } else if (inputString[i] === ">") {
-      const href = extractHref(buffer);
-      if (href !== null) {
-        hrefs.push(href);
-      }
-      buffer = "";
-    }
-  }
-
-  const parentType = parentsStack.length === 0 ? "text" : parentsStack.pop();
-  buffer = buffer.replace("<", "").trim();
-  if (buffer.length > 0) {
-    result.push({
-      id: ulid(),
-      copy: buffer,
-      tagName: parentType || "text",
-      nodeType: "TagElement",
-      href: hrefs.pop(),
-      parentId,
-    });
-  }
-  return result;
+export function findLinkDestinationInHtml(html: string): string | null {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const linkElement = doc.querySelector("a");
+  return linkElement ? linkElement.getAttribute("href") : null;
 }
 
 export function moveNodeAtLocationInContext(

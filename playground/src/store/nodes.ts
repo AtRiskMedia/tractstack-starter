@@ -71,6 +71,7 @@ export class NodesContext {
   hasPanes = atom<boolean>(false);
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
+  ghostTextActiveId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
   activePaneMode = atom<ActivePaneMode>({
     paneId: "",
@@ -126,6 +127,27 @@ export class NodesContext {
       ...currentParams,
       ...params,
     });
+  }
+
+  setActiveGhost(nodeId: string): void {
+    const currentActiveId = this.ghostTextActiveId.get();
+
+    // If this is already the active ghost, do nothing
+    if (currentActiveId === nodeId) return;
+
+    // If another ghost is active, clear it first
+    if (currentActiveId && currentActiveId !== nodeId) {
+      // Set to empty string to close any existing ghost
+      this.ghostTextActiveId.set("");
+
+      // After a short delay to allow the previous ghost to close,
+      // set the new active ghost
+      setTimeout(() => {
+        this.ghostTextActiveId.set(nodeId);
+      }, 100);
+    } else {
+      this.ghostTextActiveId.set(nodeId);
+    }
   }
 
   updateHasPanesStatus() {
@@ -203,7 +225,7 @@ export class NodesContext {
         break;
       case `text`:
         // Only handle double-clicks in text mode like default mode
-        if (dblClick) {
+        if (dblClick && ![`Pane`, `Parkdown`].includes(node.nodeType)) {
           handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         }
         break;
@@ -1208,6 +1230,15 @@ export class NodesContext {
     const duplicatedNodes = cloneDeep(node) as TemplateNode;
     let flattenedNodes: TemplateNode[] = [];
 
+    // mark pane as changed
+    const paneNodeId = this.getClosestNodeTypeFromId(targetId, "Pane");
+    if (paneNodeId) {
+      const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+      if (paneNode) {
+        this.modifyNodes([{ ...paneNode, isChanged: true }]);
+      }
+    }
+
     // Check if we need to wrap in ul/li structure
     if (["img", "code"].includes(duplicatedNodes.tagName)) {
       // Look for existing ul parent
@@ -1265,7 +1296,6 @@ export class NodesContext {
             parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [newNodeId]);
           }
         }
-
         this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
         return duplicatedNodes.id;
       } else {
@@ -1304,7 +1334,6 @@ export class NodesContext {
             parentNodes.insertAfter(parentNodes.indexOf(insertNodeId), [liNode.id]);
           }
         }
-
         this.notifyNode(this.getClosestNodeTypeFromId(targetId, "Markdown"));
         return duplicatedNodes.id;
       }
@@ -1478,6 +1507,14 @@ export class NodesContext {
         this.notifyNode(parentId);
       } else if (targetNode.nodeType === "TagElement") {
         this.notifyNode(closestMarkdownId);
+        // mark pane as changed
+        const paneNodeId = this.getClosestNodeTypeFromId(closestMarkdownId, "Pane");
+        if (paneNodeId) {
+          const paneNode = cloneDeep(this.allNodes.get().get(paneNodeId)) as PaneNode;
+          if (paneNode) {
+            this.modifyNodes([{ ...paneNode, isChanged: true }]);
+          }
+        }
       } else {
         this.notifyNode(parentId);
       }

@@ -22,9 +22,12 @@ const needsTrailingSpace =
     nextNode.copy?.startsWith(";") ||
     nextNode.copy?.startsWith(":")
   );
+
+const isExternal = node.buttonPayload?.isExternalUrl === true;
+const targetAttr = isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {};
 ---
 
-<a class={getCtx().getNodeClasses(nodeId, `auto`)} href={node.href}>
+<a class={getCtx().getNodeClasses(nodeId, `auto`)} href={node.href} {...targetAttr}>
   <span
     >{
       getCtx()

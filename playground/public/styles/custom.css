@@ -15,20 +15,20 @@
 @font-face {
   font-family: "Font-Main";
   src: url("../fonts/Inter-Regular.woff2");
-  font-display: swap;
+  font-display: fallback;
 }
 
 @font-face {
   font-family: "Font-Main";
   src: url("../fonts/Inter-Bold.woff2");
   font-weight: bold;
-  font-display: swap;
+  font-display: fallback;
 }
 
 @font-face {
   font-family: "Font-Action";
   src: url("../fonts/Inter-Black.woff2");
-  font-display: swap;
+  font-display: fallback;
 }
 
 html {

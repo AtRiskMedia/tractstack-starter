@@ -40,8 +40,8 @@ pnpm-debug.log*
 # custom files
 /playground/config/init.json
 /playground/config/turso.json
-**/public/custom/
-**/public/images/
+/playground/public/custom/
+/playground/public/images/
 /playground/public/styles/frontend.css
 
 # multi-tenant
