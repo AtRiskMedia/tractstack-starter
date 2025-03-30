@@ -429,7 +429,7 @@ export class NodesContext {
 
     const allowInsertBefore =
       offset > -1
-        ? allowInsert(node, node.tagName as Tag, tagName, offset ? tagNames[offset - 1] : null)
+        ? allowInsert(node, node.tagName as Tag, tagName, offset ? tagNames[offset - 1] : undefined)
         : allowInsert(node, node.tagName as Tag, tagName);
 
     const allowInsertAfter =
