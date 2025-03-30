@@ -3,6 +3,7 @@ import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import { ulid } from "ulid";
 import SingleParam from "../fields/SingleParam";
 import BeliefEditor from "../manage/BeliefEditor";
+import { widgetMeta } from "@/constants";
 import type { FlatNode, BeliefNode } from "@/types";
 
 interface ToggleWidgetProps {
@@ -16,6 +17,10 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
   const [isCreatingBelief, setIsCreatingBelief] = useState(false);
   const [selectedBeliefTag, setSelectedBeliefTag] = useState<string>("");
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Get parameter metadata from the widgetMeta constant
+  const widgetInfo = widgetMeta.toggle;
 
   const params = node.codeHookParams || [];
   const beliefTag = String(params[0] || "");
@@ -30,6 +35,7 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
       setSelectedBeliefTag(beliefTag);
     }
     setCurrentPrompt(prompt);
+    setIsInitialized(true);
   }, [beliefTag, prompt, isPlaceholder]);
 
   useEffect(() => {
@@ -43,11 +49,13 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
   }, []);
 
   const handleBeliefChange = (selectedValue: string) => {
+    if (!isInitialized) return;
     setSelectedBeliefTag(selectedValue);
     onUpdate([selectedValue, currentPrompt]);
   };
 
   const handlePromptChange = (value: string) => {
+    if (!isInitialized) return;
     // Sanitize the input value (remove newlines and pipe characters)
     const sanitizedValue = value.replace(/[\n\r|]/g, "");
     setCurrentPrompt(sanitizedValue);
@@ -139,6 +147,7 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
               if (belief) setEditingBeliefId(belief.id);
             }}
             className="text-cyan-700 hover:text-black"
+            title="Edit belief"
           >
             <BeakerIcon className="h-5 w-5" />
           </button>
@@ -153,7 +162,11 @@ export default function ToggleWidget({ node, onUpdate }: ToggleWidgetProps) {
       </div>
 
       {(hasRealSelection || selectedBeliefTag) && (
-        <SingleParam label="Question Prompt" value={currentPrompt} onChange={handlePromptChange} />
+        <SingleParam
+          label={widgetInfo.parameters[1].label}
+          value={currentPrompt}
+          onChange={handlePromptChange}
+        />
       )}
     </div>
   );

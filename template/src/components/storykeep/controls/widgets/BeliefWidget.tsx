@@ -3,6 +3,7 @@ import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import { ulid } from "ulid";
 import SingleParam from "../fields/SingleParam";
 import BeliefEditor from "../manage/BeliefEditor";
+import { widgetMeta } from "@/constants";
 import type { FlatNode, BeliefNode } from "@/types";
 
 interface BeliefWidgetProps {
@@ -17,6 +18,10 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   const [selectedBeliefTag, setSelectedBeliefTag] = useState<string>("");
   const [currentScaleType, setCurrentScaleType] = useState<string>("");
   const [currentPrompt, setCurrentPrompt] = useState<string>("");
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Get parameter metadata from the widgetMeta constant
+  const widgetInfo = widgetMeta.belief;
 
   // Ensure params are always strings
   const params = node.codeHookParams || [];
@@ -34,6 +39,7 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
     }
     setCurrentScaleType(scaleType);
     setCurrentPrompt(prompt);
+    setIsInitialized(true);
   }, [beliefTag, scaleType, prompt, isPlaceholder]);
 
   useEffect(() => {
@@ -47,6 +53,7 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   }, []);
 
   const handleBeliefChange = (selectedValue: string) => {
+    if (!isInitialized) return;
     setSelectedBeliefTag(selectedValue);
     const selectedBelief = beliefs.find((b) => b.slug === selectedValue);
     if (selectedBelief) {
@@ -58,6 +65,7 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   };
 
   const handlePromptChange = (value: string) => {
+    if (!isInitialized) return;
     // Sanitize the input value (remove newlines and pipe characters)
     const sanitizedValue = value.replace(/[\n\r|]/g, "");
     setCurrentPrompt(sanitizedValue);
@@ -123,6 +131,15 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
   // Calculate the current value to show in the select dropdown
   const selectValue = selectedBeliefTag || (isPlaceholder ? "" : beliefTag);
 
+  // Get scale type display names
+  const scaleTypeNames: Record<string, string> = {
+    yn: "Yes/No",
+    likert: "Likert Scale (5-point)",
+    agreement: "Agreement (2-point)",
+    interest: "Interest (2-point)",
+    tf: "True/False",
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -163,21 +180,23 @@ export default function BeliefWidget({ node, onUpdate }: BeliefWidgetProps) {
       {hasRealSelection && (
         <>
           <div className="space-y-1">
-            <label className="block text-sm text-gray-600">Scale Type</label>
+            <label className="block text-sm text-gray-600">{widgetInfo.parameters[1].label}</label>
             <select
               value={selectedBelief?.scale || currentScaleType}
               className="w-full rounded-md border-0 px-2.5 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 bg-gray-100"
               disabled={true}
             >
-              <option value="yn">Yes/No</option>
-              <option value="likert">Likert Scale</option>
-              <option value="10pt">10-point Scale</option>
+              {Object.entries(scaleTypeNames).map(([value, name]) => (
+                <option key={value} value={value}>
+                  {name}
+                </option>
+              ))}
               <option value="custom">Custom Values</option>
             </select>
           </div>
 
           <SingleParam
-            label="Question Prompt"
+            label={widgetInfo.parameters[2].label}
             value={currentPrompt}
             onChange={handlePromptChange}
           />

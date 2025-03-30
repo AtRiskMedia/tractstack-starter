@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import { classNames } from "../../../utils/common/helpers";
-import { auth, loading, error, success, profile } from "../../../store/auth";
+import { classNames } from "@/utils/common/helpers";
+import { auth, loading, error, success, profile } from "@/store/auth";
 import { contactPersona } from "../../../../config/contactPersona.json";
-import type { SignupProps } from "../../../types";
+import type { SignupProps } from "@/types";
 
 export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
@@ -146,7 +146,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
           <input
             type="password"
             name="codeword"
-            placeholder="Choose a code word to manage your preferences"
+            placeholder="Choose a code word to protect your account"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
             className={classNames(

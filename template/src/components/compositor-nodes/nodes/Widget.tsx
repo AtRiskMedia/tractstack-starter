@@ -87,11 +87,12 @@ const getWidgetElement = (props: WidgetProps, classNames: string): ReactElement 
 export const Widget = memo((props: WidgetProps) => {
   const classNames = getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value);
   const content = getWidgetElement(props, classNames);
-
   if (!content) return null;
 
   return (
     <div
+      contentEditable={false}
+      suppressContentEditableWarning={true}
       onClick={(e) => {
         getCtx(props).setClickedNodeId(props.nodeId);
         e.stopPropagation();

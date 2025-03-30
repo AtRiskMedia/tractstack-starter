@@ -442,7 +442,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           {/* Debug section - only visible when showDebug is true */}
           {showDebug && (
             <div className="mt-4 border-t pt-4">
-              <h3 className="text-lg font-semibold mb-2">Debug Information</h3>
+              <h3 className="text-lg font-bold mb-2">Debug Information</h3>
 
               {/* Generated image preview */}
               {debugImage && (

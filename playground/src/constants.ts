@@ -173,69 +173,80 @@ export const toolModeButtons = [
   },
 ] as const;
 
+// Add these new interfaces to the existing constants.ts file
+// Place these with the other interface definitions
+
+interface WidgetParameterDefinition {
+  label: string;
+  defaultValue: string;
+  type: "string" | "boolean" | "scale" | "multi-string";
+  isBeliefTag?: boolean;
+}
+
 interface WidgetMeta {
   [key: string]: {
     title: string;
-    valueLabels: string[];
-    valueDefaults: string[];
-    multi: boolean[];
-    isScale: boolean[];
+    parameters: WidgetParameterDefinition[];
     isBelief?: boolean;
   };
 }
 
+// Replace the existing widgetMeta object with this updated version
 export const widgetMeta: WidgetMeta = {
   belief: {
     title: `Belief Widget`,
-    valueLabels: ["Belief Tag", "Scale", "Question Prompt"],
-    valueDefaults: ["BELIEF", "yn", "Prompt"],
-    multi: [false, false, false],
-    isScale: [false, true, false],
+    parameters: [
+      { label: "Belief Tag", defaultValue: "BELIEF", type: "string", isBeliefTag: true },
+      { label: "Scale", defaultValue: "yn", type: "scale" },
+      { label: "Question Prompt", defaultValue: "Prompt", type: "string" },
+    ],
     isBelief: true,
   },
   identifyAs: {
     title: `Identify As Widget`,
-    valueLabels: ["Belief Tag", "Belief Matching Value(s)", "Question Prompt"],
-    valueDefaults: ["BELIEF", "*", "Prompt"],
-    multi: [false, true, false],
-    isScale: [false, false, false],
+    parameters: [
+      { label: "Belief Tag", defaultValue: "BELIEF", type: "string", isBeliefTag: true },
+      { label: "Belief Matching Value(s)", defaultValue: "*", type: "multi-string" },
+      { label: "Question Prompt", defaultValue: "Prompt", type: "string" },
+    ],
     isBelief: true,
   },
   toggle: {
     title: `Toggle Belief Widget`,
-    valueLabels: ["Belief Tag", "Question Prompt"],
-    valueDefaults: ["BELIEF", "Prompt"],
-    multi: [false, false],
-    isScale: [false, false],
+    parameters: [
+      { label: "Belief Tag", defaultValue: "BELIEF", type: "string", isBeliefTag: true },
+      { label: "Question Prompt", defaultValue: "Prompt", type: "string" },
+    ],
     isBelief: true,
   },
   youtube: {
     title: `YouTube Video Embed`,
-    valueLabels: ["Embed Code", "Title"],
-    valueDefaults: ["*", "Descriptive Title"],
-    multi: [false, false],
-    isScale: [false, false],
+    parameters: [
+      { label: "Embed Code", defaultValue: "*", type: "string" },
+      { label: "Title", defaultValue: "Descriptive Title", type: "string" },
+    ],
   },
   bunny: {
     title: `BunnyCDN Video Embed`,
-    valueLabels: ["Embed URL", "Title"],
-    valueDefaults: ["*", "Descriptive Title"],
-    multi: [false, false],
-    isScale: [false, false],
+    parameters: [
+      { label: "Embed URL", defaultValue: "*", type: "string" },
+      { label: "Title", defaultValue: "Descriptive Title", type: "string" },
+    ],
   },
   resource: {
     title: `Not yet implemented`,
-    valueLabels: ["Type", "Variation"],
-    valueDefaults: ["?", "?"],
-    multi: [false, false],
-    isScale: [false, false],
+    parameters: [
+      { label: "Type", defaultValue: "?", type: "string" },
+      { label: "Variation", defaultValue: "?", type: "string" },
+    ],
   },
   signup: {
     title: `Email Sign Up Widget`,
-    valueLabels: ["Contact Persona", "Prompt Text", "Clarify Consent"],
-    valueDefaults: ["Major Updates Only", "Keep in touch!", "false"],
-    multi: [false, false, false],
-    isScale: [false, false, false],
+    parameters: [
+      { label: "Contact Persona", defaultValue: "Major Updates Only", type: "string" },
+      { label: "Prompt Text", defaultValue: "Keep in touch!", type: "string" },
+      { label: "Clarify Consent", defaultValue: "false", type: "boolean" },
+    ],
   },
 };
 

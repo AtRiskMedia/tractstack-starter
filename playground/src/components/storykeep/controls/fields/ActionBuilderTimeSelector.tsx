@@ -78,7 +78,7 @@ function TimeSelectModal({ videoUrl, onClose, onSelect }: TimeSelectModalProps) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-3xl w-full">
-        <h3 className="text-lg font-semibold mb-4">Select Video Start Time</h3>
+        <h3 className="text-lg font-bold mb-4">Select Video Start Time</h3>
         <p className="text-sm text-gray-600 mb-4">
           Use the video player to find your desired start point, then click "Use Current Time"
         </p>

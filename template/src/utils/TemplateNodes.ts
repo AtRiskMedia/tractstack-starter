@@ -126,8 +126,8 @@ export const TemplateBunnyNode = {
 export const TemplateEmailSignUpNode = {
   nodeType: "TagElement",
   tagName: "code",
-  copy: "signup(Major Updates Only|Keep in touch!|false)",
-  codeHookParams: ["Major Updates Only", "Keep in touch!", "false"],
+  copy: "signup(major|Keep in touch!|false)",
+  codeHookParams: ["major", "Keep in touch!", "false"],
 } as TemplateNode;
 
 export const TemplateIdentifyAsNode = {

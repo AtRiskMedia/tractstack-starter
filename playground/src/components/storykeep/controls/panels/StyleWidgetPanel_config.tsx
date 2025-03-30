@@ -1,92 +1,180 @@
-import { widgetMeta } from "@/constants";
-import { settingsPanelStore } from "@/store/storykeep";
+import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes";
-import { isWidgetNode } from "@/utils/nodes/type-guards";
-import type { FlatNode } from "@/types";
-
-// Widget imports
-import YouTubeWidget from "../widgets/YouTubeWidget";
-import BunnyWidget from "../widgets/BunnyWidget";
-import SignupWidget from "../widgets/SignupWidget";
+import { cloneDeep } from "@/utils/common/helpers";
+import { widgetMeta } from "@/constants";
+import SingleParam from "../fields/SingleParam";
+import BooleanParam from "../fields/BooleanParam";
+import MultiParam from "../fields/MultiParam";
 import BeliefWidget from "../widgets/BeliefWidget";
+import BunnyWidget from "../widgets/BunnyWidget";
 import IdentifyAsWidget from "../widgets/IdentifyAsWidget";
+import SignupWidget from "../widgets/SignupWidget";
 import ToggleWidget from "../widgets/ToggleWidget";
+import YouTubeWidget from "../widgets/YouTubeWidget";
+import type { FlatNode } from "@/types";
 
 interface StyleWidgetConfigPanelProps {
   node: FlatNode;
 }
 
-function createUpdatedWidget(widgetNode: FlatNode, newCopy: string, newParams: string[]) {
-  return {
-    id: widgetNode.id,
-    parentId: widgetNode.parentId,
-    nodeType: widgetNode.nodeType,
-    tagName: "code" as const,
-    copy: newCopy,
-    codeHookParams: newParams,
-    isChanged: true,
-  };
-}
-
 function StyleWidgetConfigPanel({ node }: StyleWidgetConfigPanelProps) {
-  if (!isWidgetNode(node)) return null;
+  const [init, setInit] = useState(false);
 
-  const widgetId = node.copy?.substring(0, node.copy.indexOf("("));
-  const meta = widgetId && widgetMeta[widgetId];
-  if (!meta) return null;
+  useEffect(() => {
+    if (!init) setInit(true);
+  }, []);
 
-  const handleUpdate = (newParams: string[]) => {
-    const ctx = getCtx();
-    const allNodes = ctx.allNodes.get();
-    const widgetNode = allNodes.get(node.id);
-    if (!widgetNode || !isWidgetNode(widgetNode) || !widgetId) return;
-    const paramStrings = newParams.map((param) => param.toString());
-    const newCopy = `${widgetId}(${paramStrings.join("|")})`;
-    ctx.modifyNodes([createUpdatedWidget(widgetNode, newCopy, newParams)]);
-  };
+  if (!node || !("copy" in node) || typeof node.copy !== "string") return null;
 
-  const handleClose = () => {
-    settingsPanelStore.set({
-      nodeId: node.id,
-      action: "style-widget",
-      expanded: true,
+  // Extract the widget type from the node's copy
+  const regexpHook =
+    /^(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*)\)$/;
+  const hookMatch = node.copy?.match(regexpHook);
+  if (!hookMatch) return null;
+
+  const widgetType = hookMatch[1];
+  const widgetInfo = widgetMeta[widgetType];
+
+  // If widget is not found in widgetMeta, display error message
+  if (!widgetInfo) {
+    return (
+      <div className="p-4 bg-red-50 text-red-800 rounded-md">
+        Widget type '{widgetType}' not found in configuration. Please check the widget type.
+      </div>
+    );
+  }
+
+  // Get params from node and ensure they match the expected count from metadata
+  const existingParams = node.codeHookParams?.map((p) => String(p)) || [];
+  const expectedParamCount = widgetInfo.parameters.length;
+
+  // Ensure params array is the right length with default values if needed
+  const params = Array(expectedParamCount)
+    .fill("")
+    .map((_, index) => {
+      if (index < existingParams.length && existingParams[index] !== undefined) {
+        return existingParams[index];
+      }
+      return widgetInfo.parameters[index].defaultValue;
     });
+
+  const handleParamUpdate = (updatedParams: string[]) => {
+    if (!init) return;
+
+    // Create a copy of the node to avoid direct mutation
+    const newNode = cloneDeep(node);
+
+    // Ensure all parameters are strings
+    const stringParams = updatedParams.map((param) => String(param));
+
+    // Update the codeHookParams
+    newNode.codeHookParams = stringParams;
+
+    // Update the copy field to match the new params
+    newNode.copy = `${widgetType}(${stringParams.join("|")})`;
+
+    // Mark the node as changed
+    newNode.isChanged = true;
+
+    // Update the node in the store
+    getCtx().modifyNodes([newNode]);
   };
 
-  const renderWidget = () => {
-    switch (widgetId) {
-      case "youtube":
-        return <YouTubeWidget node={node} onUpdate={handleUpdate} />;
-      case "bunny":
-        return <BunnyWidget node={node} onUpdate={handleUpdate} />;
-      case "signup":
-        return <SignupWidget node={node} onUpdate={handleUpdate} />;
-      case "belief":
-        return <BeliefWidget node={node} onUpdate={handleUpdate} />;
-      case "identifyAs":
-        return <IdentifyAsWidget node={node} onUpdate={handleUpdate} />;
-      case "toggle":
-        return <ToggleWidget node={node} onUpdate={handleUpdate} />;
-      default:
-        return null;
+  // Specialized widget editors for specific widget types
+  const specializedEditors = {
+    belief: () => <BeliefWidget node={node} onUpdate={handleParamUpdate} />,
+    bunny: () => <BunnyWidget node={node} onUpdate={handleParamUpdate} />,
+    identifyAs: () => <IdentifyAsWidget node={node} onUpdate={handleParamUpdate} />,
+    signup: () => <SignupWidget node={node} onUpdate={handleParamUpdate} />,
+    toggle: () => <ToggleWidget node={node} onUpdate={handleParamUpdate} />,
+    youtube: () => <YouTubeWidget node={node} onUpdate={handleParamUpdate} />,
+  };
+
+  // Generic parameter editor for widget types without specific editors
+  const GenericParamEditor = () => (
+    <div className="space-y-4">
+      {widgetInfo.parameters.map((param, index) => {
+        const paramValue = params[index] || param.defaultValue;
+
+        switch (param.type) {
+          case "boolean":
+            return (
+              <BooleanParam
+                key={index}
+                label={param.label}
+                value={paramValue === "true"}
+                onChange={(value) => {
+                  const newParams = [...params];
+                  newParams[index] = value ? "true" : "false";
+                  handleParamUpdate(newParams);
+                }}
+              />
+            );
+          case "multi-string":
+            return (
+              <MultiParam
+                key={index}
+                label={param.label}
+                values={paramValue ? paramValue.split(",").filter(Boolean) : []}
+                onChange={(values) => {
+                  const newParams = [...params];
+                  newParams[index] = values.join(",");
+                  handleParamUpdate(newParams);
+                }}
+              />
+            );
+          case "scale":
+            // Scale parameters have special rendering requirements but still use string storage
+            return (
+              <SingleParam
+                key={index}
+                label={param.label}
+                value={paramValue}
+                disabled={true}
+                onChange={(value) => {
+                  const newParams = [...params];
+                  newParams[index] = value;
+                  handleParamUpdate(newParams);
+                }}
+              />
+            );
+          case "string":
+          default:
+            return (
+              <SingleParam
+                key={index}
+                label={param.label}
+                value={paramValue}
+                onChange={(value) => {
+                  const newParams = [...params];
+                  newParams[index] = value;
+                  handleParamUpdate(newParams);
+                }}
+              />
+            );
+        }
+      })}
+    </div>
+  );
+
+  // Render the editor (either specialized or generic)
+  const renderEditor = () => {
+    // Check if we have a specialized editor for this widget type
+    if (widgetType in specializedEditors) {
+      return specializedEditors[widgetType as keyof typeof specializedEditors]();
     }
+
+    // Fall back to generic editor
+    return <GenericParamEditor />;
   };
 
   return (
-    <div className="my-4">
-      <div className="space-y-4 max-w-md min-w-80">
-        <div className="flex flex-row flex-nowrap justify-between">
-          <h2 className="text-xl font-bold">{meta.title}</h2>
-          <button
-            className="text-cyan-700 hover:text-black"
-            title="Return to preview pane"
-            onClick={handleClose}
-          >
-            Go Back
-          </button>
-        </div>
-        {renderWidget()}
-      </div>
+    <div className="space-y-4">
+      <h3 className="text-lg font-bold">{widgetInfo.title}</h3>
+      <p className="text-sm text-gray-600">
+        Configure the parameters for this {widgetType} widget.
+      </p>
+      {renderEditor()}
     </div>
   );
 }
