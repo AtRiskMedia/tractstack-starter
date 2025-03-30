@@ -8,11 +8,11 @@ import ArrowPathRoundedSquareIcon from "@heroicons/react/24/outline/ArrowPathRou
 import BellSlashIcon from "@heroicons/react/24/outline/BellSlashIcon";
 import BoltIcon from "@heroicons/react/24/outline/BoltIcon";
 import ChatBubbleBottomCenterIcon from "@heroicons/react/24/outline/ChatBubbleBottomCenterIcon";
-import { newProfile, auth, profile, error, success, loading } from "../../../store/auth";
-import { classNames } from "../../../utils/common/helpers";
+import { newProfile, auth, profile, error, success, loading } from "@/store/auth";
+import { classNames } from "@/utils/common/helpers";
 import { contactPersona } from "../../../../config/contactPersona.json";
 import type { FormEvent } from "react";
-import type { ContactPersona } from "../../../types";
+import type { ContactPersona } from "@/types";
 
 async function goSaveProfile(payload: {
   firstname: string;

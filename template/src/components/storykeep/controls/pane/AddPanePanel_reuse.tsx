@@ -110,7 +110,7 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
 
       if (newPaneId) {
         ctx.notifyNode(`root`);
-        setMode(PaneAddMode.DEFAULT); // Close the panel after insertion
+        setMode(PaneAddMode.DEFAULT);
       }
     } catch (error) {
       console.error("Error reusing pane:", error);

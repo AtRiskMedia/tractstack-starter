@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import type { FormEvent } from "react";
 import ChevronRightIcon from "@heroicons/react/20/solid/ChevronRightIcon";
-import { auth, profile, error, success, loading } from "../../../store/auth";
-import { heldBeliefs } from "../../../store/beliefs";
-import { classNames } from "../../../utils/common/helpers";
+import { auth, profile, error, success, loading } from "@/store/auth";
+import { heldBeliefs } from "@/store/beliefs";
+import { classNames } from "@/utils/common/helpers";
 
 export async function goUnlockProfile(payload: { email: string; codeword: string }) {
   try {
@@ -59,9 +59,13 @@ export async function goUnlockProfile(payload: { email: string; codeword: string
   }
 }
 
-export const ProfileUnlock = () => {
+interface ProfileUnlockProps {
+  initialEmail?: string;
+}
+
+export const ProfileUnlock = ({ initialEmail }: ProfileUnlockProps) => {
   const [submitted, setSubmitted] = useState<boolean | undefined>(undefined);
-  const [email, setEmail] = useState(``);
+  const [email, setEmail] = useState(initialEmail || ``);
   const [badLogin, setBadLogin] = useState(false);
   const [codeword, setCodeword] = useState(``);
 
@@ -114,7 +118,7 @@ export const ProfileUnlock = () => {
               id="email"
               autoComplete="new-password"
               aria-autocomplete="none"
-              defaultValue={email}
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={classNames(
                 `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-myorange focus:ring-myorange`,
@@ -136,7 +140,7 @@ export const ProfileUnlock = () => {
               id="codeword"
               autoComplete="new-password"
               aria-autocomplete="none"
-              defaultValue={codeword}
+              value={codeword}
               onChange={(e) => setCodeword(e.target.value)}
               className={classNames(
                 `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-myorange focus:ring-myorange`,
@@ -148,8 +152,13 @@ export const ProfileUnlock = () => {
             )}
           </div>
           {badLogin ? (
-            <div className="col-span-3 flex justify-center align-center py-12 font-action text-red-500">
-              BAD LOGIN
+            <div className="col-span-3 flex justify-center align-center py-12">
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md max-w-md w-full">
+                <p className="text-sm font-bold">Login Failed</p>
+                <p className="text-sm">
+                  The email or code word you entered is incorrect. Please try again.
+                </p>
+              </div>
             </div>
           ) : null}
 

@@ -454,28 +454,28 @@ export class NodesSerializer_Json extends NodesSerializer {
 
     ctx.clearUndoHistory();
     const dirtyNodes = ctx.getDirtyNodes();
-    console.log(`dirtyNodes to process`, dirtyNodes);
+    //console.log(`dirtyNodes to process`, dirtyNodes);
 
     // 1. Process TractStack nodes first (required by storyfragments)
     const tractStackNodes = dirtyNodes.filter(
       (node): node is TractStackNode => node.nodeType === "TractStack"
     );
     tractStackNodes.forEach((node) => {
-      console.log(`Processing TractStack node:`, node);
+      //console.log(`Processing TractStack node:`, node);
       this.processTractStackNode(node, saveData);
     });
 
     // 2. Process Menu nodes (required by storyfragments)
     const menuNodes = dirtyNodes.filter((node): node is MenuNode => node.nodeType === "Menu");
     menuNodes.forEach((node) => {
-      console.log(`Processing Menu node:`, node);
+      //console.log(`Processing Menu node:`, node);
       this.processMenuNode(node, saveData);
     });
 
     // 3. Process File nodes (required by panes)
     const fileNodes = dirtyNodes.filter((node): node is ImageFileNode => node.nodeType === "File");
     fileNodes.forEach((node) => {
-      console.log(`Processing File node:`, node);
+      //console.log(`Processing File node:`, node);
       this.processImageFileNode(node, saveData);
     });
 
@@ -486,7 +486,7 @@ export class NodesSerializer_Json extends NodesSerializer {
     // 5. Process Pane nodes
     const paneNodes = dirtyNodes.filter((node): node is PaneNode => node.nodeType === "Pane");
     paneNodes.forEach((node) => {
-      console.log(`Processing Pane node:`, node);
+      //console.log(`Processing Pane node:`, node);
       // Convert string dates to proper format before processing
       const processNode = {
         ...node,
@@ -501,7 +501,7 @@ export class NodesSerializer_Json extends NodesSerializer {
       (node): node is StoryFragmentNode => node.nodeType === "StoryFragment"
     );
     storyFragmentNodes.forEach((node) => {
-      console.log(`Processing StoryFragment node:`, node);
+      //console.log(`Processing StoryFragment node:`, node);
       // Convert string dates to proper format before processing
       const processNode = {
         ...node,
@@ -516,18 +516,18 @@ export class NodesSerializer_Json extends NodesSerializer {
       (node): node is ResourceNode => node.nodeType === "Resource"
     );
     resourceNodes.forEach((node) => {
-      console.log(`Processing Resource node:`, node);
+      //console.log(`Processing Resource node:`, node);
       this.processResourceNode(node, saveData);
     });
 
     // 8. Process Belief nodes (no dependencies)
     const beliefNodes = dirtyNodes.filter((node): node is BeliefNode => node.nodeType === "Belief");
     beliefNodes.forEach((node) => {
-      console.log(`Processing Belief node:`, node);
+      //console.log(`Processing Belief node:`, node);
       this.processBeliefNode(node, saveData);
     });
 
-    console.log(saveData);
+    //console.log(saveData);
     return saveData;
   }
 }

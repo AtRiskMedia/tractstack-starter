@@ -47,7 +47,7 @@ export const AddElementsPanel = memo((props: AddElementsPanelProps) => {
         />
       </div>
       <p className="text-sm mt-1.5 text-mydarkgrey">
-        <em>Drag and drop enabled.</em>
+        <em>Drag and drop coming soon!</em>
       </p>
     </div>
   );

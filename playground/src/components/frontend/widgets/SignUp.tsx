@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import { classNames } from "../../../utils/common/helpers";
-import { auth, loading, error, success, profile } from "../../../store/auth";
+import { classNames } from "@/utils/common/helpers";
+import { auth, loading, error, success, profile } from "@/store/auth";
 import { contactPersona } from "../../../../config/contactPersona.json";
-import type { SignupProps } from "../../../types";
+import type { SignupProps } from "@/types";
 
 export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
@@ -13,6 +13,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [firstname, setFirstname] = useState("");
   const [codeword, setCodeword] = useState("");
   const [badSave, setBadSave] = useState(false);
+  const [emailRegistered, setEmailRegistered] = useState(false);
   const [personaSelected, setPersonaSelected] = useState(
     contactPersona.find((p) => p.id === persona) ||
       contactPersona.find((p) => p.title === "Major Updates Only") ||
@@ -23,10 +24,18 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const $success = useStore(success);
 
   useEffect(() => {
-    if (badSave) {
+    if (badSave && !emailRegistered) {
       setTimeout(() => setBadSave(false), 7000);
     }
-  }, [badSave]);
+  }, [badSave, emailRegistered]);
+
+  const redirectToProfileUnlock = () => {
+    auth.setKey("showUnlock", "1");
+    auth.setKey("lastEmail", email);
+    auth.setKey("consent", "1");
+    auth.setKey("active", "1");
+    window.location.href = "/concierge/profile";
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,16 +45,31 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
     try {
       loading.set(true);
-      const payload = {
+      setEmailRegistered(false);
+
+      const payload: {
+        firstname: string;
+        email: string;
+        codeword: string;
+        bio: string;
+        persona: string;
+        init: boolean;
+        fingerprint?: string;
+      } = {
         firstname,
         email,
         codeword,
         bio: "",
-        persona: clarifyConsent ? personaSelected.id : "Major Updates Only",
+        persona: clarifyConsent ? personaSelected.id : "major",
         init: true,
       };
 
-      const response = await fetch("/auth/profile", {
+      const authData = auth.get();
+      if (authData && authData.key) {
+        payload.fingerprint = authData.key;
+      }
+
+      const response = await fetch("/api/turso/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -58,47 +82,84 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       if (data.success) {
         auth.setKey("hasProfile", "1");
         auth.setKey("consent", "1");
-        auth.setKey("encryptedEmail", data.encryptedEmail);
-        auth.setKey("encryptedCode", data.encryptedCode);
+        auth.setKey("encryptedEmail", data.data.encryptedEmail);
+        auth.setKey("encryptedCode", data.data.encryptedCode);
+        auth.setKey("unlockedProfile", "1");
+
         profile.set({
           firstname: payload.firstname,
           contactPersona: payload.persona,
           email: payload.email,
           shortBio: payload.bio,
         });
+
         success.set(true);
         loading.set(false);
         setSubmitted(true);
       } else {
-        throw new Error("Failed to save profile");
+        console.error("Failed to save profile:", data.error || "Unknown error");
+
+        // Check if the error is for an existing email
+        if (data.error && data.error.includes("Email already registered")) {
+          setEmailRegistered(true);
+        }
+
+        throw new Error(data.error || "Failed to save profile");
       }
     } catch (e) {
+      console.error("Error during signup:", e);
       error.set(true);
       success.set(false);
       loading.set(false);
       setBadSave(true);
-      profile.set({
-        firstname: undefined,
-        contactPersona: undefined,
-        email: undefined,
-        shortBio: undefined,
-      });
-      auth.setKey("hasProfile", undefined);
-      auth.setKey("encryptedEmail", undefined);
-      auth.setKey("encryptedCode", undefined);
+
+      // Don't reset profile if we're dealing with an existing email case
+      if (!emailRegistered) {
+        profile.set({
+          firstname: undefined,
+          contactPersona: undefined,
+          email: undefined,
+          shortBio: undefined,
+        });
+        auth.setKey("hasProfile", undefined);
+        auth.setKey("encryptedEmail", undefined);
+        auth.setKey("encryptedCode", undefined);
+        auth.setKey("unlockedProfile", undefined);
+      }
     }
   }
 
   if ($success && submitted) {
     return (
-      <div className="bg-mygreen/10 p-4 rounded-lg">
-        <p className="text-mygreen font-bold">Thanks for signing up, {firstname}!</p>
-        <p className="text-sm mt-2">
-          <a href="/concierge/profile" className="text-myblue hover:text-black underline">
+      <div className="bg-mygreen/20 p-6 rounded-lg border border-mygreen">
+        <h2 className="text-myblack font-bold text-2xl mb-2">Success!</h2>
+        <p className="text-black text-xl mb-4">Thanks for signing up, {firstname}!</p>
+        <p className="text-md mt-2">
+          <a href="/concierge/profile" className="text-myblue hover:text-black underline font-bold">
             Complete your profile
           </a>{" "}
           to customize your preferences. Remember your code word to manage your preferences later.
         </p>
+      </div>
+    );
+  }
+
+  if (emailRegistered) {
+    return (
+      <div className="bg-myorange/20 p-6 rounded-lg border border-myorange">
+        <h2 className="text-myorange font-bold text-2xl mb-2">Email Already Registered</h2>
+        <p className="text-black text-md mb-4">
+          It looks like the email address <strong>{email}</strong> is already registered with us.
+        </p>
+        <p className="text-md mb-4">Would you like to unlock your existing profile instead?</p>
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={redirectToProfileUnlock}
+            className="px-6 py-3 bg-myorange text-white font-bold text-md rounded-md hover:bg-myorange/80 transition-colors"
+          >
+            Unlock My Profile
+          </button>
+        </div>
       </div>
     );
   }
@@ -146,7 +207,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
           <input
             type="password"
             name="codeword"
-            placeholder="Choose a code word to manage your preferences"
+            placeholder="Choose a code word to protect your account"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
             className={classNames(
@@ -231,10 +292,13 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
           </button>
         </div>
 
-        {badSave && (
-          <p className="text-red-500 text-sm text-center">
-            Sorry, we couldn't sign you up. Please try again or use a different email address.
-          </p>
+        {badSave && !emailRegistered && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+            <p className="text-sm font-bold">Signup Failed</p>
+            <p className="text-sm">
+              Sorry, we couldn't sign you up. Please try again or use a different email address.
+            </p>
+          </div>
         )}
 
         <p className="text-xs text-mydarkgrey text-center mt-4">

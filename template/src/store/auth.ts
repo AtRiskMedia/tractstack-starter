@@ -12,6 +12,8 @@ export type AuthSettings = {
   active: string | undefined;
   hasProfile: string | undefined;
   unlockedProfile: string | undefined;
+  showUnlock: string | undefined;
+  lastEmail: string | undefined;
 };
 
 export type AuthProfile = {
@@ -31,6 +33,8 @@ export const auth = persistentMap<AuthSettings>("auth:", {
   active: undefined,
   hasProfile: undefined,
   unlockedProfile: undefined,
+  showUnlock: undefined,
+  lastEmail: undefined,
 });
 
 export const entered = atom<boolean>(false);

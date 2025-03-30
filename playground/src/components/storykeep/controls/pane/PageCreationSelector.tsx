@@ -142,7 +142,7 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
           <button
             type="button"
             onClick={handleContinue}
-            className="inline-flex justify-center rounded-md bg-cyan-700 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
+            className="inline-flex justify-center rounded-md bg-cyan-700 px-6 py-2 text-sm font-bold text-white shadow-sm hover:bg-cyan-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
           >
             Continue
           </button>

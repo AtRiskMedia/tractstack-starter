@@ -117,6 +117,20 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "create":
         result = await createProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
+        // Check if result indicates email already exists
+        if (result && "emailExists" in result) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Email already registered",
+              emailExists: true,
+            }),
+            {
+              status: 200, // Using 200 status instead of error status
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
         break;
       case "update":
         result = await updateProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);

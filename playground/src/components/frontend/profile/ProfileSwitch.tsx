@@ -44,6 +44,19 @@ export const ProfileSwitch = () => {
 
   useEffect(() => {
     const init = async () => {
+      // Check if we've been directed to show the unlock form (from SignUp)
+      if ($authPayload?.showUnlock === "1") {
+        error.set(undefined);
+        success.set(undefined);
+        loading.set(undefined);
+        setMode(`unlock`);
+        // Clear the flag after we've used it
+        setTimeout(() => {
+          auth.setKey("showUnlock", undefined);
+        }, 500);
+        return;
+      }
+
       // If we have encrypted credentials but no profile data, try to restore
       if ($authPayload?.encryptedCode && $authPayload?.encryptedEmail && !$profile.firstname) {
         const restored = await restoreProfile();
@@ -84,6 +97,7 @@ export const ProfileSwitch = () => {
     $authPayload.hasProfile,
     $authPayload.consent,
     $authPayload.unlockedProfile,
+    $authPayload.showUnlock,
     $profile.firstname,
   ]);
 
@@ -97,7 +111,7 @@ export const ProfileSwitch = () => {
           {mode === `create` ? (
             <ProfileCreate />
           ) : mode === `unlock` ? (
-            <ProfileUnlock />
+            <ProfileUnlock initialEmail={$authPayload.lastEmail} />
           ) : mode === `edit` ? (
             <ProfileEdit />
           ) : null}
