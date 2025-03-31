@@ -22,11 +22,16 @@ export function handleActionButtonClick({
 
   // Handle bunny video events
   if (bunny) {
-    const videoContainer = document.getElementById("video-container");
-    if (videoContainer) {
-      //videoContainer.scrollIntoView({ behavior: "smooth" });
-      dispatchUpdateVideoEvent(`${bunny.t}s`);
+    if (bunny.videoId) {
+      dispatchUpdateVideoEvent(`${bunny.t}s`, bunny.videoId);
+    } else {
+      // Fallback to legacy behavior for backward compatibility
+      const videoContainer = document.getElementById("video-container");
+      if (videoContainer) {
+        dispatchUpdateVideoEvent(`${bunny.t}s`);
+      }
     }
+
     if (event) events.set([...events.get(), event]);
     return;
   }
@@ -51,7 +56,6 @@ export function handleActionButtonClick({
       const checkScrollEnd = setInterval(() => {
         if (window.scrollY === targetPosition || Math.abs(window.scrollY - targetPosition) < 2) {
           clearInterval(checkScrollEnd);
-          // Force a reflow to maintain correct document height
           document.body.style.minHeight = `${Math.max(
             document.body.scrollHeight,
             document.documentElement.scrollHeight

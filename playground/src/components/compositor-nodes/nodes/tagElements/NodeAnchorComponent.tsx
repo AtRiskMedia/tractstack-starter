@@ -2,6 +2,7 @@ import { useEffect, useRef, type RefObject, type MouseEvent } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
+import { PlayButton } from "@/components/common/widgets/ButtonIsland";
 import type { FlatNode, NodeProps } from "@/types";
 
 export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
@@ -10,6 +11,9 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
   const node = ctx.allNodes.get().get(nodeId) as FlatNode;
   const childNodeIDs = ctx.getChildNodeIDs(node?.parentId ?? "");
   const linkRef = useRef<HTMLAnchorElement | HTMLButtonElement>(null);
+
+  // Check if this is a video link
+  const isVideo = !!node.buttonPayload?.bunnyPayload;
 
   // Get previous and next siblings for spacing logic
   const currentIndex = childNodeIDs.indexOf(nodeId);
@@ -189,6 +193,12 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
           style={{ display: "inline" }}
         >
           <RenderChildren children={ctx.getChildNodeIDs(nodeId)} nodeProps={props} />
+          {isVideo && (
+            <>
+              {` `}
+              <PlayButton />
+            </>
+          )}
         </a>
         {needsTrailingSpace && " "}
       </>
@@ -206,6 +216,12 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
           style={{ display: "inline" }}
         >
           <RenderChildren children={ctx.getChildNodeIDs(nodeId)} nodeProps={props} />
+          {isVideo && (
+            <>
+              {` `}
+              <PlayButton />
+            </>
+          )}
         </button>
         {needsTrailingSpace && " "}
       </>

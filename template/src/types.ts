@@ -889,9 +889,10 @@ export interface FlatNode extends BaseNode {
     callbackPayload: string;
     isExternalUrl?: boolean;
     bunnyPayload?: {
-      slug: string;
       t: string;
-      isContext: boolean;
+      videoId: string | null;
+      slug?: string;
+      isContext?: boolean;
     };
   };
 }
@@ -959,9 +960,10 @@ export interface LinkNode extends FlatNode {
     callbackPayload: string;
     isExternalUrl?: boolean;
     bunnyPayload?: {
-      slug: string;
       t: string;
-      isContext: boolean;
+      videoId: string | null;
+      slug?: string;
+      isContext?: boolean;
     };
   };
 }

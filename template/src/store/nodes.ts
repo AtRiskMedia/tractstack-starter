@@ -429,7 +429,7 @@ export class NodesContext {
 
     const allowInsertBefore =
       offset > -1
-        ? allowInsert(node, node.tagName as Tag, tagName, offset ? tagNames[offset - 1] : null)
+        ? allowInsert(node, node.tagName as Tag, tagName, offset ? tagNames[offset - 1] : undefined)
         : allowInsert(node, node.tagName as Tag, tagName);
 
     const allowInsertAfter =
@@ -1819,6 +1819,153 @@ export class NodesContext {
       counter++;
     }
     return newSlug;
+  }
+
+  isBunnyVideoNode(node: BaseNode): boolean {
+    if (node.nodeType === "Pane" && "codeHookTarget" in node) {
+      return (node as PaneNode).codeHookTarget === "bunny-video";
+    }
+    if (node.nodeType === "TagElement" && "tagName" in node) {
+      const flatNode = node as FlatNode;
+      return (
+        flatNode.tagName === "code" &&
+        "codeHookParams" in flatNode &&
+        Array.isArray(flatNode.codeHookParams) &&
+        typeof flatNode.copy === "string" &&
+        flatNode.copy.includes("bunny(")
+      );
+    }
+    return false;
+  }
+
+  getBunnyVideoUrl(nodeId: string): string | string[] | null {
+    const node = this.allNodes.get().get(nodeId);
+    if (!node) return null;
+
+    if (node.nodeType === "Pane" && "codeHookPayload" in node) {
+      const paneNode = node as PaneNode;
+      try {
+        if (paneNode.codeHookPayload && typeof paneNode.codeHookPayload.options === "string") {
+          const options = JSON.parse(paneNode.codeHookPayload.options);
+          return options.videoUrl || null;
+        }
+      } catch (error) {
+        console.error("Error parsing Bunny video options:", error);
+      }
+    }
+
+    if (node.nodeType === "TagElement" && "codeHookParams" in node) {
+      const flatNode = node as FlatNode;
+      if (Array.isArray(flatNode.codeHookParams) && flatNode.codeHookParams.length > 0) {
+        return flatNode.codeHookParams[0];
+      }
+    }
+
+    return null;
+  }
+
+  getAllBunnyVideoInfo(): { url: string; title: string; videoId: string }[] {
+    const results: { url: string; title: string; videoId: string }[] = [];
+    const processedVideoIds = new Set<string>();
+
+    // Find panes with bunny-video code hook
+    const allNodes = Array.from(this.allNodes.get().values());
+    const paneNodes = allNodes.filter(
+      (node) =>
+        node.nodeType === "Pane" &&
+        "codeHookTarget" in node &&
+        node.codeHookTarget === "bunny-video"
+    ) as PaneNode[];
+
+    // Process pane-level bunny videos
+    for (const paneNode of paneNodes) {
+      try {
+        if (paneNode.codeHookPayload && typeof paneNode.codeHookPayload.options === "string") {
+          const options = JSON.parse(paneNode.codeHookPayload.options);
+          const url = options.videoUrl || "";
+          const title = options.title || "Untitled Video";
+
+          if (url && typeof url === "string") {
+            let videoId = "";
+            try {
+              const urlObj = new URL(url);
+              if (
+                urlObj.hostname === "iframe.mediadelivery.net" &&
+                urlObj.pathname.startsWith("/embed/")
+              ) {
+                const pathParts = urlObj.pathname.split("/");
+                if (pathParts.length >= 4) {
+                  videoId = `${pathParts[2]}/${pathParts[3]}`;
+                }
+              }
+            } catch (error) {
+              console.error("Error extracting video ID from URL:", error);
+            }
+
+            if (videoId && !processedVideoIds.has(videoId)) {
+              results.push({
+                url: url,
+                title: typeof title === "string" ? title : "Untitled Video",
+                videoId,
+              });
+              processedVideoIds.add(videoId);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing Bunny video options:", error);
+      }
+    }
+
+    // Find inline bunny widgets
+    const codeNodes = allNodes.filter(
+      (node) =>
+        node.nodeType === "TagElement" &&
+        "tagName" in node &&
+        node.tagName === "code" &&
+        "codeHookParams" in node &&
+        "copy" in node &&
+        typeof node.copy === "string" &&
+        node.copy.includes("bunny(")
+    ) as FlatNode[];
+
+    // Process inline widgets
+    for (const codeNode of codeNodes) {
+      if (Array.isArray(codeNode.codeHookParams) && codeNode.codeHookParams.length >= 2) {
+        const urlParam = codeNode.codeHookParams[0];
+        const titleParam = codeNode.codeHookParams[1];
+
+        const url = Array.isArray(urlParam) ? urlParam[0] : String(urlParam || "");
+        const title = Array.isArray(titleParam)
+          ? titleParam[0]
+          : String(titleParam || "Untitled Video");
+
+        if (url) {
+          let videoId = "";
+          try {
+            const urlObj = new URL(url);
+            if (
+              urlObj.hostname === "iframe.mediadelivery.net" &&
+              urlObj.pathname.startsWith("/embed/")
+            ) {
+              const pathParts = urlObj.pathname.split("/");
+              if (pathParts.length >= 4) {
+                videoId = `${pathParts[2]}/${pathParts[3]}`;
+              }
+            }
+          } catch (error) {
+            console.error("Error extracting video ID from URL:", error);
+          }
+
+          if (videoId && !processedVideoIds.has(videoId)) {
+            results.push({ url, title, videoId });
+            processedVideoIds.add(videoId);
+          }
+        }
+      }
+    }
+
+    return results;
   }
 
   private deleteNodes(nodesList: BaseNode[]): BaseNode[] {

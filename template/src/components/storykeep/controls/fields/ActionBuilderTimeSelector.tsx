@@ -1,5 +1,9 @@
 import { useState, useEffect } from "react";
+import { Listbox, Transition } from "@headlessui/react";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { type BunnyPlayer, hasPlayerJS } from "@/types";
+import { getCtx } from "@/store/nodes";
 import type { ChangeEvent } from "react";
 
 interface ActionBuilderTimeSelectorProps {
@@ -129,13 +133,41 @@ export default function ActionBuilderTimeSelector({
   videoId,
   onSelect,
   label,
-  placeholder = "https://iframe.mediadelivery.net/embed/{library}/{videoId}",
+  placeholder = "Select a video",
 }: ActionBuilderTimeSelectorProps) {
-  const [videoUrl, setVideoUrl] = useState(
-    videoId ? `https://iframe.mediadelivery.net/embed/${videoId}` : ``
-  );
   const [showModal, setShowModal] = useState(false);
+  const [availableVideos, setAvailableVideos] = useState<
+    { videoId: string; title: string; url: string }[]
+  >([]);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ctx = getCtx();
+    const videoInfo = ctx.getAllBunnyVideoInfo();
+    setAvailableVideos(videoInfo);
+
+    if (videoId) {
+      const matchingVideo = videoInfo.find((v) => v.videoId === videoId);
+      if (matchingVideo) {
+        setSelectedVideoUrl(matchingVideo.url);
+      }
+    }
+  }, [videoId]);
+
+  const handleVideoSelect = (url: string) => {
+    setSelectedVideoUrl(url);
+    setValidationError(null);
+
+    const extractedVideoId = extractVideoId(url);
+    if (extractedVideoId) {
+      if (value) {
+        onSelect(value, extractedVideoId);
+      } else {
+        onSelect("0", extractedVideoId);
+      }
+    }
+  };
 
   const extractVideoId = (url: string): string | null => {
     try {
@@ -147,51 +179,89 @@ export default function ActionBuilderTimeSelector({
     }
   };
 
-  const handleUrlChange = (url: string) => {
-    setVideoUrl(url);
-    setValidationError(null);
-
-    const videoId = extractVideoId(url);
-    if (!videoId && url) {
-      setValidationError("Invalid Bunny Stream URL format");
-    }
-  };
-
   const handleTimeSelect = (time: string) => {
-    const videoId = extractVideoId(videoUrl);
-    if (videoId) {
-      onSelect(time, videoId);
+    const extractedVideoId = extractVideoId(selectedVideoUrl);
+    if (extractedVideoId) {
+      onSelect(time, extractedVideoId);
     } else {
       onSelect(time);
     }
     setShowModal(false);
   };
 
-  const isValidBunnyUrl = (url: string): boolean => {
-    return (
-      url.startsWith("https://iframe.mediadelivery.net/embed/") && extractVideoId(url) !== null
-    );
-  };
-
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="block text-sm text-gray-700">Bunny Video URL</label>
-        <input
-          type="text"
-          className={`w-full rounded-md border ${
-            validationError ? "border-red-500" : "border-gray-300"
-          } px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue`}
-          value={videoUrl}
-          onChange={(e) => handleUrlChange(e.target.value)}
-          placeholder={placeholder}
-        />
+        <label className="block text-sm text-gray-700 font-bold">Select a Video</label>
+
+        <Listbox value={selectedVideoUrl} onChange={handleVideoSelect}>
+          <div className="relative mt-1">
+            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm border border-gray-300">
+              <span className="block truncate">
+                {selectedVideoUrl
+                  ? availableVideos.find((v) => v.url === selectedVideoUrl)?.title ||
+                    selectedVideoUrl
+                  : placeholder}
+              </span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+              </span>
+            </Listbox.Button>
+            <Transition
+              leave="transition ease-in duration-100"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
+                {availableVideos.length > 0 ? (
+                  availableVideos.map((video) => (
+                    <Listbox.Option
+                      key={video.videoId}
+                      className={({ active }) =>
+                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                          active ? "bg-amber-100 text-amber-900" : "text-gray-900"
+                        }`
+                      }
+                      value={video.url}
+                    >
+                      {({ selected }) => (
+                        <>
+                          <span
+                            className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                          >
+                            {video.title}
+                          </span>
+                          {selected ? (
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </Listbox.Option>
+                  ))
+                ) : (
+                  <div className="py-2 px-4 text-sm text-gray-500 italic">
+                    No videos found on this page
+                  </div>
+                )}
+              </Listbox.Options>
+            </Transition>
+          </div>
+        </Listbox>
+
         {validationError && <p className="text-sm text-red-500 mt-1">{validationError}</p>}
+
+        {!availableVideos.length && (
+          <div className="text-sm text-gray-500 mt-2">
+            <p>No videos found on this page. Please add a Bunny Video component first.</p>
+          </div>
+        )}
       </div>
 
-      {isValidBunnyUrl(videoUrl) && (
+      {selectedVideoUrl && (
         <div className="space-y-2">
-          <label className="block text-sm text-gray-700">{label}</label>
+          <label className="block text-sm text-gray-700 font-bold">{label}</label>
           <div className="flex items-center gap-2">
             <div className="flex-1 text-sm text-gray-500">
               {value ? `Current start time: ${value}s` : "No start time selected"}
@@ -199,7 +269,7 @@ export default function ActionBuilderTimeSelector({
             {value !== "" && (
               <button
                 onClick={() => handleTimeSelect(value)}
-                className="px-4 py-2 bg-myblue text-white rounded hover:bg-orange-600"
+                className="px-4 py-2 bg-myblue text-white rounded hover:bg-blue-600"
               >
                 Start at {value}s
               </button>
@@ -216,7 +286,7 @@ export default function ActionBuilderTimeSelector({
 
       {showModal && (
         <TimeSelectModal
-          videoUrl={videoUrl}
+          videoUrl={selectedVideoUrl}
           onClose={() => setShowModal(false)}
           onSelect={handleTimeSelect}
         />

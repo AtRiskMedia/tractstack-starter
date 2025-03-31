@@ -70,6 +70,7 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
   class AstroBunnyVideo extends HTMLElement {
     private videoUrl: string = "";
     private videoTitle: string = "";
+    private videoId: string = "";
     private currentIframe: HTMLIFrameElement | null = null;
     private videoContainer: HTMLElement | null = null;
     private player: any = null;
@@ -102,6 +103,22 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
           this.chapters = [];
           this.hasChapters = false;
         }
+      }
+      try {
+        if (this.videoUrl) {
+          const urlObj = new URL(this.videoUrl);
+          if (
+            urlObj.hostname === "iframe.mediadelivery.net" &&
+            urlObj.pathname.startsWith("/embed/")
+          ) {
+            const pathParts = urlObj.pathname.split("/");
+            if (pathParts.length >= 4) {
+              this.videoId = `${pathParts[2]}/${pathParts[3]}`;
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error extracting video ID from URL:", error);
       }
     }
 
@@ -211,20 +228,22 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
           // Seek to the specified time
           this.player.setCurrentTime(startSeconds);
 
-          // Explicitly play the video after seeking
-          if (typeof this.player.play === "function") {
-            this.player.play();
-          } else {
-            // Fallback if play method doesn't exist: use the call method
-            this.player.call?.("play");
-          }
-
           // Scroll the video into view
           if (this.videoContainer) {
             setTimeout(() => {
               this.videoContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }, 100);
+            }, 0);
           }
+
+          // Explicitly play the video after seeking
+          setTimeout(() => {
+            if (typeof this.player.play === "function") {
+              this.player.play();
+            } else {
+              // Fallback if play method doesn't exist: use the call method
+              this.player.call?.("play");
+            }
+          }, 750);
 
           return; // Exit early, we've successfully used the existing player
         } catch (error) {
@@ -291,7 +310,7 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
         if (startSeconds > 0 && this.videoContainer) {
           setTimeout(() => {
             this.videoContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
-          }, 100);
+          }, 0);
         }
       };
     }
@@ -308,13 +327,13 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
         }
         this.player = getBunnyPlayer(this.currentIframe.id);
         this.player.on("ready", () => {
-          if (!this.player.pause) {
+          if (this.player && !this.player.pause) {
             this.player.pause = () => {
               this.player.call("pause");
             };
           }
 
-          if (!this.player.play) {
+          if (this.player && !this.player.play) {
             this.player.play = () => {
               this.player.call("play");
             };
@@ -608,14 +627,18 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
     }
 
     private handleUpdateVideo = (event: CustomEvent): void => {
-      // Handle both old and new event formats
       let startTime;
+      let videoId;
       if (typeof event.detail === "object" && event.detail !== null) {
         startTime = event.detail.startTime;
+        videoId = event.detail.videoId;
       } else {
         startTime = event.detail;
       }
-
+      if (videoId && videoId !== this.videoId) {
+        // Skip if this event targets a different video
+        return;
+      }
       this.initializeVideo(startTime);
     };
 

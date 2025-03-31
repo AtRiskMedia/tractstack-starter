@@ -346,7 +346,7 @@ export const GOTO_TARGETS: GotoTargets = {
     description: "Navigate to specific pane in a story fragment",
   },
   bunny: {
-    name: "Bunny Video",
+    name: "Goto Bunny Video",
     requiresParam: true,
     requiresSecondParam: true,
     requiresThirdParam: true,
