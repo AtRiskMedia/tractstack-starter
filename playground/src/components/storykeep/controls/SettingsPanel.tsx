@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
 import ChevronDoubleDownIcon from "@heroicons/react/24/outline/ChevronDoubleDownIcon";
 import { settingsPanelStore } from "@/store/storykeep";
@@ -414,7 +414,7 @@ const SettingsPanel = ({
           aria-label="Close settings panel"
           title="Close settings panel"
         >
-          <XMarkIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <CheckIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
       </div>
       {effectiveExpanded ? (

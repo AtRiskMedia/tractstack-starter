@@ -46,29 +46,18 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
       if (!linkNode || !markdownId) return;
 
       const lexedPayload = lispLexer(newCallbackPayload);
-      console.log(`callbackPayload`, newCallbackPayload);
-
-      // For goto actions, get the target URL
       let targetUrl = null;
       if (newCallbackPayload.startsWith("(goto")) {
         targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
       }
-
-      // For all actions, check if it's a bunny video action
       const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
-
-      // Determine if it's an external URL
       const isExternalUrl = typeof targetUrl === "string" && targetUrl.startsWith("https://");
-
-      // Preserve existing button payload properties or initialize new ones
       const existingButtonPayload = linkNode.buttonPayload || {
         buttonClasses: {},
         buttonHoverClasses: {},
         callbackPayload: "",
       };
 
-      // For bunnyMoment actions, we'll always use a button
-      // For goto actions, use a link if there's a target URL, otherwise a button
       if (newCallbackPayload.startsWith("(bunnyMoment")) {
         linkNode.tagName = "button";
         linkNode.href = "#";
@@ -85,7 +74,6 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
         ...(isExternalUrl ? { isExternalUrl: true } : {}),
         ...(bunnyPayload ? { bunnyPayload } : {}),
       };
-      console.log(linkNode);
 
       ctx.modifyNodes([{ ...linkNode, isChanged: true }]);
     } catch (error) {

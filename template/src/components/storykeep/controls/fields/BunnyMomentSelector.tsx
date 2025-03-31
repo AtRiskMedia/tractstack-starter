@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getCtx } from "@/store/nodes";
+import ActionBuilderTimeSelector from "./ActionBuilderTimeSelector";
 
 interface BunnyMomentSelectorProps {
   value: string;
@@ -7,17 +7,10 @@ interface BunnyMomentSelectorProps {
 }
 
 export default function BunnyMomentSelector({ value, onChange }: BunnyMomentSelectorProps) {
-  const [videos, setVideos] = useState<{ videoId: string; title: string }[]>([]);
   const [selectedVideoId, setSelectedVideoId] = useState("");
   const [timestamp, setTimestamp] = useState("0");
 
-  // Load available videos on mount
   useEffect(() => {
-    const ctx = getCtx();
-    const videoInfo = ctx.getAllBunnyVideoInfo();
-    setVideos(videoInfo);
-
-    // Try to parse existing value if any
     if (value) {
       try {
         const match = value.match(/\(bunnyMoment\s+\(\s*([^\s]+)\s+(\d+)\s*\)\)/);
@@ -31,15 +24,12 @@ export default function BunnyMomentSelector({ value, onChange }: BunnyMomentSele
     }
   }, [value]);
 
-  // Update when selection changes
-  const handleVideoChange = (videoId: string) => {
-    setSelectedVideoId(videoId);
-    updateValue(videoId, timestamp);
-  };
-
-  const handleTimestampChange = (time: string) => {
+  const handleTimeSelect = (time: string, videoId?: string) => {
+    if (videoId) {
+      setSelectedVideoId(videoId);
+    }
     setTimestamp(time);
-    updateValue(selectedVideoId, time);
+    updateValue(videoId || selectedVideoId, time);
   };
 
   const updateValue = (videoId: string, time: string) => {
@@ -49,32 +39,13 @@ export default function BunnyMomentSelector({ value, onChange }: BunnyMomentSele
 
   return (
     <div className="space-y-4">
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-700">Select Video</label>
-        <select
-          value={selectedVideoId}
-          onChange={(e) => handleVideoChange(e.target.value)}
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        >
-          <option value="">Select a video...</option>
-          {videos.map((video) => (
-            <option key={video.videoId} value={video.videoId}>
-              {video.title}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-gray-700">Timestamp (seconds)</label>
-        <input
-          type="number"
-          value={timestamp}
-          onChange={(e) => handleTimestampChange(e.target.value)}
-          min="0"
-          className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-        />
-      </div>
+      <ActionBuilderTimeSelector
+        value={timestamp}
+        videoId={selectedVideoId}
+        onSelect={handleTimeSelect}
+        label="Bunny Video Moment"
+        placeholder="Select a video and timestamp"
+      />
     </div>
   );
 }
