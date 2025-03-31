@@ -65,9 +65,14 @@ const buildVersion = (() => {
   if (pubDatetime) return pubDatetime.getTime();
   return Date.now();
 })();
-const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
-const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
-
+const socialImageWithVersion = joinUrlPaths(
+  config?.init?.SITE_URL || ``,
+  `${defaultSocialImageURL}?v=${buildVersion}`
+);
+const socialLogoWithVersion = joinUrlPaths(
+  config?.init?.SITE_URL || ``,
+  `${defaultSocialLogoURL}?v=${buildVersion}`
+);
 const gtagId = config?.init?.GTAG || false;
 const gtagUrl =
   typeof gtagId === `string` && gtagId.length > 1
@@ -109,7 +114,7 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
     <meta property="twitter:url" content={fullCanonicalUrl} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
-    <meta property="twitter:image" content={socialLogoWithVersion} />
+    <meta property="twitter:image" content={socialImageWithVersion} />
 
     <!-- Article Published/Modified time -->
     {pubDatetime && <meta property="article:published_time" content={pubDatetime.toISOString()} />}
