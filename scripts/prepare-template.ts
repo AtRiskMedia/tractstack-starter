@@ -45,11 +45,7 @@ const EXCLUDED_PATHS = [
 const EMPTY_FILES = ["config/init.json", "config/turso.json", "public/styles/frontend.css"];
 
 // Empty directories to create (with .gitkeep files)
-const EMPTY_DIRECTORIES = [
-  "public/images/og",
-  "public/images/thumbs",
-  "public/custom"
-];
+const EMPTY_DIRECTORIES = ["public/images/og", "public/images/thumbs", "public/custom"];
 
 async function shouldCopyFile(srcPath: string): Promise<boolean> {
   const relativePath = path.relative(PLAYGROUND_DIR, srcPath);
@@ -86,14 +82,14 @@ async function createEmptyDirectoriesWithGitKeep() {
   console.log("Creating empty directories with .gitkeep files...");
   for (const dir of EMPTY_DIRECTORIES) {
     const dirPath = path.join(TEMPLATE_DIR, dir);
-    
+
     // Ensure the directory exists
     await fs.ensureDir(dirPath);
-    
+
     // Create .gitkeep file inside
-    const gitkeepPath = path.join(dirPath, '.gitkeep');
-    await fs.writeFile(gitkeepPath, '');
-    
+    const gitkeepPath = path.join(dirPath, ".gitkeep");
+    await fs.writeFile(gitkeepPath, "");
+
     console.log(`Created directory with .gitkeep: ${dir}`);
   }
 }
