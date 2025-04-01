@@ -4,8 +4,19 @@ import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { classNames } from "@/utils/common/helpers";
 import { auth, loading, error, success, profile } from "@/store/auth";
-import { contactPersona } from "../../../../config/contactPersona.json";
+import contactPersonaData from "../../../../config/contactPersona.json"; // Adjust path if needed
 import type { SignupProps } from "@/types";
+
+// Define the Persona interface based on contactPersona.json
+interface Persona {
+  id: string;
+  title: string;
+  description: string;
+  disabled?: boolean;
+}
+
+// Extract and type the contactPersona array from the JSON
+const contactPersona: Persona[] = (contactPersonaData as { contactPersona: Persona[] }).contactPersona;
 
 export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
@@ -14,7 +25,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [codeword, setCodeword] = useState("");
   const [badSave, setBadSave] = useState(false);
   const [emailRegistered, setEmailRegistered] = useState(false);
-  const [personaSelected, setPersonaSelected] = useState(
+  const [personaSelected, setPersonaSelected] = useState<Persona>(
     contactPersona.find((p) => p.id === persona) ||
       contactPersona.find((p) => p.title === "Major Updates Only") ||
       contactPersona[0]
@@ -99,7 +110,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       } else {
         console.error("Failed to save profile:", data.error || "Unknown error");
 
-        // Check if the error is for an existing email
         if (data.error && data.error.includes("Email already registered")) {
           setEmailRegistered(true);
         }
@@ -113,7 +123,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       loading.set(false);
       setBadSave(true);
 
-      // Don't reset profile if we're dealing with an existing email case
       if (!emailRegistered) {
         profile.set({
           firstname: undefined,
@@ -155,7 +164,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         <div className="flex justify-center mt-4">
           <button
             onClick={redirectToProfileUnlock}
-            className="px-6 py-3 bg-myorange text-white font-bold text-md rounded-md hover:bg-myorange/80 transition-colors"
+            className="px-6 py-3 bg-cyan-700 text-white font-bold text-md rounded-md hover:bg-cyan-600 transition-colors"
           >
             Unlock My Profile
           </button>
@@ -170,8 +179,12 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
+          <label htmlFor="firstname" className="block text-sm font-medium text-mydarkgrey mb-1">
+            First Name
+          </label>
           <input
             type="text"
+            id="firstname"
             name="firstname"
             placeholder="First name"
             value={firstname}
@@ -187,8 +200,12 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
+          <label htmlFor="email" className="block text-sm font-medium text-mydarkgrey mb-1">
+            Email Address
+          </label>
           <input
             type="email"
+            id="email"
             name="email"
             placeholder="Email address"
             value={email}
@@ -204,10 +221,14 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
+          <label htmlFor="codeword" className="block text-sm font-medium text-mydarkgrey mb-1">
+            Code Word
+          </label>
           <input
             type="password"
+            id="codeword"
             name="codeword"
-            placeholder="Choose a code word to protect your account"
+            placeholder="Choose a code word"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
             className={classNames(
@@ -283,8 +304,8 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             disabled={$loading}
             className={classNames(
               "w-full px-4 py-2 text-sm font-bold rounded-md shadow-sm",
-              "bg-myorange text-white hover:bg-myorange/80",
-              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange",
+              "bg-cyan-700 text-white hover:bg-cyan-600",
+              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-700",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
@@ -301,12 +322,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
           </div>
         )}
 
-        <p className="text-xs text-mydarkgrey text-center mt-4">
-          By signing up, you agree to receive updates based on your chosen preferences.{" "}
-          <a href="/concierge/profile" className="text-myblue hover:text-black underline">
-            Manage preferences
-          </a>
-        </p>
       </form>
     </div>
   );
