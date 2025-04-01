@@ -1,12 +1,12 @@
 ---
 import { Home } from "./icons/Home";
 import Menu from "./Menu";
-import { getCtx } from "../../store/nodes";
+import { getCtx } from "@/store/nodes";
 import { RememberMe } from "./state/RememberMe";
 import { OpenStoryKeep } from "./nav/OpenStoryKeep";
 import { ConfigureStoryKeep } from "./nav/ConfigureStoryKeep";
 import ImpressionWrapper from "./widgets/ImpressionWrapper";
-import type { AuthStatus, MenuDatum, ImpressionDatum, Config } from "../../types";
+import type { AuthStatus, MenuDatum, ImpressionDatum, Config } from "@/types";
 
 export interface Props {
   title: string;
@@ -35,10 +35,8 @@ const {
 } = Astro.props;
 const isHome = slug === config?.init?.HOME_SLUG;
 const logo = (typeof config?.init?.LOGO === "string" && config?.init?.LOGO) || "/logo.svg";
-const logoIsSvg = logo.includes("svg");
 const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
-const wordmarkIsSvg = wordmark.includes("svg");
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
 ---
 
@@ -49,40 +47,18 @@ const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId
         {
           [`default`, `logo`].includes(config?.init?.WORDMARK_MODE) ? (
             <>
-              {logoIsSvg ? (
-                <object
-                  type="image/svg+xml"
-                  data={logo}
-                  class="h-8 w-auto pointer-events-none"
-                  aria-label="Logo"
-                >
-                  Logo
-                </object>
-              ) : (
-                <img src={logo} class="h-8 w-auto pointer-events-none" alt="Logo" />
-              )}
+              <img src={logo} alt="Logo" class="h-8 w-auto pointer-events-none" />
               <span class="w-2" />
             </>
           ) : null
         }
         {
           [`default`, `wordmark`].includes(config?.init?.WORDMARK_MODE) ? (
-            wordmarkIsSvg ? (
-              <object
-                type="image/svg+xml"
-                data={wordmark}
-                aria-label="Wordmark"
-                class="h-14 w-auto max-w-48 md:max-w-72 pointer-events-none"
-              >
-                Wordmark
-              </object>
-            ) : (
-              <img
-                src={wordmark}
-                alt="Wordmark"
-                class="h-14 w-auto max-w-48 md:max-w-72 pointer-events-none"
-              />
-            )
+            <img
+              src={wordmark}
+              alt="Wordmark"
+              class="h-14 w-auto max-w-48 md:max-w-72 pointer-events-none"
+            />
           ) : null
         }
       </div>
@@ -94,10 +70,9 @@ const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId
     }
   </div>
   <div
-    class="flex flex-row flex-nowrap justify-between pt-4 pb-3
-px-4 md:px-8 bg-mywhite shadow-inner"
+    class="flex flex-row flex-nowrap justify-between pt-4 pb-3 px-4 md:px-8 bg-mywhite shadow-inner"
   >
-    <h1 class="text-mydarkgrey truncate text-xl" title={title}>{title}</h1>
+    <h1 class="text-mydarkgrey truncate text-xl">{title}</h1>
     <div class="flex flex-row flex-nowrap gap-x-2">
       {
         !isHome && !isStoryKeep ? (

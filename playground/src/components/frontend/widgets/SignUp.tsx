@@ -4,8 +4,20 @@ import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { classNames } from "@/utils/common/helpers";
 import { auth, loading, error, success, profile } from "@/store/auth";
-import { contactPersona } from "../../../../config/contactPersona.json";
+import contactPersonaData from "../../../../config/contactPersona.json";
 import type { SignupProps } from "@/types";
+
+// Define the Persona interface based on contactPersona.json
+interface Persona {
+  id: string;
+  title: string;
+  description: string;
+  disabled?: boolean;
+}
+
+// Extract and type the contactPersona array from the JSON
+const contactPersona: Persona[] = (contactPersonaData as { contactPersona: Persona[] })
+  .contactPersona;
 
 export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
@@ -14,7 +26,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [codeword, setCodeword] = useState("");
   const [badSave, setBadSave] = useState(false);
   const [emailRegistered, setEmailRegistered] = useState(false);
-  const [personaSelected, setPersonaSelected] = useState(
+  const [personaSelected, setPersonaSelected] = useState<Persona>(
     contactPersona.find((p) => p.id === persona) ||
       contactPersona.find((p) => p.title === "Major Updates Only") ||
       contactPersona[0]
@@ -22,6 +34,66 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
   const $loading = useStore(loading);
   const $success = useStore(success);
+  const $auth = useStore(auth);
+  const $profile = useStore(profile);
+
+  // Check for encrypted credentials and try to restore profile
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      // If we have encrypted credentials but no unlocked profile, try to unlock
+      if ($auth.encryptedEmail && $auth.encryptedCode && !$auth.unlockedProfile) {
+        try {
+          // Try to unlock the profile using stored credentials
+          const response = await fetch("/api/turso/unlock", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fingerprint: $auth.key,
+              encryptedEmail: $auth.encryptedEmail,
+              encryptedCode: $auth.encryptedCode,
+            }),
+          });
+
+          const result = await response.json();
+          if (result.success) {
+            // Set the profile data
+            profile.set({
+              firstname: result.data.firstname,
+              contactPersona: result.data.contactPersona,
+              email: result.data.email,
+              shortBio: result.data.shortBio,
+            });
+
+            // Update auth state
+            auth.setKey("unlockedProfile", "1");
+            auth.setKey("hasProfile", "1");
+          }
+        } catch (e) {
+          console.error("Error unlocking profile:", e);
+        }
+      }
+    };
+
+    checkExistingProfile();
+  }, [$auth.encryptedEmail, $auth.encryptedCode, $auth.unlockedProfile]);
+
+  // Initialize with existing profile data if available
+  useEffect(() => {
+    if ($profile.firstname && $profile.email) {
+      setFirstname($profile.firstname);
+      setEmail($profile.email);
+
+      // Set persona if available
+      if ($profile.contactPersona) {
+        const existingPersona = contactPersona.find((p) => p.id === $profile.contactPersona);
+        if (existingPersona) {
+          setPersonaSelected(existingPersona);
+        }
+      }
+    }
+  }, [$profile]);
 
   useEffect(() => {
     if (badSave && !emailRegistered) {
@@ -99,7 +171,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       } else {
         console.error("Failed to save profile:", data.error || "Unknown error");
 
-        // Check if the error is for an existing email
         if (data.error && data.error.includes("Email already registered")) {
           setEmailRegistered(true);
         }
@@ -113,7 +184,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       loading.set(false);
       setBadSave(true);
 
-      // Don't reset profile if we're dealing with an existing email case
       if (!emailRegistered) {
         profile.set({
           firstname: undefined,
@@ -129,9 +199,25 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     }
   }
 
+  // If user already has a profile, or we have encrypted credentials, show appropriate message
+  if (($auth.hasProfile === "1" || $auth.encryptedEmail) && $profile.firstname) {
+    return (
+      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
+        <h2 className="text-myblack font-bold text-2xl mb-2">Already Signed Up</h2>
+        <p className="text-black text-xl mb-4">Welcome back, {$profile.firstname}!</p>
+        <p className="text-md mt-2">
+          <a href="/concierge/profile" className="text-myblue hover:text-black underline font-bold">
+            Manage your profile
+          </a>{" "}
+          to update your preferences.
+        </p>
+      </div>
+    );
+  }
+
   if ($success && submitted) {
     return (
-      <div className="bg-mygreen/20 p-6 rounded-lg border border-mygreen">
+      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
         <h2 className="text-myblack font-bold text-2xl mb-2">Success!</h2>
         <p className="text-black text-xl mb-4">Thanks for signing up, {firstname}!</p>
         <p className="text-md mt-2">
@@ -155,7 +241,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         <div className="flex justify-center mt-4">
           <button
             onClick={redirectToProfileUnlock}
-            className="px-6 py-3 bg-myorange text-white font-bold text-md rounded-md hover:bg-myorange/80 transition-colors"
+            className="px-6 py-3 bg-cyan-700 text-white font-bold text-md rounded-md hover:bg-cyan-600 transition-colors"
           >
             Unlock My Profile
           </button>
@@ -170,10 +256,15 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
+          <label htmlFor="firstname" className="block text-sm font-medium text-mydarkgrey mb-1">
+            First Name
+          </label>
           <input
             type="text"
+            id="firstname"
             name="firstname"
             placeholder="First name"
+            autoComplete="off"
             value={firstname}
             onChange={(e) => setFirstname(e.target.value)}
             className={classNames(
@@ -187,10 +278,15 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
+          <label htmlFor="email" className="block text-sm font-medium text-mydarkgrey mb-1">
+            Email Address
+          </label>
           <input
             type="email"
+            id="email"
             name="email"
             placeholder="Email address"
+            autoComplete="off"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={classNames(
@@ -204,10 +300,15 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
+          <label htmlFor="codeword" className="block text-sm font-medium text-mydarkgrey mb-1">
+            Code Word
+          </label>
           <input
             type="password"
+            id="codeword"
             name="codeword"
-            placeholder="Choose a code word to protect your account"
+            placeholder="Choose a code word"
+            autoComplete="new-password"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
             className={classNames(
@@ -283,8 +384,8 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             disabled={$loading}
             className={classNames(
               "w-full px-4 py-2 text-sm font-bold rounded-md shadow-sm",
-              "bg-myorange text-white hover:bg-myorange/80",
-              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myorange",
+              "bg-cyan-700 text-white hover:bg-cyan-600",
+              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-700",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >
@@ -300,13 +401,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             </p>
           </div>
         )}
-
-        <p className="text-xs text-mydarkgrey text-center mt-4">
-          By signing up, you agree to receive updates based on your chosen preferences.{" "}
-          <a href="/concierge/profile" className="text-myblue hover:text-black underline">
-            Manage preferences
-          </a>
-        </p>
       </form>
     </div>
   );

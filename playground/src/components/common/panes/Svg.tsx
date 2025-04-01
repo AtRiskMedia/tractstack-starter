@@ -25,7 +25,7 @@ export const Svg = ({
       viewBox={`0 0 ${shapeData.viewBox[0]} ${shapeData.viewBox[1]}`}
       className={`svg svg__${shapeName} svg__${shapeName}--${viewportKey}`}
     >
-      <desc id="desc">decorative background</desc>
+      <desc>decorative background</desc>
       <g>
         <path d={shapeData.path} />
       </g>

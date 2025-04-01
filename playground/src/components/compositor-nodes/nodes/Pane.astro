@@ -59,15 +59,13 @@ const contentStyles = getCtx().getNodeStringStyles(nodeId, `auto`) + "; grid-are
     </div>
   ) : (
     <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
-      <div id={slug}>
-        <div id={getCtx().getNodeSlug(nodeId)} class={wrapperClasses}>
-          <div class={contentClasses} style={contentStyles}>
-            {getCtx()
-              .getChildNodeIDs(nodeId)
-              .map((childId: string) => (
-                <Node nodeId={childId} />
-              ))}
-          </div>
+      <div id={slug} class={wrapperClasses}>
+        <div class={contentClasses} style={contentStyles}>
+          {getCtx()
+            .getChildNodeIDs(nodeId)
+            .map((childId: string) => (
+              <Node nodeId={childId} />
+            ))}
         </div>
       </div>
     </div>

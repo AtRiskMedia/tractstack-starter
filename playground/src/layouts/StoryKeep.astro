@@ -37,8 +37,14 @@ const buildVersion = (() => {
   if (pubDatetime) return pubDatetime.getTime();
   return Date.now();
 })();
-const socialImageWithVersion = `${defaultSocialImageURL}?v=${buildVersion}`;
-const socialLogoWithVersion = `${defaultSocialLogoURL}?v=${buildVersion}`;
+const socialImageWithVersion = joinUrlPaths(
+  config?.init?.SITE_URL || ``,
+  `${defaultSocialImageURL}?v=${buildVersion}`
+);
+const socialLogoWithVersion = joinUrlPaths(
+  config?.init?.SITE_URL || ``,
+  `${defaultSocialLogoURL}?v=${buildVersion}`
+);
 const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics(context);
@@ -77,7 +83,7 @@ const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalyt
     <meta property="twitter:url" content={fullCanonicalUrl} />
     <meta property="twitter:title" content={defaultSocialTitle} />
     <meta property="twitter:description" content={defaultSocialDesc} />
-    <meta property="twitter:image" content={defaultSocialLogoURL} />
+    <meta property="twitter:image" content={socialImageWithVersion} />
 
     <!-- Article Published/Modified time -->
     {
