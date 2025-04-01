@@ -16,7 +16,8 @@ interface Persona {
 }
 
 // Extract and type the contactPersona array from the JSON
-const contactPersona: Persona[] = (contactPersonaData as { contactPersona: Persona[] }).contactPersona;
+const contactPersona: Persona[] = (contactPersonaData as { contactPersona: Persona[] })
+  .contactPersona;
 
 export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const [submitted, setSubmitted] = useState(false);
@@ -187,6 +188,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             id="firstname"
             name="firstname"
             placeholder="First name"
+            autoComplete="off"
             value={firstname}
             onChange={(e) => setFirstname(e.target.value)}
             className={classNames(
@@ -208,6 +210,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             id="email"
             name="email"
             placeholder="Email address"
+            autoComplete="off"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={classNames(
@@ -229,6 +232,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             id="codeword"
             name="codeword"
             placeholder="Choose a code word"
+            autoComplete="new-password"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
             className={classNames(
@@ -321,7 +325,6 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             </p>
           </div>
         )}
-
       </form>
     </div>
   );
