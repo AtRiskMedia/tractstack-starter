@@ -4,7 +4,7 @@ import { Listbox, Transition } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { classNames } from "@/utils/common/helpers";
 import { auth, loading, error, success, profile } from "@/store/auth";
-import contactPersonaData from "../../../../config/contactPersona.json"; // Adjust path if needed
+import contactPersonaData from "../../../../config/contactPersona.json";
 import type { SignupProps } from "@/types";
 
 // Define the Persona interface based on contactPersona.json
@@ -34,6 +34,66 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
   const $loading = useStore(loading);
   const $success = useStore(success);
+  const $auth = useStore(auth);
+  const $profile = useStore(profile);
+
+  // Check for encrypted credentials and try to restore profile
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      // If we have encrypted credentials but no unlocked profile, try to unlock
+      if ($auth.encryptedEmail && $auth.encryptedCode && !$auth.unlockedProfile) {
+        try {
+          // Try to unlock the profile using stored credentials
+          const response = await fetch("/api/turso/unlock", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fingerprint: $auth.key,
+              encryptedEmail: $auth.encryptedEmail,
+              encryptedCode: $auth.encryptedCode,
+            }),
+          });
+
+          const result = await response.json();
+          if (result.success) {
+            // Set the profile data
+            profile.set({
+              firstname: result.data.firstname,
+              contactPersona: result.data.contactPersona,
+              email: result.data.email,
+              shortBio: result.data.shortBio,
+            });
+
+            // Update auth state
+            auth.setKey("unlockedProfile", "1");
+            auth.setKey("hasProfile", "1");
+          }
+        } catch (e) {
+          console.error("Error unlocking profile:", e);
+        }
+      }
+    };
+
+    checkExistingProfile();
+  }, [$auth.encryptedEmail, $auth.encryptedCode, $auth.unlockedProfile]);
+
+  // Initialize with existing profile data if available
+  useEffect(() => {
+    if ($profile.firstname && $profile.email) {
+      setFirstname($profile.firstname);
+      setEmail($profile.email);
+
+      // Set persona if available
+      if ($profile.contactPersona) {
+        const existingPersona = contactPersona.find((p) => p.id === $profile.contactPersona);
+        if (existingPersona) {
+          setPersonaSelected(existingPersona);
+        }
+      }
+    }
+  }, [$profile]);
 
   useEffect(() => {
     if (badSave && !emailRegistered) {
@@ -139,9 +199,25 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     }
   }
 
+  // If user already has a profile, or we have encrypted credentials, show appropriate message
+  if (($auth.hasProfile === "1" || $auth.encryptedEmail) && $profile.firstname) {
+    return (
+      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
+        <h2 className="text-myblack font-bold text-2xl mb-2">Already Signed Up</h2>
+        <p className="text-black text-xl mb-4">Welcome back, {$profile.firstname}!</p>
+        <p className="text-md mt-2">
+          <a href="/concierge/profile" className="text-myblue hover:text-black underline font-bold">
+            Manage your profile
+          </a>{" "}
+          to update your preferences.
+        </p>
+      </div>
+    );
+  }
+
   if ($success && submitted) {
     return (
-      <div className="bg-mygreen/20 p-6 rounded-lg border border-mygreen">
+      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
         <h2 className="text-myblack font-bold text-2xl mb-2">Success!</h2>
         <p className="text-black text-xl mb-4">Thanks for signing up, {firstname}!</p>
         <p className="text-md mt-2">
