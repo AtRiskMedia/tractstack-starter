@@ -3,6 +3,7 @@ import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
 import { storedDashboardAnalytics, storyfragmentAnalyticsStore } from "@/store/storykeep";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
+import { isDemoModeStore } from "@/store/storykeep.ts";
 import type { LeadMetrics } from "@/types";
 
 interface Stat {
@@ -19,6 +20,7 @@ function formatNumber(num: number): string {
 }
 
 export default function PageViewStats() {
+  const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
@@ -179,7 +181,12 @@ export default function PageViewStats() {
               {totalLeads > 0 && (
                 <button
                   onClick={downloadLeadsCSV}
-                  disabled={isDownloading}
+                  disabled={isDemoMode || isDownloading}
+                  title={isDemoMode ? `Not so fast!` : `Download leads report`}
+                  style={{
+                    textDecoration: "line-through",
+                    cursor: isDemoMode ? "not-allowed" : "pointer",
+                  }}
                   className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"
                 >
                   <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
