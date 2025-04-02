@@ -38,6 +38,7 @@ const logo = (typeof config?.init?.LOGO === "string" && config?.init?.LOGO) || "
 const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
+const isDemoMode = config?.init?.OPEN_DEMO === true;
 ---
 
 <header class="relative bg-white shadow-inner">
@@ -95,7 +96,7 @@ const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId
         ) : null
       }
       {
-        slug !== `storykeep` && (user?.isAuthenticated || user?.isOpenDemo) ? (
+        slug !== `storykeep` && (user?.isAuthenticated || isDemoMode) ? (
           <OpenStoryKeep
             slug={slug}
             isContext={isContext}

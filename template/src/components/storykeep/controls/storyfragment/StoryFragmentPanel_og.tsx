@@ -6,7 +6,7 @@ import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
-import { storyFragmentTopicsStore } from "@/store/storykeep";
+import { storyFragmentTopicsStore, isDemoModeStore } from "@/store/storykeep";
 import { StoryFragmentMode } from "@/types.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { contentMap } from "@/store/events";
@@ -36,6 +36,7 @@ const StoryFragmentOpenGraphPanel = ({
   setMode,
   config,
 }: StoryFragmentOpenGraphPanelProps) => {
+  const isDemoMode = isDemoModeStore.get();
   const [title, setTitle] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -86,7 +87,6 @@ const StoryFragmentOpenGraphPanel = ({
       const existingSlugs = (contentMap.get() as FullContentMap[])
         .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
         .map((item) => item.slug);
-      console.log(existingSlugs);
       const newSlug =
         storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
       const updatedNode = cloneDeep({
@@ -505,10 +505,14 @@ const StoryFragmentOpenGraphPanel = ({
             <textarea
               id="description"
               rows={3}
-              className="w-full rounded-md border border-gray-300 shadow-sm p-2 focus:border-myblue focus:ring-myblue"
+              className={`w-full rounded-md border border-gray-300 shadow-sm p-2 focus:border-myblue focus:ring-myblue ${
+                isDemoMode ? "opacity-75 cursor-not-allowed" : ""
+              }`}
               placeholder="Add a description for this page..."
               value={details}
               onChange={handleDescriptionChange}
+              disabled={isDemoMode}
+              title={isDemoMode ? "Description editing is disabled in demo mode" : ""}
             />
             <p className="mt-1 text-sm text-gray-500">
               This description helps with SEO and may appear in search results.
@@ -534,7 +538,8 @@ const StoryFragmentOpenGraphPanel = ({
                     />
                     <button
                       onClick={handleRemoveImage}
-                      disabled={isProcessing}
+                      disabled={isProcessing || isDemoMode}
+                      title={isDemoMode ? "Image removal is disabled in demo mode" : "Remove image"}
                       className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-mylightgrey disabled:opacity-50"
                     >
                       <XMarkIcon className="w-4 h-4 text-mydarkgrey" />
@@ -544,7 +549,10 @@ const StoryFragmentOpenGraphPanel = ({
                   <div className="flex-grow">
                     <button
                       onClick={handleUploadClick}
-                      disabled={isProcessing}
+                      disabled={isProcessing || isDemoMode}
+                      title={
+                        isDemoMode ? "Image uploads are disabled in demo mode" : "Replace image"
+                      }
                       className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
                     >
                       <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
@@ -571,6 +579,7 @@ const StoryFragmentOpenGraphPanel = ({
                 nodeId={nodeId}
                 config={config}
                 onCustomImageUpload={handleCustomImageUpload}
+                isDemoMode={isDemoMode}
               />
             ) : (
               <>
@@ -593,7 +602,10 @@ const StoryFragmentOpenGraphPanel = ({
                   <div className="flex-grow">
                     <button
                       onClick={handleUploadClick}
-                      disabled={isProcessing}
+                      disabled={isProcessing || isDemoMode}
+                      title={
+                        isDemoMode ? "Image uploads are disabled in demo mode" : "Upload image"
+                      }
                       className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
                     >
                       <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
@@ -629,7 +641,7 @@ const StoryFragmentOpenGraphPanel = ({
             )}
           </div>
 
-          {hasDescription ? (
+          {!isDemoMode && hasDescription ? (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Topics</label>
 

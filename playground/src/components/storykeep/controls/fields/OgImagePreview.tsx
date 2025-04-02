@@ -22,9 +22,15 @@ interface OgImagePreviewProps {
   nodeId: string;
   config: Config;
   onCustomImageUpload?: (path: string) => void;
+  isDemoMode?: boolean;
 }
 
-const OgImagePreview = ({ nodeId, config, onCustomImageUpload }: OgImagePreviewProps) => {
+const OgImagePreview = ({
+  nodeId,
+  config,
+  onCustomImageUpload,
+  isDemoMode,
+}: OgImagePreviewProps) => {
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const storyfragmentNode = allNodes.get(nodeId) as StoryFragmentNode;
@@ -282,7 +288,10 @@ const OgImagePreview = ({ nodeId, config, onCustomImageUpload }: OgImagePreviewP
           <div className="flex justify-between items-center">
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
+              disabled={isProcessing || isDemoMode}
+              title={
+                isDemoMode ? "Image uploads are disabled in demo mode" : "Upload a custom image"
+              }
               className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
             >
               <ArrowUpTrayIcon className="w-4 h-4 mr-1" />

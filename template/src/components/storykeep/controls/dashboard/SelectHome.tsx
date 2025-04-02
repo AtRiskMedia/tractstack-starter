@@ -3,6 +3,7 @@ import { Combobox } from "@headlessui/react";
 import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { classNames } from "@/utils/common/helpers.ts";
+import { isDemoModeStore } from "@/store/storykeep.ts";
 import type { FullContentMap, Config } from "@/types.ts";
 
 interface SelectHomeProps {
@@ -11,6 +12,7 @@ interface SelectHomeProps {
 }
 
 export default function SelectHome({ contentMap = [], config }: SelectHomeProps) {
+  const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState(false);
   const [isChangingHome, setIsChangingHome] = useState(false);
   const [selectedStoryFragment, setSelectedStoryFragment] = useState<FullContentMap | null>(null);
@@ -157,7 +159,7 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
           )}
         </div>
 
-        {!isChangingHome ? (
+        {isDemoMode ? null : !isChangingHome ? (
           <button
             onClick={() => setIsChangingHome(true)}
             className="mt-4 px-4 py-2 text-white bg-myblue rounded hover:bg-myblack"

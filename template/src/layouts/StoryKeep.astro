@@ -48,6 +48,7 @@ const socialLogoWithVersion = joinUrlPaths(
 const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics(context);
+const isDemoMode = config?.init?.OPEN_DEMO === true;
 ---
 
 <!doctype html>
@@ -153,6 +154,7 @@ const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalyt
       homeSlug={config.init.HOME_SLUG || ``}
       tractstackSlug={config.init.TRACTSTACK_HOME_SLUG || ``}
       hasAssemblyAI={!!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY}
+      isDemoMode={isDemoMode}
       client:only="react"
     />
     <ViewTransitions />
