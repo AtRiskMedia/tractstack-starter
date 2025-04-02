@@ -122,6 +122,7 @@ const ColorPickerCombo = ({
                   displayValue={(color: string) => color}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search Tailwind colors..."
+                  autoComplete="off"
                 />
                 <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />

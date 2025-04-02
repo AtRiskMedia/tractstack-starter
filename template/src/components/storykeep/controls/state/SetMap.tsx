@@ -7,6 +7,7 @@ import {
   tractstackSlugStore,
   hasAssemblyAIStore,
   storyfragmentAnalyticsStore,
+  isDemoModeStore,
 } from "@/store/storykeep.ts";
 import type { Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
 
@@ -19,6 +20,7 @@ const SetMap = (props: {
   homeSlug: string;
   tractstackSlug: string;
   hasAssemblyAI: boolean;
+  isDemoMode: boolean;
 }) => {
   const {
     payload,
@@ -29,6 +31,7 @@ const SetMap = (props: {
     homeSlug,
     tractstackSlug,
     hasAssemblyAI,
+    isDemoMode,
   } = props;
 
   useEffect(() => {
@@ -39,6 +42,7 @@ const SetMap = (props: {
     homeSlugStore.set(homeSlug);
     tractstackSlugStore.set(tractstackSlug);
     hasAssemblyAIStore.set(hasAssemblyAI);
+    isDemoModeStore.set(isDemoMode);
     if (analytics.length > 0) {
       const analyticsById = analytics.reduce(
         (acc, item) => {

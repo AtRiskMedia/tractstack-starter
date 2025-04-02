@@ -19,22 +19,19 @@ export function smoothScrollToPane(
           behavior: "smooth",
         });
       }
-    }, 100);
+    }, 0);
   }, updateInterval);
 
   return timeout;
 }
 
-// ================================================
-// Document event dispatching
-// ================================================
 export function dispatchEvent(event: CustomEvent) {
   document.dispatchEvent(event);
 }
 
-export function dispatchUpdateVideoEvent(startTime: string) {
+export function dispatchUpdateVideoEvent(startTime: string, videoId?: string) {
   const event = new CustomEvent("updateVideo", {
-    detail: { startTime },
+    detail: { startTime, videoId },
   });
   dispatchEvent(event);
 }

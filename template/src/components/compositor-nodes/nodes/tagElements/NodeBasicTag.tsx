@@ -16,7 +16,6 @@ import {
 } from "react";
 import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import { PatchOp } from "@/store/nodesHistory.ts";
 import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
 import GhostText from "./GhostText";
 
@@ -322,7 +321,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
       if (parsedNodes && parsedNodes.length > 0) {
         // Delete the existing children
-        const deletedNodes = getCtx(props).deleteChildren(nodeId);
+        getCtx(props).deleteChildren(nodeId);
 
         // Process each node to restore styling and callbacks
         parsedNodes.forEach((node: FlatNode) => {
@@ -347,44 +346,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         // Add the new node structure
         getCtx(props).addNodes(parsedNodes);
 
-        // Mark the parent pane as changed
+        // Mark the parent pane as changed - this is the correct pattern
+        // It leverages the built-in history management in modifyNodes
         const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
         if (paneNodeId) {
-          const paneNode = {
-            ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
-            isChanged: true,
-          } as PaneNode;
-          getCtx(props).modifyNodes([paneNode]);
+          const paneNode = cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)) as PaneNode;
+          getCtx(props).modifyNodes([{ ...paneNode, isChanged: true }]);
         }
-
-        // Add undo/redo capability
-        getCtx(props).history.addPatch({
-          op: PatchOp.REPLACE,
-          undo: (ctx) => {
-            ctx.deleteChildren(nodeId);
-            ctx.addNodes(deletedNodes);
-            const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
-            if (paneNodeId) {
-              const paneNode = {
-                ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
-                isChanged: true,
-              } as PaneNode;
-              getCtx(props).modifyNodes([paneNode]);
-            }
-          },
-          redo: (ctx) => {
-            ctx.deleteChildren(nodeId);
-            ctx.addNodes(parsedNodes);
-            const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
-            if (paneNodeId) {
-              const paneNode = {
-                ...cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)),
-                isChanged: true,
-              } as PaneNode;
-              getCtx(props).modifyNodes([paneNode]);
-            }
-          },
-        });
       }
 
       // Show ghost text after editing is complete

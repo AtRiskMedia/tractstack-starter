@@ -1,0 +1,66 @@
+---
+import BunnyVideo from "@/components/frontend/widgets/BunnyVideo.astro";
+import type { CodeHookPayload, VideoMoment } from "@/types";
+
+export interface Props {
+  options?: CodeHookPayload;
+}
+
+const { options } = Astro.props;
+
+interface ParsedOptions {
+  videoUrl: string;
+  title: string;
+  chapters: VideoMoment[];
+  description?: string;
+}
+
+// Parse the options from the CodeHookPayload
+let parsedOptions: ParsedOptions;
+try {
+  parsedOptions = JSON.parse(options?.params?.options || "{}") as ParsedOptions;
+  // Ensure default values for missing properties
+  parsedOptions = {
+    videoUrl: parsedOptions.videoUrl || "",
+    title: parsedOptions.title || "Video",
+    chapters: Array.isArray(parsedOptions.chapters) ? parsedOptions.chapters : [],
+    description: parsedOptions.description || "",
+  };
+} catch (e) {
+  console.error("Invalid options", e);
+  parsedOptions = { videoUrl: "", title: "Video", chapters: [], description: "" };
+}
+
+const videoUrl = parsedOptions.videoUrl;
+const title = parsedOptions.title;
+const chapters = parsedOptions.chapters;
+const description = parsedOptions.description;
+
+// Validate chapters if present
+const validChapters: VideoMoment[] = chapters.filter(
+  (chapter: VideoMoment) =>
+    typeof chapter.startTime === "number" &&
+    typeof chapter.endTime === "number" &&
+    typeof chapter.title === "string"
+);
+---
+
+<div class="py-1.5 px-2.5 mb-8 md:px-3.5 md:mb-10 max-w-7xl mx-auto">
+  {
+    videoUrl ? (
+      <BunnyVideo
+        videoUrl={videoUrl}
+        title={title}
+        chapters={validChapters}
+        description={description}
+      />
+    ) : (
+      <div class="w-full aspect-video bg-gray-100 flex items-center justify-center text-center p-4">
+        <div>
+          <p class="text-mylightgrey mb-2">No video URL configured</p>
+          <p class="text-xs text-mygrey">Configure this component with a valid Bunny Stream URL</p>
+        </div>
+      </div>
+    )
+  }
+</div>

@@ -13,6 +13,7 @@ import {
   viewportKeyStore,
   viewportSetStore,
   settingsPanelStore,
+  isDemoModeStore,
 } from "@/store/storykeep.ts";
 import { contentMap } from "@/store/events.ts";
 import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
@@ -39,6 +40,7 @@ const StoryKeepHeader = ({
   nodeId,
   isContext = false,
 }: StoryKeepHeaderProps) => {
+  const isDemoMode = isDemoModeStore.get();
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
   const $viewportKey = useStore(viewportKeyStore);
@@ -251,6 +253,12 @@ const StoryKeepHeader = ({
             <button
               onClick={handleSave}
               className="bg-white text-myblue hover:underline font-action font-bold"
+              disabled={isDemoMode}
+              title={isDemoMode ? `Demo mode. Changes cannot be saved.` : `Save changes`}
+              style={{
+                textDecoration: "line-through",
+                cursor: isDemoMode ? "not-allowed" : "pointer",
+              }}
             >
               Save
             </button>
@@ -301,12 +309,21 @@ const StoryKeepHeader = ({
         </div>
       )}
 
-      {showSaveModal && (
+      {!isDemoMode && showSaveModal && (
         <SaveModal
           nodeId={nodeId}
           onClose={() => setShowSaveModal(false)}
           onSaveComplete={handleSaveComplete}
         />
+      )}
+
+      {isDemoMode && (
+        <div
+          className="h-9 px-3 bg-myorange/20 text-myblack text-md rounded shadow-sm border border-myorange border-dotted flex items-center gap-1"
+          title="No changes will be saved. Reload to reset and start over."
+        >
+          <span className="font-bold">Demo Mode</span>
+        </div>
       )}
     </div>
   );

@@ -107,9 +107,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // **Step 5: Authentication and authorization with tenant context**
+  const config = await getConfig(context.locals.tenant.paths.configPath);
+  const tenantValidation = await validateConfig(config);
+
   const auth = isAuthenticated(context);
   const isAdminUser = isAdmin(context);
-  const isOpenDemo = isOpenDemoMode(context);
+  const isOpenDemo = isOpenDemoMode(context, config);
 
   context.locals.user = {
     isAuthenticated: auth,
@@ -118,10 +121,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   } as AuthStatus;
 
   // **Step 6: Config validation with tenant-specific config path**
-  const config = await getConfig(context.locals.tenant.paths.configPath);
-
-  const tenantValidation = await validateConfig(config);
-
   const hasPassword = isMultiTenant
     ? !!(config?.init?.ADMIN_PASSWORD && config?.init?.EDITOR_PASSWORD)
     : !!(import.meta.env.PRIVATE_ADMIN_PASSWORD && import.meta.env.PRIVATE_EDITOR_PASSWORD);
@@ -138,34 +137,51 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const adminProtectedRoutes = [
     "/storykeep/settings",
     ...(isInitialized ? ["/storykeep/init"] : []),
+    "/api/concierge/publish",
+    "/api/concierge/status",
   ];
 
   const protectedRoutes = [
     "/*/edit",
     "/context/*/edit",
     "/storykeep",
-    "/storykeep/*",
-    "/api/fs/update",
+    "/api/aai/askLemur",
+    "/api/fs/writeAppWhitelist",
+    "/api/fs/deleteImage",
     "/api/fs/saveImage",
+    "/api/fs/saveOgImage",
+    "/api/fs/deleteOgImage",
     "/api/fs/saveBrandImage",
-    "/api/fs/updateCss",
+    "/api/fs/storykeepWhitelist",
     "/api/fs/generateTailwindWhitelist",
-    "/api/fs/generateTailwind",
-    "/api/turso/initializeContent",
-    "/api/concierge/status",
-    "/api/concierge/publish",
-    "/api/turso/paneDesigns",
-    "/api/turso/execute",
-    "/api/turso/uniqueTailwindClasses",
+    "/api/fs/update",
+    "/api/fs/updateCss",
+    "/api/tailwind/generate",
+    "/api/transcribe/dashboard",
+    "/api/transcribe/stories",
+    "/api/transcribe/transcript",
+    "/api/transcribe/transcript_override",
+    "/api/turso/executeQueries",
+    "/api/turso/upsertFile",
+    "/api/turso/upsertPane",
+    "/api/turso/upsertStoryFragment",
+    "/api/turso/upsertMenu",
+    "/api/turso/upsertResource",
+    "/api/turso/upsertTractStack",
+    "/api/turso/upsertBelief",
+    "/api/turso/upsertFileNode",
+    "/api/turso/upsertPaneNode",
+    "/api/turso/upsertStoryFragmentNode",
+    "/api/turso/upsertMenuNode",
+    "/api/turso/upsertResourceNode",
+    "/api/turso/upsertTractStackNode",
+    "/api/turso/upsertBeliefNode",
+    "/api/turso/upsertTopic",
+    "/api/turso/linkTopicToStoryFragment",
+    "/api/turso/unlinkTopicFromStoryFragment",
   ];
 
-  const openProtectedRoutes = [
-    "/*/edit",
-    "/context/*/edit",
-    "/storykeep",
-    "/storykeep/create/*",
-    "/api/turso/paneDesigns",
-  ];
+  const openProtectedRoutes = ["/*/edit", "/context/*/edit", "/storykeep", "/api/aai/askLemur"];
 
   // Allow login/logout routes
   if (["/storykeep/login", "/storykeep/logout"].includes(context.url.pathname)) {
@@ -214,7 +230,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
         headers: { "Content-Type": "application/json" },
       });
     }
-    return context.redirect("/");
+    return context.redirect(
+      `/storykeep/login?redirect=${context.url.pathname}${forceLogin ? "&force=true" : ""}`
+    );
   }
 
   if (!auth && isProtectedRoute) {

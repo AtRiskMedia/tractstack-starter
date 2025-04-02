@@ -17,6 +17,7 @@ const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
 const config = await getConfig(Astro.locals.tenant?.paths.configPath);
 const validation = await validateConfig(config);
+const isDemoMode = config?.init?.OPEN_DEMO === true;
 const isPreviewMode = !validation.capabilities.hasTurso || !validation.capabilities.hasConcierge;
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
@@ -33,14 +34,14 @@ if (!payload) {
 }
 
 const links = [];
-if (user?.isAdmin || isPreviewMode)
+if ((user?.isAdmin || isPreviewMode) && !isDemoMode)
   links.unshift({
     name: "Advanced Setup",
     description: "Your Story Keep Settings",
     featured: true,
     actionLisp: "(goto (storykeep settings))",
   });
-if (!user?.isAuthenticated && !isPreviewMode)
+if ((!user?.isAuthenticated && !isPreviewMode) || isDemoMode)
   links.unshift({
     name: "Login",
     description: "Enter your Story Keep",

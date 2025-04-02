@@ -7,6 +7,7 @@ import { lispLexer } from "@/utils/concierge/lispLexer";
 import { preParseAction } from "@/utils/concierge/preParse_Action";
 import { preParseBunny } from "@/utils/concierge/preParse_Bunny";
 import ActionBuilderField from "../fields/ActionBuilderField";
+import BunnyMomentSelector from "../fields/BunnyMomentSelector";
 import { GOTO_TARGETS } from "@/constants";
 import type { FlatNode, Config } from "@/types";
 
@@ -22,6 +23,7 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
 
   const [isInitialized, setIsInitialized] = useState(false);
   const [callbackPayload, setCallbackPayload] = useState("");
+  const [actionType, setActionType] = useState<"goto" | "bunnyMoment">("goto");
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
@@ -31,9 +33,10 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
   const slug = storyFragment && "slug" in storyFragment ? (storyFragment.slug as string) : "";
   const isContext = ctx.getIsContextPane(markdownId);
 
-  // Initialize state with current node data
   useEffect(() => {
-    setCallbackPayload(node.buttonPayload?.callbackPayload || "");
+    const currentPayload = node.buttonPayload?.callbackPayload || "";
+    setCallbackPayload(currentPayload);
+    setActionType(currentPayload.startsWith("(bunnyMoment") ? "bunnyMoment" : "goto");
     setIsInitialized(true);
   }, [node]);
 
@@ -43,19 +46,26 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
       if (!linkNode || !markdownId) return;
 
       const lexedPayload = lispLexer(newCallbackPayload);
-      const targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
+      let targetUrl = null;
+      if (newCallbackPayload.startsWith("(goto")) {
+        targetUrl = lexedPayload && preParseAction(lexedPayload, slug, isContext, config);
+      }
       const bunnyPayload = lexedPayload && preParseBunny(lexedPayload);
       const isExternalUrl = typeof targetUrl === "string" && targetUrl.startsWith("https://");
-
-      // Preserve existing button payload properties or initialize new ones
       const existingButtonPayload = linkNode.buttonPayload || {
         buttonClasses: {},
         buttonHoverClasses: {},
         callbackPayload: "",
       };
 
-      linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
-      linkNode.tagName = !targetUrl || bunnyPayload ? "button" : "a";
+      if (newCallbackPayload.startsWith("(bunnyMoment")) {
+        linkNode.tagName = "button";
+        linkNode.href = "#";
+      } else {
+        linkNode.href = isExternalUrl ? targetUrl : targetUrl || "#";
+        linkNode.tagName = !targetUrl || bunnyPayload ? "button" : "a";
+      }
+
       linkNode.buttonPayload = {
         ...existingButtonPayload,
         callbackPayload: newCallbackPayload,
@@ -71,9 +81,16 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
     }
   };
 
-  // Process callback payload changes
   useEffect(() => {
     if (!isInitialized) return;
+
+    if (callbackPayload.startsWith("(bunnyMoment")) {
+      const match = callbackPayload.match(/\(bunnyMoment\s+\(\s*([^\s]+)\s+(\d+)\s*\)\)/);
+      if (match && match[1] && match[2]) {
+        updateNode(callbackPayload);
+      }
+      return;
+    }
 
     const match = callbackPayload.match(/\(goto\s+\(([^)]+)\)/);
     if (!match) return;
@@ -108,7 +125,15 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
 
   const handleChange = (value: string) => {
     setCallbackPayload(value);
-    //setTimeout(() => settingsPanelStore.set(null), 500);
+  };
+
+  const handleActionTypeChange = (type: "goto" | "bunnyMoment") => {
+    setActionType(type);
+    if (type === "bunnyMoment") {
+      setCallbackPayload("(bunnyMoment ( ))");
+    } else {
+      setCallbackPayload("");
+    }
   };
 
   const handleCloseConfig = () => {
@@ -117,6 +142,23 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
       action: "style-link",
       expanded: true,
     });
+  };
+
+  const renderActionBuilder = () => {
+    switch (actionType) {
+      case "bunnyMoment":
+        return <BunnyMomentSelector value={callbackPayload} onChange={handleChange} />;
+      case "goto":
+      default:
+        return (
+          <ActionBuilderField
+            value={callbackPayload}
+            onChange={handleChange}
+            slug={slug}
+            contentMap={contentMap.get()}
+          />
+        );
+    }
   };
 
   return (
@@ -133,16 +175,30 @@ const StyleLinkConfigPanel = ({ node, config }: StyleLinkConfigPanelProps) => {
           </button>
         </div>
 
+        <div className="space-y-2 mb-4">
+          <label className="block text-sm text-gray-700">Action Type</label>
+          <select
+            value={actionType}
+            onChange={(e) => handleActionTypeChange(e.target.value as "goto" | "bunnyMoment")}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+          >
+            <option value="goto">Navigation Action</option>
+            <option value="bunnyMoment">Video Moment Action</option>
+          </select>
+          <p className="text-sm text-gray-500 mt-1">
+            {actionType === "goto"
+              ? "Create a link to navigate to another page or section"
+              : "Jump to a specific moment in a video on this page"}
+          </p>
+        </div>
+
         <div className="space-y-2">
           <div className="relative min-h-[400px] max-h-[60vh] overflow-y-auto">
             <div className="absolute inset-x-0">
-              <label className="block text-sm text-mydarkgrey mb-2">Callback Payload</label>
-              <ActionBuilderField
-                value={callbackPayload}
-                onChange={handleChange}
-                slug={slug}
-                contentMap={contentMap.get()}
-              />
+              <label className="block text-sm text-mydarkgrey mb-2">
+                {actionType === "goto" ? "Callback Payload" : "Video Moment Settings"}
+              </label>
+              {renderActionBuilder()}
             </div>
           </div>
         </div>

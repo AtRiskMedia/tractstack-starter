@@ -1,6 +1,7 @@
 import PuzzlePieceIcon from "@heroicons/react/24/outline/PuzzlePieceIcon";
 import DocumentDuplicateIcon from "@heroicons/react/24/outline/DocumentDuplicateIcon";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
+import { isDemoModeStore } from "@/store/storykeep.ts";
 
 const contentTypes = {
   image: {
@@ -51,6 +52,9 @@ const magicPaths = {
 };
 
 const ManageContent = () => {
+  const isDemoMode = isDemoModeStore.get();
+  if (isDemoMode) return null;
+
   const buttonClass =
     "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap";
 

@@ -5,6 +5,7 @@ import type { FullContentMap, ResourceNode, CodeHookPayload } from "@/types";
 import CustomHero from "./CustomHero.astro";
 import FeaturedContent from "@/components/codehooks/FeaturedContent.astro";
 import ListContent from "@/components/codehooks/ListContent.astro";
+import BunnyVideoWrapper from "@/components/codehooks/BunnyVideoWrapper.astro";
 
 export interface Props {
   target: string;
@@ -21,6 +22,7 @@ export const components = {
   "custom-hero": true,
   "featured-content": true,
   "list-content": true,
+  "bunny-video": true,
 };
 
 // if passing props:
@@ -37,6 +39,8 @@ export const components = {
     />
   ) : target === "featured-content" ? (
     <FeaturedContent options={options} contentMap={contentMap} />
+  ) : target === "bunny-video" ? (
+    <BunnyVideoWrapper options={options} />
   ) : target === "custom-hero" ? (
     <CustomHero />
   ) : (
