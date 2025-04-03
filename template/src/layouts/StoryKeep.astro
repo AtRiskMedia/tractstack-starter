@@ -5,6 +5,7 @@ import SetMap from "@/components/storykeep/controls/state/SetMap.tsx";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap, computeStoryfragmentAnalytics } from "@/utils/db/turso.ts";
 import { joinUrlPaths } from "@/utils/common/helpers";
+import { isOpenDemoMode } from "@/utils/core/auth.ts";
 import type { Theme, FullContentMap, Config, StoryfragmentAnalytics } from "@/types.ts";
 
 export interface Props {
@@ -48,7 +49,7 @@ const socialLogoWithVersion = joinUrlPaths(
 const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics(context);
-const isDemoMode = config?.init?.OPEN_DEMO === true;
+const isDemoMode = isOpenDemoMode(Astro, config);
 ---
 
 <!doctype html>

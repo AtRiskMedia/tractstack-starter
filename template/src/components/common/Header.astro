@@ -6,6 +6,7 @@ import { RememberMe } from "./state/RememberMe";
 import { OpenStoryKeep } from "./nav/OpenStoryKeep";
 import { ConfigureStoryKeep } from "./nav/ConfigureStoryKeep";
 import ImpressionWrapper from "./widgets/ImpressionWrapper";
+import { isOpenDemoMode } from "@/utils/core/auth.ts";
 import type { AuthStatus, MenuDatum, ImpressionDatum, Config } from "@/types";
 
 export interface Props {
@@ -38,7 +39,7 @@ const logo = (typeof config?.init?.LOGO === "string" && config?.init?.LOGO) || "
 const wordmark =
   (typeof config?.init?.WORDMARK === "string" && config?.init?.WORDMARK) || "/wordmark.svg";
 const menuPayload = typeof menuId === `string` ? getCtx().getMenuNodeById(menuId) : menu;
-const isDemoMode = config?.init?.OPEN_DEMO === true;
+const isDemoMode = isOpenDemoMode(Astro, config);
 ---
 
 <header class="relative bg-white shadow-inner">

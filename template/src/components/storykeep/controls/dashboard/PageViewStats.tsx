@@ -21,6 +21,7 @@ function formatNumber(num: number): string {
 
 export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
+  console.log(isDemoMode);
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
@@ -184,7 +185,7 @@ export default function PageViewStats() {
                   disabled={isDemoMode || isDownloading}
                   title={isDemoMode ? `Not so fast!` : `Download leads report`}
                   style={{
-                    textDecoration: "line-through",
+                    textDecoration: isDemoMode ? "line-through" : "none",
                     cursor: isDemoMode ? "not-allowed" : "pointer",
                   }}
                   className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"

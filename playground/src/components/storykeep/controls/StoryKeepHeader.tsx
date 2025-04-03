@@ -256,7 +256,7 @@ const StoryKeepHeader = ({
               disabled={isDemoMode}
               title={isDemoMode ? `Demo mode. Changes cannot be saved.` : `Save changes`}
               style={{
-                textDecoration: "line-through",
+                textDecoration: isDemoMode ? "line-through" : "none",
                 cursor: isDemoMode ? "not-allowed" : "pointer",
               }}
             >
