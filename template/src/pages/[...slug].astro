@@ -102,6 +102,7 @@ const impressionNodes = getCtx().getImpressionNodesForPanes(
   title={storyfragmentNode.title}
   pubDatetime={storyfragmentNode.created || new Date()}
   modDatetime={storyfragmentNode.changed || new Date()}
+  canonicalURL={Astro.url.pathname}
   ogImage={typeof storyfragmentNode?.socialImagePath === `string`
     ? storyfragmentNode.socialImagePath
     : `/images/og/${storyfragmentNode.id}.png`}

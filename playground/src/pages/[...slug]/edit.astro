@@ -26,7 +26,7 @@ const validation = await validateConfig(config);
 if ((!validation.isValid && slug !== `hello`) || !config) {
   return Astro.redirect("/storykeep/init");
 }
-const canonicalURL = `/${slug}`;
+const canonicalURL = slug === config.init?.HOME_SLUG ? "/" : `/${slug}`;
 
 let loadData: LoadData = {};
 
