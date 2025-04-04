@@ -211,7 +211,7 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
         }
       }
 
-      let startSeconds = 0;
+      let startSeconds = -1;
       if (t) {
         const match = t.match(/^(\d+)s$/);
         startSeconds = match && match[1] ? parseInt(match[1]) : 0;
@@ -222,7 +222,7 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
         this.currentIframe &&
         this.player &&
         typeof this.player.setCurrentTime === "function" &&
-        startSeconds > 0
+        startSeconds >= 0
       ) {
         try {
           // Seek to the specified time
@@ -266,14 +266,14 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
       iframe.id = iframeId;
 
       const params = new URLSearchParams({
-        autoplay: startSeconds > 0 ? "1" : "0",
+        autoplay: startSeconds >= 0 ? "1" : "0",
         loop: "false",
         muted: "false",
         preload: "true",
         responsive: "true",
       });
 
-      if (startSeconds > 0) {
+      if (startSeconds >= 0) {
         params.set("t", startSeconds.toString());
       }
 
@@ -307,7 +307,7 @@ const serializedChapters = hasChapters ? JSON.stringify(chapters) : "";
         }, 100); // Give a small delay to ensure iframe is fully loaded
 
         // Scroll into view when loading a new video with a timestamp
-        if (startSeconds > 0 && this.videoContainer) {
+        if (startSeconds >= 0 && this.videoContainer) {
           setTimeout(() => {
             this.videoContainer?.scrollIntoView({ behavior: "smooth", block: "center" });
           }, 0);
