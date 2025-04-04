@@ -1,4 +1,4 @@
-import type { BaseNode, FlatNode, StoryFragmentNode, TemplateNode, ToolAddMode } from "@/types.ts";
+import { ulid } from "ulid";
 import {
   TemplateBeliefNode,
   TemplateBunnyNode,
@@ -13,35 +13,49 @@ import {
   TemplateYoutubeNode,
 } from "@/utils/TemplateNodes.ts";
 import { getCtx, NodesContext } from "@/store/nodes.ts";
+import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { NodeTagProps } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag.tsx";
-import { ulid } from "ulid";
+import type { BaseNode, FlatNode, StoryFragmentNode, TemplateNode, ToolAddMode } from "@/types.ts";
 
 export const getTemplateNode = (value: ToolAddMode): TemplateNode => {
+  let templateNode: TemplateNode;
   switch (value) {
     case "h2":
-      return TemplateH2Node;
+      templateNode = cloneDeep(TemplateH2Node);
+      break;
     case "h3":
-      return TemplateH3Node;
+      templateNode = cloneDeep(TemplateH3Node);
+      break;
     case "h4":
-      return TemplateH4Node;
+      templateNode = cloneDeep(TemplateH4Node);
+      break;
     case "img":
-      return TemplateImgNode;
+      templateNode = cloneDeep(TemplateImgNode);
+      break;
     case "toggle":
-      return TemplateToggleNode;
+      templateNode = cloneDeep(TemplateToggleNode);
+      break;
     case "yt":
-      return TemplateYoutubeNode;
+      templateNode = cloneDeep(TemplateYoutubeNode);
+      break;
     case "belief":
-      return TemplateBeliefNode;
+      templateNode = cloneDeep(TemplateBeliefNode);
+      break;
     case "bunny":
-      return TemplateBunnyNode;
+      templateNode = cloneDeep(TemplateBunnyNode);
+      break;
     case "signup":
-      return TemplateEmailSignUpNode;
+      templateNode = cloneDeep(TemplateEmailSignUpNode);
+      break;
     case "identify":
-      return TemplateIdentifyAsNode;
+      templateNode = cloneDeep(TemplateIdentifyAsNode);
+      break;
     case "p":
     default:
-      return TemplatePNode;
+      templateNode = cloneDeep(TemplatePNode);
+      break;
   }
+  return templateNode;
 };
 
 const forbiddenEditTags = new Set<string>(["em", "strong", "ol", "ul"]);
