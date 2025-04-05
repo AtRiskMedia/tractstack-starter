@@ -14,7 +14,7 @@ import {
   useState,
   createElement,
 } from "react";
-import { canEditText, parseMarkdownToNodes } from "@/utils/common/nodesHelper.ts";
+import { canEditText, processRichTextToNodes } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
 import GhostText from "./GhostText";
@@ -137,7 +137,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       selection.removeAllRanges();
       selection.addRange(range);
     } catch (e) {
-      console.log("Error restoring cursor position:", e);
+      console.error("Error restoring cursor position:", e);
       // Silently fail if there's an issue with setting the selection
     }
 
@@ -178,105 +178,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     }
   };
 
-  const getNodeText = (node: FlatNode, ctx = getCtx(props)): string => {
-    if (node.copy) return node.copy;
-
-    // Get text from child nodes
-    const childIds = ctx.getChildNodeIDs(node.id);
-    if (childIds.length === 0) return "";
-
-    return childIds
-      .map((id) => {
-        const childNode = ctx.allNodes.get().get(id) as FlatNode;
-        if (!childNode) return "";
-        return getNodeText(childNode, ctx);
-      })
-      .join(" ")
-      .trim();
-  };
-
-  const findMatchingNode = (newNode: FlatNode, originalNodes: FlatNode[]): FlatNode | undefined => {
-    // Handle links with href
-    if (newNode.tagName === "a" && newNode.href) {
-      // First try to match by href exactly
-      const hrefMatch = originalNodes.find(
-        (node) => node.tagName === "a" && node.href === newNode.href
-      );
-      if (hrefMatch) return hrefMatch;
-
-      // Try to match by domain
-      const partialMatch = originalNodes.find((node) => {
-        if (node.tagName !== "a" || !node.href || !newNode.href) return false;
-
-        try {
-          const origDomain = new URL(node.href).hostname;
-          const newDomain = new URL(newNode.href).hostname;
-          return origDomain === newDomain;
-        } catch {
-          return false;
-        }
-      });
-
-      if (partialMatch) return partialMatch;
-    }
-
-    // Handle buttons - for buttons we need to compare by content and position
-    if (newNode.tagName === "button") {
-      // Get the text content of the new button
-      const newText = getNodeText(newNode);
-
-      // Find buttons in the original nodes and compare their text
-      const buttonMatches = originalNodes.filter((node) => node.tagName === "button");
-
-      for (const button of buttonMatches) {
-        const buttonText = getNodeText(button);
-
-        // Text content can change slightly, so use similarity instead of exact match
-        // If one text contains the other, or they're at least 70% similar, consider it a match
-        if (
-          buttonText.includes(newText) ||
-          newText.includes(buttonText) ||
-          calculateSimilarity(buttonText, newText) > 0.7
-        ) {
-          return button;
-        }
-      }
-
-      // If still no match but we only have one button in the original content
-      // and one in the new content, assume they're the same
-      if (
-        buttonMatches.length === 1 &&
-        originalNodes.filter((n) => n.tagName === "button").length === 1
-      ) {
-        return buttonMatches[0];
-      }
-    }
-
-    return undefined;
-  };
-
-  // Helper function to calculate text similarity (0-1 where 1 is identical)
-  const calculateSimilarity = (a: string, b: string): number => {
-    if (a === b) return 1.0;
-    if (a.length === 0 || b.length === 0) return 0.0;
-
-    // Simple similarity - count common characters
-    const aChars = new Set(a.toLowerCase());
-    const bChars = new Set(b.toLowerCase());
-
-    const intersection = new Set([...aChars].filter((x) => bChars.has(x)));
-    const union = new Set([...aChars, ...bChars]);
-
-    return intersection.size / union.size;
-  };
-
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
-    // Skip processing if not in edit mode or element is a button
-    if (!canEditText(props) || e.target.tagName === "BUTTON") {
-      return;
-    }
-
-    // Skip if double-clicked (handled separately) or no edit intent
+    if (!canEditText(props) || e.target.tagName === "BUTTON") return;
     if (doubleClickedRef.current || !editIntentRef.current) {
       doubleClickedRef.current = false;
       editIntentRef.current = false;
@@ -284,20 +187,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     }
 
     const node = getCtx(props).allNodes.get().get(nodeId);
-
-    // Handle content processing regardless of focus transition state
     const newHTML = e.currentTarget.innerHTML;
 
-    // Keep edit intent if we're transitioning to ghost text
-    if (!focusTransitionRef.current) {
-      editIntentRef.current = false;
-    }
-
-    // No change, no need to process content
+    if (!focusTransitionRef.current) editIntentRef.current = false;
     if (newHTML === originalTextRef.current) {
       getCtx(props).notifyNode(node?.parentId || "");
-
-      // Only show ghost text if not already in a focus transition
       if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
         setShowGhostText(true);
       }
@@ -305,49 +199,24 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     }
 
     try {
-      // Get all interactive elements from the original structure before parsing
-      const originalNodes = getCtx(props).getNodesRecursively(node);
-      const originalInteractiveNodes = originalNodes
+      const originalNodes = getCtx(props)
+        .getNodesRecursively(node)
         .filter(
-          (childNode) =>
-            "tagName" in childNode &&
-            typeof childNode.tagName === `string` &&
-            [`a`, `button`].includes(childNode.tagName)
-        )
-        .map((childNode) => childNode as FlatNode);
+          (childNode): childNode is FlatNode =>
+            "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
+        ) as FlatNode[];
 
-      // Parse the new HTML
-      const parsedNodes = parseMarkdownToNodes(newHTML, nodeId);
+      const parsedNodes = processRichTextToNodes(
+        newHTML,
+        nodeId,
+        originalNodes,
+        handleInsertSignal
+      );
 
-      if (parsedNodes && parsedNodes.length > 0) {
-        // Delete the existing children
+      if (parsedNodes.length > 0) {
         getCtx(props).deleteChildren(nodeId);
-
-        // Process each node to restore styling and callbacks
-        parsedNodes.forEach((node: FlatNode) => {
-          if ([`a`, `button`].includes(node.tagName)) {
-            // Try to find a matching original interactive element
-            const matchingOriginalNode = findMatchingNode(node, originalInteractiveNodes);
-
-            if (matchingOriginalNode) {
-              // Preserve buttonPayload for styling and functionality
-              node.buttonPayload = matchingOriginalNode.buttonPayload;
-              // Make sure href is preserved for <a> tags
-              if (node.tagName === "a" && matchingOriginalNode.href) {
-                node.href = matchingOriginalNode.href;
-              }
-            } else {
-              // This is a new interactive element, flag it for configuration
-              setTimeout(() => handleInsertSignal(node.tagName, node.id), 0);
-            }
-          }
-        });
-
-        // Add the new node structure
         getCtx(props).addNodes(parsedNodes);
 
-        // Mark the parent pane as changed - this is the correct pattern
-        // It leverages the built-in history management in modifyNodes
         const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
         if (paneNodeId) {
           const paneNode = cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)) as PaneNode;
@@ -355,13 +224,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }
 
-      // Show ghost text after editing is complete
-      if (isEditableMode && supportsEditing) {
-        setShowGhostText(true);
-      }
+      if (isEditableMode && supportsEditing) setShowGhostText(true);
     } catch (error) {
       console.error("Error parsing edited content:", error);
-      // Notify the parent node of the error
       getCtx(props).notifyNode(node?.parentId || "");
     }
   };

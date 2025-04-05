@@ -283,3 +283,139 @@ export function createEmptyStorykeep(id: string) {
     tailwindBgColour: undefined,
   } as StoryFragmentNode;
 }
+
+/**
+ * Processes HTML content into a flat node structure, preserving formatting and interactive elements.
+ * @param html The raw HTML string to process
+ * @param parentId The parent node's ID
+ * @param originalNodes Optional array of original nodes to match interactive elements against
+ * @param onInsertSignal Optional callback to signal insertion of new interactive elements
+ * @returns Array of parsed FlatNode objects
+ */
+export function processRichTextToNodes(
+  html: string,
+  parentId: string,
+  originalNodes: FlatNode[] = [],
+  onInsertSignal?: (tagName: string, nodeId: string) => void
+): FlatNode[] {
+  const parsedNodes = parseMarkdownToNodes(html, parentId);
+
+  if (parsedNodes.length === 0) return [];
+
+  // Process each node to restore interactive element properties
+  parsedNodes.forEach((node) => {
+    if (["a", "button"].includes(node.tagName)) {
+      const matchingOriginalNode = findMatchingNode(node, originalNodes);
+
+      if (matchingOriginalNode) {
+        // Preserve properties from the original node
+        node.buttonPayload = matchingOriginalNode.buttonPayload;
+        if (node.tagName === "a" && matchingOriginalNode.href) {
+          node.href = matchingOriginalNode.href;
+        }
+      } else if (onInsertSignal) {
+        // New interactive element detected, trigger insert signal
+        onInsertSignal(node.tagName, node.id);
+      }
+    }
+  });
+
+  return parsedNodes;
+}
+
+/**
+ * Finds a matching node from a list of original nodes based on tag-specific criteria.
+ * @param newNode The newly parsed node to match
+ * @param originalNodes Array of original nodes to search through
+ * @returns Matching FlatNode or undefined if no match found
+ */
+export function findMatchingNode(
+  newNode: FlatNode,
+  originalNodes: FlatNode[]
+): FlatNode | undefined {
+  if (newNode.tagName === "a" && newNode.href) {
+    // Exact href match for links
+    const hrefMatch = originalNodes.find(
+      (node) => node.tagName === "a" && node.href === newNode.href
+    );
+    if (hrefMatch) return hrefMatch;
+
+    // Domain-based partial match
+    const partialMatch = originalNodes.find((node) => {
+      if (node.tagName !== "a" || !node.href || !newNode.href) return false;
+      try {
+        const origDomain = new URL(node.href).hostname;
+        const newDomain = new URL(newNode.href).hostname;
+        return origDomain === newDomain;
+      } catch {
+        return false;
+      }
+    });
+    if (partialMatch) return partialMatch;
+  }
+
+  if (newNode.tagName === "button") {
+    const newText = getNodeText(newNode);
+    const buttonMatches = originalNodes.filter((node) => node.tagName === "button");
+
+    for (const button of buttonMatches) {
+      const buttonText = getNodeText(button);
+      if (
+        buttonText.includes(newText) ||
+        newText.includes(buttonText) ||
+        calculateSimilarity(buttonText, newText) > 0.7
+      ) {
+        return button;
+      }
+    }
+
+    if (
+      buttonMatches.length === 1 &&
+      originalNodes.filter((n) => n.tagName === "button").length === 1
+    ) {
+      return buttonMatches[0];
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Retrieves the text content of a node, recursively including child nodes.
+ * @param node The node to extract text from
+ * @param ctx Optional NodesContext for accessing child nodes
+ * @returns The combined text content
+ */
+export function getNodeText(node: FlatNode, ctx?: NodesContext): string {
+  const context = ctx || getCtx();
+  if (node.copy) return node.copy;
+
+  const childIds = context.getChildNodeIDs(node.id);
+  if (childIds.length === 0) return "";
+
+  return childIds
+    .map((id) => {
+      const childNode = context.allNodes.get().get(id) as FlatNode;
+      return childNode ? getNodeText(childNode, context) : "";
+    })
+    .join(" ")
+    .trim();
+}
+
+/**
+ * Calculates the similarity between two strings (0 to 1, where 1 is identical).
+ * @param a First string
+ * @param b Second string
+ * @returns Similarity score
+ */
+export function calculateSimilarity(a: string, b: string): number {
+  if (a === b) return 1.0;
+  if (a.length === 0 || b.length === 0) return 0.0;
+
+  const aChars = new Set(a.toLowerCase());
+  const bChars = new Set(b.toLowerCase());
+  const intersection = new Set([...aChars].filter((x) => bChars.has(x)));
+  const union = new Set([...aChars, ...bChars]);
+
+  return intersection.size / union.size;
+}

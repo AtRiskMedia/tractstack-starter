@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, type KeyboardEvent } from "react";
+import { ulid } from "ulid";
+import { useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
-import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
-import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
+import { getTemplateNode, processRichTextToNodes } from "@/utils/common/nodesHelper.ts";
+import type { TemplateNode, NodeProps, FlatNode, PaneNode } from "@/types.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import { useStore } from "@nanostores/react";
 
@@ -58,7 +59,7 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
     if (isEditing && ghostRef.current) {
       setTimeout(() => {
         if (ghostRef.current) {
-          ghostRef.current.innerText = "";
+          ghostRef.current.innerHTML = "";
           ghostRef.current.focus();
 
           const textNode = document.createTextNode("");
@@ -91,49 +92,120 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
 
   // Commit all paragraphs as a chain
   const commitAllParagraphs = () => {
-    // Don't process if already handling a commit
     if (processingCommitRef.current) return;
     processingCommitRef.current = true;
 
-    // Collect all paragraph texts, including the current one if it has content
     const allTexts = [...paragraphs];
-    if (text.trim()) {
-      allTexts.push(text.trim());
-    }
-
-    // Filter out empty paragraphs
+    if (text.trim()) allTexts.push(text.trim());
     const nonEmptyTexts = allTexts.filter((p) => p.trim());
 
     if (nonEmptyTexts.length > 0) {
       let lastNodeId = parentId;
 
-      // Insert each paragraph in sequence
+      const handleInsertSignal = (tagName: string, nodeId: string) => {
+        nodeContext.handleInsertSignal(tagName, nodeId);
+      };
+
       nonEmptyTexts.forEach((paragraphText) => {
-        // Create a new paragraph template node
-        const templateNode = getTemplateNode("p");
+        // Parse without signaling yet
+        const parsedNodes = processRichTextToNodes(paragraphText, lastNodeId, []);
+        let templateNode: TemplateNode;
 
-        // Set the text content
-        if (templateNode.nodes && templateNode.nodes[0]) {
-          templateNode.nodes[0].copy = paragraphText;
+        if (parsedNodes.length > 0) {
+          const pNodeId = ulid();
+          const formattedNodes: FlatNode[] = [];
+          for (let i = 0; i < parsedNodes.length; i++) {
+            const node = parsedNodes[i];
+            if (["strong", "em"].includes(node.tagName || "")) {
+              const formattingNode: FlatNode = { ...node, nodes: [] } as TemplateNode;
+              if (i + 1 < parsedNodes.length && parsedNodes[i + 1].tagName === "text") {
+                const textNode: FlatNode = {
+                  id: ulid(),
+                  parentId: formattingNode.id,
+                  nodeType: "TagElement",
+                  tagName: "text",
+                  copy: parsedNodes[i + 1].copy,
+                };
+                (formattingNode as any).nodes = [textNode];
+                i++;
+              }
+              formattedNodes.push(formattingNode);
+            } else if (node.tagName === "a") {
+              const aNode: FlatNode = { ...node, nodes: [] } as TemplateNode;
+              if (i + 1 < parsedNodes.length && parsedNodes[i + 1].tagName === "text") {
+                const textNode: FlatNode = {
+                  id: ulid(),
+                  parentId: aNode.id,
+                  nodeType: "TagElement",
+                  tagName: "text",
+                  copy: parsedNodes[i + 1].copy,
+                };
+                (aNode as any).nodes = [textNode];
+                i++;
+              }
+              formattedNodes.push(aNode);
+            } else if (node.tagName === "text") {
+              const textNode: FlatNode = {
+                id: ulid(),
+                parentId: pNodeId,
+                nodeType: "TagElement",
+                tagName: "text",
+                copy: node.copy,
+              };
+              formattedNodes.push(textNode);
+            }
+          }
+          templateNode = {
+            id: pNodeId,
+            parentId: lastNodeId,
+            nodeType: "TagElement",
+            tagName: "p",
+            nodes: formattedNodes.map((node) => ({
+              ...node,
+              parentId: pNodeId,
+              nodes: (node as any).nodes?.map((child: FlatNode) => ({
+                ...child,
+                parentId: node.id,
+              })),
+            })),
+          };
+
+          // Add to tree and get final ID
+          const newNodeId = nodeContext.addTemplateNode(
+            lastNodeId,
+            templateNode,
+            lastNodeId,
+            "after"
+          );
+          if (newNodeId) {
+            lastNodeId = newNodeId;
+            // Find the 'a' node's final ID in the tree
+            const allNodes = nodeContext.allNodes.get();
+            const pNode = allNodes.get(newNodeId);
+            if (pNode && "nodes" in pNode) {
+              const aNode = (pNode as TemplateNode).nodes?.find((n) => n.tagName === "a");
+              if (aNode && aNode.id) {
+                handleInsertSignal("a", aNode.id); // Signal the final ID
+              }
+            }
+          }
         } else {
-          templateNode.copy = paragraphText;
-        }
-
-        // Add the node after the previous node
-        const newNodeId = nodeContext.addTemplateNode(
-          lastNodeId,
-          templateNode,
-          lastNodeId,
-          "after"
-        );
-
-        // Update the insertion point for the next paragraph
-        if (newNodeId) {
-          lastNodeId = newNodeId;
+          templateNode = getTemplateNode("p");
+          if (templateNode.nodes && templateNode.nodes[0]) {
+            templateNode.nodes[0].copy = paragraphText;
+          } else {
+            templateNode.copy = paragraphText;
+          }
+          const newNodeId = nodeContext.addTemplateNode(
+            lastNodeId,
+            templateNode,
+            lastNodeId,
+            "after"
+          );
+          if (newNodeId) lastNodeId = newNodeId;
         }
       });
 
-      // Mark the parent pane as changed
       const paneNodeId = nodeContext.getClosestNodeTypeFromId(parentId, "Pane");
       if (paneNodeId) {
         const paneNode = {
@@ -144,7 +216,6 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       }
     }
 
-    // Reset state
     setParagraphs([]);
     setText("");
     setIsEditing(false);
@@ -152,12 +223,10 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
     processingCommitRef.current = false;
     isCompletingRef.current = false;
 
-    // Clear this ghost text from active registry if it's still set to this ID
     if (nodeContext.ghostTextActiveId.get() === parentId) {
       nodeContext.ghostTextActiveId.set("");
     }
 
-    // Signal completion
     onComplete();
   };
 
@@ -316,8 +385,9 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
   };
 
   // Handle input events in editable mode
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    setText(e.currentTarget.innerText || "");
+  const handleInput = (e: FormEvent<HTMLDivElement>) => {
+    const html = e.currentTarget.innerHTML || "";
+    setText(html);
   };
 
   // Set reference to next ghost
