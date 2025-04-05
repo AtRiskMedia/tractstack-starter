@@ -29,7 +29,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const elementRef = useRef<HTMLElement | null>(null);
   const doubleClickedRef = useRef<boolean>(false);
   const [showGhostText, setShowGhostText] = useState(false);
-  // Add a ref to track cursor position (primarily for Chrome)
+  const bypassEarlyReturnRef = useRef(false);
+  const currentContentRef = useRef(originalTextRef.current);
   const cursorPosRef = useRef<{ node: Node; offset: number } | null>(null);
 
   const Tag = props.tagName;
@@ -64,6 +65,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       if (mainElement && !mainElement.contains(event.target as Node) && !clickedInsideGhost) {
         setShowGhostText(false);
         editIntentRef.current = false;
+        bypassEarlyReturnRef.current = true;
       }
     };
 
@@ -180,14 +182,14 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
     if (!canEditText(props) || e.target.tagName === "BUTTON") return;
-    if (doubleClickedRef.current || !editIntentRef.current) {
+    if (doubleClickedRef.current || (!editIntentRef.current && !bypassEarlyReturnRef.current)) {
       doubleClickedRef.current = false;
       editIntentRef.current = false;
       return;
     }
 
     const node = getCtx(props).allNodes.get().get(nodeId);
-    const newHTML = e.currentTarget.innerHTML;
+    const newHTML = currentContentRef.current;
 
     if (!focusTransitionRef.current) editIntentRef.current = false;
     if (newHTML === originalTextRef.current) {
@@ -397,6 +399,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           // Mouse events that could indicate editing intent
           onInput: () => {
             editIntentRef.current = true;
+            if (elementRef.current) {
+              currentContentRef.current = elementRef.current.innerHTML;
+            }
           },
         },
         <RenderChildren children={children} nodeProps={props} />

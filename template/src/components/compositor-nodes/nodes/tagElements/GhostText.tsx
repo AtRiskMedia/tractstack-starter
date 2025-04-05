@@ -25,8 +25,10 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
   const focusTransitionRef = useRef(false);
   const processingCommitRef = useRef(false);
   const isCompletingRef = useRef(false);
+  const commitTriggeredRef = useRef(false); // Prevents multiple commits
   const activeGhostId = useStore(nodeContext.ghostTextActiveId);
 
+  // Activates editing mode
   const activate = () => {
     if (!isEditing) {
       setIsEditing(true);
@@ -37,24 +39,34 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
 
   const wasActiveRef = useRef<boolean>(false);
 
+  // Reset commit trigger when editing starts
   useEffect(() => {
-    if (isCompletingRef.current) return;
+    if (isEditing) {
+      commitTriggeredRef.current = false;
+    }
+  }, [isEditing]);
+
+  // Handle deactivation when activeGhostId changes
+  useEffect(() => {
+    if (isCompletingRef.current || !isEditing) return;
 
     const isActive = activeGhostId === parentId;
     const wasActive = wasActiveRef.current;
     wasActiveRef.current = isActive;
-    if (wasActive && !isActive) {
-      isCompletingRef.current = true;
+    if (wasActive && !isActive && !commitTriggeredRef.current) {
+      commitTriggeredRef.current = true;
       prepareToComplete();
     }
-  }, [activeGhostId]);
+  }, [activeGhostId, isEditing]);
 
+  // Expose activate function to ref
   useEffect(() => {
     if (ghostRef.current) {
       (ghostRef.current as any).activate = activate;
     }
   }, []);
 
+  // Focus and clear editable div when editing starts
   useEffect(() => {
     if (isEditing && ghostRef.current) {
       setTimeout(() => {
@@ -65,7 +77,6 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
           const textNode = document.createTextNode("");
           ghostRef.current.appendChild(textNode);
 
-          // Set cursor at the beginning
           const selection = window.getSelection();
           const range = document.createRange();
           range.setStart(textNode, 0);
@@ -84,13 +95,12 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
     }
   }, [isEditing, text, showNextGhost]);
 
-  // Listen for data from next ghost text
+  // Collect data from next ghost
   const handleNextGhostData = (paragraphText: string) => {
-    // Add the text to our paragraphs array
     setParagraphs((prev) => [...prev, paragraphText]);
   };
 
-  // Commit all paragraphs as a chain
+  // Commit all paragraphs
   const commitAllParagraphs = () => {
     if (processingCommitRef.current) return;
     processingCommitRef.current = true;
@@ -107,7 +117,6 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       };
 
       nonEmptyTexts.forEach((paragraphText) => {
-        // Parse without signaling yet
         const parsedNodes = processRichTextToNodes(paragraphText, lastNodeId, []);
         let templateNode: TemplateNode;
 
@@ -170,7 +179,6 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
             })),
           };
 
-          // Add to tree and get final ID
           const newNodeId = nodeContext.addTemplateNode(
             lastNodeId,
             templateNode,
@@ -179,13 +187,12 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
           );
           if (newNodeId) {
             lastNodeId = newNodeId;
-            // Find the 'a' node's final ID in the tree
             const allNodes = nodeContext.allNodes.get();
             const pNode = allNodes.get(newNodeId);
             if (pNode && "nodes" in pNode) {
               const aNode = (pNode as TemplateNode).nodes?.find((n) => n.tagName === "a");
               if (aNode && aNode.id) {
-                handleInsertSignal("a", aNode.id); // Signal the final ID
+                handleInsertSignal("a", aNode.id);
               }
             }
           }
@@ -216,12 +223,14 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       }
     }
 
+    // Reset state after commit
     setParagraphs([]);
     setText("");
     setIsEditing(false);
     setShowNextGhost(false);
     processingCommitRef.current = false;
     isCompletingRef.current = false;
+    commitTriggeredRef.current = false;
 
     if (nodeContext.ghostTextActiveId.get() === parentId) {
       nodeContext.ghostTextActiveId.set("");
@@ -230,39 +239,30 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
     onComplete();
   };
 
-  // Get any data from next ghost before unmounting
+  // Prepare to commit text
   const prepareToComplete = () => {
-    // If there's a next ghost, get its data first
+    if (isCompletingRef.current || commitTriggeredRef.current) return;
+    isCompletingRef.current = true;
+    commitTriggeredRef.current = true;
+
     if (showNextGhost && nextGhostRef.current) {
       const nextGhost = nextGhostRef.current;
-
-      // Check if the next ghost has a getData method
       if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
-        // Get data from the next ghost
         const nextGhostData = (nextGhost as any).getData();
-
-        // Update paragraphs with any data from next ghost
         if (nextGhostData && nextGhostData.text) {
           handleNextGhostData(nextGhostData.text);
-
-          // Also include any nested paragraphs
           if (nextGhostData.paragraphs && nextGhostData.paragraphs.length > 0) {
             setParagraphs((prev) => [...prev, ...nextGhostData.paragraphs]);
           }
         }
       }
     }
-
-    // Now commit all collected paragraphs
     commitAllParagraphs();
   };
 
-  // Export data method for parent to call
+  // Expose data for parent components
   const getData = () => {
-    // Calculate paragraphs including current text if non-empty
     const allParagraphs = [...paragraphs];
-
-    // Get data from next ghost if it exists
     if (showNextGhost && nextGhostRef.current) {
       const nextGhost = nextGhostRef.current;
       if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
@@ -275,46 +275,37 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
         }
       }
     }
-
     return {
       text: text.trim(),
       paragraphs: allParagraphs,
     };
   };
 
-  // Expose getData method via ref
   useEffect(() => {
     if (ghostRef.current) {
       (ghostRef.current as any).getData = getData;
     }
   }, [text, paragraphs, showNextGhost]);
 
-  // Focus the next ghost's placeholder and activate it
+  // Focus next ghost placeholder
   const focusNextGhostPlaceholder = () => {
     if (showNextGhost && nextGhostRef.current) {
       focusTransitionRef.current = true;
-
-      // Find the placeholder element within the next ghost
       const placeholderElement = nextGhostRef.current.querySelector(
         '[data-ghost-text="placeholder"]'
       );
-
       if (placeholderElement && placeholderElement instanceof HTMLElement) {
-        // Set focus on the placeholder element which will auto-activate due to onFocus={activate}
         placeholderElement.focus();
-
-        // Reset focus transition flag after a delay
         setTimeout(() => {
           focusTransitionRef.current = false;
         }, 100);
       } else {
-        // If placeholder isn't found, reset the flag
         focusTransitionRef.current = false;
       }
     }
   };
 
-  // Handle key events in editable mode
+  // Handle keyboard events
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -323,81 +314,53 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       e.preventDefault();
       prepareToComplete();
     } else if (e.key === "Tab" && !e.shiftKey) {
-      // Check if the current text is empty
       if (!text.trim()) {
-        // Allow the default tab behavior to continue
-        // This will naturally move focus to the next focusable element
-
-        // Just complete/unmount this ghost text without preventing default
         prepareToComplete();
-
-        // Don't preventDefault() so tab works naturally
         return;
       }
-
-      // For non-empty text, continue with the existing behavior
       e.preventDefault();
-
-      // If there's text, add it to paragraphs
       setParagraphs((prev) => [...prev, text.trim()]);
-      // Clear current text field
       setText("");
-
-      // If next ghost already exists, focus its placeholder
       if (showNextGhost) {
-        // Use a small timeout to ensure the next component is rendered
         setTimeout(focusNextGhostPlaceholder, 50);
-      }
-      // If next ghost doesn't exist yet, create it and then focus it
-      else {
+      } else {
         setShowNextGhost(true);
-        // Wait for next ghost to render
         setTimeout(focusNextGhostPlaceholder, 100);
       }
     }
   };
 
-  // Handle blur events in editable mode
+  // Handle blur event
   const handleBlur = () => {
-    // Skip if we're handling a focus transition
     if (focusTransitionRef.current) return;
-
-    // Allow a little time for any click to register on child elements
     setTimeout(() => {
-      // Skip if we're in the middle of a focus transition
       if (focusTransitionRef.current) return;
-
-      // Check if focus is within our ghost text chain
       const activeElement = document.activeElement;
       if (activeElement) {
-        // Check if the active element is a ghost text or contains one
         const isGhostActive =
           activeElement.getAttribute("data-ghost-text") ||
           activeElement.closest("[data-ghost-text]");
-
-        // If focus is still within ghost text chain, don't complete yet
         if (isGhostActive) return;
       }
-
-      // Focus is outside our ghost text chain, prepare to complete
-      prepareToComplete();
+      if (!commitTriggeredRef.current) {
+        commitTriggeredRef.current = true;
+        prepareToComplete();
+      }
     }, 100);
   };
 
-  // Handle input events in editable mode
+  // Handle text input
   const handleInput = (e: FormEvent<HTMLDivElement>) => {
     const html = e.currentTarget.innerHTML || "";
     setText(html);
   };
 
-  // Set reference to next ghost
   const setNextGhostReference = (el: HTMLDivElement | null) => {
     nextGhostRef.current = el;
   };
 
-  // Find a paragraph node style to match the current document style
+  // Determine paragraph styling
   const paragraphStyle = (() => {
-    // Try to find a paragraph node in the Markdown parent
     const markdownId = nodeContext.getClosestNodeTypeFromId(parentId, "Markdown");
     if (markdownId) {
       const childIds = nodeContext.getChildNodeIDs(markdownId);
@@ -408,12 +371,11 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
         }
       }
     }
-    // Fallback to parent's styling
     return nodeContext.getNodeClasses(parentId, viewportKeyStore.get().value);
   })();
 
+  // Conditional rendering based on editing state
   if (isEditing) {
-    // Editable version - after user has activated it
     return (
       <>
         <div
@@ -425,6 +387,7 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
           onKeyDown={handleKeyDown}
           onInput={handleInput}
           data-ghost-text="true"
+          data-parent-id={parentId}
           style={{ direction: "ltr", textAlign: "left" }}
         ></div>
 
@@ -437,7 +400,7 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
     );
   }
 
-  // Non-editable version - initial state (placeholder)
+  // Read-only state with "Tab to continue writing" prompt
   return (
     <div
       ref={ghostRef}
@@ -454,6 +417,7 @@ const GhostText = ({ parentId, onComplete, onActivate, ctx }: GhostTextProps) =>
       role="button"
       aria-label="Continue writing (press Tab)"
       data-ghost-text="placeholder"
+      data-parent-id={parentId}
     >
       <svg className="w-5 h-5 mr-2 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
         <path
