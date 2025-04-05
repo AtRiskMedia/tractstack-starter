@@ -255,7 +255,10 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     if (e.key === "Enter") {
       e.preventDefault();
-      handleBlur(e as unknown as FocusEvent<HTMLElement>); // Type casting to simulate blur event
+      if (elementRef.current) {
+        currentContentRef.current = elementRef.current.innerHTML;
+      }
+      handleBlur(e as unknown as FocusEvent<HTMLElement>);
     }
     // Handle Tab key to navigate to ghost text
     else if (e.key === "Tab") {
