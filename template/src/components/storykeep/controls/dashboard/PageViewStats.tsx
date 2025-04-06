@@ -23,6 +23,7 @@ export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [leadMetrics, setLeadMetrics] = useState<LeadMetrics[]>([]);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
 
@@ -70,6 +71,21 @@ export default function PageViewStats() {
 
   useEffect(() => {
     setIsClient(true);
+
+    // Fetch lead metrics for visitor breakdown
+    const fetchLeadMetrics = async () => {
+      try {
+        const response = await fetch("/api/turso/getLeadMetrics");
+        if (response.ok) {
+          const result = await response.json();
+          setLeadMetrics(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching lead metrics:", error);
+      }
+    };
+
+    fetchLeadMetrics();
   }, []);
 
   const downloadLeadsCSV = async () => {
@@ -162,6 +178,69 @@ export default function PageViewStats() {
               </dd>
             </div>
           ))}
+        </div>
+
+        {/* New section for visitor breakdown - same style */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {stats.map((item) => {
+            // Calculate first-time and returning values based on period
+            const period = item.period;
+            const firstTimeValue = leadMetrics.reduce(
+              (sum, lead) =>
+                sum + ((lead[`first_time_${period}` as keyof LeadMetrics] as number) || 0),
+              0
+            );
+            const returningValue = leadMetrics.reduce(
+              (sum, lead) =>
+                sum + ((lead[`returning_${period}` as keyof LeadMetrics] as number) || 0),
+              0
+            );
+            const total = firstTimeValue + returningValue;
+            const firstTimePercentage = total > 0 ? (firstTimeValue / total) * 100 : 0;
+            const returningPercentage = total > 0 ? (returningValue / total) * 100 : 0;
+
+            return (
+              <div
+                key={`breakdown-${item.period}`}
+                className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors"
+              >
+                <dt className="text-sm font-bold text-gray-800">{item.name}</dt>
+                <dd className="mt-2">
+                  <div className="flex justify-between items-end">
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">Anonymous</div>
+                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                        {firstTimeValue === 0 ? "-" : formatNumber(firstTimeValue)}
+                      </div>
+                    </div>
+                    <div className="flex-1 text-right">
+                      <div className="text-sm text-gray-600">Known Leads</div>
+                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                        {returningValue === 0 ? "-" : formatNumber(returningValue)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar visualization */}
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2 mb-1 overflow-hidden">
+                    <div
+                      className="bg-cyan-600 h-2.5 float-left"
+                      style={{ width: `${firstTimePercentage}%` }}
+                    />
+                    <div
+                      className="bg-cyan-300 h-2.5 float-left"
+                      style={{ width: `${returningPercentage}%` }}
+                    />
+                  </div>
+
+                  <div className="flex justify-between text-xs text-gray-600 mt-1">
+                    <span>{firstTimePercentage.toFixed(1)}% Anonymous</span>
+                    <span>{returningPercentage.toFixed(1)}% Known</span>
+                  </div>
+                </dd>
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

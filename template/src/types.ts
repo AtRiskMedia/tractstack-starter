@@ -1129,6 +1129,18 @@ export interface LeadMetrics {
   last_7d_visits: number;
   last_28d_visits: number;
   last_activity: string;
+  first_time_24h: number;
+  returning_24h: number;
+  first_time_7d: number;
+  returning_7d: number;
+  first_time_28d: number;
+  returning_28d: number;
+  first_time_24h_percentage: number;
+  returning_24h_percentage: number;
+  first_time_7d_percentage: number;
+  returning_7d_percentage: number;
+  first_time_28d_percentage: number;
+  returning_28d_percentage: number;
 }
 
 export interface StoryfragmentAnalytics {
