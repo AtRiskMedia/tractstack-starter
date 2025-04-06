@@ -38,7 +38,7 @@ const CodeHookContainer = ({
 
 const Pane = memo(
   (props: NodeProps) => {
-    console.log(`Rendering Pane with id: ${props.nodeId}`);
+    //console.log(`Rendering Pane with id: ${props.nodeId}`);
     const $showAnalytics = showAnalytics.get();
     const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
     const contentClasses = "relative w-full h-auto justify-self-start";
@@ -61,7 +61,7 @@ const Pane = memo(
     const getPaneId = () => `pane-${props.nodeId}`;
 
     const handleNotification = useCallback(() => {
-      console.log(" !! Pane received notification, updating:", props.nodeId);
+      //console.log(" !! Pane received notification, updating:", props.nodeId);
       const newChildren = [...getCtx(props).getChildNodeIDs(props.nodeId)];
       setChildren(newChildren); // Fresh copy
       setRenderCount((prev) => prev + 1); // Increment to force rerender

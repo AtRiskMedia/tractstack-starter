@@ -19,6 +19,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
   const [storyfragmentNode, setStoryfragmentNode] = useState<StoryFragmentNode | null>(null);
   const [isSEOReady, setIsSEOReady] = useState(false);
+  const [tempBgColor, setTempBgColor] = useState<string | null>(null);
 
   const ctx = getCtx();
   const $mode = typeof ctx !== `undefined` ? useStore(ctx.storyFragmentModeStore) : null;
@@ -92,15 +93,18 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   }, [nodeId, isNodeAvailable, storyfragmentNode?.socialImagePath]);
 
   const handleBgColorChange = (newColor: string) => {
-    if (!storyfragmentNode) return;
+    setTempBgColor(newColor);
+  };
 
-    const val = hexToTailwind(newColor, config?.init?.BRAND_COLOURS);
-    const exactValPayload = val ? null : findClosestTailwindColor(newColor);
+  const applyBgColorChange = () => {
+    if (!storyfragmentNode || !tempBgColor) return;
+
+    const val = hexToTailwind(tempBgColor, config?.init?.BRAND_COLOURS);
+    const exactValPayload = val ? null : findClosestTailwindColor(tempBgColor);
     const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
 
     if (exactVal || val) {
       const ctx = getCtx();
-      // Make a proper clone that preserves the StoryFragmentNode type
       const updatedNode: StoryFragmentNode = {
         ...cloneDeep(storyfragmentNode),
         tailwindBgColour: exactVal || val || `white`,
@@ -109,6 +113,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
 
       ctx.modifyNodes([updatedNode]);
       setStoryfragmentNode(updatedNode);
+      setTempBgColor(null);
     }
   };
 
@@ -177,7 +182,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
           </button>
 
           {config && (
-            <div className="flex items-center gap-2 h-9">
+            <div className="flex items-center gap-2">
               <div className="text-md">Background Colour:</div>
               <ColorPickerCombo
                 title=""
@@ -188,6 +193,14 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
                 onColorChange={handleBgColorChange}
                 config={config}
               />
+              {tempBgColor && (
+                <button
+                  onClick={applyBgColorChange}
+                  className="h-9 px-3 bg-cyan-700 text-white text-md rounded hover:bg-cyan-800 focus:bg-cyan-800 shadow-sm transition-colors"
+                >
+                  Apply
+                </button>
+              )}
             </div>
           )}
         </div>

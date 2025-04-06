@@ -789,8 +789,6 @@ export class NodesContext {
   }
 
   modifyNodes(newData: BaseNode[]) {
-    console.log(`modifyNodes`, newData);
-
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
 
@@ -943,7 +941,6 @@ export class NodesContext {
   }
 
   notifyNode(nodeId: string, payload?: BaseNode) {
-    console.log(`notifyNode`, nodeId);
     let notifyNodeId = nodeId;
     if (notifyNodeId === this.rootNodeId.get()) {
       notifyNodeId = ROOT_NODE_NAME;
