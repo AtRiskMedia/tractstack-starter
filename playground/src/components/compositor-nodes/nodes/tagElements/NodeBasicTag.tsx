@@ -32,7 +32,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const bypassEarlyReturnRef = useRef(false);
   const currentContentRef = useRef(originalTextRef.current);
   const cursorPosRef = useRef<{ node: Node; offset: number } | null>(null);
-
+  const focusTransitionRef = useRef(false);
+  const ghostTextRef = useRef<HTMLDivElement | null>(null);
   const Tag = props.tagName;
   const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
@@ -167,17 +168,33 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   };
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
+    // Early exit if text editing is not allowed or if the target is a button
     if (!canEditText(props) || e.target.tagName === "BUTTON") return;
+
+    // Check where the focus is moving to
+    const isFocusInGhostText = ghostTextRef.current?.contains(e.relatedTarget as Node);
+    const isFocusInNode = elementRef.current?.contains(e.relatedTarget as Node);
+
+    // Handle early return cases (e.g., double-click or no edit intent)
     if (doubleClickedRef.current || (!editIntentRef.current && !bypassEarlyReturnRef.current)) {
       doubleClickedRef.current = false;
       editIntentRef.current = false;
+
+      // Hide GhostText if focus moves outside both the node and its GhostText
+      if (!isFocusInNode && !isFocusInGhostText) {
+        setShowGhostText(false);
+      }
       return;
     }
 
+    // Get the current node and new content
     const node = getCtx(props).allNodes.get().get(nodeId);
     const newHTML = currentContentRef.current;
 
+    // Reset edit intent if not in a focus transition
     if (!focusTransitionRef.current) editIntentRef.current = false;
+
+    // If content hasn’t changed, notify parent and show GhostText if appropriate
     if (newHTML === originalTextRef.current) {
       getCtx(props).notifyNode(node?.parentId || "");
       if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
@@ -186,6 +203,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       return;
     }
 
+    // Process and save the new content
     try {
       const originalNodes = getCtx(props)
         .getNodesRecursively(node)
@@ -212,21 +230,24 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }
 
+      // Show GhostText if in editable mode and editing is supported
       if (isEditableMode && supportsEditing) setShowGhostText(true);
     } catch (error) {
       console.error("Error parsing edited content:", error);
       getCtx(props).notifyNode(node?.parentId || "");
     }
-  };
 
-  const focusTransitionRef = useRef(false);
-  const ghostTextRef = useRef<HTMLElement | null>(null);
+    // Final check to hide GhostText if focus moves outside
+    if (!isFocusInNode && !isFocusInGhostText) {
+      setShowGhostText(false);
+    }
+  };
 
   const getGhostTextElement = (): HTMLElement | null => {
     const element = document.querySelector(
       '[data-ghost-text="placeholder"], [data-ghost-text="true"]'
     );
-    if (element && element instanceof HTMLElement) {
+    if (element && element instanceof HTMLDivElement) {
       ghostTextRef.current = element;
       return element;
     }
@@ -382,26 +403,15 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
   if (showGuids.get()) {
     return (
-      <>
-        <div
-          ref={elementRef as RefObject<HTMLDivElement>}
-          className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
-          onMouseDown={handleMouseDown}
-          onClick={handleClick}
-          onDoubleClick={handleDoubleClick}
-        >
-          <RenderChildren children={children} nodeProps={props} />
-        </div>
-
-        {showGhostText && isEditableMode && supportsEditing && (
-          <GhostText
-            parentId={nodeId}
-            onComplete={handleGhostComplete}
-            onContentSaved={handleGhostContentSaved}
-            ctx={props.ctx}
-          />
-        )}
-      </>
+      <div
+        ref={elementRef as RefObject<HTMLDivElement>}
+        className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
+        onMouseDown={handleMouseDown}
+        onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
+      >
+        <RenderChildren children={children} nodeProps={props} />
+      </div>
     );
   }
 
@@ -441,6 +451,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             editIntentRef.current = false;
           }}
           ctx={props.ctx}
+          ref={ghostTextRef}
         />
       )}
     </>
