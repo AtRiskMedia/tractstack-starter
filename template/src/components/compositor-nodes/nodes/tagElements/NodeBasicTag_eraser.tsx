@@ -4,7 +4,7 @@ import { viewportKeyStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import type { NodeProps } from "@/types";
-import { type JSX, type MouseEvent, type KeyboardEvent} from "react";
+import { type JSX, type MouseEvent, type KeyboardEvent } from "react";
 import { tagTitles } from "@/constants";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };

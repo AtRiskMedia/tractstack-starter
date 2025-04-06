@@ -1,5 +1,4 @@
 import Node from "@/components/compositor-nodes/Node.tsx";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
 import type { NodeProps } from "@/types";
 import type { ReactNodesRendererProps } from "@/components/compositor-nodes/ReactNodesRenderer.tsx";
 
@@ -14,7 +13,7 @@ export const RenderChildren = (props: RenderChildrenProps) => {
   return (
     <>
       {children.map((id: string) => (
-        <Node nodeId={id} key={timestampNodeId(id)} ctx={nodeProps.ctx} />
+        <Node nodeId={id} key={id} ctx={nodeProps.ctx} />
       ))}
     </>
   );

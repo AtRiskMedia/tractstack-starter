@@ -2,7 +2,7 @@ import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, toolAddModeStore, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
-import { type JSX, type MouseEvent} from "react";
+import { type JSX, type MouseEvent } from "react";
 import type { NodeProps } from "@/types";
 import { tagTitles } from "@/constants";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";

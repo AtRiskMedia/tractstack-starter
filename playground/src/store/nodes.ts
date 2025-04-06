@@ -214,6 +214,7 @@ export class NodesContext {
   }
 
   handleClickEvent(dblClick: boolean = false) {
+    console.log(`click`);
     const toolModeVal = this.toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
     if (!node) return;
@@ -1395,7 +1396,7 @@ export class NodesContext {
     const children = this.getNodesRecursively(node).reverse();
     children.shift();
     const deletedNodes = this.deleteNodes(children);
-    this.notifyNode(node.parentId || "");
+    this.notifyNode(node.id || "");
     return deletedNodes;
   }
 
@@ -1509,7 +1510,7 @@ export class NodesContext {
           paneIdx = storyFragment.paneIds.indexOf(targetNodeId);
           storyFragment.paneIds.splice(paneIdx, 1);
         }
-        this.notifyNode(parentId);
+        this.notifyNode(targetNodeId);
       } else if (targetNode.nodeType === "TagElement") {
         this.notifyNode(closestMarkdownId);
         // mark pane as changed
@@ -1521,7 +1522,7 @@ export class NodesContext {
           }
         }
       } else {
-        this.notifyNode(parentId);
+        this.notifyNode(targetNodeId);
       }
     } else {
       if (targetNodeId === this.rootNodeId.get()) {
@@ -1659,8 +1660,8 @@ export class NodesContext {
           }
         }
 
-        const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
-        ctx.notifyNode(parentNode || "");
+        //const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
+        ctx.notifyNode(node.id || "");
       },
       redo: (ctx) => {
         moveNodeAtLocationInContext(

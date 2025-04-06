@@ -22,7 +22,7 @@ export const PaneEraser = (props: NodeProps) => {
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
-      console.log("notification received data update for page node: " + props.nodeId);
+      console.log("notification received data update for pane node: " + props.nodeId);
       setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;

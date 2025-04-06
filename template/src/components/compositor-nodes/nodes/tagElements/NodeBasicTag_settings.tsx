@@ -1,4 +1,4 @@
-import { type JSX} from "react";
+import { type JSX } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
