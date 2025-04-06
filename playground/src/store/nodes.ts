@@ -1510,9 +1510,7 @@ export class NodesContext {
           paneIdx = storyFragment.paneIds.indexOf(targetNodeId);
           storyFragment.paneIds.splice(paneIdx, 1);
         }
-        this.notifyNode(targetNodeId);
       } else if (targetNode.nodeType === "TagElement") {
-        this.notifyNode(closestMarkdownId);
         // mark pane as changed
         const paneNodeId = this.getClosestNodeTypeFromId(closestMarkdownId, "Pane");
         if (paneNodeId) {
@@ -1521,15 +1519,14 @@ export class NodesContext {
             this.modifyNodes([{ ...paneNode, isChanged: true }]);
           }
         }
-      } else {
-        this.notifyNode(targetNodeId);
       }
     } else {
       if (targetNodeId === this.rootNodeId.get()) {
         this.rootNodeId.set("");
       }
-      this.notifyNode(ROOT_NODE_NAME);
     }
+
+    this.notifyNode(ROOT_NODE_NAME);
 
     // Add to history for undo/redo
     this.history.addPatch({
@@ -1992,6 +1989,7 @@ export class NodesContext {
         if (parentNode) {
           parentNode.splice(parentNode.indexOf(node.id), 1);
           this.parentNodes.set(new Map<string, string[]>(parentNodes));
+          console.log("parentNodes after delete for", node.parentId, ":", parentNode);
         }
       }
     });

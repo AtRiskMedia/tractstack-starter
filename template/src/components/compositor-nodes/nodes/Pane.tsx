@@ -56,14 +56,16 @@ const Pane = memo(
     const [children, setChildren] = useState<string[]>([
       ...getCtx(props).getChildNodeIDs(props.nodeId),
     ]);
-    const [updateKey, setUpdateKey] = useState(0); // Force descendants to refresh
+    const [renderCount, setRenderCount] = useState(0); // Force rerender with counter
 
     const getPaneId = () => `pane-${props.nodeId}`;
 
     const handleNotification = useCallback(() => {
       console.log("Pane received notification, updating:", props.nodeId);
-      setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
-      setUpdateKey((prev) => prev + 1); // Signal descendants to re-evaluate
+      const newChildren = [...getCtx(props).getChildNodeIDs(props.nodeId)];
+      console.log("Children after notification:", newChildren);
+      setChildren(newChildren); // Fresh copy
+      setRenderCount((prev) => prev + 1); // Increment to force rerender
     }, [props.nodeId, props.ctx]);
 
     useEffect(() => {
@@ -101,7 +103,7 @@ const Pane = memo(
               <RenderChildren
                 children={children}
                 nodeProps={props}
-                key={`render-children-${updateKey}`} // Force RenderChildren to remount
+                key={`render-children-${props.nodeId}-${renderCount}`}
               />
             )}
             {$showAnalytics ? <PaneAnalyticsPanel nodeId={props.nodeId} /> : null}
