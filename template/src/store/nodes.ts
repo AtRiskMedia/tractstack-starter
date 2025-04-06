@@ -300,9 +300,9 @@ export class NodesContext {
   buildNodesTreeFromRowDataMadeNodes(nodes: LoadData | null) {
     if (nodes !== null) {
       this.clearAll();
-      if (nodes?.fileNodes) this.addNodes(nodes.fileNodes);
+      //if (nodes?.fileNodes) this.addNodes(nodes.fileNodes);
       if (nodes?.menuNodes) this.addNodes(nodes.menuNodes);
-      if (nodes?.resourceNodes) this.addNodes(nodes.resourceNodes);
+      //if (nodes?.resourceNodes) this.addNodes(nodes.resourceNodes);
       if (nodes?.tractstackNodes) this.addNodes(nodes.tractstackNodes);
       // IMPORTANT!
       // pane nodes have to be added BEFORE StoryFragment nodes so they can register in this.allNodes
@@ -312,9 +312,9 @@ export class NodesContext {
       // then storyfragment nodes will link pane nodes from above
 
       // for compatibility (until we remove buildNodesTreeFromFragmentNodes)
-      if (nodes?.impressionNodes) this.addNodes(nodes.impressionNodes);
-      if (nodes?.paneFragmentNodes) this.addNodes(nodes.paneFragmentNodes);
-      if (nodes?.flatNodes) this.addNodes(nodes.flatNodes);
+      //if (nodes?.impressionNodes) this.addNodes(nodes.impressionNodes);
+      //if (nodes?.paneFragmentNodes) this.addNodes(nodes.paneFragmentNodes);
+      //if (nodes?.flatNodes) this.addNodes(nodes.flatNodes);
 
       // then add storyfragmentNodes
       if (nodes?.storyfragmentNodes) this.addNodes(nodes.storyfragmentNodes);
@@ -784,16 +784,14 @@ export class NodesContext {
         // do nothing
         break;
       default:
-        console.log(`nodeToNotify missed on`, nodeType);
+        console.warn(`nodeToNotify missed on`, nodeType);
     }
   }
 
   modifyNodes(newData: BaseNode[]) {
-    // if all nodes are the same, skip
-    if (!this.checkAnyNodeDifferent(newData)) return;
-
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
+
     for (let i = 0; i < newData.length; i++) {
       const node = newData[i];
       const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
@@ -802,7 +800,8 @@ export class NodesContext {
         continue;
       }
       if (isDeepEqual(currentNodeData, node, ["isChanged"])) {
-        continue; // data is the same
+        this.notifyNode(node.id);
+        continue; // data is the same; skip modify, only notify
       }
 
       switch (node.nodeType) {
@@ -821,7 +820,7 @@ export class NodesContext {
           break;
 
         default:
-          console.log(`must dirty check missed on `, node.nodeType);
+          console.warn(`must dirty check missed on `, node.nodeType);
       }
 
       const newNodes = new Map(this.allNodes.get());
@@ -843,8 +842,9 @@ export class NodesContext {
         if (parentNode) this.notifyNode(parentNode);
       });
 
-      const parentNode = this.nodeToNotify(node.id, node.nodeType);
-      if (parentNode) this.notifyNode(parentNode);
+      // notify self to trigger rerender; unless StoryFragment
+      if ([`Menu`, `StoryFragment`].includes(node.nodeType)) this.notifyNode(ROOT_NODE_NAME);
+      this.notifyNode(node.id);
     }
 
     this.history.addPatch({
@@ -858,17 +858,17 @@ export class NodesContext {
     });
   }
 
-  private checkAnyNodeDifferent(newData: BaseNode[]) {
-    let isAnyNodeDifferent = false;
-    newData.forEach((nodeData) => {
-      const node = nodeData;
-      const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
-      if (!isDeepEqual(currentNodeData, node, ["isChanged"])) {
-        isAnyNodeDifferent = true;
-      }
-    });
-    return isAnyNodeDifferent;
-  }
+  //private checkAnyNodeDifferent(newData: BaseNode[]) {
+  //  let isAnyNodeDifferent = false;
+  //  newData.forEach((nodeData) => {
+  //    const node = nodeData;
+  //    const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
+  //    if (!isDeepEqual(currentNodeData, node, ["isChanged"])) {
+  //      isAnyNodeDifferent = true;
+  //    }
+  //  });
+  //  return isAnyNodeDifferent;
+  //}
 
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
     const node = this.allNodes.get().get(nodeId);
@@ -1390,7 +1390,7 @@ export class NodesContext {
     const children = this.getNodesRecursively(node).reverse();
     children.shift();
     const deletedNodes = this.deleteNodes(children);
-    this.notifyNode(node.parentId || "");
+    this.notifyNode(node.id || "");
     return deletedNodes;
   }
 
@@ -1504,9 +1504,7 @@ export class NodesContext {
           paneIdx = storyFragment.paneIds.indexOf(targetNodeId);
           storyFragment.paneIds.splice(paneIdx, 1);
         }
-        this.notifyNode(parentId);
       } else if (targetNode.nodeType === "TagElement") {
-        this.notifyNode(closestMarkdownId);
         // mark pane as changed
         const paneNodeId = this.getClosestNodeTypeFromId(closestMarkdownId, "Pane");
         if (paneNodeId) {
@@ -1515,15 +1513,14 @@ export class NodesContext {
             this.modifyNodes([{ ...paneNode, isChanged: true }]);
           }
         }
-      } else {
-        this.notifyNode(parentId);
       }
     } else {
       if (targetNodeId === this.rootNodeId.get()) {
         this.rootNodeId.set("");
       }
-      this.notifyNode(ROOT_NODE_NAME);
     }
+
+    this.notifyNode(ROOT_NODE_NAME);
 
     // Add to history for undo/redo
     this.history.addPatch({
@@ -1614,7 +1611,6 @@ export class NodesContext {
       this
     );
 
-    // Persist changes using cloneDeep and modifyNodes
     if (node.nodeType === "Pane") {
       const storyFragmentId = this.getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = cloneDeep(
@@ -1655,8 +1651,8 @@ export class NodesContext {
           }
         }
 
-        const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
-        ctx.notifyNode(parentNode || "");
+        //const parentNode = ctx.nodeToNotify(node?.parentId || "", node.nodeType);
+        ctx.notifyNode(node.id || "");
       },
       redo: (ctx) => {
         moveNodeAtLocationInContext(

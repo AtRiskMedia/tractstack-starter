@@ -13,9 +13,16 @@ interface MenuEditorProps {
   menu: MenuNode;
   create: boolean;
   contentMap: FullContentMap[];
+  embedded?: boolean;
 }
 
-export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps) {
+export default function MenuEditor({
+  menu,
+  create,
+  contentMap,
+  embedded = false,
+}: MenuEditorProps) {
+  const [originalMenu] = useState<MenuNode>({ ...menu });
   const [localMenu, setLocalMenu] = useState<MenuNode>({
     ...menu,
     theme: "default", // Always set to "default" until UI is added
@@ -83,7 +90,7 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
-        if (create) {
+        if (create && !embedded) {
           navigate(`/storykeep/manage/menu/${localMenu.id}`);
         }
       }, 7000);
@@ -92,34 +99,83 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
     } finally {
       setIsSaving(false);
     }
-  }, [localMenu, create, unsavedChanges, isSaving]);
+  }, [localMenu, create, unsavedChanges, isSaving, embedded]);
 
   const handleCancel = useCallback(() => {
-    if (unsavedChanges) {
-      if (window.confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+    if (embedded) {
+      // In embedded mode, reset to original values
+      setLocalMenu({ ...originalMenu });
+      setUnsavedChanges(false);
+    } else {
+      // In standalone mode, navigate away with confirmation
+      if (unsavedChanges) {
+        if (window.confirm("You have unsaved changes. Are you sure you want to cancel?")) {
+          navigate(`/storykeep`);
+        }
+      } else {
         navigate(`/storykeep`);
       }
-    } else {
-      navigate(`/storykeep`);
     }
-  }, [unsavedChanges]);
+  }, [unsavedChanges, embedded, originalMenu]);
+
+  const UnsavedChangesAlert = () => (
+    <div className="flex justify-between items-center mb-4 p-3 rounded-md bg-amber-50">
+      <p className="text-gray-800 font-bold">
+        <ExclamationTriangleIcon className="inline-block h-5 w-5 mr-2 text-amber-500" />
+        You have unsaved changes
+      </p>
+      <div className="flex space-x-3">
+        <button
+          onClick={handleCancel}
+          className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          {embedded ? "Reset" : "Cancel"}
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-3 py-1.5 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        >
+          {isSaving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const SuccessAlert = () => (
+    <div className="mb-4 p-3 rounded-md bg-green-50">
+      <p className="text-gray-800 font-bold">
+        <CheckCircleIcon className="inline-block h-5 w-5 mr-2 text-green-500" />
+        Changes saved successfully
+      </p>
+    </div>
+  );
 
   return (
     <div className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
-        <h3 className="font-bold font-action text-xl mb-4">
-          {create ? "Create Menu" : "Edit Menu"}
-        </h3>
-        <div className="py-2.5 mb-8 max-w-2xl">
-          <div className="p-3.5 border-2 border-dashed bg-slate-50">
-            <div className="text-base text-mydarkgrey leading-8">
-              <p>
-                Remember to link this menu to each page (story fragment) where it's supposed to be!
-                And create as many menus as you like.
-              </p>
+        {/* Show status alerts at the top */}
+        {saveSuccess && <SuccessAlert />}
+        {unsavedChanges && <UnsavedChangesAlert />}
+
+        {/* Show title and info box only when not embedded */}
+        {!embedded && (
+          <>
+            <h3 className="font-bold font-action text-xl mb-4">
+              {create ? "Create Menu" : "Edit Menu"}
+            </h3>
+            <div className="py-2.5 mb-8 max-w-2xl">
+              <div className="p-3.5 border-2 border-dashed bg-slate-50">
+                <div className="text-base text-mydarkgrey leading-8">
+                  <p>
+                    Remember to link this menu to each page (story fragment) where it's supposed to
+                    be! And create as many menus as you like.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
 
         <div className="space-y-6 max-w-screen-xl mx-auto">
           <div className="grid grid-cols-1 gap-4">
@@ -203,40 +259,54 @@ export default function MenuEditor({ menu, create, contentMap }: MenuEditorProps
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={handleCancel}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              {unsavedChanges ? "Cancel" : "Close"}
-            </button>
-            {unsavedChanges && (
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
-            )}
-          </div>
-
-          {(unsavedChanges || saveSuccess) && (
-            <div
-              className={`mt-4 p-4 rounded-md ${unsavedChanges ? "bg-amber-50" : "bg-green-50"}`}
-            >
-              {unsavedChanges ? (
-                <p className="text-gray-800 font-bold">
-                  <ExclamationTriangleIcon className="inline-block h-5 w-5 mr-2 text-amber-500" />
-                  You have unsaved changes
-                </p>
-              ) : (
-                <p className="text-gray-800 font-bold">
-                  <CheckCircleIcon className="inline-block h-5 w-5 mr-2 text-green-500" />
-                  Changes saved successfully
-                </p>
+          {/* Only show bottom buttons and alerts when not embedded */}
+          {!embedded && (
+            <>
+              {!unsavedChanges && (
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleCancel}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  >
+                    Close
+                  </button>
+                </div>
               )}
-            </div>
+
+              {/* Bottom alerts with buttons - only shown in non-embedded mode */}
+              {unsavedChanges && (
+                <div className="flex justify-between items-center mt-4 p-3 rounded-md bg-amber-50">
+                  <p className="text-gray-800 font-bold">
+                    <ExclamationTriangleIcon className="inline-block h-5 w-5 mr-2 text-amber-500" />
+                    You have unsaved changes
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={handleCancel}
+                      className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="px-3 py-1.5 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      {isSaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {saveSuccess && !unsavedChanges && (
+                <div className="mt-4 p-3 rounded-md bg-green-50">
+                  <p className="text-gray-800 font-bold">
+                    <CheckCircleIcon className="inline-block h-5 w-5 mr-2 text-green-500" />
+                    Changes saved successfully
+                  </p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { type JSX, useEffect, useState } from "react";
+import { type JSX } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
@@ -12,15 +12,8 @@ type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 export const NodeBasicTag_settings = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
   const node = getCtx(props).allNodes.get().get(nodeId) as FlatNode;
-  const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
+  const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const Tag = props.tagName;
-
-  useEffect(() => {
-    const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      setChildren(getCtx(props).getChildNodeIDs(nodeId));
-    });
-    return unsubscribe;
-  }, []);
 
   const canMove = (direction: "before" | "after"): boolean => {
     const hasCodeChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["code"]);

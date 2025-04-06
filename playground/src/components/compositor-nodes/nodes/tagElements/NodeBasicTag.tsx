@@ -24,7 +24,7 @@ export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
   const editIntentRef = useRef<boolean>(false);
-  const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
+  const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const originalTextRef = useRef<string>("");
   const elementRef = useRef<HTMLElement | null>(null);
   const doubleClickedRef = useRef<boolean>(false);
@@ -76,18 +76,12 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   }, [showGhostText, isEditableMode, supportsEditing]);
 
   useEffect(() => {
-    const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      setChildren(getCtx(props).getChildNodeIDs(nodeId));
-    });
-
     getCtx(props).clickedNodeId.subscribe((val) => {
       if (editIntentRef.current && val !== nodeId) {
         editIntentRef.current = false;
         originalTextRef.current = "";
       }
     });
-
-    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -196,7 +190,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     // If content hasn’t changed, notify parent and show GhostText if appropriate
     if (newHTML === originalTextRef.current) {
-      getCtx(props).notifyNode(node?.parentId || "");
+      //getCtx(props).notifyNode(node?.parentId || "");
+      //console.log(`notify ... no change`,node?.parentId);
       if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
         setShowGhostText(true);
       }
@@ -350,7 +345,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
     // If no changes, just notify parent and exit
     if (newHTML === originalTextRef.current) {
-      getCtx(props).notifyNode(node?.parentId || "");
+      //getCtx(props).notifyNode(node?.parentId || "");
+      //console.log(`notify ... change`,node?.parentId);
       return;
     }
 
@@ -385,6 +381,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }
 
       // Notify parent to ensure consistency
+      console.log(`notify ... change`, node?.parentId);
       getCtx(props).notifyNode(node?.parentId || "");
     } catch (error) {
       console.error("Error parsing edited content in handleGhostContentSaved:", error);

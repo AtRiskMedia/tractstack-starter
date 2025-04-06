@@ -4,24 +4,17 @@ import { viewportKeyStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import type { NodeProps } from "@/types";
-import { type JSX, type MouseEvent, type KeyboardEvent, useEffect, useState } from "react";
+import { type JSX, type MouseEvent, type KeyboardEvent } from "react";
 import { tagTitles } from "@/constants";
 
 type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTagEraser = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
-  const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
+  const children = getCtx(props).getChildNodeIDs(props.nodeId);
 
   const Tag = props.tagName;
   const tagTitle = tagTitles[props.tagName as keyof typeof tagTitles] || props.tagName;
-
-  useEffect(() => {
-    const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      setChildren(getCtx(props).getChildNodeIDs(nodeId));
-    });
-    return unsubscribe;
-  }, []);
 
   const handleClick = (e: MouseEvent) => {
     e.stopPropagation();

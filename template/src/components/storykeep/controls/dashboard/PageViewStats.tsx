@@ -21,7 +21,6 @@ function formatNumber(num: number): string {
 
 export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
-  console.log(isDemoMode);
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);

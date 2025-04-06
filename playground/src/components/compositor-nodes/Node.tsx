@@ -19,7 +19,6 @@ import { NodeBasicTag } from "@/components/compositor-nodes/nodes/tagElements/No
 import { NodeBasicTagInsert } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_insert.tsx";
 import { NodeBasicTagEraser } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_eraser.tsx";
 import { Widget } from "@/components/compositor-nodes/nodes/Widget.tsx";
-import { timestampNodeId } from "@/utils/common/helpers.ts";
 import { showGuids } from "@/store/development.ts";
 import { NodeWithGuid } from "@/components/compositor-nodes/NodeWithGuid.tsx";
 import AnalyticsPanel from "@/components/storykeep/controls/recharts/AnalyticsPanel.tsx";
@@ -83,7 +82,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   const type = getType(node);
   switch (type) {
     case "Markdown":
-      return <Markdown {...sharedProps} key={timestampNodeId(node.id)} />;
+      return <Markdown {...sharedProps} key={node.id} />;
 
     case "StoryFragment": {
       const sf = node as StoryFragmentNode;
@@ -96,7 +95,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <>
               <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
               <AnalyticsPanel nodeId={props.nodeId} />
-              <StoryFragment {...sharedProps} key={timestampNodeId(node.id)} />
+              <StoryFragment {...sharedProps} key={node.id} />
               {!isPreview && sf.slug && sf.title && sf.paneIds.length === 0 && (
                 <PageCreationSelector nodeId={props.nodeId} ctx={getCtx(props)} />
               )}
@@ -121,7 +120,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             ) : null}
             {!isPreview && <AnalyticsPanel nodeId={node.id} />}
             <div className="bg-white">
-              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+              <Pane {...sharedProps} key={node.id} />
               {!isPreview && paneNode.slug && paneNode.title && paneNodes.length === 0 && (
                 <AddPanePanel
                   nodeId={node.id}
@@ -138,7 +137,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;
       const firstPane = storyFragment?.paneIds?.length && storyFragment.paneIds[0];
-      if (isPreview) return <Pane {...sharedProps} key={timestampNodeId(node.id)} />;
+      if (isPreview) return <Pane {...sharedProps} key={node.id} />;
       return (
         <>
           {storyFragment && firstPane === node.id && (
@@ -147,11 +146,11 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           <div className="py-0.5">
             <ConfigPanePanel nodeId={node.id} />
             {toolModeVal === `eraser` ? (
-              <PaneEraser {...sharedProps} key={timestampNodeId(node.id)} />
+              <PaneEraser {...sharedProps} key={node.id} />
             ) : toolModeVal === `layout` ? (
-              <PaneLayout {...sharedProps} key={timestampNodeId(node.id)} />
+              <PaneLayout {...sharedProps} key={node.id} />
             ) : (
-              <Pane {...sharedProps} key={timestampNodeId(node.id)} />
+              <Pane {...sharedProps} key={node.id} />
             )}
           </div>
           <AddPanePanel nodeId={node.id} first={false} ctx={getCtx(props)} />
@@ -160,9 +159,9 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     }
 
     case "BgPane":
-      return <BgPaneWrapper {...sharedProps} key={timestampNodeId(node.id)} />;
+      return <BgPaneWrapper {...sharedProps} key={node.id} />;
     case "TagElement":
-      return <TagElement {...sharedProps} key={timestampNodeId(node.id)} />;
+      return <TagElement {...sharedProps} key={node.id} />;
     // tag elements
     case "h2":
     case "h3":
@@ -174,52 +173,40 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "p": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
       if (toolModeVal === `insert`)
-        return (
-          <NodeBasicTagInsert {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
-        );
+        return <NodeBasicTagInsert {...sharedProps} tagName={type} key={node.id} />;
       else if (toolModeVal === `eraser`)
-        return (
-          <NodeBasicTagEraser {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
-        );
+        return <NodeBasicTagEraser {...sharedProps} tagName={type} key={node.id} />;
       else if (toolModeVal === `move`)
-        return (
-          <NodeBasicTag_settings {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />
-        );
-      return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
+        return <NodeBasicTag_settings {...sharedProps} tagName={type} key={node.id} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} key={node.id} />;
     }
 
     case "strong":
     case "em":
-      return <NodeBasicTag {...sharedProps} tagName={type} key={timestampNodeId(node.id)} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} key={node.id} />;
 
     case "text":
-      return <NodeText {...sharedProps} key={timestampNodeId(node.id)} />;
+      return <NodeText {...sharedProps} key={node.id} />;
     case "button": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      if (toolModeVal === `eraser`)
-        return <NodeButtonEraser {...sharedProps} key={timestampNodeId(node.id)} />;
-      return <NodeButton {...sharedProps} key={timestampNodeId(node.id)} />;
+      if (toolModeVal === `eraser`) return <NodeButtonEraser {...sharedProps} key={node.id} />;
+      return <NodeButton {...sharedProps} key={node.id} />;
     }
     case "a": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      if (toolModeVal === `eraser`)
-        return <NodeAEraser {...sharedProps} key={timestampNodeId(node.id)} />;
-      return <NodeA {...sharedProps} key={timestampNodeId(node.id)} />;
+      if (toolModeVal === `eraser`) return <NodeAEraser {...sharedProps} key={node.id} />;
+      return <NodeA {...sharedProps} key={node.id} />;
     }
     case "img":
-      return <NodeImg {...sharedProps} key={timestampNodeId(node.id)} />;
+      return <NodeImg {...sharedProps} key={node.id} />;
     case "code": {
       const hookData = parseCodeHook(node);
-      return hookData ? (
-        <Widget {...hookData} {...sharedProps} key={timestampNodeId(node.id)} />
-      ) : (
-        <></>
-      );
+      return hookData ? <Widget {...hookData} {...sharedProps} key={node.id} /> : <></>;
     }
     case "impression":
       return <></>;
     default:
-      console.log(`Node.tsx miss on ${type}`);
+      console.warn(`Node.tsx miss on ${type}`);
       return <></>;
   }
 };
