@@ -2,7 +2,7 @@ import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, toolAddModeStore, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
-import { type JSX, type MouseEvent, useEffect, useState } from "react";
+import { type JSX, type MouseEvent} from "react";
 import type { NodeProps } from "@/types";
 import { tagTitles } from "@/constants";
 import { getTemplateNode } from "@/utils/common/nodesHelper.ts";
@@ -16,17 +16,10 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
     props.tagName !== "li"
       ? getCtx(props).allowInsert(nodeId, toolAddMode)
       : getCtx(props).allowInsertLi(nodeId, toolAddMode);
-  const [children, setChildren] = useState<string[]>(getCtx(props).getChildNodeIDs(nodeId));
+  const children = getCtx(props).getChildNodeIDs(props.nodeId);
 
   const Tag = props.tagName;
   const newTagTitle = tagTitles[toolAddMode];
-
-  useEffect(() => {
-    const unsubscribe = getCtx(props).notifications.subscribe(nodeId, () => {
-      setChildren(getCtx(props).getChildNodeIDs(nodeId));
-    });
-    return unsubscribe;
-  }, []);
 
   const handleInsertAbove = (e: MouseEvent) => {
     e.stopPropagation();

@@ -1,3 +1,4 @@
+import { type CSSProperties, useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
@@ -5,7 +6,6 @@ import PaneAnalyticsPanel from "@/components/storykeep/controls/pane/PaneAnalyti
 import FeaturedContentSetup from "@/components/codehooks/FeaturedContentSetup";
 import ListContentSetup from "@/components/codehooks/ListContentSetup";
 import BunnyVideoSetup from "@/components/codehooks/BunnyVideoSetup";
-import { type CSSProperties, useEffect, useState } from "react";
 import { type NodeProps } from "@/types";
 
 export const CodeHookContainer = ({
@@ -37,6 +37,7 @@ export const CodeHookContainer = ({
 );
 
 export const Pane = (props: NodeProps) => {
+  console.log(`Rendering Pane with id: ${props.nodeId}`);
   const $showAnalytics = showAnalytics.get();
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
@@ -58,11 +59,11 @@ export const Pane = (props: NodeProps) => {
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
-      console.log("notification received data update for page node: " + props.nodeId);
+      console.log("Pane received notification:", props.nodeId);
       setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;
-  }, []);
+  }, [props.nodeId]);
 
   return (
     <div id={getPaneId()} className="pane">

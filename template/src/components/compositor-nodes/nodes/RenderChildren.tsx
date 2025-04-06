@@ -10,6 +10,7 @@ export type RenderChildrenProps = {
 
 export const RenderChildren = (props: RenderChildrenProps) => {
   const { children, nodeProps } = props;
+  console.log(`Rendering RenderChildren`, children.at(0));
   return (
     <>
       {children.map((id: string) => (

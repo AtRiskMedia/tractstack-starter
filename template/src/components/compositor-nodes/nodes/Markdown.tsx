@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
@@ -7,23 +6,12 @@ import { type NodeProps } from "@/types";
 import type { MarkdownPaneFragmentNode, ParentClassesPayload } from "@/types.ts";
 
 export const Markdown = (props: NodeProps) => {
+  console.log(`Rendering Markdown with id: ${props.nodeId}`);
   const id = props.nodeId;
   const toolModeVal = getCtx(props).toolModeValStore.get().value;
   const node = getCtx(props).allNodes.get().get(props.nodeId) as MarkdownPaneFragmentNode;
   const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
-  const [children, setChildren] = useState<string[]>([
-    ...getCtx(props).getChildNodeIDs(props.nodeId),
-  ]);
-
-  useEffect(() => {
-    const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
-      console.log("notification received data update for markdown node: " + props.nodeId);
-      setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
-    });
-    return unsubscribe;
-  }, []);
-
-  // Determine whether this Markdown container is empty
+  const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const isEmpty = children.length === 0;
 
   // Get the last child element for appending new elements

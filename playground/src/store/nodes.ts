@@ -769,6 +769,7 @@ export class NodesContext {
   }
 
   nodeToNotify(nodeId: string, nodeType: string) {
+    console.log(`lookup parent`, nodeId, nodeType);
     switch (nodeType) {
       case `StoryFragment`:
         return `root`;
@@ -789,11 +790,11 @@ export class NodesContext {
   }
 
   modifyNodes(newData: BaseNode[]) {
-    // if all nodes are the same, skip
-    if (!this.checkAnyNodeDifferent(newData)) return;
+    console.log(`modifyNodes`, newData);
 
     const undoList: ((ctx: NodesContext) => void)[] = [];
     const redoList: ((ctx: NodesContext) => void)[] = [];
+
     for (let i = 0; i < newData.length; i++) {
       const node = newData[i];
       const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
@@ -802,7 +803,8 @@ export class NodesContext {
         continue;
       }
       if (isDeepEqual(currentNodeData, node, ["isChanged"])) {
-        continue; // data is the same
+        this.notifyNode(node.id);
+        continue; // data is the same; skip modify, only notify
       }
 
       switch (node.nodeType) {
@@ -843,8 +845,10 @@ export class NodesContext {
         if (parentNode) this.notifyNode(parentNode);
       });
 
-      const parentNode = this.nodeToNotify(node.id, node.nodeType);
-      if (parentNode) this.notifyNode(parentNode);
+      //const parentNode = this.nodeToNotify(node.id, node.nodeType);
+      //if (parentNode) this.notifyNode(parentNode);
+      console.log(`don't notify parent, notify self`);
+      this.notifyNode(node.id);
     }
 
     this.history.addPatch({
@@ -858,17 +862,17 @@ export class NodesContext {
     });
   }
 
-  private checkAnyNodeDifferent(newData: BaseNode[]) {
-    let isAnyNodeDifferent = false;
-    newData.forEach((nodeData) => {
-      const node = nodeData;
-      const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
-      if (!isDeepEqual(currentNodeData, node, ["isChanged"])) {
-        isAnyNodeDifferent = true;
-      }
-    });
-    return isAnyNodeDifferent;
-  }
+  //private checkAnyNodeDifferent(newData: BaseNode[]) {
+  //  let isAnyNodeDifferent = false;
+  //  newData.forEach((nodeData) => {
+  //    const node = nodeData;
+  //    const currentNodeData = this.allNodes.get().get(node.id) as BaseNode;
+  //    if (!isDeepEqual(currentNodeData, node, ["isChanged"])) {
+  //      isAnyNodeDifferent = true;
+  //    }
+  //  });
+  //  return isAnyNodeDifferent;
+  //}
 
   getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
     const node = this.allNodes.get().get(nodeId);
@@ -941,6 +945,7 @@ export class NodesContext {
   }
 
   notifyNode(nodeId: string, payload?: BaseNode) {
+    console.log(`notifyNode`, nodeId);
     let notifyNodeId = nodeId;
     if (notifyNodeId === this.rootNodeId.get()) {
       notifyNodeId = ROOT_NODE_NAME;
@@ -1614,7 +1619,6 @@ export class NodesContext {
       this
     );
 
-    // Persist changes using cloneDeep and modifyNodes
     if (node.nodeType === "Pane") {
       const storyFragmentId = this.getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = cloneDeep(
