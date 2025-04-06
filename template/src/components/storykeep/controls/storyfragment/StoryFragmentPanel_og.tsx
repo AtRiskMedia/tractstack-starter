@@ -148,7 +148,7 @@ const StoryFragmentOpenGraphPanel = ({
             setExistingTopics([]);
           }
         } else {
-          console.log("Topics API returned non-200 status:", topicsResponse.status);
+          console.warn("Topics API returned non-200 status:", topicsResponse.status);
           setExistingTopics([]);
         }
 
@@ -174,7 +174,7 @@ const StoryFragmentOpenGraphPanel = ({
                 setTopics(topicsData);
               }
             } else {
-              console.log(
+              console.warn(
                 "Fragment topics API returned non-200 status:",
                 fragmentTopicsResponse.status
               );
@@ -199,7 +199,7 @@ const StoryFragmentOpenGraphPanel = ({
                 setDetails("");
               }
             } else {
-              console.log("Details API returned non-200 status:", detailsResponse.status);
+              console.warn("Details API returned non-200 status:", detailsResponse.status);
               setDetails("");
             }
           } catch (detailsErr) {

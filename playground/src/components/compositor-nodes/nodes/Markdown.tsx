@@ -6,7 +6,6 @@ import { type NodeProps } from "@/types";
 import type { MarkdownPaneFragmentNode, ParentClassesPayload } from "@/types.ts";
 
 export const Markdown = (props: NodeProps) => {
-  console.log(`Rendering Markdown with id: ${props.nodeId}`);
   const id = props.nodeId;
   const toolModeVal = getCtx(props).toolModeValStore.get().value;
   const node = getCtx(props).allNodes.get().get(props.nodeId) as MarkdownPaneFragmentNode;

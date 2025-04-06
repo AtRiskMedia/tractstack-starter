@@ -12,7 +12,7 @@ export const StoryFragment = (props: NodeProps) => {
 
   useEffect(() => {
     const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {
-      console.log("StoryFragment received notification:", props.nodeId);
+      console.log(" !! StoryFragment received notification:", props.nodeId);
       setChildren([...getCtx(props).getChildNodeIDs(props.nodeId)]);
     });
     return unsubscribe;

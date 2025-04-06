@@ -61,9 +61,8 @@ const Pane = memo(
     const getPaneId = () => `pane-${props.nodeId}`;
 
     const handleNotification = useCallback(() => {
-      console.log("Pane received notification, updating:", props.nodeId);
+      console.log(" !! Pane received notification, updating:", props.nodeId);
       const newChildren = [...getCtx(props).getChildNodeIDs(props.nodeId)];
-      console.log("Children after notification:", newChildren);
       setChildren(newChildren); // Fresh copy
       setRenderCount((prev) => prev + 1); // Increment to force rerender
     }, [props.nodeId, props.ctx]);
@@ -116,7 +115,7 @@ const Pane = memo(
     const isEqual = prevProps.nodeId === nextProps.nodeId && prevProps.ctx === nextProps.ctx;
     if (!isEqual) {
       console.log(
-        `Pane rerender triggered by props change: ${prevProps.nodeId} -> ${nextProps.nodeId}`
+        ` !! Pane rerender triggered by props change: ${prevProps.nodeId} -> ${nextProps.nodeId}`
       );
     }
     return isEqual;

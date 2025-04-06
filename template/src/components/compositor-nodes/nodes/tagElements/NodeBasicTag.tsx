@@ -22,7 +22,6 @@ import GhostText from "./GhostText";
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
 export const NodeBasicTag = (props: NodeTagProps) => {
-  console.log(`Rendering NodeBasicTag with id: ${props.nodeId}`);
   const nodeId = props.nodeId;
   const editIntentRef = useRef<boolean>(false);
   const children = getCtx(props).getChildNodeIDs(props.nodeId);

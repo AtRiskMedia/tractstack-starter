@@ -214,7 +214,6 @@ export class NodesContext {
   }
 
   handleClickEvent(dblClick: boolean = false) {
-    console.log(`click`);
     const toolModeVal = this.toolModeValStore.get().value;
     const node = this.allNodes.get().get(this.clickedNodeId.get()) as FlatNode;
     if (!node) return;
@@ -770,7 +769,6 @@ export class NodesContext {
   }
 
   nodeToNotify(nodeId: string, nodeType: string) {
-    console.log(`lookup parent`, nodeId, nodeType);
     switch (nodeType) {
       case `StoryFragment`:
         return `root`;
@@ -786,7 +784,7 @@ export class NodesContext {
         // do nothing
         break;
       default:
-        console.log(`nodeToNotify missed on`, nodeType);
+        console.warn(`nodeToNotify missed on`, nodeType);
     }
   }
 
@@ -824,7 +822,7 @@ export class NodesContext {
           break;
 
         default:
-          console.log(`must dirty check missed on `, node.nodeType);
+          console.warn(`must dirty check missed on `, node.nodeType);
       }
 
       const newNodes = new Map(this.allNodes.get());
@@ -846,9 +844,8 @@ export class NodesContext {
         if (parentNode) this.notifyNode(parentNode);
       });
 
-      //const parentNode = this.nodeToNotify(node.id, node.nodeType);
-      //if (parentNode) this.notifyNode(parentNode);
-      console.log(`don't notify parent, notify self`);
+      // notify self to trigger rerender; unless StoryFragment
+      if ([`Menu`, `StoryFragment`].includes(node.nodeType)) this.notifyNode(ROOT_NODE_NAME);
       this.notifyNode(node.id);
     }
 
@@ -1989,7 +1986,6 @@ export class NodesContext {
         if (parentNode) {
           parentNode.splice(parentNode.indexOf(node.id), 1);
           this.parentNodes.set(new Map<string, string[]>(parentNodes));
-          console.log("parentNodes after delete for", node.parentId, ":", parentNode);
         }
       }
     });

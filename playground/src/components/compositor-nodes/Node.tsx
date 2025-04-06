@@ -206,7 +206,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "impression":
       return <></>;
     default:
-      console.log(`Node.tsx miss on ${type}`);
+      console.warn(`Node.tsx miss on ${type}`);
       return <></>;
   }
 };
