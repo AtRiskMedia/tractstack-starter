@@ -1651,75 +1651,96 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
   const client = await tursoClient.getClient(context);
   if (!client) return [];
 
-  const { rows: visitorMetrics } = await client.execute(`
+  const { rows: siteMetricsRows } = await client.execute(`
     WITH time_periods AS (
-      SELECT 
-        'last_24h' as period, 
-        datetime('now', '-1 day') as start_time
+      SELECT 'last_24h' as period, datetime('now', '-1 day') as start_time
       UNION ALL
-      SELECT 
-        'last_7d' as period, 
-        datetime('now', '-7 days') as start_time
+      SELECT 'last_7d' as period, datetime('now', '-7 days') as start_time
       UNION ALL
-      SELECT 
-        'last_28d' as period, 
-        datetime('now', '-28 days') as start_time
+      SELECT 'last_28d' as period, datetime('now', '-28 days') as start_time
     ),
     first_visits AS (
-      -- Get first visit date for each fingerprint
       SELECT 
         fingerprint_id,
         MIN(created_at) as first_visit_date
-      FROM 
-        visits
-      GROUP BY 
-        fingerprint_id
+      FROM visits
+      GROUP BY fingerprint_id
     ),
-    visit_metrics AS (
-      -- Calculate metrics without requiring lead connections
+    visitor_metrics AS (
       SELECT
         tp.period,
-        COUNT(DISTINCT v.fingerprint_id) as total_visitors,
-        COUNT(DISTINCT CASE 
-          WHEN fv.first_visit_date >= tp.start_time 
-          THEN v.fingerprint_id 
-          ELSE NULL 
-        END) as first_time_visitors,
-        (COUNT(DISTINCT v.fingerprint_id) - 
-         COUNT(DISTINCT CASE 
-           WHEN fv.first_visit_date >= tp.start_time 
-           THEN v.fingerprint_id 
-           ELSE NULL 
-         END)) as returning_visitors
+        COUNT(DISTINCT CASE WHEN v.created_at >= tp.start_time THEN v.fingerprint_id ELSE NULL END) as total_visitors,
+        COUNT(DISTINCT CASE WHEN fv.first_visit_date >= tp.start_time THEN v.fingerprint_id ELSE NULL END) as first_time_visitors,
+        COUNT(DISTINCT CASE WHEN v.created_at >= tp.start_time AND fv.first_visit_date < tp.start_time THEN v.fingerprint_id ELSE NULL END) as returning_visitors
       FROM
         time_periods tp
+      CROSS JOIN
+        (SELECT 1) as dummy
       LEFT JOIN
         visits v ON v.created_at >= tp.start_time
       LEFT JOIN
         first_visits fv ON v.fingerprint_id = fv.fingerprint_id
       GROUP BY
         tp.period
+    ),
+    site_metrics AS (
+      SELECT 
+        COUNT(DISTINCT v.id) as total_visits,
+        COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-1 day') THEN v.id ELSE NULL END) as last_24h_visits,
+        COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-7 days') THEN v.id ELSE NULL END) as last_7d_visits,
+        COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-28 days') THEN v.id ELSE NULL END) as last_28d_visits,
+        MAX(v.created_at) as last_activity,
+        (SELECT COUNT(*) FROM actions WHERE verb = 'CLICKED') as clicked_events,
+        (SELECT COUNT(*) FROM actions WHERE verb = 'ENTERED') as entered_events
+      FROM 
+        visits v
     )
     SELECT 
-      MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END) as total_24h,
-      MAX(CASE WHEN period = 'last_24h' THEN first_time_visitors ELSE 0 END) as first_time_24h,
-      MAX(CASE WHEN period = 'last_24h' THEN returning_visitors ELSE 0 END) as returning_24h,
-      MAX(CASE WHEN period = 'last_7d' THEN total_visitors ELSE 0 END) as total_7d,
-      MAX(CASE WHEN period = 'last_7d' THEN first_time_visitors ELSE 0 END) as first_time_7d,
-      MAX(CASE WHEN period = 'last_7d' THEN returning_visitors ELSE 0 END) as returning_7d,
-      MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END) as total_28d,
-      MAX(CASE WHEN period = 'last_28d' THEN first_time_visitors ELSE 0 END) as first_time_28d,
-      MAX(CASE WHEN period = 'last_28d' THEN returning_visitors ELSE 0 END) as returning_28d
+      COALESCE(MAX(CASE WHEN period = 'last_24h' THEN total_visitors END), 0) as total_24h,
+      COALESCE(MAX(CASE WHEN period = 'last_24h' THEN first_time_visitors END), 0) as first_time_24h,
+      COALESCE(MAX(CASE WHEN period = 'last_24h' THEN returning_visitors END), 0) as returning_24h,
+      COALESCE(MAX(CASE WHEN period = 'last_7d' THEN total_visitors END), 0) as total_7d,
+      COALESCE(MAX(CASE WHEN period = 'last_7d' THEN first_time_visitors END), 0) as first_time_7d,
+      COALESCE(MAX(CASE WHEN period = 'last_7d' THEN returning_visitors END), 0) as returning_7d,
+      COALESCE(MAX(CASE WHEN period = 'last_28d' THEN total_visitors END), 0) as total_28d,
+      COALESCE(MAX(CASE WHEN period = 'last_28d' THEN first_time_visitors END), 0) as first_time_28d,
+      COALESCE(MAX(CASE WHEN period = 'last_28d' THEN returning_visitors END), 0) as returning_28d,
+      (SELECT total_visits FROM site_metrics) as total_visits,
+      (SELECT last_24h_visits FROM site_metrics) as last_24h_visits,
+      (SELECT last_7d_visits FROM site_metrics) as last_7d_visits,
+      (SELECT last_28d_visits FROM site_metrics) as last_28d_visits,
+      (SELECT last_activity FROM site_metrics) as last_activity,
+      (SELECT clicked_events FROM site_metrics) as clicked_events,
+      (SELECT entered_events FROM site_metrics) as entered_events
     FROM 
-      visit_metrics
+      visitor_metrics
   `);
 
-  const first_time_24h = Number(visitorMetrics?.[0]?.first_time_24h || 0);
-  const returning_24h = Number(visitorMetrics?.[0]?.returning_24h || 0);
-  const first_time_7d = Number(visitorMetrics?.[0]?.first_time_7d || 0);
-  const returning_7d = Number(visitorMetrics?.[0]?.returning_7d || 0);
-  const first_time_28d = Number(visitorMetrics?.[0]?.first_time_28d || 0);
-  const returning_28d = Number(visitorMetrics?.[0]?.returning_28d || 0);
+  const siteMetrics = siteMetricsRows[0] || {
+    total_24h: 0,
+    first_time_24h: 0,
+    returning_24h: 0,
+    total_7d: 0,
+    first_time_7d: 0,
+    returning_7d: 0,
+    total_28d: 0,
+    first_time_28d: 0,
+    returning_28d: 0,
+    total_visits: 0,
+    last_24h_visits: 0,
+    last_7d_visits: 0,
+    last_28d_visits: 0,
+    last_activity: null,
+    clicked_events: 0,
+    entered_events: 0,
+  };
+
+  const first_time_24h = Number(siteMetrics.first_time_24h || 0);
+  const returning_24h = Number(siteMetrics.returning_24h || 0);
+  const first_time_7d = Number(siteMetrics.first_time_7d || 0);
+  const returning_7d = Number(siteMetrics.returning_7d || 0);
+  const first_time_28d = Number(siteMetrics.first_time_28d || 0);
+  const returning_28d = Number(siteMetrics.returning_28d || 0);
 
   const total_24h = first_time_24h + returning_24h;
   const total_7d = first_time_7d + returning_7d;
@@ -1732,54 +1753,15 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
   const first_time_28d_percentage = total_28d > 0 ? (first_time_28d / total_28d) * 100 : 0;
   const returning_28d_percentage = total_28d > 0 ? (returning_28d / total_28d) * 100 : 0;
 
-  const sharedMetrics = {
-    first_time_24h,
-    returning_24h,
-    first_time_7d,
-    returning_7d,
-    first_time_28d,
-    returning_28d,
-    first_time_24h_percentage,
-    returning_24h_percentage,
-    first_time_7d_percentage,
-    returning_7d_percentage,
-    first_time_28d_percentage,
-    returning_28d_percentage,
-  };
+  const hasVisits = Number(siteMetrics.total_visits || 0) > 0;
 
-  const { rows: leadCheck } = await client.execute(`
-    SELECT COUNT(*) as count FROM leads
-  `);
-
-  const hasLeads = Number(leadCheck?.[0]?.count || 0) > 0;
-
-  if (!hasLeads) {
-    return [
-      {
-        id: "00000000-0000-0000-0000-000000000000",
-        first_name: "",
-        email: "",
-        contact_persona: "",
-        short_bio: undefined,
-        total_visits: 0,
-        clicked_events: 0,
-        entered_events: 0,
-        last_24h_visits: 0,
-        last_7d_visits: 0,
-        last_28d_visits: 0,
-        last_activity: "",
-        ...sharedMetrics,
-      },
-    ];
+  if (!hasVisits) {
+    return [];
   }
 
-  const { rows } = await client.execute(`
+  const { rows: leadRows } = await client.execute(`
     SELECT 
       l.id,
-      l.first_name,
-      l.email,
-      l.contact_persona,
-      l.short_bio,
       COUNT(DISTINCT v.id) as total_visits,
       SUM(CASE WHEN a.verb = 'CLICKED' THEN 1 ELSE 0 END) as clicked_events,
       SUM(CASE WHEN a.verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events,
@@ -1789,30 +1771,65 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
       MAX(v.created_at) as last_activity
     FROM 
       leads l
-      LEFT JOIN fingerprints f ON l.id = f.lead_id
-      LEFT JOIN visits v ON f.id = v.fingerprint_id
-      LEFT JOIN actions a ON v.id = a.visit_id
+    LEFT JOIN 
+      fingerprints f ON l.id = f.lead_id
+    LEFT JOIN 
+      visits v ON f.id = v.fingerprint_id
+    LEFT JOIN 
+      actions a ON v.id = a.visit_id
     GROUP BY 
-      l.id, l.first_name, l.email, l.contact_persona, l.short_bio
+      l.id
     ORDER BY 
       last_activity DESC NULLS LAST
   `);
 
-  return rows.map((row) => ({
-    id: String(row.id),
-    first_name: String(row.first_name),
-    email: String(row.email),
-    contact_persona: String(row.contact_persona),
-    short_bio: row.short_bio ? String(row.short_bio) : undefined,
-    total_visits: Number(row.total_visits || 0),
-    clicked_events: Number(row.clicked_events || 0),
-    entered_events: Number(row.entered_events || 0),
-    last_24h_visits: Number(row.last_24h_visits || 0),
-    last_7d_visits: Number(row.last_7d_visits || 0),
-    last_28d_visits: Number(row.last_28d_visits || 0),
-    last_activity: String(row.last_activity || ""),
-    ...sharedMetrics,
-  }));
+  if (leadRows.length > 0) {
+    return leadRows.map((row) => ({
+      total_visits: Number(row.total_visits || 0),
+      clicked_events: Number(row.clicked_events || 0),
+      entered_events: Number(row.entered_events || 0),
+      last_24h_visits: Number(row.last_24h_visits || 0),
+      last_7d_visits: Number(row.last_7d_visits || 0),
+      last_28d_visits: Number(row.last_28d_visits || 0),
+      last_activity: row.last_activity ? String(row.last_activity) : "",
+      first_time_24h,
+      returning_24h,
+      first_time_7d,
+      returning_7d,
+      first_time_28d,
+      returning_28d,
+      first_time_24h_percentage,
+      returning_24h_percentage,
+      first_time_7d_percentage,
+      returning_7d_percentage,
+      first_time_28d_percentage,
+      returning_28d_percentage,
+    }));
+  }
+
+  return [
+    {
+      total_visits: Number(siteMetrics.total_visits || 0),
+      clicked_events: Number(siteMetrics.clicked_events || 0),
+      entered_events: Number(siteMetrics.entered_events || 0),
+      last_24h_visits: Number(siteMetrics.last_24h_visits || 0),
+      last_7d_visits: Number(siteMetrics.last_7d_visits || 0),
+      last_28d_visits: Number(siteMetrics.last_28d_visits || 0),
+      last_activity: siteMetrics.last_activity ? String(siteMetrics.last_activity) : "",
+      first_time_24h,
+      returning_24h,
+      first_time_7d,
+      returning_7d,
+      first_time_28d,
+      returning_28d,
+      first_time_24h_percentage,
+      returning_24h_percentage,
+      first_time_7d_percentage,
+      returning_7d_percentage,
+      first_time_28d_percentage,
+      returning_28d_percentage,
+    },
+  ];
 }
 
 export async function computeStoryfragmentAnalytics(

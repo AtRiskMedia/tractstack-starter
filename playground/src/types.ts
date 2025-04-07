@@ -1117,11 +1117,6 @@ export type PageDesign = {
 };
 
 export interface LeadMetrics {
-  id: string;
-  first_name: string;
-  email: string;
-  contact_persona: string;
-  short_bio?: string;
   total_visits: number;
   clicked_events: number;
   entered_events: number;
