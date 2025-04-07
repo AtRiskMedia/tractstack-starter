@@ -9,7 +9,6 @@ import type { LeadMetrics } from "@/types";
 interface Stat {
   name: string;
   events: number;
-  visitors: number;
   period: string;
 }
 
@@ -23,7 +22,7 @@ export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [leadMetrics, setLeadMetrics] = useState<LeadMetrics[]>([]);
+  const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
 
@@ -32,37 +31,21 @@ export default function PageViewStats() {
     (sum, fragment) => sum + (fragment?.unique_visitors || 0),
     0
   );
-  const total24hVisitors = analytics.reduce(
-    (sum, fragment) => sum + (fragment?.last_24h_unique_visitors || 0),
-    0
-  );
-  const total7dVisitors = analytics.reduce(
-    (sum, fragment) => sum + (fragment?.last_7d_unique_visitors || 0),
-    0
-  );
-  const total28dVisitors = analytics.reduce(
-    (sum, fragment) => sum + (fragment?.last_28d_unique_visitors || 0),
-    0
-  );
-  const totalLeads = analytics.length > 0 ? analytics[0]?.total_leads || 0 : 0;
 
   const stats: Stat[] = [
     {
       name: "Last 24 Hours",
       events: $storedDashboardAnalytics?.stats?.daily ?? 0,
-      visitors: total24hVisitors,
       period: "24h",
     },
     {
       name: "Past 7 Days",
       events: $storedDashboardAnalytics?.stats?.weekly ?? 0,
-      visitors: total7dVisitors,
       period: "7d",
     },
     {
       name: "Past 28 Days",
       events: $storedDashboardAnalytics?.stats?.monthly ?? 0,
-      visitors: total28dVisitors,
       period: "28d",
     },
   ];
@@ -75,7 +58,7 @@ export default function PageViewStats() {
         const response = await fetch("/api/turso/getLeadMetrics");
         if (response.ok) {
           const result = await response.json();
-          setLeadMetrics(result.data || []);
+          setLeadMetrics(result.data || null);
         }
       } catch (error) {
         console.error("Error fetching lead metrics:", error);
@@ -91,30 +74,27 @@ export default function PageViewStats() {
     try {
       setIsDownloading(true);
 
-      const response = await fetch("/api/turso/getLeadMetrics");
+      const response = await fetch("/api/turso/getLeadsList");
 
       if (!response.ok) {
-        throw new Error("Failed to fetch lead metrics");
+        throw new Error("Failed to fetch leads list");
       }
 
       const result = await response.json();
-      const leadMetrics = result.data;
+      const leadsList = result.data;
 
-      if (!leadMetrics || !leadMetrics.length) {
+      if (!leadsList || !leadsList.length) {
         alert("No lead data available to download");
         return;
       }
 
-      const headers = Object.keys(leadMetrics[0]);
+      const headers = Object.keys(leadsList[0]);
       let csvContent = headers.join(",") + "\n";
 
-      leadMetrics.forEach((lead: LeadMetrics) => {
+      leadsList.forEach((lead: any) => {
         const row = headers.map((header) => {
           const value =
-            lead[header as keyof LeadMetrics] === null ||
-            lead[header as keyof LeadMetrics] === undefined
-              ? ""
-              : String(lead[header as keyof LeadMetrics]);
+            lead[header] === null || lead[header] === undefined ? "" : String(lead[header]);
           return value.includes(",") ? `"${value}"` : value;
         });
         csvContent += row.join(",") + "\n";
@@ -124,19 +104,19 @@ export default function PageViewStats() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `leads-metrics-${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute("download", `leads-data-${new Date().toISOString().split("T")[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Error downloading lead metrics:", error);
-      alert("Failed to download lead metrics. Please try again.");
+      console.error("Error downloading leads:", error);
+      alert("Failed to download leads. Please try again.");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  if (!isClient) return null;
+  if (!isClient || !leadMetrics) return null;
 
   return (
     <div className="p-0.5 shadow-md">
@@ -146,19 +126,18 @@ export default function PageViewStats() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
             const period = item.period;
-            const firstTimeValue = leadMetrics.reduce(
-              (sum, lead) =>
-                sum + ((lead[`first_time_${period}` as keyof LeadMetrics] as number) || 0),
-              0
-            );
-            const returningValue = leadMetrics.reduce(
-              (sum, lead) =>
-                sum + ((lead[`returning_${period}` as keyof LeadMetrics] as number) || 0),
-              0
-            );
-            const total = firstTimeValue + returningValue;
-            const firstTimePercentage = total > 0 ? (firstTimeValue / total) * 100 : 0;
-            const returningPercentage = total > 0 ? (returningValue / total) * 100 : 0;
+            const firstTimeValue = leadMetrics[
+              `first_time_${period}` as keyof LeadMetrics
+            ] as number;
+            const returningValue = leadMetrics[
+              `returning_${period}` as keyof LeadMetrics
+            ] as number;
+            const firstTimePercentage = leadMetrics[
+              `first_time_${period}_percentage` as keyof LeadMetrics
+            ] as number;
+            const returningPercentage = leadMetrics[
+              `returning_${period}_percentage` as keyof LeadMetrics
+            ] as number;
 
             return (
               <div
@@ -175,12 +154,6 @@ export default function PageViewStats() {
                         {item.events === 0 ? "-" : formatNumber(item.events)}
                       </div>
                     </div>
-                    <div className="flex-1 text-right">
-                      <div className="text-sm text-gray-600">Visits</div>
-                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                        {item.visitors === 0 ? "-" : formatNumber(item.visitors)}
-                      </div>
-                    </div>
                   </div>
                 </dd>
 
@@ -189,7 +162,7 @@ export default function PageViewStats() {
                 <dd>
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
-                      <div className="text-sm text-gray-600">Unique Visitors</div>
+                      <div className="text-sm text-gray-600">Anonymous Visitors</div>
                       <div className="text-2xl font-bold tracking-tight text-cyan-700">
                         {firstTimeValue === 0 ? "-" : formatNumber(firstTimeValue)}
                       </div>
@@ -237,7 +210,7 @@ export default function PageViewStats() {
           <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
             <div className="flex justify-between items-start">
               <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
-              {totalLeads > 0 && (
+              {leadMetrics.total_leads > 0 && (
                 <button
                   onClick={downloadLeadsCSV}
                   disabled={isDemoMode || isDownloading}
@@ -255,7 +228,7 @@ export default function PageViewStats() {
             </div>
             <dd className="mt-2">
               <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                {totalLeads === 0 ? "-" : formatNumber(totalLeads)}
+                {leadMetrics.total_leads === 0 ? "-" : formatNumber(leadMetrics.total_leads)}
               </div>
               <div className="text-sm text-gray-600 mt-1">Registered leads (emails collected)</div>
             </dd>

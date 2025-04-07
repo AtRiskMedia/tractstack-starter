@@ -1118,11 +1118,9 @@ export type PageDesign = {
 
 export interface LeadMetrics {
   total_visits: number;
+  total_leads: number;
   clicked_events: number;
   entered_events: number;
-  last_24h_visits: number;
-  last_7d_visits: number;
-  last_28d_visits: number;
   last_activity: string;
   first_time_24h: number;
   returning_24h: number;
