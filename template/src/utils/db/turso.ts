@@ -1714,31 +1714,7 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
       visit_metrics
   `);
 
-  const { rows } = await client.execute(`
-    SELECT 
-      l.id,
-      l.first_name,
-      l.email,
-      l.contact_persona,
-      l.short_bio,
-      COUNT(DISTINCT v.id) as total_visits,
-      SUM(CASE WHEN a.verb = 'CLICKED' THEN 1 ELSE 0 END) as clicked_events,
-      SUM(CASE WHEN a.verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events,
-      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-1 day') THEN v.id ELSE NULL END) as last_24h_visits,
-      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-7 days') THEN v.id ELSE NULL END) as last_7d_visits,
-      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-28 days') THEN v.id ELSE NULL END) as last_28d_visits,
-      MAX(v.created_at) as last_activity
-    FROM 
-      leads l
-      LEFT JOIN fingerprints f ON l.id = f.lead_id
-      LEFT JOIN visits v ON f.id = v.fingerprint_id
-      LEFT JOIN actions a ON v.id = a.visit_id
-    GROUP BY 
-      l.id, l.first_name, l.email, l.contact_persona, l.short_bio
-    ORDER BY 
-      last_activity DESC NULLS LAST
-  `);
-
+  // Safely extract visitor metrics
   const first_time_24h = Number(visitorMetrics?.[0]?.first_time_24h || 0);
   const returning_24h = Number(visitorMetrics?.[0]?.returning_24h || 0);
   const first_time_7d = Number(visitorMetrics?.[0]?.first_time_7d || 0);
@@ -1771,6 +1747,58 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
     first_time_28d_percentage,
     returning_28d_percentage,
   };
+
+  // Check if leads table has any entries
+  const { rows: leadCheck } = await client.execute(`
+    SELECT COUNT(*) as count FROM leads
+  `);
+
+  const hasLeads = Number(leadCheck?.[0]?.count || 0) > 0;
+
+  if (!hasLeads) {
+    return [
+      {
+        id: "00000000-0000-0000-0000-000000000000",
+        first_name: "",
+        email: "",
+        contact_persona: "",
+        short_bio: undefined,
+        total_visits: 0,
+        clicked_events: 0,
+        entered_events: 0,
+        last_24h_visits: 0,
+        last_7d_visits: 0,
+        last_28d_visits: 0,
+        last_activity: "",
+        ...sharedMetrics,
+      },
+    ];
+  }
+
+  const { rows } = await client.execute(`
+    SELECT 
+      l.id,
+      l.first_name,
+      l.email,
+      l.contact_persona,
+      l.short_bio,
+      COUNT(DISTINCT v.id) as total_visits,
+      SUM(CASE WHEN a.verb = 'CLICKED' THEN 1 ELSE 0 END) as clicked_events,
+      SUM(CASE WHEN a.verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-1 day') THEN v.id ELSE NULL END) as last_24h_visits,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-7 days') THEN v.id ELSE NULL END) as last_7d_visits,
+      COUNT(DISTINCT CASE WHEN v.created_at >= datetime('now', '-28 days') THEN v.id ELSE NULL END) as last_28d_visits,
+      MAX(v.created_at) as last_activity
+    FROM 
+      leads l
+      LEFT JOIN fingerprints f ON l.id = f.lead_id
+      LEFT JOIN visits v ON f.id = v.fingerprint_id
+      LEFT JOIN actions a ON v.id = a.visit_id
+    GROUP BY 
+      l.id, l.first_name, l.email, l.contact_persona, l.short_bio
+    ORDER BY 
+      last_activity DESC NULLS LAST
+  `);
 
   return rows.map((row) => ({
     id: String(row.id),
