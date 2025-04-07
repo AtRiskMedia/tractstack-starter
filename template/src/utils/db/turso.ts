@@ -1714,7 +1714,6 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
       visit_metrics
   `);
 
-  // Safely extract visitor metrics
   const first_time_24h = Number(visitorMetrics?.[0]?.first_time_24h || 0);
   const returning_24h = Number(visitorMetrics?.[0]?.returning_24h || 0);
   const first_time_7d = Number(visitorMetrics?.[0]?.first_time_7d || 0);
@@ -1748,7 +1747,6 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
     returning_28d_percentage,
   };
 
-  // Check if leads table has any entries
   const { rows: leadCheck } = await client.execute(`
     SELECT COUNT(*) as count FROM leads
   `);
@@ -1823,7 +1821,6 @@ export async function computeStoryfragmentAnalytics(
   const client = await tursoClient.getClient(context);
   if (!client) return [];
 
-  // Get the total leads count
   const { rows: leadRows } = await client.execute(`
     SELECT COUNT(*) as total_leads FROM leads
   `);
