@@ -154,34 +154,6 @@ export default function PageViewStats() {
         <h3 className="font-bold font-action text-xl mb-4">Analytics Dashboard</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          {stats.map((item) => (
-            <div
-              key={item.period}
-              className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors"
-            >
-              <dt className="text-sm font-bold text-gray-800">{item.name}</dt>
-              <dd className="mt-2">
-                <div className="flex justify-between items-end">
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-600">Events</div>
-                    <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                      {item.events === 0 ? "-" : formatNumber(item.events)}
-                    </div>
-                  </div>
-                  <div className="flex-1 text-right">
-                    <div className="text-sm text-gray-600">Unique Visitors</div>
-                    <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                      {item.visitors === 0 ? "-" : formatNumber(item.visitors)}
-                    </div>
-                  </div>
-                </div>
-              </dd>
-            </div>
-          ))}
-        </div>
-
-        {/* New section for visitor breakdown - same style */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
             // Calculate first-time and returning values based on period
             const period = item.period;
@@ -201,11 +173,34 @@ export default function PageViewStats() {
 
             return (
               <div
-                key={`breakdown-${item.period}`}
+                key={item.period}
                 className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors"
               >
                 <dt className="text-sm font-bold text-gray-800">{item.name}</dt>
+
+                {/* First section - Events and Unique Visitors */}
                 <dd className="mt-2">
+                  <div className="flex justify-between items-end">
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-600">Events</div>
+                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                        {item.events === 0 ? "-" : formatNumber(item.events)}
+                      </div>
+                    </div>
+                    <div className="flex-1 text-right">
+                      <div className="text-sm text-gray-600">Unique Visitors</div>
+                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                        {item.visitors === 0 ? "-" : formatNumber(item.visitors)}
+                      </div>
+                    </div>
+                  </div>
+                </dd>
+
+                {/* Divider */}
+                <hr className="my-3 border-gray-100" />
+
+                {/* Second section - Anonymous vs Known */}
+                <dd>
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Anonymous</div>
