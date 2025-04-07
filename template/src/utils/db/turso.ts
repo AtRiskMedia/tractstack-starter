@@ -1651,7 +1651,6 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
   const client = await tursoClient.getClient(context);
   if (!client) return [];
 
-  // Get visitor metrics including first-time and returning visitors
   const { rows: visitorMetrics } = await client.execute(`
     WITH time_periods AS (
       SELECT 
@@ -1676,11 +1675,10 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
       GROUP BY 
         fingerprint_id
     ),
-    period_metrics AS (
-      -- Calculate metrics for each period and fingerprint's lead
+    visit_metrics AS (
+      -- Calculate metrics without requiring lead connections
       SELECT
         tp.period,
-        f.lead_id,
         COUNT(DISTINCT v.fingerprint_id) as total_visitors,
         COUNT(DISTINCT CASE 
           WHEN fv.first_visit_date >= tp.start_time 
@@ -1695,21 +1693,14 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
          END)) as returning_visitors
       FROM
         time_periods tp
-      JOIN
+      LEFT JOIN
         visits v ON v.created_at >= tp.start_time
-      JOIN
-        fingerprints f ON v.fingerprint_id = f.id
-      JOIN
+      LEFT JOIN
         first_visits fv ON v.fingerprint_id = fv.fingerprint_id
-      WHERE
-        f.lead_id IS NOT NULL
       GROUP BY
-        tp.period, f.lead_id
+        tp.period
     )
-    
-    -- Convert from rows to columns for periods
     SELECT 
-      lead_id,
       MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END) as total_24h,
       MAX(CASE WHEN period = 'last_24h' THEN first_time_visitors ELSE 0 END) as first_time_24h,
       MAX(CASE WHEN period = 'last_24h' THEN returning_visitors ELSE 0 END) as returning_24h,
@@ -1718,50 +1709,11 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
       MAX(CASE WHEN period = 'last_7d' THEN returning_visitors ELSE 0 END) as returning_7d,
       MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END) as total_28d,
       MAX(CASE WHEN period = 'last_28d' THEN first_time_visitors ELSE 0 END) as first_time_28d,
-      MAX(CASE WHEN period = 'last_28d' THEN returning_visitors ELSE 0 END) as returning_28d,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_24h' THEN first_time_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as first_time_24h_percentage,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_24h' THEN returning_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_24h' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as returning_24h_percentage,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_7d' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_7d' THEN first_time_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_7d' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as first_time_7d_percentage,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_7d' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_7d' THEN returning_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_7d' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as returning_7d_percentage,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_28d' THEN first_time_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as first_time_28d_percentage,
-      CASE 
-        WHEN MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END) > 0 
-        THEN (MAX(CASE WHEN period = 'last_28d' THEN returning_visitors ELSE 0 END) * 100.0 / 
-              MAX(CASE WHEN period = 'last_28d' THEN total_visitors ELSE 0 END))
-        ELSE 0 
-      END as returning_28d_percentage
+      MAX(CASE WHEN period = 'last_28d' THEN returning_visitors ELSE 0 END) as returning_28d
     FROM 
-      period_metrics
-    GROUP BY 
-      lead_id
+      visit_metrics
   `);
 
-  // Get the main lead metrics
   const { rows } = await client.execute(`
     SELECT 
       l.id,
@@ -1784,62 +1736,57 @@ export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics[
     GROUP BY 
       l.id, l.first_name, l.email, l.contact_persona, l.short_bio
     ORDER BY 
-      last_activity DESC
+      last_activity DESC NULLS LAST
   `);
 
-  // Create a map of visitor metrics by lead_id
-  const visitorMetricsMap = new Map();
-  for (const metric of visitorMetrics) {
-    visitorMetricsMap.set(String(metric.lead_id), {
-      first_time_24h: Number(metric.first_time_24h || 0),
-      returning_24h: Number(metric.returning_24h || 0),
-      first_time_7d: Number(metric.first_time_7d || 0),
-      returning_7d: Number(metric.returning_7d || 0),
-      first_time_28d: Number(metric.first_time_28d || 0),
-      returning_28d: Number(metric.returning_28d || 0),
-      first_time_24h_percentage: Number(metric.first_time_24h_percentage || 0),
-      returning_24h_percentage: Number(metric.returning_24h_percentage || 0),
-      first_time_7d_percentage: Number(metric.first_time_7d_percentage || 0),
-      returning_7d_percentage: Number(metric.returning_7d_percentage || 0),
-      first_time_28d_percentage: Number(metric.first_time_28d_percentage || 0),
-      returning_28d_percentage: Number(metric.returning_28d_percentage || 0),
-    });
-  }
+  const first_time_24h = Number(visitorMetrics?.[0]?.first_time_24h || 0);
+  const returning_24h = Number(visitorMetrics?.[0]?.returning_24h || 0);
+  const first_time_7d = Number(visitorMetrics?.[0]?.first_time_7d || 0);
+  const returning_7d = Number(visitorMetrics?.[0]?.returning_7d || 0);
+  const first_time_28d = Number(visitorMetrics?.[0]?.first_time_28d || 0);
+  const returning_28d = Number(visitorMetrics?.[0]?.returning_28d || 0);
 
-  // Combine the main metrics with visitor metrics
-  return rows.map((row) => {
-    const leadId = String(row.id);
-    const visitorMetrics = visitorMetricsMap.get(leadId) || {
-      first_time_24h: 0,
-      returning_24h: 0,
-      first_time_7d: 0,
-      returning_7d: 0,
-      first_time_28d: 0,
-      returning_28d: 0,
-      first_time_24h_percentage: 0,
-      returning_24h_percentage: 0,
-      first_time_7d_percentage: 0,
-      returning_7d_percentage: 0,
-      first_time_28d_percentage: 0,
-      returning_28d_percentage: 0,
-    };
+  const total_24h = first_time_24h + returning_24h;
+  const total_7d = first_time_7d + returning_7d;
+  const total_28d = first_time_28d + returning_28d;
 
-    return {
-      id: String(row.id),
-      first_name: String(row.first_name),
-      email: String(row.email),
-      contact_persona: String(row.contact_persona),
-      short_bio: row.short_bio ? String(row.short_bio) : undefined,
-      total_visits: Number(row.total_visits || 0),
-      clicked_events: Number(row.clicked_events || 0),
-      entered_events: Number(row.entered_events || 0),
-      last_24h_visits: Number(row.last_24h_visits || 0),
-      last_7d_visits: Number(row.last_7d_visits || 0),
-      last_28d_visits: Number(row.last_28d_visits || 0),
-      last_activity: String(row.last_activity || ""),
-      ...visitorMetrics,
-    };
-  });
+  const first_time_24h_percentage = total_24h > 0 ? (first_time_24h / total_24h) * 100 : 0;
+  const returning_24h_percentage = total_24h > 0 ? (returning_24h / total_24h) * 100 : 0;
+  const first_time_7d_percentage = total_7d > 0 ? (first_time_7d / total_7d) * 100 : 0;
+  const returning_7d_percentage = total_7d > 0 ? (returning_7d / total_7d) * 100 : 0;
+  const first_time_28d_percentage = total_28d > 0 ? (first_time_28d / total_28d) * 100 : 0;
+  const returning_28d_percentage = total_28d > 0 ? (returning_28d / total_28d) * 100 : 0;
+
+  const sharedMetrics = {
+    first_time_24h,
+    returning_24h,
+    first_time_7d,
+    returning_7d,
+    first_time_28d,
+    returning_28d,
+    first_time_24h_percentage,
+    returning_24h_percentage,
+    first_time_7d_percentage,
+    returning_7d_percentage,
+    first_time_28d_percentage,
+    returning_28d_percentage,
+  };
+
+  return rows.map((row) => ({
+    id: String(row.id),
+    first_name: String(row.first_name),
+    email: String(row.email),
+    contact_persona: String(row.contact_persona),
+    short_bio: row.short_bio ? String(row.short_bio) : undefined,
+    total_visits: Number(row.total_visits || 0),
+    clicked_events: Number(row.clicked_events || 0),
+    entered_events: Number(row.entered_events || 0),
+    last_24h_visits: Number(row.last_24h_visits || 0),
+    last_7d_visits: Number(row.last_7d_visits || 0),
+    last_28d_visits: Number(row.last_28d_visits || 0),
+    last_activity: String(row.last_activity || ""),
+    ...sharedMetrics,
+  }));
 }
 
 export async function computeStoryfragmentAnalytics(
