@@ -27,7 +27,6 @@ export default function PageViewStats() {
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
 
-  // Calculate totals from analytics store
   const analytics = Object.values($storyfragmentAnalytics.byId);
   const totalLifetimeVisitors = analytics.reduce(
     (sum, fragment) => sum + (fragment?.unique_visitors || 0),
@@ -45,7 +44,6 @@ export default function PageViewStats() {
     (sum, fragment) => sum + (fragment?.last_28d_unique_visitors || 0),
     0
   );
-  // Get total leads from the first analytics item (they all have the same value)
   const totalLeads = analytics.length > 0 ? analytics[0]?.total_leads || 0 : 0;
 
   const stats: Stat[] = [
@@ -72,7 +70,6 @@ export default function PageViewStats() {
   useEffect(() => {
     setIsClient(true);
 
-    // Fetch lead metrics for visitor breakdown
     const fetchLeadMetrics = async () => {
       try {
         const response = await fetch("/api/turso/getLeadMetrics");
@@ -94,7 +91,6 @@ export default function PageViewStats() {
     try {
       setIsDownloading(true);
 
-      // Fetch lead metrics from the API
       const response = await fetch("/api/turso/getLeadMetrics");
 
       if (!response.ok) {
@@ -109,16 +105,11 @@ export default function PageViewStats() {
         return;
       }
 
-      // Get headers from the first lead object
       const headers = Object.keys(leadMetrics[0]);
-
-      // Create CSV content
       let csvContent = headers.join(",") + "\n";
 
-      // Add data rows
       leadMetrics.forEach((lead: LeadMetrics) => {
         const row = headers.map((header) => {
-          // Handle fields that might contain commas by wrapping in quotes
           const value =
             lead[header as keyof LeadMetrics] === null ||
             lead[header as keyof LeadMetrics] === undefined
@@ -129,7 +120,6 @@ export default function PageViewStats() {
         csvContent += row.join(",") + "\n";
       });
 
-      // Create and trigger download
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -155,7 +145,6 @@ export default function PageViewStats() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
-            // Calculate first-time and returning values based on period
             const period = item.period;
             const firstTimeValue = leadMetrics.reduce(
               (sum, lead) =>
@@ -178,7 +167,6 @@ export default function PageViewStats() {
               >
                 <dt className="text-sm font-bold text-gray-800">{item.name}</dt>
 
-                {/* First section - Events and Unique Visitors */}
                 <dd className="mt-2">
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
@@ -188,7 +176,7 @@ export default function PageViewStats() {
                       </div>
                     </div>
                     <div className="flex-1 text-right">
-                      <div className="text-sm text-gray-600">Unique Visitors</div>
+                      <div className="text-sm text-gray-600">Visits</div>
                       <div className="text-2xl font-bold tracking-tight text-cyan-700">
                         {item.visitors === 0 ? "-" : formatNumber(item.visitors)}
                       </div>
@@ -196,14 +184,12 @@ export default function PageViewStats() {
                   </div>
                 </dd>
 
-                {/* Divider */}
-                <hr className="my-3 border-gray-100" />
+                <hr className="my-3.5 border-gray-100" />
 
-                {/* Second section - Anonymous vs Known */}
                 <dd>
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
-                      <div className="text-sm text-gray-600">Anonymous</div>
+                      <div className="text-sm text-gray-600">Unique Visitors</div>
                       <div className="text-2xl font-bold tracking-tight text-cyan-700">
                         {firstTimeValue === 0 ? "-" : formatNumber(firstTimeValue)}
                       </div>
@@ -216,7 +202,6 @@ export default function PageViewStats() {
                     </div>
                   </div>
 
-                  {/* Progress bar visualization */}
                   <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2 mb-1 overflow-hidden">
                     <div
                       className="bg-cyan-600 h-2.5 float-left"
