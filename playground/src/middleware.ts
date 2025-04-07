@@ -177,7 +177,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/api/turso/upsertTractStackNode",
     "/api/turso/upsertBeliefNode",
     "/api/turso/upsertTopic",
-    "/api/turso/getLeadMetrics",
     "/api/turso/linkTopicToStoryFragment",
     "/api/turso/unlinkTopicFromStoryFragment",
   ];
