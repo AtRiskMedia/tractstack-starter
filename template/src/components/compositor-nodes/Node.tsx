@@ -31,9 +31,7 @@ import type { NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from 
 import { NodeBasicTag_settings } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
 import { getType } from "@/utils/nodes/type-guards";
 
-// Helper function to parse code hooks
 function parseCodeHook(node: BaseNode | FlatNode) {
-  // First check if we have codeHookParams
   if ("codeHookParams" in node && Array.isArray(node.codeHookParams)) {
     const regexpHook =
       /^(identifyAs|youtube|bunny|bunnyContext|toggle|resource|belief|signup)\((.*)\)$/;
@@ -49,7 +47,6 @@ function parseCodeHook(node: BaseNode | FlatNode) {
     };
   }
 
-  // Type guard to check if it's a FlatNode with children
   if ("children" in node && Array.isArray(node.children)) {
     const firstChild = node.children[0];
     if (!firstChild?.value) return null;

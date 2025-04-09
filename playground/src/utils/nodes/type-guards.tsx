@@ -6,8 +6,9 @@ import type {
   PaneFragmentNode,
   MarkdownPaneFragmentNode,
   FlatNode,
+  BgImageNode,
   Tag,
-} from "../../types";
+} from "@/types";
 
 interface BreakData {
   collection: string;
@@ -22,7 +23,16 @@ interface BreakNode extends FlatNode {
 }
 
 export const isBreakNode = (node: FlatNode | null): node is BreakNode => {
-  return node?.nodeType === "BgPane" && "breakDesktop" in node;
+  return node?.nodeType === "BgPane" && "type" in node && node.type === "visual-break";
+};
+
+export const isBgImageNode = (node: BaseNode | PaneFragmentNode | null): node is BgImageNode => {
+  return (
+    node !== null &&
+    node.nodeType === "BgPane" &&
+    "type" in node &&
+    node.type === "background-image"
+  );
 };
 
 export const isPaneNode = (node: BaseNode | undefined): node is PaneNode => {

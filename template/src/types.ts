@@ -790,7 +790,7 @@ export interface VisualBreakData {
 }
 
 export interface PaneFragmentNode extends BaseNode {
-  type: "markdown" | "visual-break";
+  type: "markdown" | "visual-break" | "background-image";
   hiddenViewportMobile?: boolean;
   hiddenViewportTablet?: boolean;
   hiddenViewportDesktop?: boolean;
@@ -800,6 +800,15 @@ export interface PaneFragmentNode extends BaseNode {
 //  type: "markdown";
 //  // Add your markdown-specific fields here
 //}
+
+export interface BgImageNode extends PaneFragmentNode {
+  type: "background-image";
+  fileId: string;
+  src: string;
+  srcSet?: string;
+  alt?: string;
+  objectFit: "cover" | "contain" | "fill";
+}
 
 export interface VisualBreakNode extends PaneFragmentNode {
   type: "visual-break";
@@ -916,7 +925,7 @@ export type StylesInput = {
 };
 
 export interface PaneFragmentNode extends BaseNode {
-  type: "markdown" | "visual-break";
+  type: "markdown" | "visual-break" | "background-image";
   hiddenViewportMobile?: boolean;
   hiddenViewportTablet?: boolean;
   hiddenViewportDesktop?: boolean;

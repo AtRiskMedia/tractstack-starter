@@ -1,10 +1,21 @@
 ---
-import BgPane from "@/components/common/panes/BgPane.astro";
+import BgVisualBreak from "@/components/common/panes/BgVisualBreak.astro";
+import BgImage from "@/components/common/panes/BgImage.astro";
 import { getCtx } from "@/store/nodes.ts";
-import type { VisualBreakNode } from "@/types.ts";
+import type { VisualBreakNode, BgImageNode } from "@/types.ts";
 
 const { nodeId } = Astro.props;
-const node = getCtx().allNodes.get().get(nodeId) as VisualBreakNode;
+const node = getCtx().allNodes.get().get(nodeId);
+
+function isBgImageNode(node: any): node is BgImageNode {
+  return node && node.nodeType === "BgPane" && "type" in node && node.type === "background-image";
+}
 ---
 
-<BgPane payload={node} />
+{
+  node && isBgImageNode(node) ? (
+    <BgImage payload={node as BgImageNode} />
+  ) : (
+    <BgVisualBreak payload={node as VisualBreakNode} />
+  )
+}

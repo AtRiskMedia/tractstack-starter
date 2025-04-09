@@ -12,11 +12,8 @@ export const Markdown = (props: NodeProps) => {
   const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
   const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const isEmpty = children.length === 0;
-
-  // Get the last child element for appending new elements
   const lastChildId = children.length > 0 ? children[children.length - 1] : null;
 
-  // Prepare the rendering content with children and, if appropriate, the GhostInsertBlock
   let nodesToRender = (
     <>
       <RenderChildren children={children} nodeProps={props} />
@@ -31,9 +28,9 @@ export const Markdown = (props: NodeProps) => {
     </>
   );
 
-  // Apply parent classes/wrappers if they exist
-  if ("parentClasses" in node) {
-    for (let i = (node.parentClasses as ParentClassesPayload)?.length; i > 0; --i) {
+  if ("parentClasses" in node && (node.parentClasses as ParentClassesPayload)?.length > 0) {
+    const parentClassesLength = (node.parentClasses as ParentClassesPayload).length;
+    for (let i = parentClassesLength; i > 0; --i) {
       nodesToRender = (
         <div
           onClick={(e) => {
@@ -47,11 +44,14 @@ export const Markdown = (props: NodeProps) => {
             e.stopPropagation();
           }}
           className={getCtx(props).getNodeClasses(id, viewportKeyStore.get().value, i - 1)}
+          style={i === parentClassesLength ? { position: "relative", zIndex: 10 } : undefined}
         >
           {nodesToRender}
         </div>
       );
     }
+  } else {
+    nodesToRender = <div style={{ position: "relative", zIndex: 10 }}>{nodesToRender}</div>;
   }
 
   return <>{nodesToRender}</>;
