@@ -6,8 +6,10 @@ import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import FolderIcon from "@heroicons/react/24/outline/FolderIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
-import { getCtx } from "@/store/nodes";
-import { cloneDeep } from "@/utils/common/helpers";
+import { getCtx } from "@/store/nodes.ts";
+import { isDemoModeStore } from "@/store/storykeep.ts";
+import { cloneDeep } from "@/utils/common/helpers.ts";
+import { ulid } from "ulid";
 import type { ImageFileNode, BgImageNode, PaneNode } from "@/types";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -18,6 +20,7 @@ export interface BackgroundImageProps {
 }
 
 const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
+  const isDemoMode = isDemoModeStore.get();
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(paneId) as PaneNode;
@@ -45,6 +48,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     loadFiles();
   }, []);
 
+  // Find existing background image node
   useEffect(() => {
     if (paneNode) {
       const childNodes = ctx.getChildNodeIDs(paneNode.id);
@@ -63,6 +67,15 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           tablet: !!bgNode.hiddenViewportTablet,
           desktop: !!bgNode.hiddenViewportDesktop,
         });
+      } else {
+        // Reset state when no background image node exists
+        setBgImageNode(null);
+        setObjectFit("cover");
+        setHiddenViewports({
+          mobile: false,
+          tablet: false,
+          desktop: false,
+        });
       }
     }
   }, [paneNode, allNodes]);
@@ -70,41 +83,47 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
   const handleFileSelect = (file: ImageFileNode) => {
     setSelectedFile(file);
     setIsSelectingFile(false);
+    const allNodes = ctx.allNodes.get();
+    const paneNode = allNodes.get(paneId) as PaneNode;
+    const childNodes = ctx.getChildNodeIDs(paneNode.id);
+    const existingBgNodes = childNodes
+      .map((id) => allNodes.get(id))
+      .filter(
+        (node) => node?.nodeType === "BgPane" && "type" in node && node.type === "background-image"
+      ) as BgImageNode[];
 
+    const existingBgNode = existingBgNodes[0];
+    const updatedPaneNode = { ...paneNode, isChanged: true };
     let updatedBgNode: BgImageNode;
 
-    if (bgImageNode) {
-      updatedBgNode = cloneDeep(bgImageNode);
-      updatedBgNode.fileId = file.id;
-      updatedBgNode.src = file.src;
-      updatedBgNode.alt = "Background image";
-      updatedBgNode.isChanged = true;
-    } else {
+    if (existingBgNode) {
       updatedBgNode = {
-        id: `bg-${paneId}`,
+        ...existingBgNode,
+        fileId: file.id,
+        src: file.src,
+        srcSet: file.srcSet,
+        alt: file.altDescription || "Background image",
+        isChanged: true,
+      };
+      ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
+    } else {
+      const bgNodeId = ulid();
+      updatedBgNode = {
+        id: bgNodeId,
         nodeType: "BgPane",
         parentId: paneId,
         type: "background-image",
         fileId: file.id,
         src: file.src,
-        alt: "Background image",
-        objectFit: objectFit,
-        hiddenViewportMobile: hiddenViewports.mobile,
-        hiddenViewportTablet: hiddenViewports.tablet,
-        hiddenViewportDesktop: hiddenViewports.desktop,
+        srcSet: file.srcSet,
+        alt: file.altDescription || "Background image",
+        objectFit: "cover",
         isChanged: true,
       };
+      ctx.addNode(updatedBgNode);
+      ctx.notifyNode(updatedPaneNode.id);
     }
-
-    const updatedPaneNode = cloneDeep(paneNode);
-    updatedPaneNode.isChanged = true;
-
-    ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
     setBgImageNode(updatedBgNode);
-
-    if (onUpdate) {
-      onUpdate(true);
-    }
   };
 
   const filteredFiles =
@@ -126,11 +145,13 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
         return;
       }
 
-      const fileId = `${Date.now()}-${paneId}`;
+      // Generate a unique file ID
+      const fileId = `file-${ulid()}`;
       const monthPath = new Date().toISOString().slice(0, 7);
       const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const filename = `${fileId}.${fileExtension}`;
 
+      // Convert file to base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = (e) => resolve(e.target?.result as string);
@@ -138,6 +159,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       reader.readAsDataURL(file);
       const base64 = await base64Promise;
 
+      // Save file to server
       const response = await fetch("/api/fs/saveImage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -154,6 +176,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
 
       const { path: savedPath } = await response.json();
 
+      // Create file entry in database
       const fileResponse = await fetch("/api/turso/upsertFileNode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -171,23 +194,27 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
         throw new Error("Failed to save file metadata");
       }
 
+      // Get a unique ID for the background node
+      const bgNodeId = bgImageNode?.id || ulid();
       let updatedBgNode: BgImageNode;
 
       if (bgImageNode) {
+        // Update existing node
         updatedBgNode = cloneDeep(bgImageNode);
         updatedBgNode.fileId = fileId;
         updatedBgNode.src = savedPath;
-        updatedBgNode.alt = "Background image";
+        updatedBgNode.alt = "Decorative background image";
         updatedBgNode.isChanged = true;
       } else {
+        // Create new node
         updatedBgNode = {
-          id: `bg-${paneId}`,
+          id: bgNodeId,
           nodeType: "BgPane",
           parentId: paneId,
           type: "background-image",
           fileId: fileId,
           src: savedPath,
-          alt: "Background image",
+          alt: "Decorative background image",
           objectFit: objectFit,
           hiddenViewportMobile: hiddenViewports.mobile,
           hiddenViewportTablet: hiddenViewports.tablet,
@@ -199,9 +226,15 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       const updatedPaneNode = cloneDeep(paneNode);
       updatedPaneNode.isChanged = true;
 
-      ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
+      if (!bgImageNode) {
+        ctx.addNode(updatedBgNode);
+        ctx.modifyNodes([updatedPaneNode]);
+      }
+      // Update nodes
+      else ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
       setBgImageNode(updatedBgNode);
 
+      // Notify parent component
       if (onUpdate) {
         onUpdate(true);
       }
@@ -216,14 +249,26 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
   const handleRemoveImage = () => {
     if (!bgImageNode) return;
 
-    const updatedPaneNode = cloneDeep(paneNode);
-    updatedPaneNode.isChanged = true;
+    try {
+      // Mark pane as changed
+      const updatedPaneNode = cloneDeep(paneNode);
+      updatedPaneNode.isChanged = true;
 
-    ctx.deleteNode(bgImageNode.id);
-    setBgImageNode(null);
+      // Delete the background image node
+      ctx.deleteNode(bgImageNode.id);
 
-    if (onUpdate) {
-      onUpdate(false);
+      // Update pane node
+      ctx.modifyNodes([updatedPaneNode]);
+
+      // Update local state
+      setBgImageNode(null);
+
+      // Notify parent component
+      if (onUpdate) {
+        onUpdate(false);
+      }
+    } catch (error) {
+      console.error("Error removing background image:", error);
     }
   };
 
@@ -298,8 +343,9 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           <div className="flex space-x-4">
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isProcessing}
-              className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+              disabled={isProcessing || isDemoMode}
+              title={isDemoMode ? `Disabled in demo mode` : ``}
+              className={`flex items-center text-sm text-myblue ${isDemoMode ? `line-through` : `hover:text-myorange`}`}
             >
               <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
               {isProcessing
@@ -373,6 +419,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           </div>
         </>
       )}
+
       {isSelectingFile && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg w-full max-w-md">
@@ -394,36 +441,42 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
                   </Combobox.Button>
                 </div>
                 <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                  {filteredFiles.map((file) => (
-                    <Combobox.Option
-                      key={file.id}
-                      value={file}
-                      className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? "bg-myorange text-white" : "text-myblack"
-                        }`
-                      }
-                    >
-                      {({ selected, active }) => (
-                        <>
-                          <span
-                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                          >
-                            {file.altDescription || file.filename}
-                          </span>
-                          {selected && (
+                  {filteredFiles.length === 0 && query !== "" ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      No files found.
+                    </div>
+                  ) : (
+                    filteredFiles.map((file) => (
+                      <Combobox.Option
+                        key={file.id}
+                        value={file}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-myorange text-white" : "text-myblack"
+                          }`
+                        }
+                      >
+                        {({ selected, active }) => (
+                          <>
                             <span
-                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                active ? "text-white" : "text-myorange"
-                              }`}
+                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                             >
-                              <CheckIcon className="h-5 w-5" />
+                              {file.altDescription || file.filename}
                             </span>
-                          )}
-                        </>
-                      )}
-                    </Combobox.Option>
-                  ))}
+                            {selected && (
+                              <span
+                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
+                                  active ? "text-white" : "text-myorange"
+                                }`}
+                              >
+                                <CheckIcon className="h-5 w-5" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Combobox.Option>
+                    ))
+                  )}
                 </Combobox.Options>
               </div>
             </Combobox>
