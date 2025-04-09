@@ -16,7 +16,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export interface BackgroundImageProps {
   paneId: string;
-  onUpdate?: (hasImage: boolean) => void;
+  onUpdate: () => void;
 }
 
 const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
@@ -38,17 +38,23 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     tablet: false,
     desktop: false,
   });
+  const [localAltDescription, setLocalAltDescription] = useState<string>("");
 
   useEffect(() => {
     const loadFiles = async () => {
-      const response = await fetch("/api/turso/getAllFiles");
-      const { data } = await response.json();
-      setFiles(data);
+      try {
+        const response = await fetch("/api/turso/getAllFiles");
+        if (!response.ok) throw new Error("Failed to fetch files");
+        const { data } = await response.json();
+        setFiles(data);
+        console.log("[BackgroundImage] Loaded files:", data);
+      } catch (error) {
+        console.error("[BackgroundImage] Error loading files:", error);
+      }
     };
     loadFiles();
   }, []);
 
-  // Find existing background image node
   useEffect(() => {
     if (paneNode) {
       const childNodes = ctx.getChildNodeIDs(paneNode.id);
@@ -67,69 +73,58 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           tablet: !!bgNode.hiddenViewportTablet,
           desktop: !!bgNode.hiddenViewportDesktop,
         });
+        // Use nullish coalescing to ensure we always set a string
+        setLocalAltDescription(bgNode.alt || "");
       } else {
-        // Reset state when no background image node exists
         setBgImageNode(null);
         setObjectFit("cover");
-        setHiddenViewports({
-          mobile: false,
-          tablet: false,
-          desktop: false,
-        });
+        setHiddenViewports({ mobile: false, tablet: false, desktop: false });
+        setLocalAltDescription("");
       }
     }
   }, [paneNode, allNodes]);
 
+  const deleteExistingBgNodes = () => {
+    const childNodes = ctx.getChildNodeIDs(paneNode.id);
+    const bgNodes = childNodes
+      .map((id) => allNodes.get(id))
+      .filter((node) => node?.nodeType === "BgPane");
+
+    bgNodes.forEach((node) => {
+      if (node) ctx.deleteNode(node.id);
+    });
+  };
+
   const handleFileSelect = (file: ImageFileNode) => {
     setSelectedFile(file);
     setIsSelectingFile(false);
-    const allNodes = ctx.allNodes.get();
-    const paneNode = allNodes.get(paneId) as PaneNode;
-    const childNodes = ctx.getChildNodeIDs(paneNode.id);
-    const existingBgNodes = childNodes
-      .map((id) => allNodes.get(id))
-      .filter(
-        (node) => node?.nodeType === "BgPane" && "type" in node && node.type === "background-image"
-      ) as BgImageNode[];
+    deleteExistingBgNodes();
 
-    const existingBgNode = existingBgNodes[0];
-    const updatedPaneNode = { ...paneNode, isChanged: true };
-    let updatedBgNode: BgImageNode;
-
-    if (existingBgNode) {
-      updatedBgNode = {
-        ...existingBgNode,
-        fileId: file.id,
-        src: file.src,
-        srcSet: file.srcSet,
-        alt: file.altDescription || "Background image",
-        isChanged: true,
-      };
-      ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
-    } else {
-      const bgNodeId = ulid();
-      updatedBgNode = {
-        id: bgNodeId,
-        nodeType: "BgPane",
-        parentId: paneId,
-        type: "background-image",
-        fileId: file.id,
-        src: file.src,
-        srcSet: file.srcSet,
-        alt: file.altDescription || "Background image",
-        objectFit: "cover",
-        isChanged: true,
-      };
-      ctx.addNode(updatedBgNode);
-      ctx.notifyNode(updatedPaneNode.id);
-    }
+    const bgNodeId = ulid();
+    const defaultAlt = file.filename
+      ? `Decorative Image - ${file.filename.split(".").slice(0, -1).join(".")}`
+      : "Decorative Image";
+    const updatedBgNode: BgImageNode = {
+      id: bgNodeId,
+      nodeType: "BgPane",
+      parentId: paneId,
+      type: "background-image",
+      fileId: file.id,
+      src: file.src,
+      srcSet: file.srcSet,
+      alt: file.altDescription || defaultAlt,
+      objectFit: "cover",
+      isChanged: true,
+    };
+    ctx.addNode(updatedBgNode);
+    const updatedPaneNode = cloneDeep(paneNode);
+    updatedPaneNode.isChanged = true;
+    ctx.modifyNodes([updatedPaneNode]);
     setBgImageNode(updatedBgNode);
+    // Use nullish coalescing to ensure we always set a string
+    setLocalAltDescription(updatedBgNode.alt || "");
+    onUpdate();
   };
-
-  const filteredFiles =
-    query === ""
-      ? files
-      : files.filter((file) => file.filename.toLowerCase().includes(query.toLowerCase()));
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -141,17 +136,14 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     try {
       if (!ALLOWED_TYPES.includes(file.type)) {
         setImageError("Please upload only JPG, PNG, or WebP files");
-        setIsProcessing(false);
         return;
       }
 
-      // Generate a unique file ID
       const fileId = `file-${ulid()}`;
       const monthPath = new Date().toISOString().slice(0, 7);
       const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const filename = `${fileId}.${fileExtension}`;
 
-      // Convert file to base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = (e) => resolve(e.target?.result as string);
@@ -159,7 +151,6 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       reader.readAsDataURL(file);
       const base64 = await base64Promise;
 
-      // Save file to server
       const response = await fetch("/api/fs/saveImage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,77 +161,47 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
-      }
-
+      if (!response.ok) throw new Error("Failed to upload image");
       const { path: savedPath } = await response.json();
 
-      // Create file entry in database
-      const fileResponse = await fetch("/api/turso/upsertFileNode", {
+      await fetch("/api/turso/upsertFileNode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: fileId,
           nodeType: "File",
           parentId: null,
-          filename: filename,
-          altDescription: "Background image",
+          filename,
+          altDescription: `Decorative Image - ${filename.split(".").slice(0, -1).join(".")}`,
           src: savedPath,
         }),
       });
 
-      if (!fileResponse.ok) {
-        throw new Error("Failed to save file metadata");
-      }
+      deleteExistingBgNodes();
 
-      // Get a unique ID for the background node
-      const bgNodeId = bgImageNode?.id || ulid();
-      let updatedBgNode: BgImageNode;
-
-      if (bgImageNode) {
-        // Update existing node
-        updatedBgNode = cloneDeep(bgImageNode);
-        updatedBgNode.fileId = fileId;
-        updatedBgNode.src = savedPath;
-        updatedBgNode.alt = "Decorative background image";
-        updatedBgNode.isChanged = true;
-      } else {
-        // Create new node
-        updatedBgNode = {
-          id: bgNodeId,
-          nodeType: "BgPane",
-          parentId: paneId,
-          type: "background-image",
-          fileId: fileId,
-          src: savedPath,
-          alt: "Decorative background image",
-          objectFit: objectFit,
-          hiddenViewportMobile: hiddenViewports.mobile,
-          hiddenViewportTablet: hiddenViewports.tablet,
-          hiddenViewportDesktop: hiddenViewports.desktop,
-          isChanged: true,
-        };
-      }
-
+      const bgNodeId = ulid();
+      const defaultAlt = `Decorative Image - ${filename.split(".").slice(0, -1).join(".")}`;
+      const updatedBgNode: BgImageNode = {
+        id: bgNodeId,
+        nodeType: "BgPane",
+        parentId: paneId,
+        type: "background-image",
+        fileId: fileId,
+        src: savedPath,
+        alt: defaultAlt,
+        objectFit: "cover",
+        isChanged: true,
+      };
+      ctx.addNode(updatedBgNode);
       const updatedPaneNode = cloneDeep(paneNode);
       updatedPaneNode.isChanged = true;
-
-      if (!bgImageNode) {
-        ctx.addNode(updatedBgNode);
-        ctx.modifyNodes([updatedPaneNode]);
-      }
-      // Update nodes
-      else ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
+      ctx.modifyNodes([updatedPaneNode]);
       setBgImageNode(updatedBgNode);
-
-      // Notify parent component
-      if (onUpdate) {
-        onUpdate(true);
-      }
+      setLocalAltDescription(defaultAlt);
+      onUpdate(); // Tell wrapper to re-render
     } catch (err) {
       setImageError("Failed to process image");
-      console.error("Error uploading image:", err);
+      console.error("[BackgroundImage] Error:", err);
     } finally {
       setIsProcessing(false);
     }
@@ -248,41 +209,34 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
 
   const handleRemoveImage = () => {
     if (!bgImageNode) return;
+    ctx.deleteNode(bgImageNode.id);
+    const updatedPaneNode = cloneDeep(paneNode);
+    updatedPaneNode.isChanged = true;
+    ctx.modifyNodes([updatedPaneNode]);
+    setBgImageNode(null);
+    setLocalAltDescription("");
+    onUpdate(); // Tell wrapper to re-render
+  };
 
-    try {
-      // Mark pane as changed
+  const handleAltDescriptionBlur = () => {
+    if (bgImageNode && localAltDescription !== bgImageNode.alt) {
+      const updatedBgNode = cloneDeep(bgImageNode);
+      updatedBgNode.alt = localAltDescription;
+      updatedBgNode.isChanged = true;
       const updatedPaneNode = cloneDeep(paneNode);
       updatedPaneNode.isChanged = true;
-
-      // Delete the background image node
-      ctx.deleteNode(bgImageNode.id);
-
-      // Update pane node
-      ctx.modifyNodes([updatedPaneNode]);
-
-      // Update local state
-      setBgImageNode(null);
-
-      // Notify parent component
-      if (onUpdate) {
-        onUpdate(false);
-      }
-    } catch (error) {
-      console.error("Error removing background image:", error);
+      ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
     }
   };
 
   const handleObjectFitChange = (newObjectFit: "cover" | "contain" | "fill") => {
     setObjectFit(newObjectFit);
-
     if (bgImageNode) {
       const updatedBgNode = cloneDeep(bgImageNode);
       updatedBgNode.objectFit = newObjectFit;
       updatedBgNode.isChanged = true;
-
       const updatedPaneNode = cloneDeep(paneNode);
       updatedPaneNode.isChanged = true;
-
       ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
     }
   };
@@ -291,26 +245,23 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     viewport: "mobile" | "tablet" | "desktop",
     hidden: boolean
   ) => {
-    setHiddenViewports((prev) => ({
-      ...prev,
-      [viewport]: hidden,
-    }));
-
+    setHiddenViewports((prev) => ({ ...prev, [viewport]: hidden }));
     if (bgImageNode) {
       const updatedBgNode = cloneDeep(bgImageNode);
-
       if (viewport === "mobile") updatedBgNode.hiddenViewportMobile = hidden;
       if (viewport === "tablet") updatedBgNode.hiddenViewportTablet = hidden;
       if (viewport === "desktop") updatedBgNode.hiddenViewportDesktop = hidden;
-
       updatedBgNode.isChanged = true;
-
       const updatedPaneNode = cloneDeep(paneNode);
       updatedPaneNode.isChanged = true;
-
       ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
     }
   };
+
+  const filteredFiles =
+    query === ""
+      ? files
+      : files.filter((file) => file.filename.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <div className="space-y-6 w-full">
@@ -416,6 +367,18 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
                 </label>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Alt Description</label>
+            <input
+              type="text"
+              value={localAltDescription}
+              onChange={(e) => setLocalAltDescription(e.target.value)}
+              onBlur={handleAltDescriptionBlur}
+              className="w-full border border-gray-300 rounded-md p-2"
+              placeholder="Enter alt description"
+            />
           </div>
         </>
       )}

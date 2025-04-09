@@ -156,6 +156,7 @@ const isDemoMode = isOpenDemoMode(Astro, config);
       tractstackSlug={config.init.TRACTSTACK_HOME_SLUG || ``}
       hasAssemblyAI={!!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY}
       isDemoMode={isDemoMode}
+      artpacks={config?.artpacks || {}}
       client:only="react"
     />
     <ViewTransitions />

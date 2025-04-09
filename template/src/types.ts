@@ -105,8 +105,11 @@ export interface InitConfig {
   [key: string]: unknown;
 }
 
+export type ArtpacksStore = Record<string, string[]>;
+
 export interface Config {
   init: InitConfig;
+  artpacks?: ArtpacksStore;
   [key: string]: unknown;
 }
 
@@ -789,13 +792,6 @@ export interface VisualBreakData {
   svgFill: string;
 }
 
-export interface PaneFragmentNode extends BaseNode {
-  type: "markdown" | "visual-break" | "background-image";
-  hiddenViewportMobile?: boolean;
-  hiddenViewportTablet?: boolean;
-  hiddenViewportDesktop?: boolean;
-}
-
 //export interface MarkdownNode extends PaneFragmentNode {
 //  type: "markdown";
 //  // Add your markdown-specific fields here
@@ -804,6 +800,15 @@ export interface PaneFragmentNode extends BaseNode {
 export interface BgImageNode extends PaneFragmentNode {
   type: "background-image";
   fileId: string;
+  src: string;
+  srcSet?: string;
+  alt?: string;
+  objectFit: "cover" | "contain" | "fill";
+}
+export interface ArtpackImageNode extends PaneFragmentNode {
+  type: "artpack-image";
+  collection: string;
+  image: string;
   src: string;
   srcSet?: string;
   alt?: string;
@@ -925,7 +930,7 @@ export type StylesInput = {
 };
 
 export interface PaneFragmentNode extends BaseNode {
-  type: "markdown" | "visual-break" | "background-image";
+  type: "markdown" | "visual-break" | "background-image" | "artpack-image";
   hiddenViewportMobile?: boolean;
   hiddenViewportTablet?: boolean;
   hiddenViewportDesktop?: boolean;

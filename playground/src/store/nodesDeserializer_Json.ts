@@ -164,30 +164,6 @@ export class NodesDeserializer_Json implements NodesDeserializer {
       });
     }
 
-    // Process background image nodes to ensure they have full file info
-    if (optionsPayload?.nodes) {
-      optionsPayload.nodes.forEach((node: any) => {
-        // Identify BgPane nodes with background-image type
-        if (node.nodeType === "BgPane" && node.type === "background-image" && node.fileId) {
-          // Ensure src and other properties are properly set
-          if (!node.src && node.fileId) {
-            // Look for file data in files array if available
-            const fileNode = loadData.fileNodes?.find((file) => file.id === node.fileId);
-            if (fileNode) {
-              node.src = fileNode.src;
-              if (fileNode.srcSet) node.srcSet = fileNode.srcSet;
-              if (fileNode.altDescription) node.alt = fileNode.altDescription;
-            }
-          }
-
-          // Ensure objectFit has a default value if not set
-          if (!node.objectFit) {
-            node.objectFit = "cover";
-          }
-        }
-      });
-    }
-
     // Extract nodes and beliefs from options payload
     const childNodes = optionsPayload?.nodes || [];
     const heldBeliefs =

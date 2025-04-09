@@ -12,6 +12,7 @@ import type {
   Theme,
   Tag,
   StoryfragmentAnalytics,
+  ArtpacksStore,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -27,6 +28,7 @@ export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
 export const storedDashboardAnalytics = map<DashboardAnalytics>();
 export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
+export const hasArtpacksStore = map<ArtpacksStore>({});
 
 export const viewportKeyStore = map<{
   value: "mobile" | "tablet" | "desktop";

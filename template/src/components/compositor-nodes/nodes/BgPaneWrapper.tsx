@@ -3,7 +3,7 @@ import BgImage from "@/components/common/panes/BgImage.tsx";
 import { type NodeProps } from "@/types";
 import { getCtx } from "@/store/nodes";
 import { viewportKeyStore } from "@/store/storykeep.ts";
-import { isBgImageNode } from "@/utils/nodes/type-guards";
+import { isBgImageNode, isArtpackImageNode } from "@/utils/nodes/type-guards";
 import type { BgImageNode, VisualBreakNode } from "@/types";
 
 export const BgPaneWrapper = (props: NodeProps) => {
@@ -17,7 +17,7 @@ export const BgPaneWrapper = (props: NodeProps) => {
     e.stopPropagation();
   };
 
-  if (isBgImageNode(node)) {
+  if (isBgImageNode(node) || isArtpackImageNode(node)) {
     return <BgImage payload={node as BgImageNode} viewportKey={viewport} />;
   } else {
     return (

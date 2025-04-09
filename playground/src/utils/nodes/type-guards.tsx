@@ -6,6 +6,7 @@ import type {
   PaneFragmentNode,
   MarkdownPaneFragmentNode,
   FlatNode,
+  ArtpackImageNode,
   BgImageNode,
   Tag,
 } from "@/types";
@@ -24,6 +25,14 @@ interface BreakNode extends FlatNode {
 
 export const isBreakNode = (node: FlatNode | null): node is BreakNode => {
   return node?.nodeType === "BgPane" && "type" in node && node.type === "visual-break";
+};
+
+export const isArtpackImageNode = (
+  node: BaseNode | PaneFragmentNode | null
+): node is ArtpackImageNode => {
+  return (
+    node !== null && node.nodeType === "BgPane" && "type" in node && node.type === "artpack-image"
+  );
 };
 
 export const isBgImageNode = (node: BaseNode | PaneFragmentNode | null): node is BgImageNode => {
