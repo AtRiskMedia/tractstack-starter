@@ -25,8 +25,7 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
 
   // Using useCallback to create a stable reference to the update function
   const onUpdate = useCallback(() => {
-    setUpdateCounter(prev => prev + 1);
-    console.log("[BackgroundImageWrapper] Update triggered");
+    setUpdateCounter((prev) => prev + 1);
   }, []);
 
   const bgNode = (() => {
@@ -41,7 +40,6 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
           "type" in node &&
           (node.type === "background-image" || node.type === "artpack-image")
       ) as (BgImageNode | ArtpackImageNode)[];
-    console.log(`[BackgroundImageWrapper] bgNodes for pane ${paneId}:`, bgNodes);
     return bgNodes[0] || null;
   })();
 
@@ -52,10 +50,7 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
     updatedPaneNode.bgColour = color;
     updatedPaneNode.isChanged = true;
     ctx.modifyNodes([updatedPaneNode]);
-    console.log(`[BackgroundImageWrapper] Set bgColour for pane ${paneId}:`, color);
   };
-
-  console.log(`[BackgroundImageWrapper] Rendering pane ${paneId}, bgNode:`, bgNode);
 
   return (
     <div className="space-y-6 w-full">

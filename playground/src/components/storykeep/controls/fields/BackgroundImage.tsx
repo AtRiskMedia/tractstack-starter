@@ -47,7 +47,6 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
         if (!response.ok) throw new Error("Failed to fetch files");
         const { data } = await response.json();
         setFiles(data);
-        console.log("[BackgroundImage] Loaded files:", data);
       } catch (error) {
         console.error("[BackgroundImage] Error loading files:", error);
       }
