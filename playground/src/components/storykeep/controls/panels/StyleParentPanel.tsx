@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ColorPickerCombo from "../fields/ColorPickerCombo";
+import BackgroundImage from "../fields/BackgroundImage";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { StylesMemory } from "../state/StylesMemory";
 import { settingsPanelStore } from "@/store/storykeep";
@@ -33,12 +34,25 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
 
+  const [hasBackgroundImage, setHasBackgroundImage] = useState<boolean>(false);
+
   const [layerCount, setLayerCount] = useState(node.parentClasses?.length || 0);
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
   const [settings, setSettings] = useState<ParentStyles>({
     bgColor: parentNode.bgColour || "",
     parentClasses: node.parentClasses || [],
   });
+
+  useEffect(() => {
+    if (parentNode) {
+      const childNodes = ctx.getChildNodeIDs(parentNode.id);
+      const hasBgImageNode = childNodes.some((id) => {
+        const node = ctx.allNodes.get().get(id);
+        return node?.nodeType === "BgPane" && "type" in node && node.type === "background-image";
+      });
+      setHasBackgroundImage(hasBgImageNode);
+    }
+  }, [parentNode, ctx]);
 
   // Update state when node changes
   useEffect(() => {
@@ -169,13 +183,32 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Pane Outer Styles</h2>
 
-      <ColorPickerCombo
-        title="Pane Background Color"
-        defaultColor={settings.bgColor}
-        onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
-        config={config!}
-        allowNull={true}
-      />
+      <div className="space-y-4">
+        {hasBackgroundImage ? (
+          // Show only BackgroundImage when a background image exists
+          <BackgroundImage
+            paneId={parentNode.id}
+            onUpdate={(hasImage) => setHasBackgroundImage(hasImage)}
+          />
+        ) : (
+          // Show ColorPickerCombo and BackgroundImage "Upload" option when no image
+          <>
+            <ColorPickerCombo
+              title="Pane Background Color"
+              defaultColor={settings.bgColor}
+              onColorChange={(color: string) =>
+                setSettings((prev) => ({ ...prev, bgColor: color }))
+              }
+              config={config!}
+              allowNull={true}
+            />
+            <BackgroundImage
+              paneId={parentNode.id}
+              onUpdate={(hasImage) => setHasBackgroundImage(hasImage)}
+            />
+          </>
+        )}
+      </div>
 
       <div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
         <span className="text-sm font-bold text-mydarkgrey">Layer:</span>

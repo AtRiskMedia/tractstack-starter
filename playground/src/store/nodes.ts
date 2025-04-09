@@ -225,7 +225,8 @@ export class NodesContext {
         break;
       case `text`:
         // Only handle double-clicks in text mode like default mode
-        if (dblClick && ![`Pane`, `Parkdown`].includes(node.nodeType)) {
+        if (dblClick) {
+          // && ![`Pane`, `Markdown`].includes(node.nodeType)) {
           handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         }
         break;
