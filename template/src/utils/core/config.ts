@@ -1,15 +1,40 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { validateEnv } from "./env";
-import type {
-  InitConfig,
-  SystemCapabilities,
-  ConfigFile,
-  Config,
-  ValidationResult,
-} from "../../types";
+import type { InitConfig, SystemCapabilities, ConfigFile, Config, ValidationResult } from "@/types";
 
 const CONFIG_FILES = ["init.json", "turso.json"];
+
+/**
+ * Reads all JSON files from the artpacks directory
+ * @param configPath - The base directory path containing the config folder
+ */
+async function readArtpacks(configPath: string): Promise<Record<string, string[]> | null> {
+  try {
+    const artpacksPath = path.join(configPath, "artpacks");
+    const files = await fs.readdir(artpacksPath);
+    const jsonFiles = files.filter((file) => file.endsWith(".json"));
+
+    const artpacks: Record<string, string[]> = {};
+
+    for (const file of jsonFiles) {
+      const filePath = path.join(artpacksPath, file);
+      const content = await fs.readFile(filePath, "utf-8");
+      const parsedContent = JSON.parse(content);
+
+      // Validate that content is string[]
+      if (Array.isArray(parsedContent) && parsedContent.every((item) => typeof item === "string")) {
+        const artpackName = file.replace(".json", "");
+        artpacks[artpackName] = parsedContent;
+      }
+    }
+
+    return Object.keys(artpacks).length > 0 ? artpacks : null;
+  } catch (error) {
+    console.error(`Error reading artpacks from ${configPath}/artpacks:`, error);
+    return null;
+  }
+}
 
 /**
  * Reads and parses a single config file from a specified config path
@@ -91,6 +116,7 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
   const actualConfigPath = configPath || defaultConfigPath;
 
   try {
+    // Read standard config files
     const configFiles = await Promise.all(
       CONFIG_FILES.map((filename) => readConfigFile(actualConfigPath, filename))
     );
@@ -101,14 +127,22 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
       return null;
     }
 
-    // Ensure we have proper typing for the merged config
+    // Read artpacks
+    const artpacks = await readArtpacks(actualConfigPath);
+
+    // Merge standard configs
     const mergedConfig = validConfigs.reduce<Config>(
       (acc, curr) => ({
         ...acc,
         [curr.name.replace(".json", "")]: curr.content,
       }),
-      { init: {} as InitConfig } // Initialize with empty InitConfig
+      { init: {} as InitConfig }
     );
+
+    // Add artpacks to config if they exist
+    if (artpacks) {
+      mergedConfig.artpacks = artpacks;
+    }
 
     return mergedConfig;
   } catch (error) {

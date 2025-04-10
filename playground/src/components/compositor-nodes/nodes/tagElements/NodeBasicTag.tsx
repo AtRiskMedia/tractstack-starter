@@ -326,7 +326,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     if (elementRef.current) {
       elementRef.current.blur();
     }
-
     getCtx(props).setClickedNodeId(nodeId, true);
     e.stopPropagation();
   };

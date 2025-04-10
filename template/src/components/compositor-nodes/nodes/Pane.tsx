@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, memo, type CSSProperties } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore, showAnalytics } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
@@ -42,9 +42,11 @@ const Pane = memo(
     const $showAnalytics = showAnalytics.get();
     const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
     const contentClasses = "relative w-full h-auto justify-self-start";
-    const contentStyles = {
+    const contentStyles: CSSProperties = {
       ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value),
       gridArea: "1/1/1/1",
+      position: "relative",
+      zIndex: 1,
     };
     const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);
     const codeHookTarget = codeHookPayload?.target;

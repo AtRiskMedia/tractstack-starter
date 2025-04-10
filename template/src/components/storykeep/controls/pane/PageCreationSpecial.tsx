@@ -112,14 +112,16 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
 
         // Configure the SVG fill color
         if (visualBreakTemplate.bgPane) {
-          if (visualBreakTemplate.bgPane.breakDesktop) {
-            visualBreakTemplate.bgPane.breakDesktop.svgFill = fillColor;
-          }
-          if (visualBreakTemplate.bgPane.breakTablet) {
-            visualBreakTemplate.bgPane.breakTablet.svgFill = fillColor;
-          }
-          if (visualBreakTemplate.bgPane.breakMobile) {
-            visualBreakTemplate.bgPane.breakMobile.svgFill = fillColor;
+          if (visualBreakTemplate.bgPane.type === "visual-break") {
+            if (visualBreakTemplate.bgPane.breakDesktop) {
+              visualBreakTemplate.bgPane.breakDesktop.svgFill = fillColor;
+            }
+            if (visualBreakTemplate.bgPane.breakTablet) {
+              visualBreakTemplate.bgPane.breakTablet.svgFill = fillColor;
+            }
+            if (visualBreakTemplate.bgPane.breakMobile) {
+              visualBreakTemplate.bgPane.breakMobile.svgFill = fillColor;
+            }
           }
         }
 

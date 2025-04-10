@@ -32,9 +32,17 @@ export const VisualBreakPreview = ({
     // Get the template for the specified variant
     const template = getTemplateVisualBreakPane(variant);
     if (template?.bgColour) template.bgColour = bgColour;
-    if (template?.bgPane?.breakDesktop?.svgFill) template.bgPane.breakDesktop.svgFill = fillColour;
-    if (template?.bgPane?.breakTablet?.svgFill) template.bgPane.breakTablet.svgFill = fillColour;
-    if (template?.bgPane?.breakMobile?.svgFill) template.bgPane.breakMobile.svgFill = fillColour;
+    if (template?.bgPane && template.bgPane.type === "visual-break") {
+      if (template.bgPane.breakDesktop) {
+        template.bgPane.breakDesktop.svgFill = fillColour;
+      }
+      if (template.bgPane.breakTablet) {
+        template.bgPane.breakTablet.svgFill = fillColour;
+      }
+      if (template.bgPane.breakMobile) {
+        template.bgPane.breakMobile.svgFill = fillColour;
+      }
+    }
 
     // Add the template to the context
     ctx.addTemplatePane("tmp", template);

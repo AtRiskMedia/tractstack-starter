@@ -8,8 +8,9 @@ import {
   hasAssemblyAIStore,
   storyfragmentAnalyticsStore,
   isDemoModeStore,
+  hasArtpacksStore,
 } from "@/store/storykeep.ts";
-import type { Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
+import type { ArtpacksStore, Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
 
 const SetMap = (props: {
   payload: FullContentMap[];
@@ -21,6 +22,7 @@ const SetMap = (props: {
   tractstackSlug: string;
   hasAssemblyAI: boolean;
   isDemoMode: boolean;
+  artpacks: ArtpacksStore;
 }) => {
   const {
     payload,
@@ -32,6 +34,7 @@ const SetMap = (props: {
     tractstackSlug,
     hasAssemblyAI,
     isDemoMode,
+    artpacks,
   } = props;
 
   useEffect(() => {
@@ -43,6 +46,7 @@ const SetMap = (props: {
     tractstackSlugStore.set(tractstackSlug);
     hasAssemblyAIStore.set(hasAssemblyAI);
     isDemoModeStore.set(isDemoMode);
+    hasArtpacksStore.set(artpacks);
     if (analytics.length > 0) {
       const analyticsById = analytics.reduce(
         (acc, item) => {

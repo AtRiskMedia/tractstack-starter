@@ -256,7 +256,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="firstname" className="block text-sm font-medium text-mydarkgrey mb-1">
+          <label htmlFor="firstname" className="block text-sm font-bold text-mydarkgrey mb-1">
             First Name
           </label>
           <input
@@ -278,7 +278,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-mydarkgrey mb-1">
+          <label htmlFor="email" className="block text-sm font-bold text-mydarkgrey mb-1">
             Email Address
           </label>
           <input
@@ -300,7 +300,7 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         </div>
 
         <div>
-          <label htmlFor="codeword" className="block text-sm font-medium text-mydarkgrey mb-1">
+          <label htmlFor="codeword" className="block text-sm font-bold text-mydarkgrey mb-1">
             Code Word
           </label>
           <input

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import ColorPickerCombo from "../fields/ColorPickerCombo";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { StylesMemory } from "../state/StylesMemory";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { isMarkdownPaneFragmentNode, isPaneNode } from "@/utils/nodes/type-guards";
+import BackgroundImageWrapper from "../fields/BackgroundImageWrapper";
 import type { BasePanelProps } from "../SettingsPanel";
-import type { PaneNode, MarkdownPaneFragmentNode } from "@/types";
+import type { MarkdownPaneFragmentNode } from "@/types";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 interface ParentStyles {
@@ -29,9 +29,6 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
   ) {
     return null;
   }
-
-  const ctx = getCtx();
-  const allNodes = ctx.allNodes.get();
 
   const [layerCount, setLayerCount] = useState(node.parentClasses?.length || 0);
   const [currentLayer, setCurrentLayer] = useState<number>(layer || 1);
@@ -99,34 +96,6 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     setCurrentLayer(newLayer);
   };
 
-  useEffect(() => {
-    if (!parentNode) return;
-    const prevBgColor = parentNode.bgColour || ""; // Default to empty string if bgColour is not set
-
-    if (settings.bgColor !== prevBgColor) {
-      const paneNode = { ...allNodes.get(parentNode.id) } as PaneNode;
-      if (paneNode) {
-        if (settings.bgColor === "") {
-          // If bgColor is empty, delete the bgColour property
-          delete paneNode.bgColour;
-        } else {
-          paneNode.bgColour = settings.bgColor;
-        }
-        ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
-      }
-    }
-  }, [settings.bgColor, ctx, allNodes, parentNode]);
-
-  // Safely get current classes
-  const currentClasses = settings.parentClasses?.[currentLayer - 1] || {
-    mobile: {},
-    tablet: {},
-    desktop: {},
-  };
-  const hasNoClasses = !Object.values(currentClasses).some(
-    (breakpoint) => Object.keys(breakpoint).length > 0
-  );
-
   const handleClickDeleteLayer = () => {
     settingsPanelStore.set({
       nodeId: node.id,
@@ -165,17 +134,23 @@ const StyleParentPanel = ({ node, parentNode, layer, config }: BasePanelProps) =
     });
   };
 
+  // Safely get current classes
+  const currentClasses = settings.parentClasses?.[currentLayer - 1] || {
+    mobile: {},
+    tablet: {},
+    desktop: {},
+  };
+  const hasNoClasses = !Object.values(currentClasses).some(
+    (breakpoint) => Object.keys(breakpoint).length > 0
+  );
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Pane Outer Styles</h2>
 
-      <ColorPickerCombo
-        title="Pane Background Color"
-        defaultColor={settings.bgColor}
-        onColorChange={(color: string) => setSettings((prev) => ({ ...prev, bgColor: color }))}
-        config={config!}
-        allowNull={true}
-      />
+      <div className="space-y-4">
+        <BackgroundImageWrapper paneId={parentNode.id} config={config || undefined} />
+      </div>
 
       <div className="flex gap-3 items-center mb-4 bg-slate-50 p-3 rounded-md">
         <span className="text-sm font-bold text-mydarkgrey">Layer:</span>

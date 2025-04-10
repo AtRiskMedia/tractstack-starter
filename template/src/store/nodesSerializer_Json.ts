@@ -9,6 +9,7 @@ import type {
   PaneNode,
   BeliefNode,
   ImageFileNode,
+  BgImageNode,
   TractStackNode,
   StoryFragmentNode,
   MarkdownPaneFragmentNode,
@@ -342,7 +343,14 @@ export class NodesSerializer_Json extends NodesSerializer {
   ) {
     const nodes = allNodes.length > 1 ? allNodes.slice(1) : [];
 
+    const bgImageNode = allNodes.find(
+      (node) => node.nodeType === "BgPane" && "type" in node && node.type === "background-image"
+    ) as BgImageNode | undefined;
     const paneFilesNodes = ctx.getPaneImageFileIds(paneNode.id);
+    if (bgImageNode && bgImageNode.fileId && !paneFilesNodes.includes(bgImageNode.fileId)) {
+      paneFilesNodes.push(bgImageNode.fileId);
+    }
+
     const optionsPayload = {
       isDecorative: paneNode.isDecorative || false,
       ...(typeof paneNode.bgColour === "string" ? { bgColour: paneNode.bgColour } : {}),
@@ -378,36 +386,50 @@ export class NodesSerializer_Json extends NodesSerializer {
         : {}),
     };
 
-    // Process file relationships and create updated file records
-    if (paneFilesNodes) {
+    if (paneFilesNodes && paneFilesNodes.length > 0) {
       paneFilesNodes.forEach((fid: string) => {
-        // Add file relationship
         saveData.paneFiles.push({
           pane_id: paneNode.id,
           file_id: fid,
         });
 
-        // Find the TagElement with this fileId
         const tagElement = allNodes.find(
-          (node) => node.nodeType === "TagElement" && "fileId" in node && node.fileId === fid
-        ) as FlatNode;
+          (node) =>
+            (node.nodeType === "TagElement" && "fileId" in node && node.fileId === fid) ||
+            (node.nodeType === "BgPane" && "fileId" in node && node.fileId === fid)
+        );
 
-        if (tagElement && "alt" in tagElement) {
-          // Extract base filename from src URL by removing the _???px part
-          const urlFilename = tagElement.src?.split("/").pop() || "";
-          const baseFilename = urlFilename.replace(/_\d+px\./, ".");
-          saveData.files.push({
-            id: fid,
-            filename: baseFilename || fid, // Fallback to fid if extraction fails
-            alt_description: tagElement.alt || "Image description missing",
-            url: tagElement.src || "",
-            ...(typeof tagElement.srcSet === "string" ? { src_set: tagElement.srcSet } : {}),
-          });
+        if (tagElement) {
+          // Handle background image nodes
+          if (tagElement.nodeType === "BgPane") {
+            const bgNode = tagElement as BgImageNode;
+            const urlFilename = bgNode.src?.split("/").pop() || "";
+            const baseFilename = urlFilename.replace(/_\d+px\./, ".");
+            saveData.files.push({
+              id: fid,
+              filename: baseFilename || fid,
+              alt_description: bgNode.alt || "Background image",
+              url: bgNode.src || "",
+              ...(typeof bgNode.srcSet === "string" ? { src_set: bgNode.srcSet } : {}),
+            });
+          }
+          // Handle regular image nodes
+          else if ("alt" in tagElement) {
+            const flatNode = tagElement as FlatNode;
+            const urlFilename = flatNode.src?.split("/").pop() || "";
+            const baseFilename = urlFilename.replace(/_\d+px\./, ".");
+            saveData.files.push({
+              id: fid,
+              filename: baseFilename || fid,
+              alt_description: flatNode.alt || "Image description missing",
+              url: flatNode.src || "",
+              ...(typeof flatNode.srcSet === "string" ? { src_set: flatNode.srcSet } : {}),
+            });
+          }
         }
       });
     }
 
-    // Process markdown if present
     if (markdownNode) {
       const markdownGen = new MarkdownGenerator(ctx);
       const markdownBody = markdownGen.markdownFragmentToMarkdown(markdownNode.id);
@@ -419,7 +441,6 @@ export class NodesSerializer_Json extends NodesSerializer {
       }
     }
 
-    // Create the pane record
     saveData.panes.push({
       id: paneNode.id,
       title: paneNode.title,

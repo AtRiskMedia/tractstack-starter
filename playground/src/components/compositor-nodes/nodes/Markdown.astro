@@ -10,12 +10,16 @@ const parentCss = (node?.parentCss as string[]) || [];
 
 {
   parentCss.length > 0 && depth < parentCss.length ? (
-    <div class={parentCss[depth]}>
+    <div class={parentCss[depth]} style={depth === 0 ? "position: relative; z-index: 10;" : ""}>
       <Astro.self nodeId={nodeId} depth={depth + 1} />
     </div>
   ) : (
-    getCtx()
-      .getChildNodeIDs(nodeId)
-      .map((x) => <Node nodeId={x} />)
+    <div style="position: relative; z-index: 10;">
+      {getCtx()
+        .getChildNodeIDs(nodeId)
+        .map((x) => (
+          <Node nodeId={x} />
+        ))}
+    </div>
   )
 }

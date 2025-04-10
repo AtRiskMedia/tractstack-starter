@@ -227,7 +227,7 @@ export default function ActionBuilderTimeSelector({
                       {({ selected }) => (
                         <>
                           <span
-                            className={`block truncate ${selected ? "font-medium" : "font-normal"}`}
+                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
                           >
                             {video.title}
                           </span>

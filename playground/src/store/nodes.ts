@@ -29,6 +29,8 @@ import type {
   ActivePaneMode,
   NodeProps,
   OgImageParams,
+  ArtpackImageNode,
+  VisualBreakNode,
 } from "@/types.ts";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { CSSProperties } from "react";
@@ -225,7 +227,8 @@ export class NodesContext {
         break;
       case `text`:
         // Only handle double-clicks in text mode like default mode
-        if (dblClick && ![`Pane`, `Parkdown`].includes(node.nodeType)) {
+        if (dblClick) {
+          // && ![`Pane`, `Markdown`].includes(node.nodeType)) {
           handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         }
         break;
@@ -1039,16 +1042,13 @@ export class NodesContext {
         duplicatedPane.slug === "" &&
         duplicatedPane.title === ""
       ) {
-        // Take storyfragment slug and last 4 chars of pane's ulid
         duplicatedPane.slug = `${ownerNode.slug}-${duplicatedPaneId.slice(-4)}`;
         duplicatedPane.title = `${ownerNode.title.slice(0, 20)}-${duplicatedPaneId.slice(-4)}`;
       }
     }
 
-    // Track all nodes that need to be added
     let allNodes: BaseNode[] = [];
 
-    // must generate nodes from markdown
     if (duplicatedPane.markdown) {
       duplicatedPane.markdown = cloneDeep(pane.markdown) as TemplateMarkdown;
       duplicatedPane.markdown.id = pane?.markdown?.id || ulid();
@@ -1063,10 +1063,7 @@ export class NodesContext {
           duplicatedPane.markdown.id
         ) as TemplateNode[];
         allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
-      }
-
-      // Markdown already as nodes
-      else if (
+      } else if (
         typeof duplicatedPane.markdown !== `undefined` &&
         typeof duplicatedPane.markdown.id === `string`
       ) {
@@ -1080,21 +1077,38 @@ export class NodesContext {
         allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
       }
     }
-    // Handle visual break panes
-    else if (duplicatedPane.bgPane) {
-      const bgPaneId = ulid();
-      const bgPaneNode = {
-        id: bgPaneId,
-        nodeType: "BgPane",
-        parentId: duplicatedPaneId,
-        type: "visual-break",
-        breakDesktop: duplicatedPane.bgPane.breakDesktop,
-        breakTablet: duplicatedPane.bgPane.breakTablet,
-        breakMobile: duplicatedPane.bgPane.breakMobile,
-      } as PaneFragmentNode;
 
-      allNodes = [bgPaneNode];
-      // Remove bgPane from duplicatedPane to avoid duplication
+    if (duplicatedPane.bgPane) {
+      const bgPaneId = ulid();
+
+      if (duplicatedPane.bgPane.type === "visual-break") {
+        const visualBreakPane = duplicatedPane.bgPane as VisualBreakNode;
+        const bgPaneNode: VisualBreakNode = {
+          id: bgPaneId,
+          nodeType: "BgPane",
+          parentId: duplicatedPaneId,
+          type: "visual-break",
+          breakDesktop: visualBreakPane.breakDesktop,
+          breakTablet: visualBreakPane.breakTablet,
+          breakMobile: visualBreakPane.breakMobile,
+        };
+        allNodes.push(bgPaneNode);
+      } else if (duplicatedPane.bgPane.type === "artpack-image") {
+        const artpackBgPane = duplicatedPane.bgPane as ArtpackImageNode;
+        const bgPaneNode: ArtpackImageNode = {
+          id: bgPaneId,
+          nodeType: "BgPane",
+          parentId: duplicatedPaneId,
+          type: "artpack-image",
+          collection: artpackBgPane.collection,
+          image: artpackBgPane.image,
+          src: artpackBgPane.src,
+          srcSet: artpackBgPane.srcSet,
+          alt: artpackBgPane.alt || `Artpack image`,
+          objectFit: artpackBgPane.objectFit || "cover",
+        };
+        allNodes.push(bgPaneNode);
+      }
       delete duplicatedPane.bgPane;
     }
 
@@ -1121,11 +1135,8 @@ export class NodesContext {
       storyFragmentNode.isChanged = true;
     }
 
-    // Add pane but manually as addNodes will skip pane addition due to storyfragments rule
     this.addNode(duplicatedPane as PaneNode);
     this.linkChildToParent(duplicatedPane.id, duplicatedPane.parentId, specificIdx);
-
-    // Add all child nodes
     this.addNodes(allNodes);
     this.notifyNode(ownerId);
 

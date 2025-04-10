@@ -1,21 +1,29 @@
-import BgPane from "@/components/common/panes/BgPane.tsx";
+import BgVisualBreak from "@/components/common/panes/BgVisualBreak.tsx";
+import BgImage from "@/components/common/panes/BgImage.tsx";
 import { type NodeProps } from "@/types";
 import { getCtx } from "@/store/nodes";
 import { viewportKeyStore } from "@/store/storykeep.ts";
-import type { VisualBreakNode } from "@/types";
+import { isBgImageNode, isArtpackImageNode } from "@/utils/nodes/type-guards";
+import type { BgImageNode, VisualBreakNode } from "@/types";
 
 export const BgPaneWrapper = (props: NodeProps) => {
-  const node = getCtx(props).allNodes.get().get(props.nodeId) as VisualBreakNode;
+  const node = getCtx(props).allNodes.get().get(props.nodeId);
+  if (!node) return null;
+
   const viewport = viewportKeyStore.get().value;
-  return (
-    <div
-      onClick={(e) => {
-        // treat as dbl-click to force open panel
-        getCtx(props).setClickedNodeId(props.nodeId, true);
-        e.stopPropagation();
-      }}
-    >
-      <BgPane payload={node} viewportKey={viewport} />
-    </div>
-  );
+
+  const handleClick = (e: React.MouseEvent) => {
+    getCtx(props).setClickedNodeId(props.nodeId, true);
+    e.stopPropagation();
+  };
+
+  if (isBgImageNode(node) || isArtpackImageNode(node)) {
+    return <BgImage payload={node as BgImageNode} viewportKey={viewport} />;
+  } else {
+    return (
+      <div onClick={handleClick}>
+        <BgVisualBreak payload={node as VisualBreakNode} viewportKey={viewport} />
+      </div>
+    );
+  }
 };
