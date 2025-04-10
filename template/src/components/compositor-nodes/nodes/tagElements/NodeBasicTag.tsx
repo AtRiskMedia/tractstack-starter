@@ -4,7 +4,6 @@ import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildr
 import { showGuids } from "@/store/development.ts";
 import {
   type JSX,
-  type RefObject,
   type FocusEvent,
   type MouseEvent,
   type KeyboardEvent,
@@ -385,7 +384,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }
 
       // Notify parent to ensure consistency
-      console.log(`notify ... change`, node?.parentId);
       getCtx(props).notifyNode(node?.parentId || "");
     } catch (error) {
       console.error("Error parsing edited content in handleGhostContentSaved:", error);
@@ -404,13 +402,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
   if (showGuids.get()) {
     return (
-      <div
-        ref={elementRef as RefObject<HTMLDivElement>}
-        className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}
-        onMouseDown={handleMouseDown}
-        onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
-      >
+      <div className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}>
         <RenderChildren children={children} nodeProps={props} />
       </div>
     );

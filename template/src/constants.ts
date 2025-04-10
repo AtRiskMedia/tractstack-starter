@@ -1,12 +1,11 @@
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import PaintBrushIcon from "@heroicons/react/24/outline/PaintBrushIcon";
-import Cog8ToothIcon from "@heroicons/react/24/outline/Cog8ToothIcon";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
-import Square3Stack3DIcon from "@heroicons/react/24/outline/Square3Stack3DIcon";
 import ArrowsUpDownIcon from "@heroicons/react/24/outline/ArrowsUpDownIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
 
-import type { ResourceSetting, Tag, ToolMode, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
+import type { ResourceSetting, Tag, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
 import type { SubmitParams } from "assemblyai";
 
 export const AUTH_COOKIE_NAME = "auth_token";
@@ -137,41 +136,6 @@ export const toolAddModeInsertDefault: Record<ToolAddMode, string> = {
   toggle: "* `toggle(BeliefTag|prompt)`",
   //aside: "...", // on initial insert must wrap in ol
 };
-
-export const toolModes: ToolMode[] = ["text", "styles", "insert", "settings", "eraser", "pane"];
-
-export const toolModeButtons = [
-  {
-    key: "text" as const,
-    Icon: PencilIcon,
-    title: "Edit text",
-  },
-  {
-    key: "styles" as const,
-    Icon: PaintBrushIcon,
-    title: "Edit styles",
-  },
-  // {
-  //   key: "insert" as const,
-  //   Icon: PlusCircleIcon,
-  //   title: "Insert element",
-  // },
-  {
-    key: "eraser" as const,
-    Icon: TrashIcon,
-    title: "Erase element",
-  },
-  {
-    key: "pane" as const,
-    Icon: Square3Stack3DIcon,
-    title: "Insert Pane",
-  },
-  {
-    key: "settings" as const,
-    Icon: Cog8ToothIcon,
-    title: "Edit settings",
-  },
-] as const;
 
 // Add these new interfaces to the existing constants.ts file
 // Place these with the other interface definitions
@@ -527,4 +491,14 @@ export const storykeepToolModes = [
   //  Icon: BoltIcon,
   //  title: "Edit plain text",
   //},
+  ...(import.meta.env.DEV
+    ? [
+        {
+          key: "debug" as const,
+          Icon: BugAntIcon,
+          title: "Debug",
+          description: "Access debugging tools",
+        },
+      ]
+    : []),
 ] as const;

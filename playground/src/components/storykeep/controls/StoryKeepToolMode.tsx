@@ -1,8 +1,9 @@
-import { useEffect } from "react"; // Add this import
+import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes.ts";
 import { storykeepToolModes } from "@/constants";
+import { showGuids } from "@/store/development.ts"; // Added import for showGuids
 import type { ToolModeVal } from "@/types";
 
 const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
@@ -19,11 +20,13 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
 
   const handleClick = (mode: ToolModeVal) => {
     ctx.toolModeValStore.set({ value: mode });
+    if (mode === "debug") showGuids.set(true);
+    else showGuids.set(false);
     settingsPanelStore.set(null);
     ctx.notifyNode(`root`);
   };
 
-  // Add escape key listener
+  // Escape key listener
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {

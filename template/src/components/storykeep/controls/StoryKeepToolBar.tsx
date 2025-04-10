@@ -2,7 +2,7 @@ import { useStore } from "@nanostores/react";
 import { settingsPanelStore, toolModeStore, toolAddModeStore } from "@/store/storykeep.ts";
 import { AddElementsPanel } from "./insert/AddElementsPanel.tsx";
 import { getCtx } from "@/store/nodes.ts";
-import type { ToolMode, ToolAddMode } from "@/types.ts";
+import type { ToolModeVal, ToolAddMode } from "@/types.ts";
 
 const StoryKeepToolBar = () => {
   const ctx = getCtx();
@@ -10,7 +10,7 @@ const StoryKeepToolBar = () => {
   const hasPanes = useStore(ctx.hasPanes);
   const { value: toolModeVal } = useStore(ctx.toolModeValStore);
   const { value: toolAddModeVal } = useStore(toolAddModeStore);
-  const setToolMode = (newToolMode: ToolMode) => {
+  const setToolMode = (newToolMode: ToolModeVal) => {
     settingsPanelStore.set(null);
     toolModeStore.set({ value: newToolMode });
     ctx.notifyNode(`root`);

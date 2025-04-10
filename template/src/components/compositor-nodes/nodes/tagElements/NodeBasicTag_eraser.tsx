@@ -2,7 +2,6 @@ import { getCtx } from "@/store/nodes.ts";
 import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
 import { viewportKeyStore, keyboardAccessible } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
-import { showGuids } from "@/store/development.ts";
 import type { NodeProps } from "@/types";
 import { type JSX, type MouseEvent, type KeyboardEvent } from "react";
 import { tagTitles } from "@/constants";
@@ -32,33 +31,6 @@ export const NodeBasicTagEraser = (props: NodeTagProps) => {
       </div>
     </div>
   );
-
-  const baseComponent = (
-    <div
-      className="relative group cursor-pointer"
-      onClick={handleClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e: KeyboardEvent) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick(e as unknown as MouseEvent);
-        }
-      }}
-    >
-      <div className="absolute inset-0">
-        <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-red-700 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
-      </div>
-      <EraserUI />
-      <div
-        className={`${getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)} pt-12`}
-      >
-        <RenderChildren children={children} nodeProps={props} />
-      </div>
-    </div>
-  );
-
-  if (showGuids.get()) return baseComponent;
 
   return (
     <div

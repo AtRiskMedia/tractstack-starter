@@ -1,11 +1,11 @@
 import { memo } from "react";
 import { toolAddModes, toolAddModesIcons } from "@/constants.ts";
-import type { ToolAddMode, ToolMode } from "@/types.ts";
+import type { ToolAddMode, ToolModeVal } from "@/types.ts";
 import { InsertableElement } from "./InsertableElement.tsx";
 import { MiscElementsDropdown } from "./MiscElementsDropdown.tsx";
 
 export type AddElementsPanelProps = {
-  setToolMode: (toolMode: ToolMode) => void;
+  setToolMode: (toolMode: ToolModeVal) => void;
   setToolAddMode: (newToolAddMode: ToolAddMode) => void;
   currentToolAddMode: ToolAddMode;
 };

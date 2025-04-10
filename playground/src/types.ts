@@ -339,12 +339,11 @@ export interface MarkdownLookupObj {
   [key: string | number]: { nth: number };
 }
 
-export type ToolModeVal = "default" | "text" | "insert" | "eraser" | "move" | "layout";
+export type ToolModeVal = "default" | "text" | "insert" | "eraser" | "move" | "layout" | "debug";
 //  | "pane"
 //  | "settings"
 //  | "layout"
 //  | "markdown";
-export type ToolMode = "insert" | "text" | "styles" | "settings" | "pane" | "eraser";
 export type ToolAddMode = (typeof toolAddModes)[number];
 
 export type ViewportKey = "mobile" | "tablet" | "desktop" | "auto";

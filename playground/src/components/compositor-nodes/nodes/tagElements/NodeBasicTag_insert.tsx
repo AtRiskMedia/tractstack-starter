@@ -1,7 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
 import { keyboardAccessible, toolAddModeStore, viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
-import { showGuids } from "@/store/development.ts";
 import { type JSX, type MouseEvent } from "react";
 import type { NodeProps } from "@/types";
 import { tagTitles } from "@/constants";
@@ -89,31 +88,6 @@ export const NodeBasicTagInsert = (props: NodeTagProps) => {
       )}
     </div>
   );
-
-  const baseComponent = (
-    <div className="relative group">
-      <div className="relative">
-        {/* Click interceptor layer */}
-        <div
-          className="absolute inset-0 z-10"
-          onClick={handleClickIntercept}
-          onMouseDown={handleClickIntercept}
-          onMouseUp={handleClickIntercept}
-        />
-        <div className="absolute inset-0">
-          <div className="h-full w-full outline outline-4 outline-dashed mix-blend-difference outline-cyan-600 opacity-50 group-hover:opacity-100 group-focus-within:opacity-100" />
-        </div>
-        <InsertButtons />
-        <div
-          className={`${getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)} pt-12`}
-        >
-          <RenderChildren children={children} nodeProps={props} />
-        </div>
-      </div>
-    </div>
-  );
-
-  if (showGuids.get()) return baseComponent;
 
   return (
     <div className="relative group">

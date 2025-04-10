@@ -4,7 +4,7 @@ import type { ControlPosition } from "react-draggable";
 import type { Root } from "hast";
 import type {
   MarkdownLookup,
-  ToolMode,
+  ToolModeVal,
   ToolAddMode,
   Analytics,
   DashboardAnalytics,
@@ -42,7 +42,7 @@ export const viewportStore = map<{
 });
 export const viewportSetStore = atom<boolean>(false);
 
-export const toolModeStore = map<{ value: ToolMode }>({
+export const toolModeStore = map<{ value: ToolModeVal }>({
   value: "text",
 });
 export const toolAddModeStore = map<{ value: ToolAddMode }>({
