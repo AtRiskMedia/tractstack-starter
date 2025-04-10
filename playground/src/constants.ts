@@ -497,7 +497,7 @@ export const storykeepToolModes = [
           key: "debug" as const,
           Icon: BugAntIcon,
           title: "Debug",
-          description: "Access debugging tools",
+          description: "Debug node ids",
         },
       ]
     : []),
