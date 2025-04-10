@@ -30,7 +30,7 @@ const StoryKeepToolMode = ({ isContext }: { isContext: boolean }) => {
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        ctx.toolModeValStore.set({ value: "default" });
+        ctx.toolModeValStore.set({ value: "text" });
         settingsPanelStore.set(null);
         ctx.notifyNode(`root`);
       }

@@ -32,7 +32,7 @@ export const Markdown = (props: NodeProps) => {
   let nodesToRender = (
     <>
       <RenderChildren children={children} nodeProps={props} />
-      {!isPreview && [`default`, `text`, `insert`].includes(toolModeVal) && (
+      {!isPreview && [`text`, `insert`].includes(toolModeVal) && (
         <GhostInsertBlock
           nodeId={props.nodeId}
           ctx={props.ctx}

@@ -424,6 +424,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           onKeyDown: handleKeyDown,
           onFocus: handleFocus,
           onDoubleClick: handleDoubleClick,
+          style: {
+            cursor: isEditableMode ? "text" : "crosshair",
+          },
           onInput: () => {
             editIntentRef.current = true;
             if (elementRef.current) {

@@ -447,7 +447,7 @@ export const stopWords = new Set([
 
 export const storykeepToolModes = [
   {
-    key: "default" as const,
+    key: "styles" as const,
     Icon: PaintBrushIcon,
     title: "Styles",
     description: "Click to edit styles",

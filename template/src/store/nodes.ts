@@ -222,7 +222,7 @@ export class NodesContext {
 
     // click handler based on toolModeVal
     switch (toolModeVal) {
-      case `default`:
+      case `styles`:
         handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
         break;
       case `text`:

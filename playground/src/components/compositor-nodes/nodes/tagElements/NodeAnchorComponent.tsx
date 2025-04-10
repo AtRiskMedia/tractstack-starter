@@ -35,7 +35,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
 
   useEffect(() => {
     // Only apply in editable mode
-    if (!linkRef.current || !["default", "text"].includes(ctx.toolModeValStore.get().value)) {
+    if (!linkRef.current || !["text"].includes(ctx.toolModeValStore.get().value)) {
       return;
     }
 
@@ -151,7 +151,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
 
   const handleClick = (e: MouseEvent) => {
     // Check if in edit mode
-    const isEditMode = [`default`, `text`].includes(ctx.toolModeValStore.get().value);
+    const isEditMode = [`text`].includes(ctx.toolModeValStore.get().value);
 
     if (isEditMode) {
       // Allow normal cursor positioning in edit mode
@@ -177,6 +177,8 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
       ctx.setClickedNodeId(nodeId, true);
     }, 10);
   };
+
+  const isEditMode = [`text`].includes(ctx.toolModeValStore.get().value);
 
   // Create appropriate element based on tagName
   if (tagName === "a") {
@@ -213,7 +215,7 @@ export const NodeAnchorComponent = (props: NodeProps, tagName: string) => {
           onDoubleClick={handleDoubleClick}
           data-editable-button="true"
           // Preserve display mode
-          style={{ display: "inline" }}
+          style={{ display: "inline", cursor: isEditMode ? "text" : "crosshair" }}
         >
           <RenderChildren children={ctx.getChildNodeIDs(nodeId)} nodeProps={props} />
           {isVideo && (

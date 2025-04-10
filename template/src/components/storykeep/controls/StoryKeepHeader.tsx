@@ -190,7 +190,6 @@ const StoryKeepHeader = ({
   const toggleAnalytics = () => {
     settingsPanelStore.set(null);
     showAnalytics.set(!$showAnalytics);
-    getCtx().toolModeValStore.set({ value: "default" });
     settingsPanelStore.set(null);
     getCtx().notifyNode(ROOT_NODE_NAME);
   };
