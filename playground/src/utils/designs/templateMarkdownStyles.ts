@@ -1,6 +1,6 @@
 import { ulid } from "ulid";
 import { getColor, tailwindToHex } from "@/utils/tailwind/tailwindColors";
-import type { Theme, TemplatePane, ParentClassesPayload } from "@/types";
+import type { ArtpackImageNode, Theme, TemplatePane, ParentClassesPayload } from "@/types";
 
 const defaultMarkdownBody = `### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves.`;
 const defaultSectionBody = `### An incredible journey awaits... An incredible journey awaits... An incredible journey awaits...`;
@@ -58,6 +58,78 @@ export const templateCategories = [
     ],
   },
   {
+    id: "with-background",
+    title: "With Background Image",
+    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+      getWithArtpackImageDesign(
+        getSubTitleDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "default"
+      ),
+      getWithArtpackImageDesign(
+        getSubTitleDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "onecol"
+      ),
+      getWithArtpackImageDesign(
+        getSubTitleDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "center"
+      ),
+      getWithArtpackImageDesign(
+        getIntroDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "default"
+      ),
+      getWithArtpackImageDesign(
+        getIntroDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "onecol"
+      ),
+      getWithArtpackImageDesign(
+        getIntroDesign,
+        theme,
+        brand,
+        useOdd,
+        "t8k",
+        "blast",
+        "cover",
+        true,
+        "center"
+      ),
+    ],
+  },
+  {
     id: "image-hero",
     title: "Image Hero Section",
     getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
@@ -66,6 +138,55 @@ export const templateCategories = [
     ],
   },
 ] as const;
+
+export function getWithArtpackImageDesign(
+  designFn: (
+    theme: Theme,
+    brand: string,
+    useOdd: boolean,
+    bordered?: boolean,
+    variant?: string
+  ) => TemplatePane,
+  theme: Theme,
+  brand: string,
+  useOdd: boolean,
+  collection: string = "t8k",
+  imageName: string = "blast",
+  objectFit: "cover" | "contain" | "fill" = "cover",
+  bordered: boolean = true,
+  variant: string = "default"
+): TemplatePane {
+  const baseTemplate = designFn(theme, brand, useOdd, bordered, variant);
+
+  const artpackNode: ArtpackImageNode = {
+    nodeType: "BgPane",
+    id: "",
+    parentId: "",
+    type: "artpack-image",
+    collection,
+    image: imageName,
+    src: `/artpacks/${collection}/${imageName}_1920px.webp`,
+    srcSet: `/artpacks/${collection}/${imageName}_1920px.webp 1920w, /artpacks/${collection}/${imageName}_1080px.webp 1080w, /artpacks/${collection}/${imageName}_600px.webp 600w`,
+    alt: `Artpack image from ${collection} collection`,
+    objectFit,
+  };
+
+  baseTemplate.title = `${baseTemplate.title} with artpack background`;
+  baseTemplate.slug = `${baseTemplate.slug}-artpack`;
+
+  if (baseTemplate.markdown?.parentClasses) {
+    baseTemplate.markdown.parentClasses.forEach((classSet) => {
+      if (classSet.mobile.bgCOLOR === "mywhite") {
+        classSet.mobile.bgCOLOR = "transparent";
+      }
+    });
+  }
+
+  return {
+    ...baseTemplate,
+    bgPane: artpackNode,
+  };
+}
 
 const getBaseParagraphClasses = (theme: Theme) => ({
   h2: {
@@ -371,6 +492,17 @@ export function getSubTitleDesign(
       baseClasses[2].mobile.textWRAP = "pretty";
       baseClasses[2].mobile.maxW = "3xl";
       if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
         baseClasses[2].mobile.shadow = "md";
       }
       break;
@@ -407,6 +539,17 @@ export function getSubTitleDesign(
       baseClasses[2].mobile.textALIGN = "center";
       baseClasses[2].mobile.textWRAP = "balance";
       if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
         baseClasses[2].mobile.shadow = "md";
       }
       break;
@@ -444,6 +587,17 @@ export function getSubTitleDesign(
       baseClasses[2].mobile.textWRAP = "pretty";
       baseClasses[2].mobile.maxW = "3xl";
       if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
         baseClasses[2].mobile.shadow = "md";
       }
       break;
@@ -480,6 +634,17 @@ export function getSubTitleDesign(
       baseClasses[2].mobile.textALIGN = "center";
       baseClasses[2].mobile.textWRAP = "balance";
       if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
         baseClasses[2].mobile.shadow = "md";
       }
       break;
@@ -516,6 +681,17 @@ export function getSubTitleDesign(
       baseClasses[2].mobile.textALIGN = "left";
       baseClasses[2].mobile.textWRAP = "pretty";
       if (bordered) {
+        baseClasses[2].mobile.bgCOLOR = getColor(
+          {
+            light: useOdd ? "brand-2" : "white",
+            "light-bw": useOdd ? "white" : "brand-2",
+            "light-bold": useOdd ? "brand-2" : "white",
+            dark: useOdd ? "black" : "brand-1",
+            "dark-bw": useOdd ? "black" : "brand-1",
+            "dark-bold": useOdd ? "brand-1" : "black",
+          },
+          theme
+        );
         baseClasses[2].mobile.shadow = "md";
       }
       break;

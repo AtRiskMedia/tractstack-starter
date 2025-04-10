@@ -877,7 +877,7 @@ export type TemplatePane = PaneNode & {
   id?: string;
   parentId?: string;
   markdown?: TemplateMarkdown;
-  bgPane?: VisualBreakNode;
+  bgPane?: VisualBreakNode | ArtpackImageNode;
 };
 
 export interface FlatNode extends BaseNode {

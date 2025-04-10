@@ -173,14 +173,16 @@ const AddPaneBreakPanel = ({
     const svgFill = aboveColor === belowColor ? "black" : aboveColor;
 
     if (template.bgPane) {
-      if (template.bgPane.breakDesktop) {
-        template.bgPane.breakDesktop.svgFill = svgFill;
-      }
-      if (template.bgPane.breakTablet) {
-        template.bgPane.breakTablet.svgFill = svgFill;
-      }
-      if (template.bgPane.breakMobile) {
-        template.bgPane.breakMobile.svgFill = svgFill;
+      if (template.bgPane.type === "visual-break") {
+        if (template.bgPane.breakDesktop) {
+          template.bgPane.breakDesktop.svgFill = svgFill;
+        }
+        if (template.bgPane.breakTablet) {
+          template.bgPane.breakTablet.svgFill = svgFill;
+        }
+        if (template.bgPane.breakMobile) {
+          template.bgPane.breakMobile.svgFill = svgFill;
+        }
       }
     }
 
