@@ -485,14 +485,14 @@ export const storykeepToolModes = [
   {
     key: "default" as const,
     Icon: PaintBrushIcon,
-    title: "Text + styles",
-    description: "Click to edit text or styles",
+    title: "Styles",
+    description: "Click to edit styles",
   },
   {
     key: "text" as const,
     Icon: PencilIcon,
     title: "Write",
-    description: "Click to edit text; dbl-click for styles",
+    description: "Click to edit text",
   },
   {
     key: "insert" as const,

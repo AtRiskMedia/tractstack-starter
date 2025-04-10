@@ -35,7 +35,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const focusTransitionRef = useRef(false);
   const ghostTextRef = useRef<HTMLDivElement | null>(null);
   const Tag = props.tagName;
-  const isEditableMode = [`default`, `text`].includes(getCtx(props).toolModeValStore.get().value);
+  const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
 
   useEffect(() => {
@@ -302,31 +302,36 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     e.stopPropagation();
   };
 
-  const handleClick = () => {
-    if (!isEditableMode || !supportsEditing) return;
-    setTimeout(() => {
-      const selection = window.getSelection();
-      if (selection) {
-        if (selection.rangeCount > 0) {
+  const handleClick = (e: MouseEvent) => {
+    if (isEditableMode && supportsEditing) {
+      // Logic for editable mode (single click behavior when editing is supported)
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
           const range = selection.getRangeAt(0);
           cursorPosRef.current = {
             node: range.startContainer,
             offset: range.startOffset,
           };
         }
-      }
-    }, 0);
-    editIntentRef.current = true;
+      }, 0);
+      editIntentRef.current = true;
+    } else {
+      // When isEditableMode is false, stop the click event from propagating
+      e.stopPropagation();
+    }
   };
 
   const handleDoubleClick = (e: MouseEvent) => {
-    doubleClickedRef.current = true;
-    editIntentRef.current = false;
+    if (!isEditableMode) {
+      doubleClickedRef.current = true;
+      editIntentRef.current = false;
 
-    if (elementRef.current) {
-      elementRef.current.blur();
+      if (elementRef.current) {
+        elementRef.current.blur();
+      }
+      getCtx(props).setClickedNodeId(nodeId, true);
     }
-    getCtx(props).setClickedNodeId(nodeId, true);
     e.stopPropagation();
   };
 
