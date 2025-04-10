@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
@@ -13,6 +14,20 @@ export const Markdown = (props: NodeProps) => {
   const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const isEmpty = children.length === 0;
   const lastChildId = children.length > 0 ? children[children.length - 1] : null;
+
+  // Track the viewport value in state so we can react to changes
+  const [currentViewport, setCurrentViewport] = useState(viewportKeyStore.get().value);
+
+  // Subscribe to viewportKeyStore changes
+  useEffect(() => {
+    const unsubscribeViewport = viewportKeyStore.subscribe((newViewport) => {
+      setCurrentViewport(newViewport.value);
+    });
+
+    return () => {
+      unsubscribeViewport();
+    };
+  }, []);
 
   let nodesToRender = (
     <>
@@ -43,7 +58,7 @@ export const Markdown = (props: NodeProps) => {
             getCtx(props).setClickedNodeId(props.nodeId, true);
             e.stopPropagation();
           }}
-          className={getCtx(props).getNodeClasses(id, viewportKeyStore.get().value, i - 1)}
+          className={getCtx(props).getNodeClasses(id, currentViewport, i - 1)}
           style={i === parentClassesLength ? { position: "relative", zIndex: 10 } : undefined}
         >
           {nodesToRender}

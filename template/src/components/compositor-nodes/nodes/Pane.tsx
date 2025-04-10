@@ -38,12 +38,27 @@ const CodeHookContainer = ({
 
 const Pane = memo(
   (props: NodeProps) => {
-    //console.log(`Rendering Pane with id: ${props.nodeId}`);
     const $showAnalytics = showAnalytics.get();
-    const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
+
+    // Track the viewport value in state so we can react to changes
+    const [currentViewport, setCurrentViewport] = useState(viewportKeyStore.get().value);
+
+    // Update component state when viewport changes
+    useEffect(() => {
+      const unsubscribeViewport = viewportKeyStore.subscribe((newViewport) => {
+        setCurrentViewport(newViewport.value);
+      });
+
+      return () => {
+        unsubscribeViewport();
+      };
+    }, []);
+
+    const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, currentViewport)}`;
+
     const contentClasses = "relative w-full h-auto justify-self-start";
     const contentStyles: CSSProperties = {
-      ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value),
+      ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, currentViewport),
       gridArea: "1/1/1/1",
       position: "relative",
       zIndex: 1,
