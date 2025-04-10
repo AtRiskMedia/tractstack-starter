@@ -6,6 +6,7 @@ import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationCh
 import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
 import CursorArrowRaysIcon from "@heroicons/react/24/outline/CursorArrowRaysIcon";
 import ArrowTopRightOnSquareIcon from "@heroicons/react/24/outline/ArrowTopRightOnSquareIcon";
+import { showGuids } from "@/store/development.ts";
 import {
   keyboardAccessible,
   showAnalytics,
@@ -40,6 +41,7 @@ const StoryKeepHeader = ({
   nodeId,
   isContext = false,
 }: StoryKeepHeaderProps) => {
+  const $showGuids = useStore(showGuids);
   const isDemoMode = isDemoModeStore.get();
   const $viewportSet = useStore(viewportSetStore);
   const $viewport = useStore(viewportStore);
@@ -70,6 +72,12 @@ const StoryKeepHeader = ({
     !!node && !!savedNode && `slug` in node && `slug` in savedNode && savedNode.slug === node.slug;
 
   const rafId = useRef<number | null>(null);
+
+  const toggleShowGuids = () => {
+    settingsPanelStore.set(null);
+    showGuids.set(!$showGuids);
+    getCtx().notifyNode(ROOT_NODE_NAME);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -134,13 +142,6 @@ const StoryKeepHeader = ({
     },
     [mounted]
   );
-
-  const showDebugPanel = () => {
-    settingsPanelStore.set(null);
-    getCtx().toolModeValStore.set({ value: "default" });
-    settingsPanelStore.set({ nodeId: ``, action: `debug`, expanded: true });
-    getCtx().notifyNode(`root`);
-  };
 
   const handleSave = () => {
     settingsPanelStore.set(null);
@@ -287,8 +288,10 @@ const StoryKeepHeader = ({
             />
           </button>
           {import.meta.env.DEV ? (
-            <button onClick={showDebugPanel} title="Reveal Debug Panel">
-              <BugAntIcon className={iconClassName} />
+            <button onClick={toggleShowGuids} title="Toggle Node IDs">
+              <BugAntIcon
+                className={`${$showGuids ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+              />
             </button>
           ) : null}
           {!keyboardAccessibleEnabled && (

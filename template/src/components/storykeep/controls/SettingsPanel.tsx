@@ -4,7 +4,6 @@ import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
 import ChevronDoubleDownIcon from "@heroicons/react/24/outline/ChevronDoubleDownIcon";
 import { settingsPanelStore } from "@/store/storykeep";
-import DebugPanel from "./DebugPanel";
 import StyleCodeHookPanel from "./panels/StyleCodeHookPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleLinkPanel from "./panels/StyleLinkPanel";
@@ -71,8 +70,6 @@ const getPanel = (
   if (markdownNode && !isMarkdownPaneFragmentNode(markdownNode)) return null;
 
   switch (action) {
-    case "debug":
-      return <DebugPanel />;
     case "style-break":
       return clickedNode ? (
         <StyleBreakPanel config={config} node={clickedNode} parentNode={paneNode} />

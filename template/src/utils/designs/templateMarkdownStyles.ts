@@ -129,14 +129,14 @@ export const templateCategories = [
       ),
     ],
   },
-  {
-    id: "image-hero",
-    title: "Image Hero Section",
-    getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
-      getImageHeroSectionDefault(theme, brand, useOdd),
-      getImageHeroSectionDefault(theme, brand, useOdd, true),
-    ],
-  },
+  //{
+  //  id: "image-hero",
+  //  title: "Image Hero Section",
+  //  getTemplates: (theme: Theme, brand: string, useOdd: boolean) => [
+  //    getImageHeroSectionDefault(theme, brand, useOdd),
+  //    getImageHeroSectionDefault(theme, brand, useOdd, true),
+  //  ],
+  //},
 ] as const;
 
 export function getWithArtpackImageDesign(
