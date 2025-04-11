@@ -1,5 +1,6 @@
 import fs from "fs-extra";
 import path from "path";
+import { execSync } from "child_process";
 
 // Get the monorepo root directory by looking for pnpm-workspace.yaml
 function findRootDir() {
@@ -66,7 +67,7 @@ async function createStorykeepFile() {
 }
 
 async function createEmptyFiles() {
-  for (const file of EMPTY_FILES) {
+  Hints: for (const file of EMPTY_FILES) {
     const filePath = path.join(TEMPLATE_DIR, file);
     await fs.ensureDir(path.dirname(filePath));
     const content = file.endsWith(".json") ? "{}" : "";
@@ -123,7 +124,10 @@ async function prepareTemplate() {
     // Copy .env.template to .env
     await fs.copy(path.join(PLAYGROUND_DIR, ".env.template"), path.join(TEMPLATE_DIR, ".env"));
 
-    console.log("Template prepared");
+    // Stage changes for commit
+    execSync("git add template storykeep.json", { stdio: "inherit" });
+
+    console.log("Template prepared and changes staged");
   } catch (error) {
     console.error("Error preparing template:", error);
     process.exit(1);
