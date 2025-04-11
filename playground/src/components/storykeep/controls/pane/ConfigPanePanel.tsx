@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { useStore } from "@nanostores/react";
-import { getCtx } from "@/store/nodes.ts";
+import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
+import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
+import PaintBrushIcon from "@heroicons/react/24/outline/PaintBrushIcon";
 import PaneTitlePanel from "./PanePanel_title";
 import PaneSlugPanel from "./PanePanel_slug";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
+import { settingsPanelStore } from "@/store/storykeep";
 import { PaneConfigMode } from "@/types.ts";
 import type { PaneNode } from "@/types.ts";
 import type { SetStateAction, Dispatch } from "react";
-import ArrowUpIcon from "@heroicons/react/24/outline/ArrowUpIcon";
 
 interface ConfigPanePanelProps {
   nodeId: string;
@@ -27,6 +29,11 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(nodeId) as PaneNode;
   if (!paneNode) return null;
+
+  // Check if pane is a code hook
+  const codeHookPayload = ctx.getNodeCodeHookPayload(nodeId);
+  const isCodeHook = !!codeHookPayload;
+
   const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
   const isContextPane = isContextPaneNode(paneNode);
   const buttonClass =
@@ -43,6 +50,46 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
       mode: typeof newMode === "function" ? newMode(mode) : newMode,
       panel: `settings`,
     });
+  };
+
+  const handleEditStyles = () => {
+    // Set tool mode to styles
+    ctx.toolModeValStore.set({ value: "styles" });
+
+    if (paneNode.isDecorative) {
+      // For decorative panes (visual breaks), use style-break action
+      // First find the BgPane node
+      const childNodeIds = ctx.getChildNodeIDs(nodeId);
+      const bgPaneId = childNodeIds.find((id) => {
+        const node = ctx.allNodes.get().get(id);
+        return node && node.nodeType === "BgPane";
+      });
+
+      if (bgPaneId) {
+        settingsPanelStore.set({
+          action: "style-break",
+          nodeId: bgPaneId,
+          expanded: true,
+        });
+      } else {
+        // Fallback if no BgPane is found
+        settingsPanelStore.set({
+          action: "style-break",
+          nodeId: nodeId,
+          expanded: true,
+        });
+      }
+    } else {
+      // For regular panes, use style-parent action
+      settingsPanelStore.set({
+        action: "style-parent",
+        nodeId: nodeId,
+        expanded: true,
+      });
+    }
+
+    // Notify the root node to trigger updates
+    ctx.notifyNode(ROOT_NODE_NAME);
   };
 
   if (mode === PaneConfigMode.TITLE) {
@@ -66,11 +113,18 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               <ArrowDownIcon className="w-6 h-6 mr-1" /> This Pane
             </div>
             {paneNode.isDecorative ? (
-              <button className={buttonClass}>
-                <CheckIcon className="w-4 h-4 inline" />
-                {` `}
-                <strong>Decorative Pane</strong> (no analytics tracked)
-              </button>
+              <>
+                <button className={buttonClass}>
+                  <CheckIcon className="w-4 h-4 inline" />
+                  {` `}
+                  <strong>Decorative Pane</strong> (no analytics tracked)
+                </button>
+                <button onClick={handleEditStyles} className={buttonClass}>
+                  <PaintBrushIcon className="w-4 h-4 inline" />
+                  {` `}
+                  <span>Edit Visual Break</span>
+                </button>
+              </>
             ) : (
               <>
                 <button onClick={() => setSaveMode(PaneConfigMode.TITLE)} className={buttonClass}>
@@ -97,6 +151,13 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                     </>
                   )}
                 </button>
+                {!isCodeHook && (
+                  <button onClick={handleEditStyles} className={buttonClass}>
+                    <PaintBrushIcon className="w-4 h-4 inline" />
+                    {` `}
+                    <span>Edit Styles</span>
+                  </button>
+                )}
               </>
             )}
             {!isContextPane && (
