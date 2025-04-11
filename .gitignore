@@ -46,3 +46,5 @@ pnpm-debug.log*
 
 # multi-tenant
 /playground/tenants/*
+
+!storykeep.json
