@@ -127,8 +127,8 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
       return null;
     }
 
-    // Read artpacks
-    const artpacks = await readArtpacks(actualConfigPath);
+    // Read artpacks from root config
+    const artpacks = await readArtpacks(defaultConfigPath);
 
     // Merge standard configs
     const mergedConfig = validConfigs.reduce<Config>(
