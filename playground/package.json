@@ -50,6 +50,7 @@
     "react-lite-youtube-embed": "2.4.0",
     "react-search-autocomplete": "^8.5.2",
     "recharts": "^2.15.0",
+    "resend": "^4.2.0",
     "sharp": "0.33.5",
     "tinycolor2": "1.6.0",
     "ts-treemap": "^1.1.0",
