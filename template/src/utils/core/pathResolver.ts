@@ -1,6 +1,7 @@
 import { tenantRegistry } from "@/store/tenantRegistry";
 import path from "path";
 import fs from "fs/promises";
+import { createTenant } from "@/utils/tenant/createTenant";
 
 export async function resolvePaths(tenantId: string = `default`): Promise<{
   id: string;
@@ -32,6 +33,35 @@ export async function resolvePaths(tenantId: string = `default`): Promise<{
 
   if (tenantId !== `default`) {
     const tenantBaseDir = path.join(process.cwd(), `tenants`, tenantId);
+
+    // Special handling for localhost tenant
+    if (tenantId === "localhost") {
+      try {
+        // Check if the tenant directory exists
+        await fs.access(tenantBaseDir);
+      } catch {
+        // Localhost tenant doesn't exist, let's create it
+        console.log("Provisioning localhost tenant");
+        const newTenant = await createTenant("localhost");
+
+        if (newTenant.success) {
+          resolvedPaths = {
+            id: tenantId,
+            dbPath: newTenant.dbPath,
+            configPath: newTenant.configPath,
+            publicPath: newTenant.publicPath,
+            lastAccessed: Date.now(),
+            exists: true,
+          };
+
+          // Cache the resolved paths in tenantRegistry
+          registry[tenantId] = resolvedPaths;
+          tenantRegistry.set(registry);
+
+          return resolvedPaths;
+        }
+      }
+    }
 
     try {
       // First check if the tenant directory exists

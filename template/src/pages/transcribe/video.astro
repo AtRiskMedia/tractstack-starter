@@ -1,10 +1,13 @@
 ---
-import VideoPlayer from "../../components/transcribe/video/VideoPage.astro";
-import { TranscriptFollower } from "../../components/transcribe/common/TranscriptFollower";
-import { getConfig, validateConfig } from "../../utils/core/config";
-import Layout from "../../layouts/Layout.astro";
+import { getAPIContext } from "@/utils/api/astroContext";
+import VideoPlayer from "@/components/transcribe/video/VideoPage.astro";
+import { TranscriptFollower } from "@/components/transcribe/common/TranscriptFollower";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import Layout from "@/layouts/Layout.astro";
 
-const config = await getConfig(Astro.locals.tenant?.paths.configPath);
+const context = getAPIContext(Astro);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

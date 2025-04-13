@@ -5,6 +5,7 @@ import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
 import { cssStore, updateCssStore } from "@/store/css";
+import { updateTenantAccessTime } from "@/utils/tenant/updateAccess";
 import { resolvePaths } from "@/utils/core/pathResolver";
 
 // Dynamic directories for serving tenant-specific files
@@ -109,8 +110,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // **Step 5: Authentication and authorization with tenant context**
-  const config = await getConfig(context.locals.tenant.paths.configPath);
-  if (config) config.tenantId = context?.locals?.tenant?.id || "default";
+  const config = await getConfig(context.locals.tenant.paths.configPath, tenantId);
   const tenantValidation = await validateConfig(config);
 
   const auth = isAuthenticated(context);
@@ -122,6 +122,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     isAdmin: isAdminUser,
     isOpenDemo,
   } as AuthStatus;
+
+  if (tenantId !== "default") {
+    updateTenantAccessTime(tenantId, isAdminUser).catch((error) => {
+      console.warn(`Failed to update tenant access time for ${tenantId}:`, error);
+    });
+  }
 
   // **Step 6: Config validation with tenant-specific config path**
   const hasPassword = isMultiTenant

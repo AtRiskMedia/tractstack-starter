@@ -21,7 +21,8 @@ const context = getAPIContext(Astro);
 const { slug } = Astro.params;
 if (!slug) return Astro.redirect("/404");
 
-const config = await getConfig(Astro.locals.tenant?.paths.configPath);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
 if ((!validation.isValid && slug !== `hello`) || !config) {
   return Astro.redirect("/storykeep/init");

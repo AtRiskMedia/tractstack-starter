@@ -112,7 +112,7 @@ function detectCapabilities(config?: Config | null): SystemCapabilities {
  * Gets configuration from all specified config files in the given or default config path
  * @param configPath - Optional path to the config directory; defaults to "./config"
  */
-export async function getConfig(configPath?: string): Promise<Config | null> {
+export async function getConfig(configPath?: string, tenantId?: string): Promise<Config | null> {
   const defaultConfigPath = path.join(process.cwd(), "config");
   const actualConfigPath = configPath || defaultConfigPath;
 
@@ -137,13 +137,10 @@ export async function getConfig(configPath?: string): Promise<Config | null> {
         ...acc,
         [curr.name.replace(".json", "")]: curr.content,
       }),
-      { init: {} as InitConfig }
+      { init: {} as InitConfig, tenantId: tenantId || `default` }
     );
 
-    // Add artpacks to config if they exist
-    if (artpacks) {
-      mergedConfig.artpacks = artpacks;
-    }
+    if (artpacks) mergedConfig.artpacks = artpacks;
 
     return mergedConfig;
   } catch (error) {

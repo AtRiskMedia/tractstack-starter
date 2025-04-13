@@ -1,9 +1,12 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import Layout from "@/layouts/StoryKeep.astro";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import InitWizard from "@/components/storykeep/init/InitWizard";
 
-const config = await getConfig(Astro.locals.tenant?.paths.configPath);
+const context = getAPIContext(Astro);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
 
 // already initialized

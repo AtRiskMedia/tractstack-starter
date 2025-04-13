@@ -18,7 +18,8 @@ import type { LoadData } from "@/store/nodesSerializer.ts";
 
 const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
-const config = await getConfig(Astro.locals.tenant?.paths.configPath);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
 if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");

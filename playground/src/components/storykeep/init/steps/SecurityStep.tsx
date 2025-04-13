@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
 import EyeSlashIcon from "@heroicons/react/24/outline/EyeSlashIcon";
@@ -29,6 +29,14 @@ const PasswordField = ({
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus on the password field when it's required
+  useEffect(() => {
+    if ((!hasExisting || isEditing) && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [hasExisting, isEditing]);
 
   if (!isEditing && hasExisting) {
     return (
@@ -64,6 +72,7 @@ const PasswordField = ({
           className="px-3 block w-full rounded-md border-mylightgrey pr-20"
           placeholder="Enter new password"
           required={!hasExisting}
+          ref={inputRef}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 gap-2">
           {password && (
@@ -146,7 +155,6 @@ export default function SecurityStep({
   };
 
   const canSubmit = validation.hasPassword || (adminPassword !== null && editorPassword !== null);
-
   return (
     <div className="space-y-6">
       <div className="flex items-center space-x-4 mb-6">

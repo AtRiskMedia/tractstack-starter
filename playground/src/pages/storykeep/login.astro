@@ -1,9 +1,12 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
 import { isAuthenticated, setAuthenticated } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 
 // Validate config and environment
-const config = await getConfig(Astro.locals.tenant?.paths.configPath);
+const context = getAPIContext(Astro);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
 const isMultiTenant =
   import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && Astro.locals.tenant?.id !== `default`;

@@ -80,7 +80,8 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
   };
 
   try {
-    const config = context.locals.config || (await getConfig(tenantPaths.configPath));
+    const tenantId = context.locals.tenant?.id || "default";
+    const config = context.locals.config || (await getConfig(tenantPaths.configPath, tenantId));
     const isInitOperation = context.request.headers.get("X-Init-Operation") === "true";
 
     if (!config && !isInitOperation) {
