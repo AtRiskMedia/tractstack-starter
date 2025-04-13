@@ -1,0 +1,148 @@
+---
+import { ViewTransitions } from "astro:transitions";
+import RegistrationForm from "@/components/tenant/RegistrationForm";
+
+// confirm multi-tenant is enabled but not active
+const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+
+// If not in multi-tenant mode, redirect to home
+if (!isMultiTenant) {
+  return Astro.redirect("/");
+}
+
+// Logo and branding configuration - using default values
+const logo = "/logo.svg";
+const logoIsSvg = logo.includes("svg");
+const wordmark = "/wordmark.svg";
+const wordmarkIsSvg = wordmark.includes("svg");
+---
+
+<!doctype html>
+<html lang="en" class="h-full bg-mywhite">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claim Your TractStack Sandbox</title>
+    <meta
+      name="description"
+      content="Register for your own TractStack sandbox to build and test your no-code website."
+    />
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href="/styles/app.css" />
+    <ViewTransitions />
+  </head>
+  <body class="h-full">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="mx-auto pb-6">
+        <div class="flex flex-col items-center justify-center gap-4">
+          <div class="h-16 w-auto">
+            {
+              logoIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={logo}
+                  class="h-full w-auto pointer-events-none"
+                  aria-label="Logo"
+                >
+                  Logo
+                </object>
+              ) : (
+                <img src={logo} class="h-full w-auto pointer-events-none" alt="Logo" />
+              )
+            }
+          </div>
+          <div class="h-16 w-auto">
+            {
+              wordmarkIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  aria-label="Wordmark"
+                >
+                  Wordmark
+                </object>
+              ) : (
+                <img
+                  src={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  alt="Wordmark"
+                />
+              )
+            }
+          </div>
+        </div>
+
+        <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
+          Claim Your TractStack Sandbox
+        </h2>
+        <p class="mt-2 text-center text-sm text-mylightgrey">
+          Create your own sandbox to build and test your TractStack website
+        </p>
+      </div>
+
+      <div class="mx-auto w-full max-w-md px-4">
+        <RegistrationForm isMultiTenant={isMultiTenant} client:load />
+      </div>
+
+      <div class="mt-8 mx-auto max-w-md px-4">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-mylightgrey">
+          <h3 class="text-lg font-bold text-mydarkgrey mb-2">What is a TractStack Sandbox?</h3>
+          <p class="text-sm text-mydarkgrey mb-4">
+            A TractStack Sandbox gives you a fully functional environment to create and test your
+            own marketing funnels, landing pages, and interactive content.
+          </p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Full access to the StoryKeep no-code editor</span>
+            </div>
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Custom branding and design options</span>
+            </div>
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Visitor analytics and conversion tracking</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-10 py-6 bg-mywhite border-t border-mylightgrey">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-sm text-mylightgrey">
+          &copy; {new Date().getFullYear()} TractStack. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

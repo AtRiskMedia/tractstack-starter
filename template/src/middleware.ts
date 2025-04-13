@@ -148,6 +148,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     ...(isInitialized ? ["/storykeep/init"] : []),
     "/api/concierge/publish",
     "/api/concierge/status",
+    "/api/tenant/archive",
   ];
 
   const protectedRoutes = [
