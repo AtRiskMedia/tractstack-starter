@@ -39,7 +39,9 @@ if (id) {
 }
 
 // Determine CSS based on multi-tenant mode
-const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+const tenantId = context.locals.tenant?.id || "default";
+const isMultiTenant =
+  import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 const stylesUrl = isMultiTenant
   ? "/styles/storykeep.css" // Use storykeep.css for multi-tenant mode
   : config.init.STYLES_VER

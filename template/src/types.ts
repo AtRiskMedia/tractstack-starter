@@ -110,6 +110,7 @@ export type ArtpacksStore = Record<string, string[]>;
 export interface Config {
   init: InitConfig;
   artpacks?: ArtpacksStore;
+  tenantId?: string;
   [key: string]: unknown;
 }
 

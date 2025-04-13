@@ -3,6 +3,7 @@ import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import { generateOgImageWithFontLoading } from "@/utils/images/ogImageGenerator";
+import { tenantIdStore } from "@/store/storykeep.ts";
 import type { SaveData } from "@/store/nodesSerializer";
 import type { StoryFragmentNode } from "@/types";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -29,6 +30,7 @@ interface SaveModalProps {
 }
 
 const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
+  const tenantId = tenantIdStore.get();
   const [stage, setStage] = useState<SaveStage>("PREPARING");
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -301,8 +303,9 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         setProgress(80);
         addDebugMessage("Processing styles");
 
-        const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
         // skip in multi-tenant
+        const isMultiTenant =
+          import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
         if (!isMultiTenant)
           try {
             addDebugMessage("Generating Tailwind styles");

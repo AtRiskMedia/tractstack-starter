@@ -140,7 +140,8 @@ class TursoClientManager {
     try {
       let client: Client;
       // First check if multi-tenant mode is enabled
-      const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+      const isMultiTenant =
+        import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
       if (isMultiTenant) {
         // In multi-tenant mode, always use local database regardless of credentials

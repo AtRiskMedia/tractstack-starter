@@ -27,10 +27,10 @@ async function ensureCssStoreInitialized() {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   // **Step 1: Determine tenant ID based on environment and hostname**
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const isMultiTenantEnabled = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   let tenantId = "default";
 
-  if (isMultiTenant) {
+  if (isMultiTenantEnabled) {
     const hostname = context.request.headers.get("host");
     if (hostname) {
       if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
@@ -43,6 +43,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
   }
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
   // **Step 2: Resolve tenant-specific paths**
   const resolved = await resolvePaths(tenantId);
@@ -108,6 +110,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // **Step 5: Authentication and authorization with tenant context**
   const config = await getConfig(context.locals.tenant.paths.configPath);
+  if (config) config.tenantId = context?.locals?.tenant?.id || "default";
   const tenantValidation = await validateConfig(config);
 
   const auth = isAuthenticated(context);

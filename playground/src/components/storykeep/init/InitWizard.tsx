@@ -6,7 +6,8 @@ import {
   completeStep,
   uncompleteStep,
   updateValidation,
-} from "../../../store/init";
+} from "@/store/init";
+import { tenantIdStore } from "@/store/storykeep.ts";
 import SetupStep from "./steps/SetupStep";
 import IntegrationsStep from "./steps/IntegrationsStep";
 import BrandStep from "./steps/BrandStep";
@@ -45,6 +46,9 @@ export default function InitWizard({
   config,
   init,
 }: InitWizardProps) {
+  const tenantId = tenantIdStore.get();
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
   const initialConfig = initialValidation.config;
   const $store = useStore(initWizardStore);
   const [steps, setSteps] = useState<InitStepConfig[]>([]);
@@ -257,7 +261,7 @@ export default function InitWizard({
         isLocked: !$store.completedSteps.includes("setup"),
       },
     ];
-    if (hasConcierge) {
+    if (hasConcierge && !isMultiTenant) {
       newSteps.push({
         id: "integrations",
         title: "Set Up Integrations",
@@ -266,14 +270,15 @@ export default function InitWizard({
         isLocked: !$store.completedSteps.includes("brand"),
       });
     }
-    const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
     if (hasConcierge || isMultiTenant) {
       newSteps.push({
         id: "security",
         title: "Secure Your Site",
         description: "Set up authentication and access control",
         isComplete: hasInit || $store.completedSteps.includes("security"),
-        isLocked: !$store.completedSteps.includes(hasConcierge ? "integrations" : "brand"),
+        isLocked: !$store.completedSteps.includes(
+          hasConcierge && !isMultiTenant ? "integrations" : "brand"
+        ),
       });
     }
     if (requiresPublish)

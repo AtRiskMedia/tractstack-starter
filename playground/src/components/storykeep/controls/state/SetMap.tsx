@@ -9,6 +9,7 @@ import {
   storyfragmentAnalyticsStore,
   isDemoModeStore,
   hasArtpacksStore,
+  tenantIdStore,
 } from "@/store/storykeep.ts";
 import type { ArtpacksStore, Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
 
@@ -23,6 +24,7 @@ const SetMap = (props: {
   hasAssemblyAI: boolean;
   isDemoMode: boolean;
   artpacks: ArtpacksStore;
+  tenantId: string;
 }) => {
   const {
     payload,
@@ -35,6 +37,7 @@ const SetMap = (props: {
     hasAssemblyAI,
     isDemoMode,
     artpacks,
+    tenantId,
   } = props;
 
   useEffect(() => {
@@ -47,6 +50,7 @@ const SetMap = (props: {
     hasAssemblyAIStore.set(hasAssemblyAI);
     isDemoModeStore.set(isDemoMode);
     hasArtpacksStore.set(artpacks);
+    tenantIdStore.set(tenantId);
     if (analytics.length > 0) {
       const analyticsById = analytics.reduce(
         (acc, item) => {

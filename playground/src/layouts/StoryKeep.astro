@@ -157,6 +157,7 @@ const isDemoMode = isOpenDemoMode(Astro, config);
       hasAssemblyAI={!!import.meta.env.PRIVATE_ASSEMBLYAI_API_KEY}
       isDemoMode={isDemoMode}
       artpacks={config?.artpacks || {}}
+      tenantId={Astro.locals.tenant?.id || "default"}
       client:only="react"
     />
     <ViewTransitions />

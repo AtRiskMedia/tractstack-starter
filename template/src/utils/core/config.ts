@@ -77,7 +77,8 @@ async function readConfigFile(configPath: string, filename: string): Promise<Con
  * @param config - Optional config object to check for tenant-specific passwords
  */
 function detectCapabilities(config?: Config | null): SystemCapabilities {
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const hasTenantId = config?.tenantId && config.tenantId !== "default";
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && hasTenantId;
 
   // Check environment variables (always used in single-tenant mode)
   const hasTursoCredentials =

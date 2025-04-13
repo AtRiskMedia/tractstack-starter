@@ -4,6 +4,7 @@ import EyeIcon from "@heroicons/react/24/outline/EyeIcon";
 import EyeSlashIcon from "@heroicons/react/24/outline/EyeSlashIcon";
 import PencilIcon from "@heroicons/react/24/outline/PencilIcon";
 import ShieldCheckIcon from "@heroicons/react/24/outline/ShieldCheckIcon";
+import { tenantIdStore } from "@/store/storykeep.ts";
 
 interface SecurityStepProps {
   onComplete: () => void;
@@ -105,11 +106,13 @@ export default function SecurityStep({
   isProcessing,
   onConfigUpdate,
 }: SecurityStepProps) {
+  const tenantId = tenantIdStore.get();
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [editorPassword, setEditorPassword] = useState<string | null>(null);
 
   // Detect multi-tenant mode
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
   if (!isActive) return null;
 

@@ -29,6 +29,7 @@ export const storedAnalytics = map<Analytics>();
 export const storedDashboardAnalytics = map<DashboardAnalytics>();
 export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
 export const hasArtpacksStore = map<ArtpacksStore>({});
+export const tenantIdStore = atom<string>(`default`);
 
 export const viewportKeyStore = map<{
   value: "mobile" | "tablet" | "desktop";

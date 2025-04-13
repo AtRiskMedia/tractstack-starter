@@ -3,7 +3,8 @@ import { withTenantContext } from "@/utils/api/middleware";
 import { cssStore } from "@/store/css";
 
 export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const tenantId = context.locals.tenant?.id || "default";
+  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
   if (isMultiTenant) {
     return new Response("CSS generation disabled in multi-tenant mode", { status: 403 });
   }

@@ -42,9 +42,6 @@ import type {
 } from "@/types.ts";
 import type { APIContext } from "@/types";
 
-// Helper to check if multi-tenant mode is enabled
-const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
-
 // Define interfaces for full row data
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
@@ -76,6 +73,10 @@ function ensureString(value: unknown): string {
 
 // Fetch all TractStacks
 export async function getAllTractStackRowData(context?: APIContext): Promise<TractStackRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -112,6 +113,10 @@ export async function getTractStackBySlugRowData(
   slug: string,
   context?: APIContext
 ): Promise<TractStackRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedTractStack = getCachedTractStackBySlug(slug);
@@ -153,6 +158,10 @@ export async function getTractStackByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<TractStackRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cached = getCachedTractStackById(id);
@@ -194,6 +203,10 @@ export async function upsertTractStackByIdRowData(
   data: TractStackRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -224,6 +237,10 @@ export async function getResourceByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<ResourceRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedResource = getCachedResourceById(id);
@@ -269,6 +286,10 @@ export async function upsertResourceByIdRowData(
   data: ResourceRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -307,6 +328,10 @@ export async function upsertResourceByIdRowData(
 
 // Fetch all Menus
 export async function getAllMenusRowData(context?: APIContext): Promise<MenuRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -339,6 +364,10 @@ export async function getMenuByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<MenuRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedMenu = getCachedMenuById(id);
@@ -378,6 +407,10 @@ export async function upsertMenuByIdRowData(
   data: MenuRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -405,6 +438,10 @@ export async function upsertMenuByIdRowData(
 
 // Fetch all Files
 export async function getAllFilesRowData(context?: APIContext): Promise<ImageFileRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -440,6 +477,10 @@ export async function getFileByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<ImageFileRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedFile = getCachedFileById(id);
@@ -480,6 +521,10 @@ export async function upsertFileByIdRowData(
   data: ImageFileRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -511,6 +556,10 @@ export async function getPaneByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<PaneRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedPane = getCachedPaneById(id);
@@ -556,6 +605,10 @@ export async function upsertPaneByIdRowData(
   data: PaneRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -600,6 +653,10 @@ export async function getMarkdownByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<MarkdownRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedMarkdown = getCachedMarkdownById(id);
@@ -682,6 +739,10 @@ export async function getCachedStoryFragmentByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<StoryFragmentRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cached = getCachedStoryFragmentById(id);
@@ -743,6 +804,10 @@ export async function upsertStoryFragmentByIdRowData(
   data: StoryFragmentRowData,
   context?: APIContext
 ): Promise<boolean> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
@@ -804,6 +869,10 @@ export async function getStoryFragmentBySlugFullRowData(
   slug: string,
   context?: APIContext
 ): Promise<StoryFragmentFullRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const storyFragment = getCachedStoryFragmentBySlug(slug);
@@ -981,6 +1050,10 @@ export async function getStoryFragmentBySlugFullRowData(
 
 // Fetch Full Content Map
 export async function getFullContentMap(context?: APIContext): Promise<FullContentMap[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedContent = getCachedContentMap();
@@ -1182,6 +1255,10 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
 
 // Fetch all Resources
 export async function getAllResourcesRowData(context?: APIContext): Promise<ResourceRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -1218,6 +1295,10 @@ export async function getResourcesByCategorySlugRowData(
   categorySlug: string,
   context?: APIContext
 ): Promise<ResourceRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -1258,6 +1339,10 @@ export async function getResourcesBySlugsRowData(
   slugs: string[],
   context?: APIContext
 ): Promise<ResourceRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -1299,6 +1384,10 @@ export async function getResourceBySlugRowData(
   slug: string,
   context?: APIContext
 ): Promise<ResourceRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return null;
@@ -1339,6 +1428,10 @@ export async function getContextPaneBySlugFullRowData(
   slug: string,
   context?: APIContext
 ): Promise<ContextPaneFullRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const pane = getCachedPaneBySlug(slug);
@@ -1486,6 +1579,10 @@ export async function getContextPaneBySlugFullRowData(
 
 // Fetch all Beliefs
 export async function getAllBeliefRowData(context?: APIContext): Promise<BeliefRowData[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return [];
@@ -1517,6 +1614,10 @@ export async function getBeliefByIdRowData(
   id: string,
   context?: APIContext
 ): Promise<BeliefRowData | null> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   // Check cache only if not in multi-tenant mode
   if (!isMultiTenant) {
     const cachedBelief = getCachedBeliefById(id);

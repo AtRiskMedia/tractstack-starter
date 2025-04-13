@@ -5,7 +5,9 @@ export function isAuthenticated(context: APIContext): boolean {
   const token = context.cookies.get("auth_token")?.value;
   if (!token) return false;
 
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const tenantId = context.locals.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
   // If multi-tenant is disabled, use old logic
   if (!isMultiTenant) {
@@ -31,7 +33,9 @@ export function isAdmin(context: APIContext): boolean {
   const token = context.cookies.get("auth_token")?.value;
   if (!token) return false;
 
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const tenantId = context.locals.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
   // If multi-tenant is disabled, use old logic
   if (!isMultiTenant) {
@@ -90,7 +94,9 @@ export async function validateAuth(config: Config | null): Promise<AuthValidatio
 
 export function setAuthenticated(context: APIContext, value: boolean, isAdmin: boolean = false) {
   const isProd = import.meta.env.PROD;
-  const isMultiTenant = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
+  const tenantId = context.locals.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
   if (value) {
     // Only include tenant ID if multi-tenant is enabled
