@@ -1,5 +1,6 @@
 ---
 import { ViewTransitions } from "astro:transitions";
+import { verifyActivationToken } from "@/utils/tenant/verifyToken";
 import ActivationForm from "@/components/tenant/ActivationForm";
 
 // confirm multi-tenant is enabled
@@ -19,24 +20,24 @@ if (!token) {
 }
 
 // Fetch token verification details
-let tenantDetails = null;
-let verificationError = null;
+let tenantDetails: { id: string; email: string } | null = null;
+let verificationError: string | null = null;
 
-try {
-  const response = await fetch(
-    `${Astro.url.origin}/api/tenant/verify?token=${encodeURIComponent(token)}`
-  );
-  const data = await response.json();
-
-  if (data.success) {
-    tenantDetails = data.tenant;
-  } else {
-    verificationError = data.error || "Invalid activation token";
-    console.error("Token verification failed:", verificationError);
-  }
-} catch (error) {
-  console.error("Error verifying token:", error);
-  verificationError = "Failed to verify activation token. Please try again.";
+const verification = await verifyActivationToken(token);
+if (verification.valid && verification.tenantId && verification.email) {
+  tenantDetails = {
+    id: verification.tenantId,
+    email: verification.email,
+  };
+} else {
+  verificationError = verification.message || "Invalid activation token";
+  // For debugging purposes, we can log more detailed info
+  console.error("Token verification failed:", {
+    valid: verification.valid,
+    tenantId: verification.tenantId,
+    email: verification.email,
+    message: verification.message,
+  });
 }
 
 // Logo and branding configuration - using default values
