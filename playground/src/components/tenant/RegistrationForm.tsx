@@ -309,7 +309,8 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
           <p className="mt-1 text-xs text-mylightgrey">
             3-12 characters, letters, numbers, and hyphens only. This will be your subdomain:
             <span className="font-semibold">
-              {formValues.tenantId ? formValues.tenantId : "your-tenant-id"}.sandbox.tractstack.com
+              {formValues.tenantId ? formValues.tenantId : "your-tenant-id"}
+              .sandbox.freewebpress.com
             </span>
           </p>
         </div>

@@ -6,14 +6,21 @@ export async function getConfigFromRequest(request: Request) {
   let tenantId = "default";
 
   if (isMultiTenant) {
-    const hostname = request.headers.get("host");
+    // Prefer X-Forwarded-Host, fall back to Host
+    const hostname = request.headers.get("x-forwarded-host") || request.headers.get("host");
+
     if (hostname) {
-      // Check for localhost explicitly for testing
-      if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+      if (import.meta.env.DEV) {
         tenantId = "localhost";
       } else {
         const parts = hostname.split(".");
-        if (parts.length >= 3 && parts[1] === "sandbox" && parts[2] === "tractstack.com") {
+        // Handle domains like x.sandbox.freewebpress.com
+        if (
+          parts.length >= 4 &&
+          parts[1] === "sandbox" &&
+          [`freewebpress`, `tractstack`].includes(parts[2]) &&
+          parts[3] === "com"
+        ) {
           tenantId = parts[0];
         }
       }

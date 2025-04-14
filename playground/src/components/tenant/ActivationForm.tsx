@@ -103,7 +103,7 @@ export default function ActivationForm({
 
       // Redirect to tenant domain after a short delay
       setTimeout(() => {
-        const tenantUrl = `https://${claimData.tenantId}.sandbox.tractstack.com`;
+        const tenantUrl = `https://${claimData.tenantId}.sandbox.freewebpress.com`;
         window.location.href = tenantUrl;
       }, 3000);
     } catch (error) {
@@ -259,7 +259,7 @@ export default function ActivationForm({
         {tenantDetails && (
           <div className="bg-blue-50 p-4 rounded-md">
             <p className="text-myblue text-sm">
-              Setting up tenant: <strong>{tenantDetails.id}.sandbox.tractstack.com</strong>
+              Setting up tenant: <strong>{tenantDetails.id}.sandbox.freewebpress.com</strong>
             </p>
           </div>
         )}

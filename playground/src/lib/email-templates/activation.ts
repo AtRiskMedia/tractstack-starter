@@ -21,7 +21,7 @@ export function getActivationEmailContent({
       url: activationUrl,
     })}
     ${getParagraph(`Once activated, you'll be able to access your tenant at:`)}
-    ${getParagraph(`<strong>https://${tenantId}.sandbox.tractstack.com</strong>`)}
+    ${getParagraph(`<strong>https://${tenantId}.sandbox.freewebpress.com</strong>`)}
     ${getParagraph(`This activation link will expire in ${expirationHours} hours.`)}
   `;
 }
