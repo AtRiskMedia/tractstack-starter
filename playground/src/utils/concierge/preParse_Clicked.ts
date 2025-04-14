@@ -52,6 +52,14 @@ export const preParseClicked = (id: string, payload: any, config: Config) => {
           targetSlug: parameterTwo,
         };
 
+      case `sandbox`:
+        return {
+          id: id,
+          type: `SandboxAction`,
+          verb: `CLICKED`,
+          targetSlug: parameterTwo || "main",
+        };
+
       case `storykeep`:
       case `context`:
       case `concierge`:

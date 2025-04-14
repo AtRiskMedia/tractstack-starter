@@ -1,19 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ResendFormProps {
-  tenantId: string;
+  tenantId?: string;
 }
 
 export default function ResendForm({ tenantId }: ResendFormProps) {
   const [email, setEmail] = useState("");
+  const [inputTenantId, setInputTenantId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  // Initialize the tenant ID from props if available
+  useEffect(() => {
+    if (tenantId) {
+      setInputTenantId(tenantId);
+    }
+  }, [tenantId]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validate inputs
+    const errors = [];
+    if (!inputTenantId || !inputTenantId.trim()) {
+      errors.push("Please enter your subdomain");
+    }
+
     if (!email || !email.trim()) {
-      setError("Please enter your email address");
+      errors.push("Please enter your email address");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push("Please enter a valid email address");
+    }
+
+    if (errors.length > 0) {
+      setError(errors.join(". "));
       return;
     }
 
@@ -27,13 +48,18 @@ export default function ResendForm({ tenantId }: ResendFormProps) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tenantId, email }),
+        body: JSON.stringify({ tenantId: inputTenantId, email }),
       });
 
       const data = await response.json();
 
       if (data.success) {
         setMessage(`Activation email sent to ${email}. Please check your inbox.`);
+        // Clear form if successful
+        if (!tenantId) {
+          setInputTenantId("");
+        }
+        setEmail("");
       } else {
         setError(data.error || "Failed to send activation email. Please try again.");
       }
@@ -56,6 +82,31 @@ export default function ResendForm({ tenantId }: ResendFormProps) {
           <p className="text-myred text-sm">{error}</p>
         </div>
       )}
+
+      {/* Tenant ID field - only shown if not provided in props */}
+      {!tenantId && (
+        <div>
+          <label htmlFor="tenantId" className="block text-sm font-bold text-mydarkgrey">
+            Your Subdomain
+          </label>
+          <div className="mt-1">
+            <input
+              type="text"
+              id="tenantId"
+              value={inputTenantId}
+              onChange={(e) => setInputTenantId(e.target.value)}
+              className="w-full px-3 py-2 border border-mylightgrey rounded-md shadow-sm focus:outline-none focus:ring-myblue focus:border-myblue"
+              placeholder="your-subdomain"
+              required
+            />
+          </div>
+          <p className="mt-1 text-xs text-mylightgrey">
+            Enter the subdomain you registered (example: {inputTenantId || "your-subdomain"}
+            .sandbox.freewebpress.com)
+          </p>
+        </div>
+      )}
+
       <div>
         <label htmlFor="email" className="block text-sm font-bold text-mydarkgrey">
           Your Email Address
@@ -71,7 +122,11 @@ export default function ResendForm({ tenantId }: ResendFormProps) {
             required
           />
         </div>
+        <p className="mt-1 text-xs text-mylightgrey">
+          Enter the email address you used during registration
+        </p>
       </div>
+
       <button
         type="submit"
         disabled={isSubmitting}

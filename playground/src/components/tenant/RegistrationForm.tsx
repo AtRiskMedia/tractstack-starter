@@ -227,6 +227,11 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
     }
   };
 
+  // Navigate to the claimed page for resending activation
+  const handleResendActivation = () => {
+    window.location.href = "/sandbox/claimed";
+  };
+
   if (formState === "success") {
     return (
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
@@ -249,6 +254,17 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
           </div>
           <h2 className="mt-3 text-lg font-bold text-mydarkgrey">Registration Successful!</h2>
           <p className="mt-2 text-myblue">{successMessage}</p>
+
+          <div className="mt-6">
+            <p className="text-sm text-mylightgrey mb-2">Didn't receive the activation email?</p>
+            <button
+              type="button"
+              onClick={handleResendActivation}
+              className="text-myblue hover:text-myorange text-sm font-bold"
+            >
+              Resend Activation Token
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -395,6 +411,19 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
             ) : (
               "Register Your Sandbox"
             )}
+          </button>
+        </div>
+
+        <div className="pt-2 text-center border-t border-mylightgrey">
+          <p className="text-sm text-mylightgrey mb-2">
+            Already registered but need the activation email?
+          </p>
+          <button
+            type="button"
+            onClick={handleResendActivation}
+            className="text-myblue hover:text-myorange text-sm font-bold"
+          >
+            Resend Activation Token
           </button>
         </div>
       </div>

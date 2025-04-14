@@ -2,14 +2,9 @@
 import { ViewTransitions } from "astro:transitions";
 import ResendForm from "@/components/tenant/ResendForm";
 
-// Get tenant from URL parameter
+// Get tenant from URL parameter (now optional)
 const url = new URL(Astro.request.url);
 const tenantId = url.searchParams.get("tenant") || "";
-
-// If no tenant ID is provided, redirect to home
-if (!tenantId) {
-  return Astro.redirect("/");
-}
 
 // Logo and branding configuration - using default values
 const logo = "/logo.svg";
@@ -75,10 +70,14 @@ const wordmarkIsSvg = wordmark.includes("svg");
         </div>
 
         <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
-          Tenant Activation Required
+          {tenantId ? "Tenant Activation Required" : "Resend Activation Email"}
         </h2>
         <p class="mt-2 text-center text-sm text-mylightgrey">
-          Activate your sandbox to start building with TractStack
+          {
+            tenantId
+              ? `Activate your sandbox to start building with TractStack`
+              : `Enter your subdomain and email to resend the activation link`
+          }
         </p>
       </div>
 
@@ -88,11 +87,24 @@ const wordmarkIsSvg = wordmark.includes("svg");
 
       <div class="mt-8 mx-auto max-w-md px-4">
         <div class="bg-white p-6 rounded-lg shadow-sm border border-mylightgrey">
-          <h3 class="text-lg font-bold text-mydarkgrey mb-2">Activate Your Sandbox</h3>
-          <p class="text-sm text-mydarkgrey mb-4">
-            Your sandbox <strong>{tenantId}.sandbox.freewebpress.com</strong> is reserved but needs activation.
-            Check your email for the activation link or resend it below if you didn’t receive it.
-          </p>
+          <h3 class="text-lg font-bold text-mydarkgrey mb-2">
+            {tenantId ? `Activate Your Sandbox` : `Resend Your Activation Link`}
+          </h3>
+          {
+            tenantId ? (
+              <p class="text-sm text-mydarkgrey mb-4">
+                Your sandbox <strong>{tenantId}.sandbox.freewebpress.com</strong> is reserved but
+                needs activation. Check your email for the activation link or resend it below if you
+                didn't receive it.
+              </p>
+            ) : (
+              <p class="text-sm text-mydarkgrey mb-4">
+                If you've already registered a sandbox but haven't received or can't find your
+                activation email, you can request a new one here. Enter the subdomain and email you
+                used during registration.
+              </p>
+            )
+          }
           <div class="space-y-2 text-sm">
             <div class="flex items-start">
               <svg
