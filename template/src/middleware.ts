@@ -128,7 +128,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Initialize CSS store
-  if (import.meta.env.PUBLIC_ENABLE_MULTI_TENANT !== "true") {
+  if (!isMultiTenant) {
     await ensureCssStoreInitialized();
   }
 
