@@ -59,6 +59,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
+  if (isMultiTenant && resolved.exists) {
+    try {
+      const tenantConfigPath = path.join(resolved.configPath, "tenant.json");
+      const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
+      const tenantConfig = JSON.parse(tenantConfigRaw);
+      // Redirect based on tenant status
+      if (tenantConfig.status === "reserved") {
+        // Tenant is reserved but not claimed yet
+        return context.redirect(`/sandbox/claimed?tenant=${tenantId}`);
+      } else if (tenantConfig.status === "archived") {
+        // Tenant has been archived
+        return context.redirect(`/sandbox/archived?tenant=${tenantId}`);
+      }
+      // For "claimed" or "activated" statuses, continue normal flow
+    } catch (error) {
+      console.error(`Error reading tenant status for ${tenantId}:`, error);
+      // If we can't read the status, proceed with normal tenant existence check
+    }
+  }
+
   // **Step 3: Set tenant info in local context**
   context.locals.tenant = {
     id: tenantId,

@@ -1,0 +1,113 @@
+---
+import { ViewTransitions } from "astro:transitions";
+
+// Get tenant from URL parameter
+const url = new URL(Astro.request.url);
+const tenantId = url.searchParams.get("tenant") || "";
+
+// If no tenant ID is provided, redirect to home
+if (!tenantId) {
+  return Astro.redirect("/");
+}
+
+// Logo and branding configuration - using default values
+const logo = "/logo.svg";
+const logoIsSvg = logo.includes("svg");
+const wordmark = "/wordmark.svg";
+const wordmarkIsSvg = wordmark.includes("svg");
+---
+
+<!doctype html>
+<html lang="en" class="h-full bg-mywhite">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sandbox Archived | TractStack</title>
+    <meta
+      name="description"
+      content="This TractStack sandbox has been archived. Register a new one to continue building."
+    />
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href="/styles/app.css" />
+    <ViewTransitions />
+  </head>
+  <body class="h-full">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="mx-auto pb-6">
+        <div class="flex flex-col items-center justify-center gap-4">
+          <div class="h-16 w-auto">
+            {
+              logoIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={logo}
+                  class="h-full w-auto pointer-events-none"
+                  aria-label="Logo"
+                >
+                  Logo
+                </object>
+              ) : (
+                <img src={logo} class="h-full w-auto pointer-events-none" alt="Logo" />
+              )
+            }
+          </div>
+          <div class="h-16 w-auto">
+            {
+              wordmarkIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  aria-label="Wordmark"
+                >
+                  Wordmark
+                </object>
+              ) : (
+                <img
+                  src={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  alt="Wordmark"
+                />
+              )
+            }
+          </div>
+        </div>
+
+        <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
+          Sandbox Archived
+        </h2>
+        <p class="mt-2 text-center text-sm text-mylightgrey">
+          This sandbox is no longer available
+        </p>
+      </div>
+
+      <div class="mx-auto w-full max-w-md px-4">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-mylightgrey">
+          <p class="text-base text-mydarkgrey text-center mb-4">
+            The sandbox <strong>{tenantId}.sandbox.tractstack.com</strong> has been archived and is
+            no longer available.
+          </p>
+          <p class="text-base text-mydarkgrey text-center mb-4">
+            If you need a new sandbox environment, you can register for a new one.
+          </p>
+          <div class="flex justify-center">
+            <a
+              href="/sandbox/register"
+              class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-md shadow-sm text-white bg-myblue hover:bg-myorange focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue"
+            >
+              Register New Sandbox
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-10 py-6 bg-mywhite border-t border-mylightgrey">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-sm text-mylightgrey">
+          © {new Date().getFullYear()} TractStack. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
