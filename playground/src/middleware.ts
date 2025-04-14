@@ -35,13 +35,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Prefer X-Forwarded-Host, fall back to Host
     const hostname =
       context.request.headers.get("x-forwarded-host") || context.request.headers.get("host");
+
     if (hostname) {
-      //if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
       if (import.meta.env.DEV) {
         tenantId = "localhost";
       } else {
         const parts = hostname.split(".");
-        if (parts.length >= 3 && parts[1] === "sandbox" && parts[2] === "tractstack.com") {
+
+        // Handle domains like x.sandbox.freewebpress.com
+        if (
+          parts.length >= 4 &&
+          parts[1] === "sandbox" &&
+          [`freewebpress`, `tractstack`].includes(parts[2]) &&
+          parts[3] === "com"
+        ) {
           tenantId = parts[0];
         }
       }
