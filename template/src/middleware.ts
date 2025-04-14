@@ -32,10 +32,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   let tenantId = "default";
 
   if (isMultiTenantEnabled) {
-    const hostname = context.request.headers.get("host");
+    // Prefer X-Forwarded-Host, fall back to Host
+    const hostname =
+      context.request.headers.get("x-forwarded-host") || context.request.headers.get("host");
     if (hostname) {
       if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
-        tenantId = "localhost";
+        //tenantId = "localhost";
         //tenantId = "love";
       } else {
         const parts = hostname.split(".");
@@ -47,9 +49,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
   const isMultiTenant =
     import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+  console.warn(`tenantId:${tenantId} ${isMultiTenant ? `MULTI_TENANT MODE` : ``}`);
 
   // **Step 2: Resolve tenant-specific paths**
   const resolved = await resolvePaths(tenantId);
+  console.warn(resolved);
 
   // **For multi-tenant mode: If tenant doesn't exist, return 404 immediately**
   if (isMultiTenant && (!resolved.exists || resolved.configPath === "")) {
