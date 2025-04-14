@@ -22,12 +22,15 @@ export async function generateActivationToken(
       return null;
     }
 
-    // Check for required environment variable
-    const secretKey = process.env.PRIVATE_TENANT_SECRET;
+    // Read tenant configuration to get the TENANT_SECRET
+    const tenantConfigPath = path.join(process.cwd(), "tenants", tenantId, "config", "tenant.json");
+    const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
+    const tenantConfig = JSON.parse(tenantConfigRaw);
+
+    // Get tenant secret from the tenant config
+    const secretKey = tenantConfig.TENANT_SECRET;
     if (!secretKey) {
-      throw new Error(
-        "PRIVATE_TENANT_SECRET environment variable is required for token generation"
-      );
+      throw new Error("TENANT_SECRET not found in tenant configuration");
     }
 
     // Generate token components
@@ -49,18 +52,13 @@ export async function generateActivationToken(
     ];
     const token = tokenParts.join(".");
 
-    // Generate signature for verification
+    // Generate signature for verification using the tenant's own secret
     const signature = crypto.createHmac("sha256", secretKey).update(token).digest("hex");
 
     // Add signature to token
     const fullToken = `${token}.${signature}`;
 
     // Store token reference in tenant.json
-    const tenantConfigPath = path.join(process.cwd(), "tenants", tenantId, "config", "tenant.json");
-    const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
-    const tenantConfig = JSON.parse(tenantConfigRaw);
-
-    // Update token info
     tenantConfig.activationToken = tokenId; // Store only the ID part
     tenantConfig.activationTokenExpires = expiresAt;
 

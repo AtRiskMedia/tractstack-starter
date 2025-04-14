@@ -6,25 +6,11 @@ import { verifyActivationToken } from "@/utils/tenant/verifyToken";
 import crypto from "crypto";
 import type { APIContext } from "@/types";
 
-// Password validation
+// Simplified password validation for sandboxes
 function validatePassword(password: string): { valid: boolean; message?: string } {
-  if (password.length < 8) {
-    return { valid: false, message: "Password must be at least 8 characters long" };
+  if (!password || password.trim() === "") {
+    return { valid: false, message: "Password cannot be empty" };
   }
-
-  // Check for at least one uppercase letter, one lowercase letter, and one number
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-
-  if (!hasUppercase || !hasLowercase || !hasNumber) {
-    return {
-      valid: false,
-      message:
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-    };
-  }
-
   return { valid: true };
 }
 
@@ -66,7 +52,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
       );
     }
 
-    // Validate password strength
+    // Simplified password validation
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
       return new Response(

@@ -34,7 +34,7 @@ export async function getTenantStatus(tenantId: string): Promise<{
       // Return basic status for default tenant
       return {
         status: "activated" as TenantStatus,
-        email: "system@tractstack.com",
+        email: "a@atriskmedia.com",
         name: "Default Tenant",
         createdAt: new Date().toISOString(),
         lastAccessed: new Date().toISOString(),

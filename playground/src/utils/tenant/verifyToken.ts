@@ -38,10 +38,16 @@ export async function verifyActivationToken(token: string): Promise<TokenVerific
       return { valid: false, message: "Invalid activation token" };
     }
 
-    // Verify signature before proceeding with other checks
+    // Get tenant secret from the tenant config
+    const secretKey = tenantConfig.TENANT_SECRET;
+    if (!secretKey) {
+      return { valid: false, message: "Tenant secret not found" };
+    }
+
+    // Verify signature using the tenant's own secret
     const baseToken = tokenParts.slice(0, 4).join(".");
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.PRIVATE_TENANT_SECRET || "tract-stack-tenant-secret")
+      .createHmac("sha256", secretKey)
       .update(baseToken)
       .digest("hex");
 

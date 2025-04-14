@@ -120,7 +120,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
 
     // Generate activation URL
     const baseUrl = new URL(context.request.url).origin;
-    const activationUrl = `${baseUrl}/tenant/activate?token=${encodeURIComponent(activationToken)}`;
+    const activationUrl = `${baseUrl}/sandbox/activate?token=${encodeURIComponent(activationToken)}`;
 
     // Send activation email
     let emailSent = false;
@@ -135,7 +135,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         });
 
         const { error } = await resend.emails.send({
-          from: "Tract Stack <no-reply@tractstack.com>",
+          from: "Adon - At Risk Media <a@atriskmedia.com>",
           to: [email],
           subject: "Activate Your TractStack Sandbox",
           html,

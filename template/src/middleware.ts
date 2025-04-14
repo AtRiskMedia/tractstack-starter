@@ -36,6 +36,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (hostname) {
       if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
         tenantId = "localhost";
+        //tenantId = "love";
       } else {
         const parts = hostname.split(".");
         if (parts.length >= 3 && parts[1] === "sandbox" && parts[2] === "tractstack.com") {

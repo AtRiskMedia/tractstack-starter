@@ -1,4 +1,4 @@
-import { useState, useRef, type ChangeEvent, type FormEvent } from "react";
+import { useState, useRef, type ChangeEvent, type FormEvent, useEffect } from "react";
 
 interface RegistrationFormProps {
   isMultiTenant: boolean;
@@ -30,6 +30,7 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
     "idle" | "checking" | "submitting" | "success" | "error"
   >("idle");
   const [successMessage, setSuccessMessage] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
   const checkTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // Handle input changes
@@ -129,6 +130,41 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
     return isValid;
   };
 
+  // Check form validity on input change
+  useEffect(() => {
+    // Skip expensive validation if we're already submitting
+    if (isSubmitting) return;
+
+    // Real-time validation
+    let isValid = true;
+
+    // Check if all fields have values
+    if (!formValues.tenantId.trim()) isValid = false;
+    if (!formValues.name.trim()) isValid = false;
+    if (!formValues.email.trim()) isValid = false;
+
+    // Check basic format validation
+    if (
+      formValues.tenantId &&
+      (!/^[a-zA-Z0-9-]+$/.test(formValues.tenantId) ||
+        formValues.tenantId.length < 3 ||
+        formValues.tenantId.length > 12)
+    ) {
+      isValid = false;
+    }
+
+    if (formValues.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formValues.email)) {
+      isValid = false;
+    }
+
+    // Check if there are any existing errors
+    if (formErrors.tenantId || formErrors.name || formErrors.email || formErrors.general) {
+      isValid = false;
+    }
+
+    setIsFormValid(isValid);
+  }, [formValues, formErrors, isSubmitting]);
+
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -191,18 +227,6 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
     }
   };
 
-  // Reset form to initial state
-  const resetForm = () => {
-    setFormValues({
-      tenantId: "",
-      name: "",
-      email: "",
-    });
-    setFormErrors({});
-    setFormState("idle");
-    setSuccessMessage("");
-  };
-
   if (formState === "success") {
     return (
       <div className="bg-white p-8 rounded-lg shadow-lg max-w-md mx-auto">
@@ -225,16 +249,6 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
           </div>
           <h2 className="mt-3 text-lg font-bold text-mydarkgrey">Registration Successful!</h2>
           <p className="mt-2 text-myblue">{successMessage}</p>
-        </div>
-
-        <div className="mt-6">
-          <button
-            type="button"
-            onClick={resetForm}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-myblue hover:bg-myorange focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue"
-          >
-            Register Another Tenant
-          </button>
         </div>
       </div>
     );
@@ -348,8 +362,10 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
         <div>
           <button
             type="submit"
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white bg-myblue hover:bg-myorange focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue"
-            disabled={isSubmitting || isChecking}
+            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-bold text-white ${
+              isFormValid ? "bg-myblue hover:bg-myorange" : "bg-mylightgrey cursor-not-allowed"
+            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue`}
+            disabled={isSubmitting || isChecking || !isFormValid}
           >
             {isSubmitting ? (
               <span className="flex items-center">
