@@ -80,11 +80,11 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         // File doesn't exist yet, use empty object
       }
 
-      // Merge with provided config and ensure SITE_INIT is true
+      // Merge with provided config and ensure SITE_INIT is false
       const updatedInitConfig = {
         ...existingInitConfig,
         ...initConfig,
-        SITE_INIT: true,
+        SITE_INIT: false,
       };
 
       // Write updated init.json
