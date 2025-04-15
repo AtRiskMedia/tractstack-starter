@@ -213,7 +213,7 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
       setFormState("success");
       setSuccessMessage(
         data.emailSent
-          ? `Success! We've sent an activation email to ${formValues.email}. Please check your inbox to complete the setup.`
+          ? `Success! We've sent an activation email to ${formValues.email}. Please check your inbox to complete the setup. In some instances it may take up to 5-10 minutes!`
           : `Your tenant has been reserved, but we couldn't send the activation email. Please contact support.`
       );
     } catch (error) {

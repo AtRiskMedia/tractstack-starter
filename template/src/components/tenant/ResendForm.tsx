@@ -54,7 +54,9 @@ export default function ResendForm({ tenantId }: ResendFormProps) {
       const data = await response.json();
 
       if (data.success) {
-        setMessage(`Activation email sent to ${email}. Please check your inbox.`);
+        setMessage(
+          `Activation email sent to ${email}. Please check your inbox. In some instances it may take up to 5-10 minutes!`
+        );
         // Clear form if successful
         if (!tenantId) {
           setInputTenantId("");
