@@ -82,7 +82,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
 
     // Generate a new activation token with the proper utility
     const activationToken = await generateActivationToken(tenantId, email, 48);
-    
+
     if (!activationToken) {
       return new Response(
         JSON.stringify({
@@ -95,11 +95,11 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         }
       );
     }
-    
+
     // Generate activation URL
     const baseUrl = new URL(context.request.url).origin;
     const activationUrl = `${baseUrl}/sandbox/activate?token=${encodeURIComponent(activationToken)}`;
-    
+
     // Send activation email
     let emailSent = false;
     if (resend) {
@@ -135,8 +135,8 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
       JSON.stringify({
         success: true,
         emailSent,
-        message: emailSent 
-          ? "Activation token updated and email sent successfully" 
+        message: emailSent
+          ? "Activation token updated and email sent successfully"
           : "Activation token updated successfully, but email could not be sent",
       }),
       {

@@ -71,7 +71,7 @@ export default function ActivationForm({
 
       // Default init config
       const initConfig = {
-        BRAND_COLOURS: "0867ec,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
+        BRAND_COLOURS: "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         THEME: "light",
         WORDMARK_MODE: "default",
       };

@@ -85,7 +85,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         ...existingInitConfig,
         ...initConfig,
         SITE_INIT: false,
-        SITE_URL: `https://${tenantId}.sandbox.freewebpress.com`
+        SITE_URL: `https://${tenantId}.sandbox.freewebpress.com`,
       };
 
       // Write updated init.json
