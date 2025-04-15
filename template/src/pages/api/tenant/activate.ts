@@ -80,11 +80,12 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         // File doesn't exist yet, use empty object
       }
 
-      // Merge with provided config and ensure SITE_INIT is false
+      // Merge with provided config and ensure SITE_INIT is false and set the SITE_URL
       const updatedInitConfig = {
         ...existingInitConfig,
         ...initConfig,
         SITE_INIT: false,
+        SITE_URL: `https://${tenantId}.sandbox.freewebpress.com`
       };
 
       // Write updated init.json
