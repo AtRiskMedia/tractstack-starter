@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
-import { XMarkIcon, PlusIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import type { BeliefNode } from "@/types";
 import { heldBeliefsScales } from "@/utils/common/beliefs";
 

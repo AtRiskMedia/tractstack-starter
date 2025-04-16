@@ -38,19 +38,19 @@ const contentStyles =
   "; grid-area: 1/1/1/1; position: relative; z-index: 1";
 ---
 
-{
-  beliefs !== null && (
-    <Filter
-      client:load
-      id={nodeId}
-      heldBeliefsFilter={beliefs.heldBeliefs}
-      withheldBeliefsFilter={beliefs.withheldBeliefs}
-    />
-  )
-}
-{
-  codeHookPayload ? (
-    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
+<div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`} style="position: relative;">
+  {
+    beliefs !== null && (
+      <Filter
+        client:load
+        id={nodeId}
+        heldBeliefsFilter={beliefs.heldBeliefs}
+        withheldBeliefsFilter={beliefs.withheldBeliefs}
+      />
+    )
+  }
+  {
+    codeHookPayload ? (
       <div id={slug} style={contentStyles}>
         <CodeHook
           target={codeHookPayload.target}
@@ -58,9 +58,7 @@ const contentStyles =
           options={codeHookPayload || null}
         />
       </div>
-    </div>
-  ) : (
-    <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`}>
+    ) : (
       <div id={slug} class={wrapperClasses}>
         <div class={contentClasses} style={contentStyles}>
           {getCtx()
@@ -70,6 +68,6 @@ const contentStyles =
             ))}
         </div>
       </div>
-    </div>
-  )
-}
+    )
+  }
+</div>

@@ -1,4 +1,5 @@
-import { XMarkIcon, PlusIcon } from "@heroicons/react/24/outline";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 
 interface MultiParamProps {
   label: string;

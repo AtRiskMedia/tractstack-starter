@@ -42,8 +42,40 @@ const SingleIdentifyAs = ({
 
   const handleClick = () => {
     if (readonly) return false;
-    // toggle ON
-    if (selected.id === 0) {
+
+    const matchingBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug === value.slug);
+    const hasOtherBelief = matchingBeliefs.some((b) => b.object !== target);
+
+    if (hasOtherBelief) {
+      // Unset the current selection (without logging UNSET)
+      setSelected(start);
+      const prevBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug !== value.slug);
+      heldBeliefs.set([...prevBeliefs]);
+
+      // Set the new selection after a 100ms delay
+      setTimeout(() => {
+        const newScale = thisScale.at(0)!;
+        setSelected(newScale);
+        const event = {
+          id: value.slug,
+          verb: `IDENTIFY_AS`,
+          object: target,
+          type: `Belief`,
+        };
+        const belief = {
+          id: value.slug,
+          verb: `IDENTIFY_AS`,
+          slug: value.slug,
+          object: target,
+        };
+        heldBeliefs.set([...prevBeliefs, belief]);
+        const prevEvents = events
+          .get()
+          .filter((e: EventStream) => !(e.type === `Belief` && e.id === value.slug));
+        events.set([...prevEvents, event]);
+      }, 100);
+    } else if (selected.id === 0) {
+      // Toggle ON (no existing belief or same target)
       const newScale = thisScale.at(0)!;
       setSelected(newScale);
       const event = {
@@ -64,9 +96,8 @@ const SingleIdentifyAs = ({
         .get()
         .filter((e: EventStream) => !(e.type === `Belief` && e.id === value.slug));
       events.set([...prevEvents, event]);
-
-      // toggle OFF
     } else {
+      // Toggle OFF
       setSelected(start);
       const event = {
         id: value.slug,
@@ -91,9 +122,9 @@ const SingleIdentifyAs = ({
         className={classNames(
           selected.id === 0
             ? isOtherSelected
-              ? `bg-gray-300 hover:bg-lime-200 ring-gray-500` // Greyed but interactive (solid)
-              : `bg-gray-100 hover:bg-orange-200 ring-orange-500` // Original unselected state (solid)
-            : `bg-gray-100 ring-lime-500`, // Selected state (solid)
+              ? `bg-gray-300 hover:bg-lime-200 ring-gray-500`
+              : `bg-gray-100 hover:bg-orange-200 ring-orange-500`
+            : `bg-gray-100 ring-lime-500`,
           `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
         )}
       >
