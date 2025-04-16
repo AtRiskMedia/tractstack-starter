@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { heldBeliefsScales } from "../../../utils/common/beliefs";
-import { classNames } from "../../../utils/common/helpers";
-import { heldBeliefs } from "../../../store/beliefs";
-import { events } from "../../../store/events";
-import type { BeliefDatum, EventStream } from "../../../types";
+import { heldBeliefsScales } from "@/utils/common/beliefs";
+import { classNames } from "@/utils/common/helpers";
+import { heldBeliefs } from "@/store/beliefs";
+import { events } from "@/store/events";
+import type { BeliefDatum, EventStream } from "@/types";
 
 const SingleIdentifyAs = ({
   value,
@@ -91,9 +91,9 @@ const SingleIdentifyAs = ({
         className={classNames(
           selected.id === 0
             ? isOtherSelected
-              ? `bg-white/25 hover:bg-gray-100 ring-gray-200` // Greyed but interactive
-              : `bg-white hover:bg-myorange/20 ring-myorange/50` // Original unselected state
-            : `bg-white hover:bg-mygreen/20 ring-mygreen/5`, // Selected state
+              ? `bg-gray-300 hover:bg-lime-200 ring-gray-500` // Greyed but interactive (solid)
+              : `bg-gray-100 hover:bg-orange-200 ring-orange-500` // Original unselected state (solid)
+            : `bg-gray-100 ring-lime-500`, // Selected state (solid)
           `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
         )}
       >
@@ -102,7 +102,7 @@ const SingleIdentifyAs = ({
             aria-label="Color swatch for belief"
             className={classNames(
               `motion-safe:animate-pulse`,
-              selected.color || (isOtherSelected ? `bg-gray-300` : `bg-myorange`),
+              selected.color || (isOtherSelected ? `bg-gray-500` : `bg-orange-500`),
               `inline-block h-2 w-2 flex-shrink-0 rounded-full`
             )}
           />
