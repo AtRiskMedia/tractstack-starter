@@ -21,11 +21,25 @@ const Filter = (props: {
 
   useFilterPane(id, heldBeliefsFilter, withheldBeliefsFilter);
 
-  const handleDelete = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleGoBack = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
 
-    // Get slugs to remove from heldBeliefsFilter keys
-    const slugsToRemove = Object.keys(heldBeliefsFilter || {});
+    // Determine which slugs to remove based on MATCH-ACROSS
+    let slugsToRemove: string[] = [];
+
+    // Check if there's a MATCH-ACROSS key
+    if (heldBeliefsFilter && "MATCH-ACROSS" in heldBeliefsFilter) {
+      // If MATCH-ACROSS exists, only remove the belief slugs listed in it
+      const matchAcross = heldBeliefsFilter["MATCH-ACROSS"];
+      if (Array.isArray(matchAcross)) {
+        slugsToRemove = matchAcross;
+      } else if (typeof matchAcross === "string") {
+        slugsToRemove = [matchAcross];
+      }
+    } else if (heldBeliefsFilter) {
+      // If no MATCH-ACROSS, remove all keys from heldBeliefsFilter
+      slugsToRemove = Object.keys(heldBeliefsFilter).filter((key) => key !== "MATCH-ACROSS");
+    }
 
     if (slugsToRemove.length === 0) return;
 
@@ -55,8 +69,8 @@ const Filter = (props: {
 
   return (
     <button
-      title="Delete Pane"
-      onClick={handleDelete}
+      title="Go Back"
+      onClick={handleGoBack}
       className="z-10 absolute top-2 right-2 p-1.5 bg-white rounded-full hover:bg-black"
     >
       <BackwardIcon className="h-6 w-6 text-mydarkgrey hover:text-white" />
