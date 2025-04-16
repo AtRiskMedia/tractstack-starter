@@ -37,7 +37,64 @@ const processFilter = (
     return shouldMatchAll;
   }
 
-  for (const [key, valueOrValues] of Object.entries(filter)) {
+  // Extract MATCH-ACROSS beliefs if present (only for Show conditions with shouldMatchAll=true)
+  const matchAcrossBeliefsArray =
+    shouldMatchAll && filter["MATCH-ACROSS"]
+      ? Array.isArray(filter["MATCH-ACROSS"])
+        ? filter["MATCH-ACROSS"]
+        : [filter["MATCH-ACROSS"]]
+      : [];
+
+  // Remove MATCH-ACROSS from being processed as a regular belief
+  const processingFilter = { ...filter };
+  if (matchAcrossBeliefsArray.length > 0) {
+    delete processingFilter["MATCH-ACROSS"];
+  }
+
+  // If we have MATCH-ACROSS beliefs, split the filter into two parts:
+  // 1. Beliefs that should match with OR logic (in MATCH-ACROSS)
+  // 2. Beliefs that should match with AND logic (not in MATCH-ACROSS)
+  if (matchAcrossBeliefsArray.length > 0) {
+    const matchAcrossFilter: Record<string, string | string[]> = {};
+    const regularFilter: Record<string, string | string[]> = {};
+
+    // Split the filter into two parts
+    Object.entries(processingFilter).forEach(([key, value]) => {
+      if (matchAcrossBeliefsArray.includes(key)) {
+        matchAcrossFilter[key] = value;
+      } else {
+        regularFilter[key] = value;
+      }
+    });
+
+    // Process MATCH-ACROSS beliefs with OR logic (any match is sufficient)
+    const matchAcrossResult =
+      Object.keys(matchAcrossFilter).length === 0
+        ? true
+        : Object.entries(matchAcrossFilter).some(([key, valueOrValues]) => {
+            const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
+            return values.some((value) =>
+              beliefs.some((belief) => matchesBelief(belief, key, value))
+            );
+          });
+
+    // Process remaining beliefs with AND logic (all must match)
+    const regularResult =
+      Object.keys(regularFilter).length === 0
+        ? true
+        : Object.entries(regularFilter).every(([key, valueOrValues]) => {
+            const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
+            return values.some((value) =>
+              beliefs.some((belief) => matchesBelief(belief, key, value))
+            );
+          });
+
+    // Both parts must succeed for the overall filter to pass
+    return matchAcrossResult && regularResult;
+  }
+
+  // Original logic for filters without MATCH-ACROSS
+  for (const [key, valueOrValues] of Object.entries(processingFilter)) {
     const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
 
     // Check if ANY of the values match for this belief tag
