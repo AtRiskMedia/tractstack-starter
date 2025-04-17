@@ -71,9 +71,9 @@ const Filter = (props: {
     <button
       title="Go Back"
       onClick={handleGoBack}
-      className="z-10 absolute top-2 right-2 p-1.5 bg-white rounded-full hover:bg-black"
+      className="z-10 absolute top-2 right-2 p-1.5 bg-white rounded-full hover:bg-black text-mydarkgrey hover:text-white"
     >
-      <BackwardIcon className="h-6 w-6 text-mydarkgrey hover:text-white" />
+      <BackwardIcon className="h-6 w-6" />
     </button>
   );
 };
