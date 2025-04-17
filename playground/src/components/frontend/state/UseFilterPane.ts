@@ -1,67 +1,102 @@
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { heldBeliefs } from "../../../store/beliefs";
-import { pageLoadTime } from "../../../store/events";
-import type { BeliefStore, BeliefDatum } from "../../../types";
+import { heldBeliefs } from "@/store/beliefs";
+import { pageLoadTime } from "@/store/events";
+import type { BeliefStore, BeliefDatum } from "@/types";
 import { smoothScrollToPane } from "@/utils/common/domHelpers.ts";
 
-// Separate the pure calculation functions
+const matchesBelief = (belief: BeliefStore, key: string, value: string): boolean => {
+  if (belief.slug !== key) return false;
+
+  if (belief.verb === "IDENTIFY_AS") {
+    return belief.object === value || value === "*";
+  }
+
+  return belief.verb === value || value === "*";
+};
+
+const hasMatchingBelief = (
+  beliefs: BeliefStore[],
+  key: string,
+  valueOrValues: string | string[]
+): boolean => {
+  const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
+
+  return values.some((value) => beliefs.some((belief) => matchesBelief(belief, key, value)));
+};
+
 const calculateVisibility = (
   heldBeliefsFilter: Record<string, string | string[]> | undefined,
   withheldBeliefsFilter: Record<string, string | string[]> | undefined,
-  reveal: boolean,
-  overrideWithhold: boolean
+  revealResult: boolean,
+  withholdResult: boolean
 ): boolean => {
-  if (heldBeliefsFilter && !withheldBeliefsFilter) {
-    return reveal;
+  if (heldBeliefsFilter && Object.keys(heldBeliefsFilter).length > 0) {
+    if (!revealResult) return false;
   }
-  if (!heldBeliefsFilter && withheldBeliefsFilter) {
-    return overrideWithhold;
+
+  if (withheldBeliefsFilter && Object.keys(withheldBeliefsFilter).length > 0) {
+    if (!withholdResult) return false;
   }
-  if (heldBeliefsFilter && withheldBeliefsFilter) {
-    return reveal && overrideWithhold;
-  }
-  return false;
+
+  return true;
 };
 
-const matchesBelief = (belief: BeliefStore, key: string, value: string): boolean =>
-  belief.slug === key && (belief.verb === value || value === "*" || belief.object === value);
-
-const processFilter = (
+const processHeldBeliefs = (
   filter: Record<string, string | string[]>,
-  beliefs: BeliefStore[],
-  shouldMatchAll: boolean = true
+  beliefs: BeliefStore[]
 ): boolean => {
-  // If no filters, return appropriate default
-  if (!filter || Object.keys(filter).length === 0) {
-    return shouldMatchAll;
-  }
+  const matchAcrossKeys = filter["MATCH-ACROSS"]
+    ? Array.isArray(filter["MATCH-ACROSS"])
+      ? filter["MATCH-ACROSS"]
+      : [filter["MATCH-ACROSS"]]
+    : [];
 
-  for (const [key, valueOrValues] of Object.entries(filter)) {
-    const values = Array.isArray(valueOrValues) ? valueOrValues : [valueOrValues];
+  const processingFilter = { ...filter };
+  delete processingFilter["MATCH-ACROSS"];
 
-    // Check if ANY of the values match for this belief tag
-    const anyValueMatches = values.some((value) =>
-      beliefs.some((belief) => matchesBelief(belief, key, value))
-    );
+  const matchAcrossFilter: Record<string, string | string[]> = {};
+  const regularFilter: Record<string, string | string[]> = {};
 
-    // For AND logic between tags (shouldMatchAll=true), one failure means overall failure
-    if (shouldMatchAll && !anyValueMatches) {
-      return false;
+  Object.entries(processingFilter).forEach(([key, value]) => {
+    if (value == null || (Array.isArray(value) && value.length === 0)) return;
+    if (matchAcrossKeys.includes(key)) {
+      matchAcrossFilter[key] = value;
+    } else {
+      regularFilter[key] = value;
     }
+  });
 
-    // For OR logic between tags (shouldMatchAll=false), one success means overall success
-    if (!shouldMatchAll && anyValueMatches) {
-      return true;
-    }
-  }
+  const matchAcrossResult =
+    Object.keys(matchAcrossFilter).length === 0
+      ? true
+      : Object.entries(matchAcrossFilter).some(([key, valueOrValues]) =>
+          hasMatchingBelief(beliefs, key, valueOrValues)
+        );
 
-  // If we get here with shouldMatchAll=true, all criteria were met
-  // If we get here with shouldMatchAll=false, no criteria were met
-  return shouldMatchAll;
+  const regularResult =
+    Object.keys(regularFilter).length === 0
+      ? true
+      : Object.entries(regularFilter).every(([key, valueOrValues]) =>
+          hasMatchingBelief(beliefs, key, valueOrValues)
+        );
+
+  return matchAcrossResult && regularResult;
 };
 
-// Memoized style objects
+const processWithheldBeliefs = (
+  filter: Record<string, string | string[]>,
+  beliefs: BeliefStore[]
+): boolean => {
+  if (!filter || Object.keys(filter).length === 0) return true;
+
+  const matchesAny = Object.entries(filter).some(([key, valueOrValues]) =>
+    hasMatchingBelief(beliefs, key, valueOrValues)
+  );
+
+  return !matchesAny;
+};
+
 const visibleStyles = {
   opacity: "1",
   height: "auto",
@@ -84,40 +119,38 @@ export function useFilterPane(
   withheldBeliefsFilter: BeliefDatum
 ) {
   const $heldBeliefsAll = useStore(heldBeliefs);
-  const [reveal, setReveal] = useState(false);
+  const [revealResult, setRevealResult] = useState(false);
+  const [withholdResult, setWithholdResult] = useState(true);
   const [ready, setReady] = useState(false);
-  const [overrideWithhold, setOverrideWithhold] = useState(false);
   const isFirstRender = useRef(true);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Evaluate beliefs when dependencies change
   useEffect(() => {
     const evaluateBeliefs = () => {
-      if (heldBeliefsFilter && Object.keys(heldBeliefsFilter)?.length) {
-        setReveal(processFilter(heldBeliefsFilter, $heldBeliefsAll));
+      if (heldBeliefsFilter && Object.keys(heldBeliefsFilter).length > 0) {
+        const shouldReveal = processHeldBeliefs(heldBeliefsFilter, $heldBeliefsAll);
+        setRevealResult(shouldReveal);
       } else {
-        setReveal(true);
+        setRevealResult(true);
       }
 
-      if (withheldBeliefsFilter && Object.keys(withheldBeliefsFilter)?.length) {
-        setOverrideWithhold(!processFilter(withheldBeliefsFilter, $heldBeliefsAll, false));
+      if (withheldBeliefsFilter && Object.keys(withheldBeliefsFilter).length > 0) {
+        const shouldShow = processWithheldBeliefs(withheldBeliefsFilter, $heldBeliefsAll);
+        setWithholdResult(shouldShow);
       } else {
-        setOverrideWithhold(true);
+        setWithholdResult(true);
       }
 
-      // Use RAF instead of setTimeout for better browser optimization
       requestAnimationFrame(() => setReady(true));
     };
 
     evaluateBeliefs();
-  }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter]);
+  }, [$heldBeliefsAll, heldBeliefsFilter, withheldBeliefsFilter, id]);
 
-  // Reset ready state on page load
   useEffect(() => {
     if (ready) setReady(false);
   }, [pageLoadTime]);
 
-  // Handle visibility and scrolling
   useEffect(() => {
     const thisPane = document.getElementById(`pane-${id}`);
     if (!thisPane) {
@@ -128,15 +161,14 @@ export function useFilterPane(
     const isVisible = calculateVisibility(
       heldBeliefsFilter,
       withheldBeliefsFilter,
-      reveal,
-      overrideWithhold
+      revealResult,
+      withholdResult
     );
 
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
 
-    // Apply visibility styles
     if (isVisible) {
       thisPane.classList.remove("invisible");
       Object.assign(thisPane.style, visibleStyles);
@@ -146,7 +178,6 @@ export function useFilterPane(
       Object.assign(thisPane.style, hiddenStyles);
     }
 
-    // Handle smooth scrolling
     if (isVisible && !isFirstRender.current && ready) {
       const timeoutId = smoothScrollToPane(thisPane, 20, 50);
       if (timeoutId) {
@@ -161,5 +192,5 @@ export function useFilterPane(
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [id, reveal, overrideWithhold, ready]);
+  }, [id, revealResult, withholdResult, ready, heldBeliefsFilter, withheldBeliefsFilter]);
 }

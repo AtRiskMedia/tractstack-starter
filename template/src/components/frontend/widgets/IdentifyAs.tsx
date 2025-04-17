@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { heldBeliefsScales } from "../../../utils/common/beliefs";
-import { classNames } from "../../../utils/common/helpers";
-import { heldBeliefs } from "../../../store/beliefs";
-import { events } from "../../../store/events";
-import type { BeliefDatum, EventStream } from "../../../types";
+import { heldBeliefsScales } from "@/utils/common/beliefs";
+import { classNames } from "@/utils/common/helpers";
+import { heldBeliefs } from "@/store/beliefs";
+import { events } from "@/store/events";
+import type { BeliefDatum, EventStream } from "@/types";
 
 const SingleIdentifyAs = ({
   value,
@@ -42,8 +42,40 @@ const SingleIdentifyAs = ({
 
   const handleClick = () => {
     if (readonly) return false;
-    // toggle ON
-    if (selected.id === 0) {
+
+    const matchingBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug === value.slug);
+    const hasOtherBelief = matchingBeliefs.some((b) => b.object !== target);
+
+    if (hasOtherBelief) {
+      // Unset the current selection (without logging UNSET)
+      setSelected(start);
+      const prevBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug !== value.slug);
+      heldBeliefs.set([...prevBeliefs]);
+
+      // Set the new selection after a 100ms delay
+      setTimeout(() => {
+        const newScale = thisScale.at(0)!;
+        setSelected(newScale);
+        const event = {
+          id: value.slug,
+          verb: `IDENTIFY_AS`,
+          object: target,
+          type: `Belief`,
+        };
+        const belief = {
+          id: value.slug,
+          verb: `IDENTIFY_AS`,
+          slug: value.slug,
+          object: target,
+        };
+        heldBeliefs.set([...prevBeliefs, belief]);
+        const prevEvents = events
+          .get()
+          .filter((e: EventStream) => !(e.type === `Belief` && e.id === value.slug));
+        events.set([...prevEvents, event]);
+      }, 100);
+    } else if (selected.id === 0) {
+      // Toggle ON (no existing belief or same target)
       const newScale = thisScale.at(0)!;
       setSelected(newScale);
       const event = {
@@ -64,9 +96,8 @@ const SingleIdentifyAs = ({
         .get()
         .filter((e: EventStream) => !(e.type === `Belief` && e.id === value.slug));
       events.set([...prevEvents, event]);
-
-      // toggle OFF
     } else {
+      // Toggle OFF
       setSelected(start);
       const event = {
         id: value.slug,
@@ -91,9 +122,9 @@ const SingleIdentifyAs = ({
         className={classNames(
           selected.id === 0
             ? isOtherSelected
-              ? `bg-white/25 hover:bg-gray-100 ring-gray-200` // Greyed but interactive
-              : `bg-white hover:bg-myorange/20 ring-myorange/50` // Original unselected state
-            : `bg-white hover:bg-mygreen/20 ring-mygreen/5`, // Selected state
+              ? `bg-gray-300 hover:bg-lime-200 ring-gray-500`
+              : `bg-gray-100 hover:bg-orange-200 ring-orange-500`
+            : `bg-gray-100 ring-lime-500`,
           `rounded-md px-3 py-2 text-lg text-black shadow-sm ring-1 ring-inset`
         )}
       >
@@ -102,11 +133,11 @@ const SingleIdentifyAs = ({
             aria-label="Color swatch for belief"
             className={classNames(
               `motion-safe:animate-pulse`,
-              selected.color || (isOtherSelected ? `bg-gray-300` : `bg-myorange`),
+              selected.color || (isOtherSelected ? `bg-gray-500` : `bg-orange-500`),
               `inline-block h-2 w-2 flex-shrink-0 rounded-full`
             )}
           />
-          <span className="ml-3 block truncate">{thisTitle}</span>
+          <span className="ml-3 block whitespace-normal text-left w-fit">{thisTitle}</span>
         </div>
       </button>
     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { ClipboardDocumentIcon, PaintBrushIcon } from "@heroicons/react/24/outline";
+import ClipboardDocumentIcon from "@heroicons/react/24/outline/ClipboardDocumentIcon";
+import PaintBrushIcon from "@heroicons/react/24/outline/PaintBrushIcon";
 import { getCtx } from "@/store/nodes";
 import { isLinkNode, isMarkdownPaneFragmentNode, isPaneNode } from "@/utils/nodes/type-guards";
 import { cloneDeep, isDeepEqual } from "@/utils/common/helpers";

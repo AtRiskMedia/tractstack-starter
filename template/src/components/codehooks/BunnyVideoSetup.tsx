@@ -2,16 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
 import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import TrashIcon from "@heroicons/react/24/outline/TrashIcon";
+import ArrowsUpDownIcon from "@heroicons/react/24/outline/ArrowsUpDownIcon";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
+import ChevronUpIcon from "@heroicons/react/24/outline/ChevronUpIcon";
 import ActionBuilderSlugSelector from "@/components/storykeep/controls/fields/ActionBuilderSlugSelector";
-import {
-  PlusIcon,
-  TrashIcon,
-  ArrowsUpDownIcon,
-  CheckIcon,
-  XMarkIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/24/outline";
 import type { PaneNode, Config, VideoMoment, StoryFragmentNode } from "@/types";
 
 interface BunnyVideoSetupProps {

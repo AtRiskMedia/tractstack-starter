@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
-import { XMarkIcon, PlusIcon, BeakerIcon } from "@heroicons/react/24/outline";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import type { BeliefNode } from "@/types";
 import { heldBeliefsScales } from "@/utils/common/beliefs";
 
@@ -106,6 +108,41 @@ const MagicPathBuilder = ({
     [paths, setPaths]
   );
 
+  // Get the current match-across beliefs
+  const getMatchAcrossBeliefsArray = useCallback((): string[] => {
+    return paths["MATCH-ACROSS"] || [];
+  }, [paths]);
+
+  // Handle toggling a belief in match-across
+  const handleToggleMatchAcross = useCallback(
+    (beliefKey: string) => {
+      const currentMatchAcross = getMatchAcrossBeliefsArray();
+      const updatedPaths = { ...paths };
+
+      if (currentMatchAcross.includes(beliefKey)) {
+        // Remove from match-across
+        updatedPaths["MATCH-ACROSS"] = currentMatchAcross.filter((key) => key !== beliefKey);
+        if (updatedPaths["MATCH-ACROSS"].length === 0) {
+          delete updatedPaths["MATCH-ACROSS"];
+        }
+      } else {
+        // Add to match-across
+        updatedPaths["MATCH-ACROSS"] = [...currentMatchAcross, beliefKey];
+      }
+
+      setPaths(updatedPaths);
+    },
+    [paths, setPaths, getMatchAcrossBeliefsArray]
+  );
+
+  // Check if a belief is in match-across
+  const isBeliefInMatchAcross = useCallback(
+    (beliefKey: string): boolean => {
+      return getMatchAcrossBeliefsArray().includes(beliefKey);
+    },
+    [getMatchAcrossBeliefsArray]
+  );
+
   // Render custom value editor mode
   if (editingCustomBeliefId) {
     const belief = availableBeliefs.find((b) => b.id === editingCustomBeliefId);
@@ -181,6 +218,9 @@ const MagicPathBuilder = ({
     );
   }
 
+  // Get all belief keys except MATCH-ACROSS
+  const beliefKeys = Object.keys(paths).filter((key) => key !== "MATCH-ACROSS");
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -196,7 +236,38 @@ const MagicPathBuilder = ({
         </button>
       </div>
 
-      {Object.entries(paths).map(([key, values]) => (
+      {/* Only show Match Across section for Show Conditions with multiple beliefs */}
+      {isShowCondition && beliefKeys.length > 1 && (
+        <div className="p-4 border rounded-lg bg-white mb-4">
+          <div className="flex items-center mb-2">
+            <h4 className="font-bold text-md">Match Across Logic</h4>
+            <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              OR between selected beliefs
+            </span>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">
+            Select beliefs to match with OR logic (any one can match). Unselected beliefs use AND
+            logic (all must match).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {beliefKeys.map((key) => (
+              <button
+                key={key}
+                onClick={() => handleToggleMatchAcross(key)}
+                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                  isBeliefInMatchAcross(key)
+                    ? "bg-cyan-600 text-white hover:bg-cyan-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {availableBeliefs.find((b) => b.slug === key)?.title || key}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {beliefKeys.map((key) => (
         <div key={key} className="p-4 border rounded-lg bg-white">
           <div className="space-y-4">
             <div>
@@ -219,7 +290,7 @@ const MagicPathBuilder = ({
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Select Values</label>
                 <div className="flex flex-wrap gap-2">
-                  {values.map((value, valueIndex) => {
+                  {paths[key].map((value, valueIndex) => {
                     const validValues = getValidValuesForBelief(key);
                     const belief = availableBeliefs.find((b) => b.slug === key);
 
@@ -245,11 +316,11 @@ const MagicPathBuilder = ({
                           >
                             <XMarkIcon className="h-5 w-5" />
                           </button>
-                          {valueIndex === values.length - 1 && (
+                          {valueIndex === paths[key].length - 1 && (
                             <button
                               onClick={() => {
                                 const updatedPaths = { ...paths };
-                                updatedPaths[key] = [...values, "*"];
+                                updatedPaths[key] = [...paths[key], "*"];
                                 setPaths(updatedPaths);
                               }}
                               className="text-gray-500 hover:text-gray-700"
