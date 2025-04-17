@@ -137,7 +137,7 @@ const SingleIdentifyAs = ({
               `inline-block h-2 w-2 flex-shrink-0 rounded-full`
             )}
           />
-          <span className="ml-3 block truncate">{thisTitle}</span>
+          <span className="ml-3 block whitespace-normal text-left w-fit">{thisTitle}</span>
         </div>
       </button>
     </div>
