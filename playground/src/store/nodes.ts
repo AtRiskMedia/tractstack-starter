@@ -228,6 +228,9 @@ export class NodesContext {
       case `text`:
         if (dblClick && ![`Pane`, `Markdown`].includes(node.nodeType)) {
           handleClickEventDefault(node, dblClick, this.clickedParentLayer.get());
+        } else {
+          // if (![`Pane`, `Markdown`].includes(node.nodeType)) {
+          handleClickEventDefault(node, dblClick, this.clickedParentLayer.get(), true);
         }
         break;
       case `eraser`:

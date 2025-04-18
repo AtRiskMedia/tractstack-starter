@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PaneFragmentNode, FlatNode } from "@/types.ts";
-import { settingsPanelStore } from "../../store/storykeep";
+import { settingsPanelStore } from "@/store/storykeep";
 
 // Updated type predicate to check for visual break nodes
 function isVisualBreakNode(node: FlatNode): boolean {
@@ -18,14 +19,35 @@ function isCodeHookPane(node: FlatNode): boolean {
 export function handleClickEventDefault(
   node: FlatNode,
   expanded: boolean,
-  parentLayer?: number | null
+  parentLayer?: number | null,
+  minimized?: boolean
 ) {
   if (!node?.nodeType) return;
+
+  // Base panel properties
+  const panelProps: any = {
+    nodeId: node.id,
+  };
+
+  // Add expanded/minimized properties as needed
+  if (minimized === true) {
+    panelProps.minimized = true;
+  } else if (expanded) {
+    panelProps.expanded = true;
+  }
+
+  // Add parent layer if provided
+  if (parentLayer !== undefined && parentLayer !== null) {
+    panelProps.layer = parentLayer;
+  }
 
   switch (node.nodeType) {
     case "BgPane": {
       if (isVisualBreakNode(node)) {
-        settingsPanelStore.set({ action: "style-break", nodeId: node.id, expanded: true });
+        settingsPanelStore.set({
+          action: "style-break",
+          ...panelProps,
+        });
       } else {
         console.log("unhandled BgPane type");
       }
@@ -36,15 +58,12 @@ export function handleClickEventDefault(
       if (isCodeHookPane(node))
         settingsPanelStore.set({
           action: "setup-codehook",
-          nodeId: node.id,
-          expanded: true,
+          ...panelProps,
         });
       else {
         settingsPanelStore.set({
           action: "style-parent",
-          nodeId: node.id,
-          ...(parentLayer ? { layer: parentLayer } : {}),
-          ...(expanded ? { expanded: true } : {}),
+          ...panelProps,
         });
       }
       break;
@@ -52,9 +71,7 @@ export function handleClickEventDefault(
     case "Markdown":
       settingsPanelStore.set({
         action: "style-parent",
-        nodeId: node.id,
-        ...(parentLayer ? { layer: parentLayer } : {}),
-        ...(expanded ? { expanded: true } : {}),
+        ...panelProps,
       });
       break;
 
@@ -65,8 +82,7 @@ export function handleClickEventDefault(
         case "code":
           settingsPanelStore.set({
             action: "style-widget",
-            nodeId: node.id,
-            ...(expanded ? { expanded: true } : {}),
+            ...panelProps,
           });
           break;
         case "p":
@@ -77,30 +93,26 @@ export function handleClickEventDefault(
         case "ol":
           settingsPanelStore.set({
             action: "style-element",
-            nodeId: node.id,
-            ...(expanded ? { expanded: true } : {}),
+            ...panelProps,
           });
           break;
         case "img":
           settingsPanelStore.set({
             action: "style-image",
-            nodeId: node.id,
-            ...(expanded ? { expanded: true } : {}),
+            ...panelProps,
           });
           break;
         case "li":
           settingsPanelStore.set({
             action: "style-li-element",
-            nodeId: node.id,
-            ...(expanded ? { expanded: true } : {}),
+            ...panelProps,
           });
           break;
         case "a":
         case "button":
           settingsPanelStore.set({
             action: "style-link",
-            nodeId: node.id,
-            ...(expanded ? { expanded: true } : {}),
+            ...panelProps,
           });
           break;
         default:

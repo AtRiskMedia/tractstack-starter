@@ -294,6 +294,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     if (cursorPosRef.current) {
       restoreCursorPosition();
     }
+    if (!showGhostText && !doubleClickedRef.current) {
+      getCtx(props).setClickedNodeId(nodeId);
+    }
   };
 
   const handleMouseDown = (e: MouseEvent) => {
@@ -315,10 +318,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }, 0);
       editIntentRef.current = true;
-    } else {
-      // When isEditableMode is false, stop the click event from propagating
-      e.stopPropagation();
     }
+    e.stopPropagation();
   };
 
   const handleDoubleClick = (e: MouseEvent) => {

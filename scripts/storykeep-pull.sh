@@ -41,24 +41,8 @@ echo -e "${reset}  by At Risk Media"
 echo ""
 
 # Validate Story Keep path exists and contains astro.config.mjs
-if [ ! -d "$STORYKEEP_PATH" ]; then
-  echo -e "${red}Error: Story Keep directory not found at $STORYKEEP_PATH${reset}"
-  echo "Set STORYKEEP_PATH environment variable to specify a different location"
-  exit 1
-fi
-
-if [ ! -f "$STORYKEEP_PATH/astro.config.mjs" ]; then
-  echo -e "${red}Error: No astro.config.mjs found in $STORYKEEP_PATH${reset}"
-  echo "Are you sure this is a valid Story Keep installation?"
-  exit 1
-fi
-
-# Update starter template
-echo -e "${blue}Updating Tract Stack starter template...${reset}"
-cd "$PROJECT_ROOT"
-git pull
-if [ $? -ne 0 ]; then
-  echo -e "${red}Error: Failed to update starter template${reset}"
+if [ ! -d "$STORYKEEP_PATH" ] || [ ! -f "$STORYKEEP_PATH/astro.config.mjs" ]; then
+  echo -e "${red}Error: Invalid Story Keep directory at $STORYKEEP_PATH${reset}"
   exit 1
 fi
 
@@ -66,98 +50,79 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Copy files selectively
-echo -e "${blue}Updating Story Keep installation...${reset}"
+# Step 1: Update starter template
+echo -e "${blue}1. Updating Tract Stack starter template...${reset}"
+cd "$PROJECT_ROOT" && git pull
+if [ $? -ne 0 ]; then
+  echo -e "${red}Error: Failed to update starter template${reset}"
+  exit 1
+fi
 
-# Function to copy directory contents while preserving specific paths
+# Function to copy directory contents while preserving specific paths (silent)
 copy_directory() {
   local src="$1"
   local dest="$2"
   local preserve=("$3")
 
-  # Create destination if it doesn't exist
   mkdir -p "$dest"
-
-  # Copy files and directories
   for item in "$src"/*; do
     if [ -e "$item" ]; then
       base_name=$(basename "$item")
-
-      # Skip preserved directories
       if [[ " ${preserve[@]} " =~ " ${base_name} " ]]; then
-        echo -e "${yellow}Preserving $dest/$base_name${reset}"
         continue
       fi
-
       if [ -d "$item" ]; then
-        # Recursively copy directory
         copy_directory "$item" "$dest/$base_name" "${preserve[@]}"
       else
-        # Copy file
-        cp -f "$item" "$dest/$base_name"
-        echo -e "${green}Updated $dest/$base_name${reset}"
+        cp -f "$item" "$dest/$base_name" 2>/dev/null
       fi
     fi
   done
 }
 
-# Copy src directory
-echo -e "${blue}Updating src directory...${reset}"
+# Step 2: Copy files
+echo -e "${blue}2. Updating files...${reset}"
 copy_directory "$TEMPLATE_DIR/src" "$STORYKEEP_PATH/src" "custom"
-
-# Copy public directory (preserving custom and styles)
-echo -e "${blue}Updating public directory...${reset}"
 copy_directory "$TEMPLATE_DIR/public" "$STORYKEEP_PATH/public" "custom styles"
+cp -f "$TEMPLATE_DIR/astro.config.mjs" "$STORYKEEP_PATH/" 2>/dev/null
+cp -f "$TEMPLATE_DIR/tailwind.config.cjs" "$STORYKEEP_PATH/" 2>/dev/null
+cp -f "$TEMPLATE_DIR/tsconfig.json" "$STORYKEEP_PATH/" 2>/dev/null
+cp -f "$TEMPLATE_DIR"/.prettierrc* "$STORYKEEP_PATH/" 2>/dev/null
+echo -e "${green}Files updated successfully${reset}"
 
-# Copy root configuration files
-echo -e "${blue}Updating configuration files...${reset}"
-cp -f "$TEMPLATE_DIR/astro.config.mjs" "$STORYKEEP_PATH/"
-cp -f "$TEMPLATE_DIR/tailwind.config.cjs" "$STORYKEEP_PATH/"
-cp -f "$TEMPLATE_DIR/tsconfig.json" "$STORYKEEP_PATH/"
-cp -f "$TEMPLATE_DIR/env.d.ts" "$STORYKEEP_PATH/"
-cp -f "$TEMPLATE_DIR"/.prettierrc* "$STORYKEEP_PATH/"
-
-# Update package.json while preserving local dependencies
-if [ -f "$STORYKEEP_PATH/package.json" ]; then
-  echo -e "${blue}Updating package.json...${reset}"
-  # Try to merge only if both files exist and are valid JSON
-  if [ -f "$TEMPLATE_DIR/package.json" ] && [ -f "$STORYKEEP_PATH/package.json" ]; then
-    if jq '.' "$TEMPLATE_DIR/package.json" >/dev/null 2>&1 &&
-      jq '.' "$STORYKEEP_PATH/package.json" >/dev/null 2>&1; then
-      echo -e "\n${blue}Attempting to merge package.json files...${reset}"
-      if jq -s '
-        def merge_unique($base; $extra):
-          $base + ($extra | to_entries | map(select(.key as $k | $base[$k] | not)) | from_entries);
-        
-        .[0] as $template |
-        .[1] as $local |
-        $template + {
-          "dependencies": merge_unique($template.dependencies; $local.dependencies),
-          "devDependencies": merge_unique($template.devDependencies; $local.devDependencies)
-        } + 
-        if $local.packageManager then {"packageManager": $local.packageManager} else {} end +
-        if $local.name then {"name": $local.name} else {} end
-      ' "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json"; then
-        mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json"
-        echo -e "${green}Successfully updated package.json${reset}"
-      else
-        echo -e "${red}Error: Failed to merge package.json files${reset}"
-      fi
-    else
-      echo -e "${red}Error: One or both package.json files contain invalid JSON${reset}"
-    fi
+# Step 3: Update package.json
+echo -e "${blue}3. Updating package.json...${reset}"
+if [ -f "$TEMPLATE_DIR/package.json" ] && [ -f "$STORYKEEP_PATH/package.json" ]; then
+  if command -v jq >/dev/null 2>&1; then
+    jq -s '
+      def merge_unique($base; $extra):
+        $base + ($extra | to_entries | map(select(.key as $k | $base[$k] | not)) | from_entries);
+      
+      .[0] as $template |
+      .[1] as $local |
+      $template + {
+        "dependencies": merge_unique($template.dependencies; $local.dependencies),
+        "devDependencies": merge_unique($template.devDependencies; $local.devDependencies)
+      } + 
+      if $local.packageManager then {"packageManager": $local.packageManager} else {} end +
+      if $local.name then {"name": $local.name} else {} end
+    ' "$TEMPLATE_DIR/package.json" "$STORYKEEP_PATH/package.json" >"$TEMP_DIR/package.json" 2>/dev/null &&
+      mv "$TEMP_DIR/package.json" "$STORYKEEP_PATH/package.json" &&
+      echo -e "${green}Package.json updated successfully${reset}" ||
+      echo -e "${yellow}Note: jq failed, package.json not fully updated${reset}"
   else
-    echo -e "${yellow}Warning: One or both package.json files not found, skipping update${reset}"
+    echo -e "${yellow}Note: jq not installed, package.json not fully updated${reset}"
   fi
 fi
 
-# Install updated packages
-echo -e "${blue}Installing updated packages...${reset}"
+# Step 4: Install packages
+echo -e "${blue}4. Installing updated packages...${reset}"
 cd "$STORYKEEP_PATH" && pnpm install
 if [ $? -ne 0 ]; then
   echo -e "${red}Error: Failed to install packages${reset}"
   exit 1
 fi
 
+# Final step
 echo -e "${green}Story Keep update complete!${reset}"
-echo -e "${blue}Please review changes and run ~/scripts/build.sh to update${reset}"
+echo -e "${blue}Run ~/scripts/build.sh to apply changes${reset}"
