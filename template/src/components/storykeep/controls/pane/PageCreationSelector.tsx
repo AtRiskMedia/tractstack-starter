@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { RadioGroup } from "@headlessui/react";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckCircleIcon";
 import CubeTransparentIcon from "@heroicons/react/24/outline/CubeTransparentIcon";
 import DocumentIcon from "@heroicons/react/24/outline/DocumentIcon";
 import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
+import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import AddPanePanel from "./AddPanePanel";
 import PageCreationGen from "./PageCreationGen";
 import PageCreationSpecial from "./PageCreationSpecial";
 import { hasAssemblyAIStore } from "@/store/storykeep";
+import { contentMap } from "@/store/events.ts";
+import { useStore } from "@nanostores/react";
 import type { NodesContext } from "@/store/nodes";
 
 interface PageCreationSelectorProps {
@@ -20,45 +23,62 @@ type CreationMode = {
   name: string;
   description: string;
   icon: typeof DocumentIcon;
+  active: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
 };
-
-const getModes = (hasAssemblyAI: boolean) => [
-  {
-    id: "design",
-    name: "Design from scratch",
-    description: "Build your page section by section using our design system",
-    icon: DocumentIcon,
-    active: true,
-  },
-  ...(hasAssemblyAI
-    ? [
-        {
-          id: "generate",
-          name: "Generate with AI",
-          description: "Let AI help you create a complete page from your description",
-          icon: CubeTransparentIcon,
-          active: hasAssemblyAI,
-        },
-      ]
-    : []),
-  {
-    id: "featured",
-    name: "Featured Content home page",
-    description:
-      "A layout with a prominent hero section showcasing a featured article and grid of additional top articles. (Be sure to create some articles first!)",
-    icon: NewspaperIcon,
-    active: true,
-  },
-];
 
 export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps) => {
   const [selected, setSelected] = useState<CreationMode["id"]>("design");
   const [showTemplates, setShowTemplates] = useState(false);
   const [showGen, setShowGen] = useState(false);
   const [showFeatured, setShowFeatured] = useState(false);
-  const modes = getModes(hasAssemblyAIStore.get());
+  const $contentMap = useStore(contentMap);
+
+  const hasStoryFragments = useMemo(() => {
+    return $contentMap.some((item) => item.type === "StoryFragment");
+  }, [$contentMap]);
+
+  const modes = useMemo(() => {
+    const baseModesWithoutFeature = [
+      {
+        id: "design",
+        name: "Design from scratch",
+        description: "Build your page section by section using our design system",
+        icon: DocumentIcon,
+        active: true,
+      },
+      ...(hasAssemblyAIStore.get()
+        ? [
+            {
+              id: "generate",
+              name: "Generate with AI",
+              description: "Let AI help you create a complete page from your description",
+              icon: CubeTransparentIcon,
+              active: hasAssemblyAIStore.get(),
+            },
+          ]
+        : []),
+    ];
+
+    const featuredMode = {
+      id: "featured",
+      name: "Featured Content home page",
+      description: hasStoryFragments
+        ? "A layout with a prominent hero section showcasing a featured article and grid of additional top articles."
+        : "A layout with a prominent hero section showcasing a featured article and grid of additional top articles.",
+      icon: NewspaperIcon,
+      active: true,
+      disabled: !hasStoryFragments,
+      disabledReason: "Not yet available; no pages found.",
+    };
+
+    return [...baseModesWithoutFeature, featuredMode] as CreationMode[];
+  }, [hasStoryFragments]);
 
   const handleModeSelect = (mode: CreationMode["id"]) => {
+    const selectedMode = modes.find((m) => m.id === mode);
+    if (selectedMode?.disabled) return;
     setSelected(mode);
     setShowTemplates(false);
     setShowGen(false);
@@ -66,6 +86,8 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
   };
 
   const handleContinue = () => {
+    const selectedMode = modes.find((m) => m.id === selected);
+    if (selectedMode?.disabled) return;
     if (selected === "design") {
       setShowTemplates(true);
     } else if (selected === "generate") {
@@ -95,9 +117,10 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
                 <RadioGroup.Option
                   key={mode.id}
                   value={mode.id}
+                  disabled={mode.disabled}
                   className={({ active, checked }) =>
-                    `${active ? "ring-2 ring-cyan-600 ring-offset-2" : ""}
-                    ${checked ? "bg-cyan-700 text-white" : "bg-white"}
+                    `${active && !mode.disabled ? "ring-2 ring-cyan-600 ring-offset-2" : ""}
+                    ${checked ? "bg-cyan-700 text-white" : mode.disabled ? "bg-gray-50 cursor-not-allowed" : "bg-white"}
                     relative flex cursor-pointer rounded-lg px-5 py-6 shadow-md focus:outline-none`
                   }
                 >
@@ -105,27 +128,51 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
                     <div className="flex w-full items-center justify-between">
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
-                          <mode.icon
-                            className={`h-8 w-8 ${checked ? "text-white" : "text-cyan-700"}`}
-                            aria-hidden="true"
-                          />
+                          {mode.disabled ? (
+                            <ExclamationTriangleIcon
+                              className="h-8 w-8 text-amber-500"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <mode.icon
+                              className={`h-8 w-8 ${checked ? "text-white" : "text-cyan-700"}`}
+                              aria-hidden="true"
+                            />
+                          )}
                         </div>
                         <div className="ml-4">
                           <RadioGroup.Label
                             as="p"
-                            className={`font-bold ${checked ? "text-white" : "text-gray-900"}`}
+                            className={`font-bold ${
+                              checked
+                                ? "text-white"
+                                : mode.disabled
+                                  ? "text-gray-400"
+                                  : "text-gray-900"
+                            }`}
                           >
                             {mode.name}
                           </RadioGroup.Label>
                           <RadioGroup.Description
                             as="span"
-                            className={`inline ${checked ? "text-cyan-100" : "text-gray-500"}`}
+                            className={`inline ${
+                              checked
+                                ? "text-cyan-100"
+                                : mode.disabled
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                            }`}
                           >
                             {mode.description}
+                            {mode.disabled && mode.disabledReason && (
+                              <span className="block mt-1 text-amber-500 font-medium">
+                                {mode.disabledReason}
+                              </span>
+                            )}
                           </RadioGroup.Description>
                         </div>
                       </div>
-                      {checked && (
+                      {checked && !mode.disabled && (
                         <div className="shrink-0 text-white">
                           <CheckCircleIcon className="h-6 w-6" />
                         </div>

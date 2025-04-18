@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useMemo } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { ulid } from "ulid";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
@@ -7,6 +7,7 @@ import { getCtx } from "@/store/nodes.ts";
 import { findUniqueSlug } from "@/utils/common/helpers";
 import { PaneAddMode } from "@/types";
 import type { TemplatePane } from "@/types.ts";
+import { useStore } from "@nanostores/react";
 
 interface AddPaneCodeHookPanelProps {
   nodeId: string;
@@ -25,19 +26,50 @@ const AddPaneCodeHookPanel = ({
 }: AddPaneCodeHookPanelProps) => {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const existingSlugs = contentMap
-    .get()
+  const $contentMap = useStore(contentMap);
+
+  const existingSlugs = $contentMap
     .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
     .map((item) => item.slug);
 
+  const hasStoryFragments = useMemo(() => {
+    return $contentMap.some((item) => item.type === "StoryFragment");
+  }, [$contentMap]);
+
   const availableCodeHooks = codehookMap.get();
-  const filteredHooks =
-    query === ""
-      ? availableCodeHooks
-      : availableCodeHooks.filter((hook) => hook.toLowerCase().includes(query.toLowerCase()));
+
+  // Filter hooks based on search query
+  const filteredHooks = useMemo(() => {
+    // Start with available hooks
+    const hooks =
+      query === ""
+        ? [...availableCodeHooks]
+        : availableCodeHooks.filter((hook) => hook.toLowerCase().includes(query.toLowerCase()));
+
+    // Create a new array with unavailable hooks removed (don't just filter - we want to show them as disabled)
+    return hooks;
+  }, [availableCodeHooks, query]);
+
+  const isHookAvailable = (hookName: string) => {
+    if (hookName === "featured-content" || hookName === "list-content") {
+      return hasStoryFragments;
+    }
+    return true;
+  };
+
+  const getDisplayName = (hookName: string) => {
+    if ((hookName === "featured-content" || hookName === "list-content") && !hasStoryFragments) {
+      return `${hookName} (not yet available; no pages found)`;
+    }
+    return hookName;
+  };
 
   const handleUseCodeHook = () => {
     if (!selected) return;
+
+    // Don't proceed if selected hook is not available
+    if (!isHookAvailable(selected)) return;
+
     const ctx = getCtx();
     const template: TemplatePane = {
       id: ulid(),
@@ -62,6 +94,16 @@ const AddPaneCodeHookPanel = ({
     setMode(PaneAddMode.DEFAULT);
   };
 
+  // Handle the combobox selection with validation
+  const handleSelection = (hookName: string) => {
+    if (isHookAvailable(hookName)) {
+      setSelected(hookName);
+    } else {
+      // Don't set if not available
+      setSelected(null);
+    }
+  };
+
   return (
     <div className="p-0.5 shadow-inner">
       <div className="p-1.5 bg-white rounded-md w-full">
@@ -80,13 +122,13 @@ const AddPaneCodeHookPanel = ({
           </div>
 
           <div className="flex-1 min-w-[300px]">
-            <Combobox value={selected} onChange={setSelected}>
+            <Combobox value={selected} onChange={handleSelection}>
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-200 focus-within:border-cyan-500 transition-colors">
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    displayValue={(hook: string) => hook || ""}
+                    displayValue={(hook: string) => getDisplayName(hook) || ""}
                     onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search for a code hook..."
                   />
@@ -107,38 +149,27 @@ const AddPaneCodeHookPanel = ({
                         Nothing found.
                       </div>
                     ) : (
-                      filteredHooks.map((hook) => (
-                        <Combobox.Option
-                          key={hook}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? "bg-cyan-600 text-white" : "text-gray-900"
-                            }`
-                          }
-                          value={hook}
-                        >
-                          {({ selected, active }) => (
-                            <>
-                              <span
-                                className={`block truncate ${
-                                  selected ? "font-bold" : "font-normal"
-                                }`}
-                              >
-                                {hook}
+                      filteredHooks.map((hook) => {
+                        const isAvailable = isHookAvailable(hook);
+                        return (
+                          <div
+                            key={hook}
+                            className={`relative cursor-default select-none py-2 pl-10 pr-4 ${
+                              !isAvailable
+                                ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+                                : "text-gray-900 hover:bg-cyan-600 hover:text-white cursor-pointer"
+                            }`}
+                            onClick={() => isAvailable && handleSelection(hook)}
+                          >
+                            <span className={`block truncate`}>{getDisplayName(hook)}</span>
+                            {selected === hook && (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
                               </span>
-                              {selected ? (
-                                <span
-                                  className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                    active ? "text-white" : "text-cyan-600"
-                                  }`}
-                                >
-                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              ) : null}
-                            </>
-                          )}
-                        </Combobox.Option>
-                      ))
+                            )}
+                          </div>
+                        );
+                      })
                     )}
                   </Combobox.Options>
                 </Transition>
