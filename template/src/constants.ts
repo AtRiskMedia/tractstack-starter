@@ -326,6 +326,15 @@ export const GOTO_TARGETS: GotoTargets = {
     description: "Navigate to external URL",
     placeholder: "https://...",
   },
+  ...(import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true"
+    ? {
+        sandbox: {
+          name: "Multi-tenant",
+          subcommands: ["claim"],
+          description: "Claim your Tract Stack Sandbox",
+        },
+      }
+    : {}),
 };
 
 export const stopWords = new Set([

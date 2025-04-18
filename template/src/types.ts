@@ -1216,3 +1216,38 @@ export interface VideoMoment {
   description?: string;
   linkedPaneId?: string;
 }
+
+export type TenantStatus = "reserved" | "claimed" | "activated" | "archived";
+
+export interface TenantConfig {
+  status: TenantStatus;
+  email: string;
+  name: string;
+  TENANT_SECRET: string;
+  createdAt: string;
+  lastAccessed: string;
+  lastAdminAccess?: string;
+  activationToken?: string;
+  activationTokenExpires?: string;
+}
+
+export interface TenantCreateRequest {
+  tenantId: string;
+  email: string;
+  name: string;
+}
+
+export interface TenantOperationResponse {
+  success: boolean;
+  tenantId?: string;
+  message?: string;
+  error?: string;
+}
+
+export interface TokenVerificationResult {
+  valid: boolean;
+  tenantId?: string;
+  email?: string;
+  expired?: boolean;
+  message?: string;
+}

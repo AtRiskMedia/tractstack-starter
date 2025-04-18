@@ -58,6 +58,14 @@ export const preParseAction = (payload: any, slug: string, isContext: boolean, c
           return null;
         case `url`:
           return parameterTwo;
+        case `sandbox`:
+          if (parameterTwo) {
+            switch (parameterTwo) {
+              case `claim`:
+                return `/sandbox/claim`;
+            }
+          }
+          return ``;
         default:
           console.log(`LispActionPayload preParse misfire on goto`, payload);
       }

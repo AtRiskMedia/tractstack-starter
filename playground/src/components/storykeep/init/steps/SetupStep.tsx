@@ -65,7 +65,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
             <>
               <p>
                 {hasConcierge
-                  ? "Your Story Keep is configured for production use. Continue to complete the setup."
+                  ? "Your Story Keep is live and ready to be made your own!"
                   : "Thank you for trying Tract Stack!"}
               </p>
               {hasConcierge && lastBuild > 0 && (
@@ -81,7 +81,7 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
             disabled={isLoading || (hasConcierge && !conciergeActive)}
             className="px-4 py-2 text-white bg-myblue rounded hover:bg-black disabled:bg-mylightgrey"
           >
-            {isLoading ? "Checking Status..." : "Continue Setup"}
+            {isLoading ? "Checking Status..." : "Make it Your Own"}
           </button>
         </div>
       </div>

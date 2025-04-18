@@ -32,13 +32,23 @@ export const onRequest = defineMiddleware(async (context, next) => {
   let tenantId = "default";
 
   if (isMultiTenantEnabled) {
-    const hostname = context.request.headers.get("host");
+    // Prefer X-Forwarded-Host, fall back to Host
+    const hostname =
+      context.request.headers.get("x-forwarded-host") || context.request.headers.get("host");
+
     if (hostname) {
-      if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+      if (import.meta.env.DEV) {
         tenantId = "localhost";
       } else {
         const parts = hostname.split(".");
-        if (parts.length >= 3 && parts[1] === "sandbox" && parts[2] === "tractstack.com") {
+
+        // Handle domains like x.sandbox.freewebpress.com
+        if (
+          parts.length >= 4 &&
+          parts[1] === "sandbox" &&
+          [`freewebpress`, `tractstack`].includes(parts[2]) &&
+          parts[3] === "com"
+        ) {
           tenantId = parts[0];
         }
       }
@@ -56,6 +66,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
       status: 404,
       statusText: "Tenant Not Found",
     });
+  }
+
+  if (isMultiTenant && resolved.exists) {
+    try {
+      const tenantConfigPath = path.join(resolved.configPath, "tenant.json");
+      const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
+      const tenantConfig = JSON.parse(tenantConfigRaw);
+      // Redirect based on tenant status
+      if (tenantConfig.status === "reserved") {
+        // Tenant is reserved but not claimed yet
+        return context.redirect(`/sandbox/claimed?tenant=${tenantId}`);
+      } else if (tenantConfig.status === "archived") {
+        // Tenant has been archived
+        return context.redirect(`/sandbox/archived?tenant=${tenantId}`);
+      }
+      // For "claimed" or "activated" statuses, continue normal flow
+    } catch (error) {
+      console.error(`Error reading tenant status for ${tenantId}:`, error);
+      // If we can't read the status, proceed with normal tenant existence check
+    }
   }
 
   // **Step 3: Set tenant info in local context**
@@ -105,7 +135,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   // Initialize CSS store
-  if (import.meta.env.PUBLIC_ENABLE_MULTI_TENANT !== "true") {
+  if (!isMultiTenant) {
     await ensureCssStoreInitialized();
   }
 
@@ -148,6 +178,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     ...(isInitialized ? ["/storykeep/init"] : []),
     "/api/concierge/publish",
     "/api/concierge/status",
+    "/api/tenant/archive",
   ];
 
   const protectedRoutes = [

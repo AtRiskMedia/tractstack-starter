@@ -1,0 +1,161 @@
+---
+import { ViewTransitions } from "astro:transitions";
+import ResendForm from "@/components/tenant/ResendForm";
+
+// Get tenant from URL parameter (now optional)
+const url = new URL(Astro.request.url);
+const tenantId = url.searchParams.get("tenant") || "";
+
+// Logo and branding configuration - using default values
+const logo = "/logo.svg";
+const logoIsSvg = logo.includes("svg");
+const wordmark = "/wordmark.svg";
+const wordmarkIsSvg = wordmark.includes("svg");
+---
+
+<!doctype html>
+<html lang="en" class="h-full bg-mywhite">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tenant Activation Required | TractStack</title>
+    <meta
+      name="description"
+      content="Activate your TractStack sandbox to start building your no-code website."
+    />
+    <link rel="stylesheet" href="/styles/custom.css" />
+    <link rel="stylesheet" href="/styles/app.css" />
+    <ViewTransitions />
+  </head>
+  <body class="h-full">
+    <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div class="mx-auto pb-6">
+        <div class="flex flex-col items-center justify-center gap-4">
+          <div class="h-16 w-auto">
+            {
+              logoIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={logo}
+                  class="h-full w-auto pointer-events-none"
+                  aria-label="Logo"
+                >
+                  Logo
+                </object>
+              ) : (
+                <img src={logo} class="h-full w-auto pointer-events-none" alt="Logo" />
+              )
+            }
+          </div>
+          <div class="h-16 w-auto">
+            {
+              wordmarkIsSvg ? (
+                <object
+                  type="image/svg+xml"
+                  data={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  aria-label="Wordmark"
+                >
+                  Wordmark
+                </object>
+              ) : (
+                <img
+                  src={wordmark}
+                  class="h-full w-auto max-w-48 md:max-w-72 pointer-events-none"
+                  alt="Wordmark"
+                />
+              )
+            }
+          </div>
+        </div>
+
+        <h2 class="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-mydarkgrey">
+          {tenantId ? "Tenant Activation Required" : "Resend Activation Email"}
+        </h2>
+        <p class="mt-2 text-center text-sm text-mylightgrey">
+          {
+            tenantId
+              ? `Activate your sandbox to start building with TractStack`
+              : `Enter your subdomain and email to resend the activation link`
+          }
+        </p>
+      </div>
+
+      <div class="mx-auto w-full max-w-md px-4">
+        <ResendForm tenantId={tenantId} client:load />
+      </div>
+
+      <div class="mt-8 mx-auto max-w-md px-4">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-mylightgrey">
+          <h3 class="text-lg font-bold text-mydarkgrey mb-2">
+            {tenantId ? `Activate Your Sandbox` : `Resend Your Activation Link`}
+          </h3>
+          {
+            tenantId ? (
+              <p class="text-sm text-mydarkgrey mb-4">
+                Your sandbox <strong>{tenantId}.sandbox.freewebpress.com</strong> is reserved but
+                needs activation. Check your email for the activation link or resend it below if you
+                didn't receive it.
+              </p>
+            ) : (
+              <p class="text-sm text-mydarkgrey mb-4">
+                If you've already registered a sandbox but haven't received or can't find your
+                activation email, you can request a new one here. Enter the subdomain and email you
+                used during registration.
+              </p>
+            )
+          }
+          <div class="space-y-2 text-sm">
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Full access to the StoryKeep no-code editor</span>
+            </div>
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Custom branding and design options</span>
+            </div>
+            <div class="flex items-start">
+              <svg
+                class="h-5 w-5 text-myblue mr-2 flex-shrink-0"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              <span>Visitor analytics and conversion tracking</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="mt-10 py-6 bg-mywhite border-t border-mylightgrey">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-sm text-mylightgrey">
+          © {new Date().getFullYear()} TractStack. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

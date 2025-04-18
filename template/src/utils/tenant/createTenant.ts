@@ -59,7 +59,7 @@ export async function createTenant(
       // Create empty custom.css if source doesn't exist
       await fs.writeFile(
         tenantCustomCssPath,
-        ":root {\n  /* Brand Colors */\n  --brand-1: #0867ec;\n  --brand-2: #ec0867;\n  --brand-3: #67ec08;\n  --brand-4: #08ec67;\n  --brand-5: #6708ec;\n  --brand-6: #ec6708;\n  --brand-7: #ec0867;\n  --brand-8: #67ec08;\n}\n"
+        ":root {\n  /* Brand Colors */\n  --brand-1: #10120d;\n  --brand-2: #fcfcfc;\n  --brand-3: #f58333;\n  --brand-4: #c8df8c;\n  --brand-5: #293f58;\n  --brand-6: #a7b1b7;\n  --brand-7: #393d34;\n  --brand-8: #e3e3e3;\n}\n"
       );
     }
 
