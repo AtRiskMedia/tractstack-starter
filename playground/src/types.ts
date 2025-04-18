@@ -507,6 +507,7 @@ export type SettingsPanelSignal = {
   childId?: string;
   layer?: number;
   className?: string;
+  minimized?: boolean;
   expanded?: boolean;
 };
 

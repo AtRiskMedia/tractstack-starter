@@ -1,11 +1,11 @@
 import { ulid } from "ulid";
 import { forwardRef, useState, useRef, useEffect, type FormEvent, type KeyboardEvent } from "react";
-import { getCtx } from "@/store/nodes.ts";
-import { viewportKeyStore } from "@/store/storykeep.ts";
-import { getTemplateNode, processRichTextToNodes } from "@/utils/common/nodesHelper.ts";
-import type { TemplateNode, NodeProps, FlatNode, PaneNode } from "@/types.ts";
-import { cloneDeep } from "@/utils/common/helpers.ts";
 import { useStore } from "@nanostores/react";
+import { getCtx } from "@/store/nodes";
+import { viewportKeyStore, settingsPanelStore } from "@/store/storykeep";
+import { getTemplateNode, processRichTextToNodes } from "@/utils/common/nodesHelper";
+import type { TemplateNode, NodeProps, FlatNode, PaneNode } from "@/types";
+import { cloneDeep } from "@/utils/common/helpers";
 
 interface GhostTextProps {
   parentId: string;
@@ -18,6 +18,7 @@ interface GhostTextProps {
 
 const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
   ({ parentId, onComplete, onActivate, onContentSaved, ctx }, ref) => {
+    settingsPanelStore.set(null);
     const [isEditing, setIsEditing] = useState(false);
     const [text, setText] = useState("");
     const [showNextGhost, setShowNextGhost] = useState(false);

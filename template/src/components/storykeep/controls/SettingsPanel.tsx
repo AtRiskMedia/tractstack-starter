@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useStore } from "@nanostores/react";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
@@ -33,8 +33,8 @@ import StyleParentRemovePanel from "./panels/StyleParentPanel_remove";
 import StyleParentAddPanel from "./panels/StyleParentPanel_add";
 import StyleParentDeleteLayerPanel from "./panels/StyleParentPanel_deleteLayer";
 import StyleParentUpdatePanel from "./panels/StyleParentPanel_update";
-import { getCtx } from "../../../store/nodes";
-import { isMarkdownPaneFragmentNode } from "../../../utils/nodes/type-guards";
+import { getCtx } from "@/store/nodes";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
 import { type ReactElement } from "react";
 import type { MarkdownPaneFragmentNode, FlatNode, Config } from "@/types";
 
@@ -49,8 +49,6 @@ export interface BasePanelProps {
   childId?: string;
   availableCodeHooks?: string[];
 }
-
-const MIN_HEIGHT = 800;
 
 const getPanel = (
   config: Config | null,
@@ -295,24 +293,16 @@ const SettingsPanel = ({
   availableCodeHooks?: string[];
 }) => {
   const signal = useStore(settingsPanelStore);
-
+  const ctx = getCtx();
   const [userHasInteracted, setUserHasInteracted] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const shouldRespectCollapse = userHasInteracted || windowHeight < MIN_HEIGHT;
-  const effectiveExpanded = shouldRespectCollapse ? signal?.expanded : true;
 
   if (!signal) return null;
 
-  const ctx = getCtx();
+  // Determine if panel should be in minimized state
+  // Priority: explicitly set minimized flag > user interaction > expanded flag
+  const isPanelMinimized =
+    signal.minimized === true || (userHasInteracted && signal.expanded === false);
+
   const allNodes = ctx.allNodes.get();
 
   // Get the clicked node
@@ -361,15 +351,15 @@ const SettingsPanel = ({
 
   if (!panel) return null;
   const thisPanel = (
-    <div className="bg-white shadow-xl w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
+    <div className="bg-white w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
       <div
         className={
-          (!signal.expanded &&
-            `pointer-events-auto ${!effectiveExpanded && `hover:bg-myorange/20`}`) ||
+          (isPanelMinimized &&
+            `pointer-events-auto ${isPanelMinimized && `hover:bg-myorange/20`}`) ||
           ""
         }
         style={
-          effectiveExpanded
+          !isPanelMinimized
             ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
             : { height: "60px", overflowY: "hidden" }
         }
@@ -381,26 +371,39 @@ const SettingsPanel = ({
     </div>
   );
 
+  // Handle panel toggle - when expanding, switch to styles mode
+  const handleTogglePanel = () => {
+    setUserHasInteracted(true);
+
+    // If currently minimized and will expand, switch to styles mode
+    if (isPanelMinimized) {
+      ctx.toolModeValStore.set({ value: "styles" });
+    }
+
+    settingsPanelStore.set({
+      ...signal,
+      minimized: isPanelMinimized ? false : true,
+      // Keep existing expanded property for backward compatibility
+      expanded: isPanelMinimized,
+    });
+  };
+
   return (
     <div
       id="settings-panel"
-      className="z-50 transition-all fixed bottom-16 md:bottom-1 right-1 flex flex-col items-start"
+      className="z-50 transition-all fixed bottom-24 right-2 md:bottom-0 md:right-1 flex flex-col items-start"
     >
       <div className="inline space-x-2">
         <button
-          onClick={() => {
-            setUserHasInteracted(true);
-            const currentEffectiveState = shouldRespectCollapse ? signal.expanded : true;
-            settingsPanelStore.set({ ...signal, expanded: !currentEffectiveState });
-          }}
+          onClick={handleTogglePanel}
           className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
-          aria-label={effectiveExpanded ? `Hide Settings Panel` : `Show Settings Panel`}
-          title={effectiveExpanded ? `Hide Settings Panel` : `Show Settings Panel`}
+          aria-label={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
+          title={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
         >
-          {effectiveExpanded ? (
-            <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          ) : (
+          {isPanelMinimized ? (
             <ChevronDoubleUpIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          ) : (
+            <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
           )}
         </button>
         <button
@@ -414,13 +417,7 @@ const SettingsPanel = ({
           <CheckIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
       </div>
-      {effectiveExpanded ? (
-        <>{thisPanel}</>
-      ) : (
-        <div onClick={() => settingsPanelStore.set({ ...signal, expanded: !signal.expanded })}>
-          {thisPanel}
-        </div>
-      )}
+      {isPanelMinimized ? <div onClick={handleTogglePanel}>{thisPanel}</div> : <>{thisPanel}</>}
     </div>
   );
 };
