@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
+import ShieldExclamationIcon from "@heroicons/react/24/outline/ShieldExclamationIcon";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
@@ -303,13 +304,20 @@ const StoryKeepHeader = ({
         />
       )}
 
-      {isDemoMode && (
-        <div
-          className="h-9 px-3 bg-myorange/20 text-myblack text-md rounded shadow-sm border border-myorange border-dotted flex items-center gap-1"
-          title="No changes will be saved. Reload to reset and start over."
-        >
-          <span className="font-bold">Demo Mode</span>
-        </div>
+      {isDemoMode && $viewportKey.value === `mobile` ? (
+        <ShieldExclamationIcon
+          className="w-8 h-8 text-myorange cursor-not-allowed"
+          title="Demo Mode; no changes will be saved!"
+        />
+      ) : (
+        isDemoMode && (
+          <div
+            className="h-9 px-3 bg-myorange/20 text-myblack text-md rounded shadow-sm border border-myorange border-dotted flex items-center gap-1"
+            title="No changes will be saved. Reload to reset and start over."
+          >
+            <span className="font-bold">Demo Mode</span>
+          </div>
+        )
       )}
     </div>
   );

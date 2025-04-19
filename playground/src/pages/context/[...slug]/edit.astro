@@ -13,6 +13,7 @@ import { ReactNodesWrapper } from "@/components/compositor-nodes/ReactNodesWrapp
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import SettingsPanel from "@/components/storykeep/controls/SettingsPanel.tsx";
 import { ulid } from "ulid";
+import HudDisplay from "@/components/storykeep/HudDisplay";
 import type { LoadData } from "@/store/nodesSerializer.ts";
 import type { PaneNode } from "@/types";
 
@@ -134,9 +135,7 @@ if (!paneNode) {
     class="fixed right-1 z-[10000] flex flex-col items-end gap-2"
     style={{ bottom: `var(--bottom-right-controls-bottom-offset)` }}
   >
-    <div class="bg-black/70 text-white rounded p-2 text-sm max-w-[300px] text-right mb-2">
-      PLACEHOLDER FOR HELP HUD
-    </div>
+    <HudDisplay client:only="react" />
     <SettingsPanel
       config={config}
       availableCodeHooks={Object.keys(codeHookComponents)}

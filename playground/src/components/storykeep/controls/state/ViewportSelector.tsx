@@ -40,8 +40,8 @@ const ViewportSelector = ({ viewport, viewportKey, auto, setViewport }: Viewport
   return (
     <div className="flex items-center">
       <div>
-        <span className={`mr-1 text-sm text-mydarkgrey`}>Designing for:</span>
-        <span className={`font-bold text-xl text-myblue pr-2.5`}>
+        <span className={`mr-1 text-xs text-mydarkgrey hidden md:block`}>Preview</span>
+        <span className={`font-bold text-md text-myblue pr-2.5 hidden md:block`}>
           {!auto ? viewport : viewportKey}
         </span>
       </div>

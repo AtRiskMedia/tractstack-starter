@@ -1,8 +1,6 @@
-// File: ./utils/storykeep/layout.ts
 import { debounce } from "@/utils/common/helpers";
 
 export const HEADER_HEIGHT_CSS_VAR = "--header-height";
-// New CSS variable for the bottom offset of the controls wrapper
 export const BOTTOM_CONTROLS_OFFSET_VAR = "--bottom-right-controls-bottom-offset";
 
 export function setupLayoutStyles() {
@@ -10,12 +8,15 @@ export function setupLayoutStyles() {
   style.innerHTML = `
     :root {
       ${HEADER_HEIGHT_CSS_VAR}: 0px;
-      ${BOTTOM_CONTROLS_OFFSET_VAR}: 0.25rem; /* Default for md+ screens (Tailwind right-1) */
+      ${BOTTOM_CONTROLS_OFFSET_VAR}: 0.25rem; /* Default for md+ screens */
     }
   `;
   document.head.appendChild(style);
   return () => {
-    document.head.removeChild(style);
+    // Check if the style element is still a child of head before removing
+    if (style.parentNode === document.head) {
+      document.head.removeChild(style);
+    }
   };
 }
 
@@ -30,84 +31,110 @@ export function setupLayoutObservers() {
     rafId = requestAnimationFrame(() => {
       const header = document.getElementById("mainHeader");
       const headerSpacer = document.getElementById("headerSpacer");
-      const nav = document.getElementById("mainNav");
+      const mainNav = document.getElementById("mainNav");
       const navSpacer = document.getElementById("navSpacer");
-      const toolbarNav = document.getElementById("toolbarNav");
-      const isMobile = window.innerWidth < 801; // md breakpoint
+      const toolbarNav = document.getElementById("toolbarNav"); // Container for AddElementsPanel
+      const isMobile = window.innerWidth < 768; // Tailwind 'md' breakpoint is 768px
 
       // --- Header Height ---
+      let headerHeight = 0;
       if (header) {
-        const headerHeight = header.offsetHeight;
+        headerHeight = header.offsetHeight;
         document.documentElement.style.setProperty(HEADER_HEIGHT_CSS_VAR, `${headerHeight}px`);
         if (headerSpacer) {
           headerSpacer.style.height = `${headerHeight}px`;
         }
       }
 
-      // --- Main Nav Positioning & Spacers ---
-      if (nav) {
-        const navHeight = nav.offsetHeight;
+      // --- Main Nav Positioning & Spacers (Mobile vs Desktop) ---
+      let mainNavHeight = 0;
+      if (mainNav) {
+        mainNavHeight = mainNav.offsetHeight;
         if (navSpacer && isMobile) {
-          navSpacer.style.height = `${navHeight}px`;
+          navSpacer.style.height = `${mainNavHeight}px`; // Spacer for bottom nav on mobile
         } else if (navSpacer) {
-          navSpacer.style.height = "0px"; // Reset spacer on larger screens
+          navSpacer.style.height = "0px"; // No spacer needed on desktop
         }
 
-        if (!isMobile && header) {
-          nav.style.top = `${header.offsetHeight}px`; // Position below header on md+
+        // Position side nav below header on desktop
+        if (!isMobile && headerHeight > 0) {
+          mainNav.style.top = `${headerHeight}px`;
         } else {
-          nav.style.top = "auto"; // Reset top position on mobile
+          mainNav.style.top = "auto"; // Reset top for mobile fixed bottom nav
         }
-
-        if (isMobile) {
-          // On mobile, offset by nav height
-          const bottomOffset = navHeight;
-          document.documentElement.style.setProperty(
-            BOTTOM_CONTROLS_OFFSET_VAR,
-            `${bottomOffset}px`
-          );
-        } else {
-          // On md+, use default small offset from bottom
-          document.documentElement.style.setProperty(BOTTOM_CONTROLS_OFFSET_VAR, "0.25rem");
-        }
-      } else {
-        // Fallback if nav doesn't exist
-        document.documentElement.style.setProperty(BOTTOM_CONTROLS_OFFSET_VAR, "0.25rem");
       }
 
-      // --- Toolbar Positioning ---
+      // --- Toolbar Positioning & Height ---
+      let toolbarNavHeight = 0;
       if (toolbarNav) {
-        toolbarNav.style.bottom = isMobile && nav ? `${nav.offsetHeight}px` : "0";
-        toolbarNav.style.left = isMobile ? "0" : "4rem"; // Tailwind md:w-16 = 4rem
+        toolbarNavHeight = toolbarNav.offsetHeight; // Get height even if visually hidden but rendered
+
+        if (isMobile && mainNavHeight > 0) {
+          // Position toolbar *above* the main bottom nav on mobile
+          toolbarNav.style.bottom = `${mainNavHeight}px`;
+          toolbarNav.style.left = "0";
+          toolbarNav.style.width = "100%"; // Ensure it spans width on mobile
+        } else {
+          // Position toolbar next to side nav on desktop
+          toolbarNav.style.bottom = "0";
+          toolbarNav.style.left = "4rem"; // Tailwind md:w-16 = 4rem
+          toolbarNav.style.width = "auto"; // Let content determine width
+        }
       }
+
+      // --- Bottom Right Controls Offset Calculation ---
+      let bottomOffsetValue = 0.25; // Default offset in rem for desktop
+      if (isMobile) {
+        // Calculate total bottom height on mobile
+        const totalBottomHeight = mainNavHeight + (toolbarNavHeight > 0 ? toolbarNavHeight : 0);
+        bottomOffsetValue = totalBottomHeight; // Use pixel value for mobile offset
+        document.documentElement.style.setProperty(
+          BOTTOM_CONTROLS_OFFSET_VAR,
+          `${bottomOffsetValue}px` // Use px for mobile
+        );
+      } else {
+        // Use default rem value for desktop
+        document.documentElement.style.setProperty(
+          BOTTOM_CONTROLS_OFFSET_VAR,
+          `${bottomOffsetValue}rem` // Use rem for desktop
+        );
+      }
+
+      // --- Reset RafId ---
+      rafId = undefined;
     });
   }
 
   // Create debounced version for resize events
-  const debouncedUpdateLayout = debounce(updateLayout, 100);
+  const debouncedUpdateLayout = debounce(updateLayout, 150); // Increased debounce slightly
 
   // Initial updates & listeners
-  updateLayout();
-  window.addEventListener("DOMContentLoaded", updateLayout);
-  window.addEventListener("load", updateLayout);
+  // Use requestAnimationFrame for initial calls to ensure DOM is ready
+  requestAnimationFrame(updateLayout);
+  window.addEventListener("DOMContentLoaded", () => requestAnimationFrame(updateLayout));
+  window.addEventListener("load", () => requestAnimationFrame(updateLayout));
   window.addEventListener("resize", debouncedUpdateLayout);
 
-  // Setup ResizeObserver with a more selective approach (remains the same)
+  // Setup ResizeObserver (remains the same)
   const observer = new ResizeObserver((entries) => {
-    const hasSignificantChange = entries.some((entry) => {
+    // More robust check for significant changes
+    let changed = false;
+    for (const entry of entries) {
       const { width, height } = entry.contentRect;
       const element = entry.target as HTMLElement;
-      const prevWidth = parseFloat(element.dataset.prevWidth || "0");
-      const prevHeight = parseFloat(element.dataset.prevHeight || "0");
-      const hasChanged = Math.abs(width - prevWidth) > 1 || Math.abs(height - prevHeight) > 1;
-      if (hasChanged) {
+      // Check if dimensions have changed significantly (more than 1px)
+      if (
+        Math.abs(width - parseFloat(element.dataset.prevWidth || "0")) > 1 ||
+        Math.abs(height - parseFloat(element.dataset.prevHeight || "0")) > 1
+      ) {
         element.dataset.prevWidth = width.toString();
         element.dataset.prevHeight = height.toString();
+        changed = true;
+        break; // No need to check others if one changed
       }
-      return hasChanged;
-    });
-    if (hasSignificantChange) {
-      updateLayout();
+    }
+    if (changed) {
+      updateLayout(); // Use non-debounced for ResizeObserver
     }
   });
 
