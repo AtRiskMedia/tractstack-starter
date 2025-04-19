@@ -389,10 +389,7 @@ const SettingsPanel = ({
   };
 
   return (
-    <div
-      id="settings-panel"
-      className="z-50 transition-all fixed bottom-24 right-2 md:bottom-0 md:right-1 flex flex-col items-start"
-    >
+    <div id="settings-panel" className="bg-transition-all flex flex-col items-start">
       <div className="inline space-x-2">
         <button
           onClick={handleTogglePanel}
