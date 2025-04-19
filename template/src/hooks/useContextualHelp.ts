@@ -55,7 +55,7 @@ const settingsActionToHelpKey: Record<string, string> = {
   "style-li-element-remove": "PANEL_REMOVE_STYLE",
   "style-li-container-remove": "PANEL_REMOVE_STYLE",
   "setup-codehook": "PANEL_STYLE_CODEHOOK",
-  debug: "MODE_DEBUG", // Reuse debug mode key
+  debug: "MODE_DEBUG",
 };
 
 const toolModeToHelpKey: Record<string, string> = {
@@ -103,13 +103,13 @@ const paneConfigModeToHelpKey: Record<string, string> = {
   [PaneConfigMode.SLUG]: "PANEL_CONFIG_PANE_SLUG",
   [PaneConfigMode.PATH]: "PANEL_CONFIG_PANE_PATH",
   [PaneConfigMode.IMPRESSION]: "PANEL_CONFIG_PANE_IMPRESSION",
-  [PaneConfigMode.CODEHOOK]: "PANEL_STYLE_CODEHOOK", // Reuse codehook panel key
+  [PaneConfigMode.CODEHOOK]: "PANEL_STYLE_CODEHOOK",
 };
 
 const contextPaneModeToHelpKey: Record<string, string> = {
-  [ContextPaneMode.DEFAULT]: "PANEL_CONFIG_PANE", // Reuse pane config key
-  [ContextPaneMode.TITLE]: "PANEL_CONFIG_PANE_TITLE", // Reuse pane title key
-  [ContextPaneMode.SLUG]: "PANEL_CONFIG_PANE_SLUG", // Reuse pane slug key
+  [ContextPaneMode.DEFAULT]: "PANEL_CONFIG_PANE",
+  [ContextPaneMode.TITLE]: "PANEL_CONFIG_PANE_TITLE",
+  [ContextPaneMode.SLUG]: "PANEL_CONFIG_PANE_SLUG",
 };
 
 const viewportToHelpKey: Record<string, string> = {
@@ -131,16 +131,6 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
 
   useEffect(() => {
     let helpKey: string | null = null;
-
-    // Priority Order:
-    // 1. Settings Panel Action
-    // 2. Pane Add Mode (if active)
-    // 3. Story Fragment Config Mode (if active)
-    // 4. Pane Config Mode (if active)
-    // 5. Insert Sub-Mode (if tool mode is 'insert')
-    // 6. Analytics View
-    // 7. Viewport Mode
-    // 8. General Tool Mode
 
     if (signal?.action && settingsActionToHelpKey[signal.action]) {
       helpKey = settingsActionToHelpKey[signal.action];
@@ -180,7 +170,7 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
     } else if (toolMode.value && toolModeToHelpKey[toolMode.value]) {
       helpKey = toolModeToHelpKey[toolMode.value];
     } else {
-      helpKey = "DEFAULT"; // Fallback
+      helpKey = "DEFAULT";
     }
 
     if (activeHelpKeyStore.get() !== helpKey) {
@@ -188,14 +178,13 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
     }
   }, [
     signal,
-    toolMode,
-    toolAddMode,
+    toolMode.value,
+    toolAddMode.value,
     paneAddMode,
     activePaneMode,
     storyFragmentMode,
     contextPaneMode,
-    viewport,
+    viewport.value,
     $showAnalytics,
-    ctx,
   ]);
 };
