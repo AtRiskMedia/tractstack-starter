@@ -298,23 +298,18 @@ const SettingsPanel = ({
 
   if (!signal) return null;
 
-  // Determine if panel should be in minimized state
-  // Priority: explicitly set minimized flag > user interaction > expanded flag
   const isPanelMinimized =
     signal.minimized === true || (userHasInteracted && signal.expanded === false);
 
   const allNodes = ctx.allNodes.get();
 
-  // Get the clicked node
   const clickedNode = allNodes.get(signal.nodeId) as FlatNode | undefined;
   if (!clickedNode && signal.action !== `debug`) return null;
 
   let panel;
-  // Special Case (click wasn't registered on markdown due to margins)
   if (signal.action === "debug") {
     panel = getPanel(config, "debug", null, availableCodeHooks);
   } else if (clickedNode) {
-    // Get the closest pane node
     const paneId =
       clickedNode.nodeType === "Pane"
         ? clickedNode.id
@@ -326,7 +321,6 @@ const SettingsPanel = ({
           ? (allNodes.get(paneId) as FlatNode)
           : undefined;
 
-    // Get child pane nodes if we're on a pane
     const childNodeIds = paneNode ? ctx.getChildNodeIDs(paneId) : [];
     const childNodes = childNodeIds
       .map((id) => allNodes.get(id))
@@ -351,49 +345,38 @@ const SettingsPanel = ({
 
   if (!panel) return null;
   const thisPanel = (
-    <div className="bg-white w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200">
-      <div
-        className={
-          (isPanelMinimized &&
-            `pointer-events-auto ${isPanelMinimized && `hover:bg-myorange/20`}`) ||
-          ""
-        }
-        style={
-          !isPanelMinimized
-            ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
-            : { height: "60px", overflowY: "hidden" }
-        }
-      >
-        <div key={clickedNode?.id || `debug`} className="p-4">
-          {panel}
-        </div>
+    <div
+      className="bg-white w-full md:w-[500px] rounded-t-lg border-t border-x border-gray-200"
+      style={
+        !isPanelMinimized
+          ? { minHeight: "200px", maxHeight: "50vh", overflowY: "auto" }
+          : { height: "60px", overflowY: "hidden" }
+      }
+    >
+      <div key={clickedNode?.id || `debug`} className="p-4">
+        {panel}
       </div>
     </div>
   );
 
-  // Handle panel toggle - when expanding, switch to styles mode
   const handleTogglePanel = () => {
     setUserHasInteracted(true);
-
-    // If currently minimized and will expand, switch to styles mode
     if (isPanelMinimized) {
       ctx.toolModeValStore.set({ value: "styles" });
     }
-
     settingsPanelStore.set({
       ...signal,
-      minimized: isPanelMinimized ? false : true,
-      // Keep existing expanded property for backward compatibility
+      minimized: !isPanelMinimized,
       expanded: isPanelMinimized,
     });
   };
 
   return (
-    <div id="settings-panel" className="bg-transition-all flex flex-col items-start">
-      <div className="inline space-x-2">
+    <div id="settings-panel" className="relative bg-transparent flex flex-col items-end">
+      <div className="absolute left-0 z-10 inline-flex space-x-2" style={{ top: `-3.5rem` }}>
         <button
           onClick={handleTogglePanel}
-          className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
+          className="p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
           aria-label={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
           title={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
         >
@@ -407,7 +390,7 @@ const SettingsPanel = ({
           onClick={() => {
             settingsPanelStore.set(null);
           }}
-          className="mb-2 p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
+          className="p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
           aria-label="Close settings panel"
           title="Close settings panel"
         >

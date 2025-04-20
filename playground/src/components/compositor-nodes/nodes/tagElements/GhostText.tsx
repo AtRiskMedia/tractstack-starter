@@ -63,6 +63,7 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
     useEffect(() => {
       if (ghostRef.current) {
         (ghostRef.current as any).activate = activate;
+        (ghostRef.current as any).complete = prepareToComplete;
       }
     }, []);
 
@@ -219,7 +220,6 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
         }
       }
 
-      // Reset state after commit
       setParagraphs([]);
       setText("");
       setIsEditing(false);
@@ -232,7 +232,6 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
         nodeContext.ghostTextActiveId.set("");
       }
 
-      // Call the new callback after commit
       if (onContentSaved) onContentSaved();
 
       onComplete();
