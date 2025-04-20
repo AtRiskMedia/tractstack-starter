@@ -1,10 +1,6 @@
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import {
-  toolAddModeStore,
-  viewportStore,
-  showAnalytics,
-} from "@/store/storykeep";
+import { showAnalytics } from "@/store/storykeep";
 import { activeHelpKeyStore } from "@/store/help";
 import { type NodesContext } from "@/store/nodes";
 import { PaneAddMode, StoryFragmentMode, ContextPaneMode, PaneConfigMode } from "@/types";
@@ -68,20 +64,6 @@ const toolModeToHelpKey: Record<string, string> = {
   debug: "MODE_DEBUG",
 };
 
-const toolAddModeToHelpKey: Record<string, string> = {
-  p: "INSERT_P",
-  h2: "INSERT_H2",
-  h3: "INSERT_H3",
-  h4: "INSERT_H4",
-  img: "INSERT_IMG",
-  signup: "INSERT_SIGNUP",
-  yt: "INSERT_YT",
-  bunny: "INSERT_BUNNY",
-  belief: "INSERT_BELIEF",
-  identify: "INSERT_IDENTIFY",
-  toggle: "INSERT_TOGGLE",
-};
-
 const paneAddModeToHelpKey: Record<string, string> = {
   [PaneAddMode.DEFAULT]: "ACTION_ADD_PANE",
   [PaneAddMode.NEW]: "ACTION_ADD_PANE_NEW",
@@ -112,27 +94,26 @@ const contextPaneModeToHelpKey: Record<string, string> = {
   [ContextPaneMode.SLUG]: "PANEL_CONFIG_PANE_SLUG",
 };
 
-const viewportToHelpKey: Record<string, string> = {
-  auto: "VIEWPORT_AUTO",
-  mobile: "VIEWPORT_MOBILE",
-  tablet: "VIEWPORT_TABLET",
-  desktop: "VIEWPORT_DESKTOP",
-};
-
 export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: NodesContext) => {
   const toolMode = useStore(ctx.toolModeValStore);
-  const toolAddMode = useStore(toolAddModeStore);
   const paneAddMode = useStore(ctx.paneAddMode);
   const activePaneMode = useStore(ctx.activePaneMode);
   const storyFragmentMode = useStore(ctx.storyFragmentModeStore);
   const contextPaneMode = useStore(ctx.contextPaneMode);
-  const viewport = useStore(viewportStore);
   const $showAnalytics = useStore(showAnalytics);
 
   useEffect(() => {
     let helpKey: string | null = null;
 
-    if (signal?.action && settingsActionToHelpKey[signal.action]) {
+    // Priority Order:
+    // 1. Settings Panel Action
+    // 2. Pane Add Mode (if active)
+    // 3. Story Fragment Config Mode (if active)
+    // 4. Pane Config Mode (if active)
+    // 5. Analytics View
+    // 6. General Tool Mode
+
+    if (signal?.action && !signal.minimized && settingsActionToHelpKey[signal.action]) {
       helpKey = settingsActionToHelpKey[signal.action];
     } else if (
       activePaneMode?.mode &&
@@ -161,12 +142,10 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
       contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]]
     ) {
       helpKey = contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]];
-    } else if (toolMode.value === "insert" && toolAddModeToHelpKey[toolAddMode.value]) {
-      helpKey = toolAddModeToHelpKey[toolAddMode.value];
+    } else if (toolMode.value === "insert") {
+      helpKey = "MODE_INSERT";
     } else if ($showAnalytics) {
       helpKey = "VIEW_ANALYTICS";
-    } else if (viewport.value && viewportToHelpKey[viewport.value]) {
-      helpKey = viewportToHelpKey[viewport.value];
     } else if (toolMode.value && toolModeToHelpKey[toolMode.value]) {
       helpKey = toolModeToHelpKey[toolMode.value];
     } else {
@@ -179,12 +158,10 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
   }, [
     signal,
     toolMode.value,
-    toolAddMode.value,
     paneAddMode,
     activePaneMode,
     storyFragmentMode,
     contextPaneMode,
-    viewport.value,
     $showAnalytics,
   ]);
 };

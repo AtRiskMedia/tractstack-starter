@@ -2,36 +2,17 @@
 
 export const helpMessages: Record<string, string> = {
   // --- Tool Modes ---
-  MODE_STYLES:
-    "Styles Mode: Click any element in the preview to adjust its appearance (colors, spacing, borders, etc.) in the Settings Panel below.",
+  MODE_STYLES: "Click any element to adjust its appearance (colours, spacing, borders, etc.).",
   MODE_TEXT:
-    "Text Mode: Click directly on text in the preview to edit it. Double-click elements like images or widgets to open their style settings.",
+    "Click to edit any text. Dbl-click on buttons/widgets/images to manage. Type [[Link Text]] to add a new button.",
   MODE_INSERT:
-    "Insert Mode: Select an element type from the toolbar that appeared, then click in the preview area where you want to add it.",
+    "Select any element (paragraph, heading, image) to insert. Use the pop-up menu to select a different element.",
   MODE_ERASER:
     "Eraser Mode: Click any element outlined in red in the preview to remove it. Be careful, this action cannot be undone easily!",
   MODE_MOVE:
     "Move Mode: Click the up/down arrows that appear on elements to reorder them within their container.",
   MODE_LAYOUT:
     "Layout Mode: Select a layout template to apply automated styling to the current pane. (Feature under development)",
-  MODE_DEBUG:
-    "Debug Mode: Click elements to see their technical IDs and structure. Click the debug icon again to exit.",
-
-  // --- Insert Sub-Modes ---
-  INSERT_P: "Click between existing blocks or in an empty area to insert a new paragraph.",
-  INSERT_H2: "Click between existing blocks or in an empty area to insert a Level 2 Heading.",
-  INSERT_H3: "Click between existing blocks or in an empty area to insert a Level 3 Heading.",
-  INSERT_H4: "Click between existing blocks or in an empty area to insert a Level 4 Heading.",
-  INSERT_IMG:
-    "Click within a text block (not inside a list) to insert an image. Images are added inside list containers.",
-  INSERT_SIGNUP: "Click within a text block (not inside a list) to insert an Email Sign-up widget.",
-  INSERT_YT: "Click within a text block (not inside a list) to insert a YouTube video widget.",
-  INSERT_BUNNY: "Click within a text block (not inside a list) to insert a Bunny video widget.",
-  INSERT_BELIEF:
-    "Click within a text block (not inside a list) to insert a Belief selection widget.",
-  INSERT_IDENTIFY:
-    "Click within a text block (not inside a list) to insert an 'Identify As' widget.",
-  INSERT_TOGGLE: "Click within a text block (not inside a list) to insert a Belief toggle widget.",
 
   // --- Settings Panel States ---
   PANEL_SETTINGS_CLOSED:
@@ -115,15 +96,6 @@ export const helpMessages: Record<string, string> = {
   ACTION_PASTE_STYLE: "Styles applied from memory.",
   ACTION_DRAGGING_ELEMENT:
     "Drag this element and drop it above or below another element to reorder.",
-
-  // --- Viewport ---
-  VIEWPORT_AUTO:
-    "Responsive Preview: Editor width determines active styles (Mobile < Tablet < Desktop). Styles cascade upwards.",
-  VIEWPORT_MOBILE:
-    "Mobile Preview: Editing styles specifically for Mobile screens (styles cascade up to Tablet & Desktop).",
-  VIEWPORT_TABLET:
-    "Tablet Preview: Editing styles specifically for Tablet screens (styles cascade up from Mobile to Desktop).",
-  VIEWPORT_DESKTOP: "Desktop Preview: Editing styles specifically for Desktop screens.",
 
   // --- Analytics ---
   VIEW_ANALYTICS: "Viewing interaction analytics. Use the time period buttons to change the view.",

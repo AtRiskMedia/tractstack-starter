@@ -13,7 +13,6 @@ export function setupLayoutStyles() {
   `;
   document.head.appendChild(style);
   return () => {
-    // Check if the style element is still a child of head before removing
     if (style.parentNode === document.head) {
       document.head.removeChild(style);
     }
@@ -33,8 +32,8 @@ export function setupLayoutObservers() {
       const headerSpacer = document.getElementById("headerSpacer");
       const mainNav = document.getElementById("mainNav");
       const navSpacer = document.getElementById("navSpacer");
-      const toolbarNav = document.getElementById("toolbarNav"); // Container for AddElementsPanel
-      const isMobile = window.innerWidth < 768; // Tailwind 'md' breakpoint is 768px
+      const toolbarNav = document.getElementById("toolbarNav");
+      const isMobile = window.innerWidth < 801;
 
       // --- Header Height ---
       let headerHeight = 0;
