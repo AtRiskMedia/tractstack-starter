@@ -103,7 +103,8 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       processingCommitRef.current = true;
 
       const allTexts = [...paragraphs];
-      if (text.trim()) allTexts.push(text.trim());
+      const currentText = ghostRef.current?.innerHTML || text;
+      if (currentText.trim()) allTexts.push(currentText.trim());
       const nonEmptyTexts = allTexts.filter((p) => p.trim());
 
       if (nonEmptyTexts.length > 0) {
