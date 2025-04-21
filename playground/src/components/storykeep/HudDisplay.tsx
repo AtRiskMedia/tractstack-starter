@@ -6,25 +6,32 @@ import { useContextualHelp } from "@/hooks/useContextualHelp";
 import { helpMessages } from "@/utils/storykeep/helpMessages";
 
 export const HudDisplay = () => {
-  const showHelp = useStore(showHelpStore) && !useStore(isEditingStore);
-  const currentHelpKey = useStore(activeHelpKeyStore);
-  const ctx = getCtx();
+  // Get all store values first
   const signal = useStore(settingsPanelStore);
+  const ctx = getCtx();
 
+  // Call hooks before any conditional returns
   useContextualHelp(signal, ctx);
+
+  const showHelp = useStore(showHelpStore);
+  const isEditing = useStore(isEditingStore);
+  const currentHelpKey = useStore(activeHelpKeyStore);
+
+  // Now we can use conditional logic
+  const shouldShowHelp = showHelp && !isEditing;
 
   const message =
     typeof currentHelpKey === `string` ? helpMessages[currentHelpKey] : helpMessages.DEFAULT;
 
-  if (!showHelp) return null;
+  if (!shouldShowHelp || !message) return null;
 
   return (
     <div
       key={message}
       className="bg-black/70 text-white rounded-md p-2 text-lg text-right mb-2 transition-opacity duration-300 ease-in-out"
-      style={{ minHeight: `3em`, maxWidth: `300px` }}
+      style={{ minHeight: `3em`, maxWidth: `320px` }}
     >
-      {currentHelpKey}:{` `}
+      {currentHelpKey}{`: `}
       {message || "\u00A0"}
     </div>
   );

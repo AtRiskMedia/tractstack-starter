@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
+import QuestionMarkCircleIcon from "@heroicons/react/24/outline/QuestionMarkCircleIcon";
 import ShieldExclamationIcon from "@heroicons/react/24/outline/ShieldExclamationIcon";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
@@ -15,8 +16,9 @@ import {
   settingsPanelStore,
   isDemoModeStore,
 } from "@/store/storykeep.ts";
-import { contentMap } from "@/store/events.ts";
-import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
+import { showHelpStore } from "@/store/help";
+import { contentMap } from "@/store/events";
+import { getCtx, ROOT_NODE_NAME } from "@/store/nodes";
 import { debounce } from "@/utils/common/helpers";
 import ViewportSelector from "./state/ViewportSelector";
 import SaveModal from "./state/SaveModal";
@@ -47,6 +49,7 @@ const StoryKeepHeader = ({
   const $showAnalytics = useStore(showAnalytics);
   const $keyboardAccessible = useStore(keyboardAccessible);
   const $contentMap = useStore(contentMap);
+  const $showHelp = useStore(showHelpStore);
 
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -161,6 +164,10 @@ const StoryKeepHeader = ({
     }
   };
 
+  const toggleShowHelp = () => {
+    showHelpStore.set(!$showHelp);
+  };
+
   const visitPage = () => {
     settingsPanelStore.set(null);
     if (!isVisitable) {
@@ -216,7 +223,7 @@ const StoryKeepHeader = ({
   ) : null;
 
   return (
-    <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
+    <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-4">
       {hasTitle && (hasPanes || isContext) && node && (
         <>
           {viewportSelectorContent}
@@ -239,7 +246,7 @@ const StoryKeepHeader = ({
         </>
       )}
 
-      <div className="flex flex-wrap justify-center items-center gap-2">
+      <div className="text-sm flex flex-wrap justify-center items-center gap-2">
         {hasTitle && (hasPanes || isContext) && canUndo ? (
           <>
             <button
@@ -272,7 +279,7 @@ const StoryKeepHeader = ({
       </div>
 
       {hasTitle && (hasPanes || isContext) && node && (
-        <div className="flex flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-1">
           <button onClick={toggleAnalytics} title="Toggle Interaction Analytics">
             <PresentationChartBarIcon
               className={`${$showAnalytics ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
@@ -292,6 +299,11 @@ const StoryKeepHeader = ({
             className={isVisitable ? iconClassName : disabledIconClassName}
           >
             <ArrowTopRightOnSquareIcon />
+          </button>
+          <button onClick={toggleShowHelp} title="Toggle Help Text">
+            <QuestionMarkCircleIcon
+              className={`${$showHelp ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+            />
           </button>
         </div>
       )}

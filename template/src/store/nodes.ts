@@ -131,26 +131,23 @@ export class NodesContext {
     });
   }
 
-  setActiveGhost(nodeId: string): void {
-    const currentActiveId = this.ghostTextActiveId.get();
-
-    // If this is already the active ghost, do nothing
-    if (currentActiveId === nodeId) return;
-
-    // If another ghost is active, clear it first
-    if (currentActiveId && currentActiveId !== nodeId) {
-      // Set to empty string to close any existing ghost
-      this.ghostTextActiveId.set("");
-
-      // After a short delay to allow the previous ghost to close,
-      // set the new active ghost
-      setTimeout(() => {
-        this.ghostTextActiveId.set(nodeId);
-      }, 100);
-    } else {
-      this.ghostTextActiveId.set(nodeId);
-    }
-  }
+  //setActiveGhost(nodeId: string): void {
+  //  const currentActiveId = this.ghostTextActiveId.get();
+  //  // If this is already the active ghost, do nothing
+  //  if (currentActiveId === nodeId) return;
+  //  // If another ghost is active, clear it first
+  //  if (currentActiveId && currentActiveId !== nodeId) {
+  //    // Set to empty string to close any existing ghost
+  //    this.ghostTextActiveId.set("");
+  //    // After a short delay to allow the previous ghost to close,
+  //    // set the new active ghost
+  //    setTimeout(() => {
+  //      this.ghostTextActiveId.set(nodeId);
+  //    }, 100);
+  //  } else {
+  //    this.ghostTextActiveId.set(nodeId);
+  //  }
+  //}
 
   updateHasPanesStatus() {
     const allNodes = this.allNodes.get();

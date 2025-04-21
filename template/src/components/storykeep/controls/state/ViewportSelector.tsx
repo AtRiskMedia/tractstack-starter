@@ -40,8 +40,8 @@ const ViewportSelector = ({ viewport, viewportKey, auto, setViewport }: Viewport
   return (
     <div className="flex items-center">
       <div>
-        <span className={`mr-1 text-xs text-mydarkgrey hidden md:block`}>Preview</span>
-        <span className={`font-bold text-md text-myblue pr-2.5 hidden md:block`}>
+        <span className={`mr-1 text-xs text-mydarkgrey hidden md:block`}>viewing</span>
+        <span className={`font-bold text-sm text-myblue pr-2.5 hidden md:block`}>
           {!auto ? viewport : viewportKey}
         </span>
       </div>
@@ -56,7 +56,7 @@ const ViewportSelector = ({ viewport, viewportKey, auto, setViewport }: Viewport
               (key === `auto` && auto) || (viewport === key && !auto)
                 ? "bg-myblue text-white"
                 : "bg-mylightgrey/20 text-mydarkgrey ring-1 ring-inset ring-slate-200 focus:z-10",
-              "relative inline-flex items-center px-3 py-2",
+              "relative inline-flex items-center px-2 py-1.5",
               index === 0 ? "rounded-l-md" : "",
               index === viewportButtons.length - 1 ? "rounded-r-md" : ""
             )}

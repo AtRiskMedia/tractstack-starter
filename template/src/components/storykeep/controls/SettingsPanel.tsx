@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useStore } from "@nanostores/react";
-import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
 import ChevronDoubleDownIcon from "@heroicons/react/24/outline/ChevronDoubleDownIcon";
 import { settingsPanelStore } from "@/store/storykeep";
@@ -374,18 +373,16 @@ const SettingsPanel = ({
   return (
     <div id="settings-panel" className="relative bg-transparent flex flex-col items-end">
       <div className="absolute left-0 z-10 inline-flex space-x-2" style={{ top: `-3.5rem` }}>
-        <button
-          onClick={handleTogglePanel}
-          className="p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
-          aria-label={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
-          title={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
-        >
-          {isPanelMinimized ? (
+        {isPanelMinimized ? (
+          <button
+            onClick={handleTogglePanel}
+            className="p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"
+            aria-label={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
+            title={isPanelMinimized ? `Show Settings Panel` : `Hide Settings Panel`}
+          >
             <ChevronDoubleUpIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          ) : (
-            <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-          )}
-        </button>
+          </button>
+        ) : null}
         <button
           onClick={() => {
             settingsPanelStore.set(null);
@@ -394,7 +391,7 @@ const SettingsPanel = ({
           aria-label="Close settings panel"
           title="Close settings panel"
         >
-          <CheckIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+          <ChevronDoubleDownIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
         </button>
       </div>
       {isPanelMinimized ? <div onClick={handleTogglePanel}>{thisPanel}</div> : <>{thisPanel}</>}

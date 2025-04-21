@@ -108,7 +108,7 @@ const EMPTY_DRAG_HANDLE: DragHandle = {
 };
 
 export const resetDragStore = () => {
-  console.log("reset drag store");
+  //console.log("reset drag store");
   dragHoverStatesBuffer.length = 0;
   dragHandleStore.set(EMPTY_DRAG_HANDLE);
 };

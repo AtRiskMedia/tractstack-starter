@@ -123,6 +123,7 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
       helpKey = paneConfigModeToHelpKey[activePaneMode.mode];
     } else if (
       activePaneMode?.paneId &&
+      paneAddMode &&
       paneAddMode[activePaneMode.paneId] &&
       paneAddMode[activePaneMode.paneId] !== PaneAddMode.DEFAULT &&
       paneAddModeToHelpKey[paneAddMode[activePaneMode.paneId]]
@@ -130,6 +131,7 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
       helpKey = paneAddModeToHelpKey[paneAddMode[activePaneMode.paneId]];
     } else if (
       activePaneMode?.paneId &&
+      storyFragmentMode &&
       storyFragmentMode[activePaneMode.paneId] &&
       storyFragmentMode[activePaneMode.paneId] !== StoryFragmentMode.DEFAULT &&
       storyFragmentModeToHelpKey[storyFragmentMode[activePaneMode.paneId]]
@@ -137,16 +139,17 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
       helpKey = storyFragmentModeToHelpKey[storyFragmentMode[activePaneMode.paneId]];
     } else if (
       activePaneMode?.paneId &&
+      contextPaneMode &&
       contextPaneMode[activePaneMode.paneId] &&
       contextPaneMode[activePaneMode.paneId] !== ContextPaneMode.DEFAULT &&
       contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]]
     ) {
       helpKey = contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]];
-    } else if (toolMode.value === "insert") {
+    } else if (toolMode?.value === "insert") {
       helpKey = "MODE_INSERT";
     } else if ($showAnalytics) {
       helpKey = "VIEW_ANALYTICS";
-    } else if (toolMode.value && toolModeToHelpKey[toolMode.value]) {
+    } else if (toolMode?.value && toolModeToHelpKey[toolMode.value]) {
       helpKey = toolModeToHelpKey[toolMode.value];
     } else {
       helpKey = "DEFAULT";
@@ -157,7 +160,7 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
     }
   }, [
     signal,
-    toolMode.value,
+    toolMode?.value,
     paneAddMode,
     activePaneMode,
     storyFragmentMode,
