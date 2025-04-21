@@ -102,10 +102,22 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       if (processingCommitRef.current) return;
       processingCommitRef.current = true;
 
-      const allTexts = [...paragraphs];
+      // THE FIX: Create a Set to track unique texts to avoid duplication
+      const uniqueTexts = new Set<string>();
+
+      // Add all paragraphs to the unique set
+      paragraphs.forEach((p) => {
+        if (p.trim()) uniqueTexts.add(p.trim());
+      });
+
+      // Only add current text if it's not already in the paragraphs
       const currentText = ghostRef.current?.innerHTML || text;
-      if (currentText.trim()) allTexts.push(currentText.trim());
-      const nonEmptyTexts = allTexts.filter((p) => p.trim());
+      if (currentText.trim() && !uniqueTexts.has(currentText.trim())) {
+        uniqueTexts.add(currentText.trim());
+      }
+
+      // Convert back to array and filter empty strings
+      const nonEmptyTexts = Array.from(uniqueTexts).filter((p) => p.trim());
 
       if (nonEmptyTexts.length > 0) {
         let lastNodeId = parentId;
@@ -259,22 +271,41 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
     };
 
     const getData = () => {
-      const allParagraphs = [...paragraphs];
+      // THE FIX: Ensure no duplicates in paragraphs
+      const uniqueTexts = new Set<string>();
+      paragraphs.forEach((p) => {
+        if (p.trim()) uniqueTexts.add(p.trim());
+      });
+
+      const currentText = text.trim();
+      if (currentText && !uniqueTexts.has(currentText)) {
+        uniqueTexts.add(currentText);
+      }
+
+      // Get data from child ghost if it exists
       if (showNextGhost && nextGhostRef.current) {
         const nextGhost = nextGhostRef.current;
         if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
           const nextData = (nextGhost as any).getData();
-          if (nextData.text) {
-            allParagraphs.push(nextData.text);
+          if (nextData.text && nextData.text.trim() && !uniqueTexts.has(nextData.text.trim())) {
+            uniqueTexts.add(nextData.text.trim());
           }
           if (nextData.paragraphs && nextData.paragraphs.length > 0) {
-            allParagraphs.push(...nextData.paragraphs);
+            nextData.paragraphs.forEach((p: string) => {
+              if (p.trim() && !uniqueTexts.has(p.trim())) {
+                uniqueTexts.add(p.trim());
+              }
+            });
           }
         }
       }
+
+      // Convert back to array
+      const uniqueArr = Array.from(uniqueTexts);
+
       return {
-        text: text.trim(),
-        paragraphs: allParagraphs,
+        text: currentText,
+        paragraphs: uniqueArr.filter((t) => t !== currentText), // Exclude current text to avoid duplication
       };
     };
 

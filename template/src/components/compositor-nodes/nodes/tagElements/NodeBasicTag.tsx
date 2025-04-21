@@ -131,9 +131,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
-    } catch (e) {
-      console.error("Error restoring cursor position:", e);
-    }
+    } catch (e) {}
 
     if (!focusTransitionRef.current) {
       cursorPosRef.current = null;
@@ -223,7 +221,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
       if (isEditableMode && supportsEditing) setShowGhostText(true);
     } catch (error) {
-      console.error("Error parsing edited content:", error);
       getCtx(props).notifyNode(node?.parentId || "");
     }
 
@@ -371,7 +368,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
       getCtx(props).notifyNode(node?.parentId || "");
     } catch (error) {
-      console.error("Error parsing edited content in handleGhostContentSaved:", error);
       getCtx(props).notifyNode(node?.parentId || "");
     }
   };
