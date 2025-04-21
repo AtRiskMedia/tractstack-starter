@@ -55,8 +55,8 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       const wasActive = wasActiveRef.current;
       wasActiveRef.current = isActive;
       if (wasActive && !isActive && !commitTriggeredRef.current) {
-        commitTriggeredRef.current = true;
         prepareToComplete();
+        commitTriggeredRef.current = true;
       }
     }, [activeGhostId, isEditing]);
 
@@ -243,16 +243,33 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       if (isCompletingRef.current || commitTriggeredRef.current) return;
       isCompletingRef.current = true;
       commitTriggeredRef.current = true;
-      const currentText = ghostRef.current?.innerHTML || text;
-      if (currentText.trim()) {
-        setParagraphs((prev) => {
-          if (!prev.includes(currentText.trim())) {
-            return [...prev, currentText.trim()];
-          }
-          return prev;
-        });
+
+      if (isEditing) {
+        const currentText = ghostRef.current?.innerHTML || text;
+        if (currentText.trim()) {
+          setParagraphs((prev) => {
+            if (!prev.includes(currentText.trim())) {
+              return [...prev, currentText.trim()];
+            }
+            return prev;
+          });
+        }
+        commitAllParagraphs();
+      } else {
+        setParagraphs([]);
+        setText("");
+        setIsEditing(false);
+        setShowNextGhost(false);
+        processingCommitRef.current = false;
+        isCompletingRef.current = false;
+        commitTriggeredRef.current = false;
+
+        if (nodeContext.ghostTextActiveId.get() === parentId) {
+          nodeContext.ghostTextActiveId.set("");
+        }
+
+        onComplete();
       }
-      commitAllParagraphs();
     };
 
     const getData = () => {
@@ -347,8 +364,8 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
           if (isGhostActive) return;
         }
         if (!commitTriggeredRef.current) {
-          commitTriggeredRef.current = true;
           prepareToComplete();
+          commitTriggeredRef.current = true;
         }
       }, 100);
     };
