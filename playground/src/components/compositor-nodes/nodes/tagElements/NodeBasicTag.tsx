@@ -65,12 +65,12 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }
 
       if (mainElement && !mainElement.contains(event.target as Node) && !clickedInsideGhost) {
-        if (ghostTextRef.current && (ghostTextRef.current as any).complete) {
-          (ghostTextRef.current as any).complete();
-        } else {
-          setShowGhostText(false);
-          editIntentRef.current = false;
-          bypassEarlyReturnRef.current = true;
+        const ghostTextElements = Array.from(ghostElements) as HTMLElement[];
+        if (ghostTextElements.length > 0) {
+          const deepestGhostElement = ghostTextElements[ghostTextElements.length - 1];
+          if ((deepestGhostElement as any).complete) {
+            (deepestGhostElement as any).complete();
+          }
         }
       }
     };

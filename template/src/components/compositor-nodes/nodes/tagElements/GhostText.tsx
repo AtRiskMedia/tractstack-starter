@@ -94,29 +94,18 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       }
     }, [isEditing, text, showNextGhost]);
 
-    const handleNextGhostData = (paragraphText: string) => {
-      setParagraphs((prev) => [...prev, paragraphText]);
-    };
-
     const commitAllParagraphs = () => {
       if (processingCommitRef.current) return;
       processingCommitRef.current = true;
 
-      // THE FIX: Create a Set to track unique texts to avoid duplication
       const uniqueTexts = new Set<string>();
-
-      // Add all paragraphs to the unique set
       paragraphs.forEach((p) => {
         if (p.trim()) uniqueTexts.add(p.trim());
       });
-
-      // Only add current text if it's not already in the paragraphs
       const currentText = ghostRef.current?.innerHTML || text;
       if (currentText.trim() && !uniqueTexts.has(currentText.trim())) {
         uniqueTexts.add(currentText.trim());
       }
-
-      // Convert back to array and filter empty strings
       const nonEmptyTexts = Array.from(uniqueTexts).filter((p) => p.trim());
 
       if (nonEmptyTexts.length > 0) {
@@ -254,35 +243,27 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       if (isCompletingRef.current || commitTriggeredRef.current) return;
       isCompletingRef.current = true;
       commitTriggeredRef.current = true;
-
-      if (showNextGhost && nextGhostRef.current) {
-        const nextGhost = nextGhostRef.current;
-        if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
-          const nextGhostData = (nextGhost as any).getData();
-          if (nextGhostData && nextGhostData.text) {
-            handleNextGhostData(nextGhostData.text);
-            if (nextGhostData.paragraphs && nextGhostData.paragraphs.length > 0) {
-              setParagraphs((prev) => [...prev, ...nextGhostData.paragraphs]);
-            }
+      const currentText = ghostRef.current?.innerHTML || text;
+      if (currentText.trim()) {
+        setParagraphs((prev) => {
+          if (!prev.includes(currentText.trim())) {
+            return [...prev, currentText.trim()];
           }
-        }
+          return prev;
+        });
       }
       commitAllParagraphs();
     };
 
     const getData = () => {
-      // THE FIX: Ensure no duplicates in paragraphs
       const uniqueTexts = new Set<string>();
       paragraphs.forEach((p) => {
         if (p.trim()) uniqueTexts.add(p.trim());
       });
-
       const currentText = text.trim();
       if (currentText && !uniqueTexts.has(currentText)) {
         uniqueTexts.add(currentText);
       }
-
-      // Get data from child ghost if it exists
       if (showNextGhost && nextGhostRef.current) {
         const nextGhost = nextGhostRef.current;
         if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
@@ -299,13 +280,11 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
           }
         }
       }
-
-      // Convert back to array
       const uniqueArr = Array.from(uniqueTexts);
 
       return {
         text: currentText,
-        paragraphs: uniqueArr.filter((t) => t !== currentText), // Exclude current text to avoid duplication
+        paragraphs: uniqueArr.filter((t) => t !== currentText),
       };
     };
 
