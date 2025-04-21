@@ -1,5 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
+import { isEditingStore } from "@/store/help";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import {
@@ -36,6 +37,16 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const Tag = props.tagName;
   const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
+
+  useEffect(() => {
+    const isCurrentlyEditing = editIntentRef.current || showGhostText;
+    isEditingStore.set(isCurrentlyEditing);
+    return () => {
+      if (isCurrentlyEditing) {
+        isEditingStore.set(false);
+      }
+    };
+  }, [editIntentRef.current, showGhostText]);
 
   useEffect(() => {
     const unsubscribe = getCtx(props).ghostTextActiveId.subscribe((activeId) => {
@@ -375,6 +386,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const handleGhostComplete = () => {
     setShowGhostText(false);
     focusTransitionRef.current = false;
+    editIntentRef.current = false;
 
     if (getCtx(props).ghostTextActiveId.get() === nodeId) {
       getCtx(props).ghostTextActiveId.set("");
