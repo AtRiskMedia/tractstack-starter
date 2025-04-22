@@ -182,6 +182,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
           onClick={(e) => {
             e.stopPropagation();
             settingsPanelStore.set(null);
+            getCtx(props).setPanelMode(props.nodeId, "insert", "insert");
             setShowInsertOptions(true);
           }}
           className="w-full py-3 border border-dashed border-cyan-500 bg-cyan-50 rounded hover:bg-cyan-100 transition-colors group dark:bg-cyan-900 dark:border-cyan-600 dark:hover:bg-cyan-800"

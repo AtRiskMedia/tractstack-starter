@@ -4,24 +4,29 @@ import { getCtx } from "@/store/nodes";
 import { settingsPanelStore } from "@/store/storykeep";
 import ContextPaneTitlePanel from "./ContextPaneConfig_title";
 import ContextPaneSlugPanel from "./ContextPaneConfig_slug";
-import type { PaneNode } from "@/types";
 import { ContextPaneMode } from "@/types";
+import type { PaneNode } from "@/types";
 
-const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
+const ContextPaneConfig = ({ nodeId }: { nodeId: string }) => {
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
   const [paneNode, setPaneNode] = useState<PaneNode | null>(null);
 
   const nodesCtx = getCtx();
-  const $mode = useStore(nodesCtx.contextPaneMode);
-  const mode = $mode[nodeId] || ContextPaneMode.DEFAULT;
+  const activePaneMode = useStore(nodesCtx.activePaneMode);
+
+  const isActive = activePaneMode.panel === "context" && activePaneMode.paneId === nodeId;
+
+  const mode =
+    isActive && activePaneMode.mode
+      ? (activePaneMode.mode as ContextPaneMode)
+      : ContextPaneMode.DEFAULT;
 
   const setMode = (newMode: ContextPaneMode) => {
-    nodesCtx.setContextPaneMode(nodeId, newMode);
+    nodesCtx.setPanelMode(nodeId, "context", newMode);
     settingsPanelStore.set(null);
   };
 
   useEffect(() => {
-    // Check for node availability
     const checkNode = () => {
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
@@ -33,19 +38,16 @@ const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
       }
     };
 
-    // Initial check
     checkNode();
 
-    // Set up an interval to check until node is available
     const intervalId = setInterval(() => {
       if (!isNodeAvailable) {
         checkNode();
       } else {
         clearInterval(intervalId);
       }
-    }, 100); // Check every 100ms
+    }, 100);
 
-    // Cleanup
     return () => {
       clearInterval(intervalId);
     };
@@ -86,4 +88,4 @@ const PaneConfigPanel = ({ nodeId }: { nodeId: string }) => {
   );
 };
 
-export default PaneConfigPanel;
+export default ContextPaneConfig;

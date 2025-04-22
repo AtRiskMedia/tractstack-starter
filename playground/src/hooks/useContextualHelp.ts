@@ -1,10 +1,9 @@
 import { useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { showAnalytics } from "@/store/storykeep";
 import { activeHelpKeyStore } from "@/store/help";
 import { type NodesContext } from "@/store/nodes";
 import { PaneAddMode, StoryFragmentMode, ContextPaneMode, PaneConfigMode } from "@/types";
-import type { SettingsPanelSignal } from "@/types";
+import type { SettingsPanelSignal, PanelState } from "@/types";
 
 const settingsActionToHelpKey: Record<string, string> = {
   "style-element": "PANEL_STYLE_ELEMENT",
@@ -96,59 +95,39 @@ const contextPaneModeToHelpKey: Record<string, string> = {
 
 export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: NodesContext) => {
   const toolMode = useStore(ctx.toolModeValStore);
-  const paneAddMode = useStore(ctx.paneAddMode);
-  const activePaneMode = useStore(ctx.activePaneMode);
-  const storyFragmentMode = useStore(ctx.storyFragmentModeStore);
-  const contextPaneMode = useStore(ctx.contextPaneMode);
-  const $showAnalytics = useStore(showAnalytics);
+  const activePaneMode = useStore(ctx.activePaneMode) as PanelState;
 
   useEffect(() => {
     let helpKey: string | null = null;
 
     // Priority Order:
     // 1. Settings Panel Action
-    // 2. Pane Add Mode (if active)
-    // 3. Story Fragment Config Mode (if active)
-    // 4. Pane Config Mode (if active)
-    // 5. Analytics View
-    // 6. General Tool Mode
+    // 2. Active Panel Mode (based on panel type)
+    // 3. General Tool Mode
 
     if (signal?.action && !signal.minimized && settingsActionToHelpKey[signal.action]) {
       helpKey = settingsActionToHelpKey[signal.action];
-    } else if (
-      activePaneMode?.mode &&
-      activePaneMode.panel === "settings" &&
-      paneConfigModeToHelpKey[activePaneMode.mode]
-    ) {
-      helpKey = paneConfigModeToHelpKey[activePaneMode.mode];
-    } else if (
-      activePaneMode?.paneId &&
-      paneAddMode &&
-      paneAddMode[activePaneMode.paneId] &&
-      paneAddMode[activePaneMode.paneId] !== PaneAddMode.DEFAULT &&
-      paneAddModeToHelpKey[paneAddMode[activePaneMode.paneId]]
-    ) {
-      helpKey = paneAddModeToHelpKey[paneAddMode[activePaneMode.paneId]];
-    } else if (
-      activePaneMode?.paneId &&
-      storyFragmentMode &&
-      storyFragmentMode[activePaneMode.paneId] &&
-      storyFragmentMode[activePaneMode.paneId] !== StoryFragmentMode.DEFAULT &&
-      storyFragmentModeToHelpKey[storyFragmentMode[activePaneMode.paneId]]
-    ) {
-      helpKey = storyFragmentModeToHelpKey[storyFragmentMode[activePaneMode.paneId]];
-    } else if (
-      activePaneMode?.paneId &&
-      contextPaneMode &&
-      contextPaneMode[activePaneMode.paneId] &&
-      contextPaneMode[activePaneMode.paneId] !== ContextPaneMode.DEFAULT &&
-      contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]]
-    ) {
-      helpKey = contextPaneModeToHelpKey[contextPaneMode[activePaneMode.paneId]];
+    } else if (activePaneMode.panel && activePaneMode.mode) {
+      // Handle different panel types
+      switch (activePaneMode.panel) {
+        case "insert":
+          helpKey = "GHOST_INSERT";
+          break;
+        case "settings":
+          helpKey = paneConfigModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PANE";
+          break;
+        case "add":
+          helpKey = paneAddModeToHelpKey[activePaneMode.mode] || "ACTION_ADD_PANE";
+          break;
+        case "storyfragment":
+          helpKey = storyFragmentModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PAGE";
+          break;
+        case "context":
+          helpKey = contextPaneModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PANE";
+          break;
+      }
     } else if (toolMode?.value === "insert") {
       helpKey = "MODE_INSERT";
-    } else if ($showAnalytics) {
-      helpKey = "VIEW_ANALYTICS";
     } else if (toolMode?.value && toolModeToHelpKey[toolMode.value]) {
       helpKey = toolModeToHelpKey[toolMode.value];
     } else {
@@ -158,13 +137,5 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
     if (activeHelpKeyStore.get() !== helpKey) {
       activeHelpKeyStore.set(helpKey);
     }
-  }, [
-    signal,
-    toolMode?.value,
-    paneAddMode,
-    activePaneMode,
-    storyFragmentMode,
-    contextPaneMode,
-    $showAnalytics,
-  ]);
+  }, [signal, toolMode?.value, activePaneMode]);
 };

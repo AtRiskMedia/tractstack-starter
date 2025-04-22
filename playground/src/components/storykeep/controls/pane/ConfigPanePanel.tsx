@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { useStore } from "@nanostores/react";
 import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
@@ -24,13 +24,12 @@ interface ConfigPanePanelProps {
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
   const activePaneMode = useStore(ctx.activePaneMode);
-  const isActiveMode =
-    activePaneMode.panel === `settings` && activePaneMode.paneId === nodeId && activePaneMode.mode;
+  const isActiveMode = activePaneMode.panel === "settings" && activePaneMode.paneId === nodeId;
+
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(nodeId) as PaneNode;
   if (!paneNode) return null;
 
-  // Check if pane is a code hook
   const codeHookPayload = ctx.getNodeCodeHookPayload(nodeId);
   const isCodeHook = !!codeHookPayload;
 
@@ -40,20 +39,28 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
 
   const [mode, setMode] = useState<PaneConfigMode>(
-    (isActiveMode as PaneConfigMode) || PaneConfigMode.DEFAULT
+    isActiveMode && activePaneMode.mode
+      ? (activePaneMode.mode as PaneConfigMode)
+      : PaneConfigMode.DEFAULT
   );
 
+  useEffect(() => {
+    if (isActiveMode && activePaneMode.mode) {
+      setMode(activePaneMode.mode as PaneConfigMode);
+    } else {
+      setMode(PaneConfigMode.DEFAULT);
+    }
+  }, [isActiveMode, activePaneMode.mode]);
+
   const setSaveMode: Dispatch<SetStateAction<PaneConfigMode>> = (newMode) => {
-    setMode(typeof newMode === "function" ? newMode(mode) : newMode);
-    ctx.activePaneMode.set({
-      paneId: nodeId,
-      mode: typeof newMode === "function" ? newMode(mode) : newMode,
-      panel: `settings`,
-    });
+    const resolvedMode = typeof newMode === "function" ? newMode(mode) : newMode;
+    setMode(resolvedMode);
+    ctx.setPanelMode(nodeId, "settings", resolvedMode);
   };
 
   const handleEditStyles = () => {
-    // Set tool mode to styles
+    ctx.closeAllPanels();
+
     ctx.toolModeValStore.set({ value: "styles" });
 
     if (paneNode.isDecorative) {
@@ -72,6 +79,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
           expanded: true,
         });
       } else {
+        console.log(`should this happen?`);
         // Fallback if no BgPane is found
         settingsPanelStore.set({
           action: "style-break",
@@ -87,8 +95,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
         expanded: true,
       });
     }
-
-    // Notify the root node to trigger updates
     ctx.notifyNode(ROOT_NODE_NAME);
   };
 

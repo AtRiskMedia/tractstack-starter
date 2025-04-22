@@ -47,6 +47,7 @@ export const helpMessages: Record<string, string> = {
     "Confirm removal of this entire style layer and all its properties. Use this to simplify pane structure.",
 
   // --- Page/Fragment Config States ---
+  GHOST_INSERT: "Add element to current pane",
   PANEL_CONFIG_PAGE:
     "Page Settings: Click a setting (Title, Slug, Menu, SEO) to edit its properties.",
   PANEL_CONFIG_PAGE_TITLE:
@@ -88,17 +89,14 @@ export const helpMessages: Record<string, string> = {
     "Review the generated or custom content. Select a design template and click 'Apply Design' to add the pane.",
 
   // --- Other Actions ---
-  ACTION_SAVING: "Saving your changes... Please wait.",
-  ACTION_EDITING_TEXT:
-    "Editing text. Click outside or press Enter to finish. Use standard formatting like **bold** or *italic*.",
-  ACTION_COPY_STYLE:
-    "Styles copied! Select another element of the same type and click the paste icon.",
-  ACTION_PASTE_STYLE: "Styles applied from memory.",
-  ACTION_DRAGGING_ELEMENT:
-    "Drag this element and drop it above or below another element to reorder.",
-
-  // --- Analytics ---
-  VIEW_ANALYTICS: "Viewing interaction analytics. Use the time period buttons to change the view.",
+  //ACTION_SAVING: "Saving your changes... Please wait.",
+  //ACTION_EDITING_TEXT:
+  //  "Editing text. Click outside or press Enter to finish. Use standard formatting like **bold** or *italic*.",
+  //ACTION_COPY_STYLE:
+  //  "Styles copied! Select another element of the same type and click the paste icon.",
+  //ACTION_PASTE_STYLE: "Styles applied from memory.",
+  //ACTION_DRAGGING_ELEMENT:
+  //  "Drag this element and drop it above or below another element to reorder.",
 
   // --- Default/Fallback ---
   DEFAULT: "Select an element or tool to get started.",

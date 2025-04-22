@@ -39,6 +39,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const supportsEditing = canEditText(props);
 
   useEffect(() => {
+    getCtx(props).closeAllPanels();
     const isCurrentlyEditing = editIntentRef.current || showGhostText;
     isEditingStore.set(isCurrentlyEditing);
     return () => {

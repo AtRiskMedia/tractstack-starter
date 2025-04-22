@@ -1090,12 +1090,6 @@ export enum StoryFragmentMode {
   OG = "OG",
 }
 
-export interface ActivePaneMode {
-  paneId: string;
-  mode: string;
-  panel: string;
-}
-
 export interface BunnyPlayer {
   on(event: string, callback: (data: any) => void): void;
   off(event: string): void;
@@ -1250,4 +1244,10 @@ export interface TokenVerificationResult {
   email?: string;
   expired?: boolean;
   message?: string;
+}
+
+export interface PanelState {
+  paneId: string;
+  panel: string;
+  mode: string;
 }

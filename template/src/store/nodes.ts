@@ -5,11 +5,12 @@ import {
   isDefined,
   isValidTag,
   toTag,
-} from "../utils/nodes/type-guards";
+} from "@/utils/nodes/type-guards";
 import { startLoadingAnimation } from "@/utils/common/helpers";
 import { settingsPanelStore } from "@/store/storykeep.ts";
 import { PaneAddMode, StoryFragmentMode, ContextPaneMode } from "@/types";
 import type {
+  PanelState,
   BaseNode,
   FlatNode,
   ImpressionNode,
@@ -26,7 +27,6 @@ import type {
   ToolModeVal,
   TractStackNode,
   ViewportKey,
-  ActivePaneMode,
   NodeProps,
   OgImageParams,
   ArtpackImageNode,
@@ -75,7 +75,7 @@ export class NodesContext {
   clickedNodeId = atom<string>("");
   ghostTextActiveId = atom<string>("");
   clickedParentLayer = atom<number | null>(null);
-  activePaneMode = atom<ActivePaneMode>({
+  activePaneMode = atom<PanelState>({
     paneId: "",
     mode: "",
     panel: "",
@@ -86,28 +86,64 @@ export class NodesContext {
     value: "text",
   });
 
-  paneAddMode = map<Record<string, PaneAddMode>>({});
-  setPaneAddMode(nodeId: string, mode: PaneAddMode) {
-    this.paneAddMode.setKey(nodeId, mode);
+  getPanelMode(nodeId: string, panel: string): string {
+    const activeMode = this.activePaneMode.get();
+    if (activeMode.panel === panel && activeMode.paneId === nodeId) {
+      return activeMode.mode;
+    }
+    return "";
   }
+
+  setPanelMode(nodeId: string, panel: string, mode: string) {
+    this.closeAllPanelsExcept(nodeId, panel);
+    this.activePaneMode.set({
+      paneId: nodeId,
+      panel: panel,
+      mode: mode,
+    });
+  }
+
   getPaneAddMode(nodeId: string): PaneAddMode {
-    return this.paneAddMode.get()[nodeId] || PaneAddMode.DEFAULT;
+    const mode = this.getPanelMode(nodeId, "add");
+    return mode ? (mode as PaneAddMode) : PaneAddMode.DEFAULT;
   }
 
-  contextPaneMode = map<Record<string, ContextPaneMode>>({});
-  setContextPaneMode(nodeId: string, mode: ContextPaneMode) {
-    this.contextPaneMode.setKey(nodeId, mode);
+  setPaneAddMode(nodeId: string, mode: PaneAddMode) {
+    this.setPanelMode(nodeId, "add", mode);
   }
+
   getContextPaneMode(nodeId: string): ContextPaneMode {
-    return this.contextPaneMode.get()[nodeId] || ContextPaneMode.DEFAULT;
+    const mode = this.getPanelMode(nodeId, "context");
+    return mode ? (mode as ContextPaneMode) : ContextPaneMode.DEFAULT;
   }
 
-  storyFragmentModeStore = map<Record<string, StoryFragmentMode>>({});
-  setStoryFragmentMode(nodeId: string, mode: StoryFragmentMode) {
-    this.storyFragmentModeStore.setKey(nodeId, mode);
+  setContextPaneMode(nodeId: string, mode: ContextPaneMode) {
+    this.setPanelMode(nodeId, "context", mode);
   }
+
   getStoryFragmentMode(nodeId: string): StoryFragmentMode {
-    return this.storyFragmentModeStore.get()[nodeId] || StoryFragmentMode.DEFAULT;
+    const mode = this.getPanelMode(nodeId, "storyfragment");
+    return mode ? (mode as StoryFragmentMode) : StoryFragmentMode.DEFAULT;
+  }
+
+  setStoryFragmentMode(nodeId: string, mode: StoryFragmentMode) {
+    this.setPanelMode(nodeId, "storyfragment", mode);
+  }
+
+  closeAllPanels() {
+    this.activePaneMode.set({
+      paneId: "",
+      panel: "",
+      mode: "",
+    });
+    settingsPanelStore.set(null);
+  }
+
+  closeAllPanelsExcept(nodeId: string, panel: string) {
+    const currentPanel = this.activePaneMode.get();
+    if (currentPanel.paneId !== nodeId || currentPanel.panel !== panel) {
+      settingsPanelStore.set(null);
+    }
   }
 
   ogImageParamsStore = map<Record<string, OgImageParams>>({});
@@ -288,9 +324,6 @@ export class NodesContext {
   }
 
   clearAll() {
-    this.paneAddMode.set({});
-    this.contextPaneMode.set({});
-    this.storyFragmentModeStore.set({});
     this.allNodes.get().clear();
     this.parentNodes.get().clear();
     this.impressionNodes.get().clear();
