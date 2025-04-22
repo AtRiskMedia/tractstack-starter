@@ -2,17 +2,13 @@
 
 export const helpMessages: Record<string, string> = {
   // --- Tool Modes ---
-  MODE_STYLES: "Click any element to adjust its appearance (colours, spacing, borders, etc.).",
-  MODE_TEXT:
-    "Click to edit any text. Dbl-click on buttons/widgets/images to manage. Type [[Link Text]] to add a new button.",
+  MODE_STYLES: "Click any element to adjust its appearance (colours, spacing, borders, etc.)",
+  MODE_TEXT: "Click text to edit. *Italic* **Bold** Add an action with [[My Link]]",
   MODE_INSERT:
-    "Select any element (paragraph, heading, image) to insert. Use the pop-up menu to select a different element.",
-  MODE_ERASER:
-    "Eraser Mode: Click any element outlined in red in the preview to remove it. Be careful, this action cannot be undone easily!",
-  MODE_MOVE:
-    "Move Mode: Click the up/down arrows that appear on elements to reorder them within their container.",
-  MODE_LAYOUT:
-    "Layout Mode: Select a layout template to apply automated styling to the current pane. (Feature under development)",
+    "Insert paragraph, heading, image, interactive widget, etc. Choose from the bottom menu panel",
+  MODE_ERASER: "Use the trash icon to delete stuff! Undo / redo from the header",
+  MODE_MOVE: "Up / Down arrows reorder elements (drag n' drop coming soon!)",
+  MODE_LAYOUT: "Coming soon!",
 
   // --- Settings Panel States ---
   PANEL_SETTINGS_CLOSED:
@@ -47,7 +43,7 @@ export const helpMessages: Record<string, string> = {
     "Confirm removal of this entire style layer and all its properties. Use this to simplify pane structure.",
 
   // --- Page/Fragment Config States ---
-  GHOST_INSERT: "Add element to current pane",
+  GHOST_INSERT: "Add element to this pane. Use the + insert mode for more control.",
   PANEL_CONFIG_PAGE:
     "Page Settings: Click a setting (Title, Slug, Menu, SEO) to edit its properties.",
   PANEL_CONFIG_PAGE_TITLE:

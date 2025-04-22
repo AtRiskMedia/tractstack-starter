@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { keyboardAccessible } from "@/store/storykeep.ts";
 import { useStore } from "@nanostores/react";
-import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
+import { getCtx } from "@/store/nodes.ts";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowDownIcon from "@heroicons/react/24/outline/ArrowDownIcon";
@@ -12,7 +12,7 @@ import PaneSlugPanel from "./PanePanel_slug";
 import PaneMagicPathPanel from "./PanePanel_path";
 import PaneImpressionPanel from "./PanePanel_impression";
 import { isContextPaneNode, hasBeliefPayload } from "@/utils/nodes/type-guards.tsx";
-import { settingsPanelStore } from "@/store/storykeep";
+import { settingsPanelStore, viewportKeyStore } from "@/store/storykeep";
 import { PaneConfigMode } from "@/types.ts";
 import type { PaneNode } from "@/types.ts";
 import type { SetStateAction, Dispatch } from "react";
@@ -24,7 +24,12 @@ interface ConfigPanePanelProps {
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
   const activePaneMode = useStore(ctx.activePaneMode);
+  const toolMode = useStore(ctx.toolModeValStore);
+  const reorderMode = toolMode.value === `move`;
   const isActiveMode = activePaneMode.panel === "settings" && activePaneMode.paneId === nodeId;
+
+  const $viewportKey = useStore(viewportKeyStore);
+  const isMobile = $viewportKey.value === `mobile`;
 
   const allNodes = ctx.allNodes.get();
   const paneNode = allNodes.get(nodeId) as PaneNode;
@@ -60,12 +65,8 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
 
   const handleEditStyles = () => {
     ctx.closeAllPanels();
-
     ctx.toolModeValStore.set({ value: "styles" });
-
     if (paneNode.isDecorative) {
-      // For decorative panes (visual breaks), use style-break action
-      // First find the BgPane node
       const childNodeIds = ctx.getChildNodeIDs(nodeId);
       const bgPaneId = childNodeIds.find((id) => {
         const node = ctx.allNodes.get().get(id);
@@ -78,24 +79,14 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
           nodeId: bgPaneId,
           expanded: true,
         });
-      } else {
-        console.log(`should this happen?`);
-        // Fallback if no BgPane is found
-        settingsPanelStore.set({
-          action: "style-break",
-          nodeId: nodeId,
-          expanded: true,
-        });
       }
     } else {
-      // For regular panes, use style-parent action
       settingsPanelStore.set({
         action: "style-parent",
         nodeId: nodeId,
         expanded: true,
       });
     }
-    ctx.notifyNode(ROOT_NODE_NAME);
   };
 
   if (mode === PaneConfigMode.TITLE) {
@@ -115,15 +106,12 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
           <div
             className={`flex flex-wrap gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
           >
-            <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
-              <ArrowDownIcon className="w-6 h-6 mr-1" /> This Pane
-            </div>
             {paneNode.isDecorative ? (
               <>
                 <button className={buttonClass}>
                   <CheckIcon className="w-4 h-4 inline" />
                   {` `}
-                  <strong>Decorative Pane</strong> (no analytics tracked)
+                  <strong>Decorative Pane</strong>
                 </button>
                 <button onClick={handleEditStyles} className={buttonClass}>
                   <PaintBrushIcon className="w-4 h-4 inline" />
@@ -134,10 +122,20 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
             ) : (
               <>
                 <button onClick={() => setSaveMode(PaneConfigMode.TITLE)} className={buttonClass}>
-                  Title: <strong>{paneNode.title}</strong>
+                  Title
+                  {!isMobile && (
+                    <>
+                      : <strong>{paneNode.title}</strong>
+                    </>
+                  )}
                 </button>
                 <button onClick={() => setSaveMode(PaneConfigMode.SLUG)} className={buttonClass}>
-                  Slug: <strong>{paneNode.slug}</strong>
+                  Slug
+                  {!isMobile && (
+                    <>
+                      : <strong>{paneNode.slug}</strong>
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setSaveMode(PaneConfigMode.IMPRESSION)}
@@ -183,18 +181,20 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                 )}
               </button>
             )}
-            <div className="space-x-2">
-              <button title="Move pane up" onClick={() => getCtx().moveNode(nodeId, "after")}>
-                <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
-                  <ArrowDownIcon className="w-4 h-4 mr-1" />
-                </div>
-              </button>
-              <button title="Move pane down" onClick={() => getCtx().moveNode(nodeId, "before")}>
-                <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
-                  <ArrowUpIcon className="w-4 h-4 mr-1" />
-                </div>
-              </button>
-            </div>
+            {reorderMode && (
+              <div className="space-x-2">
+                <button title="Move pane up" onClick={() => getCtx().moveNode(nodeId, "after")}>
+                  <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
+                    <ArrowDownIcon className="w-4 h-4 mr-1" />
+                  </div>
+                </button>
+                <button title="Move pane down" onClick={() => getCtx().moveNode(nodeId, "before")}>
+                  <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
+                    <ArrowUpIcon className="w-4 h-4 mr-1" />
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
