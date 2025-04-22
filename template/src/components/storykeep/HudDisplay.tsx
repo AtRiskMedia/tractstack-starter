@@ -26,21 +26,18 @@ export const HudDisplay = () => {
   if (!shouldShowHelp || !message) return null;
 
   return (
-    <>
-      <span className="w-full font-bold bg-white">{currentHelpKey}</span>
-      <div
-        key={message}
-        className="text-white rounded-md p-3.5 text-lg text-right mb-2 transition-opacity duration-300 ease-in-out"
-        style={{
-          background: `rgb(0 0 0 / 90%)`,
-          minHeight: `3em`,
-          maxWidth: `320px`,
-          cursor: `context-menu`,
-        }}
-      >
-        {message || "\u00A0"}
-      </div>
-    </>
+    <div
+      key={message}
+      className="text-white rounded-md p-3.5 text-lg text-right mb-2 transition-opacity duration-300 ease-in-out"
+      style={{
+        background: `rgb(0 0 0 / 90%)`,
+        minHeight: `3em`,
+        maxWidth: `320px`,
+        cursor: `context-menu`,
+      }}
+    >
+      {message || "\u00A0"}
+    </div>
   );
 };
 

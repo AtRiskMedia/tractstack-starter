@@ -61,12 +61,6 @@ export const helpMessages: Record<string, string> = {
   ACTION_ADD_PANE_REUSE: "Search for and select an existing pane to reuse on this page",
   ACTION_ADD_PANE_CODEHOOK:
     "Add special and custom capabilities to your site. Check our docs for more info!",
-  //ACTION_ADD_PANE_AI_COPY:
-  //  "Provide reference text and optional instructions for the AI to generate content, then choose a design template to apply it to.",
-  //ACTION_ADD_PANE_CUSTOM_COPY:
-  //  "Paste or write your content in Markdown format, then choose a design template to apply it to.",
-  //ACTION_ADD_PANE_PREVIEW:
-  //  "Review the generated or custom content. Select a design template and click 'Apply Design' to add the pane.",
 
   // --- Styles Memory ---
   STYLES_COPY: "Copy styles for this element into memory",
@@ -74,16 +68,6 @@ export const helpMessages: Record<string, string> = {
 
   // --- Special ---
   GHOST_INSERT: "Add element to this pane. Use the + insert mode for more control.",
-
-  // --- Other Actions ---
-  //ACTION_SAVING: "Saving your changes... Please wait.",
-  //ACTION_EDITING_TEXT:
-  //  "Editing text. Click outside or press Enter to finish. Use standard formatting like **bold** or *italic*.",
-  //ACTION_COPY_STYLE:
-  //  "Styles copied! Select another element of the same type and click the paste icon.",
-  //ACTION_PASTE_STYLE: "Styles applied from memory.",
-  //ACTION_DRAGGING_ELEMENT:
-  //  "Drag this element and drop it above or below another element to reorder.",
 
   // --- Default/Fallback ---
   DEFAULT: "Select an element or tool to get started.",
