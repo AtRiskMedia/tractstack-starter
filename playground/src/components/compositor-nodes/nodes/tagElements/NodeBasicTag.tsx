@@ -272,6 +272,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         currentContentRef.current = elementRef.current.innerHTML;
       }
       handleBlur(e as unknown as FocusEvent<HTMLElement>);
+      if (elementRef.current) {
+        elementRef.current.blur();
+      }
     } else if (e.key === "Tab") {
       e.preventDefault();
 
