@@ -136,7 +136,6 @@ export class NodesContext {
       panel: "",
       mode: "",
     });
-    settingsPanelStore.set(null);
   }
 
   closeAllPanelsExcept(nodeId: string, panel: string) {
