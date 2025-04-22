@@ -1,5 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
+import { isEditingStore } from "@/store/help";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { showGuids } from "@/store/development.ts";
 import {
@@ -36,12 +37,33 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const Tag = props.tagName;
   const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
+  const hasEditedRef = useRef(false);
 
   useEffect(() => {
-    if (showGhostText) {
-      getCtx(props).setActiveGhost(nodeId);
+    if (showGhostText && ghostTextRef.current) {
+      ghostTextRef.current.focus();
     }
   }, [showGhostText]);
+
+  useEffect(() => {
+    getCtx(props).closeAllPanels();
+    const isCurrentlyEditing = editIntentRef.current || showGhostText;
+    isEditingStore.set(isCurrentlyEditing);
+    return () => {
+      if (isCurrentlyEditing) {
+        isEditingStore.set(false);
+      }
+    };
+  }, [editIntentRef.current, showGhostText]);
+
+  useEffect(() => {
+    const unsubscribe = getCtx(props).ghostTextActiveId.subscribe((activeId) => {
+      if (activeId !== nodeId) {
+        setShowGhostText(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [nodeId]);
 
   useEffect(() => {
     if (!showGhostText) return;
@@ -62,9 +84,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       }
 
       if (mainElement && !mainElement.contains(event.target as Node) && !clickedInsideGhost) {
-        setShowGhostText(false);
-        editIntentRef.current = false;
-        bypassEarlyReturnRef.current = true;
+        const ghostTextElements = Array.from(ghostElements) as HTMLElement[];
+        if (ghostTextElements.length > 0) {
+          const deepestGhostElement = ghostTextElements[ghostTextElements.length - 1];
+          if ((deepestGhostElement as any).complete) {
+            (deepestGhostElement as any).complete();
+          }
+        }
       }
     };
 
@@ -124,9 +150,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
-    } catch (e) {
-      console.error("Error restoring cursor position:", e);
-    }
+    } catch (e) {}
 
     if (!focusTransitionRef.current) {
       cursorPosRef.current = null;
@@ -134,7 +158,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   };
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
-    getCtx(props).handleInsertSignal(tagName, nodeId);
+    setTimeout(() => {
+      getCtx(props).handleInsertSignal(tagName, nodeId);
+    }, 500);
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
@@ -161,43 +187,35 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   };
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
-    // Early exit if text editing is not allowed or if the target is a button
     if (!canEditText(props) || e.target.tagName === "BUTTON") return;
 
-    // Check where the focus is moving to
     const isFocusInGhostText = ghostTextRef.current?.contains(e.relatedTarget as Node);
     const isFocusInNode = elementRef.current?.contains(e.relatedTarget as Node);
 
-    // Handle early return cases (e.g., double-click or no edit intent)
-    if (doubleClickedRef.current || (!editIntentRef.current && !bypassEarlyReturnRef.current)) {
+    if (
+      doubleClickedRef.current ||
+      (!editIntentRef.current && !bypassEarlyReturnRef.current && !hasEditedRef.current)
+    ) {
       doubleClickedRef.current = false;
       editIntentRef.current = false;
-
-      // Hide GhostText if focus moves outside both the node and its GhostText
       if (!isFocusInNode && !isFocusInGhostText) {
         setShowGhostText(false);
       }
       return;
     }
 
-    // Get the current node and new content
     const node = getCtx(props).allNodes.get().get(nodeId);
     const newHTML = currentContentRef.current;
 
-    // Reset edit intent if not in a focus transition
     if (!focusTransitionRef.current) editIntentRef.current = false;
 
-    // If content hasn’t changed, notify parent and show GhostText if appropriate
     if (newHTML === originalTextRef.current) {
-      //getCtx(props).notifyNode(node?.parentId || "");
-      //console.log(`notify ... no change`,node?.parentId);
       if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
         setShowGhostText(true);
       }
       return;
     }
 
-    // Process and save the new content
     try {
       const originalNodes = getCtx(props)
         .getNodesRecursively(node)
@@ -224,14 +242,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }
 
-      // Show GhostText if in editable mode and editing is supported
       if (isEditableMode && supportsEditing) setShowGhostText(true);
     } catch (error) {
-      console.error("Error parsing edited content:", error);
       getCtx(props).notifyNode(node?.parentId || "");
     }
 
-    // Final check to hide GhostText if focus moves outside
     if (!isFocusInNode && !isFocusInGhostText) {
       setShowGhostText(false);
     }
@@ -284,13 +299,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     if (!canEditText(props) || e.target.tagName === "BUTTON") {
       return;
     }
-
     originalTextRef.current = e.currentTarget.innerHTML;
-
+    hasEditedRef.current = false;
     if (isEditableMode && supportsEditing) {
+      getCtx(props).ghostTextActiveId.set("");
+      getCtx(props).ghostTextActiveId.set(nodeId);
       setShowGhostText(true);
     }
-
     if (cursorPosRef.current) {
       restoreCursorPosition();
     }
@@ -306,7 +321,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
 
   const handleClick = (e: MouseEvent) => {
     if (isEditableMode && supportsEditing) {
-      // Logic for editable mode (single click behavior when editing is supported)
       setTimeout(() => {
         const selection = window.getSelection();
         if (selection && selection.rangeCount > 0) {
@@ -336,10 +350,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   };
 
   const handleGhostContentSaved = () => {
-    // Mimic handleBlur's full save logic after GhostText commits
     if (!canEditText(props)) return;
 
-    // Ensure we have the latest content
     if (elementRef.current) {
       currentContentRef.current = elementRef.current.innerHTML;
     }
@@ -347,15 +359,11 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     const node = getCtx(props).allNodes.get().get(nodeId);
     const newHTML = currentContentRef.current;
 
-    // If no changes, just notify parent and exit
     if (newHTML === originalTextRef.current) {
-      //getCtx(props).notifyNode(node?.parentId || "");
-      //console.log(`notify ... change`,node?.parentId);
       return;
     }
 
     try {
-      // Get existing nodes to preserve (e.g., <a>, <button>)
       const originalNodes = getCtx(props)
         .getNodesRecursively(node)
         .filter(
@@ -363,7 +371,6 @@ export const NodeBasicTag = (props: NodeTagProps) => {
             "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
         ) as FlatNode[];
 
-      // Parse the new HTML into nodes
       const parsedNodes = processRichTextToNodes(
         newHTML,
         nodeId,
@@ -372,11 +379,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       );
 
       if (parsedNodes.length > 0) {
-        // Replace existing children with parsed nodes
         getCtx(props).deleteChildren(nodeId);
         getCtx(props).addNodes(parsedNodes);
 
-        // Mark the parent PaneNode as changed
         const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
         if (paneNodeId) {
           const paneNode = cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)) as PaneNode;
@@ -384,10 +389,8 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         }
       }
 
-      // Notify parent to ensure consistency
       getCtx(props).notifyNode(node?.parentId || "");
     } catch (error) {
-      console.error("Error parsing edited content in handleGhostContentSaved:", error);
       getCtx(props).notifyNode(node?.parentId || "");
     }
   };
@@ -395,6 +398,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const handleGhostComplete = () => {
     setShowGhostText(false);
     focusTransitionRef.current = false;
+    editIntentRef.current = false;
 
     if (getCtx(props).ghostTextActiveId.get() === nodeId) {
       getCtx(props).ghostTextActiveId.set("");
@@ -430,6 +434,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           },
           onInput: () => {
             editIntentRef.current = true;
+            hasEditedRef.current = true;
             if (elementRef.current) {
               currentContentRef.current = elementRef.current.innerHTML;
             }

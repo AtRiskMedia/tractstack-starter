@@ -55,14 +55,15 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       const wasActive = wasActiveRef.current;
       wasActiveRef.current = isActive;
       if (wasActive && !isActive && !commitTriggeredRef.current) {
-        commitTriggeredRef.current = true;
         prepareToComplete();
+        commitTriggeredRef.current = true;
       }
     }, [activeGhostId, isEditing]);
 
     useEffect(() => {
       if (ghostRef.current) {
         (ghostRef.current as any).activate = activate;
+        (ghostRef.current as any).complete = prepareToComplete;
       }
     }, []);
 
@@ -93,17 +94,19 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       }
     }, [isEditing, text, showNextGhost]);
 
-    const handleNextGhostData = (paragraphText: string) => {
-      setParagraphs((prev) => [...prev, paragraphText]);
-    };
-
     const commitAllParagraphs = () => {
       if (processingCommitRef.current) return;
       processingCommitRef.current = true;
 
-      const allTexts = [...paragraphs];
-      if (text.trim()) allTexts.push(text.trim());
-      const nonEmptyTexts = allTexts.filter((p) => p.trim());
+      const uniqueTexts = new Set<string>();
+      paragraphs.forEach((p) => {
+        if (p.trim()) uniqueTexts.add(p.trim());
+      });
+      const currentText = ghostRef.current?.innerHTML || text;
+      if (currentText.trim() && !uniqueTexts.has(currentText.trim())) {
+        uniqueTexts.add(currentText.trim());
+      }
+      const nonEmptyTexts = Array.from(uniqueTexts).filter((p) => p.trim());
 
       if (nonEmptyTexts.length > 0) {
         let lastNodeId = parentId;
@@ -219,7 +222,6 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
         }
       }
 
-      // Reset state after commit
       setParagraphs([]);
       setText("");
       setIsEditing(false);
@@ -232,7 +234,6 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
         nodeContext.ghostTextActiveId.set("");
       }
 
-      // Call the new callback after commit
       if (onContentSaved) onContentSaved();
 
       onComplete();
@@ -243,38 +244,64 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       isCompletingRef.current = true;
       commitTriggeredRef.current = true;
 
-      if (showNextGhost && nextGhostRef.current) {
-        const nextGhost = nextGhostRef.current;
-        if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
-          const nextGhostData = (nextGhost as any).getData();
-          if (nextGhostData && nextGhostData.text) {
-            handleNextGhostData(nextGhostData.text);
-            if (nextGhostData.paragraphs && nextGhostData.paragraphs.length > 0) {
-              setParagraphs((prev) => [...prev, ...nextGhostData.paragraphs]);
+      if (isEditing) {
+        const currentText = ghostRef.current?.innerHTML || text;
+        if (currentText.trim()) {
+          setParagraphs((prev) => {
+            if (!prev.includes(currentText.trim())) {
+              return [...prev, currentText.trim()];
             }
-          }
+            return prev;
+          });
         }
+        commitAllParagraphs();
+      } else {
+        setParagraphs([]);
+        setText("");
+        setIsEditing(false);
+        setShowNextGhost(false);
+        processingCommitRef.current = false;
+        isCompletingRef.current = false;
+        commitTriggeredRef.current = false;
+
+        if (nodeContext.ghostTextActiveId.get() === parentId) {
+          nodeContext.ghostTextActiveId.set("");
+        }
+
+        onComplete();
       }
-      commitAllParagraphs();
     };
 
     const getData = () => {
-      const allParagraphs = [...paragraphs];
+      const uniqueTexts = new Set<string>();
+      paragraphs.forEach((p) => {
+        if (p.trim()) uniqueTexts.add(p.trim());
+      });
+      const currentText = text.trim();
+      if (currentText && !uniqueTexts.has(currentText)) {
+        uniqueTexts.add(currentText);
+      }
       if (showNextGhost && nextGhostRef.current) {
         const nextGhost = nextGhostRef.current;
         if ((nextGhost as any).getData && typeof (nextGhost as any).getData === "function") {
           const nextData = (nextGhost as any).getData();
-          if (nextData.text) {
-            allParagraphs.push(nextData.text);
+          if (nextData.text && nextData.text.trim() && !uniqueTexts.has(nextData.text.trim())) {
+            uniqueTexts.add(nextData.text.trim());
           }
           if (nextData.paragraphs && nextData.paragraphs.length > 0) {
-            allParagraphs.push(...nextData.paragraphs);
+            nextData.paragraphs.forEach((p: string) => {
+              if (p.trim() && !uniqueTexts.has(p.trim())) {
+                uniqueTexts.add(p.trim());
+              }
+            });
           }
         }
       }
+      const uniqueArr = Array.from(uniqueTexts);
+
       return {
-        text: text.trim(),
-        paragraphs: allParagraphs,
+        text: currentText,
+        paragraphs: uniqueArr.filter((t) => t !== currentText),
       };
     };
 
@@ -337,8 +364,8 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
           if (isGhostActive) return;
         }
         if (!commitTriggeredRef.current) {
-          commitTriggeredRef.current = true;
           prepareToComplete();
+          commitTriggeredRef.current = true;
         }
       }, 100);
     };
@@ -364,6 +391,22 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
         }
       }
       return nodeContext.getNodeClasses(parentId, viewportKeyStore.get().value);
+    })();
+    const safeParagraphStyle = (() => {
+      const classes = paragraphStyle.split(" ");
+      const safeClasses = classes.filter((cls) => {
+        if (
+          cls.startsWith("text-") &&
+          !cls.match(/text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)/)
+        ) {
+          return true;
+        }
+        if (cls.match(/text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)/)) {
+          return false;
+        }
+        return true;
+      });
+      return safeClasses.join(" ");
     })();
 
     if (isEditing) {
@@ -395,7 +438,7 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       <div ref={ref}>
         <div
           ref={ghostRef}
-          className="mt-4 mb-4 p-3 border-2 border-dashed border-cyan-500 cursor-text text-gray-500 hover:bg-cyan-50 rounded flex items-center"
+          className={`${safeParagraphStyle} animate-fadeIn py-1 mt-1.5 border-t border-dashed border-cyan-500 cursor-pointer hover:bg-cyan-50/20 flex items-center text-sm`}
           onClick={activate}
           onFocus={activate}
           onKeyDown={(e) => {
@@ -406,18 +449,18 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
           }}
           tabIndex={0}
           role="button"
-          aria-label="Continue writing (press Tab)"
+          aria-label="Tab for a new paragraph"
           data-ghost-text="placeholder"
           data-parent-id={parentId}
         >
-          <svg className="w-5 h-5 mr-2 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+          <svg className="w-4 h-4 mx-1 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
               clipRule="evenodd"
             />
           </svg>
-          Press "Tab" to Continue writing...
+          Tab for a new paragraph
         </div>
       </div>
     );

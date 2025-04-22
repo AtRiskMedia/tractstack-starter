@@ -22,11 +22,22 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   const [tempBgColor, setTempBgColor] = useState<string | null>(null);
 
   const ctx = getCtx();
-  const $mode = typeof ctx !== `undefined` ? useStore(ctx.storyFragmentModeStore) : null;
-  const mode = $mode ? $mode[nodeId] : StoryFragmentMode.DEFAULT;
+  const activePaneMode = useStore(ctx.activePaneMode);
+
+  // Check if this specific panel is active
+  const isActive = activePaneMode.panel === "storyfragment" && activePaneMode.paneId === nodeId;
+
+  // Get the mode from activePaneMode or use DEFAULT
+  const mode =
+    isActive && activePaneMode.mode
+      ? (activePaneMode.mode as StoryFragmentMode)
+      : StoryFragmentMode.DEFAULT;
 
   const setMode = (newMode: StoryFragmentMode) => {
-    ctx.setStoryFragmentMode(nodeId, newMode);
+    // Set the panel mode in the context
+    ctx.setPanelMode(nodeId, "storyfragment", newMode);
+
+    // Clear any settings panel
     settingsPanelStore.set(null);
   };
 

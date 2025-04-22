@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type RefObject } from "react";
 
 /**
  * Hook that detects when an element is scrolled out of view and returns floating state information
+ * Using IntersectionObserver for better performance than scroll events
  *
  * @param elementRef - Reference to the element we want to monitor (generally the header)
  * @param options - Configuration options
@@ -20,43 +21,48 @@ export function useFloatingOnScroll<T extends HTMLElement>(
 
   const [isFloating, setIsFloating] = useState(false);
   const [opacity, setOpacity] = useState(normalOpacity);
-  const scrollThrottleRef = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
-    if (disabled) {
+    if (disabled || !elementRef.current) {
       setIsFloating(false);
       setOpacity(normalOpacity);
       return;
     }
 
-    const handleScroll = () => {
-      if (scrollThrottleRef.current !== null) {
-        return;
-      }
+    // Create the observer with options
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
 
-      scrollThrottleRef.current = window.setTimeout(() => {
-        scrollThrottleRef.current = null;
-
-        if (!elementRef.current) return;
-
-        const rect = elementRef.current.getBoundingClientRect();
-        const isElementOut = rect.bottom + offset <= 0;
+        // Element is out of view when not intersecting
+        const isElementOut = !entry.isIntersecting;
 
         setIsFloating(isElementOut);
+
+        // We can calculate a smoother opacity transition based on
+        // intersection ratio if needed
         setOpacity(isElementOut ? floatingOpacity : normalOpacity);
-      }, 100); // Throttle to 100ms
-    };
+      },
+      {
+        // Root is the viewport by default when null
+        root: null,
+        // Add the offset to the top margin
+        // Negative values mean the element can be partially out of view
+        // before being considered "not intersecting"
+        rootMargin: `${-offset}px 0px 0px 0px`,
+        // Default threshold is 0, which means detect as soon as one pixel crosses
+        threshold: 0,
+      }
+    );
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // Run once on mount to set initial state
-    handleScroll();
+    // Start observing the element
+    observerRef.current.observe(elementRef.current);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-
-      if (scrollThrottleRef.current !== null) {
-        clearTimeout(scrollThrottleRef.current);
+      // Clean up the observer on unmount
+      if (observerRef.current) {
+        observerRef.current.disconnect();
       }
     };
   }, [elementRef, offset, floatingOpacity, normalOpacity, disabled]);

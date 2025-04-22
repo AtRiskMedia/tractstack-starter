@@ -1,17 +1,21 @@
 import { debounce } from "@/utils/common/helpers";
 
 export const HEADER_HEIGHT_CSS_VAR = "--header-height";
+export const BOTTOM_CONTROLS_OFFSET_VAR = "--bottom-right-controls-bottom-offset";
 
 export function setupLayoutStyles() {
   const style = document.createElement("style");
   style.innerHTML = `
     :root {
       ${HEADER_HEIGHT_CSS_VAR}: 0px;
+      ${BOTTOM_CONTROLS_OFFSET_VAR}: 0.25rem; /* Default for md+ screens */
     }
   `;
   document.head.appendChild(style);
   return () => {
-    document.head.removeChild(style);
+    if (style.parentNode === document.head) {
+      document.head.removeChild(style);
+    }
   };
 }
 
@@ -26,75 +30,113 @@ export function setupLayoutObservers() {
     rafId = requestAnimationFrame(() => {
       const header = document.getElementById("mainHeader");
       const headerSpacer = document.getElementById("headerSpacer");
-      const nav = document.getElementById("mainNav");
+      const mainNav = document.getElementById("mainNav");
       const navSpacer = document.getElementById("navSpacer");
       const toolbarNav = document.getElementById("toolbarNav");
+      const isMobile = window.innerWidth < 801;
 
+      // --- Header Height ---
+      let headerHeight = 0;
       if (header) {
-        const headerHeight = header.offsetHeight;
+        headerHeight = header.offsetHeight;
         document.documentElement.style.setProperty(HEADER_HEIGHT_CSS_VAR, `${headerHeight}px`);
         if (headerSpacer) {
           headerSpacer.style.height = `${headerHeight}px`;
         }
       }
 
-      if (nav) {
-        const navHeight = nav.offsetHeight;
-        if (navSpacer) {
-          navSpacer.style.height = `${navHeight}px`;
+      // --- Main Nav Positioning & Spacers (Mobile vs Desktop) ---
+      let mainNavHeight = 0;
+      if (mainNav) {
+        mainNavHeight = mainNav.offsetHeight;
+        if (navSpacer && isMobile) {
+          navSpacer.style.height = `${mainNavHeight}px`; // Spacer for bottom nav on mobile
+        } else if (navSpacer) {
+          navSpacer.style.height = "0px"; // No spacer needed on desktop
         }
 
-        if (window.innerWidth >= 801) {
-          nav.style.top = header?.offsetHeight + "px";
+        // Position side nav below header on desktop
+        if (!isMobile && headerHeight > 0) {
+          mainNav.style.top = `${headerHeight}px`;
         } else {
-          nav.style.top = "auto";
+          mainNav.style.top = "auto"; // Reset top for mobile fixed bottom nav
         }
       }
 
+      // --- Toolbar Positioning & Height ---
+      let toolbarNavHeight = 0;
       if (toolbarNav) {
-        toolbarNav.style.bottom = window.innerWidth < 801 ? nav?.offsetHeight + "px" : "0";
-        toolbarNav.style.left = window.innerWidth < 801 ? "0" : "4rem";
+        toolbarNavHeight = toolbarNav.offsetHeight; // Get height even if visually hidden but rendered
+
+        if (isMobile && mainNavHeight > 0) {
+          // Position toolbar *above* the main bottom nav on mobile
+          toolbarNav.style.bottom = `${mainNavHeight}px`;
+          toolbarNav.style.left = "0";
+          toolbarNav.style.width = "100%"; // Ensure it spans width on mobile
+        } else {
+          // Position toolbar next to side nav on desktop
+          toolbarNav.style.bottom = "0";
+          toolbarNav.style.left = "4rem"; // Tailwind md:w-16 = 4rem
+          toolbarNav.style.width = "auto"; // Let content determine width
+        }
       }
+
+      // --- Bottom Right Controls Offset Calculation ---
+      let bottomOffsetValue = 0.25; // Default offset in rem for desktop
+      if (isMobile) {
+        // Calculate total bottom height on mobile
+        const totalBottomHeight = mainNavHeight + (toolbarNavHeight > 0 ? toolbarNavHeight : 0);
+        bottomOffsetValue = totalBottomHeight; // Use pixel value for mobile offset
+        document.documentElement.style.setProperty(
+          BOTTOM_CONTROLS_OFFSET_VAR,
+          `${bottomOffsetValue}px` // Use px for mobile
+        );
+      } else {
+        // Use default rem value for desktop
+        document.documentElement.style.setProperty(
+          BOTTOM_CONTROLS_OFFSET_VAR,
+          `${bottomOffsetValue}rem` // Use rem for desktop
+        );
+      }
+
+      // --- Reset RafId ---
+      rafId = undefined;
     });
   }
 
   // Create debounced version for resize events
-  const debouncedUpdateLayout = debounce(updateLayout, 100);
+  const debouncedUpdateLayout = debounce(updateLayout, 150); // Increased debounce slightly
 
-  // Initial updates
-  updateLayout();
-  window.addEventListener("DOMContentLoaded", updateLayout);
-  window.addEventListener("load", updateLayout);
+  // Initial updates & listeners
+  // Use requestAnimationFrame for initial calls to ensure DOM is ready
+  requestAnimationFrame(updateLayout);
+  window.addEventListener("DOMContentLoaded", () => requestAnimationFrame(updateLayout));
+  window.addEventListener("load", () => requestAnimationFrame(updateLayout));
   window.addEventListener("resize", debouncedUpdateLayout);
 
-  // Setup ResizeObserver with a more selective approach
+  // Setup ResizeObserver (remains the same)
   const observer = new ResizeObserver((entries) => {
-    // Only trigger update if size actually changed
-    const hasSignificantChange = entries.some((entry) => {
+    // More robust check for significant changes
+    let changed = false;
+    for (const entry of entries) {
       const { width, height } = entry.contentRect;
-      // Store previous dimensions in the element's dataset
       const element = entry.target as HTMLElement;
-      const prevWidth = parseFloat(element.dataset.prevWidth || "0");
-      const prevHeight = parseFloat(element.dataset.prevHeight || "0");
-
-      // Check if change is significant (more than 1px)
-      const hasChanged = Math.abs(width - prevWidth) > 1 || Math.abs(height - prevHeight) > 1;
-
-      // Update stored dimensions
-      if (hasChanged) {
+      // Check if dimensions have changed significantly (more than 1px)
+      if (
+        Math.abs(width - parseFloat(element.dataset.prevWidth || "0")) > 1 ||
+        Math.abs(height - parseFloat(element.dataset.prevHeight || "0")) > 1
+      ) {
         element.dataset.prevWidth = width.toString();
         element.dataset.prevHeight = height.toString();
+        changed = true;
+        break; // No need to check others if one changed
       }
-
-      return hasChanged;
-    });
-
-    if (hasSignificantChange) {
-      updateLayout();
+    }
+    if (changed) {
+      updateLayout(); // Use non-debounced for ResizeObserver
     }
   });
 
-  // Only observe the main containers, not their children
   ["mainHeader", "mainNav", "toolbarNav"].forEach((id) => {
     const element = document.getElementById(id);
     if (element) {

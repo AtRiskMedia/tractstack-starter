@@ -25,13 +25,29 @@ const AddPanePanel = ({
 }: AddPanePanelProps) => {
   const [reset, setReset] = useState(false);
   const lookup = first ? `${nodeId}-0` : nodeId;
-  const $mode = typeof ctx !== `undefined` ? useStore(ctx.paneAddMode) : null;
+
+  const nodesCtx = typeof ctx !== `undefined` ? ctx : null;
+  const activePaneMode = typeof ctx !== `undefined` ? useStore(ctx.activePaneMode) : null;
   const hasPanes = typeof ctx !== `undefined` ? useStore(ctx.hasPanes) : false;
-  const mode = $mode ? $mode[lookup] : PaneAddMode.DEFAULT;
+
+  // Check if this specific add panel is active
+  const isActive = activePaneMode?.panel === "add" && activePaneMode?.paneId === lookup;
+
+  // Get the mode from activePaneMode or use DEFAULT
+  const mode =
+    isActive && activePaneMode?.mode
+      ? (activePaneMode?.mode as PaneAddMode)
+      : !hasPanes && first && !reset
+        ? PaneAddMode.NEW
+        : PaneAddMode.DEFAULT;
 
   const setMode = (newMode: PaneAddMode) => {
     setReset(true);
-    ctx?.setPaneAddMode(lookup, newMode);
+
+    // Set the panel mode in the context
+    nodesCtx?.setPanelMode(lookup, "add", newMode);
+
+    // Clear any settings panel
     settingsPanelStore.set(null);
   };
 
@@ -71,7 +87,7 @@ const AddPanePanel = ({
   }
 
   return (
-    <div className="px-0.5 py-0.5 bg-mylightgrey">
+    <div className="px-0.5 py-0.5">
       <div className="p-0.5 bg-gray-300 flex gap-1 w-full group rounded-md">
         <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
           Insert Pane Here

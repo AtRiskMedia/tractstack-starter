@@ -26,6 +26,7 @@ import StoryFragmentConfigPanel from "@/components/storykeep/controls/storyfragm
 import StoryFragmentTitlePanel from "@/components/storykeep/controls/storyfragment/StoryFragmentPanel_title";
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
+import PanelVisibilityWrapper from "./PanelVisibilityWrapper";
 import { memo, type ReactElement } from "react";
 import type { NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
@@ -90,7 +91,13 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <StoryFragmentTitlePanel nodeId={props.nodeId} />
           ) : (
             <>
-              <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+              <PanelVisibilityWrapper
+                nodeId={props.nodeId}
+                panelType="storyfragment"
+                ctx={getCtx(props)}
+              >
+                <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
+              </PanelVisibilityWrapper>
               <AnalyticsPanel nodeId={props.nodeId} />
               <StoryFragment {...sharedProps} key={node.id} />
               {!isPreview && sf.slug && sf.title && sf.paneIds.length === 0 && (
@@ -119,12 +126,14 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             <div className="bg-white">
               <Pane {...sharedProps} key={node.id} />
               {!isPreview && paneNode.slug && paneNode.title && paneNodes.length === 0 && (
-                <AddPanePanel
-                  nodeId={node.id}
-                  first={true}
-                  ctx={getCtx(props)}
-                  isContextPane={true}
-                />
+                <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
+                  <AddPanePanel
+                    nodeId={node.id}
+                    first={true}
+                    ctx={getCtx(props)}
+                    isContextPane={true}
+                  />
+                </PanelVisibilityWrapper>
               )}
             </div>
           </>
@@ -138,10 +147,14 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       return (
         <>
           {storyFragment && firstPane === node.id && (
-            <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
+            <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
+              <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
+            </PanelVisibilityWrapper>
           )}
           <div className="py-0.5">
-            <ConfigPanePanel nodeId={node.id} />
+            <PanelVisibilityWrapper nodeId={node.id} panelType="settings" ctx={getCtx(props)}>
+              <ConfigPanePanel nodeId={node.id} />
+            </PanelVisibilityWrapper>
             {toolModeVal === `eraser` ? (
               <PaneEraser {...sharedProps} key={node.id} />
             ) : toolModeVal === `layout` ? (
@@ -150,7 +163,9 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
               <Pane {...sharedProps} key={node.id} />
             )}
           </div>
-          <AddPanePanel nodeId={node.id} first={false} ctx={getCtx(props)} />
+          <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
+            <AddPanePanel nodeId={node.id} first={false} ctx={getCtx(props)} />
+          </PanelVisibilityWrapper>
         </>
       );
     }

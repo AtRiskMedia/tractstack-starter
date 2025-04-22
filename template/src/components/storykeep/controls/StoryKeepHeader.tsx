@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
+import QuestionMarkCircleIcon from "@heroicons/react/24/outline/QuestionMarkCircleIcon";
+import ShieldExclamationIcon from "@heroicons/react/24/outline/ShieldExclamationIcon";
 import ArrowUturnLeftIcon from "@heroicons/react/24/outline/ArrowUturnLeftIcon";
 import ArrowUturnRightIcon from "@heroicons/react/24/outline/ArrowUturnRightIcon";
 import PresentationChartBarIcon from "@heroicons/react/24/outline/PresentationChartBarIcon";
@@ -14,8 +16,9 @@ import {
   settingsPanelStore,
   isDemoModeStore,
 } from "@/store/storykeep.ts";
-import { contentMap } from "@/store/events.ts";
-import { getCtx, ROOT_NODE_NAME } from "@/store/nodes.ts";
+import { showHelpStore } from "@/store/help";
+import { contentMap } from "@/store/events";
+import { getCtx, ROOT_NODE_NAME } from "@/store/nodes";
 import { debounce } from "@/utils/common/helpers";
 import ViewportSelector from "./state/ViewportSelector";
 import SaveModal from "./state/SaveModal";
@@ -46,6 +49,7 @@ const StoryKeepHeader = ({
   const $showAnalytics = useStore(showAnalytics);
   const $keyboardAccessible = useStore(keyboardAccessible);
   const $contentMap = useStore(contentMap);
+  const $showHelp = useStore(showHelpStore);
 
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -160,6 +164,10 @@ const StoryKeepHeader = ({
     }
   };
 
+  const toggleShowHelp = () => {
+    showHelpStore.set(!$showHelp);
+  };
+
   const visitPage = () => {
     settingsPanelStore.set(null);
     if (!isVisitable) {
@@ -200,6 +208,7 @@ const StoryKeepHeader = ({
     getCtx().notifyNode(ROOT_NODE_NAME);
   };
 
+  const activeIconClassName = "-rotate-2 w-8 h-8 text-white rounded bg-myblue p-1";
   const iconClassName =
     "w-8 h-8 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white p-1";
   const disabledIconClassName =
@@ -215,7 +224,7 @@ const StoryKeepHeader = ({
   ) : null;
 
   return (
-    <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-6">
+    <div className="p-2 flex flex-wrap justify-center items-center gap-y-2 gap-x-4">
       {hasTitle && (hasPanes || isContext) && node && (
         <>
           {viewportSelectorContent}
@@ -238,7 +247,7 @@ const StoryKeepHeader = ({
         </>
       )}
 
-      <div className="flex flex-wrap justify-center items-center gap-2">
+      <div className="text-sm flex flex-wrap justify-center items-center gap-2">
         {hasTitle && (hasPanes || isContext) && canUndo ? (
           <>
             <button
@@ -271,16 +280,21 @@ const StoryKeepHeader = ({
       </div>
 
       {hasTitle && (hasPanes || isContext) && node && (
-        <div className="flex flex-wrap justify-center items-center gap-2">
+        <div className="flex flex-wrap justify-center items-center gap-1">
+          <button onClick={toggleShowHelp} title="Toggle Help Text">
+            <QuestionMarkCircleIcon
+              className={`${$showHelp ? activeIconClassName : iconClassName}`}
+            />
+          </button>
           <button onClick={toggleAnalytics} title="Toggle Interaction Analytics">
             <PresentationChartBarIcon
-              className={`${$showAnalytics ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+              className={`${$showAnalytics ? activeIconClassName : iconClassName}`}
             />
           </button>
           {!keyboardAccessibleEnabled && (
             <button onClick={toggleKeyboardAccessible} title="Toggle Mobile/Keyboard Accessibility">
               <CursorArrowRaysIcon
-                className={`${$keyboardAccessible ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+                className={`${$keyboardAccessible ? activeIconClassName : iconClassName}`}
               />
             </button>
           )}
@@ -303,13 +317,20 @@ const StoryKeepHeader = ({
         />
       )}
 
-      {isDemoMode && (
-        <div
-          className="h-9 px-3 bg-myorange/20 text-myblack text-md rounded shadow-sm border border-myorange border-dotted flex items-center gap-1"
-          title="No changes will be saved. Reload to reset and start over."
-        >
-          <span className="font-bold">Demo Mode</span>
-        </div>
+      {isDemoMode && $viewportKey.value === `mobile` ? (
+        <ShieldExclamationIcon
+          className="w-8 h-8 text-myorange cursor-not-allowed"
+          title="Demo Mode; no changes will be saved!"
+        />
+      ) : (
+        isDemoMode && (
+          <div
+            className="h-9 px-3 bg-myorange/20 text-myblack text-md rounded shadow-sm border border-myorange border-dotted flex items-center gap-1"
+            title="No changes will be saved. Reload to reset and start over."
+          >
+            <span className="font-bold">Demo Mode</span>
+          </div>
+        )
       )}
     </div>
   );

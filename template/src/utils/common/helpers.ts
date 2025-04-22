@@ -66,18 +66,39 @@ export function scrollToTop() {
 }
 
 export function handleScroll() {
-  const rootElement = document.documentElement;
   const button = document.querySelector("button#top");
-  const aboveFold = window.innerHeight > rootElement.scrollTop;
-  if (!aboveFold && button) {
-    // Show button
-    button.classList.add("block");
-    button.classList.remove("hidden");
-  } else if (button) {
-    // Hide button
-    button.classList.add("hidden");
-    button.classList.remove("block");
+  if (!button) return;
+
+  let sentinel = document.querySelector("#scroll-sentinel") as HTMLElement | null;
+  if (!sentinel) {
+    sentinel = document.createElement("div");
+    sentinel.id = "scroll-sentinel";
+    sentinel.style.position = "absolute";
+    sentinel.style.top = "0";
+    sentinel.style.width = "1px";
+    sentinel.style.height = "1px";
+    sentinel.style.pointerEvents = "none";
+    document.body.prepend(sentinel);
   }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (!entries[0].isIntersecting) {
+        button.classList.add("block");
+        button.classList.remove("hidden");
+      } else {
+        button.classList.add("hidden");
+        button.classList.remove("block");
+      }
+    },
+    {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0,
+    }
+  );
+  observer.observe(sentinel);
+  (window as any).__scrollToTopObserver = observer;
 }
 
 export function formatDateToYYYYMMDD(date: Date): string {

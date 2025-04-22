@@ -43,7 +43,13 @@ const createdDate =
         <button
           id="top"
           title="Back to top"
-          class="motion-safe:animate-fadeInUp font-action font-bold text-black px-1.5 rounded-md bg-white/20 border-mydarkgrey/20 border-2 hover:bg-myorange hover:text-white text-2xl fixed bottom-4 right-[max(8px,calc(8px+env(safe-area-inset-right)))]"
+          class="motion-safe:animate-fadeInUp font-action font-bold text-black px-1.5 rounded-md border-mydarkgrey/20 border-2 hover:bg-myorange hover:text-white text-2xl fixed bottom-4"
+          style={{
+            right: "max(8px, calc(8px + env(safe-area-inset-right)))",
+            background: "rgba(255, 255, 255, 0.8)",
+            backdropFilter: "blur(4px)",
+            zIndex: "10007",
+          }}
         >
           ↑
         </button>

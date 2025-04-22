@@ -158,14 +158,12 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
         handleScroll,
         startLoadingAnimation,
         stopLoadingAnimation,
-        debounce,
       } from "../utils/common/helpers";
       import { eventStream } from "../utils/events/eventStream";
       import { inView } from "../utils/events/inView";
       import { eventProcessQueue } from "../utils/events/eventProcessQueue";
       import { init } from "../utils/visit/init";
       import type { EventStreamController } from "../types";
-      const debouncedHandleScroll = debounce(handleScroll, 50);
 
       let eventStreamController: EventStreamController | null = null;
       function setupEventHandlers() {
@@ -187,7 +185,6 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
         scrollToTop();
 
         window.addEventListener(`resize`, handleResize);
-        document.addEventListener("scroll", debouncedHandleScroll);
       });
 
       document.addEventListener("astro:before-swap", () => {
@@ -200,7 +197,9 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
           eventStreamController = null;
         }
         window.removeEventListener(`resize`, handleResize);
-        document.removeEventListener("scroll", debouncedHandleScroll);
+        if ((window as any).__scrollToTopObserver) {
+          (window as any).__scrollToTopObserver.disconnect();
+        }
       });
     </script>
 

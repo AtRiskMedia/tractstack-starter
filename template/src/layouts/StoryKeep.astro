@@ -117,11 +117,8 @@ const isDemoMode = isOpenDemoMode(Astro, config);
         handleScroll,
         startLoadingAnimation,
         stopLoadingAnimation,
-        debounce,
       } from "../utils/common/helpers";
       import { init } from "../utils/visit/init";
-
-      const debouncedHandleScroll = debounce(handleScroll, 50);
 
       function setupEventHandlers() {
         document.addEventListener("astro:before-preparation", startLoadingAnimation);
@@ -137,12 +134,13 @@ const isDemoMode = isOpenDemoMode(Astro, config);
         scrollToTop();
 
         window.addEventListener(`resize`, handleResize);
-        document.addEventListener("scroll", debouncedHandleScroll);
       });
 
       document.addEventListener("astro:before-preparation", () => {
         window.removeEventListener(`resize`, handleResize);
-        document.removeEventListener("scroll", debouncedHandleScroll);
+        if ((window as any).__scrollToTopObserver) {
+          (window as any).__scrollToTopObserver.disconnect();
+        }
       });
     </script>
 
