@@ -84,6 +84,10 @@ export const helpMessages: Record<string, string> = {
   ACTION_ADD_PANE_PREVIEW:
     "Review the generated or custom content. Select a design template and click 'Apply Design' to add the pane.",
 
+  // --- Styles Memory ---
+  STYLES_COPY: "Copy styles for this element into memory",
+  STYLES_PASTE: "Paste styles onto this element",
+
   // --- Other Actions ---
   //ACTION_SAVING: "Saving your changes... Please wait.",
   //ACTION_EDITING_TEXT:

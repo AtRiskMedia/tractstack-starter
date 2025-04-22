@@ -140,6 +140,9 @@ export class NodesContext {
   }
 
   closeAllPanelsExcept(nodeId: string, panel: string) {
+    if (panel === "styles-memory") {
+      return;
+    }
     const currentPanel = this.activePaneMode.get();
     if (currentPanel.paneId !== nodeId || currentPanel.panel !== panel) {
       settingsPanelStore.set(null);

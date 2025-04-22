@@ -11,7 +11,7 @@ import {
   parentStylesMemoryStore,
   buttonStylesMemoryStore,
 } from "@/store/storykeep";
-import type { Tag, BaseNode, FlatNode } from "@/types";
+import type {PanelState, Tag, BaseNode, FlatNode } from "@/types";
 
 interface StylesMemoryProps {
   node: FlatNode;
@@ -23,6 +23,7 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
   const parentStyles = useStore(parentStylesMemoryStore);
   const buttonStyles = useStore(buttonStylesMemoryStore);
   const [isMatchingMemory, setIsMatchingMemory] = useState(false);
+  const [prevPanelState, setPrevPanelState] = useState<PanelState | null>(null);
 
   const type = isMarkdownPaneFragmentNode(node)
     ? "parent"
@@ -30,6 +31,7 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
       ? "button"
       : "element";
 
+  // **Effect to Check Style Matching**
   useEffect(() => {
     if (!node) return;
 
@@ -65,7 +67,6 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
           setIsMatchingMemory(false);
           break;
         }
-        // Build current state from defaultClasses and any overrides
         const defaultClasses = parentNode.defaultClasses?.[tagName];
         const overrideClasses = node.overrideClasses;
         const current = {
@@ -79,6 +80,7 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
     }
   }, [node, parentNode, elementStyles, parentStyles, buttonStyles, type]);
 
+  // **Handle Copying Styles to Memory**
   const handleCopy = () => {
     if (!node) return;
 
@@ -120,6 +122,7 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
     setIsMatchingMemory(true);
   };
 
+  // **Handle Pasting Styles from Memory**
   const handlePaste = () => {
     const ctx = getCtx();
     if (!node) return;
@@ -190,6 +193,24 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
     }
   };
 
+  // **Handle Mouse Events for Help HUD**
+  const handleMouseEnter = (mode: "copy" | "paste") => {
+    const ctx = getCtx();
+    setPrevPanelState(ctx.activePaneMode.get());
+    ctx.setPanelMode(node.id, "styles-memory", mode);
+  };
+
+  const handleMouseLeave = () => {
+    const ctx = getCtx();
+    if (prevPanelState) {
+      ctx.activePaneMode.set(prevPanelState);
+    } else {
+      ctx.activePaneMode.set({ paneId: "", panel: "", mode: "" });
+    }
+    setPrevPanelState(null);
+  };
+
+  // **Check if Memory Exists**
   const hasMemory =
     type === "parent"
       ? !!parentStyles
@@ -199,10 +220,13 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
           ? !!elementStyles[node.tagName as Tag]
           : false;
 
+  // **Render Component**
   return (
     <div className="flex items-center gap-2">
       <button
         onClick={handleCopy}
+        onMouseEnter={() => handleMouseEnter("copy")}
+        onMouseLeave={handleMouseLeave}
         className={`transition-colors ${
           isMatchingMemory ? "text-myorange hover:text-myblack" : "text-mydarkgrey hover:text-black"
         }`}
@@ -211,24 +235,30 @@ export const StylesMemory = ({ node, parentNode }: StylesMemoryProps) => {
         <PaintBrushIcon className="w-4 h-4" />
       </button>
 
-      <button
-        onClick={handlePaste}
-        disabled={!hasMemory || isMatchingMemory}
-        className={`transition-colors ${
-          !hasMemory || isMatchingMemory
-            ? "text-mylightgrey cursor-not-allowed"
-            : "text-mydarkgrey hover:text-black"
-        }`}
-        title={
-          !hasMemory
-            ? "No styles in memory"
-            : isMatchingMemory
-              ? "Current styles match memory"
-              : "Paste styles from memory"
-        }
+      <div
+        onMouseEnter={() => handleMouseEnter("paste")}
+        onMouseLeave={handleMouseLeave}
+        className="flex items-center"
       >
-        <ClipboardDocumentIcon className="w-4 h-4" />
-      </button>
+        <button
+          onClick={handlePaste}
+          disabled={!hasMemory || isMatchingMemory}
+          className={`transition-colors ${
+            !hasMemory || isMatchingMemory
+              ? "text-mylightgrey cursor-not-allowed"
+              : "text-mydarkgrey hover:text-black"
+          }`}
+          title={
+            !hasMemory
+              ? "No styles in memory"
+              : isMatchingMemory
+                ? "Current styles match memory"
+                : "Paste styles from memory"
+          }
+        >
+          <ClipboardDocumentIcon className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 };

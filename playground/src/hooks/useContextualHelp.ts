@@ -71,6 +71,11 @@ const paneAddModeToHelpKey: Record<string, string> = {
   [PaneAddMode.CODEHOOK]: "ACTION_ADD_PANE_CODEHOOK",
 };
 
+const StylesMemoryToHelpKey: Record<string, string> = {
+  [`copy`]: "STYLES_COPY",
+  [`paste`]: "STYLES_PASTE",
+};
+
 const storyFragmentModeToHelpKey: Record<string, string> = {
   [StoryFragmentMode.DEFAULT]: "PANEL_CONFIG_PAGE",
   [StoryFragmentMode.SLUG]: "PANEL_CONFIG_PAGE_SLUG",
@@ -100,15 +105,16 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
   useEffect(() => {
     let helpKey: string | null = null;
 
-    // Priority Order:
-    // 1. Settings Panel Action
-    // 2. Active Panel Mode (based on panel type)
-    // 3. General Tool Mode
-
-    if (signal?.action && !signal.minimized && settingsActionToHelpKey[signal.action]) {
+    // Give priority to styles-memory panel
+    if (activePaneMode.panel === "styles-memory" && activePaneMode.mode) {
+      helpKey = StylesMemoryToHelpKey[activePaneMode.mode] || "STYLES_COPY";
+    }
+    // Then check signal
+    else if (signal?.action && !signal.minimized && settingsActionToHelpKey[signal.action]) {
       helpKey = settingsActionToHelpKey[signal.action];
-    } else if (activePaneMode.panel && activePaneMode.mode) {
-      // Handle different panel types
+    }
+    // Then handle other panel types
+    else if (activePaneMode.panel && activePaneMode.mode) {
       switch (activePaneMode.panel) {
         case "insert":
           helpKey = "GHOST_INSERT";
@@ -126,7 +132,9 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
           helpKey = contextPaneModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PANE";
           break;
       }
-    } else if (toolMode?.value === "insert") {
+    }
+    // Fallback to tool modes
+    else if (toolMode?.value === "insert") {
       helpKey = "MODE_INSERT";
     } else if (toolMode?.value && toolModeToHelpKey[toolMode.value]) {
       helpKey = toolModeToHelpKey[toolMode.value];
