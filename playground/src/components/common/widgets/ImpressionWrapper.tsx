@@ -95,7 +95,7 @@ const ImpressionWrapper = ({
       <button
         type="button"
         title="Click for notifications"
-        className={`h-6 w-6 rounded-full bg-myblue/80 hover:bg-myorange/100 text-white flex justify-center items-center items motion-safe:animate-bounceIn ${
+        className={`h-6 w-6 rounded-full bg-myblue hover:bg-myorange text-white flex justify-center items-center items motion-safe:animate-bounceIn ${
           isFloating ? "fixed top-4 right-4 z-50 transition-all duration-300" : ""
         }`}
         style={{ opacity: isFloating ? opacity : 1 }}
