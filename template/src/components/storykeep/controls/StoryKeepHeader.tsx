@@ -208,6 +208,7 @@ const StoryKeepHeader = ({
     getCtx().notifyNode(ROOT_NODE_NAME);
   };
 
+  const activeIconClassName = "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1";
   const iconClassName =
     "w-8 h-8 text-myblue hover:text-white hover:bg-myblue rounded-xl hover:rounded bg-white p-1";
   const disabledIconClassName =
@@ -282,13 +283,13 @@ const StoryKeepHeader = ({
         <div className="flex flex-wrap justify-center items-center gap-1">
           <button onClick={toggleAnalytics} title="Toggle Interaction Analytics">
             <PresentationChartBarIcon
-              className={`${$showAnalytics ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+              className={`${$showAnalytics ? activeIconClassName : iconClassName}`}
             />
           </button>
           {!keyboardAccessibleEnabled && (
             <button onClick={toggleKeyboardAccessible} title="Toggle Mobile/Keyboard Accessibility">
               <CursorArrowRaysIcon
-                className={`${$keyboardAccessible ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+                className={`${$keyboardAccessible ? activeIconClassName : iconClassName}`}
               />
             </button>
           )}
@@ -302,7 +303,7 @@ const StoryKeepHeader = ({
           </button>
           <button onClick={toggleShowHelp} title="Toggle Help Text">
             <QuestionMarkCircleIcon
-              className={`${$showHelp ? "-rotate-6 w-8 h-8 text-white rounded bg-myblue p-1" : iconClassName}`}
+              className={`${$showHelp ? activeIconClassName : iconClassName}`}
             />
           </button>
         </div>
