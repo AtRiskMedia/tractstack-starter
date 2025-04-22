@@ -287,13 +287,12 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     if (!canEditText(props) || e.target.tagName === "BUTTON") {
       return;
     }
-
     originalTextRef.current = e.currentTarget.innerHTML;
-
     if (isEditableMode && supportsEditing) {
+      getCtx(props).ghostTextActiveId.set("");
+      getCtx(props).ghostTextActiveId.set(nodeId);
       setShowGhostText(true);
     }
-
     if (cursorPosRef.current) {
       restoreCursorPosition();
     }

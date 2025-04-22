@@ -31,7 +31,8 @@ export const HudDisplay = () => {
       className="bg-black/70 text-white rounded-md p-2 text-lg text-right mb-2 transition-opacity duration-300 ease-in-out"
       style={{ minHeight: `3em`, maxWidth: `320px` }}
     >
-      {currentHelpKey}{`: `}
+      {currentHelpKey}
+      {`: `}
       {message || "\u00A0"}
     </div>
   );

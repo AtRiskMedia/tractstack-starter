@@ -392,6 +392,22 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       }
       return nodeContext.getNodeClasses(parentId, viewportKeyStore.get().value);
     })();
+    const safeParagraphStyle = (() => {
+      const classes = paragraphStyle.split(" ");
+      const safeClasses = classes.filter((cls) => {
+        if (
+          cls.startsWith("text-") &&
+          !cls.match(/text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)/)
+        ) {
+          return true;
+        }
+        if (cls.match(/text-(xs|sm|base|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl)/)) {
+          return false;
+        }
+        return true;
+      });
+      return safeClasses.join(" ");
+    })();
 
     if (isEditing) {
       return (
@@ -422,7 +438,7 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
       <div ref={ref}>
         <div
           ref={ghostRef}
-          className="mt-4 mb-4 p-3 border-2 border-dashed border-cyan-500 cursor-text text-gray-500 hover:bg-cyan-50 rounded flex items-center"
+          className={`${safeParagraphStyle} animate-fadeIn py-1 mt-1.5 border-t border-dashed border-cyan-500 cursor-pointer hover:bg-cyan-50/20 flex items-center text-sm`}
           onClick={activate}
           onFocus={activate}
           onKeyDown={(e) => {
@@ -433,18 +449,18 @@ const GhostText = forwardRef<HTMLDivElement, GhostTextProps>(
           }}
           tabIndex={0}
           role="button"
-          aria-label="Continue writing (press Tab)"
+          aria-label="Tab for a new paragraph"
           data-ghost-text="placeholder"
           data-parent-id={parentId}
         >
-          <svg className="w-5 h-5 mr-2 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
+          <svg className="w-4 h-4 mx-1 text-cyan-500" viewBox="0 0 20 20" fill="currentColor">
             <path
               fillRule="evenodd"
               d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
               clipRule="evenodd"
             />
           </svg>
-          Press "Tab" to Continue writing...
+          Tab for a new paragraph
         </div>
       </div>
     );
