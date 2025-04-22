@@ -158,7 +158,9 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   };
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
-    getCtx(props).handleInsertSignal(tagName, nodeId);
+    setTimeout(() => {
+      getCtx(props).handleInsertSignal(tagName, nodeId);
+    }, 500);
   };
 
   const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
