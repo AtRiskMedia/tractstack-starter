@@ -11,7 +11,7 @@ import {
   parentStylesMemoryStore,
   buttonStylesMemoryStore,
 } from "@/store/storykeep";
-import type {PanelState, Tag, BaseNode, FlatNode } from "@/types";
+import type { PanelState, Tag, BaseNode, FlatNode } from "@/types";
 
 interface StylesMemoryProps {
   node: FlatNode;

@@ -120,16 +120,16 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
           helpKey = "GHOST_INSERT";
           break;
         case "settings":
-          helpKey = paneConfigModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PANE";
+          helpKey = paneConfigModeToHelpKey[activePaneMode.mode] || "";
           break;
         case "add":
-          helpKey = paneAddModeToHelpKey[activePaneMode.mode] || "ACTION_ADD_PANE";
+          helpKey = paneAddModeToHelpKey[activePaneMode.mode] || "";
           break;
         case "storyfragment":
-          helpKey = storyFragmentModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PAGE";
+          helpKey = storyFragmentModeToHelpKey[activePaneMode.mode] || "";
           break;
         case "context":
-          helpKey = contextPaneModeToHelpKey[activePaneMode.mode] || "PANEL_CONFIG_PANE";
+          helpKey = contextPaneModeToHelpKey[activePaneMode.mode] || "";
           break;
       }
     }
