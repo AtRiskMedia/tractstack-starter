@@ -37,6 +37,13 @@ export const NodeBasicTag = (props: NodeTagProps) => {
   const Tag = props.tagName;
   const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
   const supportsEditing = canEditText(props);
+  const hasEditedRef = useRef(false);
+
+  useEffect(() => {
+    if (showGhostText && ghostTextRef.current) {
+      ghostTextRef.current.focus();
+    }
+  }, [showGhostText]);
 
   useEffect(() => {
     getCtx(props).closeAllPanels();
@@ -183,10 +190,12 @@ export const NodeBasicTag = (props: NodeTagProps) => {
     const isFocusInGhostText = ghostTextRef.current?.contains(e.relatedTarget as Node);
     const isFocusInNode = elementRef.current?.contains(e.relatedTarget as Node);
 
-    if (doubleClickedRef.current || (!editIntentRef.current && !bypassEarlyReturnRef.current)) {
+    if (
+      doubleClickedRef.current ||
+      (!editIntentRef.current && !bypassEarlyReturnRef.current && !hasEditedRef.current)
+    ) {
       doubleClickedRef.current = false;
       editIntentRef.current = false;
-
       if (!isFocusInNode && !isFocusInGhostText) {
         setShowGhostText(false);
       }
@@ -289,6 +298,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
       return;
     }
     originalTextRef.current = e.currentTarget.innerHTML;
+    hasEditedRef.current = false;
     if (isEditableMode && supportsEditing) {
       getCtx(props).ghostTextActiveId.set("");
       getCtx(props).ghostTextActiveId.set(nodeId);
@@ -422,6 +432,7 @@ export const NodeBasicTag = (props: NodeTagProps) => {
           },
           onInput: () => {
             editIntentRef.current = true;
+            hasEditedRef.current = true;
             if (elementRef.current) {
               currentContentRef.current = elementRef.current.innerHTML;
             }
