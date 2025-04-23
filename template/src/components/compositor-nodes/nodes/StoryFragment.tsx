@@ -21,7 +21,7 @@ export const StoryFragment = (props: NodeProps) => {
   return (
     <div
       className={getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}
-      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value)}
+      style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId)}
     >
       <RenderChildren children={children} nodeProps={props} />
     </div>

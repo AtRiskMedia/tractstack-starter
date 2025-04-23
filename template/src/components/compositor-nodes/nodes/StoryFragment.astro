@@ -6,10 +6,7 @@ const { nodeId } = Astro.props;
 const notEmptyPane = getCtx().getChildNodeIDs(nodeId).length > 0 || false;
 ---
 
-<div
-  class={getCtx().getNodeClasses(nodeId, `auto`)}
-  style={getCtx().getNodeStringStyles(nodeId, `auto`)}
->
+<div class={getCtx().getNodeClasses(nodeId, `auto`)} style={getCtx().getNodeStringStyles(nodeId)}>
   {
     notEmptyPane ? (
       getCtx()

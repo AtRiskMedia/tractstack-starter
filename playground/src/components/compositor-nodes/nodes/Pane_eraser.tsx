@@ -10,7 +10,7 @@ export const PaneEraser = (props: NodeProps) => {
   const wrapperClasses = `grid ${getCtx(props).getNodeClasses(props.nodeId, viewportKeyStore.get().value)}`;
   const contentClasses = "relative w-full h-auto justify-self-start";
   const contentStyles: CSSProperties = {
-    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, viewportKeyStore.get().value),
+    ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId),
     gridArea: "1/1/1/1",
   };
   const codeHookPayload = getCtx(props).getNodeCodeHookPayload(props.nodeId);

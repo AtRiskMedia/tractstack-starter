@@ -23,6 +23,7 @@ interface ConfigPanePanelProps {
 
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
+  const bgColorStyles = ctx.getNodeCSSPropertiesStyles(nodeId);
   const activePaneMode = useStore(ctx.activePaneMode);
   const toolMode = useStore(ctx.toolModeValStore);
   const reorderMode = toolMode.value === `move`;
@@ -100,8 +101,8 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   }
 
   return (
-    <div className="border-t border-dashed border-mydarkgrey">
-      <div className="p-1.5 bg-white rounded-t-md w-full group">
+    <div className="border-t border-dashed border-mydarkgrey bg-black" style={bgColorStyles}>
+      <div className="px-1.5 pt-1.5 pb-0.5 rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div
             className={`flex flex-wrap gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
@@ -122,7 +123,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
             ) : (
               <>
                 <button onClick={() => setSaveMode(PaneConfigMode.TITLE)} className={buttonClass}>
-                  Title
+                  Pane Title
                   {!isMobile && (
                     <>
                       : <strong>{paneNode.title}</strong>

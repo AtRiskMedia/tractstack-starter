@@ -21,7 +21,7 @@ import { PaneAddMode } from "@/types";
 interface AddPaneNewPanelProps {
   nodeId: string;
   first: boolean;
-  setMode: (mode: PaneAddMode, reset:boolean) => void;
+  setMode: (mode: PaneAddMode, reset: boolean) => void;
   ctx?: NodesContext;
   isStoryFragment?: boolean;
   isContextPane?: boolean;
@@ -198,7 +198,7 @@ const AddPaneNewPanel = ({
           );
           if (newPaneId) ctx.notifyNode(`root`);
         }
-        setMode(PaneAddMode.DEFAULT,false);
+        setMode(PaneAddMode.DEFAULT, false);
       }
     } catch (error) {
       console.error("Error inserting template:", error);

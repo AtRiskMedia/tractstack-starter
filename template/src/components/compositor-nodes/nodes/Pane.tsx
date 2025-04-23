@@ -58,7 +58,7 @@ const Pane = memo(
 
     const contentClasses = "relative w-full h-auto justify-self-start";
     const contentStyles: CSSProperties = {
-      ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId, currentViewport),
+      ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId),
       gridArea: "1/1/1/1",
       position: "relative",
       zIndex: 1,

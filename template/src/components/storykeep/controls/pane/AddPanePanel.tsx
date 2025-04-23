@@ -29,7 +29,6 @@ const AddPanePanel = ({
   const nodesCtx = typeof ctx !== `undefined` ? ctx : null;
   const activePaneMode = typeof ctx !== `undefined` ? useStore(ctx.activePaneMode) : null;
   const hasPanes = typeof ctx !== `undefined` ? useStore(ctx.hasPanes) : false;
-
   // Check if this specific add panel is active
   const isActive = activePaneMode?.panel === "add" && activePaneMode?.paneId === lookup;
 
@@ -84,7 +83,7 @@ const AddPanePanel = ({
         />
       ) : (
         <div className="border-t border-dashed border-mydarkgrey">
-          <div className="p-1.5 bg-black/70 flex gap-1 w-full group">
+          <div className="px-1.5 pt-1.5 pb-0.5 flex gap-1 w-full group">
             <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
               Insert Pane Here
             </div>

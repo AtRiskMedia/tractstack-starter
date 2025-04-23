@@ -506,7 +506,7 @@ export const JSONBetterParser = (obj: any): any => {
   return JSON.parse(obj, reviver);
 };
 
-function replacer(key: string, value: any) {
+function replacer(/*key: string,*/ value: any) {
   if (value instanceof Map) {
     return {
       dataType: "Map",
@@ -517,7 +517,7 @@ function replacer(key: string, value: any) {
   }
 }
 
-function reviver(key: string, value: any) {
+function reviver(/* key: string,*/ value: any) {
   if (typeof value === "object" && value !== null) {
     if (value.dataType === "Map") {
       return new Map(value.value);

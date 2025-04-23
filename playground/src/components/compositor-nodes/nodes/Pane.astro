@@ -34,8 +34,7 @@ const isDecorative = getCtx().getPaneIsDecorative(nodeId);
 const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, `auto`)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
 const contentStyles =
-  getCtx().getNodeStringStyles(nodeId, `auto`) +
-  "; grid-area: 1/1/1/1; position: relative; z-index: 1";
+  getCtx().getNodeStringStyles(nodeId) + "; grid-area: 1/1/1/1; position: relative; z-index: 1";
 ---
 
 <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`} style="position: relative;">

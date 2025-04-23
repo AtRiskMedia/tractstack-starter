@@ -906,17 +906,17 @@ export class NodesContext {
   //  return isAnyNodeDifferent;
   //}
 
-  getNodeStringStyles(nodeId: string, viewport: ViewportKey): string {
+  getNodeStringStyles(nodeId: string): string {
     const node = this.allNodes.get().get(nodeId);
-    return this.getStringNodeStyles(node, viewport);
+    return this.getStringBgColorStyle(node);
   }
 
-  getNodeCSSPropertiesStyles(nodeId: string, viewport: ViewportKey): CSSProperties {
+  getNodeCSSPropertiesStyles(nodeId: string): CSSProperties {
     const node = this.allNodes.get().get(nodeId);
-    return this.getReactNodeStyles(node, viewport);
+    return this.getPaneBgColorStyle(node);
   }
 
-  getReactNodeStyles(node: BaseNode | undefined, viewport: ViewportKey): CSSProperties {
+  getPaneBgColorStyle(node: BaseNode | undefined): CSSProperties {
     if (!node) return {};
 
     switch (node?.nodeType) {
@@ -930,7 +930,7 @@ export class NodesContext {
     return {};
   }
 
-  getStringNodeStyles(node: BaseNode | undefined, viewport: ViewportKey): string {
+  getStringBgColorStyle(node: BaseNode | undefined): string {
     if (!node) return "";
     switch (node?.nodeType) {
       case "Pane": {
