@@ -4,7 +4,7 @@ import { PaneConfigMode } from "@/types";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { cloneDeep } from "@/utils/common/helpers.ts";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction, ChangeEvent } from "react";
 import type { PaneNode } from "@/types";
 
 interface PaneTitlePanelProps {
@@ -28,7 +28,7 @@ const PaneTitlePanel = ({ nodeId, setMode }: PaneTitlePanelProps) => {
     setCharCount(paneNode.title.length);
   }, [paneNode.title]);
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     if (newTitle.length <= 50) {
       // Prevent more than 70 chars

@@ -1,6 +1,11 @@
 // src/utils/storykeep/helpMessages.ts
 
 export const helpMessages: Record<string, string> = {
+  // --- Pre Modes ---
+  MISSING_TITLE:
+    "To get started: write a clear, descriptive title that accurately represents your page content",
+  MISSING_PANES: "Follow the on-screen steps to create your first page",
+
   // --- Tool Modes ---
   MODE_STYLES: "Click any element to adjust its appearance (colours, spacing, borders, etc.)",
   MODE_TEXT: "Click text to edit. *Italic* **Bold** Add an action with [[My Link]]",

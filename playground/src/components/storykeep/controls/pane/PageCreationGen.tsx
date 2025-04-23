@@ -264,7 +264,10 @@ ${additionalInstructions}`;
             <div className="flex gap-4">
               <button
                 type="button"
-                onClick={() => window.history.back()}
+                onClick={() => {
+                  ctx.setPanelMode(nodeId, "add", "DEFAULT");
+                  ctx.notifyNode("root");
+                }}
                 className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500"
               >
                 Back

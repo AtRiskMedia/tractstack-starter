@@ -1,4 +1,5 @@
 import { getCtx } from "@/store/nodes.ts";
+import { useStore } from "@nanostores/react";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
 import PageCreationSelector from "@/components/storykeep/controls/pane/PageCreationSelector";
 import { Pane } from "@/components/compositor-nodes/nodes/Pane.tsx";
@@ -76,6 +77,7 @@ function parseCodeHook(node: BaseNode | FlatNode) {
 const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement => {
   if (node === undefined) return <></>;
   const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
+  const hasPanes = useStore(getCtx(props).hasPanes);
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
@@ -89,6 +91,8 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
         <>
           {!(sf.slug && sf.title) ? (
             <StoryFragmentTitlePanel nodeId={props.nodeId} />
+          ) : !hasPanes && sf.slug && sf.title && !isPreview ? (
+            <PageCreationSelector nodeId={props.nodeId} ctx={getCtx(props)} />
           ) : (
             <>
               <PanelVisibilityWrapper
@@ -100,9 +104,6 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
               </PanelVisibilityWrapper>
               <AnalyticsPanel nodeId={props.nodeId} />
               <StoryFragment {...sharedProps} key={node.id} />
-              {!isPreview && sf.slug && sf.title && sf.paneIds.length === 0 && (
-                <PageCreationSelector nodeId={props.nodeId} ctx={getCtx(props)} />
-              )}
             </>
           )}
         </>
@@ -123,7 +124,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
               <ContextPanePanel nodeId={node.id} />
             ) : null}
             {!isPreview && <AnalyticsPanel nodeId={node.id} />}
-            <div className="bg-white">
+            <div>
               <Pane {...sharedProps} key={node.id} />
               {!isPreview && paneNode.slug && paneNode.title && paneNodes.length === 0 && (
                 <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
@@ -147,7 +148,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       return (
         <>
           {storyFragment && firstPane === node.id && (
-            <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
+            <PanelVisibilityWrapper nodeId={`${node.id}-0`} panelType="add" ctx={getCtx(props)}>
               <AddPanePanel nodeId={node.id} first={true} ctx={getCtx(props)} />
             </PanelVisibilityWrapper>
           )}

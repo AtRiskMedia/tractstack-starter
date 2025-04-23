@@ -5,7 +5,7 @@ import AddPaneNewPanel from "./AddPanePanel_new";
 import AddPaneBreakPanel from "./AddPanePanel_break";
 import AddPaneReUsePanel from "./AddPanePanel_reuse";
 import AddPaneCodeHookPanel from "./AddPanePanel_codehook";
-import { NodesContext } from "@/store/nodes";
+import { NodesContext, ROOT_NODE_NAME } from "@/store/nodes";
 import { PaneAddMode } from "@/types";
 
 interface AddPanePanelProps {
@@ -41,90 +41,88 @@ const AddPanePanel = ({
         ? PaneAddMode.NEW
         : PaneAddMode.DEFAULT;
 
-  const setMode = (newMode: PaneAddMode) => {
+  const setMode = (newMode: PaneAddMode, reset?: boolean) => {
     setReset(true);
 
     // Set the panel mode in the context
     nodesCtx?.setPanelMode(lookup, "add", newMode);
+    if (reset) nodesCtx?.notifyNode(ROOT_NODE_NAME);
 
     // Clear any settings panel
     settingsPanelStore.set(null);
   };
 
-  if (mode === PaneAddMode.NEW || (!hasPanes && first && !reset)) {
-    return (
-      <AddPaneNewPanel
-        nodeId={nodeId}
-        first={first}
-        setMode={setMode}
-        ctx={ctx}
-        isStoryFragment={isStoryFragment}
-        isContextPane={isContextPane}
-      />
-    );
-  } else if (mode === PaneAddMode.BREAK && !isContextPane) {
-    return (
-      <AddPaneBreakPanel
-        nodeId={nodeId}
-        first={first}
-        setMode={setMode}
-        ctx={ctx}
-        isStoryFragment={isStoryFragment}
-      />
-    );
-  } else if (mode === PaneAddMode.REUSE && !isContextPane) {
-    return <AddPaneReUsePanel nodeId={nodeId} first={first} setMode={setMode} />;
-  } else if (mode === PaneAddMode.CODEHOOK) {
-    return (
-      <AddPaneCodeHookPanel
-        nodeId={nodeId}
-        first={first}
-        setMode={setMode}
-        isStoryFragment={isStoryFragment}
-        isContextPane={isContextPane}
-      />
-    );
-  }
-
+  // Always render a stable container div for the intersection observer
   return (
-    <div className="px-0.5 py-0.5">
-      <div className="p-0.5 bg-gray-300 flex gap-1 w-full group rounded-md">
-        <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
-          Insert Pane Here
-        </div>
-        <div
-          className={`flex gap-1 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
-        >
-          <button
-            onClick={() => setMode(PaneAddMode.NEW)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
-          >
-            + Design New
-          </button>
-          {!isContextPane && (
-            <>
+    <div className="add-pane-panel-wrapper">
+      {mode === PaneAddMode.NEW || (!hasPanes && first && !reset) ? (
+        <AddPaneNewPanel
+          nodeId={nodeId}
+          first={first}
+          setMode={setMode}
+          ctx={ctx}
+          isStoryFragment={isStoryFragment}
+          isContextPane={isContextPane}
+        />
+      ) : mode === PaneAddMode.BREAK && !isContextPane ? (
+        <AddPaneBreakPanel
+          nodeId={nodeId}
+          first={first}
+          setMode={setMode}
+          ctx={ctx}
+          isStoryFragment={isStoryFragment}
+        />
+      ) : mode === PaneAddMode.REUSE && !isContextPane ? (
+        <AddPaneReUsePanel nodeId={nodeId} first={first} setMode={setMode} />
+      ) : mode === PaneAddMode.CODEHOOK ? (
+        <AddPaneCodeHookPanel
+          nodeId={nodeId}
+          first={first}
+          setMode={setMode}
+          isStoryFragment={isStoryFragment}
+          isContextPane={isContextPane}
+        />
+      ) : (
+        <div className="border-t border-dashed border-mydarkgrey">
+          <div className="p-1.5 bg-black/70 flex gap-1 w-full group">
+            <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
+              Insert Pane Here
+            </div>
+            <div
+              className={`flex gap-1 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity`}
+            >
               <button
-                onClick={() => setMode(PaneAddMode.BREAK)}
+                onClick={() => setMode(PaneAddMode.NEW)}
                 className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
               >
-                + Visual Break
+                + Design New
               </button>
+              {!isContextPane && (
+                <>
+                  <button
+                    onClick={() => setMode(PaneAddMode.BREAK)}
+                    className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+                  >
+                    + Visual Break
+                  </button>
+                  <button
+                    onClick={() => setMode(PaneAddMode.REUSE)}
+                    className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+                  >
+                    + Re-use existing pane
+                  </button>
+                </>
+              )}
               <button
-                onClick={() => setMode(PaneAddMode.REUSE)}
+                onClick={() => setMode(PaneAddMode.CODEHOOK)}
                 className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
               >
-                + Re-use existing pane
+                + Custom Code Hook
               </button>
-            </>
-          )}
-          <button
-            onClick={() => setMode(PaneAddMode.CODEHOOK)}
-            className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
-          >
-            + Custom Code Hook
-          </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

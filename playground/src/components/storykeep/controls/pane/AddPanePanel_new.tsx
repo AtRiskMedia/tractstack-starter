@@ -21,7 +21,7 @@ import { PaneAddMode } from "@/types";
 interface AddPaneNewPanelProps {
   nodeId: string;
   first: boolean;
-  setMode: (mode: PaneAddMode) => void;
+  setMode: (mode: PaneAddMode, reset:boolean) => void;
   ctx?: NodesContext;
   isStoryFragment?: boolean;
   isContextPane?: boolean;
@@ -40,7 +40,7 @@ interface TemplateCategory {
   getTemplates: (theme: Theme, brand: string, useOdd: boolean) => any[];
 }
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 const AddPaneNewPanel = ({
   nodeId,
@@ -61,7 +61,7 @@ const AddPaneNewPanel = ({
   const [useOddVariant, setUseOddVariant] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(
-    templateCategories[first ? 3 : 0]
+    templateCategories[first ? 4 : 0]
   );
   const [isInserting, setIsInserting] = useState(false);
   const [aiContentGenerated, setAiContentGenerated] = useState(false);
@@ -87,7 +87,7 @@ const AddPaneNewPanel = ({
 
   useEffect(() => {
     if (copyMode !== "ai") setAiContentGenerated(false);
-    if (copyMode !== "ai" || isContextPane) setSelectedCategory(templateCategories[1]);
+    if (copyMode !== "ai" || isContextPane) setSelectedCategory(templateCategories[first ? 4 : 0]);
   }, [copyMode]);
 
   const handleAiContentGenerated = (content: string) => {
@@ -198,7 +198,7 @@ const AddPaneNewPanel = ({
           );
           if (newPaneId) ctx.notifyNode(`root`);
         }
-        setMode(PaneAddMode.DEFAULT);
+        setMode(PaneAddMode.DEFAULT,false);
       }
     } catch (error) {
       console.error("Error inserting template:", error);
@@ -208,10 +208,10 @@ const AddPaneNewPanel = ({
   };
 
   return (
-    <div className="p-0.5 shadow-inner">
+    <div className="p-3.5 shadow-inner bg-white">
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
-          onClick={() => setMode(PaneAddMode.DEFAULT)}
+          onClick={() => setMode(PaneAddMode.DEFAULT, first)}
           className="w-fit px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded hover:bg-gray-200 focus:bg-gray-200 transition-colors"
         >
           ← Go Back
@@ -222,79 +222,31 @@ const AddPaneNewPanel = ({
             + Design New Pane
           </div>
 
-          {/* Theme Select */}
-          <div className="w-40">
-            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
-              <div className="relative">
-                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-                  <span className="block truncate capitalize">
-                    {selectedTheme.replace(/-/g, " ")}
-                  </span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </span>
-                </Listbox.Button>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Listbox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {themes.map((theme) => (
-                      <Listbox.Option
-                        key={theme}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                          }`
-                        }
-                        value={theme}
-                      >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={`block truncate capitalize ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {theme.replace(/-/g, " ")}
-                            </span>
-                            {selected && (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Listbox.Option>
-                    ))}
-                  </Listbox.Options>
-                </Transition>
-              </div>
-            </Listbox>
-          </div>
-
-          {/* Odd Variant Toggle */}
-          <Switch.Group as="div" className="flex items-center gap-2">
-            <div className="relative">
-              <Switch
-                checked={useOddVariant}
-                onChange={setUseOddVariant}
-                className={`${
-                  useOddVariant ? "bg-cyan-600" : "bg-gray-200"
-                } my-2 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2`}
-              >
-                <span
-                  className={`${
-                    useOddVariant ? "left-6" : "left-1"
-                  } absolute top-1 inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-all duration-200`}
-                />
-              </Switch>
+          {!(copyMode === "ai" && aiContentGenerated) && (
+            <AddPaneNewCopyMode selected={copyMode} onChange={setCopyMode} />
+          )}
+          {copyMode === "custom" && (
+            <div className="w-full mt-4">
+              <AddPaneNewCustomCopy value={customMarkdown} onChange={setCustomMarkdown} />
             </div>
-            <Switch.Label className="text-sm text-gray-700">Use odd variant</Switch.Label>
-          </Switch.Group>
+          )}
+          {copyMode === "ai" && !aiContentGenerated && (
+            <div className="w-full mt-4">
+              <AddPanePanel_newAICopy
+                onChange={handleAiContentGenerated}
+                isContextPane={isContextPane}
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
-          {/* Category Filter */}
-          <div className="w-[250px]">
+      {shouldShowDesigns && (
+        <>
+          <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
+            1. What kind of layout
+          </h3>
+          <div className="max-w-md">
             <Combobox value={selectedCategory} onChange={setSelectedCategory}>
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
@@ -353,32 +305,85 @@ const AddPaneNewPanel = ({
             </Combobox>
           </div>
 
-          {!(copyMode === "ai" && aiContentGenerated) && (
-            <AddPaneNewCopyMode selected={copyMode} onChange={setCopyMode} />
-          )}
-          {copyMode === "custom" && (
-            <div className="w-full mt-4">
-              <AddPaneNewCustomCopy value={customMarkdown} onChange={setCustomMarkdown} />
-            </div>
-          )}
-          {copyMode === "ai" && !aiContentGenerated && (
-            <div className="w-full mt-4">
-              <AddPanePanel_newAICopy
-                onChange={handleAiContentGenerated}
-                isContextPane={isContextPane}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {shouldShowDesigns && (
-        <>
           <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
-            Click on a design to use:
+            2. Make it pretty
           </h3>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
+          <div className="w-40">
+            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
+              <div className="relative">
+                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300">
+                  <span className="block truncate capitalize">
+                    {selectedTheme.replace(/-/g, " ")}
+                  </span>
+                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </span>
+                </Listbox.Button>
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <Listbox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {themes.map((theme) => (
+                      <Listbox.Option
+                        key={theme}
+                        className={({ active }) =>
+                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
+                          }`
+                        }
+                        value={theme}
+                      >
+                        {({ selected }) => (
+                          <>
+                            <span
+                              className={`block truncate capitalize ${selected ? "font-bold" : "font-normal"}`}
+                            >
+                              {theme.replace(/-/g, " ")}
+                            </span>
+                            {selected && (
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </Listbox.Option>
+                    ))}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            </Listbox>
+          </div>
+
+          <Switch.Group as="div" className="flex items-center gap-2">
+            <div className="relative">
+              <Switch
+                checked={useOddVariant}
+                onChange={setUseOddVariant}
+                className={`${
+                  useOddVariant ? "bg-cyan-600" : "bg-gray-200"
+                } my-2 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2`}
+              >
+                <span
+                  className={`${
+                    useOddVariant ? "left-6" : "left-1"
+                  } absolute top-1 inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-all duration-200`}
+                />
+              </Switch>
+            </div>
+            <Switch.Label className="text-sm text-gray-700">Use odd variant</Switch.Label>
+          </Switch.Group>
+
+          <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
+            3. Click on the design you wish to use:
+          </h3>
+          <p className="italic">Each design can be further customized once selected.</p>
+
+          <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 p-2">
             {visiblePreviews.map((preview) => (
               <div
                 key={preview.index}

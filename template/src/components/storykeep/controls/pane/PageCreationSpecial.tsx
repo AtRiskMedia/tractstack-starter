@@ -286,7 +286,10 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
 
       <div className="mt-6 flex justify-end gap-3">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => {
+            ctx.setPanelMode(nodeId, "add", "DEFAULT");
+            ctx.notifyNode("root");
+          }}
           className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           disabled={isCreating}
         >

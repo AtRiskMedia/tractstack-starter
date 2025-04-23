@@ -41,7 +41,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const impressionNodes = ctx.getImpressionNodesForPanes([nodeId]);
   const isContextPane = isContextPaneNode(paneNode);
   const buttonClass =
-    "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap mb-1";
+    "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors whitespace-nowrap mb-1";
 
   const [mode, setMode] = useState<PaneConfigMode>(
     isActiveMode && activePaneMode.mode
@@ -100,7 +100,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   }
 
   return (
-    <div className="pt-1.5 bg-mylightgrey">
+    <div className="border-t border-dashed border-mydarkgrey">
       <div className="p-1.5 bg-white rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div

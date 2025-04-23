@@ -101,12 +101,17 @@ const contextPaneModeToHelpKey: Record<string, string> = {
 export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: NodesContext) => {
   const toolMode = useStore(ctx.toolModeValStore);
   const activePaneMode = useStore(ctx.activePaneMode) as PanelState;
+  const hasTitle = useStore(ctx.hasTitle);
+  const hasPanes = useStore(ctx.hasPanes);
 
   useEffect(() => {
     let helpKey: string | null = null;
 
+    // Give priority to !hasPanes or !hasTitle
+    if (!hasTitle) helpKey = "MISSING_TITLE";
+    else if (!hasPanes) helpKey = "MISSING_PANES";
     // Give priority to styles-memory panel
-    if (activePaneMode.panel === "styles-memory" && activePaneMode.mode) {
+    else if (activePaneMode.panel === "styles-memory" && activePaneMode.mode) {
       helpKey = StylesMemoryToHelpKey[activePaneMode.mode] || "STYLES_COPY";
     }
     // Then check signal
@@ -145,5 +150,5 @@ export const useContextualHelp = (signal: SettingsPanelSignal | null, ctx: Nodes
     if (activeHelpKeyStore.get() !== helpKey) {
       activeHelpKeyStore.set(helpKey);
     }
-  }, [signal, toolMode?.value, activePaneMode]);
+  }, [signal, toolMode?.value, activePaneMode, hasTitle, hasPanes]);
 };

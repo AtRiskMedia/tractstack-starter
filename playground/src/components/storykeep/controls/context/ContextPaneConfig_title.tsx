@@ -120,6 +120,23 @@ const ContextPaneTitlePanel = ({ nodeId, setMode }: ContextPaneTitlePanelProps) 
             </span>
           </div>
         </div>
+        <div className="flex items-center mt-2 gap-2">
+          <button
+            onClick={handleTitleBlur}
+            disabled={title.length < 10}
+            className={`px-3 py-1 bg-cyan-700 text-white text-sm rounded hover:bg-cyan-800 transition-colors ${
+              title !== paneNode.title ? "inline-flex" : "hidden"
+            } items-center ${title.length < 10 ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <CheckIcon className="h-4 w-4 mr-1" />
+            Save
+          </button>
+          <span
+            className={`text-sm ${title !== paneNode.title ? "inline" : "hidden"} text-gray-500`}
+          >
+            or press Enter
+          </span>
+        </div>
         <div className="mt-4 text-lg">
           <div className="text-gray-600">
             Write a clear, descriptive title that accurately represents your page content.
