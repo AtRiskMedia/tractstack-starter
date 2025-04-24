@@ -170,7 +170,7 @@ export const PageCreationSelector = ({
                           >
                             {mode.description}
                             {mode.disabled && mode.disabledReason && (
-                              <span className="block mt-1 text-amber-500 font-medium">
+                              <span className="block mt-1 text-amber-500 font-bold">
                                 {mode.disabledReason}
                               </span>
                             )}

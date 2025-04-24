@@ -320,7 +320,7 @@ export default function ActivationForm({
             />
           </div>
           <div className="ml-3 text-sm">
-            <label htmlFor="useCustomEditorPassword" className="font-medium text-mydarkgrey">
+            <label htmlFor="useCustomEditorPassword" className="font-bold text-mydarkgrey">
               Use different password for Editors
             </label>
             <p className="text-mylightgrey">

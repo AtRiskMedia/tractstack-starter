@@ -90,9 +90,9 @@ export default function VersionCheck({ remoteVersionInfo, hasConcierge }: Versio
                 <div className="flex flex-wrap justify-between gap-x-4 text-xs">
                   <div className="text-gray-600">
                     Current:{" "}
-                    <span className="font-medium">{formatDateTime(localVersion.storykeep)}</span>
+                    <span className="font-bold">{formatDateTime(localVersion.storykeep)}</span>
                   </div>
-                  <div className="text-cyan-700 font-medium">
+                  <div className="text-cyan-700 font-bold">
                     Available: {formatDateTime(remoteVersionInfo.storykeep)}
                   </div>
                 </div>
@@ -109,9 +109,9 @@ export default function VersionCheck({ remoteVersionInfo, hasConcierge }: Versio
                 <div className="flex flex-wrap justify-between gap-x-4 text-xs">
                   <div className="text-gray-600">
                     Current:{" "}
-                    <span className="font-medium">{formatDateTime(localVersion.concierge)}</span>
+                    <span className="font-bold">{formatDateTime(localVersion.concierge)}</span>
                   </div>
-                  <div className="text-cyan-700 font-medium">
+                  <div className="text-cyan-700 font-bold">
                     Available: {formatDateTime(remoteVersionInfo.concierge)}
                   </div>
                 </div>
@@ -126,7 +126,7 @@ export default function VersionCheck({ remoteVersionInfo, hasConcierge }: Versio
                 <div className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-cyan-700 mr-1" />
                   <span className="text-xs">
-                    <span className="font-medium text-gray-800">StoryKeep</span>
+                    <span className="font-bold text-gray-800">StoryKeep</span>
                     <span className="text-gray-600"> • Up to date</span>
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export default function VersionCheck({ remoteVersionInfo, hasConcierge }: Versio
                 <div className="flex items-center">
                   <CheckIcon className="h-4 w-4 text-cyan-700 mr-1" />
                   <span className="text-xs">
-                    <span className="font-medium text-gray-800">Concierge</span>
+                    <span className="font-bold text-gray-800">Concierge</span>
                     <span className="text-gray-600"> • Up to date</span>
                   </span>
                 </div>

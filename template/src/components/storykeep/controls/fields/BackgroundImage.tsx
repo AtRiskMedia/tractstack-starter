@@ -328,7 +328,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       {bgImageNode && (
         <>
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Object Fit</label>
+            <label className="block text-sm font-bold text-gray-700">Object Fit</label>
             <div className="flex space-x-4">
               {["cover", "contain", "fill"].map((fit) => (
                 <label key={fit} className="inline-flex items-center">
@@ -347,7 +347,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Hide on Viewport</label>
+            <label className="block text-sm font-bold text-gray-700">Hide on Viewport</label>
             <div className="flex flex-wrap gap-4">
               {["mobile", "tablet", "desktop"].map((viewport) => (
                 <label key={viewport} className="inline-flex items-center">
@@ -369,7 +369,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Alt Description</label>
+            <label className="block text-sm font-bold text-gray-700">Alt Description</label>
             <input
               type="text"
               value={localAltDescription}
