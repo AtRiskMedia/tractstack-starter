@@ -31,6 +31,8 @@ export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
 export const hasArtpacksStore = map<ArtpacksStore>({});
 export const tenantIdStore = atom<string>(`default`);
 
+export const activeHelpTemplateStore = atom<string | null>(`example`);
+
 export const viewportKeyStore = map<{
   value: "mobile" | "tablet" | "desktop";
 }>({
@@ -47,7 +49,7 @@ export const toolModeStore = map<{ value: ToolModeVal }>({
   value: "text",
 });
 export const toolAddModeStore = map<{ value: ToolAddMode }>({
-  value: toolAddModes[0], // Default to the first mode
+  value: toolAddModes[0],
 });
 
 export const settingsPanelStore = atom<SettingsPanelSignal | null>(null);

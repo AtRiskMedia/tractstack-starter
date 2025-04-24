@@ -1,0 +1,932 @@
+{
+  "id": "01JSMSK3SY03PESJR6K2R5R2AT",
+  "name": "This is an example template",
+  "description": "Template for This is an example template",
+  "tractstackNodes": [
+    {
+      "id": "01JSMPDQYXRGQCCS0J0TQKKF3V",
+      "nodeType": "TractStack",
+      "parentId": null,
+      "title": "Template",
+      "slug": "template"
+    }
+  ],
+  "storyfragmentNodes": [
+    {
+      "id": "01JSMPDQYXGY2J9MMDM68HGEHS",
+      "nodeType": "StoryFragment",
+      "parentId": "01JSMPDQYXRGQCCS0J0TQKKF3V",
+      "title": "This is an example template",
+      "slug": "example-template",
+      "paneIds": [
+        "01JSMPJFVECFQWM3N830NJDNG9",
+        "01JSMSJ3ZH4W5PNM360FJTMWP1",
+        "01JSMSJFS8PPCPEVKQBG6XTA85",
+        "01JSMSGEMVRPFFM2R0BR0H9W9J"
+      ],
+      "hasMenu": false,
+      "created": "2025-04-24T20:04:31.837Z",
+      "changed": "2025-04-24T20:04:31.837Z",
+      "tailwindBgColour": "white",
+      "isChanged": true
+    }
+  ],
+  "paneNodes": [
+    {
+      "nodeType": "Pane",
+      "id": "01JSMPJFVECFQWM3N830NJDNG9",
+      "parentId": "01JSMPDQYXGY2J9MMDM68HGEHS",
+      "isDecorative": false,
+      "title": "This is an example t-DNG9",
+      "slug": "example-template-DNG9",
+      "bgColour": "#fcfcfc",
+      "markdown": {
+        "nodeType": "Markdown",
+        "id": "01JSMPJFVFRRZC0P86WPZ0WN9M",
+        "parentId": "01JSMPJFVECFQWM3N830NJDNG9",
+        "type": "markdown",
+        "markdownId": "01JSMPJBGSEDWG1Q96NBFMKCDN",
+        "defaultClasses": {
+          "h2": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "3xl",
+              "lineHEIGHT": "snug",
+              "fontFACE": "action"
+            },
+            "tablet": {
+              "textSIZE": "4xl"
+            },
+            "desktop": {
+              "textSIZE": "5xl"
+            }
+          },
+          "h3": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "lineHEIGHT": "snug",
+              "fontFACE": "action"
+            },
+            "tablet": {
+              "textSIZE": "3xl"
+            },
+            "desktop": {}
+          },
+          "h4": {
+            "mobile": {
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "lineHEIGHT": "snug",
+              "fontFACE": "action",
+              "pt": "4"
+            },
+            "tablet": {
+              "textSIZE": "2xl",
+              "pt": "6"
+            },
+            "desktop": {}
+          },
+          "p": {
+            "mobile": {
+              "textCOLOR": "brand-7",
+              "textSIZE": "lg",
+              "lineHEIGHT": "loose",
+              "py": "1.5"
+            },
+            "tablet": {
+              "textSIZE": "xl",
+              "py": "2.5"
+            },
+            "desktop": {}
+          }
+        },
+        "parentClasses": [
+          {
+            "mobile": {
+              "mx": "5",
+              "mt": "16",
+              "mb": "16"
+            },
+            "tablet": {
+              "mx": "10",
+              "mt": "20"
+            },
+            "desktop": {}
+          },
+          {
+            "mobile": {
+              "mx": "auto",
+              "maxW": "none"
+            },
+            "tablet": {
+              "maxW": "screen-lg"
+            },
+            "desktop": {
+              "maxW": "screen-xl"
+            }
+          },
+          {
+            "mobile": {
+              "px": "9",
+              "py": "10",
+              "textALIGN": "left",
+              "textWRAP": "pretty",
+              "bgCOLOR": "white",
+              "shadow": "lg"
+            },
+            "tablet": {
+              "px": "14"
+            },
+            "desktop": {
+              "px": "32"
+            }
+          }
+        ],
+        "markdownBody": "## An incredible journey awaits\n\nAn incredible journey awaits... An incredible journey awaits..."
+      },
+      "isChanged": true
+    },
+    {
+      "nodeType": "Pane",
+      "title": "This is an example t-9W9J",
+      "slug": "example-template-9W9J",
+      "id": "01JSMSGEMVRPFFM2R0BR0H9W9J",
+      "parentId": "01JSMPDQYXGY2J9MMDM68HGEHS",
+      "isDecorative": false,
+      "bgColour": "#fcfcfc",
+      "markdown": {
+        "nodeType": "Markdown",
+        "id": "01JSMSGEMVPRF9J7MHY2HHPQ3V",
+        "parentId": "01JSMSGEMVRPFFM2R0BR0H9W9J",
+        "type": "markdown",
+        "markdownId": "01JSMSGAQ20BMJNWP0Z7XSPYRZ",
+        "defaultClasses": {
+          "h2": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "3xl",
+              "lineHEIGHT": "snug",
+              "fontFACE": "action",
+              "pt": "6",
+              "pb": "2.5"
+            },
+            "tablet": {
+              "textSIZE": "5xl",
+              "pt": "9",
+              "pb": "3.5"
+            },
+            "desktop": {
+              "textSIZE": "6xl",
+              "pt": "12"
+            }
+          },
+          "h3": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "fontFACE": "action",
+              "pt": "6",
+              "pb": "2.5"
+            },
+            "tablet": {
+              "textSIZE": "3xl",
+              "pt": "9",
+              "pb": "3.5"
+            },
+            "desktop": {
+              "pt": "12"
+            }
+          },
+          "h4": {
+            "mobile": {
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "fontFACE": "action",
+              "pt": "4"
+            },
+            "tablet": {
+              "textSIZE": "2xl",
+              "pt": "6"
+            },
+            "desktop": {}
+          },
+          "p": {
+            "mobile": {
+              "textCOLOR": "brand-7",
+              "textSIZE": "lg",
+              "lineHEIGHT": "loose",
+              "py": "1.5"
+            },
+            "tablet": {
+              "textSIZE": "xl",
+              "py": "2.5"
+            },
+            "desktop": {}
+          }
+        },
+        "parentClasses": [
+          {
+            "mobile": {
+              "mx": "5",
+              "my": "16"
+            },
+            "tablet": {
+              "mx": "10"
+            },
+            "desktop": {}
+          },
+          {
+            "mobile": {
+              "mx": "auto",
+              "maxW": "none"
+            },
+            "tablet": {
+              "maxW": "screen-lg"
+            },
+            "desktop": {
+              "maxW": "screen-xl"
+            }
+          },
+          {
+            "mobile": {
+              "px": "9",
+              "py": "10",
+              "textALIGN": "left",
+              "textWRAP": "pretty"
+            },
+            "tablet": {
+              "px": "14"
+            },
+            "desktop": {
+              "px": "32"
+            }
+          }
+        ],
+        "markdownBody": "### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves."
+      },
+      "isChanged": true
+    },
+    {
+      "nodeType": "Pane",
+      "title": "This is an example t-MWP1",
+      "slug": "example-template-MWP1",
+      "id": "01JSMSJ3ZH4W5PNM360FJTMWP1",
+      "parentId": "01JSMPDQYXGY2J9MMDM68HGEHS",
+      "isDecorative": false,
+      "bgColour": "#ffffff",
+      "markdown": {
+        "nodeType": "Markdown",
+        "id": "01JSMSJ3ZHB4QNX96NC29E0DWM",
+        "parentId": "01JSMSJ3ZH4W5PNM360FJTMWP1",
+        "type": "markdown",
+        "markdownId": "01JSMSJ1AHFATDZX6SBRE7SF80",
+        "defaultClasses": {
+          "h2": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "3xl",
+              "lineHEIGHT": "snug",
+              "fontFACE": "action",
+              "pt": "6",
+              "pb": "2.5"
+            },
+            "tablet": {
+              "textSIZE": "5xl",
+              "pt": "9",
+              "pb": "3.5"
+            },
+            "desktop": {
+              "textSIZE": "6xl",
+              "pt": "12"
+            }
+          },
+          "h3": {
+            "mobile": {
+              "fontWEIGHT": "bold",
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "fontFACE": "action",
+              "pt": "6",
+              "pb": "2.5"
+            },
+            "tablet": {
+              "textSIZE": "3xl",
+              "pt": "9",
+              "pb": "3.5"
+            },
+            "desktop": {
+              "pt": "12"
+            }
+          },
+          "h4": {
+            "mobile": {
+              "textCOLOR": "brand-5",
+              "textSIZE": "xl",
+              "fontFACE": "action",
+              "pt": "4"
+            },
+            "tablet": {
+              "textSIZE": "2xl",
+              "pt": "6"
+            },
+            "desktop": {}
+          },
+          "p": {
+            "mobile": {
+              "textCOLOR": "brand-7",
+              "textSIZE": "lg",
+              "lineHEIGHT": "loose",
+              "py": "1.5"
+            },
+            "tablet": {
+              "textSIZE": "xl",
+              "py": "2.5"
+            },
+            "desktop": {}
+          }
+        },
+        "parentClasses": [
+          {
+            "mobile": {
+              "mx": "5",
+              "my": "16"
+            },
+            "tablet": {
+              "mx": "10"
+            },
+            "desktop": {}
+          },
+          {
+            "mobile": {
+              "mx": "auto",
+              "maxW": "none"
+            },
+            "tablet": {
+              "maxW": "screen-lg"
+            },
+            "desktop": {
+              "maxW": "screen-xl"
+            }
+          },
+          {
+            "mobile": {
+              "px": "9",
+              "py": "10",
+              "textALIGN": "left",
+              "textWRAP": "pretty"
+            },
+            "tablet": {
+              "px": "14"
+            },
+            "desktop": {
+              "px": "32"
+            }
+          }
+        ],
+        "markdownBody": "### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves."
+      },
+      "isChanged": true
+    },
+    {
+      "nodeType": "Pane",
+      "title": "This is an example t-TA85",
+      "slug": "example-template-TA85",
+      "isDecorative": true,
+      "bgColour": "#fcfcfc",
+      "id": "01JSMSJFS8PPCPEVKQBG6XTA85",
+      "parentId": "01JSMPDQYXGY2J9MMDM68HGEHS",
+      "isChanged": true
+    }
+  ],
+  "childNodes": [
+    {
+      "nodeType": "Markdown",
+      "id": "01JSMPJFVFRRZC0P86WPZ0WN9M",
+      "parentId": "01JSMPJFVECFQWM3N830NJDNG9",
+      "type": "markdown",
+      "markdownId": "01JSMPJBGSEDWG1Q96NBFMKCDN",
+      "defaultClasses": {
+        "h2": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "3xl",
+            "lineHEIGHT": "snug",
+            "fontFACE": "action"
+          },
+          "tablet": {
+            "textSIZE": "4xl"
+          },
+          "desktop": {
+            "textSIZE": "5xl"
+          }
+        },
+        "h3": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "lineHEIGHT": "snug",
+            "fontFACE": "action"
+          },
+          "tablet": {
+            "textSIZE": "3xl"
+          },
+          "desktop": {}
+        },
+        "h4": {
+          "mobile": {
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "lineHEIGHT": "snug",
+            "fontFACE": "action",
+            "pt": "4"
+          },
+          "tablet": {
+            "textSIZE": "2xl",
+            "pt": "6"
+          },
+          "desktop": {}
+        },
+        "p": {
+          "mobile": {
+            "textCOLOR": "brand-7",
+            "textSIZE": "lg",
+            "lineHEIGHT": "loose",
+            "py": "1.5"
+          },
+          "tablet": {
+            "textSIZE": "xl",
+            "py": "2.5"
+          },
+          "desktop": {}
+        }
+      },
+      "parentClasses": [
+        {
+          "mobile": {
+            "mx": "5",
+            "mt": "16",
+            "mb": "16"
+          },
+          "tablet": {
+            "mx": "10",
+            "mt": "20"
+          },
+          "desktop": {}
+        },
+        {
+          "mobile": {
+            "mx": "auto",
+            "maxW": "none"
+          },
+          "tablet": {
+            "maxW": "screen-lg"
+          },
+          "desktop": {
+            "maxW": "screen-xl"
+          }
+        },
+        {
+          "mobile": {
+            "px": "9",
+            "py": "10",
+            "textALIGN": "left",
+            "textWRAP": "pretty",
+            "bgCOLOR": "white",
+            "shadow": "lg"
+          },
+          "tablet": {
+            "px": "14"
+          },
+          "desktop": {
+            "px": "32"
+          }
+        }
+      ],
+      "markdownBody": "## An incredible journey awaits\n\nAn incredible journey awaits... An incredible journey awaits..."
+    },
+    {
+      "id": "01JSMPJFVFZ77VGZTYJB4JYA0M",
+      "tagName": "h2",
+      "nodeType": "TagElement",
+      "parentId": "01JSMPJFVFRRZC0P86WPZ0WN9M"
+    },
+    {
+      "id": "01JSMPJFVFMF3ANHSRJXNFF1KR",
+      "tagName": "text",
+      "copy": "An incredible journey awaits",
+      "nodeType": "TagElement",
+      "parentId": "01JSMPJFVFZ77VGZTYJB4JYA0M"
+    },
+    {
+      "id": "01JSMPJFVFVF2EGMENMSBN87SQ",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMPJFVFRRZC0P86WPZ0WN9M"
+    },
+    {
+      "id": "01JSMPJFVFTSS7GXYAJ44319AZ",
+      "tagName": "text",
+      "copy": "An incredible journey awaits... An incredible journey awaits...",
+      "nodeType": "TagElement",
+      "parentId": "01JSMPJFVFVF2EGMENMSBN87SQ"
+    },
+    {
+      "id": "01JSMPJNDXZJK19XRP7NGX2GJZ",
+      "nodeType": "BgPane",
+      "parentId": "01JSMPJFVECFQWM3N830NJDNG9",
+      "type": "artpack-image",
+      "collection": "t8k",
+      "image": "cartoon",
+      "src": "/artpacks/t8k/cartoon_1920px.webp",
+      "srcSet": "/artpacks/t8k/cartoon_1920px.webp 1920w, /artpacks/t8k/cartoon_1080px.webp 1080w, /artpacks/t8k/cartoon_600px.webp 600w",
+      "alt": "Artpack image from t8k collection",
+      "objectFit": "cover",
+      "isChanged": true
+    },
+    {
+      "nodeType": "Markdown",
+      "id": "01JSMSGEMVPRF9J7MHY2HHPQ3V",
+      "parentId": "01JSMSGEMVRPFFM2R0BR0H9W9J",
+      "type": "markdown",
+      "markdownId": "01JSMSGAQ20BMJNWP0Z7XSPYRZ",
+      "defaultClasses": {
+        "h2": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "3xl",
+            "lineHEIGHT": "snug",
+            "fontFACE": "action",
+            "pt": "6",
+            "pb": "2.5"
+          },
+          "tablet": {
+            "textSIZE": "5xl",
+            "pt": "9",
+            "pb": "3.5"
+          },
+          "desktop": {
+            "textSIZE": "6xl",
+            "pt": "12"
+          }
+        },
+        "h3": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "fontFACE": "action",
+            "pt": "6",
+            "pb": "2.5"
+          },
+          "tablet": {
+            "textSIZE": "3xl",
+            "pt": "9",
+            "pb": "3.5"
+          },
+          "desktop": {
+            "pt": "12"
+          }
+        },
+        "h4": {
+          "mobile": {
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "fontFACE": "action",
+            "pt": "4"
+          },
+          "tablet": {
+            "textSIZE": "2xl",
+            "pt": "6"
+          },
+          "desktop": {}
+        },
+        "p": {
+          "mobile": {
+            "textCOLOR": "brand-7",
+            "textSIZE": "lg",
+            "lineHEIGHT": "loose",
+            "py": "1.5"
+          },
+          "tablet": {
+            "textSIZE": "xl",
+            "py": "2.5"
+          },
+          "desktop": {}
+        }
+      },
+      "parentClasses": [
+        {
+          "mobile": {
+            "mx": "5",
+            "my": "16"
+          },
+          "tablet": {
+            "mx": "10"
+          },
+          "desktop": {}
+        },
+        {
+          "mobile": {
+            "mx": "auto",
+            "maxW": "none"
+          },
+          "tablet": {
+            "maxW": "screen-lg"
+          },
+          "desktop": {
+            "maxW": "screen-xl"
+          }
+        },
+        {
+          "mobile": {
+            "px": "9",
+            "py": "10",
+            "textALIGN": "left",
+            "textWRAP": "pretty"
+          },
+          "tablet": {
+            "px": "14"
+          },
+          "desktop": {
+            "px": "32"
+          }
+        }
+      ],
+      "markdownBody": "### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves."
+    },
+    {
+      "id": "01JSMSGEMVVZPDF9PBNVM8EEDN",
+      "tagName": "h3",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVPRF9J7MHY2HHPQ3V"
+    },
+    {
+      "id": "01JSMSGEMWCJ1NCGWDRRSSEJRC",
+      "tagName": "text",
+      "copy": "tell us what happened",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVVZPDF9PBNVM8EEDN"
+    },
+    {
+      "id": "01JSMSGEMWWJSFQJ6JEBW0672Q",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVPRF9J7MHY2HHPQ3V"
+    },
+    {
+      "id": "01JSMSGEMWYE32DRQ6WH35PK5V",
+      "tagName": "text",
+      "copy": "your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMWWJSFQJ6JEBW0672Q"
+    },
+    {
+      "id": "01JSMSGEMWZ0J44B9W6HSRHEX7",
+      "tagName": "h4",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVPRF9J7MHY2HHPQ3V"
+    },
+    {
+      "id": "01JSMSGEMWH9YEBWF4A3DZVE0N",
+      "tagName": "text",
+      "copy": "Add in those important details",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMWZ0J44B9W6HSRHEX7"
+    },
+    {
+      "id": "01JSMSGEMWA0RCSWSC3RX3VZV6",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVPRF9J7MHY2HHPQ3V"
+    },
+    {
+      "id": "01JSMSGEMWH74JVSFZVTD744RX",
+      "tagName": "text",
+      "copy": "Write for both the humans and for the search engine rankings!",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMWA0RCSWSC3RX3VZV6"
+    },
+    {
+      "id": "01JSMSGEMWEGAVBNYANKJS6371",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMVPRF9J7MHY2HHPQ3V"
+    },
+    {
+      "id": "01JSMSGEMWW1SSX3D79BWZJ69P",
+      "tagName": "text",
+      "copy": "Capture attention and make moves.",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSGEMWEGAVBNYANKJS6371"
+    },
+    {
+      "nodeType": "Markdown",
+      "id": "01JSMSJ3ZHB4QNX96NC29E0DWM",
+      "parentId": "01JSMSJ3ZH4W5PNM360FJTMWP1",
+      "type": "markdown",
+      "markdownId": "01JSMSJ1AHFATDZX6SBRE7SF80",
+      "defaultClasses": {
+        "h2": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "3xl",
+            "lineHEIGHT": "snug",
+            "fontFACE": "action",
+            "pt": "6",
+            "pb": "2.5"
+          },
+          "tablet": {
+            "textSIZE": "5xl",
+            "pt": "9",
+            "pb": "3.5"
+          },
+          "desktop": {
+            "textSIZE": "6xl",
+            "pt": "12"
+          }
+        },
+        "h3": {
+          "mobile": {
+            "fontWEIGHT": "bold",
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "fontFACE": "action",
+            "pt": "6",
+            "pb": "2.5"
+          },
+          "tablet": {
+            "textSIZE": "3xl",
+            "pt": "9",
+            "pb": "3.5"
+          },
+          "desktop": {
+            "pt": "12"
+          }
+        },
+        "h4": {
+          "mobile": {
+            "textCOLOR": "brand-5",
+            "textSIZE": "xl",
+            "fontFACE": "action",
+            "pt": "4"
+          },
+          "tablet": {
+            "textSIZE": "2xl",
+            "pt": "6"
+          },
+          "desktop": {}
+        },
+        "p": {
+          "mobile": {
+            "textCOLOR": "brand-7",
+            "textSIZE": "lg",
+            "lineHEIGHT": "loose",
+            "py": "1.5"
+          },
+          "tablet": {
+            "textSIZE": "xl",
+            "py": "2.5"
+          },
+          "desktop": {}
+        }
+      },
+      "parentClasses": [
+        {
+          "mobile": {
+            "mx": "5",
+            "my": "16"
+          },
+          "tablet": {
+            "mx": "10"
+          },
+          "desktop": {}
+        },
+        {
+          "mobile": {
+            "mx": "auto",
+            "maxW": "none"
+          },
+          "tablet": {
+            "maxW": "screen-lg"
+          },
+          "desktop": {
+            "maxW": "screen-xl"
+          }
+        },
+        {
+          "mobile": {
+            "px": "9",
+            "py": "10",
+            "textALIGN": "left",
+            "textWRAP": "pretty"
+          },
+          "tablet": {
+            "px": "14"
+          },
+          "desktop": {
+            "px": "32"
+          }
+        }
+      ],
+      "markdownBody": "### tell us what happened\n\nyour story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.\n\n#### Add in those important details\n\nWrite for both the humans and for the search engine rankings!\n\nCapture attention and make moves."
+    },
+    {
+      "id": "01JSMSJ3ZHB4MGRWRNQC42TW8V",
+      "tagName": "h3",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4QNX96NC29E0DWM"
+    },
+    {
+      "id": "01JSMSJ3ZH4YRZ1WSBSE5W8QKV",
+      "tagName": "text",
+      "copy": "tell us what happened",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4MGRWRNQC42TW8V"
+    },
+    {
+      "id": "01JSMSJ3ZHBR5NBAX1JG9KEZ6Y",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4QNX96NC29E0DWM"
+    },
+    {
+      "id": "01JSMSJ3ZH7QHKDM0J7ZTZ6RD2",
+      "tagName": "text",
+      "copy": "your story continues... and continues... and continues... and continues... and continues... and continues... with nice layout and typography.",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHBR5NBAX1JG9KEZ6Y"
+    },
+    {
+      "id": "01JSMSJ3ZHY74P9J4YVBCHKFK1",
+      "tagName": "h4",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4QNX96NC29E0DWM"
+    },
+    {
+      "id": "01JSMSJ3ZHQT2DJ2TX2XPBTQHF",
+      "tagName": "text",
+      "copy": "Add in those important details",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHY74P9J4YVBCHKFK1"
+    },
+    {
+      "id": "01JSMSJ3ZH00JANWA2DVYZZCQ4",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4QNX96NC29E0DWM"
+    },
+    {
+      "id": "01JSMSJ3ZH81JTGRK7CX8E5JWF",
+      "tagName": "text",
+      "copy": "Write for both the humans and for the search engine rankings!",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZH00JANWA2DVYZZCQ4"
+    },
+    {
+      "id": "01JSMSJ3ZHPN4RRSY8W09WMCT9",
+      "tagName": "p",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHB4QNX96NC29E0DWM"
+    },
+    {
+      "id": "01JSMSJ3ZH1T2QE284FJ90DGM1",
+      "tagName": "text",
+      "copy": "Capture attention and make moves.",
+      "nodeType": "TagElement",
+      "parentId": "01JSMSJ3ZHPN4RRSY8W09WMCT9"
+    },
+    {
+      "id": "01JSMSJFS84A2BBX3TD7DXGT2K",
+      "nodeType": "BgPane",
+      "parentId": "01JSMSJFS8PPCPEVKQBG6XTA85",
+      "type": "visual-break",
+      "breakDesktop": {
+        "collection": "kCz",
+        "image": "steppedwide",
+        "svgFill": "#ffffff"
+      },
+      "breakTablet": {
+        "collection": "kCz",
+        "image": "steppedwide",
+        "svgFill": "#ffffff"
+      },
+      "breakMobile": {
+        "collection": "kCz",
+        "image": "steppedwide",
+        "svgFill": "#ffffff"
+      }
+    }
+  ],
+  "fileNodes": [],
+  "menuNodes": []
+}
