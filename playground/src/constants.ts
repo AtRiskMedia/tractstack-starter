@@ -59,6 +59,8 @@ export const tagTitles: Record<Tag, string> = {
   identify: "Identify As Widget",
 };
 
+export const isTemplateToolAddModes = ["p", "h2", "h3", "h4", "img", "bunny", "yt"] as const;
+
 export const toolAddModes = [
   "p",
   "h2",

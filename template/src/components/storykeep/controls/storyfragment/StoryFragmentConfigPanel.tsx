@@ -22,6 +22,7 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   const [tempBgColor, setTempBgColor] = useState<string | null>(null);
 
   const ctx = getCtx();
+  const isTemplate = useStore(ctx.isTemplate);
   const activePaneMode = useStore(ctx.activePaneMode);
 
   // Check if this specific panel is active
@@ -158,39 +159,43 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
             Slug: <span className="font-bold">{storyfragmentNode.slug}</span>
           </button>
 
-          <button
-            onClick={() => setMode(StoryFragmentMode.MENU)}
-            className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
-          >
-            {storyfragmentNode.hasMenu ? (
-              <>
-                <CheckIcon className="w-4 h-4" />
-                <span className="font-bold">Has Menu</span>
-              </>
-            ) : (
-              <>
-                <XMarkIcon className="w-4 h-4" />
-                <span>No Menu</span>
-              </>
-            )}
-          </button>
+          {!isTemplate && (
+            <>
+              <button
+                onClick={() => setMode(StoryFragmentMode.MENU)}
+                className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
+              >
+                {storyfragmentNode.hasMenu ? (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    <span className="font-bold">Has Menu</span>
+                  </>
+                ) : (
+                  <>
+                    <XMarkIcon className="w-4 h-4" />
+                    <span>No Menu</span>
+                  </>
+                )}
+              </button>
 
-          <button
-            onClick={() => setMode(StoryFragmentMode.OG)}
-            className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
-          >
-            {isSEOReady ? (
-              <>
-                <CheckIcon className="w-4 h-4" />
-                <span className="font-bold">SEO Ready</span>
-              </>
-            ) : (
-              <>
-                <TagIcon className="w-4 h-4 mr-1" />
-                <span>SEO Ready?</span>
-              </>
-            )}
-          </button>
+              <button
+                onClick={() => setMode(StoryFragmentMode.OG)}
+                className="h-9 px-3 bg-white text-cyan-700 text-md rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors border border-cyan-200 flex items-center gap-1"
+              >
+                {isSEOReady ? (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    <span className="font-bold">SEO Ready</span>
+                  </>
+                ) : (
+                  <>
+                    <TagIcon className="w-4 h-4 mr-1" />
+                    <span>SEO Ready?</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
 
           {config && (
             <div className="flex items-center gap-2">

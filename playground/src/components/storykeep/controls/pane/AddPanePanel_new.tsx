@@ -385,45 +385,51 @@ const AddPaneNewPanel = ({
 
           <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 p-2">
             {visiblePreviews.map((preview) => (
-              <div
-                key={preview.index}
-                onClick={
-                  isInserting
-                    ? undefined
-                    : () => handleTemplateInsert(preview.template, nodeId, first)
-                }
-                className={`group bg-mywhite shadow-inner relative w-full rounded-sm ${
-                  isInserting ? "cursor-not-allowed opacity-50" : "cursor-pointer"
-                } transition-all duration-200 ${
-                  preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
-                }`}
-                style={{
-                  ...(!preview.snapshot ? { minHeight: "200px" } : {}),
-                }}
-              >
-                {renderedPages.has(currentPage) && !preview.snapshot && (
-                  <NodesSnapshotRenderer
-                    ctx={preview.ctx}
-                    forceRegenerate={false}
-                    onComplete={(data) => {
-                      setPreviews((prev) =>
-                        prev.map((p) => (p.index === preview.index ? { ...p, snapshot: data } : p))
-                      );
-                    }}
-                  />
-                )}
-                {preview.snapshot && (
-                  <div className="p-0.5">
-                    <img
-                      src={preview.snapshot.imageData}
-                      alt={`Template ${preview.index + 1}`}
-                      className="w-full"
+              <div key={preview.index} className="flex flex-col items-center">
+                <div
+                  onClick={
+                    isInserting
+                      ? undefined
+                      : () => handleTemplateInsert(preview.template, nodeId, first)
+                  }
+                  className={`group bg-mywhite shadow-inner relative w-full rounded-sm ${
+                    isInserting ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                  } transition-all duration-200 ${
+                    preview.snapshot ? "hover:outline hover:outline-4 hover:outline-solid" : ""
+                  }`}
+                  style={{
+                    ...(!preview.snapshot ? { minHeight: "200px" } : {}),
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={preview.template.title}
+                >
+                  {renderedPages.has(currentPage) && !preview.snapshot && (
+                    <NodesSnapshotRenderer
+                      ctx={preview.ctx}
+                      forceRegenerate={false}
+                      onComplete={(data) => {
+                        setPreviews((prev) =>
+                          prev.map((p) =>
+                            p.index === preview.index ? { ...p, snapshot: data } : p
+                          )
+                        );
+                      }}
                     />
-                  </div>
-                )}
-                <div className="rounded-t-md absolute bottom-0 left-0 right-0 bg-mydarkgrey group-hover:bg-myblack text-white px-2 py-1 text-sm">
-                  {preview.template.title}
+                  )}
+                  {preview.snapshot && (
+                    <div className="p-0.5">
+                      <img
+                        src={preview.snapshot.imageData}
+                        alt={`Template: ${preview.template.title}`}
+                        className="w-full"
+                      />
+                    </div>
+                  )}
                 </div>
+                <p className="w-full text-sm bg-mydarkgrey p-2 text-white text-center break-words mt-2">
+                  {preview.template.title}
+                </p>
               </div>
             ))}
           </div>

@@ -5,7 +5,7 @@ export interface EditableWordProps {
   word: Word;
   wordIdx: number;
   selected: boolean;
-  onClick: (idx: number, word: Word) => void;
+  onClick: (/*idx: number,*/ word: Word) => void;
 }
 
 export const TranscriptWordDrawer = (props: EditableWordProps) => {
@@ -18,7 +18,7 @@ export const TranscriptWordDrawer = (props: EditableWordProps) => {
 
   const drawWord = () => {
     return (
-      <span className={getClass()} onClick={() => props.onClick(props.wordIdx, props.word)}>
+      <span className={getClass()} onClick={() => props.onClick(/*props.wordIdx,*/ props.word)}>
         {props.word.getText()}
       </span>
     );

@@ -14,7 +14,8 @@ export const NodeBasicTag_settings = (props: NodeTagProps) => {
   const children = getCtx(props).getChildNodeIDs(props.nodeId);
   const Tag = props.tagName;
 
-  const canMove = (direction: "before" | "after"): boolean => {
+  const canMove = (/*direction: "before" | "after"*/): boolean => {
+    console.log(`TODO-- wire into allowInsert for proper signal`);
     const hasCodeChildren = getCtx(props).getChildNodeByTagNames(nodeId, ["code"]);
     // only ul/ol can move code nodes
     if (hasCodeChildren && node.tagName === "li") {
@@ -27,14 +28,14 @@ export const NodeBasicTag_settings = (props: NodeTagProps) => {
     <div
       className={`absolute top-2 left-2 flex items-center gap-2 ${!keyboardAccessible.get() ? "opacity-20 group-hover:opacity-100 group-focus-within:opacity-100" : ""} transition-opacity z-10`}
     >
-      {canMove("after") && (
+      {canMove(/*"after"*/) && (
         <button onClick={() => getCtx().moveNode(nodeId, "after")}>
           <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
             <ArrowDownIcon className="w-6 h-6 mr-1" />
           </div>
         </button>
       )}
-      {canMove("before") && (
+      {canMove(/*"before"*/) && (
         <button onClick={() => getCtx().moveNode(nodeId, "before")}>
           <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center">
             <ArrowUpIcon className="w-6 h-6 mr-1" />

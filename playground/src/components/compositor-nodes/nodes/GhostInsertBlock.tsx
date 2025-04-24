@@ -1,5 +1,10 @@
 import { memo, useMemo, useState } from "react";
-import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants";
+import {
+  isTemplateToolAddModes,
+  toolAddModes,
+  toolAddModesIcons,
+  toolAddModeTitles,
+} from "@/constants";
 import { settingsPanelStore } from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
 import { getTemplateNode } from "@/utils/common/nodesHelper";
@@ -17,6 +22,8 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   const { isEmpty, lastChildId } = props;
   const [showInsertOptions, setShowInsertOptions] = useState(false);
 
+  const isTemplate = getCtx(props).isTemplate.get();
+  const $toolAddModes = isTemplate ? isTemplateToolAddModes : toolAddModes;
   const parentNode = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   const lastChildNode = lastChildId
     ? (getCtx(props).allNodes.get().get(lastChildId) as FlatNode)
@@ -25,7 +32,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   const allowedModes = useMemo(() => {
     const contextNode = isEmpty ? parentNode : lastChildNode;
     if (!contextNode) return [];
-    return toolAddModes.filter((mode) =>
+    return $toolAddModes.filter((mode) =>
       typeof contextNode.tagName === `string`
         ? allowInsert(contextNode, contextNode.tagName as Tag, mode as Tag, undefined)
         : false
@@ -83,7 +90,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
 
   const ElementButtons = () => (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2">
-      {toolAddModes
+      {$toolAddModes
         .filter((mode) => !["p", "h2", "h3", "h4"].includes(mode))
         .filter((mode) => allowedModes.includes(mode))
         .map((mode) => (
@@ -108,7 +115,7 @@ export const GhostInsertBlock = memo((props: GhostInsertBlockProps) => {
   );
 
   // Check if there are any allowed non-text elements
-  const hasAllowedElements = toolAddModes
+  const hasAllowedElements = $toolAddModes
     .filter((mode) => !["p", "h2", "h3", "h4"].includes(mode))
     .some((mode) => allowedModes.includes(mode));
 

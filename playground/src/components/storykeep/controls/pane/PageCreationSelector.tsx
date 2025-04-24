@@ -16,6 +16,7 @@ import type { NodesContext } from "@/store/nodes";
 interface PageCreationSelectorProps {
   nodeId: string;
   ctx: NodesContext;
+  isTemplate?: boolean;
 }
 
 type CreationMode = {
@@ -28,7 +29,11 @@ type CreationMode = {
   disabledReason?: string;
 };
 
-export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps) => {
+export const PageCreationSelector = ({
+  nodeId,
+  ctx,
+  isTemplate = false,
+}: PageCreationSelectorProps) => {
   const [selected, setSelected] = useState<CreationMode["id"]>("design");
   const [showTemplates, setShowTemplates] = useState(false);
   const [showGen, setShowGen] = useState(false);
@@ -97,7 +102,7 @@ export const PageCreationSelector = ({ nodeId, ctx }: PageCreationSelectorProps)
     }
   };
 
-  if (showTemplates)
+  if (showTemplates || isTemplate)
     return <AddPanePanel nodeId={nodeId} first={true} ctx={ctx} isStoryFragment={true} />;
   else if (showGen) return <PageCreationGen nodeId={nodeId} ctx={ctx} />;
   else if (showFeatured) return <PageCreationSpecial nodeId={nodeId} ctx={ctx} />;

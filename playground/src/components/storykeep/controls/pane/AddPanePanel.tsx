@@ -29,10 +29,9 @@ const AddPanePanel = ({
   const nodesCtx = typeof ctx !== `undefined` ? ctx : null;
   const activePaneMode = typeof ctx !== `undefined` ? useStore(ctx.activePaneMode) : null;
   const hasPanes = typeof ctx !== `undefined` ? useStore(ctx.hasPanes) : false;
-  // Check if this specific add panel is active
   const isActive = activePaneMode?.panel === "add" && activePaneMode?.paneId === lookup;
+  const isTemplate = typeof ctx !== `undefined` ? useStore(ctx.isTemplate) : false;
 
-  // Get the mode from activePaneMode or use DEFAULT
   const mode =
     isActive && activePaneMode?.mode
       ? (activePaneMode?.mode as PaneAddMode)
@@ -42,12 +41,8 @@ const AddPanePanel = ({
 
   const setMode = (newMode: PaneAddMode, reset?: boolean) => {
     setReset(true);
-
-    // Set the panel mode in the context
     nodesCtx?.setPanelMode(lookup, "add", newMode);
     if (reset) nodesCtx?.notifyNode(ROOT_NODE_NAME);
-
-    // Clear any settings panel
     settingsPanelStore.set(null);
   };
 
@@ -104,20 +99,24 @@ const AddPanePanel = ({
                   >
                     + Visual Break
                   </button>
-                  <button
-                    onClick={() => setMode(PaneAddMode.REUSE)}
-                    className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
-                  >
-                    + Re-use existing pane
-                  </button>
+                  {!isTemplate && (
+                    <button
+                      onClick={() => setMode(PaneAddMode.REUSE)}
+                      className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+                    >
+                      + Re-use existing pane
+                    </button>
+                  )}
                 </>
               )}
-              <button
-                onClick={() => setMode(PaneAddMode.CODEHOOK)}
-                className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
-              >
-                + Custom Code Hook
-              </button>
+              {!isTemplate && (
+                <button
+                  onClick={() => setMode(PaneAddMode.CODEHOOK)}
+                  className="px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors"
+                >
+                  + Custom Code Hook
+                </button>
+              )}
             </div>
           </div>
         </div>

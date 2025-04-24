@@ -21,6 +21,7 @@ function formatNumber(num: number): string {
 export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
   const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
@@ -62,6 +63,8 @@ export default function PageViewStats() {
         }
       } catch (error) {
         console.error("Error fetching lead metrics:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -116,7 +119,65 @@ export default function PageViewStats() {
     }
   };
 
-  if (!isClient || !leadMetrics) return null;
+  // Placeholder skeleton loader component
+  const LoadingPlaceholder = () => (
+    <div className="p-0.5 shadow-md">
+      <div className="p-1.5 bg-white rounded-b-md w-full">
+        <h3 className="font-bold font-action text-xl mb-4">Analytics Dashboard</h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {[1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100"
+            >
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+              <hr className="my-3.5 border-gray-100" />
+              <div className="flex justify-between">
+                <div className="w-1/2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                </div>
+                <div className="w-1/2 flex justify-end">
+                  <div className="w-3/4">
+                    <div className="h-4 bg-gray-200 rounded w-full mb-2 animate-pulse"></div>
+                    <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4 mb-2 animate-pulse"></div>
+              <div className="flex justify-between">
+                <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {[1, 2].map((item) => (
+            <div
+              key={item}
+              className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100"
+            >
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-4">
+          <div className="h-60 bg-gray-200 rounded w-full animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (!isClient) return null;
+  if (isLoading) return <LoadingPlaceholder />;
+  if (!leadMetrics) return null;
 
   return (
     <div className="p-0.5 shadow-md">
@@ -235,7 +296,7 @@ export default function PageViewStats() {
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 motion-safe:animate-fadeInUp">
           <DashboardActivity />
         </div>
       </div>

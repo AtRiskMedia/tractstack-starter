@@ -35,7 +35,7 @@ export const applyTranscriptOverrides = (overrides: TranscriptOverride) => {
 
     if (overrides?.wordOverrides?.size > 0) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for (const [key, value] of overrides.wordOverrides) {
+      for (const [_key, value] of overrides.wordOverrides) {
         if (value.word) {
           overrideWord(value.inChapterIdx, value.chapterIdx, value.word);
         }

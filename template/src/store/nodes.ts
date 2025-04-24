@@ -71,6 +71,7 @@ export class NodesContext {
   parentNodes = atom<Map<string, string[]>>(new Map<string, string[]>());
   hasTitle = atom<boolean>(false);
   hasPanes = atom<boolean>(false);
+  isTemplate = atom<boolean>(false);
   rootNodeId = atom<string>("");
   clickedNodeId = atom<string>("");
   ghostTextActiveId = atom<string>("");

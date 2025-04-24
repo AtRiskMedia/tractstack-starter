@@ -175,6 +175,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Define protected routes (unchanged)
   const adminProtectedRoutes = [
     "/storykeep/settings",
+    "/storykeep/templates",
     ...(isInitialized ? ["/storykeep/init"] : []),
     "/api/concierge/publish",
     "/api/concierge/status",

@@ -1,0 +1,78 @@
+---
+import { getAPIContext } from "@/utils/api/astroContext";
+import { components as codeHookComponents } from "@/custom/CodeHook.astro";
+import { getConfig, validateConfig } from "@/utils/core/config";
+import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar";
+import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode";
+import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import TemplateEditor from "@/components/templates/TemplateEditor";
+import { createEmptyTemplate } from "@/utils/templates/templateUtils";
+
+const context = getAPIContext(Astro);
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
+const validation = await validateConfig(config);
+
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// Create empty template data for the editor
+const initialTemplateData = createEmptyTemplate();
+---
+
+<StoryKeep
+  title="Template Editor"
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  ogImage=""
+  config={config}
+  canonicalURL="/storykeep/templates"
+>
+  <div class="flex min-h-screen">
+    <nav
+      id="mainNav"
+      class="fixed bg-mywhite z-40 bottom-0
+      left-0 right-0 pt-1.5
+      md:bottom-auto md:left-0 md:top-0 md:w-16 md:h-screen md:pt-0"
+    >
+      <div
+        class="flex flex-wrap gap-4 justify-around py-3.5
+        md:flex-col md:items-center md:space-y-2 md:space-x-0 md:py-2 md:gap-8 md:mt-8"
+      >
+        <StoryKeepToolMode isContext={false} client:only="react" />
+      </div>
+    </nav>
+
+    <nav id="toolbarNav" class="fixed w-full md:w-auto" style={{ zIndex: 9999 }}>
+      <StoryKeepToolBar client:only="react" />
+    </nav>
+
+    <div class="hidden md:block w-16 flex-shrink-0"></div>
+
+    <main class="flex-1 relative">
+      <div class="bg-myblue/20 px-4 pb-28 min-h-screen">
+        <TemplateEditor initialData={initialTemplateData} config={config} client:only="react" />
+      </div>
+    </main>
+  </div>
+
+  <div
+    id="bottom-right-controls"
+    class="fixed right-0 flex flex-col items-end gap-2"
+    style={{ zIndex: 10000, bottom: `var(--bottom-right-controls-bottom-offset)` }}
+  >
+    <SettingsPanel
+      config={config}
+      availableCodeHooks={Object.keys(codeHookComponents)}
+      client:only="react"
+    />
+  </div>
+</StoryKeep>
+
+<script>
+  import { setupLayoutObservers, setupLayoutStyles } from "@/utils/storykeep/layout";
+  setupLayoutStyles();
+  setupLayoutObservers();
+</script>

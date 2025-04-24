@@ -142,19 +142,20 @@ if (!storyfragmentNode) {
     <div class="hidden md:block w-16 flex-shrink-0"></div>
 
     <main class="flex-1 relative">
-      <div
-        class="bg-myblue/20 px-4 pb-28 min-h-screen"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
-        }}
-      >
-        <ReactNodesWrapper
-          id={storyfragmentNode.id}
-          nodes={loadData}
-          config={config}
-          client:only="react"
-        />
+      <div class="bg-myblue/20 px-4 pb-28 min-h-screen bg-mylightgrey">
+        <div
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
+          }}
+        >
+          <ReactNodesWrapper
+            id={storyfragmentNode.id}
+            nodes={loadData}
+            config={config}
+            client:only="react"
+          />
+        </div>
       </div>
     </main>
   </div>

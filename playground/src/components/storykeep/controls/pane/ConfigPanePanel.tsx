@@ -23,6 +23,7 @@ interface ConfigPanePanelProps {
 
 const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
+  const isTemplate = useStore(ctx.isTemplate);
   const bgColorStyles = ctx.getNodeCSSPropertiesStyles(nodeId);
   const activePaneMode = useStore(ctx.activePaneMode);
   const toolMode = useStore(ctx.toolModeValStore);
@@ -122,50 +123,60 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
               </>
             ) : (
               <>
-                <button onClick={() => setSaveMode(PaneConfigMode.TITLE)} className={buttonClass}>
-                  Pane Title
-                  {!isMobile && (
-                    <>
-                      : <strong>{paneNode.title}</strong>
-                    </>
-                  )}
-                </button>
-                <button onClick={() => setSaveMode(PaneConfigMode.SLUG)} className={buttonClass}>
-                  Slug
-                  {!isMobile && (
-                    <>
-                      : <strong>{paneNode.slug}</strong>
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => setSaveMode(PaneConfigMode.IMPRESSION)}
-                  className={buttonClass}
-                >
-                  {impressionNodes.length ? (
-                    <>
-                      <CheckIcon className="w-4 h-4 inline" />
-                      {` `}
-                      <span className="font-bold">Has Impression</span>
-                    </>
-                  ) : (
-                    <>
-                      <XMarkIcon className="w-4 h-4 inline" />
-                      {` `}
-                      <span>No Impression</span>
-                    </>
-                  )}
-                </button>
+                {!isTemplate && (
+                  <>
+                    <button
+                      onClick={() => setSaveMode(PaneConfigMode.TITLE)}
+                      className={buttonClass}
+                    >
+                      Pane Title
+                      {!isMobile && (
+                        <>
+                          : <strong>{paneNode.title}</strong>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setSaveMode(PaneConfigMode.SLUG)}
+                      className={buttonClass}
+                    >
+                      Slug
+                      {!isMobile && (
+                        <>
+                          : <strong>{paneNode.slug}</strong>
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setSaveMode(PaneConfigMode.IMPRESSION)}
+                      className={buttonClass}
+                    >
+                      {impressionNodes.length ? (
+                        <>
+                          <CheckIcon className="w-4 h-4 inline" />
+                          {` `}
+                          <span className="font-bold">Has Impression</span>
+                        </>
+                      ) : (
+                        <>
+                          <XMarkIcon className="w-4 h-4 inline" />
+                          {` `}
+                          <span>No Impression</span>
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
                 {!isCodeHook && (
                   <button onClick={handleEditStyles} className={buttonClass}>
                     <PaintBrushIcon className="w-4 h-4 inline" />
                     {` `}
-                    <span>Edit Styles</span>
+                    <span>Style this Pane</span>
                   </button>
                 )}
               </>
             )}
-            {!isContextPane && (
+            {!isContextPane && !isTemplate && (
               <button onClick={() => setSaveMode(PaneConfigMode.PATH)} className={buttonClass}>
                 {hasBeliefPayload(paneNode) ? (
                   <>

@@ -324,7 +324,7 @@ export const TranscriptFollower = (props: TranscriptFollowerProps) => {
     return 0;
   };
 
-  const onWordClicked = (idx: number, word: Word) => {
+  const onWordClicked = (/*idx: number,*/ word: Word) => {
     player.setCurrentTime(convertMillisecondsToSeconds(word.start));
   };
 

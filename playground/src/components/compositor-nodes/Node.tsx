@@ -78,6 +78,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   if (node === undefined) return <></>;
   const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
   const hasPanes = useStore(getCtx(props).hasPanes);
+  const isTemplate = useStore(getCtx(props).isTemplate);
   const sharedProps = { nodeId: node.id, ctx: props.ctx };
   const type = getType(node);
   switch (type) {
@@ -92,7 +93,11 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
           {!(sf.slug && sf.title) ? (
             <StoryFragmentTitlePanel nodeId={props.nodeId} />
           ) : !hasPanes && sf.slug && sf.title && !isPreview ? (
-            <PageCreationSelector nodeId={props.nodeId} ctx={getCtx(props)} />
+            <PageCreationSelector
+              nodeId={props.nodeId}
+              ctx={getCtx(props)}
+              isTemplate={isTemplate}
+            />
           ) : (
             <>
               <PanelVisibilityWrapper
