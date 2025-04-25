@@ -14,6 +14,10 @@ export default defineConfig({
         protocol: "https",
         hostname: "**.tractstack.com",
       },
+      {
+        protocol: "https",
+        hostname: "**.freewebpress.com",
+      },
     ],
   },
   integrations: [react()],
