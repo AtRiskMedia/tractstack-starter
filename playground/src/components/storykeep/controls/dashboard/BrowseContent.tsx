@@ -194,7 +194,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       <span className="flex space-x-1">
                         <a
                           href={getContentUrl(page)}
-                          className="text-myblue hover:text-myorange text-lg underline"
+                          className="pl-2 text-myblue hover:text-myorange text-lg underline"
                           title="Visit this Page"
                         >
                           Visit
@@ -202,7 +202,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                         {` `}
                         <a
                           href={getContentUrl(page, true)}
-                          className="text-myblue hover:text-myorange text-lg underline"
+                          className="pl-2 text-myblue hover:text-myorange text-lg underline"
                           title="Edit this Page"
                         >
                           Edit

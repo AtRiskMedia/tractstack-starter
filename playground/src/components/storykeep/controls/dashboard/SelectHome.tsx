@@ -135,16 +135,15 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
                   <span className="flex space-x-1 text-sm">
                     <a
                       href={`/${currentHomePage.slug}`}
-                      className="text-myblue hover:text-myorange"
-                      title="View"
+                      className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                      title="Visit this Page"
                     >
-                      View
+                      Visit
                     </a>
-                    /
                     <a
                       href={`/${currentHomePage.slug}/edit`}
-                      className="text-myblue hover:text-myorange"
-                      title="Edit"
+                      className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                      title="Edit this Page"
                     >
                       Edit
                     </a>
