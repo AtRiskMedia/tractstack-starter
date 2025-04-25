@@ -56,10 +56,10 @@ const ManageContent = () => {
   if (isDemoMode) return null;
 
   const buttonClass =
-    "px-2 py-1 bg-white text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap";
+    "px-2 py-1 bg-gray-100 text-cyan-700 text-sm rounded hover:bg-cyan-700 hover:text-white focus:bg-cyan-700 focus:text-white shadow-sm transition-colors z-10 whitespace-nowrap";
 
   const labelClass =
-    "px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-b-md inline-flex items-center whitespace-nowrap";
+    "px-2 py-1 bg-white text-gray-800 text-sm rounded-b-md inline-flex items-center whitespace-nowrap";
 
   return (
     <div className="flex flex-col gap-4">

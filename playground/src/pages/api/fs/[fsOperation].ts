@@ -1,11 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createRequire } from "module";
 import type { APIRoute } from "astro";
 import type { APIContext } from "@/types";
 import { withTenantContext } from "@/utils/api/middleware";
 import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "@/utils/core/config";
-import { createRequire } from "module";
+import { 
+  invalidateEntry,
+  setCachedContentMap
+} from "@/store/contentCache";
 import { processImage } from "@/utils/images/processImage";
 
 interface ConfigUpdatePayload {
@@ -162,9 +166,18 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, "base64");
         await fs.writeFile(path.join(ogDir, filename), buffer);
-        const processedImages = await processImage(buffer, filename, context); // Pass context
+        const processedImages = await processImage(buffer, filename, context);
         for (const image of processedImages) {
           await fs.writeFile(path.join(thumbsDir, image.filename), image.buffer);
+        }
+        const nodeId = path.basename(filename, path.extname(filename));
+        const tenantId = context.locals.tenant?.id || "default";
+        const isMultiTenant =
+          import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
+        if (!isMultiTenant) {
+          invalidateEntry("storyfragment", nodeId);
+          setCachedContentMap([]);
         }
         result = {
           success: true,

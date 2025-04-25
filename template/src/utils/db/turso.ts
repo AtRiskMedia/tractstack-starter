@@ -1190,6 +1190,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
             type: "Pane" as const,
             isContext: Boolean(row.extra),
           } as PaneContentMap;
+
         case "StoryFragment": {
           const baseData = {
             ...base,
@@ -1201,17 +1202,22 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
             baseData.description = row.description;
           if (row.topics && typeof row.topics === "string") baseData.topics = row.topics.split(",");
           const socialImagePath = row.extra ? String(row.extra) : null;
+
+          const cacheBuster = row.changed ? new Date(String(row.changed)).getTime() : Date.now();
+
           if (
             !socialImagePath ||
             socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))
           ) {
-            baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp`;
+            baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp?v=${cacheBuster}`;
             baseData.thumbSrcSet = [
-              `/images/thumbs/${row.id}_1200px.webp 1200w`,
-              `/images/thumbs/${row.id}_600px.webp 600w`,
-              `/images/thumbs/${row.id}_300px.webp 300w`,
+              `/images/thumbs/${row.id}_1200px.webp?v=${cacheBuster} 1200w`,
+              `/images/thumbs/${row.id}_600px.webp?v=${cacheBuster} 600w`,
+              `/images/thumbs/${row.id}_300px.webp?v=${cacheBuster} 300w`,
             ].join(", ");
-            baseData.socialImagePath = socialImagePath || `/images/og/${row.id}.png`;
+            baseData.socialImagePath = socialImagePath
+              ? `${socialImagePath}?v=${cacheBuster}`
+              : `/images/og/${row.id}.png?v=${cacheBuster}`;
           }
 
           return {
