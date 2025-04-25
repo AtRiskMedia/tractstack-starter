@@ -121,11 +121,15 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
         const contentType = contentTypeMap[ext] || "application/octet-stream";
         const fileContent = await fs.readFile(filePath);
+        let cacheControl = "public, max-age=31536000";
+        if (pathname.startsWith("/images/og/") || pathname.startsWith("/images/thumbs/")) {
+          cacheControl = "no-cache, must-revalidate";
+        }
         return new Response(fileContent, {
           status: 200,
           headers: {
             "Content-Type": contentType,
-            "Cache-Control": "public, max-age=31536000", // 1-year cache
+            "Cache-Control": cacheControl,
           },
         });
       } catch (error) {
