@@ -6,10 +6,7 @@ import { withTenantContext } from "@/utils/api/middleware";
 import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "@/utils/core/config";
-import { 
-  invalidateEntry,
-  setCachedContentMap
-} from "@/store/contentCache";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import { processImage } from "@/utils/images/processImage";
 
 interface ConfigUpdatePayload {

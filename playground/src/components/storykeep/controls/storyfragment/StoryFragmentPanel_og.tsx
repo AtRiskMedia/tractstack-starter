@@ -532,7 +532,7 @@ const StoryFragmentOpenGraphPanel = ({
                     }}
                   >
                     <img
-                      src={storyfragmentNode.socialImagePath}
+                      src={`${storyfragmentNode.socialImagePath}?v=${Date.now()}`}
                       alt="Open Graph preview"
                       className="w-full h-full object-cover"
                     />
