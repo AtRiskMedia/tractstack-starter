@@ -17,7 +17,7 @@ export const helpMessages: Record<string, string> = {
 
   // --- Settings Panel States ---
   PANEL_STYLE_ELEMENT:
-    "Adjust common styles like text color, size, font, and spacing for this element. Use the viewport tabs to preview responsive design",
+    "Adjust common styles like text color, size, font, and spacing for this element. The icons (Mobile, Tablet, Desktop) to view on different devices",
   PANEL_STYLE_LINK:
     "Style the appearance for Normal and Hover states. Configure the call-to-action via the settings button.",
   PANEL_STYLE_LINK_CONFIG: "Build your call-to-action! See our docs for more info",
@@ -36,7 +36,7 @@ export const helpMessages: Record<string, string> = {
   PANEL_ADD_STYLE:
     "Search or select a Tailwind style property to add. Use 'Recommended Styles' for common options.",
   PANEL_UPDATE_STYLE:
-    "Set the value for this style property. Use the viewport tabs (Mobile, Tablet, Desktop) to create responsive designs. Styles cascade upwards (Mobile applies to all unless overridden).",
+    "Set the value for this style property. The icons (Mobile, Tablet, Desktop) to view on different devices. Styles cascade upwards (Mobile applies to all unless overridden).",
   PANEL_REMOVE_STYLE:
     "Confirm removal of this style property. This will remove the style from all viewports.",
   PANEL_DELETE_LAYER:

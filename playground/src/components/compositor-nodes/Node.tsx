@@ -1,5 +1,6 @@
 import { getCtx } from "@/store/nodes.ts";
 import { useStore } from "@nanostores/react";
+import { styleElementInfoStore } from "@/store/storykeep.ts";
 import AddPanePanel from "@/components/storykeep/controls/pane/AddPanePanel";
 import PageCreationSelector from "@/components/storykeep/controls/pane/PageCreationSelector";
 import { Pane } from "@/components/compositor-nodes/nodes/Pane.tsx";
@@ -232,10 +233,47 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
 const Node = memo((props: NodeProps) => {
   const node = getCtx(props).allNodes.get().get(props.nodeId) as FlatNode;
   const isPreview = getCtx(props).rootNodeId.get() === `tmp`;
+
+  const {
+    markdownParentId,
+    tagName: styleTagName,
+    overrideNodeId,
+  } = useStore(styleElementInfoStore, { keys: ["markdownParentId", "tagName", "overrideNodeId"] });
+
+  const nodeTagName = node.tagName || "";
+  const isBasicTag = ["h2", "h3", "h4", "ol", "ul", "li", "aside", "p", "strong", "em"].includes(
+    nodeTagName
+  );
+  const closestMarkdownId = getCtx(props).getClosestNodeTypeFromId(props.nodeId, "Markdown");
+  const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
+
+  const isHighlighted =
+    isBasicTag &&
+    closestMarkdownId === markdownParentId &&
+    nodeTagName === styleTagName &&
+    !isEditableMode;
+
+  const isOverride = overrideNodeId === props.nodeId;
+
+  const highlightStyle = isHighlighted
+    ? {
+        outline: isOverride
+          ? "2.5px solid rgba(255, 165, 0, 0.5)"
+          : "0.5px dashed rgba(0, 0, 0, 0.3)",
+      }
+    : {};
+
+  const element = getElement(node, props);
+
   if (!isPreview && showGuids.get()) {
-    return <NodeWithGuid {...props} element={getElement(node, props)} />;
+    return <NodeWithGuid {...props} element={element} />;
   }
-  return getElement(node, props);
+
+  if (isBasicTag) {
+    return <span style={{ ...highlightStyle, display: "block" }}>{element}</span>;
+  }
+
+  return element;
 });
 
 export default Node;

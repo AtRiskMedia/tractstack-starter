@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
-import { settingsPanelStore } from "@/store/storykeep";
+import {
+  styleElementInfoStore,
+  resetStyleElementInfo,
+  settingsPanelStore,
+} from "@/store/storykeep";
 import ViewportComboBox from "../fields/ViewportComboBox";
 import { tailwindClasses } from "@/utils/tailwind/tailwindClasses";
 import { getCtx } from "@/store/nodes";
@@ -36,6 +40,13 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
   useEffect(() => {
     const hasOverride = node.overrideClasses?.mobile?.[className] !== undefined;
     setIsOverridden(hasOverride);
+
+    styleElementInfoStore.set({
+      markdownParentId: parentNode.id,
+      tagName: node.tagName,
+      overrideNodeId: hasOverride ? node.id : null,
+      className: className,
+    });
 
     const defaults = parentNode.defaultClasses?.[node.tagName];
 
@@ -127,6 +138,7 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
 
   const handleToggleOverride = useCallback(
     (checked: boolean) => {
+      styleElementInfoStore.setKey("overrideNodeId", checked ? node.id : null);
       const ctx = getCtx();
       const allNodes = ctx.allNodes.get();
       const elementNode = allNodes.get(node.id) as FlatNode;
@@ -201,6 +213,12 @@ const StyleElementUpdatePanel = ({ node, parentNode, className, config }: BasePa
     },
     []
   );
+
+  useEffect(() => {
+    return () => {
+      resetStyleElementInfo();
+    };
+  }, []);
 
   return (
     <div className="space-y-4 z-50 isolate">

@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { PaneFragmentNode, FlatNode } from "@/types.ts";
-import { settingsPanelStore } from "@/store/storykeep";
+import { settingsPanelStore, styleElementInfoStore } from "@/store/storykeep";
 
-// Updated type predicate to check for visual break nodes
 function isVisualBreakNode(node: FlatNode): boolean {
   return (
     node.nodeType === "BgPane" &&
@@ -11,7 +10,6 @@ function isVisualBreakNode(node: FlatNode): boolean {
   );
 }
 
-// Updated type predicate to check for code hook panes
 function isCodeHookPane(node: FlatNode): boolean {
   return node.nodeType === "Pane" && "codeHookTarget" in node;
 }
@@ -24,19 +22,16 @@ export function handleClickEventDefault(
 ) {
   if (!node?.nodeType) return;
 
-  // Base panel properties
   const panelProps: any = {
     nodeId: node.id,
   };
 
-  // Add expanded/minimized properties as needed
   if (minimized === true) {
     panelProps.minimized = true;
   } else if (expanded) {
     panelProps.expanded = true;
   }
 
-  // Add parent layer if provided
   if (parentLayer !== undefined && parentLayer !== null) {
     panelProps.layer = parentLayer;
   }
@@ -91,6 +86,12 @@ export function handleClickEventDefault(
         case "h4":
         case "h5":
         case "ol":
+          styleElementInfoStore.set({
+            markdownParentId: node.parentId,
+            tagName: node.tagName,
+            overrideNodeId: null,
+            className: null,
+          });
           settingsPanelStore.set({
             action: "style-element",
             ...panelProps,

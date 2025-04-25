@@ -277,3 +277,24 @@ export const storyfragmentAnalyticsStore = map<{
   byId: {},
   lastUpdated: null,
 });
+
+export const styleElementInfoStore = map<{
+  markdownParentId: string | null;
+  tagName: string | null;
+  overrideNodeId: string | null;
+  className: string | null;
+}>({
+  markdownParentId: null,
+  tagName: null,
+  overrideNodeId: null,
+  className: null,
+});
+
+export const resetStyleElementInfo = () => {
+  styleElementInfoStore.set({
+    markdownParentId: null,
+    tagName: null,
+    overrideNodeId: null,
+    className: null,
+  });
+};

@@ -1,9 +1,14 @@
+import { useEffect } from "react";
 import type { BasePanelProps } from "../SettingsPanel";
-import { settingsPanelStore } from "@/store/storykeep";
+import {
+  styleElementInfoStore,
+  resetStyleElementInfo,
+  settingsPanelStore,
+} from "@/store/storykeep";
 import { getCtx } from "@/store/nodes";
-import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
-import type { FlatNode, MarkdownPaneFragmentNode } from "../../../../types";
-import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
+import { tailwindClasses } from "@/utils/tailwind/tailwindClasses";
+import type { FlatNode, MarkdownPaneFragmentNode } from "@/types";
+import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 
 const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps) => {
@@ -66,6 +71,21 @@ const StyleElementRemovePanel = ({ node, parentNode, className }: BasePanelProps
   const handleNoClick = () => {
     resetStore();
   };
+
+  useEffect(() => {
+    if (className && node?.tagName) {
+      styleElementInfoStore.set({
+        markdownParentId: parentNode?.id || null,
+        tagName: node.tagName,
+        overrideNodeId: null,
+        className: className,
+      });
+    }
+
+    return () => {
+      resetStyleElementInfo();
+    };
+  }, [parentNode?.id, node?.tagName, className]);
 
   return (
     <div className="space-y-4">

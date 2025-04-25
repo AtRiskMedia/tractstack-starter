@@ -266,7 +266,7 @@ const StoryKeepHeader = ({
               onClick={handleCancel}
               className="bg-white text-myblue hover:underline font-action font-bold"
             >
-              Cancel
+              Exit
             </button>
           </>
         ) : (

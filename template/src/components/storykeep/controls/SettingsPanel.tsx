@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useStore } from "@nanostores/react";
 import ChevronDoubleUpIcon from "@heroicons/react/24/outline/ChevronDoubleUpIcon";
 import ChevronDoubleDownIcon from "@heroicons/react/24/outline/ChevronDoubleDownIcon";
-import { settingsPanelStore } from "@/store/storykeep";
+import {
+  resetStyleElementInfo,
+  settingsPanelStore,
+  styleElementInfoStore,
+} from "@/store/storykeep";
 import StyleCodeHookPanel from "./panels/StyleCodeHookPanel";
 import StyleBreakPanel from "./panels/StyleBreakPanel";
 import StyleLinkPanel from "./panels/StyleLinkPanel";
@@ -360,9 +364,27 @@ const SettingsPanel = ({
 
   const handleTogglePanel = () => {
     setUserHasInteracted(true);
+
     if (isPanelMinimized) {
       ctx.toolModeValStore.set({ value: "styles" });
+
+      if (
+        clickedNode &&
+        clickedNode.nodeType === "TagElement" &&
+        "tagName" in clickedNode &&
+        ["p", "h2", "h3", "h4", "h5", "ol"].includes(clickedNode.tagName)
+      ) {
+        styleElementInfoStore.set({
+          markdownParentId: clickedNode.parentId,
+          tagName: clickedNode.tagName,
+          overrideNodeId: null,
+          className: null,
+        });
+      }
+    } else {
+      resetStyleElementInfo();
     }
+
     settingsPanelStore.set({
       ...signal,
       minimized: !isPanelMinimized,
@@ -385,6 +407,7 @@ const SettingsPanel = ({
         ) : null}
         <button
           onClick={() => {
+            resetStyleElementInfo();
             settingsPanelStore.set(null);
           }}
           className="p-2 bg-white rounded-full shadow-lg hover:bg-myorange hover:text-white transition-colors group border border-gray-200"

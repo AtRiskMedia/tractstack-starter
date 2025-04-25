@@ -1,8 +1,12 @@
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Combobox } from "@headlessui/react";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import { settingsPanelStore } from "@/store/storykeep";
+import {
+  styleElementInfoStore,
+  resetStyleElementInfo,
+  settingsPanelStore,
+} from "@/store/storykeep";
 import { tailwindClasses } from "../../../../utils/tailwind/tailwindClasses";
 import { isMarkdownPaneFragmentNode } from "../../../../utils/nodes/type-guards";
 import type { BasePanelProps } from "../SettingsPanel";
@@ -137,6 +141,7 @@ const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
   const handleSelect = useCallback(
     (styleKey: string) => {
       setSelectedStyle(styleKey);
+      styleElementInfoStore.setKey("className", styleKey);
       settingsPanelStore.set({
         nodeId: node.id,
         className: styleKey,
@@ -166,6 +171,19 @@ const StyleElementPanelAdd = ({ node, parentNode }: BasePanelProps) => {
       expanded: true,
     });
   };
+
+  useEffect(() => {
+    styleElementInfoStore.set({
+      markdownParentId: parentNode.id,
+      tagName: node.tagName,
+      overrideNodeId: null,
+      className: null,
+    });
+
+    return () => {
+      resetStyleElementInfo();
+    };
+  }, [parentNode.id, node.tagName]);
 
   return (
     <div className="space-y-4 min-h-[400px]">

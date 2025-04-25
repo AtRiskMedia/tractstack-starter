@@ -1,9 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import SelectedTailwindClass from "../fields/SelectedTailwindClass";
 import { StylesMemory } from "../state/StylesMemory";
 import { isMarkdownPaneFragmentNode } from "@/utils/nodes/type-guards";
 import { tagTitles } from "@/constants";
-import { settingsPanelStore } from "@/store/storykeep";
+import {
+  styleElementInfoStore,
+  resetStyleElementInfo,
+  settingsPanelStore,
+} from "@/store/storykeep";
 import type { Tag, FlatNode, MarkdownPaneFragmentNode } from "@/types";
 
 interface StyleElementPanelProps {
@@ -79,6 +83,7 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
   };
 
   const handleUpdate = (className: string) => {
+    styleElementInfoStore.setKey("className", className);
     settingsPanelStore.set({
       nodeId: node.id,
       className,
@@ -87,9 +92,27 @@ const StyleElementPanel = ({ node, parentNode }: StyleElementPanelProps) => {
     });
   };
 
+  useEffect(() => {
+    if (
+      styleElementInfoStore.get().markdownParentId !== parentNode.id ||
+      styleElementInfoStore.get().tagName !== node.tagName
+    ) {
+      styleElementInfoStore.set({
+        markdownParentId: parentNode.id,
+        tagName: node.tagName,
+        overrideNodeId: null,
+        className: null,
+      });
+    }
+
+    return () => {
+      resetStyleElementInfo();
+    };
+  }, [parentNode.id, node.tagName]);
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold">Style this {tagTitles[node.tagName as Tag]}</h2>
+      <h2 className="text-xl font-bold">Style {tagTitles[node.tagName as Tag]}</h2>
 
       {Object.keys(mergedClasses).length > 0 ? (
         <div className="flex flex-wrap gap-2">
