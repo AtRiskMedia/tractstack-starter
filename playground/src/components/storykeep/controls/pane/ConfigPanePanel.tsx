@@ -25,7 +25,6 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
   const isTemplate = useStore(ctx.isTemplate);
   const bgColorStyles = ctx.getNodeCSSPropertiesStyles(nodeId);
-  console.log(bgColorStyles);
   const activePaneMode = useStore(ctx.activePaneMode);
   const toolMode = useStore(ctx.toolModeValStore);
   const reorderMode = toolMode.value === `move`;
