@@ -25,6 +25,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   const ctx = getCtx();
   const isTemplate = useStore(ctx.isTemplate);
   const bgColorStyles = ctx.getNodeCSSPropertiesStyles(nodeId);
+  console.log(bgColorStyles);
   const activePaneMode = useStore(ctx.activePaneMode);
   const toolMode = useStore(ctx.toolModeValStore);
   const reorderMode = toolMode.value === `move`;
@@ -102,7 +103,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   }
 
   return (
-    <div className="border-t border-dashed border-mydarkgrey bg-black" style={bgColorStyles}>
+    <div className="border-t border-dashed border-mydarkgrey bg-myoffwhite" style={bgColorStyles}>
       <div className="px-1.5 pt-1.5 pb-0.5 rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div
