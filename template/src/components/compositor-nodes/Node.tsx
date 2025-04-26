@@ -240,15 +240,17 @@ const Node = memo((props: NodeProps) => {
     overrideNodeId,
   } = useStore(styleElementInfoStore, { keys: ["markdownParentId", "tagName", "overrideNodeId"] });
 
-  const nodeTagName = node.tagName || "";
-  const isBasicTag = ["h2", "h3", "h4", "ol", "ul", "li", "aside", "p", "strong", "em"].includes(
-    nodeTagName
-  );
+  const nodeTagName = node?.tagName || "";
+  const isBlockTag = ["h2", "h3", "h4", "ol", "ul", "li", "p"].includes(nodeTagName);
+
+  const parentNode = node?.parentId ? getCtx(props).allNodes.get().get(node.parentId) : null;
+  const isTopLevelBlock = isBlockTag && parentNode?.nodeType === "Markdown";
+
   const closestMarkdownId = getCtx(props).getClosestNodeTypeFromId(props.nodeId, "Markdown");
   const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
 
   const isHighlighted =
-    isBasicTag &&
+    isTopLevelBlock &&
     closestMarkdownId === markdownParentId &&
     nodeTagName === styleTagName &&
     !isEditableMode;
@@ -269,8 +271,8 @@ const Node = memo((props: NodeProps) => {
     return <NodeWithGuid {...props} element={element} />;
   }
 
-  if (isBasicTag) {
-    return <span style={{ ...highlightStyle, display: "block" }}>{element}</span>;
+  if (isTopLevelBlock) {
+    return <div style={highlightStyle}>{element}</div>;
   }
 
   return element;
