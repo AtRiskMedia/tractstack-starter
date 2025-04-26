@@ -77,7 +77,7 @@ const AddPanePanel = ({
           isContextPane={isContextPane}
         />
       ) : (
-        <div className="border-t border-dashed border-mydarkgrey">
+        <div className="border-t border-dotted border-mylightgrey">
           <div className="px-1.5 pt-1.5 pb-0.5 flex gap-1 w-full group">
             <div className="px-2 py-1 bg-gray-200 text-gray-800 text-sm rounded-md">
               Insert Pane Here

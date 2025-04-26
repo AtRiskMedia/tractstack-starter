@@ -102,7 +102,7 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
   }
 
   return (
-    <div className="border-t border-dashed border-mydarkgrey bg-myoffwhite" style={bgColorStyles}>
+    <div className="border-t border-dotted border-mylightgrey bg-myoffwhite" style={bgColorStyles}>
       <div className="px-1.5 pt-1.5 pb-0.5 rounded-t-md w-full group">
         <div className="flex flex-wrap gap-2">
           <div
