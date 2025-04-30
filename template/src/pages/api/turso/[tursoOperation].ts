@@ -205,7 +205,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         if (!id) {
           throw new Error("Missing required parameter: id");
         }
-        result = await getEpinetMetrics(id /*, context */);
+        result = await getEpinetMetrics(id, context);
         break;
       }
       case "getAllFiles":

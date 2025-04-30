@@ -227,6 +227,15 @@ export function computeEpinetSankey(
   const tenantId = context?.locals?.tenant?.id || "default";
   const epinetStore = hourlyEpinetStore.get();
   const epinetData = epinetStore.data[tenantId]?.[epinetId];
+  if (VERBOSE)
+    console.log(
+      `[DEBUG-EPINET] computeEpinetSankey for tenant:${tenantId}, epinetId:${epinetId}, found data:`,
+      epinetData ? "exists" : "null",
+      "store contains tenants:",
+      Object.keys(epinetStore.data),
+      "tenant data contains epinets:",
+      epinetStore.data[tenantId] ? Object.keys(epinetStore.data[tenantId]) : "none"
+    );
 
   if (!epinetData) {
     return null;

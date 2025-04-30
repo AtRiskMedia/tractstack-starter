@@ -132,11 +132,17 @@ class TursoClientManager {
       await client.execute(indexSql);
     }
     if (schema.epinets) {
-      for (const epinet of schema.epinets) {
-        await client.execute({
-          sql: `INSERT INTO epinets (id, title, options_payload) VALUES (?, ?, ?)`,
-          args: [ulid(), epinet.title, JSON.stringify(epinet.payload)],
-        });
+      const { rows: existingEpinets } = await client.execute(
+        "SELECT COUNT(*) as count FROM epinets"
+      );
+      const epinetCount = Number(existingEpinets[0]?.count || 0);
+      if (epinetCount === 0) {
+        for (const epinet of schema.epinets) {
+          await client.execute({
+            sql: `INSERT INTO epinets (id, title, options_payload) VALUES (?, ?, ?)`,
+            args: [ulid(), epinet.title, JSON.stringify(epinet.payload)],
+          });
+        }
       }
     }
     await this.updateSchemaStatus(configPath, this.hasTursoCredentials(tenantId));
