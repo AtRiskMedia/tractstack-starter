@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
-import { storedDashboardAnalytics, storyfragmentAnalyticsStore } from "@/store/storykeep";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
-import { isDemoModeStore } from "@/store/storykeep.ts";
+import {
+  isDemoModeStore,
+  storedDashboardAnalytics,
+  storyfragmentAnalyticsStore,
+} from "@/store/storykeep";
 import type { LeadMetrics } from "@/types";
 
 interface Stat {

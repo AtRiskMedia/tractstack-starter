@@ -1,5 +1,6 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
+import { computeStoryfragmentAnalytics as computeStoryfragmentAnalyticsFromEvents } from "@/utils/events/analyticsComputation";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
 import {
   invalidateEntry,
@@ -1917,73 +1918,6 @@ function createEmptyLeadMetrics(): LeadMetrics {
   };
 }
 
-export async function computeStoryfragmentAnalytics(
-  context?: APIContext
-): Promise<StoryfragmentAnalytics[]> {
-  const client = await tursoClient.getClient(context);
-  if (!client) return [];
-
-  const { rows: leadRows } = await client.execute(`
-    SELECT COUNT(*) as total_leads FROM leads
-  `);
-
-  const totalLeads = Number(leadRows[0]?.total_leads || 0);
-
-  const { rows } = await client.execute(`
-    SELECT 
-      sf.id,
-      sf.slug,
-      COUNT(DISTINCT a.fingerprint_id) as unique_visitors,
-      COUNT(a.id) as total_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-1 day') 
-        THEN 1 ELSE 0 
-      END) as last_24h_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-7 days') 
-        THEN 1 ELSE 0 
-      END) as last_7d_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-28 days') 
-        THEN 1 ELSE 0 
-      END) as last_28d_actions,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-1 day') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_24h_unique_visitors,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-7 days') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_7d_unique_visitors,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-28 days') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_28d_unique_visitors
-    FROM storyfragments sf
-    LEFT JOIN actions a ON 
-      a.object_id = sf.id AND 
-      a.object_type = 'StoryFragment'
-    GROUP BY sf.id, sf.slug
-  `);
-
-  return rows.map((row) => ({
-    id: String(row.id),
-    slug: String(row.slug),
-    total_actions: Number(row.total_actions || 0),
-    unique_visitors: Number(row.unique_visitors || 0),
-    last_24h_actions: Number(row.last_24h_actions || 0),
-    last_7d_actions: Number(row.last_7d_actions || 0),
-    last_28d_actions: Number(row.last_28d_actions || 0),
-    last_24h_unique_visitors: Number(row.last_24h_unique_visitors || 0),
-    last_7d_unique_visitors: Number(row.last_7d_unique_visitors || 0),
-    last_28d_unique_visitors: Number(row.last_28d_unique_visitors || 0),
-    total_leads: totalLeads,
-  }));
-}
-
 export async function logTokenUsage(tokensUsed: number, context?: APIContext): Promise<boolean> {
   try {
     const client = await tursoClient.getClient(context);
@@ -1999,4 +1933,10 @@ export async function logTokenUsage(tokensUsed: number, context?: APIContext): P
     console.error("Error logging token usage:", error);
     return false;
   }
+}
+
+export async function computeStoryfragmentAnalytics(
+  context?: APIContext
+): Promise<StoryfragmentAnalytics[]> {
+  return computeStoryfragmentAnalyticsFromEvents(context);
 }

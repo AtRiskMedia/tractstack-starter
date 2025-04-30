@@ -1,6 +1,6 @@
 import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
-import type { EventPayload, EventStream } from "../../types";
+import type { EventPayload, EventStream } from "@/types";
 
 const DEBUG = false;
 

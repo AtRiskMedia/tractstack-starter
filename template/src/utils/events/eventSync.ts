@@ -27,6 +27,7 @@ export async function eventSync(payload: EventStream[]) {
     referrer: ref.httpReferrer !== `` ? ref : undefined,
     fingerprint: authPayload?.key,
     visitId: authPayload?.visitId,
+    isKnownLead: authPayload?.consent === `1`,
   };
 
   try {

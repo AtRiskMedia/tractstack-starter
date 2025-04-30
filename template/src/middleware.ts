@@ -4,9 +4,12 @@ import path from "node:path";
 import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
+import { loadHourlyAnalytics, refreshHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader"; // Added import
+import { isAnalyticsCacheValid } from "@/store/analytics";
 import { cssStore, updateCssStore } from "@/store/css";
 import { updateTenantAccessTime } from "@/utils/tenant/updateAccess";
 import { resolvePaths } from "@/utils/core/pathResolver";
+import { type APIContext } from "@/types";
 
 // Dynamic directories for serving tenant-specific files
 const DYNAMIC_DIRS = ["/images", "/custom"];
@@ -141,6 +144,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Initialize CSS store
   if (!isMultiTenant) {
     await ensureCssStoreInitialized();
+  }
+
+  if (!isAnalyticsCacheValid()) {
+    await loadHourlyAnalytics(672, context as APIContext);
+  } else {
+    await refreshHourlyAnalytics(context as APIContext);
   }
 
   // **Step 5: Authentication and authorization with tenant context**

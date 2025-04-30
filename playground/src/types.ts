@@ -1251,3 +1251,100 @@ export interface PanelState {
   panel: string;
   mode: string;
 }
+
+export interface EpinetStep {
+  gateType: "belief" | "identifyAs" | "commitmentAction" | "conversionAction";
+  title: string;
+  values: string[];
+}
+
+export interface EpinetStepBelief extends EpinetStep {
+  gateType: "belief";
+}
+
+export interface EpinetStepIdentifyAs extends EpinetStep {
+  gateType: "identifyAs";
+}
+
+export interface EpinetStepCommitmentAction extends EpinetStep {
+  gateType: "commitmentAction";
+  objectType: "StoryFragment" | "Pane" | "ContextPage";
+  objectIds?: string[];
+}
+
+export interface EpinetStepConversionAction extends EpinetStep {
+  gateType: "conversionAction";
+  objectType: "StoryFragment" | "Pane" | "ContextPage";
+  objectIds?: string[];
+}
+
+export interface EpinetDatum {
+  id: string;
+  title: string;
+  slug: string;
+  steps: (
+    | EpinetStepBelief
+    | EpinetStepIdentifyAs
+    | EpinetStepCommitmentAction
+    | EpinetStepConversionAction
+  )[];
+}
+
+export interface ComputedEpinetNode {
+  name: string;
+}
+
+export interface ComputedEpinetLink {
+  source: number;
+  target: number;
+  value: number;
+}
+
+export interface ComputedEpinet {
+  id: string;
+  title: string;
+  nodes: ComputedEpinetNode[];
+  links: ComputedEpinetLink[];
+}
+
+export interface ComputedEpinets {
+  daily: ComputedEpinet;
+  weekly: ComputedEpinet;
+  monthly: ComputedEpinet;
+  all?: ComputedEpinet;
+}
+
+export interface HourlyAnalyticsData {
+  contentData: Record<string, Record<string, HourlyContentData>>;
+  siteData: Record<string, HourlySiteData>;
+  lastFullHour: string;
+  totalLeads: number;
+  lastActivity: string | null;
+  slugMap: Map<string, string>; // Maps content IDs to slugs
+}
+
+export interface HourlyContentData {
+  uniqueVisitors: Set<string>; // fingerprint_ids
+  knownVisitors: Set<string>; // visitors with lead_id
+  anonymousVisitors: Set<string>; // visitors without lead_id
+  actions: number;
+  clickedEvents: number;
+  enteredEvents: number;
+}
+
+export interface HourlySiteData {
+  totalVisits: number;
+  knownVisitors: Set<string>;
+  anonymousVisitors: Set<string>;
+  clickedEvents: number;
+  enteredEvents: number;
+}
+
+export interface TimeRangeMetrics {
+  anonymousVisitors: Set<string>;
+  knownVisitors: Set<string>;
+  totalVisitors: number;
+  totalVisits: number;
+  clickedEvents: number;
+  enteredEvents: number;
+}
