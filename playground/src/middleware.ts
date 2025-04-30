@@ -4,17 +4,16 @@ import path from "node:path";
 import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
-import { loadHourlyAnalytics, refreshHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader"; // Added import
+import { loadHourlyAnalytics, refreshHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
 import { isAnalyticsCacheValid } from "@/store/analytics";
 import { cssStore, updateCssStore } from "@/store/css";
 import { updateTenantAccessTime } from "@/utils/tenant/updateAccess";
 import { resolvePaths } from "@/utils/core/pathResolver";
 import { type APIContext } from "@/types";
 
-// Dynamic directories for serving tenant-specific files
 const DYNAMIC_DIRS = ["/images", "/custom"];
+const ANALYTICS_ROUTES = ["/api/turso/getLeadMetrics", "/api/turso/getStoryfragmentAnalytics"];
 
-// Ensure CSS store is initialized
 async function ensureCssStoreInitialized() {
   const store = cssStore.get();
   if (!store.content || !store.version) {
@@ -30,12 +29,10 @@ async function ensureCssStoreInitialized() {
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // **Step 1: Determine tenant ID based on environment and hostname**
   const isMultiTenantEnabled = import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true";
   let tenantId = "default";
 
   if (isMultiTenantEnabled) {
-    // Prefer X-Forwarded-Host, fall back to Host
     const hostname =
       context.request.headers.get("x-forwarded-host") || context.request.headers.get("host");
 
@@ -44,8 +41,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
         tenantId = "localhost";
       } else {
         const parts = hostname.split(".");
-
-        // Handle domains like x.sandbox.freewebpress.com
         if (
           parts.length >= 4 &&
           parts[1] === "sandbox" &&
@@ -60,10 +55,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isMultiTenant =
     import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
 
-  // **Step 2: Resolve tenant-specific paths**
   const resolved = await resolvePaths(tenantId);
 
-  // **For multi-tenant mode: If tenant doesn't exist, return 404 immediately**
   if (isMultiTenant && (!resolved.exists || resolved.configPath === "")) {
     return new Response(null, {
       status: 404,
@@ -76,28 +69,21 @@ export const onRequest = defineMiddleware(async (context, next) => {
       const tenantConfigPath = path.join(resolved.configPath, "tenant.json");
       const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
       const tenantConfig = JSON.parse(tenantConfigRaw);
-      // Redirect based on tenant status
       if (tenantConfig.status === "reserved") {
-        // Tenant is reserved but not claimed yet
         return context.redirect(`/sandbox/claimed?tenant=${tenantId}`);
       } else if (tenantConfig.status === "archived") {
-        // Tenant has been archived
         return context.redirect(`/sandbox/archived?tenant=${tenantId}`);
       }
-      // For "claimed" or "activated" statuses, continue normal flow
     } catch (error) {
       console.error(`Error reading tenant status for ${tenantId}:`, error);
-      // If we can't read the status, proceed with normal tenant existence check
     }
   }
 
-  // **Step 3: Set tenant info in local context**
   context.locals.tenant = {
     id: tenantId,
     paths: resolved,
   };
 
-  // **Step 4: Handle dynamic file serving with tenant-specific public path**
   if (context.request.method === "GET") {
     const url = new URL(context.request.url);
     const pathname = url.pathname;
@@ -135,24 +121,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
             "Cache-Control": cacheControl,
           },
         });
-      } catch (error) {
-        // File not found, proceed with normal request handling
-      }
+      } catch (error) {}
     }
   }
 
-  // Initialize CSS store
   if (!isMultiTenant) {
     await ensureCssStoreInitialized();
   }
 
-  if (!isAnalyticsCacheValid()) {
-    await loadHourlyAnalytics(672, context as APIContext);
-  } else {
-    await refreshHourlyAnalytics(context as APIContext);
+  if (ANALYTICS_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
+    if (!isAnalyticsCacheValid(tenantId)) {
+      await loadHourlyAnalytics(672, context as APIContext);
+    } else {
+      await refreshHourlyAnalytics(context as APIContext);
+    }
   }
 
-  // **Step 5: Authentication and authorization with tenant context**
   const config = await getConfig(context.locals.tenant.paths.configPath, tenantId);
   const tenantValidation = await validateConfig(config);
 
@@ -172,7 +156,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // **Step 6: Config validation with tenant-specific config path**
   const hasPassword = isMultiTenant
     ? !!(config?.init?.ADMIN_PASSWORD && config?.init?.EDITOR_PASSWORD)
     : !!(import.meta.env.PRIVATE_ADMIN_PASSWORD && import.meta.env.PRIVATE_EDITOR_PASSWORD);
@@ -185,7 +168,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (!isInitialized) return next();
 
-  // Define protected routes (unchanged)
   const adminProtectedRoutes = [
     "/storykeep/settings",
     "/storykeep/templates",
@@ -237,12 +219,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const openProtectedRoutes = ["/*/edit", "/context/*/edit", "/storykeep", "/api/aai/askLemur"];
 
-  // Allow login/logout routes
   if (["/storykeep/login", "/storykeep/logout"].includes(context.url.pathname)) {
     return next();
   }
 
-  // Handle uninitialized or invalid config
   if (!tenantValidation.isValid && !tenantValidation.hasPassword) {
     return context.redirect("/storykeep/init");
   }
@@ -258,7 +238,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     );
   }
 
-  // **Step 7: Route protection logic** (unchanged)
   const isProtectedRoute = protectedRoutes.some((route) =>
     route.includes("*")
       ? new RegExp("^" + route.replace("*", ".*")).test(context.url.pathname)

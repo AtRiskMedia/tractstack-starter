@@ -5,62 +5,76 @@ import {
   createEmptyHourlySiteData,
 } from "@/store/analytics";
 import { processEpinetEvent } from "./epinetAnalytics";
-import type { EventPayload } from "@/types";
+import type { EventPayload, APIContext } from "@/types";
 
-/**
- * Updates the hourly analytics store with real-time event data
- * To be called from the streamEvents function
- *
- * @param payload Event payload from stream events
- * @param hasLeadId Whether the user has a lead_id (known user)
- */
-export function updateAnalyticsWithEvent(payload: EventPayload, hasLeadId: boolean): void {
+const VERBOSE = false;
+
+export function updateAnalyticsWithEvent(
+  payload: EventPayload,
+  hasLeadId: boolean,
+  context?: APIContext
+): void {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  if (VERBOSE) console.log("[DEBUG-TENANT] updateAnalyticsWithEvent tenantId:", tenantId); // Debug log
   const currentHour = formatHourKey(new Date());
   const currentStore = hourlyAnalyticsStore.get();
 
+  if (!currentStore.data[tenantId]) {
+    currentStore.data[tenantId] = {
+      contentData: {},
+      siteData: {},
+      lastFullHour: currentHour,
+      lastUpdated: Date.now(),
+      totalLeads: 0,
+      lastActivity: null,
+      slugMap: new Map(),
+    };
+  }
+
+  const tenantData = currentStore.data[tenantId];
+
   const fingerprintId = String(payload.visit.fingerprint_id);
 
-  if (!currentStore.siteData[currentHour]) {
-    currentStore.siteData[currentHour] = createEmptyHourlySiteData();
+  if (!tenantData.siteData[currentHour]) {
+    tenantData.siteData[currentHour] = createEmptyHourlySiteData();
   }
 
-  currentStore.siteData[currentHour].totalVisits++;
+  tenantData.siteData[currentHour].totalVisits++;
 
   if (hasLeadId) {
-    currentStore.siteData[currentHour].knownVisitors.add(fingerprintId);
+    tenantData.siteData[currentHour].knownVisitors.add(fingerprintId);
   } else {
-    currentStore.siteData[currentHour].anonymousVisitors.add(fingerprintId);
+    tenantData.siteData[currentHour].anonymousVisitors.add(fingerprintId);
   }
 
-  currentStore.lastActivity = new Date().toISOString();
+  tenantData.lastActivity = new Date().toISOString();
 
   for (const event of payload.events) {
-    // Process epinet data for each event
-    processEpinetEvent(event, fingerprintId);
+    processEpinetEvent(event, fingerprintId, context); // Pass context
 
     const targetId = event.id;
     if (!targetId) continue;
 
     if (event.verb) {
-      if (!currentStore.siteData[currentHour].eventCounts[event.verb]) {
-        currentStore.siteData[currentHour].eventCounts[event.verb] = 0;
+      if (!tenantData.siteData[currentHour].eventCounts[event.verb]) {
+        tenantData.siteData[currentHour].eventCounts[event.verb] = 0;
       }
-      currentStore.siteData[currentHour].eventCounts[event.verb]++;
+      tenantData.siteData[currentHour].eventCounts[event.verb]++;
     }
 
     if (!targetId || !event.type) continue;
 
     if (event.type !== "StoryFragment" && event.type !== "Pane") continue;
 
-    if (!currentStore.contentData[targetId]) {
-      currentStore.contentData[targetId] = {};
+    if (!tenantData.contentData[targetId]) {
+      tenantData.contentData[targetId] = {};
     }
 
-    if (!currentStore.contentData[targetId][currentHour]) {
-      currentStore.contentData[targetId][currentHour] = createEmptyHourlyContentData();
+    if (!tenantData.contentData[targetId][currentHour]) {
+      tenantData.contentData[targetId][currentHour] = createEmptyHourlyContentData();
     }
 
-    const hourData = currentStore.contentData[targetId][currentHour];
+    const hourData = tenantData.contentData[targetId][currentHour];
     hourData.uniqueVisitors.add(fingerprintId);
     hourData.actions++;
 
@@ -78,14 +92,24 @@ export function updateAnalyticsWithEvent(payload: EventPayload, hasLeadId: boole
     }
   }
 
+  currentStore.data[tenantId] = tenantData;
   hourlyAnalyticsStore.set(currentStore);
 }
 
-/**
- * Updates the total lead count when a new lead is created
- */
-export function incrementLeadCount(): void {
+export function incrementLeadCount(context?: APIContext): void {
+  const tenantId = context?.locals?.tenant?.id || "default";
   const currentStore = hourlyAnalyticsStore.get();
-  currentStore.totalLeads++;
+  if (!currentStore.data[tenantId]) {
+    currentStore.data[tenantId] = {
+      contentData: {},
+      siteData: {},
+      lastFullHour: formatHourKey(new Date()),
+      lastUpdated: Date.now(),
+      totalLeads: 0,
+      lastActivity: null,
+      slugMap: new Map(),
+    };
+  }
+  currentStore.data[tenantId].totalLeads++;
   hourlyAnalyticsStore.set(currentStore);
 }

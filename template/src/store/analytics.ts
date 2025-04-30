@@ -42,39 +42,47 @@ export interface HourlyEpinetData {
 }
 
 export const hourlyAnalyticsStore = map<{
-  contentData: Record<string, Record<string, HourlyContentData>>;
-  siteData: Record<string, HourlySiteData>;
-  lastFullHour: string;
-  lastUpdated: number;
-  totalLeads: number;
-  lastActivity: string | null;
-  slugMap: Map<string, string>;
+  data: Record<
+    string,
+    {
+      contentData: Record<string, Record<string, HourlyContentData>>;
+      siteData: Record<string, HourlySiteData>;
+      lastFullHour: string;
+      lastUpdated: number;
+      totalLeads: number;
+      lastActivity: string | null;
+      slugMap: Map<string, string>;
+    }
+  >;
 }>({
-  contentData: {},
-  siteData: {},
-  lastFullHour: "",
-  lastUpdated: 0,
-  totalLeads: 0,
-  lastActivity: null,
-  slugMap: new Map(),
+  data: {},
 });
 
 export const hourlyEpinetStore = map<{
-  data: Record<string, Record<string, HourlyEpinetData>>;
-  lastFullHour: string;
+  data: Record<string, Record<string, Record<string, HourlyEpinetData>>>;
+  lastFullHour: Record<string, string>;
 }>({
   data: {},
-  lastFullHour: "",
+  lastFullHour: {},
 });
 
-export function isAnalyticsCacheValid(): boolean {
-  const { lastFullHour, lastUpdated, contentData } = hourlyAnalyticsStore.get();
+export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
+  const store = hourlyAnalyticsStore.get();
+  const tenantData = store.data[tenantId] || {
+    contentData: {},
+    siteData: {},
+    lastFullHour: "",
+    lastUpdated: 0,
+    totalLeads: 0,
+    lastActivity: null,
+    slugMap: new Map(),
+  };
 
-  if (!lastFullHour || Object.keys(contentData).length === 0) {
+  if (!tenantData.lastFullHour || Object.keys(tenantData.contentData).length === 0) {
     return false;
   }
 
-  const timeSinceUpdate = Date.now() - lastUpdated;
+  const timeSinceUpdate = Date.now() - tenantData.lastUpdated;
   if (timeSinceUpdate >= ANALYTICS_CACHE_TTL) {
     return false;
   }

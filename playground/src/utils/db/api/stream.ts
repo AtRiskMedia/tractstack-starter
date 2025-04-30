@@ -38,7 +38,7 @@ export async function streamEvents(
   };
 
   await processEventStream(client, eventPayload);
-  updateAnalyticsWithEvent(eventPayload, !!isKnownLead);
+  updateAnalyticsWithEvent(eventPayload, !!isKnownLead, context);
 
   return {
     message: "Events processed successfully",

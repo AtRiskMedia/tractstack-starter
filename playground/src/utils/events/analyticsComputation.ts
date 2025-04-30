@@ -2,24 +2,31 @@ import {
   hourlyAnalyticsStore,
   getHourKeysForTimeRange,
   createEmptyLeadMetrics,
+  isAnalyticsCacheValid,
   type HourlySiteData,
   type HourlyContentData,
 } from "@/store/analytics";
-import { loadHourlyAnalytics, refreshHourlyAnalytics } from "./hourlyAnalyticsLoader";
+import { loadHourlyAnalytics } from "./hourlyAnalyticsLoader";
 import type { LeadMetrics, StoryfragmentAnalytics, APIContext } from "@/types";
 
-/**
- * Computes lead metrics from hourly analytics data
- * Drop-in replacement for getLeadMetrics in turso.ts
- */
 export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetrics> {
-  if (!isAnalyticsCacheValid()) {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  if (!isAnalyticsCacheValid(tenantId)) {
     await loadHourlyAnalytics(672, context);
   }
 
   const store = hourlyAnalyticsStore.get();
+  const tenantData = store.data[tenantId] || {
+    contentData: {},
+    siteData: {},
+    lastFullHour: "",
+    lastUpdated: 0,
+    totalLeads: 0,
+    lastActivity: null,
+    slugMap: new Map(),
+  };
 
-  if (!store.lastFullHour || Object.keys(store.siteData).length === 0) {
+  if (!tenantData.lastFullHour || Object.keys(tenantData.siteData).length === 0) {
     return createEmptyLeadMetrics();
   }
 
@@ -27,12 +34,12 @@ export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetr
   const hours7d = getHourKeysForTimeRange(168);
   const hours28d = getHourKeysForTimeRange(672);
 
-  const metrics24h = aggregateHourlySiteMetrics(store.siteData, hours24);
-  const metrics7d = aggregateHourlySiteMetrics(store.siteData, hours7d);
-  const metrics28d = aggregateHourlySiteMetrics(store.siteData, hours28d);
+  const metrics24h = aggregateHourlySiteMetrics(tenantData.siteData, hours24);
+  const metrics7d = aggregateHourlySiteMetrics(tenantData.siteData, hours7d);
+  const metrics28d = aggregateHourlySiteMetrics(tenantData.siteData, hours28d);
 
-  const allHours = Object.keys(store.siteData);
-  const totalMetrics = aggregateHourlySiteMetrics(store.siteData, allHours);
+  const allHours = Object.keys(tenantData.siteData);
+  const totalMetrics = aggregateHourlySiteMetrics(tenantData.siteData, allHours);
 
   const total24h = metrics24h.anonymousVisitors.size + metrics24h.knownVisitors.size;
   const total7d = metrics7d.anonymousVisitors.size + metrics7d.knownVisitors.size;
@@ -52,7 +59,7 @@ export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetr
 
   return {
     total_visits: totalMetrics.totalVisits,
-    last_activity: store.lastActivity || "",
+    last_activity: tenantData.lastActivity || "",
     first_time_24h: metrics24h.anonymousVisitors.size,
     returning_24h: metrics24h.knownVisitors.size,
     first_time_7d: metrics7d.anonymousVisitors.size,
@@ -65,47 +72,38 @@ export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetr
     returning_7d_percentage,
     first_time_28d_percentage,
     returning_28d_percentage,
-    total_leads: store.totalLeads,
+    total_leads: tenantData.totalLeads,
   };
 }
 
-/**
- * Computes storyfragment analytics from hourly data
- * Drop-in replacement for computeStoryfragmentAnalytics in turso.ts
- */
 export async function computeStoryfragmentAnalytics(
   context?: APIContext
 ): Promise<StoryfragmentAnalytics[]> {
-  const store = hourlyAnalyticsStore.get();
-  const now = new Date();
-
-  // Force reload if lastFullHour is outdated
-  const currentHour = store.lastFullHour ? store.lastFullHour.split("-").map(Number) : [0, 0, 0, 0];
-  const currentHourDate = new Date(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate(),
-    now.getUTCHours()
-  );
-  const lastFullHourDate = store.lastFullHour
-    ? new Date(currentHour[0], currentHour[1] - 1, currentHour[2], currentHour[3])
-    : new Date(0);
-  const hoursDiff = (currentHourDate.getTime() - lastFullHourDate.getTime()) / (1000 * 60 * 60);
-
-  if (!isAnalyticsCacheValid() || hoursDiff > 1) {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  if (!isAnalyticsCacheValid(tenantId)) {
     await loadHourlyAnalytics(672, context);
-  } else {
-    await refreshHourlyAnalytics(context);
   }
+
+  const store = hourlyAnalyticsStore.get();
+  const tenantData = store.data[tenantId] || {
+    contentData: {},
+    siteData: {},
+    lastFullHour: "",
+    lastUpdated: 0,
+    totalLeads: 0,
+    lastActivity: null,
+    slugMap: new Map(),
+  };
 
   const result: StoryfragmentAnalytics[] = [];
   const hours24 = getHourKeysForTimeRange(24);
   const hours7d = getHourKeysForTimeRange(168);
   const hours28d = getHourKeysForTimeRange(672);
 
-  for (const contentId of Object.keys(store.contentData)) {
-    const contentData = store.contentData[contentId];
-    const slug = Array.from(store.slugMap.entries()).find(([_, id]) => id === contentId)?.[0] || "";
+  for (const contentId of Object.keys(tenantData.contentData)) {
+    const contentData = tenantData.contentData[contentId];
+    const slug =
+      Array.from(tenantData.slugMap.entries()).find(([_, id]) => id === contentId)?.[0] || "";
 
     const metrics24h = aggregateHourlyContentMetrics(contentData, hours24);
     const metrics7d = aggregateHourlyContentMetrics(contentData, hours7d);
@@ -125,16 +123,13 @@ export async function computeStoryfragmentAnalytics(
       last_24h_unique_visitors: metrics24h.uniqueVisitors.size,
       last_7d_unique_visitors: metrics7d.uniqueVisitors.size,
       last_28d_unique_visitors: metrics28d.uniqueVisitors.size,
-      total_leads: store.totalLeads,
+      total_leads: tenantData.totalLeads,
     });
   }
 
   return result;
 }
 
-/**
- * Helper function to aggregate site metrics across multiple hours
- */
 function aggregateHourlySiteMetrics(siteData: Record<string, HourlySiteData>, hourKeys: string[]) {
   const anonymousVisitors = new Set<string>();
   const knownVisitors = new Set<string>();
@@ -143,29 +138,18 @@ function aggregateHourlySiteMetrics(siteData: Record<string, HourlySiteData>, ho
 
   hourKeys.forEach((hour) => {
     if (siteData[hour]) {
-      siteData[hour].anonymousVisitors.forEach((id) => anonymousVisitors.add(id));
-      siteData[hour].knownVisitors.forEach((id) => knownVisitors.add(id));
+      siteData[hour].anonymousVisitors.forEach((id: string) => anonymousVisitors.add(id));
+      siteData[hour].knownVisitors.forEach((id: string) => knownVisitors.add(id));
       totalVisits += siteData[hour].totalVisits;
       Object.entries(siteData[hour].eventCounts).forEach(([verb, count]) => {
-        if (!eventCounts[verb]) {
-          eventCounts[verb] = 0;
-        }
-        eventCounts[verb] += count;
+        eventCounts[verb] = (eventCounts[verb] || 0) + (count as number);
       });
     }
   });
 
-  return {
-    anonymousVisitors,
-    knownVisitors,
-    totalVisits,
-    eventCounts,
-  };
+  return { anonymousVisitors, knownVisitors, totalVisits, eventCounts };
 }
 
-/**
- * Helper function to aggregate content metrics across multiple hours
- */
 function aggregateHourlyContentMetrics(
   contentData: Record<string, HourlyContentData>,
   hourKeys: string[]
@@ -178,32 +162,15 @@ function aggregateHourlyContentMetrics(
 
   hourKeys.forEach((hour) => {
     if (contentData[hour]) {
-      contentData[hour].uniqueVisitors.forEach((id) => uniqueVisitors.add(id));
-      contentData[hour].knownVisitors.forEach((id) => knownVisitors.add(id));
-      contentData[hour].anonymousVisitors.forEach((id) => anonymousVisitors.add(id));
+      contentData[hour].uniqueVisitors.forEach((id: string) => uniqueVisitors.add(id));
+      contentData[hour].knownVisitors.forEach((id: string) => knownVisitors.add(id));
+      contentData[hour].anonymousVisitors.forEach((id: string) => anonymousVisitors.add(id));
       actions += contentData[hour].actions;
       Object.entries(contentData[hour].eventCounts).forEach(([verb, count]) => {
-        if (!eventCounts[verb]) {
-          eventCounts[verb] = 0;
-        }
-        eventCounts[verb] += count;
+        eventCounts[verb] = (eventCounts[verb] || 0) + (count as number);
       });
     }
   });
 
-  return {
-    uniqueVisitors,
-    knownVisitors,
-    anonymousVisitors,
-    actions,
-    eventCounts,
-  };
-}
-
-/**
- * Check if analytics cache is valid and ready for use
- */
-function isAnalyticsCacheValid(): boolean {
-  const { lastFullHour } = hourlyAnalyticsStore.get();
-  return !!lastFullHour && Object.keys(hourlyAnalyticsStore.get().contentData).length > 0;
+  return { uniqueVisitors, knownVisitors, anonymousVisitors, actions, eventCounts };
 }

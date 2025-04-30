@@ -16,7 +16,7 @@ interface ActionRow {
   object_type: string | null;
   fingerprints: string | null;
   total_actions: number;
-  event_counts: string | null; // JSON string of verb counts
+  event_counts: string | null;
 }
 
 interface SiteRow {
@@ -24,15 +24,9 @@ interface SiteRow {
   total_visits: number;
   anonymous_fingerprints: string | null;
   known_fingerprints: string | null;
-  event_counts: string | null; // JSON string of verb counts
+  event_counts: string | null;
 }
 
-/**
- * Parses a hour key (YYYY-MM-DD-HH) into a valid Date object
- * @param hourKey Hour key in format YYYY-MM-DD-HH
- * @returns Date object
- * @throws Error if hourKey is invalid
- */
 function parseHourKeyToDate(hourKey: string): Date {
   const parts = hourKey.split("-").map(Number);
   if (parts.length !== 4) {
@@ -61,21 +55,16 @@ function parseHourKeyToDate(hourKey: string): Date {
   return date;
 }
 
-/**
- * Loads hourly analytics data from Turso database
- * @param hours Number of hours back from now to load (default: 672 hours/28 days)
- * @param context API context for database access
- */
 export async function loadHourlyAnalytics(
   hours: number = 672,
   context?: APIContext
 ): Promise<void> {
+  const tenantId = context?.locals?.tenant?.id || "default";
   const client = await tursoClient.getClient(context);
   if (!client) {
     return;
   }
 
-  // Fetch aggregate metrics
   const [{ rows: leadCountRows }, { rows: activityRows }] = await Promise.all([
     client.execute(`SELECT COUNT(*) as total_leads FROM leads`),
     client.execute(`SELECT MAX(created_at) as last_activity FROM visits`),
@@ -93,9 +82,9 @@ export async function loadHourlyAnalytics(
 
   let startTime: Date, endTime: Date;
   try {
-    startTime = parseHourKeyToDate(hourKeys[hours - 1]); // Earliest hour
-    endTime = parseHourKeyToDate(hourKeys[0]); // Most recent hour
-    endTime.setHours(endTime.getHours() + 1); // Include full last hour
+    startTime = parseHourKeyToDate(hourKeys[hours - 1]);
+    endTime = parseHourKeyToDate(hourKeys[0]);
+    endTime.setHours(endTime.getHours() + 1);
   } catch (error) {
     console.debug("loadHourlyAnalytics: Error parsing hour keys", { error });
     throw error;
@@ -191,7 +180,6 @@ export async function loadHourlyAnalytics(
     siteData[hourKey] = createEmptyHourlySiteData();
   }
 
-  // Process site data
   for (const row of siteRows as unknown as SiteRow[]) {
     const anonymousFingerprints = row.anonymous_fingerprints
       ? String(row.anonymous_fingerprints).split(",").filter(Boolean)
@@ -216,7 +204,6 @@ export async function loadHourlyAnalytics(
     };
   }
 
-  // Process content data
   for (const row of contentRows as unknown as ActionRow[]) {
     if (!row.object_id) continue;
 
@@ -253,34 +240,31 @@ export async function loadHourlyAnalytics(
     }
   }
 
-  // Process story fragments
   for (const row of storyFragmentRows) {
     if (row.id && row.slug) {
       slugMap.set(String(row.slug), String(row.id));
     }
   }
 
-  // Update store
-  const currentHour = formatHourKey(new Date());
-  hourlyAnalyticsStore.set({
+  const currentStore = hourlyAnalyticsStore.get();
+  currentStore.data[tenantId] = {
     contentData,
     siteData,
-    lastFullHour: currentHour,
+    lastFullHour: formatHourKey(new Date()),
     lastUpdated: Date.now(),
     totalLeads,
     lastActivity,
     slugMap,
-  });
+  };
+  hourlyAnalyticsStore.set(currentStore);
 
-  // now do epinet!
   await loadHourlyEpinetData(hours, context);
 }
 
-/**
- * Refreshes hourly analytics data, only fetching new hours since last update
- */
 export async function refreshHourlyAnalytics(context?: APIContext): Promise<void> {
-  const { lastFullHour } = hourlyAnalyticsStore.get();
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const currentStore = hourlyAnalyticsStore.get();
+  const lastFullHour = currentStore.data[tenantId]?.lastFullHour || "";
   const currentHour = formatHourKey(new Date());
 
   if (lastFullHour === currentHour) {
