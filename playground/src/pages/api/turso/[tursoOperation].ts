@@ -37,6 +37,7 @@ import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStor
 import { upsertTopic } from "@/utils/db/api/upsertTopic";
 import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
 import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
+import { getEpinetMetrics } from "@/utils/events/epinetAnalytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
 import { getEpinetById } from "@/utils/db/api/getEpinetById";
@@ -198,6 +199,15 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
       case "getLeadMetrics":
         result = await computeLeadMetrics(context);
         break;
+      case "getEpinetMetrics": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+        result = await getEpinetMetrics(id /*, context */);
+        break;
+      }
       case "getAllFiles":
         result = await getAllFiles(context);
         break;

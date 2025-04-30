@@ -345,3 +345,11 @@ export function computeAllEpinetRanges(epinetId: string): {
     monthly: computeEpinetSankey(epinetId, 672),
   };
 }
+
+/**
+ * Public API endpoint for retrieving epinet sankey data
+ * Compatible with [tursoOperation].ts API structure
+ */
+export async function getEpinetMetrics(id: string): Promise<ComputedEpinet | null> {
+  return computeEpinetSankey(id, 168);
+}

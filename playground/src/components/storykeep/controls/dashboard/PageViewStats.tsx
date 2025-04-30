@@ -7,6 +7,7 @@ import {
   storedDashboardAnalytics,
   storyfragmentAnalyticsStore,
 } from "@/store/storykeep";
+import { contentMap } from "@/store/events"; // Your manual fix
 import type { LeadMetrics } from "@/types";
 
 interface Stat {
@@ -29,6 +30,7 @@ export default function PageViewStats() {
   const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
   const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
+  const $contentMap = useStore(contentMap);
 
   const analytics = Object.values($storyfragmentAnalytics.byId);
   const totalLifetimeVisitors = analytics.reduce(
@@ -73,6 +75,29 @@ export default function PageViewStats() {
 
     fetchLeadMetrics();
   }, []);
+
+  useEffect(() => {
+    const fetchEpinetMetrics = async () => {
+      try {
+        // Get epinets from the content map
+        const contentItems = Object.values($contentMap);
+        const epinets = contentItems.filter((item: any) => item.type === "Epinet");
+
+        if (epinets.length > 0) {
+          const firstEpinetId = epinets[0].id;
+          const response = await fetch(`/api/turso/getEpinetMetrics?id=${firstEpinetId}`);
+          if (response.ok) {
+            const result = await response.json();
+            console.log("Epinet metrics:", result.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching epinet metrics:", error);
+      }
+    };
+
+    fetchEpinetMetrics();
+  }, [$contentMap]);
 
   const downloadLeadsCSV = async () => {
     if (isDownloading) return;
