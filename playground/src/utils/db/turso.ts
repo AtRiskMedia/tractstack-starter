@@ -38,6 +38,7 @@ import type {
   PaneContentMap,
   ResourceContentMap,
   MenuContentMap,
+  EpinetContentMap,
   StoryfragmentAnalytics,
 } from "@/types.ts";
 import type { APIContext } from "@/types";
@@ -1107,6 +1108,20 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as topics
       FROM resources`,
       `SELECT 
+        id, 
+        id as slug, 
+        title, 
+        'Epinet' as type, 
+        options_payload as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description,
+        NULL as topics
+      FROM epinets`,
+      `SELECT 
         sf.id, 
         sf.slug, 
         sf.title, 
@@ -1171,18 +1186,47 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
       };
 
       switch (ensureString(row.type)) {
+        case "Epinet": {
+          let steps: any[] = [];
+          let promoted = false;
+          try {
+            if (row.extra && typeof row.extra === "string") {
+              const options = JSON.parse(String(row.extra));
+              if (Array.isArray(options)) {
+                steps = options;
+              } else if (typeof options === "object") {
+                if (Array.isArray(options.steps)) {
+                  steps = options.steps;
+                }
+                promoted = !!options.promoted;
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing options_payload for epinet ${row.id}:`, error);
+          }
+
+          return {
+            ...base,
+            type: "Epinet" as const,
+            promoted,
+            steps,
+          } as EpinetContentMap;
+        }
+
         case "Menu":
           return {
             ...base,
             type: "Menu" as const,
             theme: ensureString(row.extra),
           } as MenuContentMap;
+
         case "Resource":
           return {
             ...base,
             type: "Resource" as const,
             categorySlug: row.extra as string | null,
           } as ResourceContentMap;
+
         case "Pane":
           return {
             ...base,
@@ -1231,18 +1275,21 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
             }),
           } as StoryFragmentContentMap;
         }
+
         case "TractStack":
           return {
             ...base,
             type: "TractStack" as const,
             ...(row.extra && { socialImagePath: String(row.extra) }),
           } as TractStackContentMap;
+
         case "Belief":
           return {
             ...base,
             type: "Belief" as const,
             scale: ensureString(row.extra),
           } as BeliefContentMap;
+
         default:
           throw new Error(`Unknown type: ${row.type}`);
       }

@@ -31,11 +31,30 @@ export async function loadHourlyEpinetData(
     return;
   }
 
-  const epinets = epinetRows.map((row) => ({
-    id: String(row.id),
-    title: String(row.title),
-    steps: row.options_payload ? JSON.parse(String(row.options_payload)) : [],
-  }));
+  const epinets = epinetRows.map((row) => {
+    let steps = [];
+    let promoted = false;
+
+    try {
+      if (row.options_payload) {
+        const options = JSON.parse(String(row.options_payload));
+        if (typeof options === "object") {
+          if (Array.isArray(options.steps)) {
+            steps = options.steps;
+          }
+          promoted = !!options.promoted;
+        }
+      }
+    } catch (parseError) {
+      console.error(`Error parsing options_payload for epinet ${row.id}:`, parseError);
+    }
+    return {
+      id: String(row.id),
+      title: String(row.title),
+      steps: steps,
+      promoted: promoted,
+    };
+  });
 
   const hourKeys = getHourKeysForTimeRange(hours);
   if (!hourKeys.length) {

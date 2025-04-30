@@ -165,6 +165,17 @@ export type ContentMapBase = {
   type: "Menu" | "Pane" | "Resource" | "StoryFragment" | "TractStack";
 };
 
+export type EpinetContentMap = ContentMapBase & {
+  type: "Epinet";
+  promoted: boolean;
+  steps: (
+    | EpinetStepBelief
+    | EpinetStepIdentifyAs
+    | EpinetStepCommitmentAction
+    | EpinetStepConversionAction
+  )[];
+};
+
 export type MenuContentMap = ContentMapBase & {
   type: "Menu";
   theme: string;
@@ -207,7 +218,8 @@ export type FullContentMap =
   | PaneContentMap
   | StoryFragmentContentMap
   | TractStackContentMap
-  | BeliefContentMap;
+  | BeliefContentMap
+  | EpinetContentMap;
 
 export interface ResourceNode extends BaseNode {
   title: string;
@@ -1279,6 +1291,7 @@ export interface EpinetStepConversionAction extends EpinetStep {
 export interface EpinetDatum {
   id: string;
   title: string;
+  promoted?: boolean;
   steps: (
     | EpinetStepBelief
     | EpinetStepIdentifyAs

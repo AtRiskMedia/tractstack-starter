@@ -38,6 +38,7 @@ import { upsertTopic } from "@/utils/db/api/upsertTopic";
 import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
 import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
+import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
 import { getEpinetById } from "@/utils/db/api/getEpinetById";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
@@ -229,6 +230,9 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
       }
       case "getAllEpinets":
         result = await getAllEpinets(context);
+        break;
+      case "getAllPromotedEpinets":
+        result = await getAllPromotedEpinets(context);
         break;
       case "getEpinetById": {
         const url = new URL(context.request.url);

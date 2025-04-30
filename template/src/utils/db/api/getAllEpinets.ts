@@ -19,12 +19,21 @@ export async function getAllEpinets(context?: APIContext): Promise<EpinetDatum[]
         id: String(row.id),
         title: String(row.title),
         steps: [],
+        promoted: false,
       };
 
       try {
-        // Parse the options_payload which contains the steps
+        // Parse the options_payload which contains the steps and promoted flag
         if (row.options_payload) {
-          epinet.steps = JSON.parse(String(row.options_payload));
+          const options = JSON.parse(String(row.options_payload));
+          if (Array.isArray(options)) {
+            epinet.steps = options;
+          } else if (typeof options === "object") {
+            if (Array.isArray(options.steps)) {
+              epinet.steps = options.steps;
+            }
+            epinet.promoted = !!options.promoted;
+          }
         }
       } catch (parseError) {
         console.error(`Error parsing options_payload for epinet ${row.id}:`, parseError);

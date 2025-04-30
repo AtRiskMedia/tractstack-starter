@@ -2,7 +2,7 @@ import { tursoClient } from "../client";
 import type { EpinetDatum } from "@/types";
 import type { APIContext } from "@/types";
 
-export async function getAllEpinets(context?: APIContext): Promise<EpinetDatum[]> {
+export async function getAllPromotedEpinets(context?: APIContext): Promise<EpinetDatum[]> {
   try {
     const client = await tursoClient.getClient(context);
     if (!client) {
@@ -14,35 +14,42 @@ export async function getAllEpinets(context?: APIContext): Promise<EpinetDatum[]
       FROM epinets
     `);
 
-    return rows.map((row) => {
-      const epinet: EpinetDatum = {
-        id: String(row.id),
-        title: String(row.title),
-        steps: [],
-        promoted: false,
-      };
+    const promotedEpinets: EpinetDatum[] = [];
 
+    rows.forEach((row) => {
       try {
-        // Parse the options_payload which contains the steps and promoted flag
         if (row.options_payload) {
           const options = JSON.parse(String(row.options_payload));
+          let steps = [];
+          let promoted = false;
+
           if (Array.isArray(options)) {
-            epinet.steps = options;
+            steps = options;
           } else if (typeof options === "object") {
             if (Array.isArray(options.steps)) {
-              epinet.steps = options.steps;
+              steps = options.steps;
             }
-            epinet.promoted = !!options.promoted;
+            promoted = !!options.promoted;
+          }
+
+          // Only include promoted epinets
+          if (promoted) {
+            promotedEpinets.push({
+              id: String(row.id),
+              title: String(row.title),
+              steps,
+              promoted: true,
+            });
           }
         }
       } catch (parseError) {
         console.error(`Error parsing options_payload for epinet ${row.id}:`, parseError);
       }
-
-      return epinet;
     });
+
+    return promotedEpinets;
   } catch (error) {
-    console.error("Error in getAllEpinets:", error);
+    console.error("Error in getAllPromotedEpinets:", error);
     return [];
   }
 }

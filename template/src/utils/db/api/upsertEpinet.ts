@@ -12,8 +12,11 @@ export async function upsertEpinet(
       return { success: false, error: "Database client not available" };
     }
 
-    // Serialize steps to options_payload
-    const options_payload = JSON.stringify(epinet.steps);
+    // Create options_payload with steps and promoted flag
+    const options_payload = JSON.stringify({
+      steps: epinet.steps || [],
+      promoted: !!epinet.promoted,
+    });
 
     await client.execute({
       sql: `INSERT INTO epinets (id, title, options_payload)

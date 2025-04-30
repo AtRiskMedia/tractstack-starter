@@ -39,6 +39,7 @@ const SetMap = (props: {
     artpacks,
     tenantId,
   } = props;
+  console.log(payload);
 
   useEffect(() => {
     contentMap.set(payload);
