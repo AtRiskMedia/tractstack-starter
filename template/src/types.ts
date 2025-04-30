@@ -1128,8 +1128,6 @@ export type PageDesign = {
 export interface LeadMetrics {
   total_visits: number;
   total_leads: number;
-  clicked_events: number;
-  entered_events: number;
   last_activity: string;
   first_time_24h: number;
   returning_24h: number;
@@ -1281,7 +1279,6 @@ export interface EpinetStepConversionAction extends EpinetStep {
 export interface EpinetDatum {
   id: string;
   title: string;
-  slug: string;
   steps: (
     | EpinetStepBelief
     | EpinetStepIdentifyAs
@@ -1328,16 +1325,14 @@ export interface HourlyContentData {
   knownVisitors: Set<string>; // visitors with lead_id
   anonymousVisitors: Set<string>; // visitors without lead_id
   actions: number;
-  clickedEvents: number;
-  enteredEvents: number;
+  eventCounts: Record<string, number>;
 }
 
 export interface HourlySiteData {
   totalVisits: number;
   knownVisitors: Set<string>;
   anonymousVisitors: Set<string>;
-  clickedEvents: number;
-  enteredEvents: number;
+  eventCounts: Record<string, number>;
 }
 
 export interface TimeRangeMetrics {
@@ -1345,6 +1340,5 @@ export interface TimeRangeMetrics {
   knownVisitors: Set<string>;
   totalVisitors: number;
   totalVisits: number;
-  clickedEvents: number;
-  enteredEvents: number;
+  eventCounts: Record<string, number>;
 }

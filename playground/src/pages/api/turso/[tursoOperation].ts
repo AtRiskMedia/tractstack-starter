@@ -37,6 +37,10 @@ import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStor
 import { upsertTopic } from "@/utils/db/api/upsertTopic";
 import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
 import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
+import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
+import { getEpinetById } from "@/utils/db/api/getEpinetById";
+import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
+import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -114,6 +118,12 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "unlock":
         result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
+        break;
+      case "upsertEpinet":
+        result = await upsertEpinet(body, context);
+        break;
+      case "deleteEpinet":
+        result = await deleteEpinet(body.id, context);
         break;
       case "create":
         result = await createProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
@@ -215,6 +225,18 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
           throw new Error("Missing required parameter: storyFragmentId");
         }
         result = await getStoryFragmentDetails(storyFragmentId, context);
+        break;
+      }
+      case "getAllEpinets":
+        result = await getAllEpinets(context);
+        break;
+      case "getEpinetById": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+        result = await getEpinetById(id, context);
         break;
       }
       default:

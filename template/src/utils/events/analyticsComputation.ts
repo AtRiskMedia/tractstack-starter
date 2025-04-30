@@ -2,6 +2,8 @@ import {
   hourlyAnalyticsStore,
   getHourKeysForTimeRange,
   createEmptyLeadMetrics,
+  type HourlySiteData,
+  type HourlyContentData,
 } from "@/store/analytics";
 import { loadHourlyAnalytics, refreshHourlyAnalytics } from "./hourlyAnalyticsLoader";
 import type { LeadMetrics, StoryfragmentAnalytics, APIContext } from "@/types";
@@ -22,8 +24,8 @@ export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetr
   }
 
   const hours24 = getHourKeysForTimeRange(24);
-  const hours7d = getHourKeysForTimeRange(168); // 7 days
-  const hours28d = getHourKeysForTimeRange(672); // 28 days
+  const hours7d = getHourKeysForTimeRange(168);
+  const hours28d = getHourKeysForTimeRange(672);
 
   const metrics24h = aggregateHourlySiteMetrics(store.siteData, hours24);
   const metrics7d = aggregateHourlySiteMetrics(store.siteData, hours7d);
@@ -38,25 +40,18 @@ export async function computeLeadMetrics(context?: APIContext): Promise<LeadMetr
 
   const first_time_24h_percentage =
     total24h > 0 ? (metrics24h.anonymousVisitors.size / total24h) * 100 : 0;
-
   const returning_24h_percentage =
     total24h > 0 ? (metrics24h.knownVisitors.size / total24h) * 100 : 0;
-
   const first_time_7d_percentage =
     total7d > 0 ? (metrics7d.anonymousVisitors.size / total7d) * 100 : 0;
-
   const returning_7d_percentage = total7d > 0 ? (metrics7d.knownVisitors.size / total7d) * 100 : 0;
-
   const first_time_28d_percentage =
     total28d > 0 ? (metrics28d.anonymousVisitors.size / total28d) * 100 : 0;
-
   const returning_28d_percentage =
     total28d > 0 ? (metrics28d.knownVisitors.size / total28d) * 100 : 0;
 
   return {
     total_visits: totalMetrics.totalVisits,
-    clicked_events: totalMetrics.clickedEvents,
-    entered_events: totalMetrics.enteredEvents,
     last_activity: store.lastActivity || "",
     first_time_24h: metrics24h.anonymousVisitors.size,
     returning_24h: metrics24h.knownVisitors.size,
@@ -140,23 +135,23 @@ export async function computeStoryfragmentAnalytics(
 /**
  * Helper function to aggregate site metrics across multiple hours
  */
-function aggregateHourlySiteMetrics(
-  siteData: Record<string, import("@/store/analytics").HourlySiteData>,
-  hourKeys: string[]
-) {
+function aggregateHourlySiteMetrics(siteData: Record<string, HourlySiteData>, hourKeys: string[]) {
   const anonymousVisitors = new Set<string>();
   const knownVisitors = new Set<string>();
   let totalVisits = 0;
-  let clickedEvents = 0;
-  let enteredEvents = 0;
+  const eventCounts: Record<string, number> = {};
 
   hourKeys.forEach((hour) => {
     if (siteData[hour]) {
       siteData[hour].anonymousVisitors.forEach((id) => anonymousVisitors.add(id));
       siteData[hour].knownVisitors.forEach((id) => knownVisitors.add(id));
       totalVisits += siteData[hour].totalVisits;
-      clickedEvents += siteData[hour].clickedEvents;
-      enteredEvents += siteData[hour].enteredEvents;
+      Object.entries(siteData[hour].eventCounts).forEach(([verb, count]) => {
+        if (!eventCounts[verb]) {
+          eventCounts[verb] = 0;
+        }
+        eventCounts[verb] += count;
+      });
     }
   });
 
@@ -164,8 +159,7 @@ function aggregateHourlySiteMetrics(
     anonymousVisitors,
     knownVisitors,
     totalVisits,
-    clickedEvents,
-    enteredEvents,
+    eventCounts,
   };
 }
 
@@ -173,15 +167,14 @@ function aggregateHourlySiteMetrics(
  * Helper function to aggregate content metrics across multiple hours
  */
 function aggregateHourlyContentMetrics(
-  contentData: Record<string, import("@/store/analytics").HourlyContentData>,
+  contentData: Record<string, HourlyContentData>,
   hourKeys: string[]
 ) {
   const uniqueVisitors = new Set<string>();
   const knownVisitors = new Set<string>();
   const anonymousVisitors = new Set<string>();
   let actions = 0;
-  let clickedEvents = 0;
-  let enteredEvents = 0;
+  const eventCounts: Record<string, number> = {};
 
   hourKeys.forEach((hour) => {
     if (contentData[hour]) {
@@ -189,8 +182,12 @@ function aggregateHourlyContentMetrics(
       contentData[hour].knownVisitors.forEach((id) => knownVisitors.add(id));
       contentData[hour].anonymousVisitors.forEach((id) => anonymousVisitors.add(id));
       actions += contentData[hour].actions;
-      clickedEvents += contentData[hour].clickedEvents;
-      enteredEvents += contentData[hour].enteredEvents;
+      Object.entries(contentData[hour].eventCounts).forEach(([verb, count]) => {
+        if (!eventCounts[verb]) {
+          eventCounts[verb] = 0;
+        }
+        eventCounts[verb] += count;
+      });
     }
   });
 
@@ -199,8 +196,7 @@ function aggregateHourlyContentMetrics(
     knownVisitors,
     anonymousVisitors,
     actions,
-    clickedEvents,
-    enteredEvents,
+    eventCounts,
   };
 }
 

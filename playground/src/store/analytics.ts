@@ -18,16 +18,14 @@ export interface HourlyContentData {
   knownVisitors: Set<string>;
   anonymousVisitors: Set<string>;
   actions: number;
-  clickedEvents: number;
-  enteredEvents: number;
+  eventCounts: Record<string, number>;
 }
 
 export interface HourlySiteData {
   totalVisits: number;
   knownVisitors: Set<string>;
   anonymousVisitors: Set<string>;
-  clickedEvents: number;
-  enteredEvents: number;
+  eventCounts: Record<string, number>;
 }
 
 export interface HourlyEpinetStepData {
@@ -90,8 +88,7 @@ export function createEmptyHourlyContentData(): HourlyContentData {
     knownVisitors: new Set<string>(),
     anonymousVisitors: new Set<string>(),
     actions: 0,
-    clickedEvents: 0,
-    enteredEvents: 0,
+    eventCounts: {},
   };
 }
 
@@ -100,8 +97,7 @@ export function createEmptyHourlySiteData(): HourlySiteData {
     totalVisits: 0,
     knownVisitors: new Set<string>(),
     anonymousVisitors: new Set<string>(),
-    clickedEvents: 0,
-    enteredEvents: 0,
+    eventCounts: {},
   };
 }
 
@@ -115,8 +111,6 @@ export function createEmptyHourlyEpinetData(): HourlyEpinetData {
 export function createEmptyLeadMetrics(): LeadMetrics {
   return {
     total_visits: 0,
-    clicked_events: 0,
-    entered_events: 0,
     last_activity: "",
     first_time_24h: 0,
     returning_24h: 0,

@@ -3,9 +3,11 @@ import {
   hourlyAnalyticsStore,
   formatHourKey,
   createEmptyHourlySiteData,
+  createEmptyHourlyContentData,
   getHourKeysForTimeRange,
   getHoursBetween,
 } from "@/store/analytics";
+import { loadHourlyEpinetData } from "./epinetLoader";
 import type { APIContext } from "@/types";
 
 interface ActionRow {
@@ -14,8 +16,7 @@ interface ActionRow {
   object_type: string | null;
   fingerprints: string | null;
   total_actions: number;
-  clicked_events: number;
-  entered_events: number;
+  event_counts: string | null; // JSON string of verb counts
 }
 
 interface SiteRow {
@@ -23,8 +24,7 @@ interface SiteRow {
   total_visits: number;
   anonymous_fingerprints: string | null;
   known_fingerprints: string | null;
-  clicked_events: number;
-  entered_events: number;
+  event_counts: string | null; // JSON string of verb counts
 }
 
 /**
@@ -103,46 +103,80 @@ export async function loadHourlyAnalytics(
 
   const { rows: contentRows } = await client.execute({
     sql: `
-      SELECT 
+    WITH verb_counts AS (
+      SELECT
         strftime('%Y-%m-%d-%H', created_at) as hour_key,
         object_id,
         object_type,
-        GROUP_CONCAT(DISTINCT fingerprint_id) as fingerprints,
-        COUNT(*) as total_actions,
-        SUM(CASE WHEN verb = 'CLICKED' THEN 1 ELSE 0 END) as clicked_events,
-        SUM(CASE WHEN verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events
+        verb,
+        COUNT(*) as count
       FROM actions
-      WHERE 
+      WHERE
         created_at >= ? AND created_at < ?
         AND object_type IN ('StoryFragment', 'Pane')
-      GROUP BY hour_key, object_id, object_type
-    `,
-    args: [startTime.toISOString(), endTime.toISOString()],
+      GROUP BY hour_key, object_id, object_type, verb
+    )
+    SELECT
+      vc.hour_key,
+      vc.object_id,
+      vc.object_type,
+      GROUP_CONCAT(DISTINCT a.fingerprint_id) as fingerprints,
+      SUM(vc.count) as total_actions,
+      json_group_object(vc.verb, vc.count) as event_counts
+    FROM verb_counts vc
+    JOIN actions a ON
+      a.object_id = vc.object_id AND
+      a.object_type = vc.object_type AND
+      strftime('%Y-%m-%d-%H', a.created_at) = vc.hour_key
+    WHERE
+      a.created_at >= ? AND a.created_at < ?
+      AND a.object_type IN ('StoryFragment', 'Pane')
+    GROUP BY vc.hour_key, vc.object_id, vc.object_type
+  `,
+    args: [
+      startTime.toISOString(),
+      endTime.toISOString(),
+      startTime.toISOString(),
+      endTime.toISOString(),
+    ],
   });
 
   const { rows: siteRows } = await client.execute({
     sql: `
-      WITH visit_fingerprints AS (
-        SELECT 
-          v.id as visit_id,
-          v.fingerprint_id,
-          f.lead_id,
-          strftime('%Y-%m-%d-%H', v.created_at) as hour_key
-        FROM visits v
-        JOIN fingerprints f ON v.fingerprint_id = f.id
-        WHERE v.created_at >= ? AND v.created_at < ?
-      )
+    WITH visit_fingerprints AS (
       SELECT
-        hour_key,
-        COUNT(DISTINCT visit_id) as total_visits,
-        GROUP_CONCAT(DISTINCT CASE WHEN lead_id IS NULL THEN fingerprint_id ELSE NULL END) as anonymous_fingerprints,
-        GROUP_CONCAT(DISTINCT CASE WHEN lead_id IS NOT NULL THEN fingerprint_id ELSE NULL END) as known_fingerprints,
-        (SELECT COUNT(*) FROM actions a WHERE a.verb = 'CLICKED' AND strftime('%Y-%m-%d-%H', a.created_at) = visit_fingerprints.hour_key) as clicked_events,
-        (SELECT COUNT(*) FROM actions a WHERE a.verb = 'ENTERED' AND strftime('%Y-%m-%d-%H', a.created_at) = visit_fingerprints.hour_key) as entered_events
-      FROM visit_fingerprints
-      GROUP BY hour_key
-    `,
-    args: [startTime.toISOString(), endTime.toISOString()],
+        v.id as visit_id,
+        v.fingerprint_id,
+        f.lead_id,
+        strftime('%Y-%m-%d-%H', v.created_at) as hour_key
+      FROM visits v
+      JOIN fingerprints f ON v.fingerprint_id = f.id
+      WHERE v.created_at >= ? AND v.created_at < ?
+    ),
+    verb_counts AS (
+      SELECT
+        strftime('%Y-%m-%d-%H', created_at) as hour_key,
+        verb,
+        COUNT(*) as count
+      FROM actions
+      WHERE created_at >= ? AND created_at < ?
+      GROUP BY hour_key, verb
+    )
+    SELECT
+      vf.hour_key,
+      COUNT(DISTINCT vf.visit_id) as total_visits,
+      GROUP_CONCAT(DISTINCT CASE WHEN vf.lead_id IS NULL THEN vf.fingerprint_id ELSE NULL END) as anonymous_fingerprints,
+      GROUP_CONCAT(DISTINCT CASE WHEN vf.lead_id IS NOT NULL THEN vf.fingerprint_id ELSE NULL END) as known_fingerprints,
+      (SELECT json_group_object(vc.verb, vc.count) FROM verb_counts vc WHERE vc.hour_key = vf.hour_key) as event_counts
+    FROM visit_fingerprints vf
+    GROUP BY vf.hour_key
+  `,
+    args: [
+      startTime.toISOString(),
+      endTime.toISOString(),
+      startTime.toISOString(),
+      endTime.toISOString(),
+    ],
   });
 
   const { rows: storyFragmentRows } = await client.execute(`
@@ -165,13 +199,20 @@ export async function loadHourlyAnalytics(
     const knownFingerprints = row.known_fingerprints
       ? String(row.known_fingerprints).split(",").filter(Boolean)
       : [];
+    let eventCounts: Record<string, number> = {};
+    if (row.event_counts) {
+      try {
+        eventCounts = JSON.parse(row.event_counts) || {};
+      } catch (e) {
+        console.error("Error parsing event_counts JSON:", e);
+      }
+    }
 
     siteData[row.hour_key] = {
       totalVisits: Number(row.total_visits || 0),
       anonymousVisitors: new Set(anonymousFingerprints),
       knownVisitors: new Set(knownFingerprints),
-      clickedEvents: Number(row.clicked_events || 0),
-      enteredEvents: Number(row.entered_events || 0),
+      eventCounts,
     };
   }
 
@@ -194,14 +235,22 @@ export async function loadHourlyAnalytics(
       siteData[row.hour_key]?.anonymousVisitors.has(id)
     );
 
-    contentData[contentId][row.hour_key] = {
-      uniqueVisitors: new Set(fingerprints),
-      knownVisitors: new Set(knownFingerprints),
-      anonymousVisitors: new Set(anonymousFingerprints),
-      actions: Number(row.total_actions || 0),
-      clickedEvents: Number(row.clicked_events || 0),
-      enteredEvents: Number(row.entered_events || 0),
-    };
+    if (!contentData[contentId][row.hour_key]) {
+      contentData[contentId][row.hour_key] = createEmptyHourlyContentData();
+    }
+
+    const hourData = contentData[contentId][row.hour_key];
+    hourData.uniqueVisitors = new Set(fingerprints);
+    hourData.knownVisitors = new Set(knownFingerprints);
+    hourData.anonymousVisitors = new Set(anonymousFingerprints);
+    hourData.actions = Number(row.total_actions || 0);
+    if (row.event_counts) {
+      try {
+        hourData.eventCounts = JSON.parse(row.event_counts) || {};
+      } catch (e) {
+        console.error("Error parsing event_counts JSON:", e);
+      }
+    }
   }
 
   // Process story fragments
@@ -222,6 +271,9 @@ export async function loadHourlyAnalytics(
     lastActivity,
     slugMap,
   });
+
+  // now do epinet!
+  await loadHourlyEpinetData(hours, context);
 }
 
 /**

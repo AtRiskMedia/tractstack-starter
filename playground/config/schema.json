@@ -94,7 +94,6 @@
     "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_fingerprint_id ON heldbeliefs(fingerprint_id)",
     "CREATE INDEX IF NOT EXISTS idx_heldbeliefs_composite ON heldbeliefs(fingerprint_id, belief_id)",
     "CREATE INDEX IF NOT EXISTS idx_panes_slug ON panes(slug)",
-    "CREATE INDEX IF NOT EXISTS idx_epinets_slug ON epinets(slug)",
     "CREATE INDEX IF NOT EXISTS idx_resources_slug ON resources(slug)",
     "CREATE INDEX IF NOT EXISTS idx_resources_category ON resources(category_slug)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_panes_weight ON storyfragment_panes(weight)",
