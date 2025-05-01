@@ -2,7 +2,7 @@ import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
 import type { EventPayload, EventStream } from "@/types";
 
-const DEBUG = true;
+const VERBOSE = false;
 
 async function processBeliefEvent(
   client: Client,
@@ -15,7 +15,7 @@ async function processBeliefEvent(
     sql: "SELECT id FROM beliefs WHERE slug = ?",
     args: [event.id],
   };
-  if (DEBUG) console.log(checkBeliefQuery);
+  if (VERBOSE) console.log(checkBeliefQuery);
   const { rows: beliefRows } = await client.execute(checkBeliefQuery);
 
   if (!beliefRows.length) {
@@ -36,7 +36,7 @@ async function processBeliefEvent(
         sql: "DELETE FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
         args: [beliefId, fingerprint_id],
       };
-      if (DEBUG) console.log(deleteQuery);
+      if (VERBOSE) console.log(deleteQuery);
       await client.execute(deleteQuery);
       return;
     }
@@ -56,7 +56,7 @@ async function processBeliefEvent(
         new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
       ],
     };
-    if (DEBUG) console.log(actionQuery);
+    if (VERBOSE) console.log(actionQuery);
     await client.execute(actionQuery);
 
     // Check for existing belief state
@@ -64,7 +64,7 @@ async function processBeliefEvent(
       sql: "SELECT verb FROM heldbeliefs WHERE belief_id = ? AND fingerprint_id = ?",
       args: [beliefId, fingerprint_id],
     };
-    if (DEBUG) console.log(checkHeldBeliefQuery);
+    if (VERBOSE) console.log(checkHeldBeliefQuery);
     const { rows: existingBelief } = await client.execute(checkHeldBeliefQuery);
 
     // Update or insert belief state using belief ID
@@ -81,7 +81,7 @@ async function processBeliefEvent(
           fingerprint_id,
         ],
       };
-      if (DEBUG) console.log(updateQuery);
+      if (VERBOSE) console.log(updateQuery);
       await client.execute(updateQuery);
     } else {
       const insertQuery = {
@@ -96,7 +96,7 @@ async function processBeliefEvent(
           new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
         ],
       };
-      if (DEBUG) console.log(insertQuery);
+      if (VERBOSE) console.log(insertQuery);
       await client.execute(insertQuery);
     }
   } catch (error) {
@@ -116,7 +116,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
       sql: "SELECT id FROM campaigns WHERE name = ?",
       args: [referrer.utmCampaign],
     };
-    if (DEBUG) console.log(selectQuery);
+    if (VERBOSE) console.log(selectQuery);
     const { rows } = await client.execute(selectQuery);
 
     if (rows.length > 0) {
@@ -137,7 +137,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
           referrer.httpReferrer || null,
         ],
       };
-      if (DEBUG) console.log(insertQuery);
+      if (VERBOSE) console.log(insertQuery);
       await client.execute(insertQuery);
     }
 
@@ -146,7 +146,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
         sql: "UPDATE visits SET campaign_id = ? WHERE id = ?",
         args: [campaign_id, visit_id],
       };
-      if (DEBUG) console.log(updateQuery);
+      if (VERBOSE) console.log(updateQuery);
       await client.execute(updateQuery);
     }
   }
@@ -175,7 +175,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
           new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
         ],
       };
-      if (DEBUG) console.log(actionQuery);
+      if (VERBOSE) console.log(actionQuery);
       await client.execute(actionQuery);
     } catch (error) {
       console.error(`Error processing event:`, event, error);

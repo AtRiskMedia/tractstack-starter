@@ -230,8 +230,8 @@ export async function loadHourlyEpinetData(
       console.log("[DEBUG-EPINET] Time range parameters:", {
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
-        currentHourOnly,
-        hourKeys,
+        //currentHourOnly,
+        //hourKeys,
       });
   }
 
@@ -538,18 +538,6 @@ async function processActionStepsForEpinet(
 
   if (whereConditions.length === 0) return;
 
-  const debugQuery = await client.execute({
-    sql: `
-    SELECT created_at, object_id, object_type, verb
-    FROM actions
-    WHERE created_at >= ? OR created_at >= datetime(?, '-4 hours')
-    ORDER BY created_at DESC
-    LIMIT 10
-  `,
-    args: [startTime.toISOString(), startTime.toISOString()],
-  });
-  console.log(`[DEBUG-EPINET] Recent actions`, debugQuery.rows);
-
   const query = `
   SELECT 
     strftime('%Y-%m-%d-%H', created_at) as hour_key,
@@ -576,16 +564,7 @@ async function processActionStepsForEpinet(
     ],
   });
 
-  if (VERBOSE) {
-    console.log(`[DEBUG-EPINET] Polled ${rows.length} rows from actions`);
-    console.log("[DEBUG-EPINET] Action query parameters:", {
-      sql: query,
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
-      whereConditions,
-      queryParams,
-    });
-  }
+  if (VERBOSE) console.log(`[DEBUG-EPINET] Polled ${rows.length} rows from actions`);
 
   // Process all actions to create content-specific nodes
   for (const row of rows) {
