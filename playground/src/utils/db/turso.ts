@@ -1204,7 +1204,6 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
           } catch (error) {
             console.error(`Error parsing options_payload for epinet ${row.id}:`, error);
           }
-
           return {
             ...base,
             type: "Epinet" as const,

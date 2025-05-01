@@ -95,12 +95,6 @@
             "gateType": "commitmentAction",
             "objectType": "Pane",
             "values": ["READ", "GLOSSED", "CLICKED", "WATCHED"]
-          },
-          {
-            "title": "Delved into the Details",
-            "gateType": "commitmentAction",
-            "objectType": "ContextPage",
-            "values": ["READ", "GLOSSED", "CLICKED", "WATCHED"]
           }
         ]
       }

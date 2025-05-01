@@ -1278,13 +1278,13 @@ export interface EpinetStepIdentifyAs extends EpinetStep {
 
 export interface EpinetStepCommitmentAction extends EpinetStep {
   gateType: "commitmentAction";
-  objectType: "StoryFragment" | "Pane" | "ContextPage";
+  objectType: "StoryFragment" | "Pane";
   objectIds?: string[];
 }
 
 export interface EpinetStepConversionAction extends EpinetStep {
   gateType: "conversionAction";
-  objectType: "StoryFragment" | "Pane" | "ContextPage";
+  objectType: "StoryFragment" | "Pane";
   objectIds?: string[];
 }
 
