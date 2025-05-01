@@ -17,7 +17,7 @@ import type {
 } from "@/types";
 import type { Client } from "@libsql/client";
 
-const VERBOSE = true;
+const VERBOSE = false;
 
 /**
  * Generates a stable, unique ID for an epinet step that includes content ID
@@ -78,7 +78,7 @@ export function getEventNodeId(event: {
  * Gets a human-readable name for a step node, incorporating content titles
  */
 export function getNodeName(
-  step: EpinetStep, // Explicitly type as EpinetStep to avoid 'never'
+  step: EpinetStep,
   contentId: string,
   contentItems: Record<string, FullContentMap>
 ): string {
@@ -89,30 +89,10 @@ export function getNodeName(
     return `Believes: ${step.title || step.values.join("/")}`;
   } else if (step.gateType === "identifyAs") {
     return `Identifies as: ${step.title || step.values.join("/")}`;
-  } else if (step.gateType === "commitmentAction") {
+  } else if (["commitmentAction", "conversionAction"].includes(step.gateType)) {
     const actionVerb = step.values[0] || "";
-    switch (actionVerb) {
-      case "ENTERED":
-        return `Entered: ${contentTitle}`;
-      case "PAGEVIEWED":
-        return `Viewed: ${contentTitle}`;
-      case "CLICKED":
-        return `Clicked: ${contentTitle}`;
-      default:
-        return `${actionVerb}: ${contentTitle}`;
-    }
-  } else if (step.gateType === "conversionAction") {
-    const actionVerb = step.values[0] || "";
-    switch (actionVerb) {
-      case "SUBMITTED":
-        return `Submitted: ${contentTitle}`;
-      case "CONVERTED":
-        return `Converted: ${contentTitle}`;
-      default:
-        return `${actionVerb}: ${contentTitle}`;
-    }
+    return `${actionVerb}: ${contentTitle}`;
   }
-
   // Default case for unexpected gateType
   console.warn(`Unexpected gateType: ${step.gateType}`);
   return `${step.title || contentTitle}`;

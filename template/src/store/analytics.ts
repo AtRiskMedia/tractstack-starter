@@ -95,12 +95,6 @@ export function isEpinetCacheValid(tenantId: string = "default"): boolean {
   }
 
   const now = Date.now();
-  console.log("Cache check:", {
-    now,
-    lastUpdateTime,
-    timeDiff: now - lastUpdateTime,
-    ttl: EPINETS_CACHE_TTL,
-  });
   return now - lastUpdateTime < EPINETS_CACHE_TTL;
 }
 

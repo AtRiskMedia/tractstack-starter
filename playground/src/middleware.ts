@@ -149,16 +149,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   if (EPINET_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
-    console.log(`THIS IS EPINET ROUTE`);
     if (!isEpinetCacheValid(tenantId)) {
       const store = hourlyEpinetStore.get();
       const isStoreUninitialized =
         !store.lastFullHour[tenantId] ||
         !store.lastUpdateTime[tenantId] ||
         Object.keys(store.data[tenantId] || {}).length === 0;
-      console.log(`load epinet data`, { isStoreUninitialized });
       await loadHourlyEpinetData(672, !isStoreUninitialized, context as APIContext);
-    } else console.log(`cache is valid`);
+    }
   }
 
   const config = await getConfig(context.locals.tenant.paths.configPath, tenantId);
