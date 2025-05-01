@@ -1,4 +1,5 @@
 import { hourlyEpinetStore, formatHourKey, createEmptyHourlyEpinetData } from "@/store/analytics";
+import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import type {
   EventStream,
   EpinetStepBelief,
@@ -211,7 +212,6 @@ export async function addObjectToEpinetStep(
     if (!step.objectIds.includes(objectId)) {
       step.objectIds.push(objectId);
 
-      const { upsertEpinet } = await import("@/utils/db/api/upsertEpinet");
       await upsertEpinet(epinet, context);
     }
   } catch (error) {
