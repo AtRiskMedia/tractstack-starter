@@ -1,5 +1,6 @@
 import { map } from "nanostores";
 import { ANALYTICS_CACHE_TTL } from "@/constants";
+import { EPINETS_CACHE_TTL } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
 export function formatHourKey(date: Date): string {
@@ -63,10 +64,45 @@ export const hourlyAnalyticsStore = map<{
 export const hourlyEpinetStore = map<{
   data: Record<string, Record<string, Record<string, HourlyEpinetData>>>;
   lastFullHour: Record<string, string>;
+  lastUpdateTime: Record<string, number>;
 }>({
   data: {},
   lastFullHour: {},
+  lastUpdateTime: {},
 });
+
+export function isEpinetCacheValid(tenantId: string = "default"): boolean {
+  const store = hourlyEpinetStore.get();
+
+  if (
+    !store.lastFullHour[tenantId] ||
+    !store.lastUpdateTime[tenantId] ||
+    Object.keys(store.data[tenantId] || {}).length === 0
+  ) {
+    console.log("Cache invalid: missing lastFullHour, lastUpdateTime, or data for tenant", {
+      tenantId,
+    });
+    return false;
+  }
+
+  const lastHourKey = store.lastFullHour[tenantId];
+  const lastUpdateTime = store.lastUpdateTime[tenantId];
+  const currentHour = formatHourKey(new Date());
+
+  if (lastHourKey !== currentHour) {
+    console.log("Cache invalid: hour key mismatch", { lastHourKey, currentHour });
+    return false;
+  }
+
+  const now = Date.now();
+  console.log("Cache check:", {
+    now,
+    lastUpdateTime,
+    timeDiff: now - lastUpdateTime,
+    ttl: EPINETS_CACHE_TTL,
+  });
+  return now - lastUpdateTime < EPINETS_CACHE_TTL;
+}
 
 export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
   const store = hourlyAnalyticsStore.get();

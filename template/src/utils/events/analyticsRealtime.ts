@@ -4,7 +4,6 @@ import {
   createEmptyHourlyContentData,
   createEmptyHourlySiteData,
 } from "@/store/analytics";
-import { processEpinetEvent } from "./epinetAnalytics";
 import type { EventPayload, APIContext } from "@/types";
 
 const VERBOSE = false;
@@ -50,8 +49,6 @@ export function updateAnalyticsWithEvent(
   tenantData.lastActivity = new Date().toISOString();
 
   for (const event of payload.events) {
-    processEpinetEvent(event, fingerprintId, context); // Pass context
-
     const targetId = event.id;
     if (!targetId) continue;
 

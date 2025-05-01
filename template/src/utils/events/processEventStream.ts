@@ -2,7 +2,7 @@ import type { Client } from "@libsql/client";
 import { ulid } from "ulid";
 import type { EventPayload, EventStream } from "@/types";
 
-const DEBUG = false;
+const DEBUG = true;
 
 async function processBeliefEvent(
   client: Client,
@@ -44,9 +44,17 @@ async function processBeliefEvent(
     // Record action for non-UNSET verbs
     const actionQuery = {
       sql: `INSERT INTO actions 
-        (id, object_id, object_type, visit_id, fingerprint_id, verb, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      args: [ulid(), beliefId, event.type, visit_id, fingerprint_id, event.verb],
+    (id, object_id, object_type, visit_id, fingerprint_id, verb, created_at) 
+    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        ulid(),
+        beliefId,
+        event.type,
+        visit_id,
+        fingerprint_id,
+        event.verb,
+        new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+      ],
     };
     if (DEBUG) console.log(actionQuery);
     await client.execute(actionQuery);
@@ -63,17 +71,30 @@ async function processBeliefEvent(
     if (existingBelief.length > 0) {
       const updateQuery = {
         sql: `UPDATE heldbeliefs 
-              SET verb = ?, object = ?, updated_at = CURRENT_TIMESTAMP 
-              WHERE belief_id = ? AND fingerprint_id = ?`,
-        args: [event.verb, event.object || null, beliefId, fingerprint_id],
+        SET verb = ?, object = ?, updated_at = ? 
+        WHERE belief_id = ? AND fingerprint_id = ?`,
+        args: [
+          event.verb,
+          event.object || null,
+          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+          beliefId,
+          fingerprint_id,
+        ],
       };
       if (DEBUG) console.log(updateQuery);
       await client.execute(updateQuery);
     } else {
       const insertQuery = {
-        sql: `INSERT INTO heldbeliefs (id, belief_id, fingerprint_id, verb, object)
-              VALUES (?, ?, ?, ?, ?)`,
-        args: [ulid(), beliefId, fingerprint_id, event.verb, event.object || null],
+        sql: `INSERT INTO heldbeliefs (id, belief_id, fingerprint_id, verb, object, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [
+          ulid(),
+          beliefId,
+          fingerprint_id,
+          event.verb,
+          event.object || null,
+          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+        ],
       };
       if (DEBUG) console.log(insertQuery);
       await client.execute(insertQuery);
@@ -141,8 +162,8 @@ export async function processEventStream(client: Client, payload: EventPayload) 
       // Record standard action
       const actionQuery = {
         sql: `INSERT INTO actions 
-              (id, object_id, object_type, visit_id, fingerprint_id, verb, duration, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        (id, object_id, object_type, visit_id, fingerprint_id, verb, duration, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           ulid(),
           event.id,
@@ -151,6 +172,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
           fingerprint_id,
           event.verb,
           event.duration || null,
+          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
         ],
       };
       if (DEBUG) console.log(actionQuery);

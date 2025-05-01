@@ -7,7 +7,6 @@ import {
   getHourKeysForTimeRange,
   getHoursBetween,
 } from "@/store/analytics";
-import { loadHourlyEpinetData } from "./epinetLoader";
 import { getFullContentMap } from "@/utils/db/turso";
 import type { APIContext, FullContentMap } from "@/types";
 
@@ -256,8 +255,6 @@ export async function loadHourlyAnalytics(
     slugMap,
   };
   hourlyAnalyticsStore.set(currentStore);
-
-  await loadHourlyEpinetData(hours, context);
 }
 
 export async function refreshHourlyAnalytics(context?: APIContext): Promise<void> {
@@ -266,10 +263,7 @@ export async function refreshHourlyAnalytics(context?: APIContext): Promise<void
   const lastFullHour = currentStore.data[tenantId]?.lastFullHour || "";
   const currentHour = formatHourKey(new Date());
 
-  if (lastFullHour === currentHour) {
-    return;
-  }
-
+  // If we need a full analytics refresh
   const hoursSinceLastUpdate = lastFullHour
     ? Math.max(1, getHoursBetween(lastFullHour, currentHour))
     : 672;

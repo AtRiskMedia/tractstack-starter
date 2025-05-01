@@ -1,9 +1,7 @@
 import { hourlyEpinetStore, formatHourKey, createEmptyHourlyEpinetData } from "@/store/analytics";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
-import { contentMap } from "@/store/events";
 import { getHourKeysForTimeRange } from "@/store/analytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
-import { getEventNodeId } from "@/utils/events/epinetLoader";
 import type {
   EventStream,
   EpinetStepBelief,
@@ -17,127 +15,6 @@ import type {
 } from "@/types";
 
 const VERBOSE = false;
-
-/**
- * Process an event and update epinet data in real-time
- */
-export function processEpinetEvent(
-  event: EventStream,
-  fingerprintId: string,
-  context?: APIContext
-): void {
-  const tenantId = context?.locals?.tenant?.id || "default";
-  if (VERBOSE) console.log("[DEBUG-TENANT] processEpinetEvent tenantId:", tenantId);
-
-  const epinetStore = hourlyEpinetStore.get();
-  const tenantData = epinetStore.data[tenantId] || {};
-
-  // Get all epinets in the system
-  const epinets = Object.keys(tenantData);
-  if (VERBOSE) console.log("[DEBUG-TENANT] processEpinetEvent epinets:", epinets);
-
-  if (epinets.length === 0) return;
-
-  // Get content items for title resolution
-  const $contentMap = contentMap.get();
-  const contentItems = Array.isArray($contentMap)
-    ? $contentMap.reduce(
-        (acc, item) => {
-          if (item.id) acc[item.id] = item;
-          return acc;
-        },
-        {} as Record<string, any>
-      )
-    : {};
-
-  // For each epinet, try to match the event against epinet steps
-  for (const epinetId of epinets) {
-    try {
-      // Get the epinet definition asynchronously
-      getAllEpinets(context)
-        .then((allEpinets) => {
-          const epinet = allEpinets.find((e) => e.id === epinetId);
-          if (!epinet) return;
-
-          // For each step in the epinet, check if this event matches
-          for (const step of epinet.steps) {
-            // Type assertion since we know the structure is correct
-            const typedStep = step as
-              | EpinetStepBelief
-              | EpinetStepIdentifyAs
-              | EpinetStepCommitmentAction
-              | EpinetStepConversionAction;
-
-            const isMatch = matchEventToStep(event, typedStep);
-
-            if (isMatch) {
-              // Find the user's previous step node in this epinet
-              const previousNodeId = findUserPreviousNode(epinetId, fingerprintId, context);
-
-              // Generate a node ID specific to this event/content
-              const nodeId = getEventNodeId(event);
-
-              // Generate a human-readable node name
-              const nodeName = getContentNodeName(event, contentItems);
-
-              // Record this step and transition
-              updateEpinetHourlyData(
-                fingerprintId,
-                epinetId,
-                nodeId,
-                nodeName,
-                previousNodeId,
-                context
-              );
-            }
-          }
-        })
-        .catch((err) => {
-          console.error("Error processing event for epinet metrics:", err);
-        });
-    } catch (error) {
-      console.error("Error in processEpinetEvent:", error);
-    }
-  }
-}
-
-/**
- * Generate a human-readable node name from an event
- */
-function getContentNodeName(event: EventStream, contentItems: Record<string, any>): string {
-  const content = contentItems[event.id];
-  const contentTitle = content?.title || event.id.slice(0, 8);
-
-  if (event.type === "Belief") {
-    if (event.object !== undefined) {
-      return `Identifies as: ${String(event.object)}`;
-    } else {
-      return `Believes: ${event.verb}`;
-    }
-  } else {
-    // For action events
-    switch (event.verb) {
-      case "ENTERED":
-        return `Entered: ${contentTitle}`;
-      case "PAGEVIEWED":
-        return `Viewed: ${contentTitle}`;
-      case "READ":
-        return `Read: ${contentTitle}`;
-      case "GLOSSED":
-        return `Skimmed: ${contentTitle}`;
-      case "WATCHED":
-        return `Watched: ${contentTitle}`;
-      case "CLICKED":
-        return `Clicked: ${contentTitle}`;
-      case "SUBMITTED":
-        return `Submitted: ${contentTitle}`;
-      case "CONVERTED":
-        return `Converted: ${contentTitle}`;
-      default:
-        return `${event.verb}: ${contentTitle}`;
-    }
-  }
-}
 
 /**
  * Find the most recent node a user has visited in an epinet
@@ -342,6 +219,7 @@ export function computeEpinetSankey(
   context?: APIContext
 ): ComputedEpinet | null {
   const tenantId = context?.locals?.tenant?.id || "default";
+
   const epinetStore = hourlyEpinetStore.get();
   const epinetData = epinetStore.data[tenantId]?.[epinetId];
 

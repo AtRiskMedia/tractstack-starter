@@ -15,9 +15,9 @@ import type {
   EpinetStepConversionAction,
   FullContentMap,
 } from "@/types";
-import type { Client } from "@libsql/client"; // Import Client type
+import type { Client } from "@libsql/client";
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 /**
  * Generates a stable, unique ID for an epinet step that includes content ID
@@ -120,12 +120,22 @@ export function getNodeName(
 
 /**
  * Loads hourly epinet data for the specified time period
+ * @param hours Number of hours to load data for
+ * @param currentHourOnly When true, only refresh the current hour's data
+ * @param context API context for tenant information
  */
 export async function loadHourlyEpinetData(
   hours: number = 672,
+  currentHourOnly: boolean = false,
   context?: APIContext
 ): Promise<void> {
   const tenantId = context?.locals?.tenant?.id || "default";
+
+  if (VERBOSE)
+    console.log(
+      `[DEBUG-EPINET] loading data from turso for ${tenantId}, hours:${hours} ${currentHourOnly ? `CURRENT HOUR ONLY` : ``}`
+    );
+
   const client = await tursoClient.getClient(context);
   if (!client) {
     return;
@@ -135,6 +145,10 @@ export async function loadHourlyEpinetData(
   const { rows: epinetRows } = await client.execute(`
     SELECT id, title, options_payload FROM epinets
   `);
+  if (VERBOSE)
+    console.log(
+      `[DEBUG-EPINET] Polled ${epinetRows.length} rows from epinets table for tenant ${tenantId}`
+    );
 
   if (epinetRows.length === 0) {
     return;
@@ -180,39 +194,72 @@ export async function loadHourlyEpinetData(
   );
 
   // Set up time period for queries
-  const hourKeys = getHourKeysForTimeRange(hours);
-  if (!hourKeys.length) {
-    return;
+  let hourKeys: string[];
+  let startTime: Date, endTime: Date;
+
+  if (currentHourOnly) {
+    // For partial updates, only get the current hour
+    const currentHourKey = formatHourKey(new Date());
+    hourKeys = [currentHourKey];
+
+    const hourParts = currentHourKey.split("-").map(Number);
+    startTime = new Date(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]);
+    endTime = new Date(startTime);
+    endTime.setHours(endTime.getHours() + 1);
+  } else {
+    // For full updates, get all hours in the specified range
+    hourKeys = getHourKeysForTimeRange(hours);
+    if (!hourKeys.length) {
+      return;
+    }
+
+    const firstHourParts = hourKeys[hours - 1].split("-").map(Number);
+    const lastHourParts = hourKeys[0].split("-").map(Number);
+
+    startTime = new Date(
+      firstHourParts[0],
+      firstHourParts[1] - 1,
+      firstHourParts[2],
+      firstHourParts[3]
+    );
+
+    endTime = new Date(lastHourParts[0], lastHourParts[1] - 1, lastHourParts[2], lastHourParts[3]);
+    endTime.setHours(endTime.getHours() + 1);
+
+    if (VERBOSE)
+      console.log("[DEBUG-EPINET] Time range parameters:", {
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        currentHourOnly,
+        hourKeys,
+      });
   }
 
-  const firstHourParts = hourKeys[hours - 1].split("-").map(Number);
-  const lastHourParts = hourKeys[0].split("-").map(Number);
+  // Initialize or get the current epinet data structure
+  const currentStore = hourlyEpinetStore.get();
+  let epinetData: Record<string, Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>>;
 
-  const startTime = new Date(
-    firstHourParts[0],
-    firstHourParts[1] - 1,
-    firstHourParts[2],
-    firstHourParts[3]
-  );
+  if (currentHourOnly && currentStore.data[tenantId]) {
+    // For partial updates, keep the existing data and only update the current hour
+    epinetData = { ...currentStore.data[tenantId] };
+  } else {
+    // For full updates, initialize all hours in the range
+    epinetData = {};
+  }
 
-  const endTime = new Date(
-    lastHourParts[0],
-    lastHourParts[1] - 1,
-    lastHourParts[2],
-    lastHourParts[3]
-  );
-  endTime.setHours(endTime.getHours() + 1);
-
-  // Initialize epinet data structure
-  const epinetData: Record<
-    string,
-    Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>
-  > = {};
-
+  // Initialize any missing epinets or hours
   for (const epinet of epinets) {
-    epinetData[epinet.id] = {};
+    if (!epinetData[epinet.id]) {
+      epinetData[epinet.id] = {};
+    }
+
     for (const hourKey of hourKeys) {
-      epinetData[epinet.id][hourKey] = createEmptyHourlyEpinetData();
+      if (!epinetData[epinet.id][hourKey]) {
+        epinetData[epinet.id][hourKey] = createEmptyHourlyEpinetData();
+      } else if (currentHourOnly) {
+        // For partial updates, reset the current hour's data to start fresh
+        epinetData[epinet.id][hourKey] = createEmptyHourlyEpinetData();
+      }
     }
   }
 
@@ -263,12 +310,20 @@ export async function loadHourlyEpinetData(
   }
 
   // Store the processed data
-  const currentStore = hourlyEpinetStore.get();
-  if (!currentStore.data[tenantId]) {
-    currentStore.data[tenantId] = {};
+  if (currentHourOnly) {
+    // For partial updates, merge with existing data
+    currentStore.data[tenantId] = {
+      ...currentStore.data[tenantId],
+      ...epinetData,
+    };
+  } else {
+    // For full updates, replace all data
+    currentStore.data[tenantId] = epinetData;
   }
-  currentStore.data[tenantId] = epinetData;
+
+  // Update the last refresh timestamp and hour
   currentStore.lastFullHour[tenantId] = formatHourKey(new Date());
+  currentStore.lastUpdateTime[tenantId] = Date.now();
   hourlyEpinetStore.set(currentStore);
 }
 
@@ -335,12 +390,6 @@ function calculateChronologicalTransitions(
           }
 
           hourData.transitions[fromNodeId][toNodeId].visitors.add(visitorId);
-
-          if (VERBOSE) {
-            console.log(
-              `[DEBUG-EPINET] Transition created: ${fromNodeId} -> ${toNodeId}, visitor: ${visitorId}`
-            );
-          }
         }
       }
     }
@@ -378,26 +427,33 @@ async function processBeliefStepsForEpinet(
 
   if (whereConditions.length === 0) return;
 
-  // Execute consolidated query for beliefs
   const query = `
-    SELECT 
-      strftime('%Y-%m-%d-%H', updated_at) as hour_key,
-      belief_id,
-      fingerprint_id,
-      verb,
-      object
-    FROM heldbeliefs
-    JOIN beliefs ON heldbeliefs.belief_id = beliefs.id
-    WHERE 
-      updated_at >= ? AND updated_at < ?
-      AND (${whereConditions.join(" OR ")})
-    ORDER BY updated_at ASC
-  `;
+  SELECT 
+    strftime('%Y-%m-%d-%H', updated_at) as hour_key,
+    belief_id,
+    fingerprint_id,
+    verb,
+    object
+  FROM heldbeliefs
+  JOIN beliefs ON heldbeliefs.belief_id = beliefs.id
+  WHERE 
+    (updated_at >= ? AND updated_at < ? OR updated_at >= datetime(?, '-4 hours') AND updated_at < datetime(?, '-4 hours'))
+    AND (${whereConditions.join(" OR ")})
+  ORDER BY updated_at ASC
+`;
 
   const { rows } = await client.execute({
     sql: query,
-    args: queryParams,
+    args: [
+      startTime.toISOString(),
+      endTime.toISOString(),
+      startTime.toISOString(),
+      endTime.toISOString(),
+      ...queryParams.slice(2),
+    ],
   });
+
+  if (VERBOSE) console.log(`[DEBUG-EPINET] Polled ${rows.length} rows from heldbeliefs`);
 
   // Process query results
   for (const row of rows) {
@@ -482,26 +538,54 @@ async function processActionStepsForEpinet(
 
   if (whereConditions.length === 0) return;
 
-  // Execute consolidated query for actions
-  const query = `
-    SELECT 
-      strftime('%Y-%m-%d-%H', created_at) as hour_key,
-      object_id,
-      object_type,
-      fingerprint_id,
-      verb,
-      created_at
+  const debugQuery = await client.execute({
+    sql: `
+    SELECT created_at, object_id, object_type, verb
     FROM actions
-    WHERE 
-      created_at >= ? AND created_at < ?
-      AND (${whereConditions.join(" OR ")})
-    ORDER BY created_at ASC
-  `;
+    WHERE created_at >= ? OR created_at >= datetime(?, '-4 hours')
+    ORDER BY created_at DESC
+    LIMIT 10
+  `,
+    args: [startTime.toISOString(), startTime.toISOString()],
+  });
+  console.log(`[DEBUG-EPINET] Recent actions`, debugQuery.rows);
+
+  const query = `
+  SELECT 
+    strftime('%Y-%m-%d-%H', created_at) as hour_key,
+    object_id,
+    object_type,
+    fingerprint_id,
+    verb,
+    created_at
+  FROM actions
+  WHERE 
+    (created_at >= ? AND created_at < ? OR created_at >= datetime(?, '-4 hours') AND created_at < datetime(?, '-4 hours'))
+    AND (${whereConditions.join(" OR ")})
+  ORDER BY created_at ASC
+`;
 
   const { rows } = await client.execute({
     sql: query,
-    args: queryParams,
+    args: [
+      startTime.toISOString(),
+      endTime.toISOString(),
+      startTime.toISOString(),
+      endTime.toISOString(),
+      ...queryParams.slice(2),
+    ],
   });
+
+  if (VERBOSE) {
+    console.log(`[DEBUG-EPINET] Polled ${rows.length} rows from actions`);
+    console.log("[DEBUG-EPINET] Action query parameters:", {
+      sql: query,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      whereConditions,
+      queryParams,
+    });
+  }
 
   // Process all actions to create content-specific nodes
   for (const row of rows) {
