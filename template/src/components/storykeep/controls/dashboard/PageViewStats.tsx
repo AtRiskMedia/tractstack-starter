@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
+import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import {
   isDemoModeStore,
@@ -8,13 +9,52 @@ import {
   storyfragmentAnalyticsStore,
 } from "@/store/storykeep";
 import { contentMap } from "@/store/events";
-import type { LeadMetrics } from "@/types";
+import type { LeadMetrics, DashboardAnalytics, StoryfragmentAnalytics } from "@/types";
+
+// Define types for Sankey data
+interface SankeyNode {
+  name: string;
+  id: string;
+}
+
+interface SankeyLink {
+  source: number;
+  target: number;
+  value: number;
+}
+
+interface SankeyData {
+  nodes: SankeyNode[];
+  links: SankeyLink[];
+}
+
+// Define store type locally since it's not in @/types.ts
+interface StoryfragmentAnalyticsStore {
+  byId: Record<string, StoryfragmentAnalytics>;
+  lastUpdated: number | null;
+}
 
 interface Stat {
   name: string;
   events: number;
   period: string;
 }
+
+// Simple error boundary component
+const ErrorBoundary: React.FC<{ children: React.ReactNode; fallback: React.ReactNode }> = ({
+  children,
+  fallback,
+}) => {
+  const [hasError, setHasError] = useState(false);
+
+  const handleError = useCallback(() => {
+    setHasError(true);
+  }, []);
+
+  if (hasError) return <>{fallback}</>;
+
+  return <div onError={handleError}>{children}</div>;
+};
 
 function formatNumber(num: number): string {
   if (num < 10000) return num.toString();
@@ -24,17 +64,20 @@ function formatNumber(num: number): string {
 
 export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
-  const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [isClient, setIsClient] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
-  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
-  const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
+  const [epinetData, setEpinetData] = useState<SankeyData | null>(null);
+  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics) as DashboardAnalytics;
+  const $storyfragmentAnalytics = useStore(
+    storyfragmentAnalyticsStore
+  ) as StoryfragmentAnalyticsStore;
   const $contentMap = useStore(contentMap);
 
-  const analytics = Object.values($storyfragmentAnalytics.byId);
-  const totalLifetimeVisitors = analytics.reduce(
-    (sum, fragment) => sum + (fragment?.unique_visitors || 0),
+  const analytics: StoryfragmentAnalytics[] = Object.values($storyfragmentAnalytics.byId);
+  const totalLifetimeVisitors: number = analytics.reduce(
+    (sum: number, fragment: StoryfragmentAnalytics) => sum + (fragment.unique_visitors || 0),
     0
   );
 
@@ -79,7 +122,6 @@ export default function PageViewStats() {
   useEffect(() => {
     const fetchEpinetMetrics = async () => {
       try {
-        // Get epinets from the content map
         const contentItems = Object.values($contentMap);
         const epinets = contentItems.filter((item: any) => item.type === "Epinet");
 
@@ -88,7 +130,19 @@ export default function PageViewStats() {
           const response = await fetch(`/api/turso/getEpinetMetrics?id=${firstEpinetId}`);
           if (response.ok) {
             const result = await response.json();
-            console.log("Epinet metrics:", result.data);
+            if (
+              result.data &&
+              Array.isArray(result.data.nodes) &&
+              Array.isArray(result.data.links) &&
+              result.data.nodes.length > 0
+            ) {
+              setEpinetData(result.data);
+            } else {
+              console.warn("Invalid epinet data structure:", result.data);
+              setEpinetData(null);
+            }
+          } else {
+            console.error("Failed to fetch epinet metrics:", response.statusText);
           }
         }
       } catch (error) {
@@ -147,7 +201,6 @@ export default function PageViewStats() {
     }
   };
 
-  // Placeholder skeleton loader component
   const LoadingPlaceholder = () => (
     <div className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
@@ -239,7 +292,10 @@ export default function PageViewStats() {
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Events</div>
-                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                      <div
+                        className="text-2xl font-bold tracking-tight text-cyan- Planck
+700"
+                      >
                         {item.events === 0 ? "-" : formatNumber(item.events)}
                       </div>
                     </div>
@@ -326,6 +382,17 @@ export default function PageViewStats() {
 
         <div className="p-4 motion-safe:animate-fadeInUp">
           <DashboardActivity />
+          {epinetData && (
+            <ErrorBoundary
+              fallback={
+                <div className="p-4 bg-red-50 text-red-800 rounded-lg">
+                  Error rendering user flow diagram. Please check the data and try again.
+                </div>
+              }
+            >
+              <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
+            </ErrorBoundary>
+          )}
         </div>
       </div>
     </div>
