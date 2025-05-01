@@ -10,6 +10,10 @@ import { cssStore, updateCssStore } from "@/store/css";
 import { updateTenantAccessTime } from "@/utils/tenant/updateAccess";
 import { resolvePaths } from "@/utils/core/pathResolver";
 import { type APIContext } from "@/types";
+import {
+  shouldUpdateTenantAccess,
+  markTenantAccessUpdateComplete,
+} from "@/store/tenantAccessManager";
 
 const DYNAMIC_DIRS = ["/images", "/custom"];
 const ANALYTICS_ROUTES = ["/api/turso/getLeadMetrics", "/api/turso/getStoryfragmentAnalytics"];
@@ -150,10 +154,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
     isOpenDemo,
   } as AuthStatus;
 
-  if (tenantId !== "default") {
-    updateTenantAccessTime(tenantId, isAdminUser).catch((error) => {
-      console.warn(`Failed to update tenant access time for ${tenantId}:`, error);
-    });
+  // Check if we should update tenant access time using the store manager
+  if (tenantId !== "default" && shouldUpdateTenantAccess(tenantId, isAdminUser)) {
+    updateTenantAccessTime(tenantId, isAdminUser)
+      .then((result) => {
+        markTenantAccessUpdateComplete(tenantId, result.success);
+      })
+      .catch((error) => {
+        console.error(`Failed to update tenant access time: ${error}`);
+        markTenantAccessUpdateComplete(tenantId, false);
+      });
   }
 
   const hasPassword = isMultiTenant
