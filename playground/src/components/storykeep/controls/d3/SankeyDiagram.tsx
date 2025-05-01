@@ -148,11 +148,8 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ data }) => {
   }, [data, dimensions]);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full my-12"
-    >
-        <h4 className="font-bold font-action text-xl">User Journeys</h4>
+    <div ref={containerRef} className="w-full my-12">
+      <h4 className="font-bold font-action text-xl">User Journeys</h4>
       <svg
         ref={svgRef}
         width={dimensions.width}

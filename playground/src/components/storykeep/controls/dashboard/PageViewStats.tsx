@@ -66,6 +66,7 @@ export default function PageViewStats() {
   const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isEpinetLoading, setIsEpinetLoading] = useState<boolean>(true);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
   const [epinetData, setEpinetData] = useState<SankeyData | null>(null);
@@ -108,6 +109,8 @@ export default function PageViewStats() {
         if (response.ok) {
           const result = await response.json();
           setLeadMetrics(result.data || null);
+        } else {
+          console.error("Failed to fetch lead metrics:", response.statusText);
         }
       } catch (error) {
         console.error("Error fetching lead metrics:", error);
@@ -144,9 +147,15 @@ export default function PageViewStats() {
           } else {
             console.error("Failed to fetch epinet metrics:", response.statusText);
           }
+        } else {
+          console.warn("No epinets found in content map");
+          setEpinetData(null);
         }
       } catch (error) {
         console.error("Error fetching epinet metrics:", error);
+        setEpinetData(null);
+      } finally {
+        setIsEpinetLoading(false);
       }
     };
 
@@ -250,14 +259,20 @@ export default function PageViewStats() {
         </div>
 
         <div className="p-4">
-          <div className="h-60 bg-gray-200 rounded w-full animate-pulse"></div>
+          {/* Placeholder for DashboardActivity */}
+          <div className="h-60 bg-gray-200 rounded w-full mb-4 animate-pulse"></div>
+          {/* Placeholder for SankeyDiagram */}
+          <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
+            <div className="h-96 bg-gray-200 rounded w-full animate-pulse"></div>
+          </div>
         </div>
       </div>
     </div>
   );
 
   if (!isClient) return null;
-  if (isLoading) return <LoadingPlaceholder />;
+  if (isLoading || isEpinetLoading) return <LoadingPlaceholder />;
   if (!leadMetrics) return null;
 
   return (
@@ -292,10 +307,7 @@ export default function PageViewStats() {
                   <div className="flex justify-between items-end">
                     <div className="flex-1">
                       <div className="text-sm text-gray-600">Events</div>
-                      <div
-                        className="text-2xl font-bold tracking-tight text-cyan- Planck
-700"
-                      >
+                      <div className="text-2xl font-bold tracking-tight text-cyan-700">
                         {item.events === 0 ? "-" : formatNumber(item.events)}
                       </div>
                     </div>

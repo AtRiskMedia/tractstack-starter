@@ -5,7 +5,7 @@ import {
   createEmptyHourlyEpinetData,
   getHourKeysForTimeRange,
 } from "@/store/analytics";
-import { contentMap } from "@/store/events";
+import { getFullContentMap } from "@/utils/db/turso";
 import type {
   APIContext,
   EpinetStep,
@@ -13,7 +13,9 @@ import type {
   EpinetStepIdentifyAs,
   EpinetStepCommitmentAction,
   EpinetStepConversionAction,
+  FullContentMap,
 } from "@/types";
+import type { Client } from "@libsql/client"; // Import Client type
 
 const VERBOSE = false;
 
@@ -76,25 +78,18 @@ export function getEventNodeId(event: {
  * Gets a human-readable name for a step node, incorporating content titles
  */
 export function getNodeName(
-  step:
-    | EpinetStepBelief
-    | EpinetStepIdentifyAs
-    | EpinetStepCommitmentAction
-    | EpinetStepConversionAction,
+  step: EpinetStep, // Explicitly type as EpinetStep to avoid 'never'
   contentId: string,
-  contentItems: Record<string, any>
+  contentItems: Record<string, FullContentMap>
 ): string {
   const content = contentItems[contentId];
-  const contentTitle = content?.title || contentId.slice(0, 8);
+  const contentTitle = content?.title || "Unknown Content";
 
   if (step.gateType === "belief") {
-    // For belief gates
     return `Believes: ${step.title || step.values.join("/")}`;
   } else if (step.gateType === "identifyAs") {
-    // For identifyAs gates
     return `Identifies as: ${step.title || step.values.join("/")}`;
   } else if (step.gateType === "commitmentAction") {
-    // For commitment actions
     const actionVerb = step.values[0] || "";
     switch (actionVerb) {
       case "ENTERED":
@@ -107,7 +102,6 @@ export function getNodeName(
         return `${actionVerb}: ${contentTitle}`;
     }
   } else if (step.gateType === "conversionAction") {
-    // For conversion actions
     const actionVerb = step.values[0] || "";
     switch (actionVerb) {
       case "SUBMITTED":
@@ -119,8 +113,9 @@ export function getNodeName(
     }
   }
 
-  // Default case if none of the above matched (shouldn't happen with proper typing)
-  return `${(step as any).title || contentTitle}`;
+  // Default case for unexpected gateType
+  console.warn(`Unexpected gateType: ${step.gateType}`);
+  return `${step.title || contentTitle}`;
 }
 
 /**
@@ -175,16 +170,14 @@ export async function loadHourlyEpinetData(
   });
 
   // Get all content items for connecting IDs to titles
-  const $contentMap = contentMap.get();
-  const contentItems = Array.isArray($contentMap)
-    ? $contentMap.reduce(
-        (acc, item) => {
-          if (item.id) acc[item.id] = item;
-          return acc;
-        },
-        {} as Record<string, any>
-      )
-    : {};
+  const contentMap = await getFullContentMap(context);
+  const contentItems = contentMap.reduce(
+    (acc, item) => {
+      if (item.id) acc[item.id] = item;
+      return acc;
+    },
+    {} as Record<string, FullContentMap>
+  );
 
   // Set up time period for queries
   const hourKeys = getHourKeysForTimeRange(hours);
@@ -363,8 +356,8 @@ async function processBeliefStepsForEpinet(
   startTime: Date,
   endTime: Date,
   hourKeys: string[],
-  client: any,
-  contentItems: Record<string, any>
+  client: Client, // Use Client from @libsql/client
+  contentItems: Record<string, FullContentMap>
 ): Promise<void> {
   // Collect all belief values and identifyAs values for the query
   let whereConditions: string[] = [];
@@ -458,8 +451,8 @@ async function processActionStepsForEpinet(
   startTime: Date,
   endTime: Date,
   hourKeys: string[],
-  client: any,
-  contentItems: Record<string, any>
+  client: Client, // Use Client from @libsql/client
+  contentItems: Record<string, FullContentMap>
 ): Promise<void> {
   // Collect query conditions for all action steps
   let whereConditions: string[] = [];

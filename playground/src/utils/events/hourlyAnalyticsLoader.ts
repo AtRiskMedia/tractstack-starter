@@ -8,7 +8,8 @@ import {
   getHoursBetween,
 } from "@/store/analytics";
 import { loadHourlyEpinetData } from "./epinetLoader";
-import type { APIContext } from "@/types";
+import { getFullContentMap } from "@/utils/db/turso";
+import type { APIContext, FullContentMap } from "@/types";
 
 interface ActionRow {
   hour_key: string;
@@ -168,13 +169,17 @@ export async function loadHourlyAnalytics(
     ],
   });
 
-  const { rows: storyFragmentRows } = await client.execute(`
-    SELECT id, slug FROM storyfragments
-  `);
-
+  const contentMap = await getFullContentMap(context);
   const slugMap = new Map<string, string>();
   const siteData: Record<string, ReturnType<typeof createEmptyHourlySiteData>> = {};
   const contentData: Record<string, Record<string, any>> = {};
+
+  // Build slugMap from contentMap
+  contentMap.forEach((item: FullContentMap) => {
+    if (item.type === "StoryFragment" && item.id && item.slug) {
+      slugMap.set(item.slug, item.id);
+    }
+  });
 
   for (const hourKey of hourKeys) {
     siteData[hourKey] = createEmptyHourlySiteData();
@@ -237,12 +242,6 @@ export async function loadHourlyAnalytics(
       } catch (e) {
         console.error("Error parsing event_counts JSON:", e);
       }
-    }
-  }
-
-  for (const row of storyFragmentRows) {
-    if (row.id && row.slug) {
-      slugMap.set(String(row.slug), String(row.id));
     }
   }
 
