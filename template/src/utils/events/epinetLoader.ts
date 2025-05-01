@@ -15,6 +15,8 @@ import type {
   EpinetStepConversionAction,
 } from "@/types";
 
+const VERBOSE = false;
+
 /**
  * Generates a stable, unique ID for an epinet step that includes content ID
  */
@@ -261,7 +263,7 @@ export async function loadHourlyEpinetData(
       );
     }
 
-    // Calculate transitions for each hour based on chronological ordering
+    // Calculate transitions for each hour based on step ordering
     for (const hourKey of hourKeys) {
       calculateChronologicalTransitions(hourKey, epinetData[epinet.id]);
     }
@@ -278,17 +280,13 @@ export async function loadHourlyEpinetData(
 }
 
 /**
- * Calculate transitions between nodes based on chronological ordering of events
+ * Calculate transitions between nodes based on step ordering
  */
 function calculateChronologicalTransitions(
   hourKey: string,
   epinetHourData: Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>
 ): void {
   const hourData = epinetHourData[hourKey];
-
-  // We need additional data about event timing to properly order transitions
-  // For now, we'll assume transitions are valid between any nodes with common visitors
-  // But we'll only create one-way transitions, not bidirectional ones
 
   // Create a map of visitors to the nodes they've visited
   const visitorNodes: Record<string, string[]> = {};
@@ -304,32 +302,53 @@ function calculateChronologicalTransitions(
   }
 
   // For each visitor, create transitions between their nodes
-  // This is a simplified approach - ideally we would use event timestamps
   for (const visitorId in visitorNodes) {
     const nodes = visitorNodes[visitorId];
 
-    if (nodes.length >= 2) {
-      // Create forward transitions only - e.g. 0->1, 1->2, etc.
-      for (let i = 0; i < nodes.length - 1; i++) {
-        const fromNodeId = nodes[i];
-        const toNodeId = nodes[i + 1];
+    if (nodes.length < 2) continue;
+
+    // Sort nodes by stepIndex, then nodeId for same-step transitions
+    const sortedNodes = nodes.sort((a, b) => {
+      const aStep = hourData.steps[a].stepIndex;
+      const bStep = hourData.steps[b].stepIndex;
+      if (aStep !== bStep) {
+        return aStep - bStep;
+      }
+      return a.localeCompare(b); // Alphabetical by nodeId for same step
+    });
+
+    // Create transitions for all valid pairs
+    for (let i = 0; i < sortedNodes.length; i++) {
+      for (let j = i + 1; j < sortedNodes.length; j++) {
+        const fromNodeId = sortedNodes[i];
+        const toNodeId = sortedNodes[j];
 
         // Skip self-transitions
         if (fromNodeId === toNodeId) continue;
 
-        // Initialize transition data if needed
-        if (!hourData.transitions[fromNodeId]) {
-          hourData.transitions[fromNodeId] = {};
-        }
+        const fromStepIndex = hourData.steps[fromNodeId].stepIndex;
+        const toStepIndex = hourData.steps[toNodeId].stepIndex;
 
-        if (!hourData.transitions[fromNodeId][toNodeId]) {
-          hourData.transitions[fromNodeId][toNodeId] = {
-            visitors: new Set(),
-          };
-        }
+        // Only create transitions where fromStepIndex <= toStepIndex
+        if (fromStepIndex <= toStepIndex) {
+          if (!hourData.transitions[fromNodeId]) {
+            hourData.transitions[fromNodeId] = {};
+          }
 
-        // Record this visitor's transition
-        hourData.transitions[fromNodeId][toNodeId].visitors.add(visitorId);
+          if (!hourData.transitions[fromNodeId][toNodeId]) {
+            hourData.transitions[fromNodeId][toNodeId] = {
+              visitors: new Set(),
+            };
+          }
+
+          hourData.transitions[fromNodeId][toNodeId].visitors.add(visitorId);
+
+          if (VERBOSE) {
+            console.log(
+              `[DEBUG-EPINET] Transition created: ${fromNodeId} -> ${toNodeId}, visitor: ${visitorId}`
+            );
+          }
+        }
       }
     }
   }
@@ -352,7 +371,7 @@ async function processBeliefStepsForEpinet(
   let queryParams: any[] = [startTime.toISOString(), endTime.toISOString()];
 
   // Build WHERE conditions
-  for (const step of beliefSteps) {
+  for (const [_, step] of beliefSteps.entries()) {
     if (step.gateType === "belief" && step.values && step.values.length > 0) {
       const verbPlaceholders = step.values.map(() => "?").join(",");
       whereConditions.push(`(verb IN (${verbPlaceholders}))`);
@@ -398,7 +417,7 @@ async function processBeliefStepsForEpinet(
     const object = row.object !== null ? String(row.object) : null;
 
     // Match this row against each belief step
-    for (const step of beliefSteps) {
+    for (const [index, step] of beliefSteps.entries()) {
       let isMatch = false;
 
       if (step.gateType === "belief" && step.values.includes(verb)) {
@@ -419,6 +438,7 @@ async function processBeliefStepsForEpinet(
           epinetHourData[hourKey].steps[nodeId] = {
             visitors: new Set(),
             name: nodeName,
+            stepIndex: index + 1, // 1-based index
           };
         }
 
@@ -446,7 +466,7 @@ async function processActionStepsForEpinet(
   let queryParams: any[] = [startTime.toISOString(), endTime.toISOString()];
 
   // Build WHERE conditions for all types of actions
-  for (const step of actionSteps) {
+  for (const [_, step] of actionSteps.entries()) {
     const verbValues = step.values || [];
     if (verbValues.length === 0) continue;
 
@@ -501,7 +521,7 @@ async function processActionStepsForEpinet(
     const verb = String(row.verb);
 
     // Match this action against each action step
-    for (const step of actionSteps) {
+    for (const [index, step] of actionSteps.entries()) {
       let isMatch = false;
 
       // Match by verb and object type
@@ -526,6 +546,7 @@ async function processActionStepsForEpinet(
           epinetHourData[hourKey].steps[nodeId] = {
             visitors: new Set(),
             name: nodeName,
+            stepIndex: index + 1, // 1-based index
           };
         }
 

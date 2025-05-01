@@ -72,6 +72,10 @@ export const onRequest = defineMiddleware(async (context, next) => {
     try {
       const tenantConfigPath = path.join(resolved.configPath, "tenant.json");
       const tenantConfigRaw = await fs.readFile(tenantConfigPath, "utf-8");
+      if (!tenantConfigRaw || tenantConfigRaw.trim() === "") {
+        console.error(`Error: tenant.json for ${tenantId} is empty`);
+        return new Response("Tenant configuration is empty", { status: 500 });
+      }
       const tenantConfig = JSON.parse(tenantConfigRaw);
       if (tenantConfig.status === "reserved") {
         return context.redirect(`/sandbox/claimed?tenant=${tenantId}`);
@@ -80,6 +84,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     } catch (error) {
       console.error(`Error reading tenant status for ${tenantId}:`, error);
+      return new Response(`Failed to read tenant configuration`, { status: 500 });
     }
   }
 

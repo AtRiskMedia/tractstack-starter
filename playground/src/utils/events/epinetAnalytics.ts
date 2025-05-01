@@ -225,6 +225,7 @@ export function updateEpinetHourlyData(
     hourData.steps[nodeId] = {
       visitors: new Set(),
       name: nodeName,
+      stepIndex: 0, // Real-time events don't have step index; set to 0
     };
   }
 
@@ -344,7 +345,7 @@ export function computeEpinetSankey(
   const epinetStore = hourlyEpinetStore.get();
   const epinetData = epinetStore.data[tenantId]?.[epinetId];
 
-  if (VERBOSE)
+  if (VERBOSE) {
     console.log(
       `[DEBUG-EPINET] computeEpinetSankey for tenant:${tenantId}, epinetId:${epinetId}, found data:`,
       epinetData ? "exists" : "null",
@@ -353,6 +354,7 @@ export function computeEpinetSankey(
       "tenant data contains epinets:",
       epinetStore.data[tenantId] ? Object.keys(epinetStore.data[tenantId]) : "none"
     );
+  }
 
   if (!epinetData) {
     return null;
@@ -363,6 +365,7 @@ export function computeEpinetSankey(
   // Build visitor count data by node
   const nodeCounts: Record<string, Set<string>> = {};
   const nodeNames: Record<string, string> = {};
+  const nodeStepIndices: Record<string, number> = {};
   const transitionCounts: Record<string, Record<string, Set<string>>> = {};
 
   // Process each hour's data
@@ -374,14 +377,10 @@ export function computeEpinetSankey(
     Object.entries(hourData.steps).forEach(([nodeId, data]) => {
       if (!nodeCounts[nodeId]) {
         nodeCounts[nodeId] = new Set();
-      }
-
-      // Store node name if available
-      if ("name" in data && data.name && !nodeNames[nodeId]) {
         nodeNames[nodeId] = data.name;
+        nodeStepIndices[nodeId] = data.stepIndex;
       }
 
-      // Add visitors to this node
       data.visitors.forEach((visitor) => {
         nodeCounts[nodeId].add(visitor);
       });
@@ -443,6 +442,12 @@ export function computeEpinetSankey(
       }
     });
   });
+
+  if (VERBOSE) {
+    console.log(
+      `[DEBUG-EPINET] Sankey computed for epinet:${epinetId}, nodes: ${nodes.length}, links: ${links.length}`
+    );
+  }
 
   return {
     id: epinetId,
