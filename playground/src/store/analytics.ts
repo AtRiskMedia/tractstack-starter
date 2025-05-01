@@ -30,6 +30,7 @@ export interface HourlySiteData {
 
 export interface HourlyEpinetStepData {
   visitors: Set<string>;
+  name?: string;
 }
 
 export interface HourlyEpinetTransitionData {

@@ -1,5 +1,9 @@
 import { hourlyEpinetStore, formatHourKey, createEmptyHourlyEpinetData } from "@/store/analytics";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
+import { contentMap } from "@/store/events";
+import { getHourKeysForTimeRange } from "@/store/analytics";
+import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
+import { getEventNodeId } from "@/utils/events/epinetLoader";
 import type {
   EventStream,
   EpinetStepBelief,
@@ -8,13 +12,15 @@ import type {
   EpinetStepConversionAction,
   ComputedEpinet,
   ComputedEpinetLink,
+  ComputedEpinetNode,
   APIContext,
 } from "@/types";
-import { getHourKeysForTimeRange } from "@/store/analytics";
-import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 
 const VERBOSE = false;
 
+/**
+ * Process an event and update epinet data in real-time
+ */
 export function processEpinetEvent(
   event: EventStream,
   fingerprintId: string,
@@ -22,29 +28,121 @@ export function processEpinetEvent(
 ): void {
   const tenantId = context?.locals?.tenant?.id || "default";
   if (VERBOSE) console.log("[DEBUG-TENANT] processEpinetEvent tenantId:", tenantId);
+
   const epinetStore = hourlyEpinetStore.get();
   const tenantData = epinetStore.data[tenantId] || {};
-  const epinets = Object.keys(tenantData).map((id) => ({
-    id,
-    steps: [],
-  }));
-  if (VERBOSE)
-    console.log(
-      "[DEBUG-TENANT] processEpinetEvent epinets:",
-      epinets.map((e) => e.id)
-    );
+
+  // Get all epinets in the system
+  const epinets = Object.keys(tenantData);
+  if (VERBOSE) console.log("[DEBUG-TENANT] processEpinetEvent epinets:", epinets);
 
   if (epinets.length === 0) return;
 
-  for (const epinet of epinets) {
-    const previousStepId = findUserPreviousStep(epinet.id, fingerprintId, context);
-    const currentStepId = `${epinet.id}-${event.verb}_${event.type}-${event.id}`;
+  // Get content items for title resolution
+  const $contentMap = contentMap.get();
+  const contentItems = Array.isArray($contentMap)
+    ? $contentMap.reduce(
+        (acc, item) => {
+          if (item.id) acc[item.id] = item;
+          return acc;
+        },
+        {} as Record<string, any>
+      )
+    : {};
 
-    updateEpinetHourlyData(fingerprintId, epinet.id, currentStepId, previousStepId, context);
+  // For each epinet, try to match the event against epinet steps
+  for (const epinetId of epinets) {
+    try {
+      // Get the epinet definition asynchronously
+      getAllEpinets(context)
+        .then((allEpinets) => {
+          const epinet = allEpinets.find((e) => e.id === epinetId);
+          if (!epinet) return;
+
+          // For each step in the epinet, check if this event matches
+          for (const step of epinet.steps) {
+            // Type assertion since we know the structure is correct
+            const typedStep = step as
+              | EpinetStepBelief
+              | EpinetStepIdentifyAs
+              | EpinetStepCommitmentAction
+              | EpinetStepConversionAction;
+
+            const isMatch = matchEventToStep(event, typedStep);
+
+            if (isMatch) {
+              // Find the user's previous step node in this epinet
+              const previousNodeId = findUserPreviousNode(epinetId, fingerprintId, context);
+
+              // Generate a node ID specific to this event/content
+              const nodeId = getEventNodeId(event);
+
+              // Generate a human-readable node name
+              const nodeName = getContentNodeName(event, contentItems);
+
+              // Record this step and transition
+              updateEpinetHourlyData(
+                fingerprintId,
+                epinetId,
+                nodeId,
+                nodeName,
+                previousNodeId,
+                context
+              );
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Error processing event for epinet metrics:", err);
+        });
+    } catch (error) {
+      console.error("Error in processEpinetEvent:", error);
+    }
   }
 }
 
-export function findUserPreviousStep(
+/**
+ * Generate a human-readable node name from an event
+ */
+function getContentNodeName(event: EventStream, contentItems: Record<string, any>): string {
+  const content = contentItems[event.id];
+  const contentTitle = content?.title || event.id.slice(0, 8);
+
+  if (event.type === "Belief") {
+    if (event.object !== undefined) {
+      return `Identifies as: ${String(event.object)}`;
+    } else {
+      return `Believes: ${event.verb}`;
+    }
+  } else {
+    // For action events
+    switch (event.verb) {
+      case "ENTERED":
+        return `Entered: ${contentTitle}`;
+      case "PAGEVIEWED":
+        return `Viewed: ${contentTitle}`;
+      case "READ":
+        return `Read: ${contentTitle}`;
+      case "GLOSSED":
+        return `Skimmed: ${contentTitle}`;
+      case "WATCHED":
+        return `Watched: ${contentTitle}`;
+      case "CLICKED":
+        return `Clicked: ${contentTitle}`;
+      case "SUBMITTED":
+        return `Submitted: ${contentTitle}`;
+      case "CONVERTED":
+        return `Converted: ${contentTitle}`;
+      default:
+        return `${event.verb}: ${contentTitle}`;
+    }
+  }
+}
+
+/**
+ * Find the most recent node a user has visited in an epinet
+ */
+export function findUserPreviousNode(
   epinetId: string,
   fingerprintId: string,
   context?: APIContext
@@ -52,40 +150,62 @@ export function findUserPreviousStep(
   const tenantId = context?.locals?.tenant?.id || "default";
   const store = hourlyEpinetStore.get();
   const epinetData = store.data[tenantId]?.[epinetId];
+
   if (VERBOSE)
     console.log(
-      "[DEBUG-TENANT] findUserPreviousStep epinetData for tenantId:",
+      "[DEBUG-TENANT] findUserPreviousNode epinetData for tenantId:",
       tenantId,
       "epinetId:",
       epinetId
     );
+
   if (!epinetData) return undefined;
 
-  const hourKeys = Object.keys(epinetData).sort().reverse();
+  // Get current hour and the previous hour for recency
+  const currentHour = formatHourKey(new Date());
+  const prevDate = new Date();
+  prevDate.setHours(prevDate.getHours() - 1);
+  const prevHour = formatHourKey(prevDate);
 
-  for (const hourKey of hourKeys) {
-    const hourData = epinetData[hourKey];
-    for (const [stepId, stepData] of Object.entries(hourData.steps)) {
-      if (stepData.visitors.has(fingerprintId)) {
-        return stepId;
+  // Check current hour first
+  if (epinetData[currentHour]) {
+    // Find any nodes the user has visited in the current hour
+    for (const [nodeId, nodeData] of Object.entries(epinetData[currentHour].steps)) {
+      if (nodeData.visitors.has(fingerprintId)) {
+        return nodeId;
       }
     }
   }
 
+  // Check previous hour next
+  if (epinetData[prevHour]) {
+    for (const [nodeId, nodeData] of Object.entries(epinetData[prevHour].steps)) {
+      if (nodeData.visitors.has(fingerprintId)) {
+        return nodeId;
+      }
+    }
+  }
+
+  // No recent activity found
   return undefined;
 }
 
+/**
+ * Update the hourly epinet data with a new user step and transition
+ */
 export function updateEpinetHourlyData(
   fingerprintId: string,
   epinetId: string,
-  stepId: string,
-  fromStepId?: string,
+  nodeId: string,
+  nodeName: string,
+  fromNodeId?: string,
   context?: APIContext
 ): void {
   const tenantId = context?.locals?.tenant?.id || "default";
   const currentHour = formatHourKey(new Date());
   const currentStore = hourlyEpinetStore.get();
 
+  // Initialize data structures if needed
   if (!currentStore.data[tenantId]) {
     currentStore.data[tenantId] = {};
   }
@@ -100,59 +220,40 @@ export function updateEpinetHourlyData(
 
   const hourData = currentStore.data[tenantId][epinetId][currentHour];
 
-  if (!hourData.steps[stepId]) {
-    hourData.steps[stepId] = {
+  // Initialize or update step data
+  if (!hourData.steps[nodeId]) {
+    hourData.steps[nodeId] = {
       visitors: new Set(),
+      name: nodeName,
     };
   }
 
-  hourData.steps[stepId].visitors.add(fingerprintId);
+  // Add visitor to this node
+  hourData.steps[nodeId].visitors.add(fingerprintId);
 
-  if (fromStepId) {
-    if (!hourData.transitions[fromStepId]) {
-      hourData.transitions[fromStepId] = {};
+  // Record transition if coming from a previous node
+  if (fromNodeId && fromNodeId !== nodeId) {
+    if (!hourData.transitions[fromNodeId]) {
+      hourData.transitions[fromNodeId] = {};
     }
 
-    if (!hourData.transitions[fromStepId][stepId]) {
-      hourData.transitions[fromStepId][stepId] = {
+    if (!hourData.transitions[fromNodeId][nodeId]) {
+      hourData.transitions[fromNodeId][nodeId] = {
         visitors: new Set(),
       };
     }
 
-    hourData.transitions[fromStepId][stepId].visitors.add(fingerprintId);
+    hourData.transitions[fromNodeId][nodeId].visitors.add(fingerprintId);
   }
 
+  // Update store
   currentStore.data[tenantId][epinetId][currentHour] = hourData;
   hourlyEpinetStore.set(currentStore);
 }
 
-function getStableStepId(
-  step:
-    | EpinetStepBelief
-    | EpinetStepIdentifyAs
-    | EpinetStepCommitmentAction
-    | EpinetStepConversionAction
-): string {
-  const parts: string[] = [step.gateType];
-
-  if (step.title) {
-    parts.push(step.title.replace(/\s+/g, "_"));
-  }
-
-  if (step.gateType === "belief" || step.gateType === "identifyAs") {
-    if (step.values?.length) {
-      parts.push(step.values.join("_"));
-    }
-  } else if (step.gateType === "commitmentAction" || step.gateType === "conversionAction") {
-    parts.push(String(step.objectType));
-    if (step.objectIds?.length) {
-      parts.push(step.objectIds.join("_"));
-    }
-  }
-
-  return parts.join("-");
-}
-
+/**
+ * Determine if an event matches a specific epinet step
+ */
 export function matchEventToStep(
   event: EventStream,
   step:
@@ -170,25 +271,27 @@ export function matchEventToStep(
   }
 
   if (step.gateType === "commitmentAction" || step.gateType === "conversionAction") {
-    const validVerb =
-      step.gateType === "commitmentAction"
-        ? event.verb === "CLICKED" || event.verb === "ENTERED"
-        : event.verb === "SUBMITTED" || event.verb === "CONVERTED";
+    // Check if the event verb is in the step's values array
+    const verbMatch = step.values && step.values.includes(event.verb);
+    if (!verbMatch) return false;
 
-    if (!validVerb) return false;
+    // Check if object type matches
+    if (step.objectType && step.objectType !== event.type) return false;
 
+    // Check for specific object IDs if specified
     if (step.objectIds && step.objectIds.length > 0) {
       return step.objectIds.includes(event.id);
     }
 
-    if (step.objectType === event.type) {
-      return true;
-    }
+    return true;
   }
 
   return false;
 }
 
+/**
+ * Add an object ID to an epinet step
+ */
 export async function addObjectToEpinetStep(
   epinetId: string,
   stepId: string,
@@ -200,7 +303,18 @@ export async function addObjectToEpinetStep(
     const epinet = epinets.find((e) => e.id === epinetId);
     if (!epinet) return;
 
-    const step = epinet.steps.find((s) => getStableStepId(s) === stepId);
+    // Get all step identifiers for matching
+    const stepIdentifiers = epinet.steps.map((s) => {
+      const gateType = (s as any).gateType;
+      const title = (s as any).title?.replace(/\s+/g, "_") || "";
+      return `${gateType}-${title}`;
+    });
+
+    // Find the step that matches the step ID
+    const stepIndex = stepIdentifiers.findIndex((id) => stepId.startsWith(id));
+    if (stepIndex === -1) return;
+
+    const step = epinet.steps[stepIndex];
     if (!step) return;
 
     if (step.gateType !== "commitmentAction" && step.gateType !== "conversionAction") return;
@@ -211,7 +325,6 @@ export async function addObjectToEpinetStep(
 
     if (!step.objectIds.includes(objectId)) {
       step.objectIds.push(objectId);
-
       await upsertEpinet(epinet, context);
     }
   } catch (error) {
@@ -219,6 +332,9 @@ export async function addObjectToEpinetStep(
   }
 }
 
+/**
+ * Compute a Sankey diagram from epinet data for the specified time period
+ */
 export function computeEpinetSankey(
   epinetId: string,
   hours: number = 168,
@@ -227,6 +343,7 @@ export function computeEpinetSankey(
   const tenantId = context?.locals?.tenant?.id || "default";
   const epinetStore = hourlyEpinetStore.get();
   const epinetData = epinetStore.data[tenantId]?.[epinetId];
+
   if (VERBOSE)
     console.log(
       `[DEBUG-EPINET] computeEpinetSankey for tenant:${tenantId}, epinetId:${epinetId}, found data:`,
@@ -243,51 +360,81 @@ export function computeEpinetSankey(
 
   const hourKeys = getHourKeysForTimeRange(hours);
 
-  const stepCounts: Record<string, Set<string>> = {};
+  // Build visitor count data by node
+  const nodeCounts: Record<string, Set<string>> = {};
+  const nodeNames: Record<string, string> = {};
   const transitionCounts: Record<string, Record<string, Set<string>>> = {};
 
+  // Process each hour's data
   hourKeys.forEach((hourKey) => {
     const hourData = epinetData[hourKey];
     if (!hourData) return;
 
-    Object.entries(hourData.steps).forEach(([stepId, data]) => {
-      if (!stepCounts[stepId]) {
-        stepCounts[stepId] = new Set();
+    // Collect node visitor data
+    Object.entries(hourData.steps).forEach(([nodeId, data]) => {
+      if (!nodeCounts[nodeId]) {
+        nodeCounts[nodeId] = new Set();
       }
 
+      // Store node name if available
+      if ("name" in data && data.name && !nodeNames[nodeId]) {
+        nodeNames[nodeId] = data.name;
+      }
+
+      // Add visitors to this node
       data.visitors.forEach((visitor) => {
-        stepCounts[stepId].add(visitor);
+        nodeCounts[nodeId].add(visitor);
       });
     });
 
-    Object.entries(hourData.transitions).forEach(([fromStep, toSteps]) => {
-      if (!transitionCounts[fromStep]) {
-        transitionCounts[fromStep] = {};
+    // Collect transition data
+    Object.entries(hourData.transitions).forEach(([fromNode, toNodes]) => {
+      if (!transitionCounts[fromNode]) {
+        transitionCounts[fromNode] = {};
       }
 
-      Object.entries(toSteps).forEach(([toStep, data]) => {
-        if (!transitionCounts[fromStep][toStep]) {
-          transitionCounts[fromStep][toStep] = new Set();
+      Object.entries(toNodes).forEach(([toNode, data]) => {
+        if (!transitionCounts[fromNode][toNode]) {
+          transitionCounts[fromNode][toNode] = new Set();
         }
 
         data.visitors.forEach((visitor) => {
-          transitionCounts[fromStep][toStep].add(visitor);
+          transitionCounts[fromNode][toNode].add(visitor);
         });
       });
     });
   });
 
-  const nodes = Object.keys(stepCounts).map((id) => ({
-    name: id,
+  // Sort nodes by count to keep the most significant ones
+  const sortedNodes = Object.entries(nodeCounts)
+    .sort((a, b) => b[1].size - a[1].size)
+    .slice(0, 20); // Limit to 20 most active nodes for readability
+
+  // Convert node data to nodes array
+  const nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
+    name: nodeNames[nodeId] || nodeId,
+    id: nodeId, // Include the node ID for reference
   }));
 
-  const links: ComputedEpinetLink[] = [];
-  Object.entries(transitionCounts).forEach(([source, targets]) => {
-    Object.entries(targets).forEach(([target, visitors]) => {
-      const sourceIndex = nodes.findIndex((n) => n.name === source);
-      const targetIndex = nodes.findIndex((n) => n.name === target);
+  // Create a map of node IDs to indices in the nodes array
+  const nodeIndexMap: Record<string, number> = {};
+  nodes.forEach((_, index) => {
+    const nodeId = sortedNodes[index][0];
+    nodeIndexMap[nodeId] = index;
+  });
 
-      if (sourceIndex !== -1 && targetIndex !== -1) {
+  // Convert transition data to links array
+  const links: ComputedEpinetLink[] = [];
+  Object.entries(transitionCounts).forEach(([fromNode, toNodes]) => {
+    const sourceIndex = nodeIndexMap[fromNode];
+    if (sourceIndex === undefined) return; // Skip nodes not in our top nodes
+
+    Object.entries(toNodes).forEach(([toNode, visitors]) => {
+      const targetIndex = nodeIndexMap[toNode];
+      if (targetIndex === undefined) return; // Skip nodes not in our top nodes
+
+      // Only include links with a minimum number of visitors for clarity
+      if (visitors.size >= 1) {
         links.push({
           source: sourceIndex,
           target: targetIndex,
@@ -305,6 +452,9 @@ export function computeEpinetSankey(
   };
 }
 
+/**
+ * Compute epinet data for multiple time periods
+ */
 export function computeAllEpinetRanges(
   epinetId: string,
   context?: APIContext
@@ -320,6 +470,9 @@ export function computeAllEpinetRanges(
   };
 }
 
+/**
+ * Get epinet metrics for an epinet
+ */
 export async function getEpinetMetrics(
   id: string,
   context?: APIContext
