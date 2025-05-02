@@ -6,6 +6,7 @@ import {
   getHourKeysForTimeRange,
 } from "@/store/analytics";
 import { getFullContentMap } from "@/utils/db/turso";
+import { parseHourKeyToDate } from "@/utils/common/helpers";
 import type {
   APIContext,
   EpinetStep,
@@ -15,6 +16,7 @@ import type {
   EpinetStepConversionAction,
   FullContentMap,
 } from "@/types";
+import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { Client } from "@libsql/client";
 
 const VERBOSE = false;
@@ -299,6 +301,29 @@ export async function loadHourlyEpinetData(
   } else {
     // For full updates, replace all data
     currentStore.data[tenantId] = epinetData;
+  }
+
+  if (!currentHourOnly) {
+    // Trim old hourly bins that are outside our time window
+    const oldestAllowedDate = new Date();
+    oldestAllowedDate.setHours(oldestAllowedDate.getHours() - MAX_ANALYTICS_HOURS);
+
+    // For each epinet, remove hour keys that are older than our window
+    for (const epinet of epinets) {
+      if (epinetData[epinet.id]) {
+        const hourKeys = Object.keys(epinetData[epinet.id]);
+        hourKeys.forEach((hourKey) => {
+          try {
+            const hourDate = parseHourKeyToDate(hourKey);
+            if (hourDate < oldestAllowedDate) {
+              delete epinetData[epinet.id][hourKey];
+            }
+          } catch (error) {
+            console.error(`Error trimming epinet data hour key ${hourKey}:`, error);
+          }
+        });
+      }
+    }
   }
 
   // Update the last refresh timestamp and hour

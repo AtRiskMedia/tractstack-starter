@@ -7,7 +7,9 @@ import {
   getHourKeysForTimeRange,
   getHoursBetween,
 } from "@/store/analytics";
+import { parseHourKeyToDate } from "@/utils/common/helpers";
 import { getFullContentMap } from "@/utils/db/turso";
+import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { APIContext, FullContentMap } from "@/types";
 
 interface ActionRow {
@@ -27,36 +29,8 @@ interface SiteRow {
   event_counts: string | null;
 }
 
-function parseHourKeyToDate(hourKey: string): Date {
-  const parts = hourKey.split("-").map(Number);
-  if (parts.length !== 4) {
-    throw new Error(`Invalid hour key format: ${hourKey}`);
-  }
-  const [year, month, day, hour] = parts;
-  if (
-    isNaN(year) ||
-    isNaN(month) ||
-    isNaN(day) ||
-    isNaN(hour) ||
-    year < 1000 ||
-    month < 1 ||
-    month > 12 ||
-    day < 1 ||
-    day > 31 ||
-    hour < 0 ||
-    hour > 23
-  ) {
-    throw new Error(`Invalid date values in hour key: ${hourKey}`);
-  }
-  const date = new Date(year, month - 1, day, hour);
-  if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date from hour key: ${hourKey}`);
-  }
-  return date;
-}
-
 export async function loadHourlyAnalytics(
-  hours: number = 672,
+  hours: number = MAX_ANALYTICS_HOURS,
   context?: APIContext
 ): Promise<void> {
   const tenantId = context?.locals?.tenant?.id || "default";
@@ -254,6 +228,24 @@ export async function loadHourlyAnalytics(
     lastActivity,
     slugMap,
   };
+
+  // remove hour keys that are older than our window
+  const oldestAllowedDate = new Date();
+  oldestAllowedDate.setHours(oldestAllowedDate.getHours() - MAX_ANALYTICS_HOURS);
+  Object.keys(contentData).forEach((contentId) => {
+    const hourKeys = Object.keys(contentData[contentId]);
+    hourKeys.forEach((hourKey) => {
+      try {
+        const hourDate = parseHourKeyToDate(hourKey);
+        if (hourDate < oldestAllowedDate) {
+          delete contentData[contentId][hourKey];
+        }
+      } catch (error) {
+        console.error(`Error trimming content data hour key ${hourKey}:`, error);
+      }
+    });
+  });
+
   hourlyAnalyticsStore.set(currentStore);
 }
 
@@ -266,7 +258,7 @@ export async function refreshHourlyAnalytics(context?: APIContext): Promise<void
   // If we need a full analytics refresh
   const hoursSinceLastUpdate = lastFullHour
     ? Math.max(1, getHoursBetween(lastFullHour, currentHour))
-    : 672;
+    : MAX_ANALYTICS_HOURS;
 
   await loadHourlyAnalytics(hoursSinceLastUpdate, context);
 }
