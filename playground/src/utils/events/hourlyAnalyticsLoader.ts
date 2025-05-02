@@ -7,6 +7,7 @@ import {
   getHourKeysForTimeRange,
   getHoursBetween,
 } from "@/store/analytics";
+import { getFullContentMap } from "@/utils/db/turso";
 import { parseHourKeyToDate } from "@/utils/common/helpers";
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { APIContext } from "@/types";
@@ -79,6 +80,14 @@ export async function loadHourlyAnalytics(
     if (!client) {
       throw new Error(`Failed to get database client for tenant ${tenantId}`);
     }
+
+    const contentMap = await getFullContentMap(context);
+    const slugMap = new Map<string, string>();
+    contentMap.forEach((item) => {
+      if ((item.type === "StoryFragment" || item.type === "Pane") && item.id && item.slug) {
+        slugMap.set(item.slug, item.id);
+      }
+    });
 
     const [{ rows: leadCountRows }, { rows: activityRows }] = await Promise.all([
       client.execute(`SELECT COUNT(*) as total_leads FROM leads`),
@@ -285,8 +294,6 @@ export async function loadHourlyAnalytics(
       // update the store incrementally after each chunk
       // This allows the UI to show partial data while processing continues
       const currentStore = hourlyAnalyticsStore.get();
-      const slugMap = new Map<string, string>();
-
       currentStore.data[tenantId] = {
         contentData,
         siteData,
@@ -321,7 +328,6 @@ export async function loadHourlyAnalytics(
     });
 
     // Update the store with final data
-    const slugMap = new Map<string, string>();
     const currentStore = hourlyAnalyticsStore.get();
     currentStore.data[tenantId] = {
       contentData,

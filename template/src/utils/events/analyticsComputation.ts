@@ -258,7 +258,6 @@ export async function computeStoryfragmentAnalytics(
         total_leads: tenantData.totalLeads,
       });
     }
-
     return result;
   } catch (error) {
     console.error("Error computing storyfragment analytics:", error);
