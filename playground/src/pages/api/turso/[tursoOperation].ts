@@ -311,7 +311,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         const currentHourOnly = tenantData && Object.keys(tenantData).length > 0;
         const processingPromise = new Promise<void>(async (resolve) => {
           try {
-            await loadHourlyEpinetData(672, currentHourOnly, context);
+            await loadHourlyEpinetData(672, context, currentHourOnly);
             resolve();
           } catch (error) {
             console.error("Error in background epinet processing:", error);
