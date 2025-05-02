@@ -6,6 +6,7 @@ import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import {
   isDemoModeStore,
   storedDashboardAnalytics,
+  analyticsDuration,
   storyfragmentAnalyticsStore,
   type StoryfragmentAnalyticsStore,
 } from "@/store/storykeep";
@@ -71,6 +72,7 @@ export default function PageViewStats() {
     storyfragmentAnalyticsStore
   ) as StoryfragmentAnalyticsStore;
   const $contentMap = useStore(contentMap);
+  const $analyticsDuration = useStore(analyticsDuration);
 
   const analytics: StoryfragmentAnalytics[] = Object.values($storyfragmentAnalytics.byId);
   const totalLifetimeVisitors: number = analytics.reduce(
@@ -126,7 +128,9 @@ export default function PageViewStats() {
 
         if (epinets.length > 0) {
           const firstEpinetId = epinets[0].id;
-          const response = await fetch(`/api/turso/getEpinetMetrics?id=${firstEpinetId}`);
+          const response = await fetch(
+            `/api/turso/getEpinetMetrics?id=${firstEpinetId}&duration=${$analyticsDuration}`
+          );
           if (response.ok) {
             const result = await response.json();
             if (
@@ -156,7 +160,7 @@ export default function PageViewStats() {
     };
 
     fetchEpinetMetrics();
-  }, [$contentMap]);
+  }, [$contentMap, $analyticsDuration]);
 
   const downloadLeadsCSV = async () => {
     if (isDownloading) return;

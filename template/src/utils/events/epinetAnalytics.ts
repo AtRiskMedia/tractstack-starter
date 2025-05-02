@@ -16,7 +16,7 @@ import type {
   APIContext,
 } from "@/types";
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 /**
  * Process an event and update epinet data in real-time
@@ -559,7 +559,9 @@ export function computeAllEpinetRanges(
  */
 export async function getEpinetMetrics(
   id: string,
+  duration: "daily" | "weekly" | "monthly" = "weekly",
   context?: APIContext
 ): Promise<ComputedEpinet | null> {
-  return computeEpinetSankey(id, 168, context);
+  const hours = duration === "daily" ? 24 : duration === "weekly" ? 168 : 672;
+  return computeEpinetSankey(id, hours, context);
 }

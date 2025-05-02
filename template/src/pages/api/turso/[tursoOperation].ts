@@ -202,10 +202,14 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
       case "getEpinetMetrics": {
         const url = new URL(context.request.url);
         const id = url.searchParams.get("id");
+        const durationParam = url.searchParams.get("duration") || "weekly";
+        const duration = ["daily", "weekly", "monthly"].includes(durationParam)
+          ? (durationParam as "daily" | "weekly" | "monthly")
+          : "weekly";
         if (!id) {
           throw new Error("Missing required parameter: id");
         }
-        result = await getEpinetMetrics(id, context);
+        result = await getEpinetMetrics(id, duration, context);
         break;
       }
       case "getAllFiles":
