@@ -165,8 +165,6 @@ export async function computeLeadMetrics(
  * @param context API context for tenant information
  * @returns Storyfragment analytics list or empty array with loading status
  */
-// In analyticsComputation.ts, modify the computeStoryfragmentAnalytics function signature:
-
 export async function computeStoryfragmentAnalytics(
   context?: APIContext
 ): Promise<StoryfragmentAnalytics[]> {
