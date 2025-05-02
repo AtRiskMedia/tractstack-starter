@@ -43,6 +43,10 @@ import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
 import { getEpinetById } from "@/utils/db/api/getEpinetById";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
+import {
+  computeDashboardAnalytics,
+  createEmptyDashboardAnalytics,
+} from "@/utils/events/dashboardAnalytics";
 import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
 import {
@@ -354,6 +358,94 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             headers: { "Content-Type": "application/json" },
           }
         );
+      }
+
+      case "getDashboardAnalytics": {
+        const url = new URL(context.request.url);
+        const durationParam = url.searchParams.get("duration") || "weekly";
+        const duration = ["daily", "weekly", "monthly"].includes(durationParam)
+          ? (durationParam as "daily" | "weekly" | "monthly")
+          : "weekly";
+
+        try {
+          const tenantId = context?.locals?.tenant?.id || "default";
+          const store = hourlyAnalyticsStore.get();
+          const isValid = isAnalyticsCacheValid(tenantId);
+          const tenantData = store.data[tenantId];
+          const currentHour = formatHourKey(new Date());
+
+          if (isValid && tenantData && tenantData.lastFullHour === currentHour) {
+            // Data is fresh and complete
+            const dashboardData = await computeDashboardAnalytics(duration, context);
+            return new Response(
+              JSON.stringify({
+                success: true,
+                data: dashboardData,
+                status: "complete",
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          // Cache exists but needs refresh, or is empty
+          const hoursToLoad =
+            tenantData && Object.keys(tenantData.contentData).length > 0 ? 1 : 672;
+          const processingPromise = new Promise<void>(async (resolve) => {
+            try {
+              await loadHourlyAnalytics(hoursToLoad, context);
+              resolve();
+            } catch (error) {
+              console.error("Error in background analytics processing:", error);
+              resolve();
+            }
+          });
+
+          processingPromise.catch((err) => console.error("Async analytics processing error:", err));
+
+          // If we have prior data, compute metrics immediately using existing data
+          if (tenantData && Object.keys(tenantData.contentData).length > 0) {
+            const dashboardData = await computeDashboardAnalytics(duration, context);
+            return new Response(
+              JSON.stringify({
+                success: true,
+                data: dashboardData,
+                status: "refreshing",
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          // No prior data, return empty metrics
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: createEmptyDashboardAnalytics(),
+              status: "loading",
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (error) {
+          console.error("Error in getDashboardAnalytics:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "An unknown error occurred",
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
       }
 
       case "getAllFiles":

@@ -137,6 +137,9 @@ export async function loadHourlyAnalytics(
       );
       endTime.setHours(endTime.getHours() + 1);
     }
+    console.log(
+      `[DEBUG] hourKeys.length: ${hourKeys.length}, range: ${hourKeys[0]} to ${hourKeys[hourKeys.length - 1]}`
+    );
 
     if (VERBOSE) {
       console.log(
@@ -333,78 +336,14 @@ async function processTimeRange(
     );
   }
 
-  // CONTENT DATA QUERY: Consolidated query that pre-aggregates at the database level
-  const { rows: contentRows } = await client.execute({
-    sql: `
-      WITH hourly_content_stats AS (
-        -- First level of aggregation: Get key metrics per content item and hour
-        SELECT
-          strftime('%Y-%m-%d-%H', a.created_at) as hour_key,
-          a.object_id,
-          a.object_type,
-          COUNT(DISTINCT a.id) as action_count,
-          COUNT(DISTINCT a.fingerprint_id) as unique_visitors,
-          GROUP_CONCAT(DISTINCT a.fingerprint_id) as fingerprints,
-          GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NOT NULL THEN a.fingerprint_id ELSE NULL END) as known_fingerprints
-        FROM actions a
-        LEFT JOIN fingerprints f ON a.fingerprint_id = f.id
-        WHERE
-          a.created_at >= ? AND a.created_at < ?
-          AND a.object_type IN ('StoryFragment', 'Pane')
-        GROUP BY hour_key, a.object_id, a.object_type
-      ),
-      hourly_verb_counts AS (
-        -- Second level: Calculate event counts per verb
-        SELECT
-          strftime('%Y-%m-%d-%H', created_at) as hour_key,
-          object_id,
-          object_type,
-          verb,
-          COUNT(*) as count,
-          GROUP_CONCAT(DISTINCT fingerprint_id) as verb_fingerprints
-        FROM actions
-        WHERE
-          created_at >= ? AND created_at < ?
-          AND object_type IN ('StoryFragment', 'Pane')
-        GROUP BY hour_key, object_id, object_type, verb
-      )
-      SELECT
-        hcs.hour_key,
-        hcs.object_id,
-        hcs.object_type,
-        hcs.action_count,
-        hcs.unique_visitors,
-        hcs.fingerprints,
-        hcs.known_fingerprints,
-        -- Use SQL's JSON functions to generate a proper event counts object
-        json_group_object(hvc.verb, json_object(
-          'count', hvc.count,
-          'fingerprints', hvc.verb_fingerprints
-        )) as event_counts
-      FROM hourly_content_stats hcs
-      LEFT JOIN hourly_verb_counts hvc ON
-        hvc.hour_key = hcs.hour_key AND
-        hvc.object_id = hcs.object_id AND
-        hvc.object_type = hcs.object_type
-      GROUP BY hcs.hour_key, hcs.object_id, hcs.object_type
-    `,
-    args: [
-      startTime.toISOString(),
-      endTime.toISOString(),
-      startTime.toISOString(),
-      endTime.toISOString(),
-    ],
-  });
-
-  // SITE DATA QUERY: Consolidated query for site-wide metrics
+  // SITE DATA QUERY: Corrected for COUNT() misuse
+  const siteStart = Date.now();
   const { rows: siteRows } = await client.execute({
     sql: `
       WITH hourly_visits AS (
-        -- Aggregate visits data by hour
         SELECT
           strftime('%Y-%m-%d-%H', v.created_at) as hour_key,
           COUNT(DISTINCT v.id) as total_visits,
-          COUNT(DISTINCT v.fingerprint_id) as total_visitors,
           GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NULL THEN v.fingerprint_id ELSE NULL END) as anonymous_fingerprints,
           GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NOT NULL THEN v.fingerprint_id ELSE NULL END) as known_fingerprints
         FROM visits v
@@ -413,32 +352,29 @@ async function processTimeRange(
         GROUP BY hour_key
       ),
       hourly_actions AS (
-        -- Aggregate actions data by hour and verb
-        SELECT 
-          strftime('%Y-%m-%d-%H', created_at) as hour_key,
-          verb,
-          COUNT(*) as count,
-          GROUP_CONCAT(DISTINCT fingerprint_id) as verb_fingerprints
-        FROM actions
-        WHERE created_at >= ? AND created_at < ?
-        GROUP BY hour_key, verb
+        SELECT
+          hour_key,
+          json_group_object(verb, verb_count) as event_counts
+        FROM (
+          SELECT
+            strftime('%Y-%m-%d-%H', created_at) as hour_key,
+            verb,
+            COUNT(*) as verb_count
+          FROM actions
+          WHERE created_at >= ? AND created_at < ?
+          GROUP BY hour_key, verb
+        ) sub
+        GROUP BY hour_key
       )
       SELECT
-        hv.hour_key,
+        COALESCE(hv.hour_key, ha.hour_key) as hour_key,
         hv.total_visits,
-        hv.total_visitors,
         hv.anonymous_fingerprints,
         hv.known_fingerprints,
-        -- Use correlated subquery with json_group_object to create the event counts JSON
-        (
-          SELECT json_group_object(verb, json_object(
-            'count', count,
-            'fingerprints', verb_fingerprints
-          ))
-          FROM hourly_actions ha
-          WHERE ha.hour_key = hv.hour_key
-        ) as event_counts
+        COALESCE(ha.event_counts, '{}') as event_counts
       FROM hourly_visits hv
+      FULL OUTER JOIN hourly_actions ha ON hv.hour_key = ha.hour_key
+      WHERE COALESCE(hv.hour_key, ha.hour_key) IS NOT NULL
     `,
     args: [
       startTime.toISOString(),
@@ -447,8 +383,9 @@ async function processTimeRange(
       endTime.toISOString(),
     ],
   });
+  console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
 
-  // Process site rows efficiently
+  // Process site rows
   for (const row of siteRows) {
     const hourKey = String(row.hour_key);
     if (!hourKeys.includes(hourKey) || !siteData[hourKey]) continue;
@@ -464,30 +401,48 @@ async function processTimeRange(
     siteData[hourKey].anonymousVisitors = new Set(anonymousFingerprints);
     siteData[hourKey].knownVisitors = new Set(knownFingerprints);
 
-    // Parse event counts JSON with proper error handling
     if (row.event_counts) {
       try {
         const eventCountsData = JSON.parse(String(row.event_counts));
-        siteData[hourKey].eventCounts = {};
-
-        // Process each verb's data
-        for (const [verb, data] of Object.entries(eventCountsData)) {
-          const typedData = data as { count: number; fingerprints: string };
-          // Just store the count as a number, not the full object
-          siteData[hourKey].eventCounts[verb] = Number(typedData.count || 0);
-        }
+        siteData[hourKey].eventCounts = eventCountsData;
       } catch (e) {
-        console.error("Error parsing site event_counts JSON:", e);
+        console.error(`Error parsing site event_counts JSON for hour ${hourKey}:`, e);
         siteData[hourKey].eventCounts = {};
       }
     }
   }
+  console.log(
+    `[DEBUG] siteRows.length: ${siteRows.length}, sample event_counts: ${
+      siteRows[0]?.event_counts || "{}"
+    }`
+  );
 
-  // Process content rows efficiently
+  // CONTENT DATA QUERY: Unchanged
+  const contentStart = Date.now();
+  const { rows: contentRows } = await client.execute({
+    sql: `
+      SELECT
+        strftime('%Y-%m-%d-%H', a.created_at) as hour_key,
+        a.object_id,
+        a.object_type,
+        COUNT(DISTINCT a.id) as action_count,
+        GROUP_CONCAT(DISTINCT a.fingerprint_id) as fingerprints,
+        GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NOT NULL THEN a.fingerprint_id ELSE NULL END) as known_fingerprints
+      FROM actions a
+      LEFT JOIN fingerprints f ON a.fingerprint_id = f.id
+      WHERE
+        a.created_at >= ? AND a.created_at < ?
+        AND a.object_type IN ('StoryFragment', 'Pane')
+      GROUP BY hour_key, a.object_id, a.object_type
+    `,
+    args: [startTime.toISOString(), endTime.toISOString()],
+  });
+  console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
+
+  // Process content rows
   for (const row of contentRows) {
     const hourKey = String(row.hour_key);
     const contentId = String(row.object_id);
-
     if (!hourKeys.includes(hourKey) || !contentData[contentId] || !contentData[contentId][hourKey])
       continue;
 
@@ -505,25 +460,12 @@ async function processTimeRange(
       allFingerprints.filter((id) => !knownFingerprints.includes(id))
     );
     hourData.actions = Number(row.action_count || 0);
-
-    // Parse event counts JSON with proper error handling
-    if (row.event_counts) {
-      try {
-        const eventCountsData = JSON.parse(String(row.event_counts));
-        hourData.eventCounts = {};
-
-        // Process each verb's data
-        for (const [verb, data] of Object.entries(eventCountsData)) {
-          const typedData = data as { count: number; fingerprints: string };
-          // Just store the count as a number, not the full object
-          hourData.eventCounts[verb] = Number(typedData.count || 0);
-        }
-      } catch (e) {
-        console.error("Error parsing content event_counts JSON:", e);
-        hourData.eventCounts = {};
-      }
-    }
   }
+  console.log(
+    `[DEBUG] contentRows.length: ${contentRows.length}, sample action_count: ${
+      contentRows[0]?.action_count || 0
+    }, object_type: ${contentRows[0]?.object_type || ""}`
+  );
 }
 
 /**
