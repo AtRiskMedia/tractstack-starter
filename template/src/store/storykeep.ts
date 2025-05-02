@@ -270,10 +270,12 @@ export const storyFragmentTopicsStore = map<{
   };
 }>({});
 
-export const storyfragmentAnalyticsStore = map<{
+export interface StoryfragmentAnalyticsStore {
   byId: Record<string, StoryfragmentAnalytics>;
   lastUpdated: number | null;
-}>({
+}
+
+export const storyfragmentAnalyticsStore = map<StoryfragmentAnalyticsStore>({
   byId: {},
   lastUpdated: null,
 });

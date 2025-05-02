@@ -8,6 +8,21 @@ import BugAntIcon from "@heroicons/react/24/outline/BugAntIcon";
 import type { ResourceSetting, Tag, ToolAddMode, GotoTargets, Theme } from "@/types.ts";
 import type { SubmitParams } from "assemblyai";
 
+export const colors = [
+  "#61AFEF",
+  "#98C379",
+  "#C678DD",
+  "#E06C75",
+  "#56B6C2",
+  "#D19A66",
+  "#BE5046",
+  "#98C379",
+  "#E5C07B",
+  "#528BFF",
+  "#FF6B6B",
+  "#4EC9B0",
+];
+
 export const AUTH_COOKIE_NAME = "auth_token";
 export const AUTH_COOKIE_MAX_AGE = 60 * 60 * 24; // 24 hours
 export const MS_BETWEEN_UNDO = 6000;

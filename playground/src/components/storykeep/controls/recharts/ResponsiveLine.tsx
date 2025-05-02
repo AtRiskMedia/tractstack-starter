@@ -8,6 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { colors } from "@/constants";
 import { useState, useEffect } from "react";
 
 interface Point {
@@ -88,21 +89,6 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
   const maxY = Math.max(...data.flatMap((series) => series.data.map((point) => point.y)));
 
   const getLineStyle = (index: number) => {
-    const colors = [
-      "#61AFEF",
-      "#98C379",
-      "#C678DD",
-      "#E06C75",
-      "#56B6C2",
-      "#D19A66",
-      "#BE5046",
-      "#98C379",
-      "#E5C07B",
-      "#528BFF",
-      "#FF6B6B",
-      "#4EC9B0",
-    ];
-
     const patterns = [
       { strokeDasharray: "0", pattern: "Solid" },
       { strokeDasharray: "8 4", pattern: "Long dash" },

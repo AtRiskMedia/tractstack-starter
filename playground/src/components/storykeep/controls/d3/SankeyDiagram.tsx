@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { useEffect, useRef, useState } from "react";
+import { colors } from "@/constants";
 
 interface Node {
   name: string;
@@ -22,10 +23,10 @@ interface SankeyDiagramProps {
   data: SankeyData;
 }
 
-const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ data }) => {
+const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
+  const [dimensions, setDimensions] = useState({
     width: 800,
     height: 600,
   });
@@ -108,7 +109,7 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ data }) => {
           }\n${d.value} events`;
         });
 
-      // Draw nodes
+      // Draw nodes with colors from constants
       svg
         .append("g")
         .selectAll("rect")
@@ -119,9 +120,7 @@ const SankeyDiagram: React.FC<SankeyDiagramProps> = ({ data }) => {
         .attr("y", (d) => d.y0 ?? 0)
         .attr("height", (d) => (d.y1 ?? 0) - (d.y0 ?? 0))
         .attr("width", sankeyGenerator.nodeWidth())
-        .attr("fill", (d) =>
-          d.name.includes("Entered") ? "#4CAF50" : d.name.includes("Viewed") ? "#2196F3" : "#FF9800"
-        )
+        .attr("fill", (_, i) => colors[i % colors.length])
         .append("title")
         .text((d) => `${d.name}\n${d.value} events`);
 

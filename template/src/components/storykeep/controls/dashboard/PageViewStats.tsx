@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
@@ -7,6 +7,7 @@ import {
   isDemoModeStore,
   storedDashboardAnalytics,
   storyfragmentAnalyticsStore,
+  type StoryfragmentAnalyticsStore,
 } from "@/store/storykeep";
 import { contentMap } from "@/store/events";
 import type { LeadMetrics, DashboardAnalytics, StoryfragmentAnalytics } from "@/types";
@@ -28,23 +29,18 @@ interface SankeyData {
   links: SankeyLink[];
 }
 
-// Define store type locally since it's not in @/types.ts
-interface StoryfragmentAnalyticsStore {
-  byId: Record<string, StoryfragmentAnalytics>;
-  lastUpdated: number | null;
-}
-
 interface Stat {
   name: string;
   events: number;
   period: string;
 }
 
-// Simple error boundary component
-const ErrorBoundary: React.FC<{ children: React.ReactNode; fallback: React.ReactNode }> = ({
-  children,
-  fallback,
-}) => {
+interface ErrorBoundaryProps {
+  children: ReactNode;
+  fallback: ReactNode;
+}
+
+const ErrorBoundary = ({ children, fallback }: ErrorBoundaryProps) => {
   const [hasError, setHasError] = useState(false);
 
   const handleError = useCallback(() => {
