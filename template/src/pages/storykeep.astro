@@ -89,16 +89,16 @@ const remoteVersionInfo = await getRemoteVersionInfo();
   {
     user.isOpenDemo ? (
       <div class="my-1 pt-2 shadow-inner px-1">
-        <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
-          <span class="font-bold">You are in Demo Mode:</span> &nbsp; Reload to reset and start
-          over. Have fun, and seriously... try to break things!
+        <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-sm text-black w-full justify-center">
+          <span class="font-bold">Demo Mode:</span> &nbsp; No changes will be saved. Reload the page
+          in your browser to reset. Have fun and explore!
         </span>
       </div>
     ) : isPreviewMode ? (
       <div class="my-1 pt-2 shadow-inner px-1">
         <span class="inline-flex items-center rounded-md bg-mygreen/20 px-4 py-1 text-lg text-black w-full justify-center">
           <div>
-            <span class="font-bold">You are in Preview Mode:</span>
+            <span class="font-bold">Preview Mode:</span>
             For a production install of Tract Stack please see{" "}
             <a
               class="underline hover:text-black"

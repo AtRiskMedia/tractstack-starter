@@ -66,7 +66,7 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
 
   interface RechartsDataPoint {
     name: number;
-    [key: string]: number | undefined; // For dynamic keys like series.id
+    [key: string]: number | undefined;
   }
 
   const rechartsData: RechartsDataPoint[] = data
@@ -113,12 +113,12 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <ResponsiveContainer width="100%" height={isMobile ? "85%" : "100%"}>
+      <ResponsiveContainer width="100%" height={isMobile ? "80%" : "100%"}>
         <LineChart
           data={rechartsData}
           margin={
             isMobile
-              ? { top: 5, right: 10, left: 10, bottom: 5 }
+              ? { top: 5, right: 5, left: 0, bottom: 5 }
               : { top: 20, right: 20, left: 20, bottom: 20 }
           }
           style={{
@@ -144,8 +144,9 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
                   }
                 : undefined
             }
-            padding={{ left: 20, right: 20 }}
+            padding={{ left: 10, right: 10 }}
             stroke="#ABB2BF"
+            tick={{ fontSize: isMobile ? 12 : 14 }}
           />
           <YAxis
             domain={[0, maxY]}
@@ -162,23 +163,29 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
                   }
                 : undefined
             }
-            padding={{ top: 20, bottom: 20 }}
+            padding={{ top: 10, bottom: 10 }}
             stroke="#ABB2BF"
+            tick={{ fontSize: isMobile ? 12 : 14 }}
           />
           <Tooltip
             contentStyle={{
               backgroundColor: "#21252B",
               border: "1px solid #3E4451",
               color: "#ABB2BF",
+              fontSize: isMobile ? "0.9rem" : "1rem",
             }}
           />
           <Legend
             verticalAlign={isMobile ? "bottom" : "top"}
-            height={isMobile ? 120 : 80}
+            height={isMobile ? 100 : 80}
             wrapperStyle={{
               color: "#ABB2BF",
-              fontSize: isMobile ? "0.85rem" : "1rem",
-              paddingTop: isMobile ? "1rem" : 0,
+              fontSize: isMobile ? "0.9rem" : "1rem",
+              paddingTop: isMobile ? "0.5rem" : 0,
+              paddingBottom: isMobile ? "0.5rem" : 0,
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
             }}
           />
           {data.map((series, index) => {

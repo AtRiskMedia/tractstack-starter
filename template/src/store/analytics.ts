@@ -3,6 +3,8 @@ import { ANALYTICS_CACHE_TTL } from "@/constants";
 import { EPINETS_CACHE_TTL } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
+const VERBOSE = true;
+
 export function formatHourKey(date: Date): string {
   if (isNaN(date.getTime())) {
     throw new Error("Invalid date provided to formatHourKey");
@@ -71,33 +73,6 @@ export const hourlyEpinetStore = map<{
   lastUpdateTime: {},
 });
 
-export function isEpinetCacheValid(tenantId: string = "default"): boolean {
-  const store = hourlyEpinetStore.get();
-
-  if (
-    !store.lastFullHour[tenantId] ||
-    !store.lastUpdateTime[tenantId] ||
-    Object.keys(store.data[tenantId] || {}).length === 0
-  ) {
-    console.log("Cache invalid: missing lastFullHour, lastUpdateTime, or data for tenant", {
-      tenantId,
-    });
-    return false;
-  }
-
-  const lastHourKey = store.lastFullHour[tenantId];
-  const lastUpdateTime = store.lastUpdateTime[tenantId];
-  const currentHour = formatHourKey(new Date());
-
-  if (lastHourKey !== currentHour) {
-    console.log("Cache invalid: hour key mismatch", { lastHourKey, currentHour });
-    return false;
-  }
-
-  const now = Date.now();
-  return now - lastUpdateTime < EPINETS_CACHE_TTL;
-}
-
 export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
   const store = hourlyAnalyticsStore.get();
   const tenantData = store.data[tenantId] || {
@@ -111,12 +86,52 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
   };
 
   if (!tenantData.lastFullHour || Object.keys(tenantData.contentData).length === 0) {
+    if (VERBOSE)
+      console.log("Cache invalid: missing lastFullHour or contentData for tenant", { tenantId });
     return false;
   }
 
+  const currentHour = formatHourKey(new Date());
   const timeSinceUpdate = Date.now() - tenantData.lastUpdated;
-  if (timeSinceUpdate >= ANALYTICS_CACHE_TTL) {
+
+  // Cache is valid if we have data for prior hours, even if TTL is exceeded
+  // Only the current hour needs refreshing
+  if (timeSinceUpdate >= ANALYTICS_CACHE_TTL || tenantData.lastFullHour !== currentHour) {
+    if (VERBOSE)
+      console.log("Lead metrics cache requires current hour refresh", {
+        lastFullHour: tenantData.lastFullHour,
+        currentHour,
+        timeSinceUpdate,
+      });
+    return true;
+  }
+
+  return true;
+}
+
+export function isEpinetCacheValid(tenantId: string = "default"): boolean {
+  const store = hourlyEpinetStore.get();
+
+  if (
+    !store.lastFullHour[tenantId] ||
+    !store.lastUpdateTime[tenantId] ||
+    Object.keys(store.data[tenantId] || {}).length === 0
+  ) {
+    if (VERBOSE)
+      console.log("Cache invalid: missing lastFullHour, lastUpdateTime, or data for tenant", {
+        tenantId,
+      });
     return false;
+  }
+
+  const lastHourKey = store.lastFullHour[tenantId];
+  const lastUpdateTime = store.lastUpdateTime[tenantId];
+  const currentHour = formatHourKey(new Date());
+
+  if (lastHourKey !== currentHour || Date.now() - lastUpdateTime >= EPINETS_CACHE_TTL) {
+    if (VERBOSE)
+      console.log("Epinet cache requires current hour refresh", { lastHourKey, currentHour });
+    return true;
   }
 
   return true;

@@ -307,7 +307,7 @@ export default function PageViewStats() {
   };
 
   const DurationSelector = () => (
-    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mt-6 mb-4">
+    <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center text-sm mt-6 mb-4">
       <span className="font-action text-gray-800 font-bold">Filter analytics:</span>
       {["daily", "weekly", "monthly"].map((period) => (
         <button
@@ -604,7 +604,9 @@ export default function PageViewStats() {
         </div>
 
         <div className="p-4 motion-safe:animate-fadeInUp">
-          {/* Show loading indicator for Sankey diagram */}
+          <DurationSelector />
+          <DashboardActivity />
+
           {loadingStatus.epinet === "loading" &&
           (!epinetData ||
             !epinetData.nodes ||
@@ -643,8 +645,8 @@ export default function PageViewStats() {
                     Updating...
                   </div>
                 )}
-                <DurationSelector />
                 <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
+                <DurationSelector />
               </div>
             </ErrorBoundary>
           ) : (
@@ -655,8 +657,6 @@ export default function PageViewStats() {
               </div>
             </div>
           )}
-          <DurationSelector />
-          <DashboardActivity />
         </div>
       </div>
     </div>

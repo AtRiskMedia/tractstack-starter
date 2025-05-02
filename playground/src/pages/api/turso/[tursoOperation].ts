@@ -46,6 +46,7 @@ import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
 import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
 import {
+  formatHourKey,
   createEmptyLeadMetrics,
   hourlyAnalyticsStore,
   hourlyEpinetStore,
@@ -209,7 +210,10 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         const store = hourlyAnalyticsStore.get();
         const tenantId = context?.locals?.tenant?.id || "default";
         const isValid = isAnalyticsCacheValid(tenantId);
-        if (isValid && store.data[tenantId]) {
+        const currentHour = formatHourKey(new Date());
+        const tenantData = store.data[tenantId];
+
+        if (isValid && tenantData && tenantData.lastFullHour === currentHour) {
           const leadMetrics = await computeLeadMetrics(context);
           return new Response(
             JSON.stringify({
@@ -223,20 +227,37 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             }
           );
         }
-        // If cache is invalid, return loading status and trigger background processing
-        // Create a promise that will process analytics data asynchronously
+
+        const hoursToLoad = tenantData && Object.keys(tenantData.contentData).length > 0 ? 1 : 672;
         const processingPromise = new Promise<void>(async (resolve) => {
           try {
-            await loadHourlyAnalytics(672, context);
+            await loadHourlyAnalytics(hoursToLoad, context);
             resolve();
           } catch (error) {
             console.error("Error in background analytics processing:", error);
-            resolve(); // Resolve even on error to avoid hanging promises
+            resolve();
           }
         });
-        // Don't await the promise - let it run in the background
+
         processingPromise.catch((err) => console.error("Async analytics processing error:", err));
-        // Return placeholder/empty data with loading status
+
+        // If we have prior data, compute metrics immediately using existing data
+        if (tenantData && Object.keys(tenantData.contentData).length > 0) {
+          const leadMetrics = await computeLeadMetrics(context);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: leadMetrics,
+              status: "refreshing",
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        // No prior data, return empty metrics
         return new Response(
           JSON.stringify({
             success: true,
@@ -263,7 +284,15 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         const tenantId = context?.locals?.tenant?.id || "default";
         const store = hourlyEpinetStore.get();
         const isValid = isEpinetCacheValid(tenantId);
-        if (isValid && store.data[tenantId] && store.data[tenantId][id]) {
+        const tenantData = store.data[tenantId];
+        const currentHour = formatHourKey(new Date());
+
+        if (
+          isValid &&
+          tenantData &&
+          tenantData[id] &&
+          store.lastFullHour[tenantId] === currentHour
+        ) {
           const epinetData = await getEpinetMetrics(id, duration, context);
           return new Response(
             JSON.stringify({
@@ -277,21 +306,38 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             }
           );
         }
-        // If cache is invalid, return loading status and trigger background processing
-        // Create a promise that will process epinet data asynchronously
+
+        // Cache exists but needs current hour refresh, or is empty
+        const currentHourOnly = tenantData && Object.keys(tenantData).length > 0;
         const processingPromise = new Promise<void>(async (resolve) => {
           try {
-            // Use current hour only for first load to speed up initial data
-            await loadHourlyEpinetData(672, false, context);
+            await loadHourlyEpinetData(672, currentHourOnly, context);
             resolve();
           } catch (error) {
             console.error("Error in background epinet processing:", error);
-            resolve(); // Resolve even on error to avoid hanging promises
+            resolve();
           }
         });
-        // Don't await the promise - let it run in the background
+
         processingPromise.catch((err) => console.error("Async epinet processing error:", err));
-        // Return minimal data with loading status
+
+        // If we have prior data, compute metrics immediately using existing data
+        if (tenantData && tenantData[id]) {
+          const epinetData = await getEpinetMetrics(id, duration, context);
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: epinetData,
+              status: "refreshing",
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        // No prior data, return minimal data
         return new Response(
           JSON.stringify({
             success: true,
