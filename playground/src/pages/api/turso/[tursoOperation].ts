@@ -2,7 +2,6 @@
 import type { APIRoute } from "astro";
 import type { APIContext } from "@/types";
 import { withTenantContext } from "@/utils/api/middleware";
-import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics";
 import { streamEvents } from "@/utils/db/api/stream";
 import { syncVisit } from "@/utils/db/api/syncVisit";
 import { unlockProfile } from "@/utils/db/api/unlock";
@@ -83,9 +82,6 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "analytics":
         result = await getAnalytics(body.id, body.type, body.duration, context);
-        break;
-      case "dashboardAnalytics":
-        result = await dashboardAnalytics(body, context);
         break;
       case "upsertFile":
         result = await upsertFile(body, context);
