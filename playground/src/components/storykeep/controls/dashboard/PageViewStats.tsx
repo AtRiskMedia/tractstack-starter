@@ -200,8 +200,10 @@ export default function PageViewStats() {
             result.data &&
             Array.isArray(result.data.nodes) &&
             Array.isArray(result.data.links) &&
-            result.data.nodes.length > 0
+            result.data.nodes.length > 0 &&
+            result.data.links.length > 0
           ) {
+            // Valid data with non-empty nodes and links
             setEpinetData(result.data);
             setLoadingStatus((prev) => ({ ...prev, epinet: "complete" }));
 
@@ -211,9 +213,11 @@ export default function PageViewStats() {
               setPollingInterval(null);
             }
           } else {
-            console.warn("Invalid epinet data structure:", result.data);
+            // We have data but it's empty or invalid format - don't treat as error
+            // because it's a valid state (no user journey data yet)
+            // OR more likely it's still priming the cache
             setEpinetData(null);
-            setLoadingStatus((prev) => ({ ...prev, epinet: "error" }));
+            setLoadingStatus((prev) => ({ ...prev, epinet: "complete" }));
           }
         } else {
           console.error("Failed to fetch epinet metrics:", response.statusText);
@@ -566,7 +570,12 @@ export default function PageViewStats() {
           <DashboardActivity />
 
           {/* Show loading indicator for Sankey diagram */}
-          {loadingStatus.epinet === "loading" && !epinetData ? (
+          {loadingStatus.epinet === "loading" &&
+          (!epinetData ||
+            !epinetData.nodes ||
+            !epinetData.links ||
+            epinetData.nodes.length === 0 ||
+            epinetData.links.length === 0) ? (
             <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
               <h4 className="font-bold font-action text-xl mb-4">User Journeys (Loading...)</h4>
               <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
@@ -583,7 +592,11 @@ export default function PageViewStats() {
                 There was an error loading the user journey data. Please try refreshing the page.
               </div>
             </div>
-          ) : epinetData && epinetData.nodes && epinetData.nodes.length > 0 ? (
+          ) : epinetData &&
+            epinetData.nodes &&
+            epinetData.links &&
+            epinetData.nodes.length > 0 &&
+            epinetData.links.length > 0 ? (
             <ErrorBoundary
               fallback={
                 <div className="p-4 bg-red-50 text-red-800 rounded-lg">
