@@ -10,6 +10,7 @@ import {
   storyfragmentAnalyticsStore,
   type StoryfragmentAnalyticsStore,
 } from "@/store/storykeep";
+import { classNames } from "@/utils/common/helpers";
 import { contentMap } from "@/store/events";
 import type { LeadMetrics, DashboardAnalytics, StoryfragmentAnalytics } from "@/types";
 
@@ -79,12 +80,17 @@ export default function PageViewStats() {
   ) as StoryfragmentAnalyticsStore;
   const $contentMap = useStore(contentMap);
   const $analyticsDuration = useStore(analyticsDuration);
+  const duration = $analyticsDuration;
 
   const analytics: StoryfragmentAnalytics[] = Object.values($storyfragmentAnalytics.byId);
   const totalLifetimeVisitors: number = analytics.reduce(
     (sum: number, fragment: StoryfragmentAnalytics) => sum + (fragment.unique_visitors || 0),
     0
   );
+
+  const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
+    analyticsDuration.set(newValue);
+  };
 
   const stats: Stat[] = [
     {
@@ -300,62 +306,96 @@ export default function PageViewStats() {
     }
   };
 
+  const DurationSelector = () => (
+    <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mt-6 mb-4">
+      <span className="font-action text-gray-800 font-bold">Filter analytics:</span>
+      {["daily", "weekly", "monthly"].map((period) => (
+        <button
+          key={period}
+          onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
+          className={classNames(
+            "px-3 py-1 rounded-full transition-all duration-200 ease-in-out",
+            duration === period
+              ? "bg-cyan-600 text-white font-bold shadow-sm"
+              : "bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-800"
+          )}
+        >
+          {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
+        </button>
+      ))}
+    </div>
+  );
+
   const LoadingPlaceholder = () => (
     <div className="p-0.5 shadow-md">
-      <div className="p-1.5 bg-white rounded-b-md w-full">
-        <h3 className="font-bold font-action text-xl mb-4">Analytics Dashboard</h3>
+      <div className="p-4 bg-white rounded-b-md w-full">
+        <div className="flex justify-between items-center mb-6">
+          <div className="h-6 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse"></div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {[1, 2, 3].map((item) => (
             <div
               key={item}
-              className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100"
+              className="px-4 py-4 bg-white rounded-lg shadow-sm border border-gray-100 animate-pulse"
             >
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3 animate-pulse"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
-              <hr className="my-3.5 border-gray-100" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <hr className="my-3 border-gray-100" />
               <div className="flex justify-between">
                 <div className="w-1/2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-                  <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
                 </div>
                 <div className="w-1/2 flex justify-end">
                   <div className="w-3/4">
-                    <div className="h-4 bg-gray-200 rounded w-full mb-2 animate-pulse"></div>
-                    <div className="h-6 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                    <div className="h-6 bg-gray-200 rounded w-2/3"></div>
                   </div>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4 mb-2 animate-pulse"></div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4 mb-2"></div>
               <div className="flex justify-between">
-                <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-1/4"></div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {[1, 2].map((item) => (
             <div
               key={item}
-              className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100"
+              className="px-4 py-4 bg-white rounded-lg shadow-sm border border-gray-100 animate-pulse"
             >
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-3 animate-pulse"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/3 mb-2 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+              <div className="flex justify-between items-start mb-3">
+                <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                {item === 2 && <div className="h-4 bg-gray-200 rounded w-1/6"></div>}
+              </div>
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
           ))}
         </div>
 
         <div className="p-4">
-          {/* Placeholder for DashboardActivity */}
-          <div className="h-60 bg-gray-200 rounded w-full mb-4 animate-pulse"></div>
-          {/* Placeholder for SankeyDiagram */}
+          <div className="h-64 bg-gray-100 rounded-lg w-full mb-6 animate-pulse"></div>
           <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100">
-            <div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
-            <div className="h-96 bg-gray-200 rounded w-full animate-pulse"></div>
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-4 animate-pulse"></div>
+            <div className="h-96 bg-gray-100 rounded w-full animate-pulse"></div>
           </div>
+        </div>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm mt-6 mb-4">
+          <div className="h-4 bg-gray-200 rounded w-1/6 animate-pulse"></div>
+          {["daily", "weekly", "monthly"].map((period) => (
+            <div
+              key={period}
+              className="px-3 py-1 rounded-full bg-gray-200 h-8 w-20 animate-pulse"
+            ></div>
+          ))}
         </div>
       </div>
     </div>
@@ -421,10 +461,8 @@ export default function PageViewStats() {
 
   if (!isClient) return null;
 
-  // Show full loading screen on initial load
   if (isLoading && isEpinetLoading) return <LoadingPlaceholder />;
 
-  // Progressive rendering for data as it becomes available
   return (
     <div className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
@@ -439,7 +477,6 @@ export default function PageViewStats() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
-            // Show skeleton loader if data is still loading
             if (loadingStatus.lead === "loading" || !leadMetrics) {
               return <StatsSkeleton key={item.period} name={item.name} />;
             }
@@ -567,8 +604,6 @@ export default function PageViewStats() {
         </div>
 
         <div className="p-4 motion-safe:animate-fadeInUp">
-          <DashboardActivity />
-
           {/* Show loading indicator for Sankey diagram */}
           {loadingStatus.epinet === "loading" &&
           (!epinetData ||
@@ -577,7 +612,6 @@ export default function PageViewStats() {
             epinetData.nodes.length === 0 ||
             epinetData.links.length === 0) ? (
             <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <h4 className="font-bold font-action text-xl mb-4">User Journeys (Loading...)</h4>
               <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
                 <div className="text-center">
                   <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
@@ -587,7 +621,6 @@ export default function PageViewStats() {
             </div>
           ) : loadingStatus.epinet === "error" ? (
             <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-red-100 mt-12">
-              <h4 className="font-bold font-action text-xl text-red-800">User Journeys</h4>
               <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
                 There was an error loading the user journey data. Please try refreshing the page.
               </div>
@@ -610,18 +643,20 @@ export default function PageViewStats() {
                     Updating...
                   </div>
                 )}
+                <DurationSelector />
                 <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
               </div>
             </ErrorBoundary>
           ) : (
             <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <h4 className="font-bold font-action text-xl">User Journeys</h4>
               <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
                 No user journey data is available yet. This visualization will appear when users
                 start interacting with your content.
               </div>
             </div>
           )}
+          <DurationSelector />
+          <DashboardActivity />
         </div>
       </div>
     </div>

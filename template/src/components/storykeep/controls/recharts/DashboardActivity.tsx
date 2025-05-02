@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
 import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
-import { classNames } from "@/utils/common/helpers.ts";
 import ResponsiveLine from "./ResponsiveLine";
 
 const DashboardActivity = () => {
@@ -27,10 +26,6 @@ const DashboardActivity = () => {
     return processed;
   }, [$storedDashboardAnalytics]);
 
-  const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
-    analyticsDuration.set(newValue);
-  };
-
   if (!isClient) return null;
 
   if (!$storedDashboardAnalytics || !$storedDashboardAnalytics.line) {
@@ -43,22 +38,6 @@ const DashboardActivity = () => {
     <>
       <div style={{ height: "400px" }}>
         <ResponsiveLine data={processedData} duration={duration} />
-      </div>
-      <div className="flex flex-wrap gap-x-2 text-md mt-4">
-        <span className="font-action">Stats for past:</span>
-        {["daily", "weekly", "monthly"].map((period) => (
-          <button
-            key={period}
-            onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
-            className={classNames(
-              duration === period
-                ? "font-bold text-myblue"
-                : "underline text-mydarkgrey/80 hover:text-myorange"
-            )}
-          >
-            {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
-          </button>
-        ))}
       </div>
     </>
   );

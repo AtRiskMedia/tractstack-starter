@@ -78,8 +78,8 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
       .nodeWidth(20)
       .nodePadding(10)
       .extent([
-        [50, 50],
-        [width - 50, height - 50],
+        [0, 0],
+        [width, height],
       ]);
 
     try {
@@ -133,7 +133,7 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
         .append("text")
         .attr("x", (d) => {
           const x0 = d.x0 ?? 0;
-          return x0 + (x0 < width / 2 ? 25 : -5);
+          return x0 < width / 2 ? x0 + sankeyGenerator.nodeWidth() + 5 : x0 - 5;
         })
         .attr("y", (d) => ((d.y0 ?? 0) + (d.y1 ?? 0)) / 2)
         .attr("dy", "0.35em")
@@ -147,13 +147,14 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
   }, [data, dimensions]);
 
   return (
-    <div ref={containerRef} className="w-full my-12">
-      <h4 className="font-bold font-action text-xl">User Journeys</h4>
+    <div ref={containerRef} className="w-full my-4">
       <svg
         ref={svgRef}
         width={dimensions.width}
         height={dimensions.height}
         style={{ display: "block", width: "100%" }}
+        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+        preserveAspectRatio="xMidYMid meet"
       ></svg>
     </div>
   );
