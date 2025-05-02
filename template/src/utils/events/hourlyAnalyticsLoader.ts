@@ -39,7 +39,7 @@ const loadingState: Record<
 > = {};
 
 const LOADING_THROTTLE_MS = 60000; // 1 minute
-const VERBOSE = true;
+const VERBOSE = false;
 
 export async function loadHourlyAnalytics(
   hours: number = MAX_ANALYTICS_HOURS,

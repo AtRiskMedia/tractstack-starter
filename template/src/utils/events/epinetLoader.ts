@@ -19,7 +19,7 @@ import type {
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { Client } from "@libsql/client";
 
-const VERBOSE = true;
+const VERBOSE = false;
 
 // Track loading state per tenant
 const loadingState: Record<

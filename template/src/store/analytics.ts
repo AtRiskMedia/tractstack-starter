@@ -3,7 +3,7 @@ import { ANALYTICS_CACHE_TTL } from "@/constants";
 import { EPINETS_CACHE_TTL } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
-const VERBOSE = true;
+const VERBOSE = false;
 
 export function formatHourKey(date: Date): string {
   if (isNaN(date.getTime())) {
