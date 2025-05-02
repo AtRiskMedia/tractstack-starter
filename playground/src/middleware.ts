@@ -4,21 +4,15 @@ import path from "node:path";
 import { isAuthenticated, isAdmin, isOpenDemoMode } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 import type { AuthStatus } from "@/types";
-import { loadHourlyAnalytics, refreshHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
-import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
-import { hourlyEpinetStore, isEpinetCacheValid, isAnalyticsCacheValid } from "@/store/analytics";
 import { cssStore, updateCssStore } from "@/store/css";
 import { updateTenantAccessTime } from "@/utils/tenant/updateAccess";
 import { resolvePaths } from "@/utils/core/pathResolver";
-import { type APIContext } from "@/types";
 import {
   shouldUpdateTenantAccess,
   markTenantAccessUpdateComplete,
 } from "@/store/tenantAccessManager";
 
 const DYNAMIC_DIRS = ["/images", "/custom"];
-const ANALYTICS_ROUTES = ["/api/turso/getLeadMetrics", "/api/turso/getStoryfragmentAnalytics"];
-const EPINET_ROUTES = ["/api/turso/getEpinetMetrics"];
 
 async function ensureCssStoreInitialized() {
   const store = cssStore.get();
@@ -140,25 +134,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     await ensureCssStoreInitialized();
   }
 
-  if (ANALYTICS_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
-    if (!isAnalyticsCacheValid(tenantId)) {
-      await loadHourlyAnalytics(672, context as APIContext);
-    } else {
-      await refreshHourlyAnalytics(context as APIContext);
-    }
-  }
-
-  if (EPINET_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
-    if (!isEpinetCacheValid(tenantId)) {
-      const store = hourlyEpinetStore.get();
-      const isStoreUninitialized =
-        !store.lastFullHour[tenantId] ||
-        !store.lastUpdateTime[tenantId] ||
-        Object.keys(store.data[tenantId] || {}).length === 0;
-      await loadHourlyEpinetData(672, !isStoreUninitialized, context as APIContext);
-    }
-  }
-
   const config = await getConfig(context.locals.tenant.paths.configPath, tenantId);
   const tenantValidation = await validateConfig(config);
 
@@ -172,7 +147,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     isOpenDemo,
   } as AuthStatus;
 
-  // Check if we should update tenant access time using the store manager
   if (tenantId !== "default" && shouldUpdateTenantAccess(tenantId, isAdminUser)) {
     updateTenantAccessTime(tenantId, isAdminUser)
       .then((result) => {

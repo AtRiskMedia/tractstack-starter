@@ -4,6 +4,7 @@ import { contentMap } from "@/store/events";
 import { getHourKeysForTimeRange } from "@/store/analytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getEventNodeId } from "@/utils/events/epinetLoader";
+import { loadHourlyEpinetData, getEpinetLoadingStatus } from "@/utils/events/epinetLoader";
 import type {
   EventStream,
   EpinetStepBelief,
@@ -16,7 +17,18 @@ import type {
   APIContext,
 } from "@/types";
 
-const VERBOSE = true;
+const VERBOSE = false;
+
+// Track computation state per tenant to avoid redundant calculations
+const computationState: Record<
+  string,
+  {
+    epinetLastComputed: Record<string, number>; // Per epinet ID
+    pendingComputations: Set<string>; // Epinet IDs with pending computations
+  }
+> = {};
+
+const COMPUTATION_THROTTLE_MS = 5000; // 5 seconds
 
 /**
  * Process an event and update epinet data in real-time
@@ -404,13 +416,40 @@ function calculateStepToStepTransitions(
 
 /**
  * Compute a Sankey diagram from epinet data for the specified time period
+ * This function supports asynchronous processing and returns a loading status
+ * if data isn't ready yet
  */
-export function computeEpinetSankey(
+export async function computeEpinetSankey(
   epinetId: string,
   hours: number = 168,
   context?: APIContext
-): ComputedEpinet | null {
+): Promise<ComputedEpinet | { status: string; message: string; id: string; title: string } | null> {
   const tenantId = context?.locals?.tenant?.id || "default";
+
+  // Initialize computation state for this tenant if needed
+  if (!computationState[tenantId]) {
+    computationState[tenantId] = {
+      epinetLastComputed: {},
+      pendingComputations: new Set(),
+    };
+  }
+
+  // Check if data is being loaded
+  const loadingStatus = getEpinetLoadingStatus(tenantId);
+  const now = Date.now();
+
+  // If we've computed this recently and it's still loading, return cached status
+  const lastComputed = computationState[tenantId].epinetLastComputed[epinetId] || 0;
+  if (loadingStatus.loading && now - lastComputed < COMPUTATION_THROTTLE_MS) {
+    return {
+      status: "loading",
+      message: `Computing epinet data (${loadingStatus.progress.percentComplete}% complete)`,
+      id: epinetId,
+      title: "User Journey Flow (Loading...)",
+    };
+  }
+
+  // Get data from store
   const epinetStore = hourlyEpinetStore.get();
   const epinetData = epinetStore.data[tenantId]?.[epinetId];
 
@@ -425,10 +464,51 @@ export function computeEpinetSankey(
     );
   }
 
+  // If no data and not already loading, trigger background load
+  if (
+    !epinetData &&
+    !loadingStatus.loading &&
+    !computationState[tenantId].pendingComputations.has(epinetId)
+  ) {
+    computationState[tenantId].pendingComputations.add(epinetId);
+
+    // Trigger loading in the background
+    const loadingPromise = loadHourlyEpinetData(hours, false, context).catch((error) => {
+      console.error(`Error loading epinet data for ${epinetId}:`, error);
+    });
+
+    // Fire and forget - don't await this promise
+    loadingPromise.finally(() => {
+      computationState[tenantId].pendingComputations.delete(epinetId);
+    });
+
+    return {
+      status: "loading",
+      message: "Starting epinet data computation...",
+      id: epinetId,
+      title: "User Journey Flow (Loading...)",
+    };
+  }
+
+  // If loading is in progress, return status
+  if (loadingStatus.loading) {
+    return {
+      status: "loading",
+      message: `Computing epinet data (${loadingStatus.progress.percentComplete}% complete)`,
+      id: epinetId,
+      title: "User Journey Flow (Loading...)",
+    };
+  }
+
+  // If data still not available after loading, return null
   if (!epinetData) {
     return null;
   }
 
+  // Record computation time
+  computationState[tenantId].epinetLastComputed[epinetId] = now;
+
+  // Get the hour keys for the time period
   const hourKeys = getHourKeysForTimeRange(hours);
 
   // First, recalculate transitions for all hours using step-to-step approach
@@ -530,7 +610,7 @@ export function computeEpinetSankey(
 
   return {
     id: epinetId,
-    title: "Epinet Flow",
+    title: "User Journey Flow",
     nodes,
     links,
   };
@@ -539,29 +619,80 @@ export function computeEpinetSankey(
 /**
  * Compute epinet data for multiple time periods
  */
-export function computeAllEpinetRanges(
+export async function computeAllEpinetRanges(
   epinetId: string,
   context?: APIContext
-): {
-  daily: ComputedEpinet | null;
-  weekly: ComputedEpinet | null;
-  monthly: ComputedEpinet | null;
-} {
+): Promise<{
+  daily: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
+  weekly: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
+  monthly: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
+}> {
+  // Execute all computations in parallel for better performance
+  const [daily, weekly, monthly] = await Promise.all([
+    computeEpinetSankey(epinetId, 24, context),
+    computeEpinetSankey(epinetId, 168, context),
+    computeEpinetSankey(epinetId, 672, context),
+  ]);
+
   return {
-    daily: computeEpinetSankey(epinetId, 24, context),
-    weekly: computeEpinetSankey(epinetId, 168, context),
-    monthly: computeEpinetSankey(epinetId, 672, context),
+    daily,
+    weekly,
+    monthly,
   };
 }
 
 /**
- * Get epinet metrics for an epinet
+ * Get epinet metrics for an epinet with support for asynchronous loading
  */
 export async function getEpinetMetrics(
   id: string,
   duration: "daily" | "weekly" | "monthly" = "weekly",
   context?: APIContext
-): Promise<ComputedEpinet | null> {
+): Promise<ComputedEpinet | { status: string; message: string; id: string; title: string } | null> {
   const hours = duration === "daily" ? 24 : duration === "weekly" ? 168 : 672;
   return computeEpinetSankey(id, hours, context);
+}
+
+/**
+ * Check if epinet computation is in progress
+ */
+export function isEpinetComputationPending(epinetId: string, context?: APIContext): boolean {
+  const tenantId = context?.locals?.tenant?.id || "default";
+
+  if (!computationState[tenantId]) {
+    return false;
+  }
+
+  const loadingStatus = getEpinetLoadingStatus(tenantId);
+  return loadingStatus.loading || computationState[tenantId].pendingComputations.has(epinetId);
+}
+
+/**
+ * Force a refresh of epinet data
+ */
+export function triggerEpinetRefresh(epinetId: string, context?: APIContext): void {
+  const tenantId = context?.locals?.tenant?.id || "default";
+
+  // Initialize computation state for this tenant if needed
+  if (!computationState[tenantId]) {
+    computationState[tenantId] = {
+      epinetLastComputed: {},
+      pendingComputations: new Set(),
+    };
+  }
+
+  const loadingStatus = getEpinetLoadingStatus(tenantId);
+  if (!loadingStatus.loading) {
+    computationState[tenantId].pendingComputations.add(epinetId);
+
+    // Create a non-blocking promise to load the data
+    const loadingPromise = loadHourlyEpinetData(672, false, context).catch((error) => {
+      console.error(`Error refreshing epinet data for ${epinetId}:`, error);
+    });
+
+    // Fire and forget - don't await this promise
+    loadingPromise.finally(() => {
+      computationState[tenantId].pendingComputations.delete(epinetId);
+    });
+  }
 }
