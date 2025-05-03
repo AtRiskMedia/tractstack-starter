@@ -2,6 +2,7 @@ import { hourlyAnalyticsStore, getHourKeysForTimeRange } from "@/store/analytics
 import type { DashboardAnalytics, LineDataSeries, HotItem } from "@/types";
 import type { APIContext } from "@/types";
 
+const VERBOSE = false;
 /**
  * Computes dashboard analytics from the hourly analytics data
  * @param duration The time range to compute analytics for (daily, weekly, monthly)
@@ -30,6 +31,23 @@ export async function computeDashboardAnalytics(
   };
   const line = computeLineData(tenantData.siteData, hourKeys, duration);
   const hot_content = computeHotContent(tenantData.contentData, hourKeys);
+
+  if (VERBOSE) {
+    console.log(
+      `[DEBUG] hourKeys: ${hourKeys.length}, first: ${hourKeys[0]}, last: ${hourKeys[hourKeys.length - 1]}`
+    );
+    console.log(
+      `[DEBUG] Event types in data: ${Array.from(
+        Object.keys(tenantData.siteData).reduce((set, hourKey) => {
+          const hourData = tenantData.siteData[hourKey];
+          if (hourData?.eventCounts) {
+            Object.keys(hourData.eventCounts).forEach((type) => set.add(type));
+          }
+          return set;
+        }, new Set())
+      ).join(", ")}`
+    );
+  }
 
   return {
     stats,
@@ -117,9 +135,15 @@ function computeLineData(
 
     let periodIndex: number;
     if (duration === "daily") {
-      // Hours ago (0-23)
       const hoursAgo = Math.floor((now.getTime() - hourDate.getTime()) / (1000 * 60 * 60));
-      periodIndex = Math.min(hoursAgo, periodsToDisplay - 1);
+      if (hoursAgo >= -23 && hoursAgo <= 23) {
+        periodIndex = hoursAgo < 0 ? Math.abs(hoursAgo) : hoursAgo;
+        if (periodIndex >= periodsToDisplay) {
+          continue;
+        }
+      } else {
+        continue;
+      }
     } else {
       // Days ago (0-6 or 0-27)
       const msPerDay = 24 * 60 * 60 * 1000;
