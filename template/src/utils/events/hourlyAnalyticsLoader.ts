@@ -134,9 +134,6 @@ export async function loadHourlyAnalytics(
       );
       endTime.setHours(endTime.getHours() + 1);
     }
-    console.log(
-      `[DEBUG] hourKeys.length: ${hourKeys.length}, range: ${hourKeys[0]} to ${hourKeys[hourKeys.length - 1]}`
-    );
 
     if (VERBOSE) {
       console.log(
@@ -382,7 +379,7 @@ async function processTimeRange(
       endTime.toISOString(),
     ],
   });
-  console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
+  if (VERBOSE) console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
 
   // Process site rows
   for (const row of siteRows) {
@@ -410,11 +407,12 @@ async function processTimeRange(
       }
     }
   }
-  console.log(
-    `[DEBUG] siteRows.length: ${siteRows.length}, sample event_counts: ${
-      siteRows[0]?.event_counts || "{}"
-    }`
-  );
+  if (VERBOSE)
+    console.log(
+      `[DEBUG] siteRows.length: ${siteRows.length}, sample event_counts: ${
+        siteRows[0]?.event_counts || "{}"
+      }`
+    );
 
   // CONTENT DATA QUERY: Unchanged
   const contentStart = Date.now();
@@ -436,7 +434,7 @@ async function processTimeRange(
     `,
     args: [startTime.toISOString(), endTime.toISOString()],
   });
-  console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
+  if (VERBOSE) console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
 
   // Process content rows
   for (const row of contentRows) {
@@ -460,11 +458,12 @@ async function processTimeRange(
     );
     hourData.actions = Number(row.action_count || 0);
   }
-  console.log(
-    `[DEBUG] contentRows.length: ${contentRows.length}, sample action_count: ${
-      contentRows[0]?.action_count || 0
-    }, object_type: ${contentRows[0]?.object_type || ""}`
-  );
+  if (VERBOSE)
+    console.log(
+      `[DEBUG] contentRows.length: ${contentRows.length}, sample action_count: ${
+        contentRows[0]?.action_count || 0
+      }, object_type: ${contentRows[0]?.object_type || ""}`
+    );
 }
 
 /**
