@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
-import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
+import { analyticsStore, analyticsDuration } from "@/store/storykeep.ts";
 import ResponsiveLine from "./ResponsiveLine";
 
 const DashboardActivity = () => {
   const [isClient, setIsClient] = useState(false);
-  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
+  const analytics = useStore(analyticsStore);
   const $analyticsDuration = useStore(analyticsDuration);
   const duration = $analyticsDuration;
 
@@ -14,21 +14,21 @@ const DashboardActivity = () => {
   }, []);
 
   const processedData = useMemo(() => {
-    if (!$storedDashboardAnalytics || !$storedDashboardAnalytics.line) {
+    if (!analytics.dashboard || !analytics.dashboard.line) {
       return [];
     }
-    const processed = $storedDashboardAnalytics.line.map((series) => ({
+    const processed = analytics.dashboard.line.map((series) => ({
       ...series,
       data: series.data
         .filter((point) => point.x !== null && point.y !== null && point.y !== 0)
         .sort((a, b) => Number(a.x) - Number(b.x)),
     }));
     return processed;
-  }, [$storedDashboardAnalytics]);
+  }, [analytics.dashboard]);
 
   if (!isClient) return null;
 
-  if (!$storedDashboardAnalytics || !$storedDashboardAnalytics.line) {
+  if (!analytics.dashboard || !analytics.dashboard.line) {
     return <div>Loading activity data...</div>;
   }
 

@@ -5,31 +5,11 @@ import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import {
   isDemoModeStore,
-  storedDashboardAnalytics,
+  analyticsStore,
   analyticsDuration,
   storyfragmentAnalyticsStore,
-  type StoryfragmentAnalyticsStore,
 } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
-import { contentMap } from "@/store/events";
-import type { LeadMetrics, DashboardAnalytics, StoryfragmentAnalytics } from "@/types";
-
-// Define types for Sankey data
-interface SankeyNode {
-  name: string;
-  id: string;
-}
-
-interface SankeyLink {
-  source: number;
-  target: number;
-  value: number;
-}
-
-interface SankeyData {
-  nodes: SankeyNode[];
-  links: SankeyLink[];
-}
 
 interface Stat {
   name: string;
@@ -61,202 +41,32 @@ function formatNumber(num: number): string {
 }
 
 export default function PageViewStats() {
-  const isDemoMode = isDemoModeStore.get();
   const [isClient, setIsClient] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isEpinetLoading, setIsEpinetLoading] = useState<boolean>(true);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
-  const [leadMetrics, setLeadMetrics] = useState<LeadMetrics | null>(null);
-  const [epinetData, setEpinetData] = useState<SankeyData | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState<{
-    lead: "loading" | "complete" | "error";
-    epinet: "loading" | "complete" | "error";
-  }>({ lead: "loading", epinet: "loading" });
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
-  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics) as DashboardAnalytics;
-  const $storyfragmentAnalytics = useStore(
-    storyfragmentAnalyticsStore
-  ) as StoryfragmentAnalyticsStore;
-  const $contentMap = useStore(contentMap);
+  // Use the consolidated analytics store
+  const analytics = useStore(analyticsStore);
+  const $isDemoMode = useStore(isDemoModeStore);
   const $analyticsDuration = useStore(analyticsDuration);
+  const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
 
-  const analytics: StoryfragmentAnalytics[] = Object.values($storyfragmentAnalytics.byId);
-  const totalLifetimeVisitors: number = analytics.reduce(
-    (sum: number, fragment: StoryfragmentAnalytics) => sum + (fragment.unique_visitors || 0),
+  // Extract values from the store
+  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status, error } = analytics;
+
+  // Calculate total lifetime visitors from storyfragmentAnalytics
+  const totalLifetimeVisitors = Object.values($storyfragmentAnalytics.byId).reduce(
+    (sum, fragment) => sum + (fragment.unique_visitors || 0),
     0
   );
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
     analyticsDuration.set(newValue);
   };
-
-  const stats: Stat[] = [
-    {
-      name: "Last 24 Hours",
-      events: $storedDashboardAnalytics?.stats?.daily ?? 0,
-      period: "24h",
-    },
-    {
-      name: "Past 7 Days",
-      events: $storedDashboardAnalytics?.stats?.weekly ?? 0,
-      period: "7d",
-    },
-    {
-      name: "Past 28 Days",
-      events: $storedDashboardAnalytics?.stats?.monthly ?? 0,
-      period: "28d",
-    },
-  ];
-
-  // Function to fetch lead metrics with status handling
-  const fetchLeadMetrics = useCallback(async () => {
-    try {
-      const response = await fetch("/api/turso/getLeadMetrics");
-      if (response.ok) {
-        const result = await response.json();
-
-        // Check if data has a status field indicating it's still loading
-        if (result.data && "status" in result.data) {
-          setLoadingStatus((prev) => ({ ...prev, lead: result.data.status }));
-
-          // If status is loading, we'll use the data but keep polling
-          if (result.data.status === "loading") {
-            // Only initiate polling if we haven't already
-            if (!pollingInterval) {
-              const interval = setInterval(() => {
-                fetchLeadMetrics();
-              }, 5000); // Poll every 5 seconds
-              setPollingInterval(interval);
-            }
-          } else if (result.data.status === "complete") {
-            // Data is complete, clear polling
-            if (pollingInterval) {
-              clearInterval(pollingInterval);
-              setPollingInterval(null);
-            }
-          }
-        } else {
-          // No status field means it's complete
-          setLoadingStatus((prev) => ({ ...prev, lead: "complete" }));
-
-          // Clear polling if it was active
-          if (pollingInterval) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-          }
-        }
-
-        setLeadMetrics(result.data || null);
-        setIsLoading(false);
-      } else {
-        console.error("Failed to fetch lead metrics:", response.statusText);
-        setLoadingStatus((prev) => ({ ...prev, lead: "error" }));
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error fetching lead metrics:", error);
-      setLoadingStatus((prev) => ({ ...prev, lead: "error" }));
-      setIsLoading(false);
-    }
-  }, [pollingInterval]);
-
-  // Function to fetch epinet metrics with status handling
-  const fetchEpinetMetrics = useCallback(async () => {
-    try {
-      const contentItems = Object.values($contentMap);
-      const epinets = contentItems.filter((item: any) => item.type === "Epinet");
-
-      if (epinets.length > 0) {
-        const firstEpinetId = epinets[0].id;
-        const response = await fetch(
-          `/api/turso/getEpinetMetrics?id=${firstEpinetId}&duration=${$analyticsDuration}`
-        );
-
-        if (response.ok) {
-          const result = await response.json();
-
-          // Check if the result contains a status field
-          if (result.data && typeof result.data === "object" && "status" in result.data) {
-            setLoadingStatus((prev) => ({ ...prev, epinet: result.data.status }));
-
-            // Even if still loading, we'll set partial data if it has nodes/links
-            if (result.data.nodes && result.data.links) {
-              setEpinetData(result.data);
-            }
-
-            // If status is loading, we'll use the data but keep polling
-            if (result.data.status === "loading") {
-              // Only create new polling interval if not already polling
-              if (!pollingInterval) {
-                const interval = setInterval(() => {
-                  fetchEpinetMetrics();
-                }, 5000); // Poll every 5 seconds
-                setPollingInterval(interval);
-              }
-            } else if (result.data.status === "complete") {
-              // Data is complete, clear polling
-              if (pollingInterval) {
-                clearInterval(pollingInterval);
-                setPollingInterval(null);
-              }
-            }
-          } else if (
-            result.data &&
-            Array.isArray(result.data.nodes) &&
-            Array.isArray(result.data.links) &&
-            result.data.nodes.length > 0 &&
-            result.data.links.length > 0
-          ) {
-            // Valid data with non-empty nodes and links
-            setEpinetData(result.data);
-            setLoadingStatus((prev) => ({ ...prev, epinet: "complete" }));
-
-            // Clear polling if it was active
-            if (pollingInterval) {
-              clearInterval(pollingInterval);
-              setPollingInterval(null);
-            }
-          } else {
-            // We have data but it's empty or invalid format - don't treat as error
-            // because it's a valid state (no user journey data yet)
-            // OR more likely it's still priming the cache
-            setEpinetData(null);
-            setLoadingStatus((prev) => ({ ...prev, epinet: "complete" }));
-          }
-        } else {
-          console.error("Failed to fetch epinet metrics:", response.statusText);
-          setLoadingStatus((prev) => ({ ...prev, epinet: "error" }));
-        }
-      } else {
-        console.warn("No epinets found in content map");
-        setEpinetData(null);
-        setLoadingStatus((prev) => ({ ...prev, epinet: "complete" })); // Not an error, just no data
-      }
-    } catch (error) {
-      console.error("Error fetching epinet metrics:", error);
-      setEpinetData(null);
-      setLoadingStatus((prev) => ({ ...prev, epinet: "error" }));
-    } finally {
-      setIsEpinetLoading(false);
-    }
-  }, [$contentMap, $analyticsDuration, pollingInterval]);
-
-  useEffect(() => {
-    setIsClient(true);
-
-    // Initial data fetching
-    fetchLeadMetrics();
-    fetchEpinetMetrics();
-
-    // Cleanup polling interval on unmount
-    return () => {
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-    };
-  }, [$analyticsDuration]);
 
   const downloadLeadsCSV = async () => {
     if (isDownloading) return;
@@ -461,39 +271,57 @@ export default function PageViewStats() {
 
   if (!isClient) return null;
 
-  if (isLoading && isEpinetLoading) return <LoadingPlaceholder />;
+  if (isLoading && (!dashboard || !leadMetrics)) return <LoadingPlaceholder />;
+
+  const stats: Stat[] = [
+    {
+      name: "Last 24 Hours",
+      events: dashboard?.stats?.daily ?? 0,
+      period: "24h",
+    },
+    {
+      name: "Past 7 Days",
+      events: dashboard?.stats?.weekly ?? 0,
+      period: "7d",
+    },
+    {
+      name: "Past 28 Days",
+      events: dashboard?.stats?.monthly ?? 0,
+      period: "28d",
+    },
+  ];
 
   return (
     <div className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
         <h3 className="font-bold font-action text-xl mb-4">
           Analytics Dashboard
-          {(loadingStatus.lead === "loading" || loadingStatus.epinet === "loading") && (
+          {status === "loading" || status === "refreshing" ? (
             <span className="ml-2 text-sm font-normal text-gray-500">
               (Loading data in background...)
             </span>
-          )}
+          ) : null}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
-            if (loadingStatus.lead === "loading" || !leadMetrics) {
+            if (status === "loading" && !dashboard) {
               return <StatsSkeleton key={item.period} name={item.name} />;
             }
 
             const period = item.period;
-            const firstTimeValue = leadMetrics[
-              `first_time_${period}` as keyof LeadMetrics
-            ] as number;
-            const returningValue = leadMetrics[
-              `returning_${period}` as keyof LeadMetrics
-            ] as number;
-            const firstTimePercentage = leadMetrics[
-              `first_time_${period}_percentage` as keyof LeadMetrics
-            ] as number;
-            const returningPercentage = leadMetrics[
-              `returning_${period}_percentage` as keyof LeadMetrics
-            ] as number;
+            const firstTimeValue =
+              (leadMetrics?.[`first_time_${period}` as keyof typeof leadMetrics] as number) ?? 0;
+            const returningValue =
+              (leadMetrics?.[`returning_${period}` as keyof typeof leadMetrics] as number) ?? 0;
+            const firstTimePercentage =
+              (leadMetrics?.[
+                `first_time_${period}_percentage` as keyof typeof leadMetrics
+              ] as number) ?? 0;
+            const returningPercentage =
+              (leadMetrics?.[
+                `returning_${period}_percentage` as keyof typeof leadMetrics
+              ] as number) ?? 0;
 
             return (
               <div
@@ -554,7 +382,7 @@ export default function PageViewStats() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Visitors panel with skeleton loader if loading */}
-          {loadingStatus.lead === "loading" ? (
+          {status === "loading" && !leadMetrics ? (
             <VisitorsSkeleton />
           ) : (
             <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
@@ -569,20 +397,20 @@ export default function PageViewStats() {
           )}
 
           {/* Leads panel with skeleton loader if loading */}
-          {loadingStatus.lead === "loading" || !leadMetrics ? (
+          {status === "loading" && !leadMetrics ? (
             <LeadMetricsSkeleton />
           ) : (
             <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
               <div className="flex justify-between items-start">
                 <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
-                {leadMetrics.total_leads > 0 && (
+                {leadMetrics && leadMetrics.total_leads > 0 && (
                   <button
                     onClick={downloadLeadsCSV}
-                    disabled={isDemoMode || isDownloading}
-                    title={isDemoMode ? `Not so fast!` : `Download leads report`}
+                    disabled={$isDemoMode || isDownloading}
+                    title={$isDemoMode ? `Not so fast!` : `Download leads report`}
                     style={{
-                      textDecoration: isDemoMode ? "line-through" : "none",
-                      cursor: isDemoMode ? "not-allowed" : "pointer",
+                      textDecoration: $isDemoMode ? "line-through" : "none",
+                      cursor: $isDemoMode ? "not-allowed" : "pointer",
                     }}
                     className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"
                   >
@@ -593,7 +421,9 @@ export default function PageViewStats() {
               </div>
               <dd className="mt-2">
                 <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                  {leadMetrics.total_leads === 0 ? "-" : formatNumber(leadMetrics.total_leads)}
+                  {leadMetrics?.total_leads === 0
+                    ? "-"
+                    : formatNumber(leadMetrics?.total_leads || 0)}
                 </div>
                 <div className="text-sm text-gray-600 mt-1">
                   Registered leads (emails collected)
@@ -605,9 +435,27 @@ export default function PageViewStats() {
 
         <div className="p-4 motion-safe:animate-fadeInUp">
           <DurationSelector />
-          <DashboardActivity />
 
-          {loadingStatus.epinet === "loading" &&
+          {/* Dashboard Activity Chart */}
+          {dashboard && dashboard.line && dashboard.line.length > 0 ? (
+            <DashboardActivity />
+          ) : (
+            <div className="h-64 bg-gray-100 rounded-lg w-full mb-6 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                {status === "loading" ? (
+                  <div className="flex flex-col items-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                    <p className="mt-4">Loading activity data...</p>
+                  </div>
+                ) : (
+                  "No activity data available yet"
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Epinet Sankey Diagram */}
+          {status === "loading" &&
           (!epinetData ||
             !epinetData.nodes ||
             !epinetData.links ||
@@ -621,7 +469,7 @@ export default function PageViewStats() {
                 </div>
               </div>
             </div>
-          ) : loadingStatus.epinet === "error" ? (
+          ) : error ? (
             <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-red-100 mt-12">
               <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
                 There was an error loading the user journey data. Please try refreshing the page.
@@ -640,11 +488,11 @@ export default function PageViewStats() {
               }
             >
               <div className="relative">
-                {loadingStatus.epinet === "loading" && (
+                {status === "loading" || status === "refreshing" ? (
                   <div className="absolute top-0 right-0 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-sm">
                     Updating...
                   </div>
-                )}
+                ) : null}
                 <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
                 <DurationSelector />
               </div>
