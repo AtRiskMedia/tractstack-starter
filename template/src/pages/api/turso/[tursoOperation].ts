@@ -10,7 +10,6 @@ import { updateProfile } from "@/utils/db/api/update";
 import { executeQueries } from "@/utils/db/api/executeQueries";
 import { getAllFiles } from "@/utils/db/api/getAllFiles";
 import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
-import { getAnalytics } from "@/utils/db/api/getAnalytics";
 import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode";
 import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes";
 import { getAllMenus } from "@/utils/db/api/getAllMenus";
@@ -48,6 +47,7 @@ import {
 } from "@/utils/events/dashboardAnalytics";
 import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
+import { getPanelAnalytics } from "@/utils/db/api/panelAnalytics";
 import {
   formatHourKey,
   createEmptyLeadMetrics,
@@ -79,9 +79,6 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "executeQueries":
         result = await executeQueries(body, context);
-        break;
-      case "analytics":
-        result = await getAnalytics(body.id, body.type, body.duration, context);
         break;
       case "upsertFile":
         result = await upsertFile(body, context);
@@ -360,6 +357,24 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             }
           );
         }
+      }
+
+      case "getPanelAnalytics": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        const type = url.searchParams.get("type") as "pane" | "storyfragment";
+        const duration = url.searchParams.get("duration") || "weekly";
+
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+
+        if (!type || (type !== "pane" && type !== "storyfragment")) {
+          throw new Error("Invalid or missing parameter: type (must be 'pane' or 'storyfragment')");
+        }
+
+        result = await getPanelAnalytics(id, type, duration, context);
+        break;
       }
 
       case "getAllFiles":

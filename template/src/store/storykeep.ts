@@ -14,6 +14,7 @@ import type {
   StoryfragmentAnalytics,
   ArtpacksStore,
   LeadMetrics,
+  ProcessedAnalytics,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -27,7 +28,27 @@ export const isDemoModeStore = atom<boolean>(false);
 export const keyboardAccessible = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
-export const storedDashboardAnalytics = map<DashboardAnalytics>();
+export interface PanelAnalyticsCache {
+  id: string | null;
+  type: "pane" | "storyfragment" | null;
+  data: {
+    daily: ProcessedAnalytics | null;
+    weekly: ProcessedAnalytics | null;
+    monthly: ProcessedAnalytics | null;
+  };
+  lastFetched: number | null;
+}
+
+export const panelAnalyticsCache = atom<PanelAnalyticsCache>({
+  id: null,
+  type: null,
+  data: {
+    daily: null,
+    weekly: null,
+    monthly: null,
+  },
+  lastFetched: null,
+});
 export const leadMetricsStore = map<LeadMetrics>({
   total_visits: 0,
   total_leads: 0,

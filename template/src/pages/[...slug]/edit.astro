@@ -11,7 +11,7 @@ import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar";
 import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode";
 import SettingsPanel from "@/components/storykeep/controls/SettingsPanel";
 import StoryKeep from "@/layouts/StoryKeep.astro";
-import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
+import PullPanelAnalytics from "@/components/storykeep/controls/state/PullPanelAnalytics.tsx";
 import { ulid } from "ulid";
 import { getTractStackNode } from "@/utils/db/api/getTractStackNode";
 import HudDisplay from "@/components/storykeep/HudDisplay";
@@ -116,7 +116,7 @@ if (!storyfragmentNode) {
       isContext={false}
       client:only="react"
     />
-    <PullAnalytics id={storyfragmentNode.id} client:only="react" />
+    <PullPanelAnalytics id={storyfragmentNode.id} client:only="react" />
   </header>
   <div id="headerSpacer"></div>
 
