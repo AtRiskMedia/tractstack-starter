@@ -1339,6 +1339,7 @@ export interface HourlyContentData {
   anonymousVisitors: Set<string>; // visitors without lead_id
   actions: number;
   eventCounts: Record<string, number>;
+  object_type?: string;
 }
 
 export interface HourlySiteData {

@@ -435,6 +435,10 @@ async function processTimeRange(
     args: [startTime.toISOString(), endTime.toISOString()],
   });
   if (VERBOSE) console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
+  if (VERBOSE) {
+    console.log(`[DEBUG] Content query found ${contentRows.length} rows`);
+    console.log(`[DEBUG] Sample content rows:`, contentRows);
+  }
 
   // Process content rows
   for (const row of contentRows) {

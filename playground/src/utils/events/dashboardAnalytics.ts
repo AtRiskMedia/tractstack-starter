@@ -47,6 +47,18 @@ export async function computeDashboardAnalytics(
         }, new Set())
       ).join(", ")}`
     );
+    console.log(
+      "[DEBUG] All event types in raw data:",
+      Array.from(
+        Object.keys(tenantData.siteData).reduce((set, hourKey) => {
+          const hourData = tenantData.siteData[hourKey];
+          if (hourData?.eventCounts) {
+            Object.keys(hourData.eventCounts).forEach((type) => set.add(type));
+          }
+          return set;
+        }, new Set())
+      )
+    );
   }
 
   return {
@@ -63,6 +75,15 @@ export async function computeDashboardAnalytics(
 function computeAllEvents(tenantData: Record<string, any>, hourKeys: string[]): number {
   let total = 0;
 
+  // Count events from content data
+  for (const contentId of Object.keys(tenantData.contentData)) {
+    for (const hourKey of hourKeys) {
+      const hourData = tenantData.contentData[contentId][hourKey];
+      if (hourData) {
+        total += hourData.actions || 0;
+      }
+    }
+  }
   // Count events from site data
   for (const hourKey of hourKeys) {
     const hourData = tenantData.siteData[hourKey];
