@@ -24,9 +24,9 @@ export async function computeDashboardAnalytics(
   const hoursToAnalyze = duration === "daily" ? 24 : duration === "weekly" ? 7 * 24 : 28 * 24;
   const hourKeys = getHourKeysForTimeRange(hoursToAnalyze);
   const stats = {
-    daily: computePageviewEvents(tenantData.siteData, getHourKeysForTimeRange(24)),
-    weekly: computePageviewEvents(tenantData.siteData, getHourKeysForTimeRange(7 * 24)),
-    monthly: computePageviewEvents(tenantData.siteData, getHourKeysForTimeRange(28 * 24)),
+    daily: computeAllEvents(tenantData, getHourKeysForTimeRange(24)),
+    weekly: computeAllEvents(tenantData, getHourKeysForTimeRange(7 * 24)),
+    monthly: computeAllEvents(tenantData, getHourKeysForTimeRange(28 * 24)),
   };
   const line = computeLineData(tenantData.siteData, hourKeys, duration);
   const hot_content = computeHotContent(tenantData.contentData, hourKeys);
@@ -39,15 +39,31 @@ export async function computeDashboardAnalytics(
 }
 
 /**
- * Computes the total PAGEVIEWED events for a given time period
+ * Computes the total events for a given time period, including all event types
+ * from both site data and content data
  */
-function computePageviewEvents(siteData: Record<string, any>, hourKeys: string[]): number {
+function computeAllEvents(tenantData: Record<string, any>, hourKeys: string[]): number {
   let total = 0;
 
+  // Count events from site data
   for (const hourKey of hourKeys) {
-    const hourData = siteData[hourKey];
-    if (hourData && hourData.eventCounts && hourData.eventCounts["PAGEVIEWED"]) {
-      total += hourData.eventCounts["PAGEVIEWED"];
+    const hourData = tenantData.siteData[hourKey];
+    if (hourData && hourData.eventCounts) {
+      // Count all event types, not just PAGEVIEWED
+      Object.values(hourData.eventCounts).forEach((count) => {
+        total += Number(count);
+      });
+    }
+  }
+
+  // Count events from content data
+  for (const contentId of Object.keys(tenantData.contentData)) {
+    for (const hourKey of hourKeys) {
+      const hourData = tenantData.contentData[contentId][hourKey];
+      if (hourData) {
+        // Add actions from content-specific data
+        total += hourData.actions || 0;
+      }
     }
   }
 

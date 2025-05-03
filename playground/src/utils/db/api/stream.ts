@@ -1,6 +1,5 @@
 import { tursoClient } from "../client";
 import { processEventStream } from "@/utils/events/processEventStream.ts";
-import { updateAnalyticsWithEvent } from "@/utils/events/analyticsRealtime.ts";
 import type { APIContext, EventPayload, EventStream, Referrer } from "@/types.ts";
 
 export async function streamEvents(
@@ -18,7 +17,7 @@ export async function streamEvents(
     throw new Error("No database connection");
   }
 
-  const { fingerprint: fingerprintId, visitId, events, referrer, isKnownLead } = payload;
+  const { fingerprint: fingerprintId, visitId, events, referrer } = payload;
 
   if (!fingerprintId || !visitId) {
     throw new Error("Visit not registered!");
@@ -38,7 +37,6 @@ export async function streamEvents(
   };
 
   await processEventStream(client, eventPayload);
-  updateAnalyticsWithEvent(eventPayload, !!isKnownLead, context);
 
   return {
     message: "Events processed successfully",

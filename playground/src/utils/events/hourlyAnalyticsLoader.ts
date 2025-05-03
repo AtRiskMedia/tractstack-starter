@@ -104,11 +104,11 @@ export async function loadHourlyAnalytics(
 
     if (currentHourOnly) {
       // For partial updates, only get the current hour
-      const currentHourKey = formatHourKey(new Date());
+      const currentHourKey = formatHourKey(new Date(Date.now()));
       hourKeys = [currentHourKey];
 
       const hourParts = currentHourKey.split("-").map(Number);
-      startTime = new Date(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]);
+      startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
       endTime = new Date(startTime);
       endTime.setHours(endTime.getHours() + 1);
     } else {
@@ -123,10 +123,7 @@ export async function loadHourlyAnalytics(
       const lastHourParts = hourKeys[0].split("-").map(Number);
 
       startTime = new Date(
-        firstHourParts[0],
-        firstHourParts[1] - 1,
-        firstHourParts[2],
-        firstHourParts[3]
+        Date.UTC(firstHourParts[0], firstHourParts[1] - 1, firstHourParts[2], firstHourParts[3])
       );
 
       endTime = new Date(
@@ -209,7 +206,7 @@ export async function loadHourlyAnalytics(
       await processTimeRange(hourKeys, contentData, siteData, client, startTime, endTime);
     } else {
       // Split processing to handle current hour separately for more frequent updates
-      const currentHourKey = formatHourKey(new Date());
+      const currentHourKey = formatHourKey(new Date(Date.now()));
       const currentHourKeys = [currentHourKey];
       const historicalHourKeys = hourKeys.filter((key) => key !== currentHourKey);
 
@@ -217,10 +214,12 @@ export async function loadHourlyAnalytics(
       if (hourKeys.includes(currentHourKey)) {
         const currentHourParts = currentHourKey.split("-").map(Number);
         const currentHourStart = new Date(
-          currentHourParts[0],
-          currentHourParts[1] - 1,
-          currentHourParts[2],
-          currentHourParts[3]
+          Date.UTC(
+            currentHourParts[0],
+            currentHourParts[1] - 1,
+            currentHourParts[2],
+            currentHourParts[3]
+          )
         );
         const currentHourEnd = new Date(currentHourStart);
         currentHourEnd.setHours(currentHourEnd.getHours() + 1);
@@ -265,7 +264,7 @@ export async function loadHourlyAnalytics(
 
     // Trim old hourly bins that are outside our time window
     if (!currentHourOnly) {
-      const oldestAllowedDate = new Date();
+      const oldestAllowedDate = new Date(Date.now());
       oldestAllowedDate.setHours(oldestAllowedDate.getHours() - MAX_ANALYTICS_HOURS);
 
       Object.keys(contentData).forEach((contentId) => {
@@ -297,7 +296,7 @@ export async function loadHourlyAnalytics(
     currentStore.data[tenantId] = {
       contentData,
       siteData,
-      lastFullHour: formatHourKey(new Date()),
+      lastFullHour: formatHourKey(new Date(Date.now())),
       lastUpdated: Date.now(),
       totalLeads,
       lastActivity,
@@ -476,7 +475,7 @@ export async function refreshHourlyAnalytics(context?: APIContext): Promise<void
   const tenantId = context?.locals?.tenant?.id || "default";
   const currentStore = hourlyAnalyticsStore.get();
   const lastFullHour = currentStore.data[tenantId]?.lastFullHour || "";
-  const currentHour = formatHourKey(new Date());
+  const currentHour = formatHourKey(new Date(Date.now()));
 
   if (lastFullHour === currentHour) {
     // Already updated this hour, just refresh current hour

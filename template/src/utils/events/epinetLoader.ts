@@ -219,7 +219,7 @@ export async function loadHourlyEpinetData(
     let startTime: Date, endTime: Date;
 
     if (currentHourOnly) {
-      const currentHourKey = formatHourKey(new Date());
+      const currentHourKey = formatHourKey(new Date(Date.now()));
       hourKeys = [currentHourKey];
       const hourParts = currentHourKey.split("-").map(Number);
       startTime = new Date(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]);
@@ -333,14 +333,14 @@ export async function loadHourlyEpinetData(
 
     // Trim old hourly bins that are outside our time window
     if (!currentHourOnly) {
-      const oldestAllowedDate = new Date();
-      oldestAllowedDate.setHours(oldestAllowedDate.getHours() - MAX_ANALYTICS_HOURS);
+      const oldestAllowedDate = new Date(Date.now());
+      oldestAllowedDate.setUTCHours(oldestAllowedDate.getUTCHours() - MAX_ANALYTICS_HOURS);
       trimOldData(epinetData, oldestAllowedDate);
     }
 
     // Final store update
     currentStore.data[tenantId] = epinetData;
-    currentStore.lastFullHour[tenantId] = formatHourKey(new Date());
+    currentStore.lastFullHour[tenantId] = formatHourKey(new Date(Date.now()));
     currentStore.lastUpdateTime[tenantId] = Date.now();
     hourlyEpinetStore.set(currentStore);
   } catch (error) {

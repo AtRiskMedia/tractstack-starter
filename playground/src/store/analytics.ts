@@ -91,7 +91,7 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
     return false;
   }
 
-  const currentHour = formatHourKey(new Date());
+  const currentHour = formatHourKey(new Date(Date.now()));
   const timeSinceUpdate = Date.now() - tenantData.lastUpdated;
 
   // Cache is valid if we have data for prior hours, even if TTL is exceeded
@@ -126,7 +126,7 @@ export function isEpinetCacheValid(tenantId: string = "default"): boolean {
 
   const lastHourKey = store.lastFullHour[tenantId];
   const lastUpdateTime = store.lastUpdateTime[tenantId];
-  const currentHour = formatHourKey(new Date());
+  const currentHour = formatHourKey(new Date(Date.now()));
 
   if (lastHourKey !== currentHour || Date.now() - lastUpdateTime >= EPINETS_CACHE_TTL) {
     if (VERBOSE)
@@ -201,7 +201,7 @@ export function createEmptyStoryfragmentAnalytics(id: string): StoryfragmentAnal
 
 export function getHourKeysForTimeRange(hours: number): string[] {
   const keys = [];
-  const now = new Date();
+  const now = new Date(Date.now());
   for (let i = 0; i < hours; i++) {
     const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
     const key = formatHourKey(hourDate);

@@ -105,7 +105,7 @@ function getPaneQueries(id: string, dateFilter: string, limit: number, intervalE
         a.object_id,
         a.object_type,
         a.verb,
-        CAST((JULIANDAY('now') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
+        CAST((JULIANDAY('now', 'utc') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
         COUNT(a.id) AS total_count
       FROM actions a
       WHERE a.object_id = ? 
@@ -161,7 +161,7 @@ function getStoryFragmentQueries(
         a.object_id,
         a.object_type,
         a.verb,
-        CAST((JULIANDAY('now') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
+        CAST((JULIANDAY('now', 'utc') - JULIANDAY(a.created_at)) * CASE ? WHEN 'hour' THEN 24 ELSE 1 END AS INTEGER) AS time_interval,
         COUNT(a.id) AS total_count
       FROM actions a
       WHERE (
