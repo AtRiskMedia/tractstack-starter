@@ -13,15 +13,26 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [showMostActive, setShowMostActive] = useState(false);
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
   const itemsPerPage = 16;
 
   const analytics = useStore(analyticsStore);
   const dashboard = analytics.dashboard;
+  const hotContent = dashboard?.hot_content || [];
   const $homeSlug = useStore(homeSlugStore);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Monitor analytics loading state
+  useEffect(() => {
+    if (analytics.status === "loading" || analytics.status === "refreshing") {
+      setIsAnalyticsLoading(true);
+    } else {
+      setIsAnalyticsLoading(false);
+    }
+  }, [analytics.status]);
 
   useEffect(() => {
     setCurrentPage(1); // Reset pagination when filters change
@@ -38,11 +49,9 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
       return matchesType && matchesQuery;
     })
     .sort((a, b) => {
-      if (showMostActive && dashboard?.hot_content) {
-        const aEvents =
-          dashboard.hot_content.find((h: HotItem) => h.id === a.id)?.total_events || 0;
-        const bEvents =
-          dashboard.hot_content.find((h: HotItem) => h.id === b.id)?.total_events || 0;
+      if (showMostActive && hotContent && hotContent.length > 0) {
+        const aEvents = hotContent.find((h: HotItem) => h.id === a.id)?.total_events || 0;
+        const bEvents = hotContent.find((h: HotItem) => h.id === b.id)?.total_events || 0;
         return bEvents - aEvents;
       }
       return 0;
@@ -67,6 +76,12 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     const basePath =
       page.type === "Pane" && page.isContext ? `/context/${page.slug}` : `/${page.slug}`;
     return isEdit ? `${basePath}/edit` : basePath;
+  };
+
+  // Helper function for getting the event count with safety checks
+  const getEventCount = (pageId: string): number => {
+    if (!hotContent || hotContent.length === 0) return 0;
+    return hotContent.find((h: HotItem) => h.id === pageId)?.total_events || 0;
   };
 
   return (
@@ -136,8 +151,8 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
               checked={showMostActive}
               onChange={setShowMostActive}
               className={classNames(
-                showMostActive ? "bg-myblue" : "bg-gray-200",
-                "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue"
+                showMostActive ? "bg-cyan-600" : "bg-gray-200",
+                "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600"
               )}
             >
               <span
@@ -158,8 +173,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {paginatedPages.map((page) => {
-              const events =
-                dashboard?.hot_content?.find((h: HotItem) => h.id === page.id)?.total_events || 0;
+              const events = getEventCount(page.id);
 
               return (
                 <div
@@ -183,16 +197,24 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       {page.type === "Pane" && page.isContext && " (Context Page)"}
                     </div>
                     {page.slug === $homeSlug && (
-                      <span className="inline-flex w-fit items-center rounded-full bg-myblue px-1 py-0.5 text-xs font-bold text-slate-100">
+                      <span className="inline-flex w-fit items-center rounded-full bg-cyan-600 px-1 py-0.5 text-xs font-bold text-slate-100">
                         Home
                       </span>
                     )}
                     <div className="text-xs text-mydarkgrey flex justify-between items-center mt-1">
-                      <span>{events} events</span>
+                      <span>
+                        {isAnalyticsLoading ? (
+                          <span className="inline-flex items-center">
+                            <span className="animate-pulse text-cyan-600">Loading events...</span>
+                          </span>
+                        ) : (
+                          `${events} events`
+                        )}
+                      </span>
                       <span className="flex space-x-1">
                         <a
                           href={getContentUrl(page)}
-                          className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                          className="pl-2 text-cyan-600 hover:text-myorange text-lg underline"
                           title="Visit this Page"
                         >
                           Visit
@@ -200,7 +222,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                         {` `}
                         <a
                           href={getContentUrl(page, true)}
-                          className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                          className="pl-2 text-cyan-600 hover:text-myorange text-lg underline"
                           title="Edit this Page"
                         >
                           Edit
@@ -222,7 +244,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                   className={classNames(
                     "px-3 py-1 rounded-md text-sm",
                     currentPage === page
-                      ? "bg-myblue text-white"
+                      ? "bg-cyan-600 text-white"
                       : "bg-white text-mydarkgrey hover:bg-myorange/10"
                   )}
                 >
