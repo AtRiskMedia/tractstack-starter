@@ -2,41 +2,60 @@
 import type { APIRoute } from "astro";
 import type { APIContext } from "@/types";
 import { withTenantContext } from "@/utils/api/middleware";
-import { dashboardAnalytics } from "@/utils/db/api/dashboardAnalytics.ts";
-import { streamEvents } from "@/utils/db/api/stream.ts";
-import { syncVisit } from "@/utils/db/api/syncVisit.ts";
-import { unlockProfile } from "@/utils/db/api/unlock.ts";
-import { createProfile } from "@/utils/db/api/create.ts";
-import { updateProfile } from "@/utils/db/api/update.ts";
-import { executeQueries } from "@/utils/db/api/executeQueries.ts";
-import { getAllFiles } from "@/utils/db/api/getAllFiles.ts";
-import { getResourceNodes } from "@/utils/db/api/getResourceNodes.ts";
-import { getAnalytics } from "@/utils/db/api/getAnalytics.ts";
-import { getLeadMetrics } from "@/utils/db/api/getLeadMetrics.ts";
-import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode.ts";
-import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes.ts";
-import { getAllMenus } from "@/utils/db/api/getAllMenus.ts";
-import { upsertBelief } from "@/utils/db/api/upsertBelief.ts";
-import { upsertFile } from "@/utils/db/api/upsertFile.ts";
-import { upsertMenu } from "@/utils/db/api/upsertMenu.ts";
-import { upsertPane } from "@/utils/db/api/upsertPane.ts";
-import { upsertStoryFragment } from "@/utils/db/api/upsertStoryFragment.ts";
-import { upsertResource } from "@/utils/db/api/upsertResource.ts";
-import { upsertTractStack } from "@/utils/db/api/upsertTractStack.ts";
-import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode.ts";
-import { upsertFileNode } from "@/utils/db/api/upsertFileNode.ts";
-import { upsertMenuNode } from "@/utils/db/api/upsertMenuNode.ts";
-import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode.ts";
-import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode.ts";
-import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode.ts";
-import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode.ts";
-import { initializeContent } from "@/utils/db/turso.ts";
-import { getAllTopics } from "@/utils/db/api/getAllTopics.ts";
-import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment.ts";
-import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment.ts";
-import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment.ts";
-import { upsertTopic } from "@/utils/db/api/upsertTopic.ts";
-import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails.ts";
+import { streamEvents } from "@/utils/db/api/stream";
+import { syncVisit } from "@/utils/db/api/syncVisit";
+import { unlockProfile } from "@/utils/db/api/unlock";
+import { createProfile } from "@/utils/db/api/create";
+import { updateProfile } from "@/utils/db/api/update";
+import { executeQueries } from "@/utils/db/api/executeQueries";
+import { getAllFiles } from "@/utils/db/api/getAllFiles";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import { getPaneTemplateNode } from "@/utils/db/api/getPaneTemplateNode";
+import { getAllBeliefNodes } from "@/utils/db/api/getAllBeliefNodes";
+import { getAllMenus } from "@/utils/db/api/getAllMenus";
+import { upsertBelief } from "@/utils/db/api/upsertBelief";
+import { upsertFile } from "@/utils/db/api/upsertFile";
+import { upsertMenu } from "@/utils/db/api/upsertMenu";
+import { upsertPane } from "@/utils/db/api/upsertPane";
+import { upsertStoryFragment } from "@/utils/db/api/upsertStoryFragment";
+import { upsertResource } from "@/utils/db/api/upsertResource";
+import { upsertTractStack } from "@/utils/db/api/upsertTractStack";
+import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode";
+import { upsertFileNode } from "@/utils/db/api/upsertFileNode";
+import { upsertMenuNode } from "@/utils/db/api/upsertMenuNode";
+import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode";
+import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode";
+import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode";
+import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode";
+import { initializeContent, getFullContentMap } from "@/utils/db/turso";
+import { getAllTopics } from "@/utils/db/api/getAllTopics";
+import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
+import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment";
+import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
+import { upsertTopic } from "@/utils/db/api/upsertTopic";
+import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
+import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
+import { getEpinetMetrics } from "@/utils/events/epinetAnalytics";
+import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
+import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
+import { getEpinetById } from "@/utils/db/api/getEpinetById";
+import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
+import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
+import {
+  computeDashboardAnalytics,
+  createEmptyDashboardAnalytics,
+} from "@/utils/events/dashboardAnalytics";
+import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
+import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
+import { getPanelAnalytics } from "@/utils/db/api/panelAnalytics";
+import {
+  formatHourKey,
+  createEmptyLeadMetrics,
+  hourlyAnalyticsStore,
+  hourlyEpinetStore,
+  isEpinetCacheValid,
+  isAnalyticsCacheValid,
+} from "@/store/analytics";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -60,12 +79,6 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "executeQueries":
         result = await executeQueries(body, context);
-        break;
-      case "analytics":
-        result = await getAnalytics(body.id, body.type, body.duration, context);
-        break;
-      case "dashboardAnalytics":
-        result = await dashboardAnalytics(body, context);
         break;
       case "upsertFile":
         result = await upsertFile(body, context);
@@ -114,6 +127,12 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "unlock":
         result = await unlockProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
+        break;
+      case "upsertEpinet":
+        result = await upsertEpinet(body, context);
+        break;
+      case "deleteEpinet":
+        result = await deleteEpinet(body.id, context);
         break;
       case "create":
         result = await createProfile(body, PUBLIC_CONCIERGE_AUTH_SECRET, context);
@@ -184,9 +203,180 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         result = await getResourceNodes({ slugs, categories }, context);
         break;
       }
-      case "getLeadMetrics":
-        result = await getLeadMetrics(context);
+
+      case "getAllAnalytics": {
+        const url = new URL(context.request.url);
+        const durationParam = url.searchParams.get("duration") || "weekly";
+        const duration = ["daily", "weekly", "monthly"].includes(durationParam)
+          ? (durationParam as "daily" | "weekly" | "monthly")
+          : "weekly";
+
+        try {
+          const tenantId = context?.locals?.tenant?.id || "default";
+          const isAnalyticsValid = isAnalyticsCacheValid(tenantId);
+          const isEpinetValid = isEpinetCacheValid(tenantId);
+          const analyticStore = hourlyAnalyticsStore.get();
+          const epinetStore = hourlyEpinetStore.get();
+          const currentHour = formatHourKey(new Date());
+          const tenantAnalyticsData = analyticStore.data[tenantId];
+          const tenantEpinetData = epinetStore.data[tenantId];
+
+          // Find the first promoted epinet ID for epinet data
+          const contentItems = await getFullContentMap(context);
+          const epinets = contentItems.filter(
+            (item: any) => item.type === "Epinet" && item.promoted
+          );
+          const epinetId = epinets.length > 0 ? epinets[0].id : null;
+
+          // Check if all data is fresh and complete
+          if (
+            isAnalyticsValid &&
+            tenantAnalyticsData &&
+            tenantAnalyticsData.lastFullHour === currentHour &&
+            isEpinetValid &&
+            epinetId &&
+            tenantEpinetData &&
+            tenantEpinetData[epinetId] &&
+            epinetStore.lastFullHour[tenantId] === currentHour
+          ) {
+            // All data is fresh
+            const [dashboardData, leadMetrics, epinetData] = await Promise.all([
+              computeDashboardAnalytics(duration, context),
+              computeLeadMetrics(context),
+              epinetId ? getEpinetMetrics(epinetId, duration, context) : null,
+            ]);
+
+            return new Response(
+              JSON.stringify({
+                success: true,
+                data: {
+                  dashboard: dashboardData,
+                  leads: leadMetrics,
+                  epinet: epinetData,
+                },
+                status: "complete",
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          // Refresh data in the background if needed
+          const needsAnalyticsRefresh =
+            !isAnalyticsValid ||
+            !tenantAnalyticsData ||
+            tenantAnalyticsData.lastFullHour !== currentHour;
+
+          const needsEpinetRefresh =
+            !isEpinetValid ||
+            !tenantEpinetData ||
+            !epinetId ||
+            !tenantEpinetData[epinetId] ||
+            epinetStore.lastFullHour[tenantId] !== currentHour;
+
+          const hoursToLoad =
+            tenantAnalyticsData && Object.keys(tenantAnalyticsData.contentData).length > 0
+              ? 1
+              : 672;
+          const epinetHoursToLoad = tenantEpinetData && Object.keys(tenantEpinetData).length > 0;
+
+          // Start background processing
+          const processingPromises = [];
+
+          if (needsAnalyticsRefresh) {
+            processingPromises.push(
+              loadHourlyAnalytics(hoursToLoad, context).catch((err) =>
+                console.error("Async analytics processing error:", err)
+              )
+            );
+          }
+
+          if (needsEpinetRefresh && epinetId) {
+            processingPromises.push(
+              loadHourlyEpinetData(672, context, epinetHoursToLoad).catch((err) =>
+                console.error("Async epinet processing error:", err)
+              )
+            );
+          }
+
+          // Start processing in background
+          Promise.all(processingPromises).catch((err) =>
+            console.error("Error in background processing:", err)
+          );
+
+          const [dashboardData, leadMetrics, epinetData] = await Promise.all([
+            tenantAnalyticsData
+              ? computeDashboardAnalytics(duration, context)
+              : createEmptyDashboardAnalytics(),
+            tenantAnalyticsData ? computeLeadMetrics(context) : createEmptyLeadMetrics(),
+            epinetId && tenantEpinetData && tenantEpinetData[epinetId]
+              ? getEpinetMetrics(epinetId, duration, context)
+              : {
+                  id: epinetId || "unknown",
+                  title: "User Journey Flow (Loading...)",
+                  nodes: [],
+                  links: [],
+                },
+          ]);
+
+          const status = needsAnalyticsRefresh || needsEpinetRefresh ? "refreshing" : "complete";
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: {
+                dashboard: dashboardData,
+                leads: leadMetrics,
+                epinet: epinetData,
+              },
+              status: status,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (error) {
+          console.error("Error in getAllAnalytics:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "An unknown error occurred",
+              data: {
+                dashboard: createEmptyDashboardAnalytics(),
+                leads: createEmptyLeadMetrics(),
+                epinet: null,
+              },
+              status: "error",
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
+      case "getPanelAnalytics": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        const type = url.searchParams.get("type") as "pane" | "storyfragment";
+        const duration = url.searchParams.get("duration") || "weekly";
+
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+
+        if (!type || (type !== "pane" && type !== "storyfragment")) {
+          throw new Error("Invalid or missing parameter: type (must be 'pane' or 'storyfragment')");
+        }
+
+        result = await getPanelAnalytics(id, type, duration, context);
         break;
+      }
+
       case "getAllFiles":
         result = await getAllFiles(context);
         break;
@@ -217,9 +407,24 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         result = await getStoryFragmentDetails(storyFragmentId, context);
         break;
       }
+      case "getAllEpinets":
+        result = await getAllEpinets(context);
+        break;
+      case "getAllPromotedEpinets":
+        result = await getAllPromotedEpinets(context);
+        break;
+      case "getEpinetById": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+        result = await getEpinetById(id, context);
+        break;
+      }
       default:
         if (tursoOperation === "read") {
-          return POST(context as any); // Type assertion for simplicity
+          return POST(context as any);
         }
         throw new Error("Method not allowed");
     }

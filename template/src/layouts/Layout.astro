@@ -2,8 +2,8 @@
 import { getAPIContext } from "@/utils/api/astroContext";
 import { ViewTransitions } from "astro:transitions";
 import { joinUrlPaths } from "@/utils/common/helpers";
-import { getFullContentMap } from "@/utils/db/turso.ts";
-import type { Config, FullContentMap } from "../types";
+import { getFullContentMap } from "@/utils/db/turso";
+import type { Config, FullContentMap } from "@/types";
 
 export interface Props {
   config: Config;

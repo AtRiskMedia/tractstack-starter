@@ -13,6 +13,8 @@ import type {
   Tag,
   StoryfragmentAnalytics,
   ArtpacksStore,
+  LeadMetrics,
+  ProcessedAnalytics,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -26,7 +28,56 @@ export const isDemoModeStore = atom<boolean>(false);
 export const keyboardAccessible = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
-export const storedDashboardAnalytics = map<DashboardAnalytics>();
+export interface PanelAnalyticsCache {
+  id: string | null;
+  type: "pane" | "storyfragment" | null;
+  data: {
+    daily: ProcessedAnalytics | null;
+    weekly: ProcessedAnalytics | null;
+    monthly: ProcessedAnalytics | null;
+  };
+  lastFetched: number | null;
+}
+
+export const panelAnalyticsCache = atom<PanelAnalyticsCache>({
+  id: null,
+  type: null,
+  data: {
+    daily: null,
+    weekly: null,
+    monthly: null,
+  },
+  lastFetched: null,
+});
+export const leadMetricsStore = map<LeadMetrics>({
+  total_visits: 0,
+  total_leads: 0,
+  last_activity: "",
+  first_time_24h: 0,
+  returning_24h: 0,
+  first_time_7d: 0,
+  returning_7d: 0,
+  first_time_28d: 0,
+  returning_28d: 0,
+  first_time_24h_percentage: 0,
+  returning_24h_percentage: 0,
+  first_time_7d_percentage: 0,
+  returning_7d_percentage: 0,
+  first_time_28d_percentage: 0,
+  returning_28d_percentage: 0,
+});
+export const analyticsStore = map({
+  dashboard: null as DashboardAnalytics | null,
+  leads: null as LeadMetrics | null,
+  epinet: null as {
+    nodes: Array<{ name: string; id: string }>;
+    links: Array<{ source: number; target: number; value: number }>;
+  } | null,
+  isLoading: false,
+  status: "loading" as "loading" | "refreshing" | "complete" | "error",
+  error: null as string | null,
+  lastUpdated: null as number | null,
+});
 export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
 export const hasArtpacksStore = map<ArtpacksStore>({});
 export const tenantIdStore = atom<string>(`default`);
@@ -270,10 +321,12 @@ export const storyFragmentTopicsStore = map<{
   };
 }>({});
 
-export const storyfragmentAnalyticsStore = map<{
+export interface StoryfragmentAnalyticsStore {
   byId: Record<string, StoryfragmentAnalytics>;
   lastUpdated: number | null;
-}>({
+}
+
+export const storyfragmentAnalyticsStore = map<StoryfragmentAnalyticsStore>({
   byId: {},
   lastUpdated: null,
 });

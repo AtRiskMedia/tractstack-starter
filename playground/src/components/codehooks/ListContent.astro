@@ -1,500 +1,497 @@
 ---
-import type {
-  FullContentMap,
-  StoryFragmentContentMap,
-  CodeHookPayload,
-  StoryfragmentAnalytics,
-} from "@/types";
+import type { FullContentMap, /* StoryFragmentContentMap,*/ CodeHookPayload } from "@/types";
 
 export interface Props {
   options?: CodeHookPayload;
   contentMap: FullContentMap[];
-  storyfragmentAnalytics: StoryfragmentAnalytics[];
 }
 
-const { options, contentMap, storyfragmentAnalytics } = Astro.props;
+//const { options, contentMap } = Astro.props;
 
-// Parse the options from the CodeHookPayload
-let parsedOptions;
-try {
-  parsedOptions = JSON.parse(options?.params?.options || "{}");
-} catch (e) {
-  console.error("Invalid options", e);
-  parsedOptions = {
-    defaultMode: "recent",
-    topics: "",
-    excludedIds: "",
-    pageSize: 10,
-  };
-}
-
-const defaultMode = parsedOptions.defaultMode || "recent";
-const excludedIdsArray = parsedOptions.excludedIds ? parsedOptions.excludedIds.split(",") : [];
-const topicsArray = parsedOptions.topics ? parsedOptions.topics.split(",") : [];
-const pageSize = parsedOptions.pageSize || 10;
-
-// Filter stories based on configuration
-let filteredStories: StoryFragmentContentMap[] = [];
-
-// First apply basic validation to ensure all required properties are present
-const validPages = contentMap.filter(
-  (item): item is StoryFragmentContentMap =>
-    item.type === "StoryFragment" &&
-    typeof item.description === "string" &&
-    typeof item.thumbSrc === "string" &&
-    typeof item.thumbSrcSet === "string" &&
-    typeof item.changed === "string" &&
-    !excludedIdsArray.includes(item.id)
-);
-
-if (topicsArray.length > 0) {
-  // Filter by topics
-  filteredStories = validPages.filter(
-    (item) => item.topics && item.topics.some((topic) => topicsArray.includes(topic))
-  );
-} else {
-  // If no topics selected, show all valid story fragments
-  filteredStories = validPages;
-}
-
-// Create view data for both sorting modes
-const viewsMap = new Map();
-storyfragmentAnalytics.forEach((item) => {
-  viewsMap.set(item.id, item.total_actions);
-});
-
-// Prepare data for both sort modes
-const sortedByRecent = [...filteredStories].sort((a, b) => {
-  const dateA = a.changed ? new Date(a.changed).getTime() : 0;
-  const dateB = b.changed ? new Date(b.changed).getTime() : 0;
-  return dateB - dateA;
-});
-
-const sortedByPopular = [...filteredStories].sort((a, b) => {
-  const aViews = viewsMap.get(a.id) || 0;
-  const bViews = viewsMap.get(b.id) || 0;
-
-  if (bViews === aViews) {
-    const dateA = a.changed ? new Date(a.changed).getTime() : 0;
-    const dateB = b.changed ? new Date(b.changed).getTime() : 0;
-    return dateB - dateA;
-  }
-
-  return bViews - aViews;
-});
-
-// Choose initial stories based on default mode
-let displayStories = defaultMode === "recent" ? sortedByRecent : sortedByPopular;
-
-// Limit to pageSize items
-const initialStories = displayStories.slice(0, pageSize);
-
-// Function to format dates in a human-readable way (server-side only)
-function formatDate(dateString: string | null): string {
-  if (!dateString) return "Unknown";
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  }).format(date);
-}
+//// Parse the options from the CodeHookPayload
+//let parsedOptions;
+//try {
+//  parsedOptions = JSON.parse(options?.params?.options || "{}");
+//} catch (e) {
+//  console.error("Invalid options", e);
+//  parsedOptions = {
+//    defaultMode: "recent",
+//    topics: "",
+//    excludedIds: "",
+//    pageSize: 10,
+//  };
+//}
+//
+//const defaultMode = parsedOptions.defaultMode || "recent";
+//const excludedIdsArray = parsedOptions.excludedIds ? parsedOptions.excludedIds.split(",") : [];
+//const topicsArray = parsedOptions.topics ? parsedOptions.topics.split(",") : [];
+//const pageSize = parsedOptions.pageSize || 10;
+//
+//// Filter stories based on configuration
+//let filteredStories: StoryFragmentContentMap[] = [];
+//
+//// First apply basic validation to ensure all required properties are present
+//const validPages = contentMap.filter(
+//  (item): item is StoryFragmentContentMap =>
+//    item.type === "StoryFragment" &&
+//    typeof item.description === "string" &&
+//    typeof item.thumbSrc === "string" &&
+//    typeof item.thumbSrcSet === "string" &&
+//    typeof item.changed === "string" &&
+//    !excludedIdsArray.includes(item.id)
+//);
+//
+//if (topicsArray.length > 0) {
+//  // Filter by topics
+//  filteredStories = validPages.filter(
+//    (item) => item.topics && item.topics.some((topic) => topicsArray.includes(topic))
+//  );
+//} else {
+//  // If no topics selected, show all valid story fragments
+//  filteredStories = validPages;
+//}
+//
+//// Create view data for both sorting modes
+//const viewsMap = new Map();
+//storyfragmentAnalytics.forEach((item) => {
+//  viewsMap.set(item.id, item.total_actions);
+//});
+//
+//// Prepare data for both sort modes
+//const sortedByRecent = [...filteredStories].sort((a, b) => {
+//  const dateA = a.changed ? new Date(a.changed).getTime() : 0;
+//  const dateB = b.changed ? new Date(b.changed).getTime() : 0;
+//  return dateB - dateA;
+//});
+//
+//const sortedByPopular = [...filteredStories].sort((a, b) => {
+//  const aViews = viewsMap.get(a.id) || 0;
+//  const bViews = viewsMap.get(b.id) || 0;
+//
+//  if (bViews === aViews) {
+//    const dateA = a.changed ? new Date(a.changed).getTime() : 0;
+//    const dateB = b.changed ? new Date(b.changed).getTime() : 0;
+//    return dateB - dateA;
+//  }
+//
+//  return bViews - aViews;
+//});
+//
+//// Choose initial stories based on default mode
+//let displayStories = defaultMode === "recent" ? sortedByRecent : sortedByPopular;
+//
+//// Limit to pageSize items
+//const initialStories = displayStories.slice(0, pageSize);
+//
+//// Function to format dates in a human-readable way (server-side only)
+//function formatDate(dateString: string | null): string {
+//  if (!dateString) return "Unknown";
+//  const date = new Date(dateString);
+//  return new Intl.DateTimeFormat("en-US", {
+//    year: "numeric",
+//    month: "long",
+//    day: "numeric",
+//  }).format(date);
+//}
+//---
+//
+//<div class="py-12 p-4 mx-auto max-w-7xl">
+//  <!-- View Mode Toggle -->
+//  <div class="flex justify-center mb-4">
+//    <div class="inline-flex rounded-md shadow-sm" role="group">
+//      <button
+//        id="recent-toggle"
+//        class={`px-4 py-2 text-sm font-bold ${defaultMode === "recent" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-l-md transition-colors`}
+//      >
+//        Newest
+//      </button>
+//      <button
+//        id="popular-toggle"
+//        class={`px-4 py-2 text-sm font-bold ${defaultMode === "popular" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-r-md transition-colors`}
+//      >
+//        Most Active
+//      </button>
+//    </div>
+//  </div>
+//
+//  {
+//    filteredStories.length === 0 && (
+//      <div class="text-center py-12 px-4 bg-gray-50 rounded-lg">
+//        <p class="text-lg text-myblue italic">No stories available.</p>
+//      </div>
+//    )
+//  }
+//
+//  <!-- Mobile Content listing (single column) -->
+//  <div id="mobile-content" class="block md:hidden space-y-6 p-4">
+//    {
+//      initialStories.map((story) => (
+//        <a href={`/${story.slug}`} class="block group">
+//          <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
+//            {story.thumbSrc && (
+//              <img
+//                src={story.thumbSrc}
+//                alt={story.title}
+//                style="width: 100px; height: auto;"
+//                class="rounded-md"
+//              />
+//            )}
+//            <div class="flex-1">
+//              <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
+//                {story.title}
+//              </h3>
+//              {story.description && (
+//                <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
+//              )}
+//              {story.topics && story.topics.length > 0 && (
+//                <div class="mt-1 flex flex-wrap gap-1">
+//                  {story.topics.slice(0, 3).map((topic) => (
+//                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+//                      {topic}
+//                    </span>
+//                  ))}
+//                </div>
+//              )}
+//              <p class="text-mydarkgrey text-xs mt-1">
+//                {story.changed && formatDate(story.changed)}
+//              </p>
+//            </div>
+//          </div>
+//        </a>
+//      ))
+//    }
+//  </div>
+//
+//  <!-- Desktop Content listing (two columns) -->
+//  <div id="desktop-content" class="hidden md:flex md:space-x-6 p-4">
+//    <!-- Left column -->
+//    <div class="md:w-1/2 space-y-6">
+//      {
+//        initialStories.slice(0, Math.ceil(initialStories.length / 2)).map((story) => (
+//          <a href={`/${story.slug}`} class="block group">
+//            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
+//              {story.thumbSrc && (
+//                <img
+//                  src={story.thumbSrc}
+//                  alt={story.title}
+//                  style="width: 100px; height: auto;"
+//                  class="rounded-md"
+//                />
+//              )}
+//              <div class="flex-1">
+//                <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
+//                  {story.title}
+//                </h3>
+//                {story.description && (
+//                  <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
+//                )}
+//                {story.topics && story.topics.length > 0 && (
+//                  <div class="mt-1 flex flex-wrap gap-1">
+//                    {story.topics.slice(0, 3).map((topic) => (
+//                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+//                        {topic}
+//                      </span>
+//                    ))}
+//                  </div>
+//                )}
+//                <p class="text-mydarkgrey text-xs mt-1">
+//                  {story.changed && formatDate(story.changed)}
+//                </p>
+//              </div>
+//            </div>
+//          </a>
+//        ))
+//      }
+//    </div>
+//
+//    <!-- Right column -->
+//    <div class="md:w-1/2 space-y-6 p-4">
+//      {
+//        initialStories.slice(Math.ceil(initialStories.length / 2)).map((story) => (
+//          <a href={`/${story.slug}`} class="block group">
+//            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
+//              {story.thumbSrc && (
+//                <img
+//                  src={story.thumbSrc}
+//                  alt={story.title}
+//                  style="width: 100px; height: auto;"
+//                  class="rounded-md"
+//                />
+//              )}
+//              <div class="flex-1">
+//                <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
+//                  {story.title}
+//                </h3>
+//                {story.description && (
+//                  <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
+//                )}
+//                {story.topics && story.topics.length > 0 && (
+//                  <div class="mt-1 flex flex-wrap gap-1">
+//                    {story.topics.slice(0, 3).map((topic) => (
+//                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+//                        {topic}
+//                      </span>
+//                    ))}
+//                  </div>
+//                )}
+//                <p class="text-mydarkgrey text-xs mt-1">
+//                  {story.changed && formatDate(story.changed)}
+//                </p>
+//              </div>
+//            </div>
+//          </a>
+//        ))
+//      }
+//    </div>
+//  </div>
+//
+//  <!-- Pagination controls -->
+//  {
+//    filteredStories.length > pageSize && (
+//      <div class="flex justify-center mt-8">
+//        <nav class="inline-flex rounded-md shadow-sm" aria-label="Pagination">
+//          <button
+//            id="prev-page"
+//            class="px-4 py-2 text-sm font-bold text-myblack bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+//            disabled
+//          >
+//            Previous
+//          </button>
+//          <button
+//            id="next-page"
+//            class="px-4 py-2 text-sm font-bold text-white bg-myblue border border-myblue rounded-r-md hover:bg-myblue-dark disabled:opacity-50 disabled:cursor-not-allowed"
+//          >
+//            Next
+//          </button>
+//        </nav>
+//      </div>
+//    )
+//  }
+//</div>
+//
+//<script is:inline define:vars={{ sortedByRecent, sortedByPopular, pageSize, defaultMode }}>
+//  // Client-side state
+//  let currentMode = defaultMode;
+//  let currentPage = 1;
+//  let currentData = currentMode === "recent" ? sortedByRecent : sortedByPopular;
+//
+//  // Function to format dates in a human-readable way (client-side)
+//  function formatDate(dateString) {
+//    if (!dateString) return "Unknown";
+//    const date = new Date(dateString);
+//    return new Intl.DateTimeFormat("en-US", {
+//      year: "numeric",
+//      month: "long",
+//      day: "numeric",
+//    }).format(date);
+//  }
+//
+//  // Set initial toggle state based on defaultMode
+//  document.addEventListener("DOMContentLoaded", () => {
+//    const recentToggle = document.getElementById("recent-toggle");
+//    const popularToggle = document.getElementById("popular-toggle");
+//
+//    if (currentMode === "recent" && recentToggle && popularToggle) {
+//      recentToggle.classList.add("bg-myblue", "text-white");
+//      recentToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
+//      popularToggle.classList.remove("bg-myblue", "text-white");
+//      popularToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
+//    } else if (currentMode === "popular" && recentToggle && popularToggle) {
+//      popularToggle.classList.add("bg-myblue", "text-white");
+//      popularToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
+//      recentToggle.classList.remove("bg-myblue", "text-white");
+//      recentToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
+//    }
+//  });
+//
+//  // Calculate total pages
+//  const getTotalPages = () => Math.ceil(currentData.length / pageSize);
+//
+//  // DOM Elements
+//  const recentToggle = document.getElementById("recent-toggle");
+//  const popularToggle = document.getElementById("popular-toggle");
+//  const prevPageBtn = document.getElementById("prev-page");
+//  const nextPageBtn = document.getElementById("next-page");
+//  const mobileContainer = document.getElementById("mobile-content");
+//  const desktopContainer = document.getElementById("desktop-content");
+//
+//  // Create HTML for a story item
+//  function createStoryItem(story) {
+//    // Format topics if they exist
+//    const topicsHtml =
+//      story.topics && story.topics.length > 0
+//        ? `<div class="mt-1 flex flex-wrap gap-1">
+//          ${story.topics
+//            .slice(0, 3)
+//            .map(
+//              (topic) =>
+//                `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
+//              ${topic}
+//            </span>`
+//            )
+//            .join("")}
+//        </div>`
+//        : "";
+//
+//    // Format views and date
+//    const metaInfo = `
+//      <p class="text-mydarkgrey text-xs mt-1">
+//        ${story.changed ? formatDate(story.changed) : "Unknown date"}
+//      </p>
+//    `;
+//
+//    // Create the full HTML
+//    return `
+//      <a href="/${story.slug}" class="block group">
+//        <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
+//          ${
+//            story.thumbSrc
+//              ? `<img src="${story.thumbSrc}" alt="${story.title}" style="width:100px;height:auto;" class="rounded-md">`
+//              : ""
+//          }
+//          <div class="flex-1">
+//            <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">${story.title}</h3>
+//            ${story.description ? `<p class="text-myblack text-sm line-clamp-2">${story.description}</p>` : ""}
+//            ${topicsHtml}
+//            ${metaInfo}
+//          </div>
+//        </div>
+//      </a>
+//    `;
+//  }
+//
+//  // Update the content based on currentMode and currentPage
+//  function updateDisplayedContent() {
+//    // Get the data for the current mode
+//    currentData = currentMode === "recent" ? sortedByRecent : sortedByPopular;
+//
+//    // Reset to page 1 if we're beyond the total pages after switching modes
+//    const totalPages = getTotalPages();
+//    if (currentPage > totalPages && totalPages > 0) {
+//      currentPage = 1;
+//    }
+//
+//    // Calculate pagination
+//    const startIdx = (currentPage - 1) * pageSize;
+//    const endIdx = Math.min(startIdx + pageSize, currentData.length);
+//    const currentPageData = currentData.slice(startIdx, endIdx);
+//
+//    // Update mobile view
+//    if (mobileContainer) {
+//      mobileContainer.innerHTML = "";
+//      if (currentPageData.length === 0) {
+//        mobileContainer.innerHTML = `
+//          <div class="p-8 text-center">
+//            <p class="text-lg text-myblue italic">No stories available matching your criteria.</p>
+//          </div>
+//        `;
+//      } else {
+//        currentPageData.forEach((story) => {
+//          mobileContainer.innerHTML += createStoryItem(story);
+//        });
+//      }
+//    }
+//
+//    // Update desktop view (split into two columns)
+//    if (desktopContainer) {
+//      const midpoint = Math.ceil(currentPageData.length / 2);
+//      const leftColumnData = currentPageData.slice(0, midpoint);
+//      const rightColumnData = currentPageData.slice(midpoint);
+//
+//      // Create columns
+//      if (currentPageData.length === 0) {
+//        desktopContainer.innerHTML = `
+//          <div class="w-full p-8 text-center">
+//            <p class="text-lg text-myblue italic">No stories available matching your criteria.</p>
+//          </div>
+//        `;
+//      } else {
+//        desktopContainer.innerHTML = `
+//          <div class="md:w-1/2 space-y-6">
+//            ${leftColumnData.map((story) => createStoryItem(story)).join("")}
+//          </div>
+//          <div class="md:w-1/2 space-y-6">
+//            ${rightColumnData.map((story) => createStoryItem(story)).join("")}
+//          </div>
+//        `;
+//      }
+//    }
+//
+//    // Update pagination buttons
+//    if (prevPageBtn) {
+//      prevPageBtn.disabled = currentPage <= 1;
+//    }
+//
+//    if (nextPageBtn) {
+//      nextPageBtn.disabled = currentPage >= totalPages;
+//    }
+//  }
+//
+//  // Toggle Mode Buttons
+//  if (recentToggle) {
+//    recentToggle.addEventListener("click", (e) => {
+//      e.preventDefault();
+//      if (currentMode !== "recent") {
+//        currentMode = "recent";
+//        currentPage = 1;
+//        updateDisplayedContent();
+//
+//        // Update toggle button styles
+//        recentToggle.classList.add("bg-myblue", "text-white");
+//        recentToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
+//
+//        if (popularToggle) {
+//          popularToggle.classList.remove("bg-myblue", "text-white");
+//          popularToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
+//        }
+//      }
+//    });
+//  }
+//
+//  if (popularToggle) {
+//    popularToggle.addEventListener("click", (e) => {
+//      e.preventDefault();
+//      if (currentMode !== "popular") {
+//        currentMode = "popular";
+//        currentPage = 1;
+//        updateDisplayedContent();
+//
+//        // Update toggle button styles
+//        popularToggle.classList.add("bg-myblue", "text-white");
+//        popularToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
+//
+//        if (recentToggle) {
+//          recentToggle.classList.remove("bg-myblue", "text-white");
+//          recentToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
+//        }
+//      }
+//    });
+//  }
+//
+//  if (prevPageBtn) {
+//    prevPageBtn.addEventListener("click", (e) => {
+//      e.preventDefault();
+//      if (currentPage > 1) {
+//        currentPage--;
+//        updateDisplayedContent();
+//      }
+//    });
+//  }
+//
+//  if (nextPageBtn) {
+//    nextPageBtn.addEventListener("click", (e) => {
+//      e.preventDefault();
+//      const totalPages = getTotalPages();
+//      if (currentPage < totalPages) {
+//        currentPage++;
+//        updateDisplayedContent();
+//      }
+//    });
+//  }
+//
+//  // Initialize the display on page load
+//  updateDisplayedContent();
+//</script>
 ---
 
-<div class="py-12 p-4 mx-auto max-w-7xl">
-  <!-- View Mode Toggle -->
-  <div class="flex justify-center mb-4">
-    <div class="inline-flex rounded-md shadow-sm" role="group">
-      <button
-        id="recent-toggle"
-        class={`px-4 py-2 text-sm font-bold ${defaultMode === "recent" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-l-md transition-colors`}
-      >
-        Newest
-      </button>
-      <button
-        id="popular-toggle"
-        class={`px-4 py-2 text-sm font-bold ${defaultMode === "popular" ? "bg-myblue text-white" : "bg-white text-myblack hover:bg-gray-100"} border border-myblue rounded-r-md transition-colors`}
-      >
-        Most Active
-      </button>
-    </div>
-  </div>
-
-  {
-    filteredStories.length === 0 && (
-      <div class="text-center py-12 px-4 bg-gray-50 rounded-lg">
-        <p class="text-lg text-myblue italic">No stories available.</p>
-      </div>
-    )
-  }
-
-  <!-- Mobile Content listing (single column) -->
-  <div id="mobile-content" class="block md:hidden space-y-6 p-4">
-    {
-      initialStories.map((story) => (
-        <a href={`/${story.slug}`} class="block group">
-          <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
-            {story.thumbSrc && (
-              <img
-                src={story.thumbSrc}
-                alt={story.title}
-                style="width: 100px; height: auto;"
-                class="rounded-md"
-              />
-            )}
-            <div class="flex-1">
-              <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
-                {story.title}
-              </h3>
-              {story.description && (
-                <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
-              )}
-              {story.topics && story.topics.length > 0 && (
-                <div class="mt-1 flex flex-wrap gap-1">
-                  {story.topics.slice(0, 3).map((topic) => (
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <p class="text-mydarkgrey text-xs mt-1">
-                {story.changed && formatDate(story.changed)}
-              </p>
-            </div>
-          </div>
-        </a>
-      ))
-    }
-  </div>
-
-  <!-- Desktop Content listing (two columns) -->
-  <div id="desktop-content" class="hidden md:flex md:space-x-6 p-4">
-    <!-- Left column -->
-    <div class="md:w-1/2 space-y-6">
-      {
-        initialStories.slice(0, Math.ceil(initialStories.length / 2)).map((story) => (
-          <a href={`/${story.slug}`} class="block group">
-            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
-              {story.thumbSrc && (
-                <img
-                  src={story.thumbSrc}
-                  alt={story.title}
-                  style="width: 100px; height: auto;"
-                  class="rounded-md"
-                />
-              )}
-              <div class="flex-1">
-                <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
-                  {story.title}
-                </h3>
-                {story.description && (
-                  <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
-                )}
-                {story.topics && story.topics.length > 0 && (
-                  <div class="mt-1 flex flex-wrap gap-1">
-                    {story.topics.slice(0, 3).map((topic) => (
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p class="text-mydarkgrey text-xs mt-1">
-                  {story.changed && formatDate(story.changed)}
-                </p>
-              </div>
-            </div>
-          </a>
-        ))
-      }
-    </div>
-
-    <!-- Right column -->
-    <div class="md:w-1/2 space-y-6 p-4">
-      {
-        initialStories.slice(Math.ceil(initialStories.length / 2)).map((story) => (
-          <a href={`/${story.slug}`} class="block group">
-            <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
-              {story.thumbSrc && (
-                <img
-                  src={story.thumbSrc}
-                  alt={story.title}
-                  style="width: 100px; height: auto;"
-                  class="rounded-md"
-                />
-              )}
-              <div class="flex-1">
-                <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">
-                  {story.title}
-                </h3>
-                {story.description && (
-                  <p class="text-myblack text-sm line-clamp-2">{story.description}</p>
-                )}
-                {story.topics && story.topics.length > 0 && (
-                  <div class="mt-1 flex flex-wrap gap-1">
-                    {story.topics.slice(0, 3).map((topic) => (
-                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p class="text-mydarkgrey text-xs mt-1">
-                  {story.changed && formatDate(story.changed)}
-                </p>
-              </div>
-            </div>
-          </a>
-        ))
-      }
-    </div>
-  </div>
-
-  <!-- Pagination controls -->
-  {
-    filteredStories.length > pageSize && (
-      <div class="flex justify-center mt-8">
-        <nav class="inline-flex rounded-md shadow-sm" aria-label="Pagination">
-          <button
-            id="prev-page"
-            class="px-4 py-2 text-sm font-bold text-myblack bg-white border border-gray-300 rounded-l-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled
-          >
-            Previous
-          </button>
-          <button
-            id="next-page"
-            class="px-4 py-2 text-sm font-bold text-white bg-myblue border border-myblue rounded-r-md hover:bg-myblue-dark disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </nav>
-      </div>
-    )
-  }
-</div>
-
-<script is:inline define:vars={{ sortedByRecent, sortedByPopular, pageSize, defaultMode }}>
-  // Client-side state
-  let currentMode = defaultMode;
-  let currentPage = 1;
-  let currentData = currentMode === "recent" ? sortedByRecent : sortedByPopular;
-
-  // Function to format dates in a human-readable way (client-side)
-  function formatDate(dateString) {
-    if (!dateString) return "Unknown";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  }
-
-  // Set initial toggle state based on defaultMode
-  document.addEventListener("DOMContentLoaded", () => {
-    const recentToggle = document.getElementById("recent-toggle");
-    const popularToggle = document.getElementById("popular-toggle");
-
-    if (currentMode === "recent" && recentToggle && popularToggle) {
-      recentToggle.classList.add("bg-myblue", "text-white");
-      recentToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
-      popularToggle.classList.remove("bg-myblue", "text-white");
-      popularToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
-    } else if (currentMode === "popular" && recentToggle && popularToggle) {
-      popularToggle.classList.add("bg-myblue", "text-white");
-      popularToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
-      recentToggle.classList.remove("bg-myblue", "text-white");
-      recentToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
-    }
-  });
-
-  // Calculate total pages
-  const getTotalPages = () => Math.ceil(currentData.length / pageSize);
-
-  // DOM Elements
-  const recentToggle = document.getElementById("recent-toggle");
-  const popularToggle = document.getElementById("popular-toggle");
-  const prevPageBtn = document.getElementById("prev-page");
-  const nextPageBtn = document.getElementById("next-page");
-  const mobileContainer = document.getElementById("mobile-content");
-  const desktopContainer = document.getElementById("desktop-content");
-
-  // Create HTML for a story item
-  function createStoryItem(story) {
-    // Format topics if they exist
-    const topicsHtml =
-      story.topics && story.topics.length > 0
-        ? `<div class="mt-1 flex flex-wrap gap-1">
-          ${story.topics
-            .slice(0, 3)
-            .map(
-              (topic) =>
-                `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800">
-              ${topic}
-            </span>`
-            )
-            .join("")}
-        </div>`
-        : "";
-
-    // Format views and date
-    const metaInfo = `
-      <p class="text-mydarkgrey text-xs mt-1">
-        ${story.changed ? formatDate(story.changed) : "Unknown date"}
-      </p>
-    `;
-
-    // Create the full HTML
-    return `
-      <a href="/${story.slug}" class="block group">
-        <div class="flex items-start space-x-4 group-hover:bg-slate-200/20 p-2 rounded-md">
-          ${
-            story.thumbSrc
-              ? `<img src="${story.thumbSrc}" alt="${story.title}" style="width:100px;height:auto;" class="rounded-md">`
-              : ""
-          }
-          <div class="flex-1">
-            <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">${story.title}</h3>
-            ${story.description ? `<p class="text-myblack text-sm line-clamp-2">${story.description}</p>` : ""}
-            ${topicsHtml}
-            ${metaInfo}
-          </div>
-        </div>
-      </a>
-    `;
-  }
-
-  // Update the content based on currentMode and currentPage
-  function updateDisplayedContent() {
-    // Get the data for the current mode
-    currentData = currentMode === "recent" ? sortedByRecent : sortedByPopular;
-
-    // Reset to page 1 if we're beyond the total pages after switching modes
-    const totalPages = getTotalPages();
-    if (currentPage > totalPages && totalPages > 0) {
-      currentPage = 1;
-    }
-
-    // Calculate pagination
-    const startIdx = (currentPage - 1) * pageSize;
-    const endIdx = Math.min(startIdx + pageSize, currentData.length);
-    const currentPageData = currentData.slice(startIdx, endIdx);
-
-    // Update mobile view
-    if (mobileContainer) {
-      mobileContainer.innerHTML = "";
-      if (currentPageData.length === 0) {
-        mobileContainer.innerHTML = `
-          <div class="p-8 text-center">
-            <p class="text-lg text-myblue italic">No stories available matching your criteria.</p>
-          </div>
-        `;
-      } else {
-        currentPageData.forEach((story) => {
-          mobileContainer.innerHTML += createStoryItem(story);
-        });
-      }
-    }
-
-    // Update desktop view (split into two columns)
-    if (desktopContainer) {
-      const midpoint = Math.ceil(currentPageData.length / 2);
-      const leftColumnData = currentPageData.slice(0, midpoint);
-      const rightColumnData = currentPageData.slice(midpoint);
-
-      // Create columns
-      if (currentPageData.length === 0) {
-        desktopContainer.innerHTML = `
-          <div class="w-full p-8 text-center">
-            <p class="text-lg text-myblue italic">No stories available matching your criteria.</p>
-          </div>
-        `;
-      } else {
-        desktopContainer.innerHTML = `
-          <div class="md:w-1/2 space-y-6">
-            ${leftColumnData.map((story) => createStoryItem(story)).join("")}
-          </div>
-          <div class="md:w-1/2 space-y-6">
-            ${rightColumnData.map((story) => createStoryItem(story)).join("")}
-          </div>
-        `;
-      }
-    }
-
-    // Update pagination buttons
-    if (prevPageBtn) {
-      prevPageBtn.disabled = currentPage <= 1;
-    }
-
-    if (nextPageBtn) {
-      nextPageBtn.disabled = currentPage >= totalPages;
-    }
-  }
-
-  // Toggle Mode Buttons
-  if (recentToggle) {
-    recentToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (currentMode !== "recent") {
-        currentMode = "recent";
-        currentPage = 1;
-        updateDisplayedContent();
-
-        // Update toggle button styles
-        recentToggle.classList.add("bg-myblue", "text-white");
-        recentToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
-
-        if (popularToggle) {
-          popularToggle.classList.remove("bg-myblue", "text-white");
-          popularToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
-        }
-      }
-    });
-  }
-
-  if (popularToggle) {
-    popularToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (currentMode !== "popular") {
-        currentMode = "popular";
-        currentPage = 1;
-        updateDisplayedContent();
-
-        // Update toggle button styles
-        popularToggle.classList.add("bg-myblue", "text-white");
-        popularToggle.classList.remove("bg-white", "text-myblack", "hover:bg-gray-100");
-
-        if (recentToggle) {
-          recentToggle.classList.remove("bg-myblue", "text-white");
-          recentToggle.classList.add("bg-white", "text-myblack", "hover:bg-gray-100");
-        }
-      }
-    });
-  }
-
-  if (prevPageBtn) {
-    prevPageBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (currentPage > 1) {
-        currentPage--;
-        updateDisplayedContent();
-      }
-    });
-  }
-
-  if (nextPageBtn) {
-    nextPageBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const totalPages = getTotalPages();
-      if (currentPage < totalPages) {
-        currentPage++;
-        updateDisplayedContent();
-      }
-    });
-  }
-
-  // Initialize the display on page load
-  updateDisplayedContent();
-</script>
+<div>apologies... under maintenance</div>

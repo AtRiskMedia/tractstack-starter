@@ -165,6 +165,17 @@ export type ContentMapBase = {
   type: "Menu" | "Pane" | "Resource" | "StoryFragment" | "TractStack";
 };
 
+export type EpinetContentMap = ContentMapBase & {
+  type: "Epinet";
+  promoted: boolean;
+  steps: (
+    | EpinetStepBelief
+    | EpinetStepIdentifyAs
+    | EpinetStepCommitmentAction
+    | EpinetStepConversionAction
+  )[];
+};
+
 export type MenuContentMap = ContentMapBase & {
   type: "Menu";
   theme: string;
@@ -207,7 +218,8 @@ export type FullContentMap =
   | PaneContentMap
   | StoryFragmentContentMap
   | TractStackContentMap
-  | BeliefContentMap;
+  | BeliefContentMap
+  | EpinetContentMap;
 
 export interface ResourceNode extends BaseNode {
   title: string;
@@ -1128,8 +1140,6 @@ export type PageDesign = {
 export interface LeadMetrics {
   total_visits: number;
   total_leads: number;
-  clicked_events: number;
-  entered_events: number;
   last_activity: string;
   first_time_24h: number;
   returning_24h: number;
@@ -1250,4 +1260,99 @@ export interface PanelState {
   paneId: string;
   panel: string;
   mode: string;
+}
+
+export interface EpinetStep {
+  gateType: "belief" | "identifyAs" | "commitmentAction" | "conversionAction";
+  title: string;
+  values: string[];
+}
+
+export interface EpinetStepBelief extends EpinetStep {
+  gateType: "belief";
+}
+
+export interface EpinetStepIdentifyAs extends EpinetStep {
+  gateType: "identifyAs";
+}
+
+export interface EpinetStepCommitmentAction extends EpinetStep {
+  gateType: "commitmentAction";
+  objectType: "StoryFragment" | "Pane";
+  objectIds?: string[];
+}
+
+export interface EpinetStepConversionAction extends EpinetStep {
+  gateType: "conversionAction";
+  objectType: "StoryFragment" | "Pane";
+  objectIds?: string[];
+}
+
+export interface EpinetDatum {
+  id: string;
+  title: string;
+  promoted?: boolean;
+  steps: (
+    | EpinetStepBelief
+    | EpinetStepIdentifyAs
+    | EpinetStepCommitmentAction
+    | EpinetStepConversionAction
+  )[];
+}
+
+export interface ComputedEpinetNode {
+  name: string;
+}
+
+export interface ComputedEpinetLink {
+  source: number;
+  target: number;
+  value: number;
+}
+
+export interface ComputedEpinet {
+  id: string;
+  title: string;
+  nodes: ComputedEpinetNode[];
+  links: ComputedEpinetLink[];
+}
+
+export interface ComputedEpinets {
+  daily: ComputedEpinet;
+  weekly: ComputedEpinet;
+  monthly: ComputedEpinet;
+  all?: ComputedEpinet;
+}
+
+export interface HourlyAnalyticsData {
+  contentData: Record<string, Record<string, HourlyContentData>>;
+  siteData: Record<string, HourlySiteData>;
+  lastFullHour: string;
+  totalLeads: number;
+  lastActivity: string | null;
+  slugMap: Map<string, string>; // Maps content IDs to slugs
+}
+
+export interface HourlyContentData {
+  uniqueVisitors: Set<string>; // fingerprint_ids
+  knownVisitors: Set<string>; // visitors with lead_id
+  anonymousVisitors: Set<string>; // visitors without lead_id
+  actions: number;
+  eventCounts: Record<string, number>;
+  object_type?: string;
+}
+
+export interface HourlySiteData {
+  totalVisits: number;
+  knownVisitors: Set<string>;
+  anonymousVisitors: Set<string>;
+  eventCounts: Record<string, number>;
+}
+
+export interface TimeRangeMetrics {
+  anonymousVisitors: Set<string>;
+  knownVisitors: Set<string>;
+  totalVisitors: number;
+  totalVisits: number;
+  eventCounts: Record<string, number>;
 }

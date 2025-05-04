@@ -1,12 +1,12 @@
 import { tursoClient } from "../client";
 import { processEventStream } from "@/utils/events/processEventStream.ts";
-import type { EventPayload, EventStream, Referrer } from "@/types.ts";
-import type { APIContext } from "@/types";
+import type { APIContext, EventPayload, EventStream, Referrer } from "@/types.ts";
 
 export async function streamEvents(
   payload: {
     fingerprint?: string;
     visitId?: string;
+    isKnownLead?: boolean;
     events: EventStream[];
     referrer?: Referrer;
   },

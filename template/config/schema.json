@@ -11,6 +11,9 @@
     "resources": {
       "sql": "CREATE TABLE IF NOT EXISTS resources (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, category_slug TEXT, oneliner TEXT NOT NULL, options_payload TEXT NOT NULL, action_lisp TEXT)"
     },
+    "epinets": {
+      "sql": "CREATE TABLE IF NOT EXISTS epinets (id TEXT PRIMARY KEY, title TEXT NOT NULL, options_payload TEXT NOT NULL)"
+    },
     "files": {
       "sql": "CREATE TABLE IF NOT EXISTS files (id TEXT PRIMARY KEY, filename TEXT NOT NULL, alt_description TEXT NOT NULL, url TEXT NOT NULL, src_set TEXT)"
     },
@@ -69,6 +72,34 @@
       "sql": "CREATE TABLE IF NOT EXISTS storyfragment_details (id NUMERIC PRIMARY KEY, storyfragment_id TEXT NOT NULL REFERENCES storyfragments(id), description TEXT NOT NULL)"
     }
   },
+  "epinets": [
+    {
+      "title": "My Tract Stack",
+      "payload": {
+        "promoted": true,
+        "steps": [
+          {
+            "title": "Entered Site",
+            "gateType": "commitmentAction",
+            "objectType": "StoryFragment",
+            "values": ["ENTERED"]
+          },
+          {
+            "title": "Experienced Site",
+            "gateType": "commitmentAction",
+            "objectType": "StoryFragment",
+            "values": ["PAGEVIEWED"]
+          },
+          {
+            "title": "Experienced Content",
+            "gateType": "commitmentAction",
+            "objectType": "Pane",
+            "values": ["READ", "GLOSSED", "CLICKED", "WATCHED"]
+          }
+        ]
+      }
+    }
+  ],
   "indexes": [
     "CREATE INDEX IF NOT EXISTS idx_storyfragments_slug ON storyfragments(slug)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_tractstack_id ON storyfragments(tractstack_id)",

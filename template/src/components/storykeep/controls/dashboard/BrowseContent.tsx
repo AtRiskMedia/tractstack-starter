@@ -4,7 +4,7 @@ import { Combobox } from "@headlessui/react";
 import { Switch } from "@headlessui/react";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import { storedDashboardAnalytics, homeSlugStore } from "@/store/storykeep.ts";
+import { analyticsStore, homeSlugStore } from "@/store/storykeep.ts";
 import { classNames } from "@/utils/common/helpers.ts";
 import type { FullContentMap, HotItem } from "@/types.ts";
 
@@ -15,7 +15,8 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 16;
 
-  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
+  const analytics = useStore(analyticsStore);
+  const dashboard = analytics.dashboard;
   const $homeSlug = useStore(homeSlugStore);
 
   useEffect(() => {
@@ -37,13 +38,11 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
       return matchesType && matchesQuery;
     })
     .sort((a, b) => {
-      if (showMostActive && $storedDashboardAnalytics?.hot_content) {
+      if (showMostActive && dashboard?.hot_content) {
         const aEvents =
-          $storedDashboardAnalytics.hot_content.find((h: HotItem) => h.id === a.id)?.total_events ||
-          0;
+          dashboard.hot_content.find((h: HotItem) => h.id === a.id)?.total_events || 0;
         const bEvents =
-          $storedDashboardAnalytics.hot_content.find((h: HotItem) => h.id === b.id)?.total_events ||
-          0;
+          dashboard.hot_content.find((h: HotItem) => h.id === b.id)?.total_events || 0;
         return bEvents - aEvents;
       }
       return 0;
@@ -160,8 +159,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {paginatedPages.map((page) => {
               const events =
-                $storedDashboardAnalytics?.hot_content?.find((h: HotItem) => h.id === page.id)
-                  ?.total_events || 0;
+                dashboard?.hot_content?.find((h: HotItem) => h.id === page.id)?.total_events || 0;
 
               return (
                 <div

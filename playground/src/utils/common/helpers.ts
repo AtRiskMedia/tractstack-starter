@@ -587,3 +587,31 @@ export function joinUrlPaths(base: string, path: string): string {
   // Join with a single slash
   return `${trimmedBase}/${trimmedPath}`;
 }
+
+export function parseHourKeyToDate(hourKey: string): Date {
+  const parts = hourKey.split("-").map(Number);
+  if (parts.length !== 4) {
+    throw new Error(`Invalid hour key format: ${hourKey}`);
+  }
+  const [year, month, day, hour] = parts;
+  if (
+    isNaN(year) ||
+    isNaN(month) ||
+    isNaN(day) ||
+    isNaN(hour) ||
+    year < 1000 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31 ||
+    hour < 0 ||
+    hour > 23
+  ) {
+    throw new Error(`Invalid date values in hour key: ${hourKey}`);
+  }
+  const date = new Date(year, month - 1, day, hour);
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid date from hour key: ${hourKey}`);
+  }
+  return date;
+}

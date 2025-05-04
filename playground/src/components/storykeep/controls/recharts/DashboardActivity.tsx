@@ -1,12 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
-import { storedDashboardAnalytics, analyticsDuration } from "@/store/storykeep.ts";
-import { classNames } from "@/utils/common/helpers.ts";
+import { analyticsStore, analyticsDuration } from "@/store/storykeep.ts";
 import ResponsiveLine from "./ResponsiveLine";
 
 const DashboardActivity = () => {
   const [isClient, setIsClient] = useState(false);
-  const $storedDashboardAnalytics = useStore(storedDashboardAnalytics);
+  const analytics = useStore(analyticsStore);
   const $analyticsDuration = useStore(analyticsDuration);
   const duration = $analyticsDuration;
 
@@ -15,25 +14,21 @@ const DashboardActivity = () => {
   }, []);
 
   const processedData = useMemo(() => {
-    if (!$storedDashboardAnalytics || !$storedDashboardAnalytics.line) {
+    if (!analytics.dashboard || !analytics.dashboard.line) {
       return [];
     }
-    const processed = $storedDashboardAnalytics.line.map((series) => ({
+    const processed = analytics.dashboard.line.map((series) => ({
       ...series,
       data: series.data
         .filter((point) => point.x !== null && point.y !== null && point.y !== 0)
         .sort((a, b) => Number(a.x) - Number(b.x)),
     }));
     return processed;
-  }, [$storedDashboardAnalytics]);
-
-  const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
-    analyticsDuration.set(newValue);
-  };
+  }, [analytics.dashboard]);
 
   if (!isClient) return null;
 
-  if (!$storedDashboardAnalytics || !$storedDashboardAnalytics.line) {
+  if (!analytics.dashboard || !analytics.dashboard.line) {
     return <div>Loading activity data...</div>;
   }
 
@@ -43,22 +38,6 @@ const DashboardActivity = () => {
     <>
       <div style={{ height: "400px" }}>
         <ResponsiveLine data={processedData} duration={duration} />
-      </div>
-      <div className="flex flex-wrap gap-x-2 text-md mt-4">
-        <span className="font-action">Stats for past:</span>
-        {["daily", "weekly", "monthly"].map((period) => (
-          <button
-            key={period}
-            onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
-            className={classNames(
-              duration === period
-                ? "font-bold text-myblue"
-                : "underline text-mydarkgrey/80 hover:text-myorange"
-            )}
-          >
-            {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
-          </button>
-        ))}
       </div>
     </>
   );

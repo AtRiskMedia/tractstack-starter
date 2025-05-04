@@ -1,5 +1,6 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
+import { computeStoryfragmentAnalytics as computeStoryfragmentAnalyticsFromEvents } from "@/utils/events/analyticsComputation";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
 import {
   invalidateEntry,
@@ -37,12 +38,11 @@ import type {
   PaneContentMap,
   ResourceContentMap,
   MenuContentMap,
+  EpinetContentMap,
   StoryfragmentAnalytics,
-  LeadMetrics,
 } from "@/types.ts";
 import type { APIContext } from "@/types";
 
-// Define interfaces for full row data
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
   tractstack: TractStackRowData;
@@ -1108,6 +1108,20 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as topics
       FROM resources`,
       `SELECT 
+        id, 
+        id as slug, 
+        title, 
+        'Epinet' as type, 
+        options_payload as extra, 
+        NULL as parent_id, 
+        NULL as parent_title, 
+        NULL as parent_slug,
+        NULL as changed,
+        NULL as pane_ids, 
+        NULL as description,
+        NULL as topics
+      FROM epinets`,
+      `SELECT 
         sf.id, 
         sf.slug, 
         sf.title, 
@@ -1172,18 +1186,46 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
       };
 
       switch (ensureString(row.type)) {
+        case "Epinet": {
+          let steps: any[] = [];
+          let promoted = false;
+          try {
+            if (row.extra && typeof row.extra === "string") {
+              const options = JSON.parse(String(row.extra));
+              if (Array.isArray(options)) {
+                steps = options;
+              } else if (typeof options === "object") {
+                if (Array.isArray(options.steps)) {
+                  steps = options.steps;
+                }
+                promoted = !!options.promoted;
+              }
+            }
+          } catch (error) {
+            console.error(`Error parsing options_payload for epinet ${row.id}:`, error);
+          }
+          return {
+            ...base,
+            type: "Epinet" as const,
+            promoted,
+            steps,
+          } as EpinetContentMap;
+        }
+
         case "Menu":
           return {
             ...base,
             type: "Menu" as const,
             theme: ensureString(row.extra),
           } as MenuContentMap;
+
         case "Resource":
           return {
             ...base,
             type: "Resource" as const,
             categorySlug: row.extra as string | null,
           } as ResourceContentMap;
+
         case "Pane":
           return {
             ...base,
@@ -1232,18 +1274,21 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
             }),
           } as StoryFragmentContentMap;
         }
+
         case "TractStack":
           return {
             ...base,
             type: "TractStack" as const,
             ...(row.extra && { socialImagePath: String(row.extra) }),
           } as TractStackContentMap;
+
         case "Belief":
           return {
             ...base,
             type: "Belief" as const,
             scale: ensureString(row.extra),
           } as BeliefContentMap;
+
         default:
           throw new Error(`Unknown type: ${row.type}`);
       }
@@ -1754,236 +1799,6 @@ export async function getSiteMap(context?: APIContext): Promise<SiteMap[]> {
   }
 }
 
-export async function getLeadMetrics(context?: APIContext): Promise<LeadMetrics> {
-  const client = await tursoClient.getClient(context);
-  if (!client) return createEmptyLeadMetrics();
-
-  try {
-    // Get total lead count
-    const { rows: leadCountRows } = await client.execute(`
-      SELECT COUNT(*) as total_leads FROM leads
-    `);
-    const totalLeads = Number(leadCountRows[0]?.total_leads || 0);
-
-    // Get site-wide metrics
-    const { rows: siteMetricsRows } = await client.execute(`
-      WITH time_periods AS (
-        SELECT 'last_24h' as period, datetime('now', '-1 day') as start_time
-        UNION ALL
-        SELECT 'last_7d' as period, datetime('now', '-7 days') as start_time
-        UNION ALL
-        SELECT 'last_28d' as period, datetime('now', '-28 days') as start_time
-      ),
-      visitors_by_period AS (
-        SELECT
-          tp.period,
-          COUNT(DISTINCT v.fingerprint_id) as total_visitors,
-          COUNT(DISTINCT CASE WHEN f.lead_id IS NULL THEN v.fingerprint_id ELSE NULL END) as anonymous_visitors,
-          COUNT(DISTINCT CASE WHEN f.lead_id IS NOT NULL THEN v.fingerprint_id ELSE NULL END) as known_visitors
-        FROM
-          time_periods tp
-        CROSS JOIN
-          visits v
-        LEFT JOIN
-          fingerprints f ON v.fingerprint_id = f.id
-        WHERE
-          v.created_at >= tp.start_time
-        GROUP BY
-          tp.period
-      ),
-      event_counts AS (
-        SELECT 
-          'total' as type,
-          COUNT(*) as clicked_events,
-          SUM(CASE WHEN verb = 'ENTERED' THEN 1 ELSE 0 END) as entered_events
-        FROM 
-          actions
-        UNION ALL
-        SELECT 
-          'last_24h' as type,
-          COUNT(CASE WHEN created_at >= datetime('now', '-1 day') AND verb = 'CLICKED' THEN 1 ELSE NULL END) as clicked_events,
-          COUNT(CASE WHEN created_at >= datetime('now', '-1 day') AND verb = 'ENTERED' THEN 1 ELSE NULL END) as entered_events
-        FROM 
-          actions
-        UNION ALL
-        SELECT 
-          'last_7d' as type,
-          COUNT(CASE WHEN created_at >= datetime('now', '-7 days') AND verb = 'CLICKED' THEN 1 ELSE NULL END) as clicked_events,
-          COUNT(CASE WHEN created_at >= datetime('now', '-7 days') AND verb = 'ENTERED' THEN 1 ELSE NULL END) as entered_events
-        FROM 
-          actions
-        UNION ALL
-        SELECT 
-          'last_28d' as type,
-          COUNT(CASE WHEN created_at >= datetime('now', '-28 days') AND verb = 'CLICKED' THEN 1 ELSE NULL END) as clicked_events,
-          COUNT(CASE WHEN created_at >= datetime('now', '-28 days') AND verb = 'ENTERED' THEN 1 ELSE NULL END) as entered_events
-        FROM 
-          actions
-      ),
-      total_metrics AS (
-        SELECT
-          (SELECT COUNT(*) FROM visits) as total_visits,
-          (SELECT MAX(created_at) FROM visits) as last_activity
-        FROM 
-          (SELECT 1) as dummy
-      )
-      SELECT
-        (SELECT total_visits FROM total_metrics) as total_visits,
-        (SELECT last_activity FROM total_metrics) as last_activity,
-        (SELECT clicked_events FROM event_counts WHERE type = 'total') as clicked_events,
-        (SELECT entered_events FROM event_counts WHERE type = 'total') as entered_events,
-        
-        (SELECT anonymous_visitors FROM visitors_by_period WHERE period = 'last_24h') as first_time_24h,
-        (SELECT known_visitors FROM visitors_by_period WHERE period = 'last_24h') as returning_24h,
-        (SELECT anonymous_visitors FROM visitors_by_period WHERE period = 'last_7d') as first_time_7d,
-        (SELECT known_visitors FROM visitors_by_period WHERE period = 'last_7d') as returning_7d,
-        (SELECT anonymous_visitors FROM visitors_by_period WHERE period = 'last_28d') as first_time_28d,
-        (SELECT known_visitors FROM visitors_by_period WHERE period = 'last_28d') as returning_28d,
-        
-        (SELECT clicked_events FROM event_counts WHERE type = 'last_24h') as clicked_events_24h,
-        (SELECT clicked_events FROM event_counts WHERE type = 'last_7d') as clicked_events_7d,
-        (SELECT clicked_events FROM event_counts WHERE type = 'last_28d') as clicked_events_28d
-    `);
-
-    if (siteMetricsRows.length === 0) {
-      return createEmptyLeadMetrics();
-    }
-
-    const metrics = siteMetricsRows[0];
-
-    // Calculate percentages
-    const first_time_24h = Number(metrics.first_time_24h || 0);
-    const returning_24h = Number(metrics.returning_24h || 0);
-    const first_time_7d = Number(metrics.first_time_7d || 0);
-    const returning_7d = Number(metrics.returning_7d || 0);
-    const first_time_28d = Number(metrics.first_time_28d || 0);
-    const returning_28d = Number(metrics.returning_28d || 0);
-
-    const total_24h = first_time_24h + returning_24h;
-    const total_7d = first_time_7d + returning_7d;
-    const total_28d = first_time_28d + returning_28d;
-
-    const first_time_24h_percentage = total_24h > 0 ? (first_time_24h / total_24h) * 100 : 0;
-    const returning_24h_percentage = total_24h > 0 ? (returning_24h / total_24h) * 100 : 0;
-    const first_time_7d_percentage = total_7d > 0 ? (first_time_7d / total_7d) * 100 : 0;
-    const returning_7d_percentage = total_7d > 0 ? (returning_7d / total_7d) * 100 : 0;
-    const first_time_28d_percentage = total_28d > 0 ? (first_time_28d / total_28d) * 100 : 0;
-    const returning_28d_percentage = total_28d > 0 ? (returning_28d / total_28d) * 100 : 0;
-
-    return {
-      total_visits: Number(metrics.total_visits || 0),
-      clicked_events: Number(metrics.clicked_events || 0),
-      entered_events: Number(metrics.entered_events || 0),
-      last_activity: metrics.last_activity ? String(metrics.last_activity) : "",
-      first_time_24h,
-      returning_24h,
-      first_time_7d,
-      returning_7d,
-      first_time_28d,
-      returning_28d,
-      first_time_24h_percentage,
-      returning_24h_percentage,
-      first_time_7d_percentage,
-      returning_7d_percentage,
-      first_time_28d_percentage,
-      returning_28d_percentage,
-      total_leads: totalLeads,
-    };
-  } catch (error) {
-    console.error("Error calculating lead metrics:", error);
-    return createEmptyLeadMetrics();
-  }
-}
-
-function createEmptyLeadMetrics(): LeadMetrics {
-  return {
-    total_visits: 0,
-    clicked_events: 0,
-    entered_events: 0,
-    last_activity: "",
-    first_time_24h: 0,
-    returning_24h: 0,
-    first_time_7d: 0,
-    returning_7d: 0,
-    first_time_28d: 0,
-    returning_28d: 0,
-    first_time_24h_percentage: 0,
-    returning_24h_percentage: 0,
-    first_time_7d_percentage: 0,
-    returning_7d_percentage: 0,
-    first_time_28d_percentage: 0,
-    returning_28d_percentage: 0,
-    total_leads: 0,
-  };
-}
-
-export async function computeStoryfragmentAnalytics(
-  context?: APIContext
-): Promise<StoryfragmentAnalytics[]> {
-  const client = await tursoClient.getClient(context);
-  if (!client) return [];
-
-  const { rows: leadRows } = await client.execute(`
-    SELECT COUNT(*) as total_leads FROM leads
-  `);
-
-  const totalLeads = Number(leadRows[0]?.total_leads || 0);
-
-  const { rows } = await client.execute(`
-    SELECT 
-      sf.id,
-      sf.slug,
-      COUNT(DISTINCT a.fingerprint_id) as unique_visitors,
-      COUNT(a.id) as total_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-1 day') 
-        THEN 1 ELSE 0 
-      END) as last_24h_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-7 days') 
-        THEN 1 ELSE 0 
-      END) as last_7d_actions,
-      SUM(CASE 
-        WHEN a.created_at >= datetime('now', '-28 days') 
-        THEN 1 ELSE 0 
-      END) as last_28d_actions,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-1 day') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_24h_unique_visitors,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-7 days') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_7d_unique_visitors,
-      COUNT(DISTINCT CASE 
-        WHEN a.created_at >= datetime('now', '-28 days') 
-        THEN a.fingerprint_id 
-        ELSE NULL
-      END) as last_28d_unique_visitors
-    FROM storyfragments sf
-    LEFT JOIN actions a ON 
-      a.object_id = sf.id AND 
-      a.object_type = 'StoryFragment'
-    GROUP BY sf.id, sf.slug
-  `);
-
-  return rows.map((row) => ({
-    id: String(row.id),
-    slug: String(row.slug),
-    total_actions: Number(row.total_actions || 0),
-    unique_visitors: Number(row.unique_visitors || 0),
-    last_24h_actions: Number(row.last_24h_actions || 0),
-    last_7d_actions: Number(row.last_7d_actions || 0),
-    last_28d_actions: Number(row.last_28d_actions || 0),
-    last_24h_unique_visitors: Number(row.last_24h_unique_visitors || 0),
-    last_7d_unique_visitors: Number(row.last_7d_unique_visitors || 0),
-    last_28d_unique_visitors: Number(row.last_28d_unique_visitors || 0),
-    total_leads: totalLeads,
-  }));
-}
-
 export async function logTokenUsage(tokensUsed: number, context?: APIContext): Promise<boolean> {
   try {
     const client = await tursoClient.getClient(context);
@@ -1999,4 +1814,10 @@ export async function logTokenUsage(tokensUsed: number, context?: APIContext): P
     console.error("Error logging token usage:", error);
     return false;
   }
+}
+
+export async function computeStoryfragmentAnalytics(
+  context?: APIContext
+): Promise<StoryfragmentAnalytics[]> {
+  return computeStoryfragmentAnalyticsFromEvents(context);
 }

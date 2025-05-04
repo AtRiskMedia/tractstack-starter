@@ -8,7 +8,7 @@ import { getContextPaneBySlugFullRowData } from "@/utils/db/turso.ts";
 import StoryKeepHeader from "@/components/storykeep/controls/StoryKeepHeader.tsx";
 import StoryKeepToolBar from "@/components/storykeep/controls/StoryKeepToolBar.tsx";
 import StoryKeepToolMode from "@/components/storykeep/controls/StoryKeepToolMode.tsx";
-import PullAnalytics from "@/components/storykeep/controls/recharts/PullAnalytics.tsx";
+import PullPanelAnalytics from "@/components/storykeep/controls/state/PullPanelAnalytics.tsx";
 import { ReactNodesWrapper } from "@/components/compositor-nodes/ReactNodesWrapper.tsx";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import SettingsPanel from "@/components/storykeep/controls/SettingsPanel.tsx";
@@ -90,7 +90,7 @@ if (!paneNode) {
       nodeId={paneNode.id}
       client:load
     />
-    <PullAnalytics id={paneNode.id} type="pane" client:only="react" />
+    <PullPanelAnalytics id={paneNode.id} type="pane" client:only="react" />
   </header>
   <div id="headerSpacer"></div>
 

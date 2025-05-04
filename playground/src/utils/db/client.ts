@@ -1,5 +1,6 @@
 import { createClient } from "@libsql/client";
 import path from "path";
+import { ulid } from "ulid";
 import fs from "fs/promises";
 import type { Client } from "@libsql/client";
 import schema from "../../../config/schema.json";
@@ -129,6 +130,20 @@ class TursoClientManager {
     }
     for (const indexSql of schema.indexes) {
       await client.execute(indexSql);
+    }
+    if (schema.epinets) {
+      const { rows: existingEpinets } = await client.execute(
+        "SELECT COUNT(*) as count FROM epinets"
+      );
+      const epinetCount = Number(existingEpinets[0]?.count || 0);
+      if (epinetCount === 0) {
+        for (const epinet of schema.epinets) {
+          await client.execute({
+            sql: `INSERT INTO epinets (id, title, options_payload) VALUES (?, ?, ?)`,
+            args: [ulid(), epinet.title, JSON.stringify(epinet.payload)],
+          });
+        }
+      }
     }
     await this.updateSchemaStatus(configPath, this.hasTursoCredentials(tenantId));
   }
