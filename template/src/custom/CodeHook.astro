@@ -2,6 +2,7 @@
 import { getAPIContext } from "@/utils/api/astroContext";
 import { getFullContentMap } from "@/utils/db/turso.ts";
 import type { FullContentMap, ResourceNode, CodeHookPayload } from "@/types";
+import { computeDashboardAnalytics } from "@/utils/events/dashboardAnalytics";
 import CustomHero from "./CustomHero.astro";
 import FeaturedContent from "@/components/codehooks/FeaturedContent.astro";
 import ListContent from "@/components/codehooks/ListContent.astro";
@@ -16,6 +17,8 @@ export interface Props {
 const { target, options /* resources */ } = Astro.props;
 const context = getAPIContext(Astro);
 const contentMap: FullContentMap[] = await getFullContentMap(context);
+const dashboardData = await computeDashboardAnalytics(`weekly`, context);
+const hotContent = dashboardData?.hot_content || [];
 
 export const components = {
   "custom-hero": true,
@@ -31,7 +34,7 @@ export const components = {
 
 {
   target === "list-content" ? (
-    <ListContent options={options} contentMap={contentMap} />
+    <ListContent options={options} contentMap={contentMap} hotContent={hotContent} />
   ) : target === "featured-content" ? (
     <FeaturedContent options={options} contentMap={contentMap} />
   ) : target === "bunny-video" ? (

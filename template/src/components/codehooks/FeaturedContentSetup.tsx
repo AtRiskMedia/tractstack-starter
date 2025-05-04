@@ -29,6 +29,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
   const draggedRef = useRef<string | null>(null);
   const isInitialMount = useRef(true);
 
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [selectedMode, setSelectedMode] = useState(params?.defaultMode || "ordered");
   const [selectedFeaturedId, setSelectedFeaturedId] = useState(params?.featuredId || "");
   const [selectedIds, setSelectedIds] = useState<string[]>(
@@ -46,7 +47,8 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
 
   const ctx = getCtx();
 
-  // Get all valid story fragments with required fields
+  const hasConfiguration = selectedIds.length > 0 || selectedFeaturedId !== "";
+
   const validPages = $contentMap
     .filter(
       (item): item is StoryFragmentContentMap =>
@@ -242,8 +244,38 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     return pageIds.filter((id) => selectedIds.includes(id)).length;
   };
 
+  // If panel is not open, show only the configuration button
+  if (!isPanelOpen) {
+    return (
+      <div className="w-full p-6 space-y-6 flex flex-col items-center justify-center bg-slate-50 min-h-[200px] rounded-lg">
+        <button
+          onClick={() => setIsPanelOpen(true)}
+          className="px-6 py-3 bg-cyan-600 text-white font-bold rounded-lg shadow-md hover:bg-cyan-700 transition-colors"
+        >
+          {hasConfiguration ? "Edit Featured Content Widget" : "Configure Featured Content Widget"}
+        </button>
+        {hasConfiguration && (
+          <div className="mt-3 text-sm text-gray-600">
+            Currently showing {selectedIds.length} pages
+            {featuredPage ? ", with featured article" : ""}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-900">Configure Featured Content</h2>
+        <button
+          onClick={() => setIsPanelOpen(false)}
+          className="px-4 py-2 bg-gray-200 text-gray-800 font-bold rounded hover:bg-gray-300 transition-colors"
+        >
+          Close Configuration
+        </button>
+      </div>
+
       <div className="bg-white rounded-lg shadow p-4">
         <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-4">Settings</h3>
         <div className="pt-4 space-y-4">
@@ -260,7 +292,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                     className={({ checked }) =>
                       classNames(
                         "flex items-center p-2 rounded-md cursor-pointer border",
-                        checked ? "bg-blue-50 border-blue-500" : "border-gray-300"
+                        checked ? "bg-cyan-50 border-blue-500" : "border-gray-300"
                       )
                     }
                   >
@@ -298,7 +330,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
       <div
         className={classNames(
           "bg-white rounded-lg shadow overflow-hidden",
-          dragState.dropTarget === "featured" ? "bg-blue-50 border-2 border-blue-500" : ""
+          dragState.dropTarget === "featured" ? "bg-cyan-50 border-2 border-blue-500" : ""
         )}
         onDragOver={(e) => handleDragOver(e, "featured", true)}
         onDrop={(e) => handleDrop(e, "featured", true)}
@@ -378,7 +410,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleTopicIncludeAll(topic.pageIds)}
-                    className="px-2 py-1 text-xs font-bold text-blue-600 bg-blue-100 hover:bg-blue-200 rounded"
+                    className="px-2 py-1 text-xs font-bold text-blue-600 bg-cyan-100 hover:bg-cyan-200 rounded"
                   >
                     Include All
                   </button>
@@ -404,7 +436,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
               {validPages.length} available)
             </p>
           </div>
-          <span className="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-sm font-bold">
+          <span className="bg-cyan-100 text-blue-800 py-1 px-3 rounded-full text-sm font-bold">
             {selectedIds.length - (selectedFeaturedId ? 1 : 0)} / {validPages.length}
           </span>
         </div>
@@ -423,7 +455,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                   "p-4 flex items-center",
                   selectedMode === "ordered" && isIncluded ? "cursor-move" : "",
                   dragState.dragging === page.id ? "opacity-50 bg-gray-100" : "",
-                  dragState.dropTarget === page.id ? "bg-blue-50 border-2 border-blue-500" : ""
+                  dragState.dropTarget === page.id ? "bg-cyan-50 border-2 border-blue-500" : ""
                 )}
               >
                 <img
@@ -473,7 +505,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                           "px-2 py-1 text-xs font-bold rounded",
                           selectedFeaturedId === page.id
                             ? "bg-red-100 text-red-600 hover:bg-red-200"
-                            : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+                            : "bg-cyan-100 text-blue-600 hover:bg-cyan-200"
                         )}
                       >
                         {selectedFeaturedId === page.id ? "Unfeature" : "Make Featured"}
@@ -511,7 +543,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                 "px-4 py-2 text-sm font-bold rounded",
                 currentPage === 1
                   ? "bg-gray-200 text-gray-500"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-cyan-600 text-white hover:bg-cyan-700"
               )}
             >
               Previous
@@ -526,7 +558,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                 "px-4 py-2 text-sm font-bold rounded",
                 currentPage === totalPages
                   ? "bg-gray-200 text-gray-500"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-cyan-600 text-white hover:bg-cyan-700"
               )}
             >
               Next

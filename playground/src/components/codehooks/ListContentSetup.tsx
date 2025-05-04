@@ -20,7 +20,8 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
   const $contentMap = useStore(contentMap);
   const $analytics = useStore(storyfragmentAnalyticsStore);
 
-  // Parse existing parameters or set defaults
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+
   const [selectedMode, setSelectedMode] = useState(params?.defaultMode || "recent");
   const [excludedIds, setExcludedIds] = useState<string[]>(
     params?.excludedIds ? params.excludedIds.split(",") : []
@@ -32,12 +33,13 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
   const [currentPage, setCurrentPage] = useState(1);
   const [bgColor, setBgColor] = useState(params?.bgColor || "");
 
-  // Use a ref to track initial mount to prevent unnecessary updates
   const isInitialMount = useRef(true);
 
   const ctx = getCtx();
 
-  // Get all valid story fragments, ensuring they have all required fields
+  const hasConfiguration =
+    selectedTopics.length > 0 || excludedIds.length > 0 || pageSize !== 10 || bgColor !== "";
+
   const validPages = $contentMap.filter(
     (item): item is StoryFragmentContentMap =>
       item.type === "StoryFragment" &&
@@ -68,40 +70,30 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Filter pages based on topic and exclusion logic
   const filteredPages = validPages.filter((page) => {
-    // Skip if page is explicitly excluded
     if (excludedIds.includes(page.id)) {
       return false;
     }
-
-    // If no topics selected, include all non-excluded pages
     if (selectedTopics.length === 0) {
       return true;
     }
-
-    // Check if page has at least one of the selected topics
     return page.topics && page.topics.some((topic) => selectedTopics.includes(topic));
   });
 
-  // Sort filtered pages according to selected mode
   const sortedPages = [...filteredPages].sort((a, b) => {
     if (selectedMode === "popular") {
       const aViews = $analytics.byId[a.id]?.total_actions || 0;
       const bViews = $analytics.byId[b.id]?.total_actions || 0;
       return bViews - aViews;
     }
-    // Default to "recent"
     const bDate = b.changed ? new Date(b.changed) : new Date(0);
     const aDate = a.changed ? new Date(a.changed) : new Date(0);
     return bDate.getTime() - aDate.getTime();
   });
 
-  // Paginate pages
   const totalPages = Math.ceil(sortedPages.length / PER_PAGE);
   const paginatedPages = sortedPages.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
-  // Update the pane node when configuration changes
   const updatePaneNode = () => {
     if (nodeId) {
       const allNodes = ctx.allNodes.get();
@@ -233,8 +225,44 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
     return topicInfo.pageIds.every((id) => excludedIds.includes(id));
   };
 
+  // If panel is not open, show only the configuration button
+  if (!isPanelOpen) {
+    return (
+      <div className="w-full p-6 space-y-6 flex flex-col items-center justify-center bg-slate-50 min-h-[200px] rounded-lg">
+        <button
+          onClick={() => setIsPanelOpen(true)}
+          className="px-6 py-3 bg-cyan-600 text-white font-bold rounded-lg shadow-md hover:bg-cyan-700 transition-colors"
+        >
+          {hasConfiguration ? "Edit Content List Widget" : "Configure Content List Widget"}
+        </button>
+        {hasConfiguration && (
+          <div className="mt-3 text-sm text-gray-600">
+            {selectedTopics.length > 0 ? (
+              <span>Showing content with topics: {selectedTopics.join(", ")}</span>
+            ) : (
+              <span>
+                Showing {filteredPages.length} pages, {pageSize} per page
+              </span>
+            )}
+            {excludedIds.length > 0 && <span>, {excludedIds.length} pages excluded</span>}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-bold text-gray-900">Configure Content List</h2>
+        <button
+          onClick={() => setIsPanelOpen(false)}
+          className="px-4 py-2 bg-gray-200 text-gray-800 font-bold rounded hover:bg-gray-300 transition-colors"
+        >
+          Close Configuration
+        </button>
+      </div>
+
       <div className="bg-white rounded-lg shadow p-4">
         <div className="border-b border-gray-200 pb-4">
           <h3 className="text-lg font-bold text-gray-900">Content Settings</h3>
@@ -247,7 +275,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
             <select
               id="page-size"
               name="page-size"
-              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-myblue focus:outline-none focus:ring-myblue sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-cyan-600 focus:outline-none focus:ring-cyan-600 sm:text-sm"
               value={pageSize}
               onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
             >
@@ -265,7 +293,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
             <select
               id="sort-mode"
               name="sort-mode"
-              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-myblue focus:outline-none focus:ring-myblue sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-cyan-600 focus:outline-none focus:ring-cyan-600 sm:text-sm"
               value={selectedMode}
               onChange={(e) => setSelectedMode(e.target.value)}
             >
@@ -312,7 +340,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                   const allTopicPageIds = topics.flatMap((t) => t.pageIds);
                   setExcludedIds((prev) => prev.filter((id) => !allTopicPageIds.includes(id)));
                 }}
-                className="px-3 py-1 text-sm font-bold text-myblue bg-myblue/10 hover:bg-myblue/20 rounded-md"
+                className="px-3 py-1 text-sm font-bold text-cyan-600 bg-cyan-600/10 hover:bg-cyan-600/20 rounded-md"
               >
                 Include All Topics
               </button>
@@ -331,7 +359,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                   <span className="text-sm font-bold text-gray-900">{topic.name}</span>
                   <span className="ml-2 text-sm text-gray-500">({topic.count} pages)</span>
                   {isTopicEffectivelySelected(topic.name) && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-myblue/10 text-myblue">
+                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-cyan-600/10 text-cyan-600">
                       Included
                     </span>
                   )}
@@ -352,7 +380,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                     className={`px-2 py-1 text-xs font-bold ${
                       isTopicEffectivelySelected(topic.name)
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "text-myblue hover:text-myblue-dark bg-myblue/10 hover:bg-myblue/20"
+                        : "text-cyan-600 hover:text-cyan-700 bg-cyan-600/10 hover:bg-cyan-600/20"
                     } rounded-md`}
                     disabled={isTopicEffectivelySelected(topic.name)}
                   >
@@ -431,7 +459,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                             onClick={() => toggleTopicFilter(topic)}
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold cursor-pointer ${
                               selectedTopics.includes(topic)
-                                ? "bg-myblue/10 text-myblue"
+                                ? "bg-cyan-600/10 text-cyan-600"
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >
@@ -468,7 +496,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                 "px-4 py-2 text-sm font-bold rounded-md",
                 currentPage === 1
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-myblue text-white hover:bg-myblue-dark"
+                  : "bg-cyan-600 text-white hover:bg-cyan-700"
               )}
             >
               Previous
@@ -483,7 +511,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
                 "px-4 py-2 text-sm font-bold rounded-md",
                 currentPage === totalPages
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-myblue text-white hover:bg-myblue-dark"
+                  : "bg-cyan-600 text-white hover:bg-cyan-700"
               )}
             >
               Next
