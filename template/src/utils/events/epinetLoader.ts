@@ -19,7 +19,7 @@ import type {
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { Client } from "@libsql/client";
 
-const VERBOSE = false;
+const VERBOSE = true;
 const LOADING_THROTTLE_MS = 60000;
 const RECENT_CHUNK_SIZE = 48;
 const HISTORICAL_CHUNK_SIZE = 168;

@@ -3,7 +3,7 @@ import { ANALYTICS_CACHE_TTL } from "@/constants";
 import { EPINETS_CACHE_TTL } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 export function formatHourKey(date: Date): string {
   if (isNaN(date.getTime())) {
@@ -74,6 +74,7 @@ export const hourlyEpinetStore = map<{
 });
 
 export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
+  ensureStoreStructures(tenantId);
   const store = hourlyAnalyticsStore.get();
   const tenantData = store.data[tenantId] || {
     contentData: {},
@@ -89,7 +90,7 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
     if (VERBOSE)
       console.log("Cache invalid: missing lastFullHour or contentData for tenant", { tenantId });
     return false;
-  }
+  } else if (VERBOSE) console.log("Cache is valid for tenant", { tenantId });
 
   const currentHour = formatHourKey(new Date(Date.now()));
   const timeSinceUpdate = Date.now() - tenantData.lastUpdated;
@@ -220,4 +221,32 @@ export function getHoursBetween(startHourKey: string, endHourKey: string): numbe
   const endDate = new Date(endYear, endMonth - 1, endDay, endHour);
 
   return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / (60 * 60 * 1000)));
+}
+
+export function ensureStoreStructures(tenantId = "default") {
+  // Ensure analytics store structure
+  const analyticsStore = hourlyAnalyticsStore.get();
+  if (!analyticsStore.data) analyticsStore.data = {};
+  if (!analyticsStore.data[tenantId]) {
+    analyticsStore.data[tenantId] = {
+      contentData: {},
+      siteData: {},
+      lastFullHour: formatHourKey(new Date()),
+      lastUpdated: Date.now(),
+      totalLeads: 0,
+      lastActivity: null,
+      slugMap: new Map(),
+    };
+    hourlyAnalyticsStore.set(analyticsStore);
+  }
+
+  // Ensure epinet store structure
+  const epinetStore = hourlyEpinetStore.get();
+  if (!epinetStore.data) epinetStore.data = {};
+  if (!epinetStore.data[tenantId]) {
+    epinetStore.data[tenantId] = {};
+  }
+  if (!epinetStore.lastFullHour) epinetStore.lastFullHour = {};
+  if (!epinetStore.lastUpdateTime) epinetStore.lastUpdateTime = {};
+  hourlyEpinetStore.set(epinetStore);
 }

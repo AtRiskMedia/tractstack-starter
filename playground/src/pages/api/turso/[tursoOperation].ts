@@ -213,10 +213,10 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
 
         try {
           const tenantId = context?.locals?.tenant?.id || "default";
-          const analyticStore = hourlyAnalyticsStore.get();
-          const epinetStore = hourlyEpinetStore.get();
           const isAnalyticsValid = isAnalyticsCacheValid(tenantId);
           const isEpinetValid = isEpinetCacheValid(tenantId);
+          const analyticStore = hourlyAnalyticsStore.get();
+          const epinetStore = hourlyEpinetStore.get();
           const currentHour = formatHourKey(new Date());
           const tenantAnalyticsData = analyticStore.data[tenantId];
           const tenantEpinetData = epinetStore.data[tenantId];

@@ -9,10 +9,9 @@ import type {
   ResourceRowData,
   BeliefRowData,
 } from "@/store/nodesSerializer";
-import { ANALYTICS_CACHE_TTL } from "@/constants";
-import type { StoryfragmentAnalytics, FullContentMap } from "@/types";
+import type { FullContentMap } from "@/types";
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 interface CacheEntry<T> {
   data: T;
@@ -374,7 +373,6 @@ export function setCachedResource(data: ResourceRowData) {
   const entry = createCacheEntry(data);
   const currentStore = resourceStore.get();
 
-  // Update category mapping if category exists
   let byCategory = currentStore.byCategory;
   if (data.category_slug) {
     const categoryIds = new Set(currentStore.byCategory[data.category_slug] || []);
@@ -432,7 +430,6 @@ export function setCachedBelief(data: BeliefRowData) {
   });
 }
 
-// Cache Management Operations
 export function invalidateCache() {
   contentMapStore.set({ items: [], lastUpdated: null });
   tractStackStore.set({ byId: {}, bySlug: {} });
@@ -447,20 +444,10 @@ export function invalidateCache() {
     lastFullUpdate: null,
     errors: {},
   });
-  analyticsStore.set({
-    byId: {},
-    lastFullUpdate: null,
-  });
 }
 
 export function invalidateEntry(type: string, id: string) {
   switch (type) {
-    case "analytics": {
-      const { [id]: removed, ...rest } = analyticsStore.get().byId;
-      analyticsStore.setKey("byId", rest);
-      break;
-    }
-
     case "tractstack": {
       const tractStack = tractStackStore.get().byId[id];
       if (tractStack) {
@@ -718,69 +705,4 @@ export function processBatchCache(batch: BatchCacheData) {
       },
     });
   }
-}
-
-export const analyticsStore = map<{
-  byId: Record<string, CacheEntry<StoryfragmentAnalytics>>;
-  lastFullUpdate: number | null;
-}>({
-  byId: {},
-  lastFullUpdate: null,
-});
-
-export function getCachedAnalyticsById(id: string): StoryfragmentAnalytics | null {
-  const entry = analyticsStore.get().byId[id];
-  if (!isAnalyticsCacheValid(entry)) return null;
-
-  const updatedEntry = touchCacheEntry(entry);
-  analyticsStore.setKey("byId", {
-    ...analyticsStore.get().byId,
-    [id]: updatedEntry,
-  });
-
-  return updatedEntry.data;
-}
-
-function isAnalyticsCacheValid<T>(entry: CacheEntry<T> | undefined): boolean {
-  updateCacheStats(!!entry);
-  if (!entry) return false;
-  return Date.now() - entry.accessed < ANALYTICS_CACHE_TTL;
-}
-
-export function setCachedAnalytics(data: StoryfragmentAnalytics) {
-  const entry = createCacheEntry(data);
-  analyticsStore.setKey("byId", {
-    ...analyticsStore.get().byId,
-    [data.id]: entry,
-  });
-  analyticsStore.setKey("lastFullUpdate", Date.now());
-}
-
-export function processBatchAnalytics(analytics: StoryfragmentAnalytics[]) {
-  const entries = analytics.map((a) => [a.id, createCacheEntry(a)]);
-
-  analyticsStore.set({
-    byId: {
-      ...analyticsStore.get().byId,
-      ...Object.fromEntries(entries),
-    },
-    lastFullUpdate: Date.now(),
-  });
-}
-
-export function shouldRefreshAnalytics(): boolean {
-  const lastUpdate = analyticsStore.get().lastFullUpdate;
-  if (!lastUpdate) return true;
-  return Date.now() - lastUpdate > ANALYTICS_CACHE_TTL;
-}
-
-export function getAllCachedAnalytics(): StoryfragmentAnalytics[] {
-  const store = analyticsStore.get();
-  if (!store.lastFullUpdate || Date.now() - store.lastFullUpdate > ANALYTICS_CACHE_TTL) {
-    return [];
-  }
-
-  return Object.values(store.byId)
-    .map((entry) => entry.data)
-    .filter((analytics): analytics is StoryfragmentAnalytics => analytics !== null);
 }
