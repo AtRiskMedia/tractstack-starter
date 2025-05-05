@@ -1101,12 +1101,29 @@ export class NodesContext {
         typeof duplicatedPane.markdown !== `undefined` &&
         typeof duplicatedPane.markdown.id === `string`
       ) {
-        duplicatedPane?.markdown.nodes?.forEach((node) => {
-          const childrenNodes = this.setupTemplateNodeRecursively(
-            node,
-            duplicatedPane?.markdown?.id || ""
-          );
-          markdownNodes.push(...childrenNodes);
+        // Create a map to track the original node ID to its duplicated node ID
+        const oldToNewIdMap = new Map<string, string>();
+        // First pass: Clone nodes and generate new IDs
+        const nodesClone =
+          duplicatedPane?.markdown?.nodes?.map((originalNode) => {
+            const newNode = cloneDeep(originalNode);
+            newNode.id = ulid();
+            oldToNewIdMap.set(originalNode.id, newNode.id);
+            return newNode;
+          }) || [];
+        // Second pass: Update parent IDs using the mapping
+        nodesClone.forEach((node) => {
+          // Special case for direct children of markdown
+          if (node.parentId === pane?.markdown?.id) {
+            node.parentId = duplicatedPane?.markdown?.id || "";
+          } else {
+            // For all other nodes, use the mapping to find the new parent ID
+            const newParentId = oldToNewIdMap.get(node.parentId || "");
+            if (newParentId) {
+              node.parentId = newParentId;
+            }
+          }
+          markdownNodes.push(node);
         });
         allNodes = [...allNodes, duplicatedPane.markdown, ...markdownNodes];
       }
@@ -2007,6 +2024,33 @@ export class NodesContext {
     }
 
     return results;
+  }
+
+  mapNodeHierarchy(nodes: TemplateNode[]) {
+    const nodeMap: Record<string, any> = {};
+
+    // First pass - create entries for all nodes
+    nodes.forEach((node) => {
+      nodeMap[node.id] = {
+        id: node.id,
+        nodeType: node.nodeType,
+        tagName: node.tagName || "N/A",
+        parentId: node.parentId,
+        children: [],
+      };
+    });
+
+    // Second pass - build the hierarchy
+    nodes.forEach((node) => {
+      if (node.parentId && nodeMap[node.parentId]) {
+        nodeMap[node.parentId].children.push(nodeMap[node.id]);
+      }
+    });
+
+    // Return only the root nodes (those whose parents aren't in our node set)
+    return nodes
+      .filter((node) => !node.parentId || !nodeMap[node.parentId])
+      .map((node) => nodeMap[node.id]);
   }
 
   private deleteNodes(nodesList: BaseNode[]): BaseNode[] {
