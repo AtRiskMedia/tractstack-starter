@@ -28,7 +28,6 @@ if (!validation.isValid || !config) {
 }
 const canonicalURL = `/storykeep`;
 
-// get storykeep datum
 const payload = await getFullContentMap(context);
 const filterPayload = payload.filter(
   (e: FullContentMap) => e.type === `StoryFragment` || (e.type === `Pane` && e.isContext)

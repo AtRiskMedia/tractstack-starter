@@ -1,35 +1,43 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
-import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
-import TagIcon from "@heroicons/react/24/outline/TagIcon";
-import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
-import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
-import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
-import { storyFragmentTopicsStore, isDemoModeStore } from "@/store/storykeep";
-import { StoryFragmentMode } from "@/types.ts";
-import { getCtx } from "@/store/nodes.ts";
 import { contentMap } from "@/store/events";
+import { storyFragmentTopicsStore, isDemoModeStore } from "@/store/storykeep";
+import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
+import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import TagIcon from "@heroicons/react/24/outline/TagIcon";
+import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
+import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
+import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
+import { getCtx } from "@/store/nodes.ts";
 import { cloneDeep, findUniqueSlug, titleToSlug } from "@/utils/common/helpers.ts";
 import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
 import OgImagePreview from "../fields/OgImagePreview";
-import type { FullContentMap, StoryFragmentNode, Config } from "@/types.ts";
+import type {
+  FullContentMap,
+  StoryFragmentContentMap,
+  StoryFragmentNode,
+  Config,
+  Topic,
+  TopicContentMap,
+  PaneContentMap,
+} from "@/types.ts";
+import { StoryFragmentMode } from "@/types.ts";
 import type { MouseEventHandler, ChangeEvent } from "react";
 
 const TARGET_WIDTH = 1200;
 const TARGET_HEIGHT = 630;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
-interface Topic {
-  id?: string | number;
-  title: string;
-}
-
 interface StoryFragmentOpenGraphPanelProps {
   nodeId: string;
   setMode: (mode: StoryFragmentMode) => void;
   config?: Config;
 }
+
+const hasSlug = (item: FullContentMap): item is StoryFragmentContentMap | PaneContentMap =>
+  "slug" in item &&
+  typeof item.slug === "string" &&
+  (item.type === "StoryFragment" || item.type === "Pane");
 
 const StoryFragmentOpenGraphPanel = ({
   nodeId,
@@ -50,7 +58,14 @@ const StoryFragmentOpenGraphPanel = ({
   const [dataFetched, setDataFetched] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialState = useRef<{
+    title: string;
+    details: string;
+    topics: Topic[];
+    socialImagePath: string | null;
+  } | null>(null);
 
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
@@ -63,6 +78,7 @@ const StoryFragmentOpenGraphPanel = ({
 
   const initialized = useRef(false);
 
+  const $contentMap = useStore(contentMap) as FullContentMap[];
   const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
   const storedData = $storyFragmentTopics[nodeId];
 
@@ -83,10 +99,7 @@ const StoryFragmentOpenGraphPanel = ({
 
   const handleTitleBlur = () => {
     if (title.length >= 10) {
-      const ctx = getCtx();
-      const existingSlugs = (contentMap.get() as FullContentMap[])
-        .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
-        .map((item) => item.slug);
+      const existingSlugs = $contentMap.filter(hasSlug).map((item) => item.slug);
       const newSlug =
         storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
       const updatedNode = cloneDeep({
@@ -99,7 +112,6 @@ const StoryFragmentOpenGraphPanel = ({
     }
   };
 
-  // Image validation function
   const validateImage = (file: File): Promise<{ isValid: boolean; error?: string }> => {
     return new Promise((resolve) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -134,103 +146,80 @@ const StoryFragmentOpenGraphPanel = ({
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadContentData = () => {
       if (initialized.current || dataFetched) return;
 
       setLoading(true);
       try {
-        const topicsResponse = await fetch("/api/turso/getAllTopics");
-        if (topicsResponse.ok) {
-          const topicsData = await topicsResponse.json();
-          if (topicsData.success && Array.isArray(topicsData.data.data)) {
-            setExistingTopics(topicsData.data.data);
-          } else {
-            setExistingTopics([]);
-          }
-        } else {
-          console.warn("Topics API returned non-200 status:", topicsResponse.status);
-          setExistingTopics([]);
-        }
+        const topicsContent = $contentMap.find(
+          (item) => item.type === "Topic" && item.id === "all-topics"
+        ) as TopicContentMap | undefined;
 
-        // If we have stored data (for new fragments that aren't yet saved), use it
+        setExistingTopics(topicsContent?.topics || []);
+
+        let initialTopics: Topic[] = [];
+        let initialDescription = "";
+
         if (storedData) {
-          setTopics(Array.isArray(storedData.topics) ? storedData.topics : []);
-          setDetails(storedData.description || "");
-        }
-        // Otherwise fetch from API for existing fragments
-        else {
-          try {
-            // Fetch topics for this fragment
-            const fragmentTopicsResponse = await fetch(
-              `/api/turso/getTopicsForStoryFragment?storyFragmentId=${nodeId}`
-            );
+          initialTopics = Array.isArray(storedData.topics)
+            ? storedData.topics.map((t) => ({
+                id: typeof t.id === "string" ? parseInt(t.id, 10) : (t.id ?? -1),
+                title: t.title,
+              }))
+            : [];
+          initialDescription = storedData.description || "";
+          setTopics(initialTopics);
+          setDetails(initialDescription);
+        } else {
+          const sfContent = $contentMap.find(
+            (item): item is StoryFragmentContentMap =>
+              item.type === "StoryFragment" && item.id === nodeId
+          );
 
-            if (fragmentTopicsResponse.ok) {
-              const fragmentTopicsData = await fragmentTopicsResponse.json();
-              if (fragmentTopicsData.success && typeof fragmentTopicsData.data.data === `object`) {
-                const topicsData = Array.isArray(fragmentTopicsData.data.data)
-                  ? fragmentTopicsData.data.data
-                  : [];
-                setTopics(topicsData);
-              }
-            } else {
-              console.warn(
-                "Fragment topics API returned non-200 status:",
-                fragmentTopicsResponse.status
-              );
-              setTopics([]);
+          if (sfContent) {
+            if (sfContent.topics && sfContent.topics.length > 0) {
+              initialTopics = sfContent.topics.map((topicTitle) => {
+                const existingTopic = topicsContent?.topics.find(
+                  (t) => t.title.toLowerCase() === topicTitle.toLowerCase()
+                );
+                return existingTopic || { id: -1, title: topicTitle };
+              });
             }
-          } catch (topicErr) {
-            console.error("Error fetching fragment topics:", topicErr);
+            initialDescription = sfContent.description || "";
+            setTopics(initialTopics);
+            setDetails(initialDescription);
+          } else {
             setTopics([]);
-          }
-
-          try {
-            // Fetch fragment details
-            const detailsResponse = await fetch(
-              `/api/turso/getStoryFragmentDetails?storyFragmentId=${nodeId}`
-            );
-
-            if (detailsResponse.ok) {
-              const detailsData = await detailsResponse.json();
-              if (detailsData.success && typeof detailsData?.data?.data?.description === `string`) {
-                setDetails(detailsData.data.data.description);
-              } else {
-                setDetails("");
-              }
-            } else {
-              console.warn("Details API returned non-200 status:", detailsResponse.status);
-              setDetails("");
-            }
-          } catch (detailsErr) {
-            console.error("Error fetching fragment details:", detailsErr);
             setDetails("");
           }
         }
 
-        // Mark data as fetched
+        // Store initial state for change detection
+        initialState.current = {
+          title: storyfragmentNode.title,
+          details: initialDescription,
+          topics: cloneDeep(initialTopics),
+          socialImagePath: storyfragmentNode.socialImagePath ?? null,
+        };
+
         setDataFetched(true);
         initialized.current = true;
       } catch (err) {
-        console.error("Error in fetchData:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
+        console.error("Error in loadContentData:", err);
+        setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [nodeId, storedData, storyfragmentNode.socialImagePath]);
+    loadContentData();
+  }, [nodeId, storedData, storyfragmentNode.socialImagePath, $contentMap]);
 
-  // Update the store when topics or details change, but only after initial loading
   useEffect(() => {
-    if (!loading && dataFetched) {
-      // Ensure topics is an array before mapping
+    if (!loading && dataFetched && initialState.current) {
       const topicsArray = Array.isArray(topics) ? topics : [];
-
-      // Type conversion to match the storyFragmentTopicsStore expected format
       const storeTopics = topicsArray.map((topic) => ({
-        id: topic.id?.toString(),
+        id: topic.id !== undefined && topic.id !== -1 ? String(topic.id) : undefined,
         title: topic.title,
       }));
 
@@ -238,10 +227,26 @@ const StoryFragmentOpenGraphPanel = ({
         topics: storeTopics,
         description: details,
       });
-    }
-  }, [topics, details, nodeId, loading, dataFetched]);
 
-  // Image handling functions
+      // Detect changes
+      const initial = initialState.current;
+      const topicsChanged =
+        topics.length !== initial.topics.length ||
+        topics.some(
+          (t, i) =>
+            t.title.toLowerCase() !== initial.topics[i]?.title.toLowerCase() ||
+            t.id !== initial.topics[i]?.id
+        );
+      const hasChangesDetected =
+        title !== initial.title ||
+        details !== initial.details ||
+        topicsChanged ||
+        (storyfragmentNode.socialImagePath ?? null) !== initial.socialImagePath;
+
+      setHasChanges(hasChangesDetected);
+    }
+  }, [topics, details, title, storyfragmentNode.socialImagePath, nodeId, loading, dataFetched]);
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -259,7 +264,6 @@ const StoryFragmentOpenGraphPanel = ({
   const handleRemoveImage = async () => {
     if (storyfragmentNode.socialImagePath) {
       setIsProcessing(true);
-      // note: we do not delete the image, but no longer use it
       const updatedNode = cloneDeep({
         ...storyfragmentNode,
         socialImagePath: null,
@@ -279,7 +283,6 @@ const StoryFragmentOpenGraphPanel = ({
     setImageError(null);
 
     try {
-      // Validate image dimensions and format
       const validation = await validateImage(file);
       if (!validation.isValid) {
         setImageError(validation.error || "Invalid image");
@@ -287,7 +290,6 @@ const StoryFragmentOpenGraphPanel = ({
         return;
       }
 
-      // Delete existing image if present
       if (storyfragmentNode.socialImagePath) {
         await fetch("/api/fs/deleteOgImage", {
           method: "POST",
@@ -298,12 +300,10 @@ const StoryFragmentOpenGraphPanel = ({
         });
       }
 
-      // Create new filename using node ID and original extension
       const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
       const filename = `${nodeId}.${fileExtension}`;
       const imageDir = "/images/og";
 
-      // Read file as base64
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = (e) => resolve(e.target?.result as string);
@@ -311,7 +311,6 @@ const StoryFragmentOpenGraphPanel = ({
       reader.readAsDataURL(file);
       const base64 = await base64Promise;
 
-      // Upload to filesystem
       const response = await fetch("/api/fs/saveOgImage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -341,27 +340,22 @@ const StoryFragmentOpenGraphPanel = ({
     }
   };
 
-  // Topic handling functions
   const addTopic = (titleToAdd: string, sourceTopic?: Topic) => {
     if (!titleToAdd) return;
 
-    const existingTopic = topics.find(
-      (topic) => topic.title.toLowerCase() === titleToAdd.toLowerCase()
-    );
+    const titleLower = titleToAdd.toLowerCase().trim();
 
-    if (existingTopic) return;
+    if (topics.some((topic) => topic.title.toLowerCase() === titleLower)) return;
 
     const existingTopicsArray = Array.isArray(existingTopics) ? existingTopics : [];
     const matchingTopic =
-      sourceTopic ||
-      existingTopicsArray.find((topic) => topic.title?.toLowerCase() === titleToAdd.toLowerCase());
+      sourceTopic || existingTopicsArray.find((topic) => topic.title.toLowerCase() === titleLower);
 
     if (matchingTopic) {
       setTopics([...topics, { id: matchingTopic.id, title: matchingTopic.title }]);
     } else {
-      const newTopic = { title: titleToAdd };
-      setTopics([...topics, newTopic]);
-      setExistingTopics([...existingTopicsArray, newTopic]);
+      setTopics([...topics, { id: -1, title: titleToAdd.trim() }]);
+      setExistingTopics([...existingTopicsArray, { id: -1, title: titleToAdd.trim() }]);
     }
   };
 
@@ -372,18 +366,9 @@ const StoryFragmentOpenGraphPanel = ({
   };
 
   const handleRemoveTopic = (topicToRemove: Topic) => {
-    setTopics((prevTopics) => {
-      const newTopics = prevTopics.filter((topic) => {
-        const idMatch =
-          topic.id !== undefined && topicToRemove.id !== undefined
-            ? topic.id === topicToRemove.id
-            : false;
-        const titleMatch = topic.title === topicToRemove.title;
-        const isMatch = idMatch || titleMatch; // Match if either ID or title matches
-        return !isMatch; // Keep if it doesn't match
-      });
-      return newTopics;
-    });
+    setTopics((prevTopics) =>
+      prevTopics.filter((topic) => topic.title.toLowerCase() !== topicToRemove.title.toLowerCase())
+    );
   };
 
   const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -400,7 +385,11 @@ const StoryFragmentOpenGraphPanel = ({
     }
   };
 
-  // Check if prerequisites are met for showing topics
+  const handleApplyChanges = () => {
+    nodeIsChanged();
+    setMode(StoryFragmentMode.DEFAULT);
+  };
+
   const hasDescription = details && details.trim().length > 0;
 
   return (
@@ -418,6 +407,17 @@ const StoryFragmentOpenGraphPanel = ({
             ← Close Panel
           </button>
         </div>
+
+        {hasChanges && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleApplyChanges}
+              className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              Apply Changes
+            </button>
+          </div>
+        )}
 
         {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
 
@@ -485,7 +485,7 @@ const StoryFragmentOpenGraphPanel = ({
               </ul>
               <div className="py-2">
                 {charCount < 10 && (
-                  <span className="text-red-500">Title must be at least 20 characters</span>
+                  <span className="text-red-500">Title must be at least 10 characters</span>
                 )}
                 {charCount >= 10 && charCount < 35 && (
                   <span className="text-gray-500">
@@ -670,9 +670,9 @@ const StoryFragmentOpenGraphPanel = ({
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {topics.map((topic, index) => (
+                {topics.map((topic) => (
                   <div
-                    key={topic.id ? `topic-${topic.id}` : `topic-${index}`}
+                    key={`topic-${topic.title}`}
                     className="flex items-center bg-gray-100 rounded-full px-3 py-1"
                   >
                     <TagIcon className="h-4 w-4 text-gray-500 mr-1" />
@@ -698,14 +698,12 @@ const StoryFragmentOpenGraphPanel = ({
                     .filter(
                       (existingTopic) =>
                         !topics.some(
-                          (topic) =>
-                            topic.id === existingTopic.id ||
-                            topic.title.toLowerCase() === existingTopic.title.toLowerCase()
+                          (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
                         )
                     )
                     .map((availableTopic) => (
                       <button
-                        key={`available-${availableTopic.id || availableTopic.title}`}
+                        key={`available-${availableTopic.title}`}
                         onClick={() => addTopic(availableTopic.title, availableTopic)}
                         className="flex items-center bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full px-3 py-1 transition-colors"
                       >
@@ -716,9 +714,7 @@ const StoryFragmentOpenGraphPanel = ({
                   {existingTopics.filter(
                     (existingTopic) =>
                       !topics.some(
-                        (topic) =>
-                          topic.id === existingTopic.id ||
-                          topic.title.toLowerCase() === existingTopic.title.toLowerCase()
+                        (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
                       )
                   ).length === 0 && (
                     <p className="text-xs text-gray-500 italic">No additional topics available.</p>
@@ -728,6 +724,17 @@ const StoryFragmentOpenGraphPanel = ({
             </div>
           ) : null}
         </div>
+
+        {hasChanges && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleApplyChanges}
+              className="bg-cyan-600 text-white px-4 py-2 rounded-md hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              Apply Changes
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

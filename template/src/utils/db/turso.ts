@@ -40,6 +40,8 @@ import type {
   MenuContentMap,
   EpinetContentMap,
   StoryfragmentAnalytics,
+  Topic,
+  TopicContentMap,
 } from "@/types.ts";
 import type { APIContext } from "@/types";
 
@@ -1064,6 +1066,16 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
     const client = await tursoClient.getClient(context);
     if (!client) return [];
 
+    // First, get all topics to include as a special content map entry
+    const { rows: allTopicRows } = await client.execute(
+      `SELECT id, title FROM storyfragment_topics ORDER BY title ASC`
+    );
+
+    const allTopics: Topic[] = allTopicRows.map((row) => ({
+      id: Number(row.id),
+      title: String(row.title),
+    }));
+
     const queryParts = [
       `SELECT 
         id, 
@@ -1139,9 +1151,9 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         sfd.description,
         (
           SELECT GROUP_CONCAT(st.title)
-          FROM storyfragment_has_topic sft
-          JOIN storyfragment_topics st ON sft.topic_id = st.id
-          WHERE sft.storyfragment_id = sf.id
+          FROM storyfragment_has_topic sht
+          JOIN storyfragment_topics st ON sht.topic_id = st.id
+          WHERE sht.storyfragment_id = sf.id
         ) as topics
       FROM storyfragments sf
       JOIN tractstacks ts ON sf.tractstack_id = ts.id
@@ -1178,7 +1190,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
 
     const { rows } = await client.execute(queryParts.join(" UNION ALL ") + " ORDER BY title");
 
-    const mappedData = rows.map((row) => {
+    const mappedData: FullContentMap[] = rows.map((row) => {
       const base = {
         id: ensureString(row.id),
         title: ensureString(row.title),
@@ -1240,9 +1252,14 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
             changed: row.changed ? String(row.changed) : null,
           } as StoryFragmentContentMap;
 
+          // Add description if available
           if (row.description && typeof row.description === "string")
             baseData.description = row.description;
-          if (row.topics && typeof row.topics === "string") baseData.topics = row.topics.split(",");
+
+          // Add topics if available
+          if (row.topics && typeof row.topics === "string")
+            baseData.topics = row.topics.split(",").map((t) => t.trim());
+
           const socialImagePath = row.extra ? String(row.extra) : null;
 
           const cacheBuster = row.changed ? new Date(String(row.changed)).getTime() : Date.now();
@@ -1293,6 +1310,17 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
           throw new Error(`Unknown type: ${row.type}`);
       }
     });
+
+    // Add a special entry for all topics
+    if (allTopics.length > 0) {
+      mappedData.push({
+        id: "all-topics",
+        slug: "all-topics",
+        title: "All Topics",
+        type: "Topic",
+        topics: allTopics,
+      } as TopicContentMap);
+    }
 
     // Update cache only if not in multi-tenant mode
     if (!isMultiTenant) {

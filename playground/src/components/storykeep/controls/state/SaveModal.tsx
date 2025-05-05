@@ -3,9 +3,10 @@ import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import { generateOgImageWithFontLoading } from "@/utils/images/ogImageGenerator";
-import { tenantIdStore } from "@/store/storykeep.ts";
+import { tenantIdStore, storyFragmentTopicsStore } from "@/store/storykeep.ts";
+import { contentMap } from "@/store/events.ts";
 import type { SaveData } from "@/store/nodesSerializer";
-import type { StoryFragmentNode } from "@/types";
+import type { StoryFragmentNode, StoryFragmentContentMap, TopicContentMap, Topic } from "@/types";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 
 type SaveStage =
@@ -14,6 +15,7 @@ type SaveStage =
   | "SAVING_FILES"
   | "SAVING_PANES"
   | "SAVING_STORY_FRAGMENTS"
+  | "SAVING_SEO_TOPICS"
   | "PROCESSING_STYLES"
   | "COMPLETED"
   | "ERROR";
@@ -47,34 +49,25 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
     setDebugMessages((prev) => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   };
 
-  // Add event listener to disable scrolling when modal is open
   useEffect(() => {
-    // Store original overflow setting
     const originalOverflow = document.body.style.overflow;
-    // Prevent scrolling while modal is open
     document.body.style.overflow = "hidden";
 
-    // Handler to prevent all keyboard shortcuts
     const preventKeyboardShortcuts = (e: KeyboardEvent) => {
-      // Allow only tab navigation within the modal
       if (e.key !== "Tab") {
         e.preventDefault();
         e.stopPropagation();
       }
 
-      // Only allow Escape key to close the modal if save is completed or errored
       if (e.key === "Escape" && (stage === "COMPLETED" || stage === "ERROR")) {
         onClose();
       }
     };
 
-    // Prevent all keyboard shortcuts
     window.addEventListener("keydown", preventKeyboardShortcuts, true);
 
     return () => {
-      // Restore original overflow setting
       document.body.style.overflow = originalOverflow;
-      // Remove keyboard event listener
       window.removeEventListener("keydown", preventKeyboardShortcuts, true);
     };
   }, [onClose, stage]);
@@ -89,7 +82,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
       const serializer = new NodesSerializer_Json();
 
       try {
-        // Process nodes through serializer first
         addDebugMessage("Serializing nodes...");
         const saveResult = serializer.save(ctx);
         if (!saveResult) {
@@ -99,13 +91,11 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           return;
         }
 
-        // Convert boolean result to SaveData
         const saveData = saveResult as unknown as SaveData;
         addDebugMessage(
           `Found data to save: Menus:${saveData.menus?.length}, Files:${saveData.files?.length}, Panes:${saveData.panes?.length}, Fragments:${saveData.storyfragments?.length}`
         );
 
-        // Save Menu nodes
         if (saveData.menus?.length > 0) {
           setStage("SAVING_MENUS");
           setProgress(10);
@@ -129,7 +119,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           }
         }
 
-        // Save File nodes
         if (saveData.files?.length > 0) {
           setStage("SAVING_FILES");
           setProgress(20);
@@ -153,7 +142,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           }
         }
 
-        // Save Pane nodes (which include markdown content)
         if (saveData.panes?.length > 0) {
           setStage("SAVING_PANES");
           setProgress(30);
@@ -166,7 +154,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             );
             const pane = saveData.panes[i];
 
-            // Extract markdown data from options_payload
             const options = JSON.parse(pane.options_payload);
             const markdownNode = options.nodes?.find((n: any) => n.nodeType === "Markdown");
 
@@ -203,7 +190,12 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           }
         }
 
-        // Save Story Fragment nodes
+        const storySEOData = storyFragmentTopicsStore.get();
+        const hasStorySEOData = Object.keys(storySEOData).length > 0;
+
+        // Track all updated topics with their real database IDs
+        const allUpdatedTopics: Map<string, Topic[]> = new Map();
+
         if (saveData.storyfragments?.length > 0) {
           setStage("SAVING_STORY_FRAGMENTS");
           setProgress(50);
@@ -216,38 +208,29 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               `Processing fragment ${i + 1}/${saveData.storyfragments.length}: ${fragment.id}`
             );
 
-            // Check if socialImagePath is not a string - meaning it will be set to null
-            // This is our trigger to generate a new OG image
             if (typeof fragment.social_image_path !== "string") {
-              // Ensure it's explicitly null for the database to clear old values
               fragment.social_image_path = null;
 
               try {
-                // Get node to access its OG image parameters
                 const allNodes = ctx.allNodes.get();
                 const node = allNodes.get(fragment.id) as StoryFragmentNode;
 
                 if (node && fragment.title) {
                   addDebugMessage("Getting OG parameters for generation");
-                  // Get OG image parameters from context
                   const params = ctx.getOgImageParams(fragment.id);
                   addDebugMessage(
                     `OG params: text:${params.textColor}, bg:${params.bgColor}, font:${params.fontSize || "auto"}`
                   );
 
-                  // Generate the image
                   addDebugMessage("Generating OG image...");
                   const imageData = await generateOgImageWithFontLoading(fragment.title, params);
                   addDebugMessage("Image generation complete");
 
-                  // For debug visualization
                   setDebugImage(imageData);
 
-                  // Prepare filename with node ID
                   const filename = `${fragment.id}.png`;
                   addDebugMessage(`Saving OG image with filename: ${filename}`);
 
-                  // Save image using existing endpoint
                   const imgResponse = await fetch("/api/fs/saveOgImage", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -270,13 +253,25 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                   `Error generating OG image: ${imgError instanceof Error ? imgError.message : String(imgError)}`
                 );
                 console.error("Error generating OG image:", imgError);
-                // Continue with save process even if image generation fails
               }
+            }
+
+            if (hasStorySEOData && storySEOData[fragment.id]) {
+              const seoData = storySEOData[fragment.id];
+              fragment.pendingTopics = {
+                topics: seoData.topics || [],
+                description: seoData.description || "",
+              };
+              addDebugMessage(
+                `Added SEO data to fragment ${fragment.id}: ${seoData.topics?.length || 0} topics`
+              );
             }
 
             addDebugMessage(
               `Saving fragment: ${fragment.id}, socialImagePath: ${fragment.social_image_path}`
             );
+
+            // Make the API call and get the response with updated topic IDs
             const response = await fetch("/api/turso/upsertStoryFragment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -286,11 +281,117 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             if (!response.ok) {
               throw new Error("Failed to save story fragment");
             }
+
+            // Extract the updatedTopics from the response
+            const responseData = await response.json();
+            if (responseData.data?.updatedTopics && responseData.data.updatedTopics.length > 0) {
+              allUpdatedTopics.set(fragment.id, responseData.data.updatedTopics);
+              addDebugMessage(
+                `Received ${responseData.data.updatedTopics.length} updated topics with IDs from server`
+              );
+            }
+
             setItemProgress((prev) => ({ ...prev, currentItem: i + 1 }));
           }
         }
 
-        // Mark all nodes as clean
+        if (hasStorySEOData) {
+          setStage("SAVING_SEO_TOPICS");
+          setProgress(65);
+
+          addDebugMessage("Updating client-side content map with SEO data");
+
+          const currentContentMap = contentMap.get();
+          const updatedContentMap = [...currentContentMap];
+          let allTopics: Topic[] = [];
+
+          // First find the all-topics entry and collect existing topics
+          const topicsMapIndex = updatedContentMap.findIndex(
+            (item) => item.type === "Topic" && item.id === "all-topics"
+          );
+
+          if (topicsMapIndex !== -1) {
+            const topicsMap = updatedContentMap[topicsMapIndex] as TopicContentMap;
+            allTopics = [...topicsMap.topics];
+          }
+
+          // Update story fragments and collect topics with real IDs
+          for (const [fragmentId, seoData] of Object.entries(storySEOData)) {
+            const fragmentIndex = updatedContentMap.findIndex(
+              (item) => item.type === "StoryFragment" && item.id === fragmentId
+            );
+
+            if (fragmentIndex !== -1) {
+              const fragment = updatedContentMap[fragmentIndex] as StoryFragmentContentMap;
+
+              // Get the updated topics with real IDs from the server response
+              const updatedTopicsFromServer = allUpdatedTopics.get(fragmentId) || [];
+
+              updatedContentMap[fragmentIndex] = {
+                ...fragment,
+                topics: seoData.topics?.map((topic) => topic.title) || [],
+                description: seoData.description || fragment.description,
+              };
+
+              // Add any topics to the all-topics collection, using real IDs from server when available
+              if (seoData.topics && seoData.topics.length > 0) {
+                for (const topicItem of seoData.topics) {
+                  // Find if this topic has a real ID from the server response
+                  const matchingServerTopic = updatedTopicsFromServer.find(
+                    (serverTopic) =>
+                      serverTopic.title.toLowerCase() === topicItem.title.toLowerCase()
+                  );
+
+                  const realTopicId = matchingServerTopic ? matchingServerTopic.id : -1;
+
+                  // Create proper Topic object with real ID from server when available
+                  const topic: Topic = {
+                    id: realTopicId,
+                    title: topicItem.title,
+                  };
+
+                  // Check if topic already exists by title, case-insensitive
+                  const existingIndex = allTopics.findIndex(
+                    (t) => t.title.toLowerCase() === topic.title.toLowerCase()
+                  );
+
+                  if (existingIndex === -1) {
+                    // Topic doesn't exist, add it
+                    allTopics.push(topic);
+                  } else if (realTopicId !== -1 && allTopics[existingIndex].id === -1) {
+                    // If we now have a real ID for a previously temporary topic, update it
+                    allTopics[existingIndex].id = realTopicId;
+                    addDebugMessage(
+                      `Updated topic ID for "${topic.title}" from -1 to ${realTopicId}`
+                    );
+                  }
+                }
+              }
+
+              addDebugMessage(`Updated client-side content map for fragment ${fragmentId}`);
+            }
+          }
+
+          // Update the all-topics entry if it exists
+          if (topicsMapIndex !== -1) {
+            updatedContentMap[topicsMapIndex] = {
+              ...updatedContentMap[topicsMapIndex],
+              topics: allTopics,
+            } as TopicContentMap;
+
+            // Log topic statistics for debugging
+            const newTopics = allTopics.filter((t) => t.id === -1).length;
+            const realIdTopics = allTopics.length - newTopics;
+
+            addDebugMessage(
+              `Updated all-topics with ${allTopics.length} topics (${realIdTopics} with real IDs, ${newTopics} with temporary IDs)`
+            );
+          }
+
+          // Set the updated content map
+          contentMap.set(updatedContentMap);
+        }
+
         addDebugMessage("Cleaning dirty nodes");
         ctx.getDirtyNodes().forEach((node) => {
           if (node.isChanged) {
@@ -298,12 +399,10 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           }
         });
 
-        // Process Tailwind styles
         setStage("PROCESSING_STYLES");
         setProgress(80);
         addDebugMessage("Processing styles");
 
-        // skip in multi-tenant
         const isMultiTenant =
           import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
         if (!isMultiTenant)
@@ -323,7 +422,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               `Style processing error: ${styleError instanceof Error ? styleError.message : String(styleError)}`
             );
             console.error("Style processing error:", styleError);
-            // Continue with save process even if style generation fails
           }
 
         setProgress(100);
@@ -363,6 +461,8 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         return `Saving pane content...${getProgressText()}`;
       case "SAVING_STORY_FRAGMENTS":
         return `Saving story content...${getProgressText()}`;
+      case "SAVING_SEO_TOPICS":
+        return "Updating SEO topics and descriptions...";
       case "COMPLETED":
         return "Save completed successfully!";
       case "ERROR":
@@ -373,7 +473,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
   };
 
   const handleCloseClick = () => {
-    // Only allow close if save is completed or errored
     if (stage === "COMPLETED" || stage === "ERROR") {
       onClose();
     }
@@ -381,7 +480,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
   return (
     <>
-      {/* Full screen blocking overlay - cannot be clicked through */}
       <div
         className="fixed inset-0 z-[10100] bg-transparent"
         style={{
@@ -399,7 +497,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         }}
       />
 
-      {/* Modal overlay with visible background */}
       <div
         className="fixed inset-0 z-[10101] bg-black/50 flex items-center justify-center"
         style={{
@@ -442,12 +539,10 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
           <p className="text-lg mb-4">{getStageDescription(stage)}</p>
 
-          {/* Debug section - only visible when showDebug is true */}
           {showDebug && (
             <div className="mt-4 border-t pt-4">
               <h3 className="text-lg font-bold mb-2">Debug Information</h3>
 
-              {/* Generated image preview */}
               {debugImage && (
                 <div className="mb-4">
                   <h4 className="text-md font-bold mb-2">Generated OG Image Preview:</h4>
@@ -468,7 +563,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                 </div>
               )}
 
-              {/* Debug log */}
               <div>
                 <h4 className="text-md font-bold mb-2">Debug Log:</h4>
                 <div className="bg-gray-100 p-2 rounded text-xs font-mono max-h-60 overflow-y-auto">

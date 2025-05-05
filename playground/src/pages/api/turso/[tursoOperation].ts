@@ -28,13 +28,13 @@ import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode"
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode";
 import { initializeContent, getFullContentMap } from "@/utils/db/turso";
-import { getAllTopics } from "@/utils/db/api/getAllTopics";
-import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
-import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment";
-import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
-import { upsertTopic } from "@/utils/db/api/upsertTopic";
+//import { getAllTopics } from "@/utils/db/api/getAllTopics";
+//import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
+//import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment";
+//import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
+//import { upsertTopic } from "@/utils/db/api/upsertTopic";
+//import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
 import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
-import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
 import { getEpinetMetrics } from "@/utils/events/epinetAnalytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
@@ -158,15 +158,15 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         await initializeContent(context);
         result = true;
         break;
-      case "upsertTopic":
-        result = await upsertTopic(body.title, context);
-        break;
-      case "linkTopicToStoryFragment":
-        result = await linkTopicToStoryFragment(body.storyFragmentId, body.topicId, context);
-        break;
-      case "unlinkTopicFromStoryFragment":
-        result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId, context);
-        break;
+      //case "upsertTopic":
+      //  result = await upsertTopic(body.title, context);
+      //  break;
+      //case "linkTopicToStoryFragment":
+      //  result = await linkTopicToStoryFragment(body.storyFragmentId, body.topicId, context);
+      //  break;
+      //case "unlinkTopicFromStoryFragment":
+      //  result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId, context);
+      //  break;
       default:
         throw new Error(`Unknown operation: ${tursoOperation}`);
     }
@@ -386,27 +386,27 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
       case "getAllBeliefNodes":
         result = await getAllBeliefNodes(context);
         break;
-      case "getAllTopics":
-        result = await getAllTopics(context);
-        break;
-      case "getTopicsForStoryFragment": {
-        const url = new URL(context.request.url);
-        const storyFragmentId = url.searchParams.get("storyFragmentId");
-        if (!storyFragmentId) {
-          throw new Error("Missing required parameter: storyFragmentId");
-        }
-        result = await getTopicsForStoryFragment(storyFragmentId, context);
-        break;
-      }
-      case "getStoryFragmentDetails": {
-        const url = new URL(context.request.url);
-        const storyFragmentId = url.searchParams.get("storyFragmentId");
-        if (!storyFragmentId) {
-          throw new Error("Missing required parameter: storyFragmentId");
-        }
-        result = await getStoryFragmentDetails(storyFragmentId, context);
-        break;
-      }
+      //case "getAllTopics":
+      //  result = await getAllTopics(context);
+      //  break;
+      //case "getTopicsForStoryFragment": {
+      //  const url = new URL(context.request.url);
+      //  const storyFragmentId = url.searchParams.get("storyFragmentId");
+      //  if (!storyFragmentId) {
+      //    throw new Error("Missing required parameter: storyFragmentId");
+      //  }
+      //  result = await getTopicsForStoryFragment(storyFragmentId, context);
+      //  break;
+      //}
+      //case "getStoryFragmentDetails": {
+      //  const url = new URL(context.request.url);
+      //  const storyFragmentId = url.searchParams.get("storyFragmentId");
+      //  if (!storyFragmentId) {
+      //    throw new Error("Missing required parameter: storyFragmentId");
+      //  }
+      //  result = await getStoryFragmentDetails(storyFragmentId, context);
+      //  break;
+      //}
       case "getAllEpinets":
         result = await getAllEpinets(context);
         break;

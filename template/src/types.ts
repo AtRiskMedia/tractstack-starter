@@ -212,6 +212,19 @@ export type BeliefContentMap = ContentMapBase & {
   scale: string;
 };
 
+export interface Topic {
+  id: number;
+  title: string;
+}
+
+export type TopicContentMap = {
+  id: string;
+  title: string;
+  slug: string;
+  type: "Topic";
+  topics: Topic[];
+};
+
 export type FullContentMap =
   | MenuContentMap
   | ResourceContentMap
@@ -219,7 +232,8 @@ export type FullContentMap =
   | StoryFragmentContentMap
   | TractStackContentMap
   | BeliefContentMap
-  | EpinetContentMap;
+  | EpinetContentMap
+  | TopicContentMap;
 
 export interface ResourceNode extends BaseNode {
   title: string;

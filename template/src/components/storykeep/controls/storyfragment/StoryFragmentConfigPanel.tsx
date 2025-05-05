@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { settingsPanelStore } from "@/store/storykeep";
+import { contentMap } from "@/store/events";
+import { settingsPanelStore, storyFragmentTopicsStore } from "@/store/storykeep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
@@ -13,7 +14,7 @@ import StoryFragmentOpenGraphPanel from "./StoryFragmentPanel_og";
 import { tailwindToHex, hexToTailwind } from "@/utils/tailwind/tailwindColors.ts";
 import { cloneDeep } from "@/utils/common/helpers";
 import { StoryFragmentMode } from "@/types";
-import type { StoryFragmentNode, Config } from "@/types";
+import type { StoryFragmentNode, Config, FullContentMap, StoryFragmentContentMap } from "@/types";
 
 const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?: Config }) => {
   const [isNodeAvailable, setIsNodeAvailable] = useState(false);
@@ -24,6 +25,8 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   const ctx = getCtx();
   const isTemplate = useStore(ctx.isTemplate);
   const activePaneMode = useStore(ctx.activePaneMode);
+  const $contentMap = useStore(contentMap) as FullContentMap[];
+  const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
 
   // Check if this specific panel is active
   const isActive = activePaneMode.panel === "storyfragment" && activePaneMode.paneId === nodeId;
@@ -73,36 +76,26 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
     };
   }, [nodeId, isNodeAvailable]);
 
-  // Check if SEO is ready by fetching description
+  // Check if SEO is ready by checking the content map and store
   useEffect(() => {
     if (!isNodeAvailable || !storyfragmentNode) return;
 
-    const checkSEOStatus = async () => {
-      try {
-        const detailsResponse = await fetch(
-          `/api/turso/getStoryFragmentDetails?storyFragmentId=${nodeId}`
-        );
+    // Check SEO status from content map first
+    const storyFragmentContent = $contentMap.find(
+      (item): item is StoryFragmentContentMap => item.type === "StoryFragment" && item.id === nodeId
+    );
 
-        if (detailsResponse.ok) {
-          const detailsData = await detailsResponse.json();
-          if (
-            detailsData.success &&
-            typeof detailsData?.data?.data?.description === `string` &&
-            detailsData.data.data.description.trim() !== ""
-          ) {
-            setIsSEOReady(true);
-          } else {
-            setIsSEOReady(false);
-          }
-        }
-      } catch (err) {
-        console.error("Error checking SEO status:", err);
-        setIsSEOReady(false);
-      }
-    };
+    // Check topics store as a fallback
+    const storedTopicsData = $storyFragmentTopics[nodeId];
 
-    checkSEOStatus();
-  }, [nodeId, isNodeAvailable, storyfragmentNode?.socialImagePath]);
+    // Set SEO ready if description exists in either source
+    const hasValidDescription = Boolean(
+      (storyFragmentContent?.description && storyFragmentContent.description.trim() !== "") ||
+        (storedTopicsData?.description && storedTopicsData.description.trim() !== "")
+    );
+
+    setIsSEOReady(hasValidDescription);
+  }, [nodeId, isNodeAvailable, storyfragmentNode, $contentMap, $storyFragmentTopics]);
 
   const handleBgColorChange = (newColor: string) => {
     setTempBgColor(newColor);
