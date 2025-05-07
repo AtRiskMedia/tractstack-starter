@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Combobox } from "@ark-ui/react";
+import { Dialog } from "@ark-ui/react/dialog";
+import { Portal } from "@ark-ui/react/portal";
 import { createListCollection } from "@ark-ui/react/collection";
-import { Dialog } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import SwatchIcon from "@heroicons/react/24/outline/SwatchIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -83,7 +84,6 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
     }
   }, [selectedCollection, $artpacks]);
 
-  // Create collection for Ark UI Combobox
   const collection = useMemo(() => {
     const filteredCollections =
       query === ""
@@ -201,7 +201,6 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
     }
   };
 
-  // CSS to properly style the combobox items with hover and selection
   const comboboxItemStyles = `
     .collection-item[data-highlighted] {
       background-color: #0891b2; /* bg-cyan-600 */
@@ -221,9 +220,24 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
     }
   `;
 
+  // CSS for Dialog styles
+  const dialogStyles = `
+    .dialog-backdrop {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+    .dialog-content {
+      max-width: 48rem;
+      background-color: white;
+      border-radius: 0.375rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      padding: 1.5rem;
+    }
+  `;
+
   return (
     <div className="space-y-6 w-full">
       <style>{comboboxItemStyles}</style>
+      <style>{dialogStyles}</style>
       <div className="w-full flex flex-col space-y-4">
         {previewUrl && (
           <div
@@ -304,120 +318,121 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
         </>
       )}
 
-      <Dialog
+      <Dialog.Root
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        className="relative"
-        style={{ zIndex: "10010" }}
+        onOpenChange={(details) => setIsModalOpen(details.open)}
+        modal={true}
       >
-        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto max-w-3xl rounded bg-white p-6 shadow-xl">
-            <Dialog.Title className="text-lg font-bold mb-4">Select Artpack Image</Dialog.Title>
-            {Object.keys($artpacks || {}).length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-mydarkgrey">No artpack collections available.</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-bold text-mydarkgrey mb-2">
-                    Select Collection
-                  </label>
-                  <Combobox.Root
-                    collection={collection}
-                    value={selectedCollection ? [selectedCollection] : []}
-                    onValueChange={handleCollectionSelect}
-                    onInputValueChange={(details) => setQuery(details.inputValue)}
-                    loopFocus={true}
-                    openOnKeyPress={true}
-                    composite={true}
-                  >
-                    <div className="relative">
-                      <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-300 shadow-sm focus-within:border-myblue focus-within:ring-1 focus-within:ring-myblue">
-                        <Combobox.Input
-                          className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-mydarkgrey focus:ring-0"
-                          placeholder="Select a collection..."
-                          autoComplete="off"
-                        />
-                        <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
-                          <ChevronUpDownIcon
-                            className="h-5 w-5 text-mydarkgrey"
-                            aria-hidden="true"
-                          />
-                        </Combobox.Trigger>
-                      </div>
-                      <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                        {collection.items.length === 0 ? (
-                          <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
-                            No collections found.
-                          </div>
-                        ) : (
-                          collection.items.map((item) => (
-                            <Combobox.Item
-                              key={item}
-                              item={item}
-                              className="collection-item relative cursor-default select-none py-2 pl-10 pr-4 text-mydarkgrey"
-                            >
-                              <span className="block truncate">{item}</span>
-                              <span className="collection-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            </Combobox.Item>
-                          ))
-                        )}
-                      </Combobox.Content>
-                    </div>
-                  </Combobox.Root>
+        <Portal>
+          <Dialog.Backdrop className="fixed inset-0 dialog-backdrop" />
+          <Dialog.Positioner
+            className="fixed inset-0 flex items-center justify-center p-4"
+            style={{ zIndex: 10010 }}
+          >
+            <Dialog.Content className="dialog-content">
+              <Dialog.Title className="text-lg font-bold mb-4">Select Artpack Image</Dialog.Title>
+              {Object.keys($artpacks || {}).length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-mydarkgrey">No artpack collections available.</p>
                 </div>
-
-                {!isLoading && selectedCollection && availableImages.length > 0 ? (
+              ) : (
+                <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-bold text-mydarkgrey mb-2">
-                      Select Image from {selectedCollection}
+                      Select Collection
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2">
-                      {availableImages.map((image) => (
-                        <div
-                          key={image}
-                          className={`relative cursor-pointer border rounded overflow-hidden hover:border-cyan-600 transition-colors ${
-                            selectedImage === image ? "ring-2 ring-cyan-600" : "border-gray-200"
-                          }`}
-                          onClick={() => handleSelectArtpackImage(selectedCollection, image)}
-                        >
-                          <img
-                            src={`/artpacks/${selectedCollection}/${image}_600px.webp`}
-                            alt={`${image} from ${selectedCollection}`}
-                            className="w-full aspect-video object-cover"
+                    <Combobox.Root
+                      collection={collection}
+                      value={selectedCollection ? [selectedCollection] : []}
+                      onValueChange={handleCollectionSelect}
+                      onInputValueChange={(details) => setQuery(details.inputValue)}
+                      loopFocus={true}
+                      openOnKeyPress={true}
+                      composite={true}
+                    >
+                      <div className="relative">
+                        <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-300 shadow-sm focus-within:border-myblue focus-within:ring-1 focus-within:ring-myblue">
+                          <Combobox.Input
+                            className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-mydarkgrey focus:ring-0"
+                            placeholder="Select a collection..."
+                            autoComplete="off"
                           />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-opacity">
-                            <span className="px-2 py-1 bg-white bg-opacity-80 text-xs text-mydarkgrey rounded truncate max-w-full">
-                              {image}
-                            </span>
-                          </div>
+                          <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon
+                              className="h-5 w-5 text-mydarkgrey"
+                              aria-hidden="true"
+                            />
+                          </Combobox.Trigger>
                         </div>
-                      ))}
-                    </div>
+                        <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                          {collection.items.length === 0 ? (
+                            <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                              No collections found.
+                            </div>
+                          ) : (
+                            collection.items.map((item) => (
+                              <Combobox.Item
+                                key={item}
+                                item={item}
+                                className="collection-item relative cursor-default select-none py-2 pl-10 pr-4 text-mydarkgrey"
+                              >
+                                <span className="block truncate">{item}</span>
+                                <span className="collection-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                              </Combobox.Item>
+                            ))
+                          )}
+                        </Combobox.Content>
+                      </div>
+                    </Combobox.Root>
                   </div>
-                ) : isLoading ? (
-                  <div className="text-center py-4">
-                    <p className="text-mydarkgrey">Loading images...</p>
-                  </div>
-                ) : null}
 
-                <div className="flex justify-end space-x-3 mt-4">
-                  <button
-                    className="px-4 py-2 bg-mylightgrey text-mydarkgrey rounded hover:bg-gray-300"
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
+                  {!isLoading && selectedCollection && availableImages.length > 0 ? (
+                    <div>
+                      <label className="block text-sm font-bold text-mydarkgrey mb-2">
+                        Select Image from {selectedCollection}
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2">
+                        {availableImages.map((image) => (
+                          <div
+                            key={image}
+                            className={`relative cursor-pointer border rounded overflow-hidden hover:border-cyan-600 transition-colors ${
+                              selectedImage === image ? "ring-2 ring-cyan-600" : "border-gray-200"
+                            }`}
+                            onClick={() => handleSelectArtpackImage(selectedCollection, image)}
+                          >
+                            <img
+                              src={`/artpacks/${selectedCollection}/${image}_600px.webp`}
+                              alt={`${image} from ${selectedCollection}`}
+                              className="w-full aspect-video object-cover"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-20 transition-opacity">
+                              <span className="px-2 py-1 bg-white bg-opacity-80 text-xs text-mydarkgrey rounded truncate max-w-full">
+                                {image}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : isLoading ? (
+                    <div className="text-center py-4">
+                      <p className="text-mydarkgrey">Loading images...</p>
+                    </div>
+                  ) : null}
+
+                  <div className="flex justify-end space-x-3 mt-4">
+                    <Dialog.CloseTrigger className="px-4 py-2 bg-mylightgrey text-mydarkgrey rounded hover:bg-gray-300">
+                      Cancel
+                    </Dialog.CloseTrigger>
+                  </div>
                 </div>
-              </div>
-            )}
-          </Dialog.Panel>
-        </div>
-      </Dialog>
+              )}
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </div>
   );
 };
