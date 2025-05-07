@@ -1,5 +1,7 @@
-import { useState, useRef, Fragment } from "react";
-import { Dialog, Transition, RadioGroup } from "@headlessui/react";
+import { useState, useRef } from "react";
+import { Dialog } from "@ark-ui/react/dialog";
+import { Portal } from "@ark-ui/react/portal";
+import { RadioGroup } from "@headlessui/react";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckIcon";
 import { formatPrompt, pagePrompts, pagePromptsDetails } from "../../../../../config/prompts.json";
 import PageCreationPreview from "./PageCreationGen_preview";
@@ -90,11 +92,11 @@ ${additionalInstructions}`;
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = (details: { open: boolean }) => {
     if (generationStatus === "generating") {
       return;
     }
-    if (generationStatus === "success") {
+    if (generationStatus === "success" && !details.open) {
       setShowModal(false);
       setShowPreview(true);
       return;
@@ -153,8 +155,29 @@ ${additionalInstructions}`;
     );
   }
 
+  // CSS for Dialog styles
+  const dialogStyles = `
+    [data-part="backdrop"] {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+    [data-part="content"] {
+      max-width: 32rem;
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      padding: 1.5rem;
+    }
+    [data-part="title"] {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{dialogStyles}</style>
       <div className="p-6 bg-white rounded-md w-full">
         <h2 className="text-2xl font-bold text-gray-900 font-action mb-6">
           Generate Page Content with AI
@@ -289,90 +312,70 @@ ${additionalInstructions}`;
         </div>
 
         {/* Generation Result Modal */}
-        <Transition appear show={showModal} as={Fragment}>
-          <Dialog
-            as="div"
-            className="fixed inset-0 z-10 overflow-y-auto"
-            onClose={handleModalClose}
-            initialFocus={dialogButtonRef}
-          >
-            <div className="min-h-screen px-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-              </Transition.Child>
+        <Dialog.Root open={showModal} onOpenChange={handleModalClose} modal={true}>
+          <Portal>
+            <Dialog.Backdrop className="fixed inset-0" />
+            <Dialog.Positioner className="fixed inset-0 flex items-center justify-center p-4 z-50">
+              <Dialog.Content className="w-full max-w-md overflow-hidden text-left align-middle">
+                <Dialog.Title>
+                  {generationStatus === "error"
+                    ? "Generation Error"
+                    : generationStatus === "success"
+                      ? "Content Generated"
+                      : "Generating Content"}
+                </Dialog.Title>
 
-              <span className="inline-block h-screen align-middle" aria-hidden="true">
-                &#8203;
-              </span>
-
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                  <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-gray-900">
-                    {generationStatus === "error"
-                      ? "Generation Error"
-                      : generationStatus === "success"
-                        ? "Content Generated"
-                        : "Generating Content"}
-                  </Dialog.Title>
-
-                  <div className="mt-2">
-                    {generationStatus === "error" ? (
-                      <p className="text-sm text-red-600">{error}</p>
-                    ) : generationStatus === "success" ? (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Content has been generated successfully!
-                        </p>
-                        <div className="max-h-60 overflow-y-auto p-3 bg-gray-50 rounded-md">
-                          <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                            {generatedContent}
-                          </pre>
-                        </div>
+                <div className="mt-2">
+                  {generationStatus === "error" ? (
+                    <p className="text-sm text-red-600">{error}</p>
+                  ) : generationStatus === "success" ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">
+                        Content has been generated successfully!
+                      </p>
+                      <div className="max-h-60 overflow-y-auto p-3 bg-gray-50 rounded-md">
+                        <pre className="text-sm text-gray-800 whitespace-pre-wrap">
+                          {generatedContent}
+                        </pre>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600"></div>
-                        <p className="text-sm text-gray-500">Generating your page content...</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4">
-                    <button
-                      ref={dialogButtonRef}
-                      type="button"
-                      className="inline-flex justify-center px-4 py-2 text-sm font-bold text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cyan-500"
-                      onClick={handleModalClose}
-                      disabled={generationStatus === "generating"}
-                    >
-                      {generationStatus === "error"
-                        ? "Try Again"
-                        : generationStatus === "success"
-                          ? "Continue"
-                          : "Cancel"}
-                    </button>
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600"></div>
+                      <p className="text-sm text-gray-500">Generating your page content...</p>
+                    </div>
+                  )}
                 </div>
-              </Transition.Child>
-            </div>
-          </Dialog>
-        </Transition>
+
+                <div className="mt-4">
+                  <button
+                    ref={dialogButtonRef}
+                    type="button"
+                    className="inline-flex justify-center px-4 py-2 text-sm font-bold text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cyan-500"
+                    onClick={() => {
+                      if (generationStatus === "success") {
+                        setShowModal(false);
+                        setShowPreview(true);
+                      } else if (generationStatus === "error") {
+                        setShowModal(false);
+                        setGenerationStatus("idle");
+                      } else {
+                        // Don't close if still generating
+                      }
+                    }}
+                    disabled={generationStatus === "generating"}
+                  >
+                    {generationStatus === "error"
+                      ? "Try Again"
+                      : generationStatus === "success"
+                        ? "Continue"
+                        : "Cancel"}
+                  </button>
+                </div>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
       </div>
     </div>
   );

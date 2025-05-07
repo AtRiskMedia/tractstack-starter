@@ -1,5 +1,6 @@
-import { Fragment, useRef, useState, useEffect } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { useRef, useState, useEffect } from "react";
+import { Dialog } from "@ark-ui/react/dialog";
+import { Portal } from "@ark-ui/react/portal";
 import type { FinalModel } from "@/utils/aai/askLemur";
 import { paneFormatPrompt, formatPrompt } from "../../../../../config/prompts.json";
 
@@ -37,11 +38,11 @@ export const AddPanePanel_newAICopy_modal = ({
   const [generatedContent, setGeneratedContent] = useState<string | null>(null);
   const dialogButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleModalClose = () => {
+  const handleModalClose = (details: { open: boolean }) => {
     if (generationStatus === "generating") {
       return;
     }
-    if (generationStatus === "success" && generatedContent) {
+    if (generationStatus === "success" && generatedContent && !details.open) {
       onChange(generatedContent);
       onClose();
       // Reset state after closing
@@ -52,6 +53,20 @@ export const AddPanePanel_newAICopy_modal = ({
     }
     onClose();
     setGenerationStatus("idle");
+  };
+
+  const handleButtonClick = () => {
+    if (generationStatus === "success" && generatedContent) {
+      onChange(generatedContent);
+      onClose();
+      // Reset state after closing
+      setGenerationStatus("idle");
+      setGeneratedContent(null);
+      setError(null);
+    } else if (generationStatus === "error") {
+      onClose();
+      setGenerationStatus("idle");
+    }
   };
 
   const handleGenerate = async () => {
@@ -104,42 +119,35 @@ ${additionalInstructions}`;
     }
   }, [show]);
 
+  // CSS for Dialog styles
+  const dialogStyles = `
+    [data-part="backdrop"] {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+    [data-part="content"] {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      padding: 1.5rem;
+      max-width: 42rem;
+      width: 100%;
+    }
+    [data-part="title"] {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1f2937;
+    }
+  `;
+
   return (
-    <Transition appear show={show} as={Fragment}>
-      <Dialog
-        as="div"
-        className="fixed inset-0 z-10 overflow-y-auto"
-        onClose={handleModalClose}
-        initialFocus={dialogButtonRef}
-      >
-        <div className="min-h-screen px-4 text-center">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-          </Transition.Child>
-
-          <span className="inline-block h-screen align-middle" aria-hidden="true">
-            &#8203;
-          </span>
-
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-              <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-gray-900">
+    <>
+      <style>{dialogStyles}</style>
+      <Dialog.Root open={show} onOpenChange={handleModalClose}>
+        <Portal>
+          <Dialog.Backdrop className="fixed inset-0" />
+          <Dialog.Positioner className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <Dialog.Content className="text-left overflow-hidden">
+              <Dialog.Title className="text-lg font-bold leading-6 text-gray-900">
                 {generationStatus === "error"
                   ? "Generation Error"
                   : generationStatus === "success"
@@ -187,7 +195,7 @@ ${additionalInstructions}`;
                   ref={dialogButtonRef}
                   type="button"
                   className="inline-flex justify-center px-4 py-2 text-sm font-bold text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cyan-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  onClick={handleModalClose}
+                  onClick={handleButtonClick}
                   disabled={generationStatus === "generating"}
                 >
                   {generationStatus === "error"
@@ -197,10 +205,10 @@ ${additionalInstructions}`;
                       : "Please Wait..."}
                 </button>
               </div>
-            </div>
-          </Transition.Child>
-        </div>
-      </Dialog>
-    </Transition>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+    </>
   );
 };
