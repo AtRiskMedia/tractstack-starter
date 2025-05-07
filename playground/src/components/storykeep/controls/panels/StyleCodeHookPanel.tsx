@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
-import { Combobox } from "@ark-ui/react";
+import { Combobox, Switch } from "@ark-ui/react";
 import { createListCollection } from "@ark-ui/react/collection";
-import { Switch } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -365,19 +364,24 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
                 className={`w-1/3 ${commonInputClass}`}
               />
               {option.value === "true" || option.value === "false" ? (
-                <Switch
+                <Switch.Root
                   checked={option.value === "true"}
-                  onChange={() => toggleBooleanOption(index)}
-                  className={`${
-                    option.value === "true" ? "bg-cyan-600" : "bg-mydarkgrey"
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2`}
+                  onCheckedChange={() => toggleBooleanOption(index)}
+                  aria-label={`Toggle ${option.key}`}
                 >
-                  <span
-                    className={`${
-                      option.value === "true" ? "translate-x-6" : "translate-x-1"
-                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                  />
-                </Switch>
+                  <Switch.Control
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2 ${
+                      option.value === "true" ? "bg-cyan-600" : "bg-mydarkgrey"
+                    }`}
+                  >
+                    <Switch.Thumb
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        option.value === "true" ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </Switch.Control>
+                  <Switch.HiddenInput />
+                </Switch.Root>
               ) : (
                 <input
                   type="text"

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useStore } from "@nanostores/react";
-import { Switch } from "@headlessui/react";
-import { classNames } from "../../../utils/common/helpers";
-import { heldBeliefs } from "../../../store/beliefs";
-import { events } from "../../../store/events";
-import type { BeliefDatum, EventStream } from "../../../types";
+import { Switch } from "@ark-ui/react";
+import { classNames } from "@/utils/common/helpers";
+import { heldBeliefs } from "@/store/beliefs";
+import { events } from "@/store/events";
+import type { BeliefDatum, EventStream } from "@/types";
 
 export const ToggleBelief = ({
   belief,
@@ -31,7 +31,6 @@ export const ToggleBelief = ({
         slug: belief,
         verb: enabled ? `BELIEVES_NO` : `BELIEVES_YES`,
       };
-      //setEnabled(!enabled);
       const prevBeliefs = $heldBeliefsAll.filter((b: BeliefDatum) => b.slug !== belief);
       heldBeliefs.set([...prevBeliefs, thisBelief]);
       const prevEvents = events
@@ -52,26 +51,35 @@ export const ToggleBelief = ({
   if (!isClient) return null;
 
   return (
-    <Switch.Group as="div" className={classNames(`flex items-center mt-6`)}>
-      <Switch
+    <div className={classNames(`flex items-center mt-6`)}>
+      <Switch.Root
         checked={enabled}
-        onChange={handleClick}
-        className={classNames(
-          enabled ? `bg-myorange` : `bg-myblue`,
-          `relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`
-        )}
+        onCheckedChange={handleClick}
+        disabled={readonly}
+        className="inline-flex items-center"
       >
-        <span
-          aria-hidden="true"
+        <Switch.Control
           className={classNames(
-            enabled ? `translate-x-5` : `translate-x-0 motion-safe:animate-wig`,
-            `pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`
+            enabled ? `bg-cyan-600` : `bg-myblue`,
+            `relative inline-flex h-6 w-11 flex-shrink-0`,
+            readonly ? `cursor-not-allowed opacity-50` : `cursor-pointer`,
+            `rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2`
           )}
-        />
-      </Switch>
-      <Switch.Label as="span" className="ml-3">
-        <span className="cursor-pointer">{prompt}</span>
-      </Switch.Label>
-    </Switch.Group>
+        >
+          <Switch.Thumb
+            className={classNames(
+              enabled ? `translate-x-5` : `translate-x-0 motion-safe:animate-wig`,
+              `pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out`
+            )}
+          />
+        </Switch.Control>
+        <Switch.HiddenInput />
+        <div className="flex items-center h-6 ml-3">
+          <Switch.Label className={readonly ? `cursor-default` : `cursor-pointer`}>
+            <span>{prompt}</span>
+          </Switch.Label>
+        </div>
+      </Switch.Root>
+    </div>
   );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import { Switch } from "@headlessui/react";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
+import { Switch } from "@ark-ui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { analyticsStore, homeSlugStore } from "@/store/storykeep.ts";
 import { classNames } from "@/utils/common/helpers.ts";
@@ -200,27 +200,32 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6">
-          <Switch.Group as="div" className="flex items-center whitespace-nowrap">
-            <Switch
+          <div className="flex items-center whitespace-nowrap">
+            <Switch.Root
               checked={showMostActive}
-              onChange={setShowMostActive}
-              className={classNames(
-                showMostActive ? "bg-cyan-600" : "bg-gray-200",
-                "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600"
-              )}
+              onCheckedChange={() => setShowMostActive(!showMostActive)}
+              aria-label="Sort by most active"
+              className="inline-flex items-center"
             >
-              <span
-                aria-hidden="true"
+              <Switch.Control
                 className={classNames(
-                  showMostActive ? "translate-x-5" : "translate-x-0",
-                  "pointer-events-none absolute inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200"
+                  showMostActive ? "bg-cyan-600" : "bg-gray-200",
+                  "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600"
                 )}
-              />
-            </Switch>
-            <Switch.Label as="span" className="ml-3 text-sm">
-              Sort by Most Active
-            </Switch.Label>
-          </Switch.Group>
+              >
+                <Switch.Thumb
+                  className={classNames(
+                    showMostActive ? "translate-x-5" : "translate-x-0",
+                    "pointer-events-none absolute inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200"
+                  )}
+                />
+              </Switch.Control>
+              <Switch.HiddenInput />
+              <div className="flex items-center h-5 ml-3">
+                <Switch.Label className="text-sm leading-none">Sort by Most Active</Switch.Label>
+              </div>
+            </Switch.Root>
+          </div>
         </div>
       </div>
 

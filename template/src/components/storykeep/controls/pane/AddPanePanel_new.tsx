@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo } from "react";
-import { Switch } from "@headlessui/react";
-import { Combobox } from "@ark-ui/react";
+import { Combobox, Switch } from "@ark-ui/react";
 import { Select } from "@ark-ui/react/select";
 import { Portal } from "@ark-ui/react/portal";
 import { createListCollection } from "@ark-ui/react/collection";
@@ -413,24 +412,29 @@ const AddPaneNewPanel = ({
             </Select.Root>
           </div>
 
-          <Switch.Group as="div" className="flex items-center gap-2">
-            <div className="relative">
-              <Switch
-                checked={useOddVariant}
-                onChange={setUseOddVariant}
+          <div className="flex items-center gap-2">
+            <Switch.Root
+              checked={useOddVariant}
+              onCheckedChange={(details) => setUseOddVariant(details.checked)}
+              className="inline-flex items-center"
+            >
+              <Switch.Control
                 className={`${
                   useOddVariant ? "bg-cyan-600" : "bg-gray-200"
                 } my-2 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2`}
               >
-                <span
+                <Switch.Thumb
                   className={`${
-                    useOddVariant ? "left-6" : "left-1"
-                  } absolute top-1 inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-all duration-200`}
+                    useOddVariant ? "translate-x-6" : "translate-x-1"
+                  } inline-block h-4 w-4 rounded-full bg-white shadow-lg transition-transform duration-200`}
                 />
-              </Switch>
-            </div>
-            <Switch.Label className="text-sm text-gray-700">Use odd variant</Switch.Label>
-          </Switch.Group>
+              </Switch.Control>
+              <Switch.HiddenInput />
+              <div className="flex items-center h-6">
+                <Switch.Label className="px-4 text-sm text-gray-700">Use odd variant</Switch.Label>
+              </div>
+            </Switch.Root>
+          </div>
 
           <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
             3. Click on the design you wish to use:
