@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { RadioGroup } from "@headlessui/react";
+import { RadioGroup } from "@ark-ui/react/radio-group";
 import { ulid } from "ulid";
 import FeaturedContentPreview from "@/components/codehooks/FeaturedContentPreview";
 import ListContentPreview from "@/components/codehooks/ListContentPreview";
@@ -54,8 +54,27 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
     .filter((item) => ["Pane", "StoryFragment"].includes(item.type))
     .map((item) => item.slug);
 
+  // CSS for RadioGroup styling
+  const radioGroupStyles = `
+    .radio-control[data-state="unchecked"] .radio-dot {
+      background-color: #d1d5db; /* gray-300 */
+    }
+    .radio-control[data-state="checked"] .radio-dot {
+      background-color: #0891b2; /* cyan-600 */
+    }
+    .radio-control[data-state="checked"] {
+      border-color: #0891b2;
+    }
+    .radio-item[data-state="checked"] {
+      border-color: #0891b2;
+      background-color: #ecfeff; /* cyan-50 */
+    }
+  `;
+
   // Function to handle continue/apply button
   const handleApply = async () => {
+    if (!selectedLayout) return; // Null check
+
     try {
       setIsCreating(true);
 
@@ -191,38 +210,45 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
 
   return (
     <div className="p-6 bg-white rounded-md">
+      <style>{radioGroupStyles}</style>
       <div className="mb-6 space-y-6 italic text-mydarkgrey">
         <strong>Note:</strong> when editing web pages (story fragments) be sure to click on Topics
         &amp; Details for each page; (if you see no articles, that's why!)
       </div>
       <div className="mb-6 space-y-6">
         <div>
-          <RadioGroup value={selectedLayout} onChange={setSelectedLayout}>
+          <RadioGroup.Root
+            defaultValue={selectedLayout}
+            onValueChange={(details) => {
+              if (details.value) {
+                setSelectedLayout(details.value);
+              }
+            }}
+          >
             <RadioGroup.Label className="text-lg font-bold">Select Layout</RadioGroup.Label>
             <div className="space-y-4 mt-2">
               {layoutOptions.map((option) => (
-                <RadioGroup.Option key={option.id} value={option.id}>
-                  {({ checked }) => (
-                    <div
-                      className={`flex items-center space-x-3 p-4 border rounded-lg ${
-                        checked ? "border-cyan-600 bg-cyan-50" : "border-gray-300"
-                      }`}
-                    >
-                      <div
-                        className={`w-4 h-4 rounded-full ${
-                          checked ? "bg-cyan-600" : "bg-white border border-gray-300"
-                        }`}
-                      />
+                <RadioGroup.Item
+                  key={option.id}
+                  value={option.id}
+                  className="radio-item flex items-center space-x-3 p-4 border rounded-lg"
+                >
+                  <div className="flex items-center">
+                    <RadioGroup.ItemControl className="radio-control w-4 h-4 rounded-full border border-gray-300 mr-2 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full radio-dot" />
+                    </RadioGroup.ItemControl>
+                    <RadioGroup.ItemText>
                       <div>
                         <div className="font-bold">{option.label}</div>
                         <div className="text-sm text-gray-500">{option.description}</div>
                       </div>
-                    </div>
-                  )}
-                </RadioGroup.Option>
+                    </RadioGroup.ItemText>
+                  </div>
+                  <RadioGroup.ItemHiddenInput />
+                </RadioGroup.Item>
               ))}
             </div>
-          </RadioGroup>
+          </RadioGroup.Root>
         </div>
 
         {selectedLayout === "complete-home" && (
@@ -297,9 +323,9 @@ const PageCreationSpecial = ({ nodeId, ctx }: PageCreationSpecialProps): ReactNo
         </button>
         <button
           onClick={handleApply}
-          disabled={isCreating}
+          disabled={isCreating || !selectedLayout}
           className={`px-6 py-2 text-sm font-bold text-white rounded-md transition-colors ${
-            isCreating ? "bg-gray-400" : "bg-cyan-600 hover:bg-cyan-700"
+            isCreating || !selectedLayout ? "bg-gray-400" : "bg-cyan-600 hover:bg-cyan-700"
           }`}
         >
           {isCreating ? "Creating..." : "Create Layout"}

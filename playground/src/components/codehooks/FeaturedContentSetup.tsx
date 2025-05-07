@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type DragEvent } from "react";
 import { useStore } from "@nanostores/react";
-import { RadioGroup } from "@headlessui/react";
+import { RadioGroup } from "@ark-ui/react/radio-group";
 import { contentMap } from "@/store/events";
 import { storyfragmentAnalyticsStore } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
@@ -8,6 +8,22 @@ import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
 import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
 import type { StoryFragmentContentMap, PaneNode, Config } from "@/types";
+
+const radioGroupStyles = `
+  .radio-control[data-state="unchecked"] .radio-dot {
+    background-color: #d1d5db; /* gray-300 */
+  }
+  .radio-control[data-state="checked"] .radio-dot {
+    background-color: #0891b2; /* cyan-600 */
+  }
+  .radio-control[data-state="checked"] {
+    border-color: #0891b2;
+  }
+  .radio-item[data-state="checked"] {
+    background-color: #ecfeff;
+    border-color: #0891b2;
+  }
+`;
 
 const sortModes = [
   { id: "ordered", name: "Preferred Order", description: "Manually arrange pages" },
@@ -266,6 +282,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
 
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
+      <style>{radioGroupStyles}</style>
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold text-gray-900">Configure Featured Content</h2>
         <button
@@ -280,39 +297,36 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
         <h3 className="text-lg font-bold text-gray-900 border-b border-gray-200 pb-4">Settings</h3>
         <div className="pt-4 space-y-4">
           <div>
-            <RadioGroup value={selectedMode} onChange={setSelectedMode}>
+            <RadioGroup.Root
+              value={selectedMode}
+              onValueChange={(details) => setSelectedMode(details.value || "ordered")}
+            >
               <RadioGroup.Label className="block text-sm font-bold text-gray-700">
                 Sort Mode
               </RadioGroup.Label>
               <div className="mt-2 space-y-2">
                 {sortModes.map((mode) => (
-                  <RadioGroup.Option
+                  <RadioGroup.Item
                     key={mode.id}
                     value={mode.id}
-                    className={({ checked }) =>
-                      classNames(
-                        "flex items-center p-2 rounded-md cursor-pointer border",
-                        checked ? "bg-cyan-50 border-blue-500" : "border-gray-300"
-                      )
-                    }
+                    className="radio-item flex items-center p-2 rounded-md cursor-pointer border border-gray-300"
                   >
-                    {({ checked }) => (
-                      <div className="flex-1">
-                        <span
-                          className={classNames(
-                            "text-sm font-bold",
-                            checked ? "text-blue-600" : "text-gray-900"
-                          )}
-                        >
-                          {mode.name}
-                        </span>
-                        <p className="text-xs text-gray-500">{mode.description}</p>
-                      </div>
-                    )}
-                  </RadioGroup.Option>
+                    <div className="flex items-center">
+                      <RadioGroup.ItemControl className="radio-control h-4 w-4 rounded-full border border-gray-300 mr-2 flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full radio-dot" />
+                      </RadioGroup.ItemControl>
+                      <RadioGroup.ItemText>
+                        <div className="flex-1">
+                          <span className="text-sm font-bold text-gray-900">{mode.name}</span>
+                          <p className="text-xs text-gray-500">{mode.description}</p>
+                        </div>
+                      </RadioGroup.ItemText>
+                    </div>
+                    <RadioGroup.ItemHiddenInput />
+                  </RadioGroup.Item>
                 ))}
               </div>
-            </RadioGroup>
+            </RadioGroup.Root>
           </div>
           <div>
             <ColorPickerCombo

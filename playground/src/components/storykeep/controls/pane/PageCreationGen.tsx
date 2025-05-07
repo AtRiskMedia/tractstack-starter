@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Dialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
-import { RadioGroup } from "@headlessui/react";
+import { RadioGroup, type RadioGroup as RadioGroupNamespace } from "@ark-ui/react/radio-group";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckIcon";
 import { formatPrompt, pagePrompts, pagePromptsDetails } from "../../../../../config/prompts.json";
 import PageCreationPreview from "./PageCreationGen_preview";
@@ -42,7 +42,10 @@ export const PageCreationGen = ({ nodeId, ctx }: PageCreationGenProps) => {
 
   const dialogButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handlePromptTypeChange = (type: PromptType) => {
+  const handlePromptTypeChange = (details: RadioGroupNamespace.ValueChangeDetails) => {
+    if (!details.value) return;
+
+    const type = details.value as PromptType;
     setSelectedPromptType(type);
     setCustomizedPrompt(pagePrompts[type]);
   };
@@ -175,9 +178,30 @@ ${additionalInstructions}`;
     }
   `;
 
+  // CSS for RadioGroup styles
+  const radioGroupStyles = `
+    .radio-item[data-highlighted] {
+      outline: none;
+    }
+    .radio-item[data-state="checked"] {
+      background-color: #efefef;
+      color: white;
+    }
+    .radio-item[data-state="checked"] .radio-description {
+      color: black;
+    }
+    .radio-item[data-state="checked"] .check-icon {
+      display: flex;
+    }
+    .radio-item .check-icon {
+      display: none;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
       <style>{dialogStyles}</style>
+      <style>{radioGroupStyles}</style>
       <div className="p-6 bg-white rounded-md w-full">
         <h2 className="text-2xl font-bold text-gray-900 font-action mb-6">
           Generate Page Content with AI
@@ -186,50 +210,41 @@ ${additionalInstructions}`;
         <div className="space-y-8">
           {/* Prompt Type Selection */}
           <div className="w-full">
-            <RadioGroup value={selectedPromptType} onChange={handlePromptTypeChange}>
+            <RadioGroup.Root
+              defaultValue={selectedPromptType}
+              onValueChange={handlePromptTypeChange}
+            >
               <RadioGroup.Label className="block text-sm font-bold text-gray-900 mb-4">
                 Select Page Type
               </RadioGroup.Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(pagePromptsDetails).map(([key, details]) => (
-                  <RadioGroup.Option
+                  <RadioGroup.Item
                     key={key}
                     value={key}
-                    className={({ active, checked }) =>
-                      `${active ? "ring-2 ring-cyan-600 ring-offset-2" : ""}
-                      ${checked ? "bg-cyan-700 text-white" : "bg-white"}
-                      relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none`
-                    }
+                    className="radio-item relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none"
                   >
-                    {({ checked }) => (
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center">
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center">
+                        <RadioGroup.ItemControl className="hidden" />
+                        <RadioGroup.ItemText>
                           <div className="text-sm">
-                            <RadioGroup.Label
-                              as="p"
-                              className={`font-bold ${checked ? "text-white" : "text-gray-900"}`}
-                            >
-                              {details.title}
-                            </RadioGroup.Label>
-                            <RadioGroup.Description
-                              as="span"
-                              className={`inline ${checked ? "text-cyan-100" : "text-gray-500"}`}
-                            >
+                            <p className="font-bold text-black">{details.title}</p>
+                            <span className="inline text-gray-500 radio-description">
                               {details.description}
-                            </RadioGroup.Description>
+                            </span>
                           </div>
-                        </div>
-                        {checked && (
-                          <div className="shrink-0 text-white">
-                            <CheckCircleIcon className="h-6 w-6" />
-                          </div>
-                        )}
+                        </RadioGroup.ItemText>
                       </div>
-                    )}
-                  </RadioGroup.Option>
+                      <div className="shrink-0 text-white check-icon">
+                        <CheckCircleIcon className="h-6 w-6" />
+                      </div>
+                    </div>
+                    <RadioGroup.ItemHiddenInput />
+                  </RadioGroup.Item>
                 ))}
               </div>
-            </RadioGroup>
+            </RadioGroup.Root>
           </div>
 
           {/* Customizable Prompt */}
