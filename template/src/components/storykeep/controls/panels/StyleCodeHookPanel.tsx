@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Combobox } from "@ark-ui/react";
 import { createListCollection } from "@ark-ui/react/collection";
 import { Switch } from "@headlessui/react";
@@ -29,6 +29,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
 
   const [localTarget, setLocalTarget] = useState(node.codeHookTarget || "");
   const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Parse the nested options from JSON string
   const [localOptions, setLocalOptions] = useState<OptionState[]>(() => {
@@ -86,6 +87,8 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
 
     return createListCollection({
       items: filteredCodeHooks,
+      itemToValue: (item) => item,
+      itemToString: (item) => item,
     });
   }, [availableCodeHooks, query]);
 
@@ -213,7 +216,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
       if (!isInitialized) return;
       const target = details.value[0] || "";
       setLocalTarget(target);
-
+      setQuery("");
       const payload = localOptions.reduce(
         (acc, { key, value }) => {
           if (key.trim()) {
@@ -223,11 +226,26 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
         },
         {} as Record<string, string>
       );
-
       updateStore(target, payload);
     },
     [isInitialized, localOptions, updateStore]
   );
+
+  const handleInputValueChange = useCallback(
+    (details: { inputValue: string }) => {
+      setQuery(details.inputValue);
+    },
+    [localTarget]
+  );
+
+  const handleBlur = useCallback(() => {
+    if (availableCodeHooks.includes(localTarget)) {
+      setQuery("");
+    } else {
+      setLocalTarget(node.codeHookTarget || "");
+      setQuery("");
+    }
+  }, [localTarget, availableCodeHooks, node.codeHookTarget]);
 
   const handleCancel = () => {
     settingsPanelStore.set({
@@ -284,14 +302,20 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
             <Combobox.Root
               collection={collection}
               value={localTarget ? [localTarget] : []}
+              inputValue={query || localTarget}
               onValueChange={handleTargetChange}
-              onInputValueChange={(details) => setQuery(details.inputValue)}
+              onInputValueChange={handleInputValueChange}
               loopFocus={true}
               openOnKeyPress={true}
               composite={true}
             >
               <div className="relative">
-                <Combobox.Input className={commonInputClass} placeholder="Select a code hook..." />
+                <Combobox.Input
+                  ref={inputRef}
+                  className={commonInputClass}
+                  placeholder="Select a code hook..."
+                  onBlur={handleBlur}
+                />
                 <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
                 </Combobox.Trigger>

@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, useMemo, Fragment } from "react";
-import { Listbox, Switch, Transition } from "@headlessui/react";
+import { useEffect, useState, useMemo } from "react";
+import { Switch } from "@headlessui/react";
 import { Combobox } from "@ark-ui/react";
+import { Select } from "@ark-ui/react/select";
+import { Portal } from "@ark-ui/react/portal";
 import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
@@ -80,6 +82,15 @@ const AddPaneNewPanel = ({
       itemToString: (item) => item.title,
     });
   }, [copyMode]);
+
+  // Create collection for Ark UI Listbox (themes)
+  const themesCollection = useMemo(() => {
+    return createListCollection({
+      items: themes,
+      itemToValue: (item) => item,
+      itemToString: (item) => item.replace(/-/g, " "),
+    });
+  }, []);
 
   const filteredTemplates = useMemo(() => {
     if (copyMode === `ai` || isContextPane)
@@ -221,8 +232,16 @@ const AddPaneNewPanel = ({
     }
   };
 
-  // CSS to properly style the combobox items with hover and selection
-  const comboboxItemStyles = `
+  // Handle theme selection with Ark UI
+  const handleThemeChange = (details: { value: string[] }) => {
+    const newTheme = details.value[0] as Theme;
+    if (newTheme) {
+      setSelectedTheme(newTheme);
+    }
+  };
+
+  // CSS to properly style the combobox and listbox items with hover and selection
+  const customStyles = `
     .category-item[data-highlighted] {
       background-color: #0891b2; /* bg-cyan-600 */
       color: white;
@@ -239,11 +258,28 @@ const AddPaneNewPanel = ({
     .category-item[data-state="checked"] {
       font-weight: bold;
     }
+    
+    .theme-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .theme-item[data-highlighted] .theme-indicator {
+      color: white;
+    }
+    .theme-item[data-state="checked"] .theme-indicator {
+      display: flex;
+    }
+    .theme-item .theme-indicator {
+      display: none;
+    }
+    .theme-item[data-state="checked"] {
+      font-weight: bold;
+    }
   `;
 
   return (
     <div className="p-3.5 shadow-inner bg-white">
-      <style>{comboboxItemStyles}</style>
+      <style>{customStyles}</style>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
           onClick={() => setMode(PaneAddMode.DEFAULT, first)}
@@ -338,53 +374,43 @@ const AddPaneNewPanel = ({
           </h3>
 
           <div className="w-40">
-            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
-              <div className="relative">
-                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300">
-                  <span className="block truncate capitalize">
+            <Select.Root
+              collection={themesCollection}
+              value={[selectedTheme]}
+              onValueChange={handleThemeChange}
+            >
+              <Select.Label className="block text-sm font-medium text-gray-700">Theme</Select.Label>
+              <Select.Control className="mt-1 relative">
+                <Select.Trigger className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-600 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600">
+                  <Select.ValueText className="block truncate capitalize">
                     {selectedTheme.replace(/-/g, " ")}
-                  </span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  </Select.ValueText>
+                  <Select.Indicator className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </span>
-                </Listbox.Button>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Listbox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {themes.map((theme) => (
-                      <Listbox.Option
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content className="z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {themesCollection.items.map((theme) => (
+                      <Select.Item
                         key={theme}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                          }`
-                        }
-                        value={theme}
+                        item={theme}
+                        className="theme-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                       >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={`block truncate capitalize ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {theme.replace(/-/g, " ")}
-                            </span>
-                            {selected && (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Listbox.Option>
+                        <Select.ItemText className="block truncate capitalize">
+                          {theme.replace(/-/g, " ")}
+                        </Select.ItemText>
+                        <Select.ItemIndicator className="theme-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
                     ))}
-                  </Listbox.Options>
-                </Transition>
-              </div>
-            </Listbox>
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
           </div>
 
           <Switch.Group as="div" className="flex items-center gap-2">

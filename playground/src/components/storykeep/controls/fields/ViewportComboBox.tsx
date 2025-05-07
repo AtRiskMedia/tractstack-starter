@@ -108,7 +108,7 @@ const ViewportComboBox = ({
   // CSS to properly style the combobox items with hover and selection
   const comboboxItemStyles = `
     .viewport-item[data-highlighted] {
-      background-color: #f97316; /* bg-myorange */
+      background-color: #0891b2; /* bg-cyan-600 */
       color: white;
     }
     .viewport-item[data-highlighted] .viewport-indicator {
@@ -160,7 +160,7 @@ const ViewportComboBox = ({
                   <Combobox.Input
                     ref={inputRef}
                     className={classNames(
-                      "w-full border border-mydarkgrey rounded-md py-2 text-xl leading-5 focus:ring-1 focus:ring-myorange focus:border-myorange",
+                      "w-full border border-mydarkgrey rounded-md py-2 text-xl leading-5 focus:ring-1 focus:ring-cyan-600 focus:border-cyan-600",
                       isInferred ? "text-black/20" : "text-black",
                       isColorValue ? "pl-12" : "pl-3",
                       "pr-16"
@@ -202,7 +202,7 @@ const ViewportComboBox = ({
                         >
                           {item}
                         </span>
-                        <span className="viewport-indicator absolute inset-y-0 right-0 flex items-center pr-4 text-myorange">
+                        <span className="viewport-indicator absolute inset-y-0 right-0 flex items-center pr-4 text-cyan-600">
                           <CheckIcon className="h-5 w-5" aria-hidden="true" />
                         </span>
                       </div>
@@ -219,7 +219,7 @@ const ViewportComboBox = ({
                 id={`negative-${viewport}`}
                 checked={isNowNegative}
                 onChange={handleNegativeChange}
-                className="h-4 w-4 text-myorange focus:ring-myorange border-mydarkgrey rounded"
+                className="h-4 w-4 text-cyan-600 focus:ring-cyan-600 border-mydarkgrey rounded"
               />
               <label htmlFor={`negative-${viewport}`} className="ml-2 block text-sm text-black">
                 Negative
