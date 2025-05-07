@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
-import { Combobox } from "@headlessui/react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import BrandColorPicker from "@/components/storykeep/widgets/BrandColorPicker.tsx";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import OpenGraphSettings from "./settings/OpenGraphSettings";
@@ -107,6 +108,16 @@ export default function BrandStep({
   const [customColors, setCustomColors] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+
+  // Create collection for Ark UI Combobox
+  const presetCollection = useMemo(() => {
+    const presets = [...Object.keys(knownBrand), "custom"];
+    return createListCollection({
+      items: presets,
+      itemToValue: (item) => item,
+      itemToString: (item) => item.charAt(0).toUpperCase() + item.slice(1),
+    });
+  }, []);
 
   useEffect(() => {
     if (config?.init) {
@@ -238,7 +249,9 @@ export default function BrandStep({
     }
   };
 
-  const handleBrandPresetChange = (preset: string) => {
+  const handleBrandPresetChange = (details: { value: string[] }) => {
+    const preset = details.value[0] || "";
+
     if (preset === "custom") {
       const colorsToUse = customColors || currentValues.brandColors;
       setCurrentValues((prev) => ({ ...prev, brandColors: colorsToUse }));
@@ -309,8 +322,29 @@ export default function BrandStep({
   const commonInputClass =
     "block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-md xs:leading-6";
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .preset-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .preset-item[data-highlighted] .preset-indicator {
+      color: white;
+    }
+    .preset-item[data-state="checked"] .preset-indicator {
+      display: flex;
+    }
+    .preset-item .preset-indicator {
+      display: none;
+    }
+    .preset-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="space-y-6">
+      <style>{comboboxItemStyles}</style>
       <div className="flex items-center space-x-4 mb-6">
         <button
           onClick={onBack}
@@ -409,62 +443,52 @@ export default function BrandStep({
               Brand Colors
             </label>
             <div className="space-y-4">
-              <Combobox value={selectedBrandPreset} onChange={handleBrandPresetChange}>
-                <div className="relative max-w-xs">
+              <div className="relative max-w-xs">
+                <Combobox.Root
+                  collection={presetCollection}
+                  value={selectedBrandPreset ? [selectedBrandPreset] : []}
+                  onValueChange={handleBrandPresetChange}
+                  loopFocus={true}
+                  openOnKeyPress={true}
+                  composite={true}
+                >
                   <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-sm">
                     <Combobox.Input
                       id="brandPreset"
                       name="brandPreset"
                       className={`${commonInputClass} pr-10`}
-                      displayValue={(preset: string) =>
-                        preset.charAt(0).toUpperCase() + preset.slice(1)
-                      }
                       onChange={(event) => {
                         const value = event.target.value.toLowerCase();
                         if (value === "custom" || value in knownBrand) {
-                          handleBrandPresetChange(value);
+                          handleBrandPresetChange({ value: [value] });
                         }
                       }}
-                      aria-label="Select brand color preset"
+                      placeholder="Select brand preset"
+                      autoComplete="off"
                     />
-                    <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                       <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                    </Combobox.Button>
+                    </Combobox.Trigger>
                   </div>
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                    {[...Object.keys(knownBrand), "custom"].map((preset) => (
-                      <Combobox.Option
+
+                  <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    {presetCollection.items.map((preset) => (
+                      <Combobox.Item
                         key={preset}
-                        value={preset}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-myorange/10 text-myblack" : "text-mydarkgrey"
-                          }`
-                        }
+                        item={preset}
+                        className="preset-item relative cursor-default select-none py-2 pl-10 pr-4 text-mydarkgrey"
                       >
-                        {({ selected, active }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {preset.charAt(0).toUpperCase() + preset.slice(1)}
-                            </span>
-                            {selected ? (
-                              <span
-                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                  active ? "text-myorange" : "text-myorange"
-                                }`}
-                              >
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Combobox.Option>
+                        <span className="block truncate">
+                          {preset.charAt(0).toUpperCase() + preset.slice(1)}
+                        </span>
+                        <span className="preset-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      </Combobox.Item>
                     ))}
-                  </Combobox.Options>
-                </div>
-              </Combobox>
+                  </Combobox.Content>
+                </Combobox.Root>
+              </div>
 
               <BrandColorPicker
                 value={currentValues.brandColors}

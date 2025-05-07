@@ -1,5 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
-import { Combobox, Switch } from "@headlessui/react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
+import { Switch } from "@headlessui/react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -74,6 +76,18 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
       return;
     }
   }, []);
+
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(() => {
+    const filteredCodeHooks =
+      query === ""
+        ? availableCodeHooks
+        : availableCodeHooks.filter((hook) => hook.toLowerCase().includes(query.toLowerCase()));
+
+    return createListCollection({
+      items: filteredCodeHooks,
+    });
+  }, [availableCodeHooks, query]);
 
   const handleOptionKeyChange = useCallback((index: number, newKey: string) => {
     setLocalOptions((prev) =>
@@ -192,29 +206,28 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
     [isInitialized, localTarget, updateStore]
   );
 
-  const filteredCodeHooks =
-    query === ""
-      ? availableCodeHooks
-      : availableCodeHooks.filter((hook) => hook.toLowerCase().includes(query.toLowerCase()));
-
   const isValidCodeHook = availableCodeHooks.includes(localTarget);
 
-  const handleTargetChange = (value: string) => {
-    if (!isInitialized) return;
-    setLocalTarget(value);
+  const handleTargetChange = useCallback(
+    (details: { value: string[] }) => {
+      if (!isInitialized) return;
+      const target = details.value[0] || "";
+      setLocalTarget(target);
 
-    const payload = localOptions.reduce(
-      (acc, { key, value }) => {
-        if (key.trim()) {
-          acc[key] = value;
-        }
-        return acc;
-      },
-      {} as Record<string, string>
-    );
+      const payload = localOptions.reduce(
+        (acc, { key, value }) => {
+          if (key.trim()) {
+            acc[key] = value;
+          }
+          return acc;
+        },
+        {} as Record<string, string>
+      );
 
-    updateStore(value, payload);
-  };
+      updateStore(target, payload);
+    },
+    [isInitialized, localOptions, updateStore]
+  );
 
   const handleCancel = () => {
     settingsPanelStore.set({
@@ -227,8 +240,30 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
   const commonInputClass =
     "block w-full rounded-md border-0 px-2.5 py-1.5 text-myblack ring-1 ring-inset ring-mygreen placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-sm xs:leading-6";
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .codehook-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .codehook-item[data-highlighted] .codehook-indicator {
+      color: white;
+    }
+    .codehook-item[data-state="checked"] .codehook-indicator {
+      display: flex;
+    }
+    .codehook-item .codehook-indicator {
+      display: none;
+    }
+    .codehook-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="space-y-4">
+      <style>{comboboxItemStyles}</style>
+
       {/* Header section */}
       <div className="flex flex-row flex-nowrap justify-between">
         <h2 className="text-xl font-bold">Code Hook Settings</h2>
@@ -243,59 +278,46 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
 
       <div className="space-y-4">
         {/* Target ComboBox */}
-        <div>
+        <div className="max-w-md">
           <label className="block text-sm text-mydarkgrey">Target</label>
           <div className="relative mt-1">
-            <Combobox value={localTarget} onChange={handleTargetChange}>
+            <Combobox.Root
+              collection={collection}
+              value={localTarget ? [localTarget] : []}
+              onValueChange={handleTargetChange}
+              onInputValueChange={(details) => setQuery(details.inputValue)}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative">
-                <Combobox.Input
-                  className={commonInputClass}
-                  onChange={(event) => setQuery(event.target.value)}
-                  displayValue={(target: string) => target}
-                />
-                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                <Combobox.Input className={commonInputClass} placeholder="Select a code hook..." />
+                <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                </Combobox.Button>
+                </Combobox.Trigger>
               </div>
-              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {filteredCodeHooks.length === 0 && query !== "" ? (
+
+              <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                {collection.items.length === 0 ? (
                   <div className="relative cursor-default select-none px-4 py-2 text-mydarkgrey">
                     Nothing found.
                   </div>
                 ) : (
-                  filteredCodeHooks.map((hook) => (
-                    <Combobox.Option
+                  collection.items.map((hook) => (
+                    <Combobox.Item
                       key={hook}
-                      value={hook}
-                      className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? "bg-myorange text-white" : "text-myblack"
-                        }`
-                      }
+                      item={hook}
+                      className="codehook-item relative cursor-default select-none py-2 pl-10 pr-4"
                     >
-                      {({ selected, active }) => (
-                        <>
-                          <span
-                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                          >
-                            {hook}
-                          </span>
-                          {selected ? (
-                            <span
-                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                active ? "text-white" : "text-myorange"
-                              }`}
-                            >
-                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                    </Combobox.Option>
+                      <span className="block truncate">{hook}</span>
+                      <span className="codehook-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                        <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                      </span>
+                    </Combobox.Item>
                   ))
                 )}
-              </Combobox.Options>
-            </Combobox>
+              </Combobox.Content>
+            </Combobox.Root>
           </div>
           {!isValidCodeHook && localTarget && (
             <div className="mt-2 flex items-center text-amber-500">
@@ -323,8 +345,8 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
                   checked={option.value === "true"}
                   onChange={() => toggleBooleanOption(index)}
                   className={`${
-                    option.value === "true" ? "bg-myorange" : "bg-mydarkgrey"
-                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-myorange focus:ring-offset-2`}
+                    option.value === "true" ? "bg-cyan-600" : "bg-mydarkgrey"
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-offset-2`}
                 >
                   <span
                     className={`${
@@ -344,7 +366,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
               )}
               <button
                 onClick={() => removeOption(index)}
-                className="text-myorange hover:text-black"
+                className="text-cyan-600 hover:text-black"
                 title="Remove option"
               >
                 <XMarkIcon className="h-5 w-5" />
@@ -353,7 +375,7 @@ const StyleCodeHookPanel = ({ node, availableCodeHooks = [] }: ExtendedBasePanel
           ))}
           <button
             onClick={addOption}
-            className="mt-2 flex items-center text-myblue hover:text-myorange"
+            className="mt-2 flex items-center text-myblue hover:text-cyan-600"
           >
             <PlusIcon className="h-5 w-5 mr-1" />
             Add Option

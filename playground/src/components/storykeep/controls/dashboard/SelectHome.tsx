@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Combobox } from "@headlessui/react";
+import { useState, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { classNames } from "@/utils/common/helpers.ts";
@@ -39,6 +40,17 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
     (item) =>
       item.type === "StoryFragment" &&
       (!query || item.title.toLowerCase().includes(query.toLowerCase()))
+  );
+
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(
+    () =>
+      createListCollection({
+        items: storyFragments,
+        itemToValue: (item) => item.id,
+        itemToString: (item) => item.title,
+      }),
+    [storyFragments]
   );
 
   const handleSelectHome = async () => {
@@ -85,10 +97,41 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
     }
   };
 
+  const handleValueChange = (details: { value: string[] }) => {
+    const itemId = details.value[0];
+    if (itemId) {
+      const foundItem = storyFragments.find((item) => item.id === itemId) || null;
+      setSelectedStoryFragment(foundItem);
+    } else {
+      setSelectedStoryFragment(null);
+    }
+  };
+
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .home-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .home-item[data-highlighted] .home-indicator {
+      color: white;
+    }
+    .home-item[data-state="checked"] .home-indicator {
+      display: flex;
+    }
+    .home-item .home-indicator {
+      display: none;
+    }
+    .home-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   if (!isClient) return null;
 
   return (
     <div className="space-y-4 mb-8">
+      <style>{comboboxItemStyles}</style>
       <h3 className="text-xl font-bold font-action px-3.5">Home Page</h3>
 
       <div className="bg-myblue/5 rounded-lg p-4">
@@ -135,14 +178,14 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
                   <span className="flex space-x-1 text-sm">
                     <a
                       href={`/${currentHomePage.slug}`}
-                      className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                      className="pl-2 text-myblue hover:text-cyan-600 text-lg underline"
                       title="Visit this Page"
                     >
                       Visit
                     </a>
                     <a
                       href={`/${currentHomePage.slug}/edit`}
-                      className="pl-2 text-myblue hover:text-myorange text-lg underline"
+                      className="pl-2 text-myblue hover:text-cyan-600 text-lg underline"
                       title="Edit this Page"
                     >
                       Edit
@@ -158,64 +201,55 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
           )}
         </div>
 
-        {isDemoMode ? null : !isChangingHome ? (
-          <button
-            onClick={() => setIsChangingHome(true)}
-            className="mt-4 px-4 py-2 text-white bg-myblue rounded hover:bg-myblack"
-          >
-            Select Different Home Page
-          </button>
-        ) : (
+        {isDemoMode ? null : isChangingHome ? (
           <div className="mt-4 space-y-4 max-w-xl">
             <div className="relative">
-              <Combobox value={selectedStoryFragment} onChange={setSelectedStoryFragment}>
+              <Combobox.Root
+                collection={collection}
+                value={selectedStoryFragment ? [selectedStoryFragment.id] : []}
+                onValueChange={handleValueChange}
+                loopFocus={true}
+                openOnKeyPress={true}
+                composite={true}
+              >
                 <div className="relative">
                   <Combobox.Input
-                    className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-myorange text-sm"
+                    className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-cyan-600 text-sm"
                     onChange={(e) => setQuery(e.target.value)}
-                    displayValue={(item: FullContentMap | null) => item?.title || ""}
                     placeholder="Select a page to set as home..."
+                    autoComplete="off"
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronDownIcon className="h-5 w-5 text-myblack/60" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
 
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                    {storyFragments.length === 0 && query !== "" ? (
+                  <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    {collection.items.length === 0 ? (
                       <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
                         No pages found.
                       </div>
                     ) : (
-                      storyFragments.map((page) => (
-                        <Combobox.Option
+                      collection.items.map((page) => (
+                        <Combobox.Item
                           key={page.id}
-                          value={page}
-                          className={({ active }) =>
-                            classNames(
-                              "relative cursor-default select-none py-2 px-4",
-                              active ? "bg-myorange/10 text-black" : "text-mydarkgrey"
-                            )
-                          }
+                          item={page}
+                          className="home-item relative cursor-default select-none py-2 px-4"
                         >
-                          {({ selected }) => (
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                <span className={selected ? "font-bold" : "font-normal"}>
-                                  {page.title}
-                                </span>
-                                <span className="text-xs ml-2 text-mydarkgrey">/{page.slug}</span>
-                              </div>
-                              {selected && (
-                                <CheckIcon className="h-5 w-5 text-myblue" aria-hidden="true" />
-                              )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <span className="block truncate">{page.title}</span>
+                              <span className="text-xs ml-2 text-mydarkgrey">/{page.slug}</span>
                             </div>
-                          )}
-                        </Combobox.Option>
+                            <span className="home-indicator absolute inset-y-0 right-0 flex items-center pr-3 text-cyan-600">
+                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                          </div>
+                        </Combobox.Item>
                       ))
                     )}
-                  </Combobox.Options>
+                  </Combobox.Content>
                 </div>
-              </Combobox>
+              </Combobox.Root>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -244,6 +278,13 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
               </button>
             </div>
           </div>
+        ) : (
+          <button
+            onClick={() => setIsChangingHome(true)}
+            className="mt-4 px-4 py-2 text-white bg-myblue rounded hover:bg-myblack"
+          >
+            Select Different Home Page
+          </button>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, useMemo, Fragment } from "react";
-import { Combobox, Transition } from "@headlessui/react";
+import { useEffect, useState, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { NodesContext } from "@/store/nodes";
 import { NodesSnapshotRenderer, type SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
@@ -66,11 +67,21 @@ const AddPaneBreakPanel = ({
   const [variantQuery, setVariantQuery] = useState("");
   const [selectedVariant, setSelectedVariant] = useState<string>("all");
 
-  const filteredVariants = useMemo(() => {
-    if (!variantQuery) return ["all", ...VARIANTS];
+  // Create collection for Ark UI Combobox with filtered variants
+  const collection = useMemo(() => {
+    const allVariants = ["all", ...VARIANTS];
+    const filteredVariants =
+      variantQuery === ""
+        ? allVariants
+        : allVariants.filter((variant) =>
+            variant.toLowerCase().includes(variantQuery.toLowerCase())
+          );
 
-    const query = variantQuery.toLowerCase();
-    return ["all", ...VARIANTS].filter((variant) => variant.toLowerCase().includes(query));
+    return createListCollection({
+      items: filteredVariants,
+      itemToValue: (item) => item,
+      itemToString: (item) => (item === "all" ? "All Variants" : item),
+    });
   }, [variantQuery]);
 
   const templates = useMemo(() => {
@@ -192,8 +203,29 @@ const AddPaneBreakPanel = ({
     setMode(PaneAddMode.DEFAULT);
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .variant-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .variant-item[data-highlighted] .variant-indicator {
+      color: white;
+    }
+    .variant-item[data-state="checked"] .variant-indicator {
+      display: flex;
+    }
+    .variant-item .variant-indicator {
+      display: none;
+    }
+    .variant-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{comboboxItemStyles}</style>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
           onClick={() => setMode(PaneAddMode.DEFAULT)}
@@ -208,68 +240,54 @@ const AddPaneBreakPanel = ({
           </div>
 
           <div className="w-48">
-            <Combobox value={selectedVariant} onChange={setSelectedVariant}>
+            <Combobox.Root
+              collection={collection}
+              value={[selectedVariant]}
+              onValueChange={(details) => {
+                const newVariant = details.value[0] || "all";
+                setSelectedVariant(newVariant);
+              }}
+              onInputValueChange={(details) => setVariantQuery(details.inputValue)}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    onChange={(event) => setVariantQuery(event.target.value)}
-                    displayValue={(variant: string) =>
-                      variant === "all" ? "All Variants" : variant
-                    }
+                    placeholder="Select variant..."
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Combobox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {filteredVariants.length === 0 && variantQuery !== "" ? (
-                      <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
-                        Nothing found.
-                      </div>
-                    ) : (
-                      filteredVariants.map((variant) => (
-                        <Combobox.Option
-                          key={variant}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? "bg-teal-600 text-white" : "text-gray-900"
-                            }`
-                          }
-                          value={variant}
-                        >
-                          {({ selected, active }) => (
-                            <>
-                              <span
-                                className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                              >
-                                {variant === "all" ? "All Variants" : variant}
-                              </span>
-                              {selected && (
-                                <span
-                                  className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                    active ? "text-white" : "text-teal-600"
-                                  }`}
-                                >
-                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </Combobox.Option>
-                      ))
-                    )}
-                  </Combobox.Options>
-                </Transition>
+
+                <Combobox.Content className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                  {collection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    collection.items.map((variant) => (
+                      <Combobox.Item
+                        key={variant}
+                        item={variant}
+                        className="variant-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                      >
+                        <span className="block truncate">
+                          {variant === "all" ? "All Variants" : variant}
+                        </span>
+                        <span className="variant-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
           </div>
         </div>
       </div>

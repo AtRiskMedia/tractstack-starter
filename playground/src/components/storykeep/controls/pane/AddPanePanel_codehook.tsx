@@ -1,7 +1,8 @@
-import { Fragment, useState, useMemo } from "react";
-import { Combobox, Transition } from "@headlessui/react";
-import { ulid } from "ulid";
+import { useState, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
+import { ulid } from "ulid";
 import { codehookMap, contentMap } from "@/store/events.ts";
 import { getCtx } from "@/store/nodes.ts";
 import { findUniqueSlug } from "@/utils/common/helpers";
@@ -50,6 +51,15 @@ const AddPaneCodeHookPanel = ({
     return hooks;
   }, [availableCodeHooks, query]);
 
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(() => {
+    return createListCollection({
+      items: filteredHooks,
+      itemToValue: (item) => item,
+      itemToString: (item) => getDisplayName(item),
+    });
+  }, [filteredHooks]);
+
   const isHookAvailable = (hookName: string) => {
     if (hookName === "featured-content" || hookName === "list-content") {
       return hasStoryFragments;
@@ -95,8 +105,9 @@ const AddPaneCodeHookPanel = ({
   };
 
   // Handle the combobox selection with validation
-  const handleSelection = (hookName: string) => {
-    if (isHookAvailable(hookName)) {
+  const handleSelection = (details: { value: string[] }) => {
+    const hookName = details.value[0] || "";
+    if (hookName && isHookAvailable(hookName)) {
       setSelected(hookName);
     } else {
       // Don't set if not available
@@ -104,8 +115,44 @@ const AddPaneCodeHookPanel = ({
     }
   };
 
+  // Handle when an item is clicked manually
+  const handleItemClick = (hookName: string) => {
+    if (isHookAvailable(hookName)) {
+      setSelected(hookName);
+    }
+  };
+
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .hook-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .hook-item[data-highlighted] .hook-indicator {
+      color: white !important;
+    }
+    .hook-item[data-state="checked"] .hook-indicator {
+      display: flex;
+    }
+    .hook-item .hook-indicator {
+      display: none;
+    }
+    .hook-item[data-state="checked"] {
+      font-weight: bold;
+    }
+    .hook-item-available:hover {
+      background-color: rgba(8, 145, 178, 0.1); /* bg-cyan-600/10 */
+    }
+    .hook-item-disabled {
+      background-color: #f9fafb; /* bg-gray-50 */
+      color: #9ca3af; /* text-gray-400 */
+      cursor: not-allowed;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{comboboxItemStyles}</style>
       <div className="p-1.5 bg-white rounded-md w-full">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-2 min-w-[200px]">
@@ -122,59 +169,57 @@ const AddPaneCodeHookPanel = ({
           </div>
 
           <div className="flex-1 min-w-[300px]">
-            <Combobox value={selected} onChange={handleSelection}>
+            <Combobox.Root
+              collection={collection}
+              value={selected ? [selected] : []}
+              onValueChange={handleSelection}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-200 focus-within:border-cyan-500 transition-colors">
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    displayValue={(hook: string) => getDisplayName(hook) || ""}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(e) => setQuery(e.target.value)}
                     placeholder="Search for a code hook..."
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                  afterLeave={() => setQuery("")}
-                >
-                  <Combobox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
-                    {filteredHooks.length === 0 && query !== "" ? (
-                      <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
-                        Nothing found.
-                      </div>
-                    ) : (
-                      filteredHooks.map((hook) => {
-                        const isAvailable = isHookAvailable(hook);
-                        return (
-                          <div
-                            key={hook}
-                            className={`relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              !isAvailable
-                                ? "bg-gray-50 text-gray-400 cursor-not-allowed"
-                                : "text-gray-900 hover:bg-cyan-600 hover:text-white cursor-pointer"
-                            }`}
-                            onClick={() => isAvailable && handleSelection(hook)}
-                          >
-                            <span className={`block truncate`}>{getDisplayName(hook)}</span>
-                            {selected === hook && (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })
-                    )}
-                  </Combobox.Options>
-                </Transition>
+
+                <Combobox.Content className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                  {collection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    collection.items.map((hook) => {
+                      const isAvailable = isHookAvailable(hook);
+                      return (
+                        <Combobox.Item
+                          key={hook}
+                          item={hook}
+                          className={`relative cursor-default select-none py-2 pl-10 pr-4 ${
+                            !isAvailable
+                              ? "hook-item-disabled"
+                              : "hook-item hook-item-available text-gray-900"
+                          }`}
+                          onClick={() => isAvailable && handleItemClick(hook)}
+                        >
+                          <span className="block truncate">{getDisplayName(hook)}</span>
+                          <span className="hook-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        </Combobox.Item>
+                      );
+                    })
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
           </div>
 
           {selected && (

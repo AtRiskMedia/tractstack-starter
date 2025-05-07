@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo, Fragment } from "react";
-import { Listbox, Switch, Combobox, Transition } from "@headlessui/react";
+import { Listbox, Switch, Transition } from "@headlessui/react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { NodesContext } from "@/store/nodes";
@@ -66,6 +68,18 @@ const AddPaneNewPanel = ({
   const [isInserting, setIsInserting] = useState(false);
   const [aiContentGenerated, setAiContentGenerated] = useState(false);
   const shouldShowDesigns = copyMode !== "ai" || aiContentGenerated;
+
+  // Create collection for Ark UI Combobox
+  const categoryCollection = useMemo(() => {
+    // Filter categories based on copy mode
+    const categories = copyMode === `ai` ? [templateCategories[1]] : templateCategories;
+
+    return createListCollection({
+      items: categories,
+      itemToValue: (item) => item.id,
+      itemToString: (item) => item.title,
+    });
+  }, [copyMode]);
 
   const filteredTemplates = useMemo(() => {
     if (copyMode === `ai` || isContextPane)
@@ -207,8 +221,29 @@ const AddPaneNewPanel = ({
     }
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .category-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .category-item[data-highlighted] .category-indicator {
+      color: white;
+    }
+    .category-item[data-state="checked"] .category-indicator {
+      display: flex;
+    }
+    .category-item .category-indicator {
+      display: none;
+    }
+    .category-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="p-3.5 shadow-inner bg-white">
+      <style>{comboboxItemStyles}</style>
       <div className="p-1.5 bg-white rounded-md flex gap-1 w-full group">
         <button
           onClick={() => setMode(PaneAddMode.DEFAULT, first)}
@@ -247,62 +282,55 @@ const AddPaneNewPanel = ({
             1. What kind of layout
           </h3>
           <div className="max-w-md">
-            <Combobox value={selectedCategory} onChange={setSelectedCategory}>
+            <Combobox.Root
+              collection={categoryCollection}
+              value={[selectedCategory.id]}
+              onValueChange={(details) => {
+                const id = details.value[0];
+                if (id) {
+                  const category = templateCategories.find((cat) => cat.id === id);
+                  if (category) setSelectedCategory(category);
+                }
+              }}
+              onInputValueChange={(details) => setQuery(details.inputValue)}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    onChange={(event) => setQuery(event.target.value)}
-                    displayValue={(category: TemplateCategory) => category.title}
+                    placeholder="Select layout category..."
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Combobox.Options className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {(copyMode === `ai` ? [templateCategories[1]] : templateCategories).map(
-                      (category) => (
-                        <Combobox.Option
-                          key={category.id}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? "bg-teal-600 text-white" : "text-gray-900"
-                            }`
-                          }
-                          value={category}
-                        >
-                          {({ selected, active }) => (
-                            <>
-                              <span
-                                className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                              >
-                                {category.title}
-                              </span>
-                              {selected && (
-                                <span
-                                  className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                    active ? "text-white" : "text-teal-600"
-                                  }`}
-                                >
-                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </Combobox.Option>
-                      )
-                    )}
-                  </Combobox.Options>
-                </Transition>
+
+                <Combobox.Content className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                  {categoryCollection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-900">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    categoryCollection.items.map((category) => (
+                      <Combobox.Item
+                        key={category.id}
+                        item={category}
+                        className="category-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                      >
+                        <span className="block truncate">{category.title}</span>
+                        <span className="category-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
           </div>
 
           <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
