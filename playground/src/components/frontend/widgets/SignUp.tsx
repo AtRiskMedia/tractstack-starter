@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useStore } from "@nanostores/react";
-import { Listbox, Transition } from "@headlessui/react";
+import { Select } from "@ark-ui/react/select";
+import { Portal } from "@ark-ui/react/portal";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
-import { classNames } from "@/utils/common/helpers";
+import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { auth, loading, error, success, profile } from "@/store/auth";
 import contactPersonaData from "../../../../config/contactPersona.json";
 import type { SignupProps } from "@/types";
+import "./SignUp.css"; // Import external CSS
 
 // Define the Persona interface based on contactPersona.json
 interface Persona {
@@ -37,13 +40,20 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   const $auth = useStore(auth);
   const $profile = useStore(profile);
 
+  // Create collection for Ark UI Select
+  const personaCollection = useMemo(() => {
+    return createListCollection({
+      items: contactPersona.filter((p) => !p.disabled),
+      itemToValue: (item) => item.id,
+      itemToString: (item) => item.title,
+    });
+  }, []);
+
   // Check for encrypted credentials and try to restore profile
   useEffect(() => {
     const checkExistingProfile = async () => {
-      // If we have encrypted credentials but no unlocked profile, try to unlock
       if ($auth.encryptedEmail && $auth.encryptedCode && !$auth.unlockedProfile) {
         try {
-          // Try to unlock the profile using stored credentials
           const response = await fetch("/api/turso/unlock", {
             method: "POST",
             headers: {
@@ -58,15 +68,12 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
 
           const result = await response.json();
           if (result.success) {
-            // Set the profile data
             profile.set({
               firstname: result.data.firstname,
               contactPersona: result.data.contactPersona,
               email: result.data.email,
               shortBio: result.data.shortBio,
             });
-
-            // Update auth state
             auth.setKey("unlockedProfile", "1");
             auth.setKey("hasProfile", "1");
           }
@@ -79,13 +86,11 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     checkExistingProfile();
   }, [$auth.encryptedEmail, $auth.encryptedCode, $auth.unlockedProfile]);
 
-  // Initialize with existing profile data if available
+  // Initialize with existing profile data
   useEffect(() => {
     if ($profile.firstname && $profile.email) {
       setFirstname($profile.firstname);
       setEmail($profile.email);
-
-      // Set persona if available
       if ($profile.contactPersona) {
         const existingPersona = contactPersona.find((p) => p.id === $profile.contactPersona);
         if (existingPersona) {
@@ -95,9 +100,11 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     }
   }, [$profile]);
 
+  // Clear badSave message after 7 seconds
   useEffect(() => {
     if (badSave && !emailRegistered) {
-      setTimeout(() => setBadSave(false), 7000);
+      const timer = setTimeout(() => setBadSave(false), 7000);
+      return () => clearTimeout(timer);
     }
   }, [badSave, emailRegistered]);
 
@@ -107,6 +114,16 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     auth.setKey("consent", "1");
     auth.setKey("active", "1");
     window.location.href = "/concierge/profile";
+  };
+
+  const handlePersonaChange = (details: { value: string[] }) => {
+    const selectedId = details.value[0];
+    if (selectedId) {
+      const selected = contactPersona.find((p) => p.id === selectedId);
+      if (selected) {
+        setPersonaSelected(selected);
+      }
+    }
   };
 
   async function handleSubmit(e: React.FormEvent) {
@@ -119,27 +136,15 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
       loading.set(true);
       setEmailRegistered(false);
 
-      const payload: {
-        firstname: string;
-        email: string;
-        codeword: string;
-        bio: string;
-        persona: string;
-        init: boolean;
-        fingerprint?: string;
-      } = {
+      const payload = {
         firstname,
         email,
         codeword,
         bio: "",
         persona: clarifyConsent ? personaSelected.id : "major",
         init: true,
+        fingerprint: auth.get().key || undefined,
       };
-
-      const authData = auth.get();
-      if (authData && authData.key) {
-        payload.fingerprint = authData.key;
-      }
 
       const response = await fetch("/api/turso/create", {
         method: "POST",
@@ -166,22 +171,17 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         });
 
         success.set(true);
-        loading.set(false);
         setSubmitted(true);
       } else {
-        console.error("Failed to save profile:", data.error || "Unknown error");
-
-        if (data.error && data.error.includes("Email already registered")) {
+        if (data.error?.includes("Email already registered")) {
           setEmailRegistered(true);
         }
-
         throw new Error(data.error || "Failed to save profile");
       }
     } catch (e) {
       console.error("Error during signup:", e);
       error.set(true);
       success.set(false);
-      loading.set(false);
       setBadSave(true);
 
       if (!emailRegistered) {
@@ -196,17 +196,22 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
         auth.setKey("encryptedCode", undefined);
         auth.setKey("unlockedProfile", undefined);
       }
+    } finally {
+      loading.set(false);
     }
   }
 
-  // If user already has a profile, or we have encrypted credentials, show appropriate message
+  // Render for existing profile
   if (($auth.hasProfile === "1" || $auth.encryptedEmail) && $profile.firstname) {
     return (
-      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
-        <h2 className="text-myblack font-bold text-2xl mb-2">Already Signed Up</h2>
-        <p className="text-black text-xl mb-4">Welcome back, {$profile.firstname}!</p>
-        <p className="text-md mt-2">
-          <a href="/concierge/profile" className="text-myblue hover:text-black underline font-bold">
+      <div className="p-6 bg-white rounded-md shadow-inner border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Already Signed Up</h2>
+        <p className="text-lg text-gray-700 mb-4">Welcome back, {$profile.firstname}!</p>
+        <p className="text-sm">
+          <a
+            href="/concierge/profile"
+            className="text-cyan-700 hover:text-cyan-600 font-bold underline transition-colors"
+          >
             Manage your profile
           </a>{" "}
           to update your preferences.
@@ -215,13 +220,17 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     );
   }
 
+  // Render for successful signup
   if ($success && submitted) {
     return (
-      <div className="bg-mywhite p-6 rounded-lg border border-mydarkgrey">
-        <h2 className="text-myblack font-bold text-2xl mb-2">Success!</h2>
-        <p className="text-black text-xl mb-4">Thanks for signing up, {firstname}!</p>
-        <p className="text-md mt-2">
-          <a href="/concierge/profile" className="text-myblue hover:text-black underline font-bold">
+      <div className="p-6 bg-white rounded-md shadow-inner border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Success!</h2>
+        <p className="text-lg text-gray-700 mb-4">Thanks for signing up, {firstname}!</p>
+        <p className="text-sm">
+          <a
+            href="/concierge/profile"
+            className="text-cyan-700 hover:text-cyan-600 font-bold underline transition-colors"
+          >
             Complete your profile
           </a>{" "}
           to customize your preferences. Remember your code word to manage your preferences later.
@@ -230,18 +239,19 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
     );
   }
 
+  // Render for email already registered
   if (emailRegistered) {
     return (
-      <div className="bg-myorange/20 p-6 rounded-lg border border-myorange">
-        <h2 className="text-myorange font-bold text-2xl mb-2">Email Already Registered</h2>
-        <p className="text-black text-md mb-4">
-          It looks like the email address <strong>{email}</strong> is already registered with us.
+      <div className="p-6 bg-orange-50 rounded-md shadow-inner border border-orange-200">
+        <h2 className="text-2xl font-bold text-orange-700 mb-2">Email Already Registered</h2>
+        <p className="text-md text-gray-700 mb-4">
+          The email address <strong>{email}</strong> is already registered.
         </p>
         <p className="text-md mb-4">Would you like to unlock your existing profile instead?</p>
-        <div className="flex justify-center mt-4">
+        <div className="flex justify-center">
           <button
             onClick={redirectToProfileUnlock}
-            className="px-6 py-3 bg-cyan-700 text-white font-bold text-md rounded-md hover:bg-cyan-600 transition-colors"
+            className="px-6 py-2 bg-cyan-700 text-white font-bold text-sm rounded-md hover:bg-cyan-600 transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2"
           >
             Unlock My Profile
           </button>
@@ -251,12 +261,13 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
   }
 
   return (
-    <div className="bg-white/50 backdrop-blur-sm p-4 rounded-lg border border-mydarkgrey/20">
-      <h3 className="text-lg font-bold text-black mb-4">{prompt}</h3>
+    // Use Astro directive like `client:load` or `client:only="react"` in your Astro file
+    <div className="p-4 bg-white rounded-md shadow-inner border border-gray-200">
+      <h3 className="text-lg font-bold text-gray-900 mb-4">{prompt}</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="firstname" className="block text-sm font-bold text-mydarkgrey mb-1">
+          <label htmlFor="firstname" className="block text-sm font-bold text-gray-700 mb-1">
             First Name
           </label>
           <input
@@ -264,21 +275,20 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             id="firstname"
             name="firstname"
             placeholder="First name"
-            autoComplete="off"
+            autoComplete="given-name"
             value={firstname}
             onChange={(e) => setFirstname(e.target.value)}
-            className={classNames(
-              "w-full px-3 py-2 border rounded-md shadow-sm placeholder-mydarkgrey/50 focus:border-myorange focus:ring-myorange",
-              submitted && !firstname ? "border-red-500" : "border-mydarkgrey"
-            )}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:border-cyan-600 focus:ring-cyan-600 focus:ring-2 focus:outline-none ${
+              submitted && !firstname ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {submitted && !firstname && (
-            <p className="text-red-500 text-xs mt-1">Please enter your name</p>
+            <p className="text-red-500 text-xs mt-1">Please enter your first name</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-bold text-mydarkgrey mb-1">
+          <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-1">
             Email Address
           </label>
           <input
@@ -286,21 +296,20 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             id="email"
             name="email"
             placeholder="Email address"
-            autoComplete="off"
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={classNames(
-              "w-full px-3 py-2 border rounded-md shadow-sm placeholder-mydarkgrey/50 focus:border-myorange focus:ring-myorange",
-              submitted && !email ? "border-red-500" : "border-mydarkgrey"
-            )}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:border-cyan-600 focus:ring-cyan-600 focus:ring-2 focus:outline-none ${
+              submitted && !firstname ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {submitted && !email && (
-            <p className="text-red-500 text-xs mt-1">Please enter your email</p>
+            <p className="text-red-500 text-xs mt-1">Please enter your email address</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="codeword" className="block text-sm font-bold text-mydarkgrey mb-1">
+          <label htmlFor="codeword" className="block text-sm font-bold text-gray-700 mb-1">
             Code Word
           </label>
           <input
@@ -311,70 +320,63 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
             autoComplete="new-password"
             value={codeword}
             onChange={(e) => setCodeword(e.target.value)}
-            className={classNames(
-              "w-full px-3 py-2 border rounded-md shadow-sm placeholder-mydarkgrey/50 focus:border-myorange focus:ring-myorange",
-              submitted && !codeword ? "border-red-500" : "border-mydarkgrey"
-            )}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:border-cyan-600 focus:ring-cyan-600 focus:ring-2 focus:outline-none ${
+              submitted && !codeword ? "border-red-500" : "border-gray-300"
+            }`}
           />
           {submitted && !codeword && (
             <p className="text-red-500 text-xs mt-1">Please choose a code word</p>
           )}
-          <p className="text-xs text-mydarkgrey mt-1">
-            Remember this code word - you'll need it to update your preferences later
+          <p className="text-xs text-gray-500 mt-1">
+            Remember this code word to manage your preferences later.
           </p>
         </div>
 
         {clarifyConsent && (
           <div>
-            <Listbox value={personaSelected} onChange={setPersonaSelected}>
-              <div className="relative mt-1">
-                <Listbox.Button className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-sm ring-1 ring-inset ring-myorange focus:outline-none text-sm">
-                  <span className="block truncate">{personaSelected.title}</span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                  </span>
-                </Listbox.Button>
-                <Transition
-                  enter="transition duration-100 ease-out"
-                  enterFrom="transform scale-95 opacity-0"
-                  enterTo="transform scale-100 opacity-100"
-                  leave="transition duration-75 ease-out"
-                  leaveFrom="transform scale-100 opacity-100"
-                  leaveTo="transform scale-95 opacity-0"
-                >
-                  <Listbox.Options className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                    {contactPersona.map((option) => (
-                      <Listbox.Option
+            <Select.Root
+              collection={personaCollection}
+              value={[personaSelected.id]}
+              onValueChange={handlePersonaChange}
+              positioning={{ sameWidth: true }}
+            >
+              <Select.Label className="block text-sm font-bold text-gray-700 mb-1">
+                Contact Preferences
+              </Select.Label>
+              <Select.Control className="relative">
+                <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-600 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600">
+                  <Select.ValueText className="block truncate">
+                    {personaSelected.title}
+                  </Select.ValueText>
+                  <Select.Indicator className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content className="z-50 max-h-56 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {personaCollection.items.map((option) => (
+                      <Select.Item
                         key={option.id}
-                        className={({ active }) =>
-                          classNames(
-                            active ? "bg-myorange/10 text-black" : "text-black",
-                            "relative cursor-default select-none py-2 pl-3 pr-9"
-                          )
-                        }
-                        value={option}
+                        item={option}
+                        className="persona-item relative cursor-default select-none py-2 pl-10 pr-4 text-black"
                       >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={classNames(
-                                selected ? "font-bold" : "font-normal",
-                                "block truncate"
-                              )}
-                            >
-                              {option.title}
-                            </span>
-                            <span className="text-xs text-mydarkgrey ml-2">
-                              {option.description}
-                            </span>
-                          </>
-                        )}
-                      </Listbox.Option>
+                        <div className="flex flex-col">
+                          <Select.ItemText className="block truncate font-bold">
+                            {option.title}
+                          </Select.ItemText>
+                          <span className="text-xs text-black">{option.description}</span>
+                        </div>
+                        <Select.ItemIndicator className="persona-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
                     ))}
-                  </Listbox.Options>
-                </Transition>
-              </div>
-            </Listbox>
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
           </div>
         )}
 
@@ -382,19 +384,16 @@ export const SignUp = ({ persona, prompt, clarifyConsent }: SignupProps) => {
           <button
             type="submit"
             disabled={$loading}
-            className={classNames(
-              "w-full px-4 py-2 text-sm font-bold rounded-md shadow-sm",
-              "bg-cyan-700 text-white hover:bg-cyan-600",
-              "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-700",
-              "disabled:opacity-50 disabled:cursor-not-allowed"
-            )}
+            className={`w-full px-4 py-2 text-sm font-bold rounded-md shadow-sm text-white bg-cyan-700 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-colors ${
+              $loading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             {$loading ? "Signing up..." : "Sign up"}
           </button>
         </div>
 
         {badSave && !emailRegistered && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
             <p className="text-sm font-bold">Signup Failed</p>
             <p className="text-sm">
               Sorry, we couldn't sign you up. Please try again or use a different email address.

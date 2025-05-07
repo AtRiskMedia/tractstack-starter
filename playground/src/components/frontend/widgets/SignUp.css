@@ -1,0 +1,22 @@
+/* src/components/frontend/widgets/SignUp.css */
+
+.persona-item[data-highlighted] {
+  background-color: #0891b2; /* bg-cyan-600 */
+  color: white;
+}
+
+.persona-item[data-highlighted] .persona-indicator {
+  color: white;
+}
+
+.persona-item[data-state="checked"] .persona-indicator {
+  display: flex;
+}
+
+.persona-item .persona-indicator {
+  display: none;
+}
+
+.persona-item[data-state="checked"] {
+  font-weight: bold;
+}

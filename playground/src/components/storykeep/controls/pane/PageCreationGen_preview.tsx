@@ -1,5 +1,7 @@
-import { useState, useEffect, Fragment } from "react";
-import { Listbox, Transition } from "@headlessui/react";
+import { useState, useEffect } from "react";
+import { Select } from "@ark-ui/react/select";
+import { Portal } from "@ark-ui/react/portal";
+import { createListCollection } from "@ark-ui/react/collection";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { themes } from "@/constants";
 import { NodesSnapshotRenderer } from "@/utils/nodes/NodesSnapshotRenderer";
@@ -87,7 +89,6 @@ export const PageCreationPreview = ({
   markdownContent,
   onComplete,
   onBack,
-  isApplying = false,
 }: PageCreationPreviewProps) => {
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [selectedDesignIndex, setSelectedDesignIndex] = useState(0);
@@ -96,6 +97,19 @@ export const PageCreationPreview = ({
 
   const brand = brandColours.get();
   const pageDesigns = getPageDesigns(brand, selectedTheme);
+
+  // Create collections for Ark UI Selects
+  const themesCollection = createListCollection({
+    items: themes,
+    itemToValue: (item) => item,
+    itemToString: (item) => item.replace(/-/g, " "),
+  });
+
+  const designsCollection = createListCollection({
+    items: pageDesigns.map((design, index) => ({ design, index })),
+    itemToValue: (item) => item.index.toString(),
+    itemToString: (item) => item.design.title,
+  });
 
   useEffect(() => {
     if (!markdownContent) return;
@@ -134,111 +148,147 @@ export const PageCreationPreview = ({
     }
   }, [markdownContent, selectedTheme, selectedDesignIndex]);
 
+  // Handle theme selection with Ark UI
+  const handleThemeChange = (details: { value: string[] }) => {
+    const newTheme = details.value[0] as Theme;
+    if (newTheme) {
+      setSelectedTheme(newTheme);
+    }
+  };
+
+  // Handle design selection with Ark UI
+  const handleDesignChange = (details: { value: string[] }) => {
+    const newDesignIndex = parseInt(details.value[0], 10);
+    if (!isNaN(newDesignIndex)) {
+      setSelectedDesignIndex(newDesignIndex);
+    }
+  };
+
+  // CSS to properly style the select items with hover and selection
+  const customStyles = `
+    .theme-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .theme-item[data-highlighted] .theme-indicator {
+      color: white;
+    }
+    .theme-item[data-state="checked"] .theme-indicator {
+      display: flex;
+    }
+    .theme-item .theme-indicator {
+      display: none;
+    }
+    .theme-item[data-state="checked"] {
+      font-weight: bold;
+    }
+    
+    .design-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .design-item[data-highlighted] .design-indicator {
+      color: white;
+    }
+    .design-item[data-state="checked"] .design-indicator {
+      display: flex;
+    }
+    .design-item .design-indicator {
+      display: none;
+    }
+    .design-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="p-6 bg-white rounded-md">
+      <style>{customStyles}</style>
       {/* Controls */}
       <div className="mb-6 space-y-4">
         <div className="flex items-center gap-6">
           {/* Theme Selector */}
-          <div className="w-48">
-            <Listbox value={selectedTheme} onChange={setSelectedTheme}>
-              <div className="relative mt-1">
-                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-                  <span className="block truncate capitalize">
+          <div className="w-48 bg-">
+            <Select.Root
+              collection={themesCollection}
+              defaultValue={[selectedTheme]}
+              onValueChange={handleThemeChange}
+            >
+              <Select.Label className="block text-sm font-medium text-gray-700">Theme</Select.Label>
+              <Select.Control className="mt-1 relative">
+                <Select.Trigger className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-600 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600">
+                  <Select.ValueText className="block truncate capitalize">
                     {selectedTheme.replace(/-/g, " ")}
-                  </span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  </Select.ValueText>
+                  <Select.Indicator className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </span>
-                </Listbox.Button>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {themes.map((theme) => (
-                      <Listbox.Option
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content className="z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {themesCollection.items.map((theme) => (
+                      <Select.Item
                         key={theme}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                          }`
-                        }
-                        value={theme}
+                        item={theme}
+                        className="theme-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                       >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={`block truncate capitalize ${
-                                selected ? "font-bold" : "font-normal"
-                              }`}
-                            >
-                              {theme.replace(/-/g, " ")}
-                            </span>
-                            {selected ? (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Listbox.Option>
+                        <Select.ItemText className="block truncate capitalize">
+                          {theme.replace(/-/g, " ")}
+                        </Select.ItemText>
+                        <Select.ItemIndicator className="theme-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
                     ))}
-                  </Listbox.Options>
-                </Transition>
-              </div>
-            </Listbox>
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
           </div>
 
           {/* Layout Selector */}
           <div className="w-64">
-            <Listbox value={selectedDesignIndex} onChange={setSelectedDesignIndex}>
-              <div className="relative mt-1">
-                <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-myorange focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
-                  <span className="block truncate">{pageDesigns[selectedDesignIndex].title}</span>
-                  <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+            <Select.Root
+              collection={designsCollection}
+              defaultValue={[selectedDesignIndex.toString()]}
+              onValueChange={handleDesignChange}
+            >
+              <Select.Label className="block text-sm font-medium text-gray-700">
+                Layout
+              </Select.Label>
+              <Select.Control className="mt-1 relative">
+                <Select.Trigger className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-600 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600">
+                  <Select.ValueText className="block truncate">
+                    {pageDesigns[selectedDesignIndex].title}
+                  </Select.ValueText>
+                  <Select.Indicator className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </span>
-                </Listbox.Button>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                    {pageDesigns.map((design, idx) => (
-                      <Listbox.Option
-                        key={design.id}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                          }`
-                        }
-                        value={idx}
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content className="z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {designsCollection.items.map((item) => (
+                      <Select.Item
+                        key={item.index}
+                        item={item}
+                        className="design-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                       >
-                        {({ selected }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {design.title}
-                            </span>
-                            {selected ? (
-                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Listbox.Option>
+                        <Select.ItemText className="block truncate">
+                          {item.design.title}
+                        </Select.ItemText>
+                        <Select.ItemIndicator className="design-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </Select.ItemIndicator>
+                      </Select.Item>
                     ))}
-                  </Listbox.Options>
-                </Transition>
-              </div>
-            </Listbox>
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
           </div>
         </div>
 
@@ -254,8 +304,7 @@ export const PageCreationPreview = ({
           <div className="flex gap-2">
             <button
               onClick={onBack}
-              className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isApplying}
+              className="px-4 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Back
             </button>
@@ -264,17 +313,10 @@ export const PageCreationPreview = ({
                 preview?.ctx &&
                 onComplete(preview.ctx, markdownContent, pageDesigns[selectedDesignIndex])
               }
-              className={`px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
-              disabled={!preview?.ctx || !!error || isApplying}
+              className="px-4 py-2 text-sm font-bold text-white bg-cyan-600 rounded-md hover:bg-cyan-700"
+              disabled={!preview?.ctx || !!error}
             >
-              {isApplying ? (
-                <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-                  <span>Applying...</span>
-                </>
-              ) : (
-                "Apply Design"
-              )}
+              Apply Design
             </button>
           </div>
         </div>

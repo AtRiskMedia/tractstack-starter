@@ -165,7 +165,9 @@ if (!storyfragmentNode) {
     class="fixed right-0 flex flex-col items-end gap-2"
     style={{ zIndex: 10000, bottom: `var(--bottom-right-controls-bottom-offset)` }}
   >
-    <HudDisplay client:only="react" />
+    <div id="hud">
+      <HudDisplay client:only="react" />
+    </div>
     <SettingsPanel
       config={config}
       availableCodeHooks={Object.keys(codeHookComponents)}
@@ -179,3 +181,10 @@ if (!storyfragmentNode) {
   setupLayoutStyles();
   setupLayoutObservers();
 </script>
+
+<style>
+  #hud:hover {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+</style>
