@@ -134,7 +134,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   if (!isClient) return null;
 
   return (
-    <div className="space-y-4">
+    <div id="browse" className="space-y-4">
       <h3 className="text-xl font-bold font-action px-3.5">Browse Pages</h3>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3.5 space-y-4 md:space-y-0 md:space-x-6">
         <div className="relative w-full md:w-1/3 xl:w-1/4">

@@ -130,7 +130,7 @@ export default function SelectHome({ contentMap = [], config }: SelectHomeProps)
   if (!isClient) return null;
 
   return (
-    <div className="space-y-4 mb-8">
+    <div id="select-home" className="space-y-4 mb-8">
       <style>{comboboxItemStyles}</style>
       <h3 className="text-xl font-bold font-action px-3.5">Home Page</h3>
 

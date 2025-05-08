@@ -292,7 +292,7 @@ export default function PageViewStats() {
   ];
 
   return (
-    <div className="p-0.5 shadow-md">
+    <div id="analytics" className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
         <h3 className="font-bold font-action text-xl mb-4">
           Analytics Dashboard
