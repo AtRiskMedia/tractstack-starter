@@ -25,7 +25,7 @@ let loginError = false;
 let redirectPath = "/";
 
 const url = new URL(Astro.request.url);
-redirectPath = url.searchParams.get("redirect") || "/";
+redirectPath = url.searchParams.get("redirect") || "/storykeep";
 const forceLogin = url.searchParams.get("force") === "true";
 
 const authenticated = isAuthenticated(Astro);
@@ -34,38 +34,45 @@ if (authenticated && !forceLogin) {
   return Astro.redirect(redirectPath);
 }
 
+// Handle form submission - modified for Astro 5
 if (Astro.request.method === "POST") {
   const data = await Astro.request.formData();
   const password = data.get("password")?.toString();
 
   if (!password) {
     loginError = true;
-    return;
-  }
+  } else {
+    try {
+      let authSuccess = false;
 
-  try {
-    if (isMultiTenant && config?.init) {
-      const initConfig = config.init;
-      if (password === initConfig.ADMIN_PASSWORD) {
-        setAuthenticated(Astro, true, true);
-        return Astro.redirect(redirectPath);
-      } else if (password === initConfig.EDITOR_PASSWORD) {
-        setAuthenticated(Astro, true, false);
-        return Astro.redirect(redirectPath);
+      if (isMultiTenant && config?.init) {
+        const initConfig = config.init;
+        if (password === initConfig.ADMIN_PASSWORD) {
+          setAuthenticated(Astro, true, true);
+          authSuccess = true;
+        } else if (password === initConfig.EDITOR_PASSWORD) {
+          setAuthenticated(Astro, true, false);
+          authSuccess = true;
+        }
+      } else {
+        if (password === import.meta.env.PRIVATE_ADMIN_PASSWORD) {
+          setAuthenticated(Astro, true, true);
+          authSuccess = true;
+        } else if (password === import.meta.env.PRIVATE_EDITOR_PASSWORD) {
+          setAuthenticated(Astro, true, false);
+          authSuccess = true;
+        }
       }
-    } else {
-      if (password === import.meta.env.PRIVATE_ADMIN_PASSWORD) {
-        setAuthenticated(Astro, true, true);
+
+      if (authSuccess) {
         return Astro.redirect(redirectPath);
-      } else if (password === import.meta.env.PRIVATE_EDITOR_PASSWORD) {
-        setAuthenticated(Astro, true, false);
-        return Astro.redirect(redirectPath);
+      } else {
+        loginError = true;
       }
+    } catch (error) {
+      console.error("Login error:", error);
+      loginError = true;
     }
-    loginError = true;
-  } catch (error) {
-    console.error("Login error:", error);
-    loginError = true;
   }
 }
 
