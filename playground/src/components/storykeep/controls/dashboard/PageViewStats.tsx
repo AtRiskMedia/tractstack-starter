@@ -454,6 +454,8 @@ export default function PageViewStats() {
             </div>
           )}
 
+          <DurationSelector />
+
           {/* Epinet Sankey Diagram */}
           {status === "loading" &&
           (!epinetData ||
