@@ -74,7 +74,16 @@ const PaneMagicPathPanel = ({ nodeId, setMode }: PaneMagicPathPanelProps) => {
       updatedNode.withheldBeliefs = updatedWithheldPaths;
       updatedNode.isChanged = true;
 
+      const currentPanelState = ctx.activePaneMode.get();
+
       ctx.modifyNodes([updatedNode]);
+
+      setTimeout(() => {
+        // Only restore if it was a PATH mode
+        if (currentPanelState.panel === "settings" && currentPanelState.mode === "PATH") {
+          ctx.setPanelMode(nodeId, "settings", PaneConfigMode.PATH);
+        }
+      }, 0);
     },
     [nodeId]
   );
