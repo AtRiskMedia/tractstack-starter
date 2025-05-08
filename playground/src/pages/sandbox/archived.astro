@@ -1,5 +1,5 @@
 ---
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 
 // Get tenant from URL parameter
 const url = new URL(Astro.request.url);
@@ -29,7 +29,7 @@ const wordmarkIsSvg = wordmark.includes("svg");
     />
     <link rel="stylesheet" href="/styles/custom.css" />
     <link rel="stylesheet" href="/styles/app.css" />
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="h-full">
     <div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">

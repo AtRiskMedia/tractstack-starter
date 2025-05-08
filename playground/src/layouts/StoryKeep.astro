@@ -1,6 +1,6 @@
 ---
 import { getAPIContext } from "@/utils/api/astroContext";
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso";
@@ -158,7 +158,7 @@ const isDemoMode = isOpenDemoMode(Astro, config);
       tenantId={Astro.locals.tenant?.id || "default"}
       client:only="react"
     />
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="w-full">
     <div

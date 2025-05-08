@@ -1,6 +1,6 @@
 ---
 import { getAPIContext } from "@/utils/api/astroContext";
-import { ViewTransitions } from "astro:transitions";
+import { ClientRouter } from "astro:transitions";
 import { joinUrlPaths } from "@/utils/common/helpers";
 import { getFullContentMap } from "@/utils/db/turso";
 import type { Config, FullContentMap } from "@/types";
@@ -203,7 +203,7 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
       });
     </script>
 
-    <ViewTransitions />
+    <ClientRouter />
   </head>
   <body class="w-full">
     <div
