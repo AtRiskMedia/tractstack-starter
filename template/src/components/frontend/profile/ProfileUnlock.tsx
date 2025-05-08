@@ -4,6 +4,7 @@ import ChevronRightIcon from "@heroicons/react/20/solid/ChevronRightIcon";
 import { auth, profile, error, success, loading } from "@/store/auth";
 import { heldBeliefs } from "@/store/beliefs";
 import { classNames } from "@/utils/common/helpers";
+import type { BeliefStore } from "@/types";
 
 export async function goUnlockProfile(payload: { email: string; codeword: string }) {
   try {
@@ -38,10 +39,36 @@ export async function goUnlockProfile(payload: { email: string; codeword: string
       shortBio: result.data.shortBio,
     });
 
-    // Set beliefs if present
+    // Set beliefs if present, and add KnownLead belief
     if (result.data.beliefs) {
-      const parsedBeliefs = JSON.parse(result.data.beliefs);
-      heldBeliefs.set(parsedBeliefs);
+      try {
+        const parsedBeliefs = JSON.parse(result.data.beliefs) as BeliefStore[];
+
+        // Add or update KnownLead belief
+        const knownLeadIndex = parsedBeliefs.findIndex((b: BeliefStore) => b.slug === "KnownLead");
+        if (knownLeadIndex >= 0) {
+          parsedBeliefs[knownLeadIndex].verb = "BELIEVES_YES";
+        } else {
+          parsedBeliefs.push({
+            id: "KnownLead",
+            slug: "KnownLead",
+            verb: "BELIEVES_YES",
+          });
+        }
+
+        heldBeliefs.set(parsedBeliefs);
+      } catch (e) {
+        console.error("Error parsing beliefs:", e);
+      }
+    } else {
+      // No existing beliefs, set just the KnownLead belief
+      heldBeliefs.set([
+        {
+          id: "KnownLead",
+          slug: "KnownLead",
+          verb: "BELIEVES_YES",
+        },
+      ]);
     }
 
     auth.setKey(`encryptedEmail`, result.data.encryptedEmail);
