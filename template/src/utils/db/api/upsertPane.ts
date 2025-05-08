@@ -17,7 +17,6 @@ export async function upsertPane(
     if (!client) {
       return { success: false, error: "Database client not available" };
     }
-
     if (
       requestData.markdownData &&
       requestData.markdownData.id &&
