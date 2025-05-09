@@ -26,6 +26,7 @@ import type {
 } from "@/types";
 
 const VERBOSE = false;
+const MAX_NODES = 25;
 
 // Track computation state per tenant to avoid redundant calculations
 const computationState: Record<
@@ -574,7 +575,7 @@ export async function computeEpinetSankey(
   // Sort nodes by count to keep the most significant ones
   const sortedNodes = Object.entries(nodeCounts)
     .sort((a, b) => b[1].size - a[1].size)
-    .slice(0, 20); // Limit to 20 most active nodes for readability
+    .slice(0, MAX_NODES); // Limit to ? most active nodes for readability
 
   // Convert node data to nodes array
   const nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
@@ -901,10 +902,10 @@ export async function getEpinetCustomMetrics(
       });
     }
 
-    // Sort nodes by visitor count and limit to top 20 for readability
+    // Sort nodes by visitor count and limit to top ? for readability
     const sortedNodes = Object.entries(nodeCounts)
       .sort((a, b) => b[1].size - a[1].size)
-      .slice(0, 20);
+      .slice(0, MAX_NODES);
 
     // Remove nodes with zero visitors after filtering
     const filteredSortedNodes = sortedNodes.filter(([_, visitors]) => visitors.size > 0);

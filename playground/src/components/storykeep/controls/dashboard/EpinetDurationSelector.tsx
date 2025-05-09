@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useStore } from "@nanostores/react";
 import { analyticsDuration, epinetCustomFilters } from "@/store/storykeep";
 import { MAX_ANALYTICS_HOURS } from "@/constants";
@@ -42,13 +42,61 @@ const EpinetDurationSelector = () => {
     endHour: "23:59", // Hour of day (23:59)
   });
 
-  // Sync local state with epinetCustomFilters when it changes (only visitorType)
+  // Sync local state with epinetCustomFilters when it changes
   useEffect(() => {
     setLocalFilters((prev) => ({
       ...prev,
       visitorType: $epinetCustomFilters.visitorType || "all",
     }));
   }, [$epinetCustomFilters]);
+
+  // Initialize date range based on analyticsDuration when component mounts
+  useEffect(() => {
+    // Use local time for display purposes in the UI
+    const now = new Date();
+    const endDate = new Date();
+    let startDate = new Date();
+
+    // Set appropriate date range based on duration
+    if ($analyticsDuration === "daily") {
+      startDate.setHours(now.getHours() - 24);
+    } else if ($analyticsDuration === "weekly") {
+      startDate.setDate(now.getDate() - 7);
+    } else if ($analyticsDuration === "monthly") {
+      startDate.setDate(now.getDate() - 28);
+    }
+
+    // Set these dates for the UI display (in local time)
+    setStartDate(startDate);
+    setEndDate(endDate);
+
+    // Also update hour fields to match the start/end times
+    const startHour = startDate.getHours().toString().padStart(2, "0");
+    const endHour =
+      endDate.getHours() === 23 ? "23:59" : endDate.getHours().toString().padStart(2, "0");
+
+    setLocalFilters((prev) => ({
+      ...prev,
+      startHour,
+      endHour,
+    }));
+  }, [$analyticsDuration]);
+
+  // Helper to set hours based on current analyticsDuration
+  const getHoursFromDuration = useCallback((): [number, number] => {
+    // These hours represent UTC time differences
+    // Since our hourly bins are based on UTC, this is what we need to pass to the backend
+    switch ($analyticsDuration) {
+      case "daily":
+        return [0, 24]; // 24 hours ago to now
+      case "weekly":
+        return [0, 168]; // 7 days ago to now
+      case "monthly":
+        return [0, 672]; // 28 days ago to now
+      default:
+        return [0, 168]; // Default to weekly
+    }
+  }, [$analyticsDuration]);
 
   const visitorTypes = [
     { id: "all", title: "All Traffic", description: "All visitors" },
@@ -62,14 +110,30 @@ const EpinetDurationSelector = () => {
   };
 
   const toggleCustomFilters = (enabled: boolean) => {
-    epinetCustomFilters.set({
-      enabled,
-      visitorType: enabled ? localFilters.visitorType : "all",
-      startHour: null,
-      endHour: null,
-      selectedUserId: enabled ? $epinetCustomFilters.selectedUserId : null,
-      availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
-    });
+    if (enabled) {
+      // When enabling custom filters, use the current analyticsDuration to set
+      // appropriate start/end hours and trigger an immediate load
+      const [endHour, startHour] = getHoursFromDuration();
+
+      epinetCustomFilters.set({
+        enabled,
+        visitorType: localFilters.visitorType,
+        startHour,
+        endHour,
+        selectedUserId: $epinetCustomFilters.selectedUserId,
+        availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
+      });
+    } else {
+      // When disabling, reset to defaults
+      epinetCustomFilters.set({
+        enabled,
+        visitorType: "all",
+        startHour: null,
+        endHour: null,
+        selectedUserId: null,
+        availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
+      });
+    }
   };
 
   const updateVisitorType = (type: "all" | "anonymous" | "known") => {
@@ -86,8 +150,7 @@ const EpinetDurationSelector = () => {
   const updateDateRange = () => {
     if (!startDate || !endDate) return;
 
-    // Calculate hours hence relative to current time
-    const now = new Date();
+    // Create date objects with the user's selected local date/time
     const startDateTime = new Date(startDate);
     const [startHour, startMinute] = localFilters.startHour.split(":").map(Number);
     startDateTime.setHours(startHour, startMinute || 0, 0, 0); // Start of hour
@@ -101,11 +164,38 @@ const EpinetDurationSelector = () => {
       endMinute === 59 ? 999 : 0
     ); // End of hour for 23:59
 
-    const startHoursHence = Math.round(
-      (now.getTime() - startDateTime.getTime()) / (1000 * 60 * 60)
-    );
-    const endHoursHence = Math.round((now.getTime() - endDateTime.getTime()) / (1000 * 60 * 60));
+    // Get current time in UTC for baseline comparison
+    const nowUtc = new Date();
 
+    // Convert local dates to UTC for calculating hours hence
+    // This ensures the "hours hence" calculation properly accounts for time zone
+    const startUtc = new Date(
+      Date.UTC(
+        startDateTime.getFullYear(),
+        startDateTime.getMonth(),
+        startDateTime.getDate(),
+        startDateTime.getHours(),
+        startDateTime.getMinutes(),
+        startDateTime.getSeconds()
+      )
+    );
+
+    const endUtc = new Date(
+      Date.UTC(
+        endDateTime.getFullYear(),
+        endDateTime.getMonth(),
+        endDateTime.getDate(),
+        endDateTime.getHours(),
+        endDateTime.getMinutes(),
+        endDateTime.getSeconds()
+      )
+    );
+
+    // Calculate hours hence relative to current UTC time
+    const startHoursHence = Math.round((nowUtc.getTime() - startUtc.getTime()) / (1000 * 60 * 60));
+    const endHoursHence = Math.round((nowUtc.getTime() - endUtc.getTime()) / (1000 * 60 * 60));
+
+    // Set the filter values
     epinetCustomFilters.set({
       ...$epinetCustomFilters,
       visitorType: localFilters.visitorType,
@@ -128,7 +218,28 @@ const EpinetDurationSelector = () => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     const time = hour === "23:59" ? "23:59" : `${hour}:00`;
-    return `${month}/${day}/${year} ${time}`;
+    return `${month}/${day}/${year} ${time} (Local Time)`;
+  };
+
+  // Sets a preset date range based on duration
+  const setPresetDateRange = (period: string) => {
+    const newEndDate = new Date();
+    const newStartDate = new Date();
+
+    if (period === "24h") {
+      newStartDate.setHours(newEndDate.getHours() - 24);
+      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+    } else if (period === "7d") {
+      newStartDate.setDate(newStartDate.getDate() - 7);
+      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+    } else if (period === "30d") {
+      newStartDate.setDate(newStartDate.getDate() - 30);
+      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+    }
+
+    setStartDate(newStartDate);
+    setEndDate(newEndDate);
+    setIsDatePickerOpen(false);
   };
 
   const radioGroupStyles = `
@@ -161,6 +272,12 @@ const EpinetDurationSelector = () => {
       }
     }
   `;
+
+  // Helper to get a description of the current active filter
+  const getActiveFilterDescription = () => {
+    const duration = $analyticsDuration;
+    return duration === "daily" ? "24 hours" : duration === "weekly" ? "7 days" : "4 weeks";
+  };
 
   return (
     <div className="space-y-4">
@@ -248,39 +365,20 @@ const EpinetDurationSelector = () => {
                   <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-2 w-full sm:w-auto">
                     <div className="flex flex-wrap gap-2 justify-between mb-2">
                       <button
-                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
-                        onClick={() => {
-                          const newEndDate = new Date();
-                          const newStartDate = new Date();
-                          newStartDate.setHours(newEndDate.getHours() - 24);
-                          setStartDate(newStartDate);
-                          setEndDate(newEndDate);
-                          setIsDatePickerOpen(false);
-                        }}
+                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "daily" ? "font-bold bg-cyan-50" : ""}`}
+                        onClick={() => setPresetDateRange("24h")}
                       >
                         Last 24 hours
                       </button>
                       <button
-                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
-                        onClick={() => {
-                          const newStartDate = new Date();
-                          newStartDate.setDate(newStartDate.getDate() - 7);
-                          setStartDate(newStartDate);
-                          setEndDate(new Date());
-                          setIsDatePickerOpen(false);
-                        }}
+                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "weekly" ? "font-bold bg-cyan-50" : ""}`}
+                        onClick={() => setPresetDateRange("7d")}
                       >
                         Last 7 days
                       </button>
                       <button
-                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
-                        onClick={() => {
-                          const newStartDate = new Date();
-                          newStartDate.setDate(newStartDate.getDate() - 30);
-                          setStartDate(newStartDate);
-                          setEndDate(new Date());
-                          setIsDatePickerOpen(false);
-                        }}
+                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "monthly" ? "font-bold bg-cyan-50" : ""}`}
+                        onClick={() => setPresetDateRange("30d")}
                       >
                         Last 30 days
                       </button>
@@ -308,6 +406,7 @@ const EpinetDurationSelector = () => {
                           onChange={(e) =>
                             setStartDate(e.target.value ? new Date(e.target.value) : null)
                           }
+                          value={startDate ? startDate.toISOString().split("T")[0] : ""}
                           min={minDate.toISOString().split("T")[0]}
                           max={maxDate.toISOString().split("T")[0]}
                         />
@@ -320,6 +419,7 @@ const EpinetDurationSelector = () => {
                           onChange={(e) =>
                             setEndDate(e.target.value ? new Date(e.target.value) : null)
                           }
+                          value={endDate ? endDate.toISOString().split("T")[0] : ""}
                           min={
                             startDate
                               ? startDate.toISOString().split("T")[0]
@@ -424,20 +524,30 @@ const EpinetDurationSelector = () => {
 
           {$epinetCustomFilters.enabled && (
             <div className="p-2 bg-cyan-50 text-cyan-800 rounded-md text-sm">
-              <p>
-                {typeof $epinetCustomFilters.startHour === "number" &&
-                typeof $epinetCustomFilters.endHour === "number" &&
-                startDate &&
-                endDate
-                  ? `Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)} for ${
-                      $epinetCustomFilters.visitorType === "all"
-                        ? "all visitors"
-                        : $epinetCustomFilters.visitorType === "anonymous"
-                          ? "anonymous visitors"
-                          : "known leads"
-                    }`
-                  : "Select date range and filters to preview"}
-              </p>
+              {$epinetCustomFilters.startHour !== null && $epinetCustomFilters.endHour !== null ? (
+                <div>
+                  <p>
+                    {startDate && endDate
+                      ? `Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
+                      : `Showing data from last ${getActiveFilterDescription()}`}{" "}
+                    for{" "}
+                    {$epinetCustomFilters.visitorType === "all"
+                      ? "all visitors"
+                      : $epinetCustomFilters.visitorType === "anonymous"
+                        ? "anonymous visitors"
+                        : "known leads"}
+                    {$epinetCustomFilters.selectedUserId
+                      ? ` - User: ${$epinetCustomFilters.selectedUserId}`
+                      : ""}
+                  </p>
+                  <p className="text-xs mt-1 text-cyan-700">
+                    <span className="font-semibold">Note:</span> Time ranges are converted to UTC
+                    for data retrieval, but displayed in your local time.
+                  </p>
+                </div>
+              ) : (
+                <p>Select date range and filters to preview</p>
+              )}
             </div>
           )}
         </div>
