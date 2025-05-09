@@ -3,6 +3,9 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { useEffect, useRef, useState } from "react";
 import { colors } from "@/constants";
 
+// Maximum height constraint for the diagram
+const MAX_HEIGHT = 500;
+
 interface Node {
   name: string;
   id: string;
@@ -28,7 +31,7 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({
     width: 800,
-    height: 600,
+    height: 500,
   });
 
   useEffect(() => {
@@ -38,7 +41,9 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
         const nodeCount = data.nodes.length || 1;
         // Height: 40px per node + 10px padding + 50px buffer
         const calculatedHeight = nodeCount * (40 + 10) + 50;
-        setDimensions({ width: containerWidth, height: calculatedHeight });
+        // Apply maximum height constraint
+        const constrainedHeight = Math.min(MAX_HEIGHT, calculatedHeight);
+        setDimensions({ width: containerWidth, height: constrainedHeight });
       }
     };
 
@@ -173,7 +178,7 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
   }, [data, dimensions]);
 
   return (
-    <div ref={containerRef} className="w-full my-4">
+    <div ref={containerRef} className="w-full">
       <svg
         ref={svgRef}
         width={dimensions.width}

@@ -27,35 +27,23 @@ import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode";
 import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode";
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode";
-import { initializeContent, getFullContentMap } from "@/utils/db/turso";
+import { initializeContent } from "@/utils/db/turso";
 //import { getAllTopics } from "@/utils/db/api/getAllTopics";
 //import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
 //import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment";
 //import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
 //import { upsertTopic } from "@/utils/db/api/upsertTopic";
 //import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
-import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
-import { getEpinetMetrics } from "@/utils/events/epinetAnalytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
 import { getEpinetById } from "@/utils/db/api/getEpinetById";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
-import {
-  computeDashboardAnalytics,
-  createEmptyDashboardAnalytics,
-} from "@/utils/events/dashboardAnalytics";
-import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
-import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
+import { getAllAnalytics } from "@/utils/db/api/getAllAnalytics";
 import { getPanelAnalytics } from "@/utils/db/api/panelAnalytics";
-import {
-  formatHourKey,
-  createEmptyLeadMetrics,
-  hourlyAnalyticsStore,
-  hourlyEpinetStore,
-  isEpinetCacheValid,
-  isAnalyticsCacheValid,
-} from "@/store/analytics";
+import { createEmptyDashboardAnalytics } from "@/utils/events/dashboardAnalytics";
+import { createEmptyLeadMetrics } from "@/store/analytics";
+import { getEpinetCustomMetrics } from "@/utils/events/epinetAnalytics";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -207,131 +195,21 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
       case "getAllAnalytics": {
         const url = new URL(context.request.url);
         const durationParam = url.searchParams.get("duration") || "weekly";
-        const duration = ["daily", "weekly", "monthly"].includes(durationParam)
-          ? (durationParam as "daily" | "weekly" | "monthly")
-          : "weekly";
 
         try {
-          const tenantId = context?.locals?.tenant?.id || "default";
-          const isAnalyticsValid = isAnalyticsCacheValid(tenantId);
-          const isEpinetValid = isEpinetCacheValid(tenantId);
-          const analyticStore = hourlyAnalyticsStore.get();
-          const epinetStore = hourlyEpinetStore.get();
-          const currentHour = formatHourKey(new Date());
-          const tenantAnalyticsData = analyticStore.data[tenantId];
-          const tenantEpinetData = epinetStore.data[tenantId];
+          const analyticsData = await getAllAnalytics(durationParam, context);
 
-          // Find the first promoted epinet ID for epinet data
-          const contentItems = await getFullContentMap(context);
-          const epinets = contentItems.filter(
-            (item: any) => item.type === "Epinet" && item.promoted
-          );
-          const epinetId = epinets.length > 0 ? epinets[0].id : null;
-
-          // Check if all data is fresh and complete
-          if (
-            isAnalyticsValid &&
-            tenantAnalyticsData &&
-            tenantAnalyticsData.lastFullHour === currentHour &&
-            isEpinetValid &&
-            epinetId &&
-            tenantEpinetData &&
-            tenantEpinetData[epinetId] &&
-            epinetStore.lastFullHour[tenantId] === currentHour
-          ) {
-            // All data is fresh
-            const [dashboardData, leadMetrics, epinetData] = await Promise.all([
-              computeDashboardAnalytics(duration, context),
-              computeLeadMetrics(context),
-              epinetId ? getEpinetMetrics(epinetId, duration, context) : null,
-            ]);
-
-            return new Response(
-              JSON.stringify({
-                success: true,
-                data: {
-                  dashboard: dashboardData,
-                  leads: leadMetrics,
-                  epinet: epinetData,
-                },
-                status: "complete",
-              }),
-              {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-              }
-            );
-          }
-
-          // Refresh data in the background if needed
-          const needsAnalyticsRefresh =
-            !isAnalyticsValid ||
-            !tenantAnalyticsData ||
-            tenantAnalyticsData.lastFullHour !== currentHour;
-
-          const needsEpinetRefresh =
-            !isEpinetValid ||
-            !tenantEpinetData ||
-            !epinetId ||
-            !tenantEpinetData[epinetId] ||
-            epinetStore.lastFullHour[tenantId] !== currentHour;
-
-          const hoursToLoad =
-            tenantAnalyticsData && Object.keys(tenantAnalyticsData.contentData).length > 0
-              ? 1
-              : 672;
-          const epinetHoursToLoad = tenantEpinetData && Object.keys(tenantEpinetData).length > 0;
-
-          // Start background processing
-          const processingPromises = [];
-
-          if (needsAnalyticsRefresh) {
-            processingPromises.push(
-              loadHourlyAnalytics(hoursToLoad, context).catch((err) =>
-                console.error("Async analytics processing error:", err)
-              )
-            );
-          }
-
-          if (needsEpinetRefresh && epinetId) {
-            processingPromises.push(
-              loadHourlyEpinetData(672, context, epinetHoursToLoad).catch((err) =>
-                console.error("Async epinet processing error:", err)
-              )
-            );
-          }
-
-          // Start processing in background
-          Promise.all(processingPromises).catch((err) =>
-            console.error("Error in background processing:", err)
-          );
-
-          const [dashboardData, leadMetrics, epinetData] = await Promise.all([
-            tenantAnalyticsData
-              ? computeDashboardAnalytics(duration, context)
-              : createEmptyDashboardAnalytics(),
-            tenantAnalyticsData ? computeLeadMetrics(context) : createEmptyLeadMetrics(),
-            epinetId && tenantEpinetData && tenantEpinetData[epinetId]
-              ? getEpinetMetrics(epinetId, duration, context)
-              : {
-                  id: epinetId || "unknown",
-                  title: "User Journey Flow (Loading...)",
-                  nodes: [],
-                  links: [],
-                },
-          ]);
-
-          const status = needsAnalyticsRefresh || needsEpinetRefresh ? "refreshing" : "complete";
+          result = {
+            dashboard: analyticsData.dashboard,
+            leads: analyticsData.leads,
+            epinet: analyticsData.epinet,
+          };
 
           return new Response(
             JSON.stringify({
               success: true,
-              data: {
-                dashboard: dashboardData,
-                leads: leadMetrics,
-                epinet: epinetData,
-              },
-              status: status,
+              data: result,
+              status: analyticsData.status,
             }),
             {
               status: 200,
@@ -350,6 +228,71 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
                 epinet: null,
               },
               status: "error",
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+      }
+
+      case "getEpinetCustomMetrics": {
+        const url = new URL(context.request.url);
+        const id = url.searchParams.get("id");
+        const visitorType = (url.searchParams.get("visitorType") || "all") as
+          | "all"
+          | "anonymous"
+          | "known";
+        const selectedUserId = url.searchParams.get("userId");
+        const startHourParam = url.searchParams.get("startHour");
+        const endHourParam = url.searchParams.get("endHour");
+
+        if (!id) {
+          throw new Error("Missing required parameter: id");
+        }
+
+        // Parse hour parameters if provided
+        const startHour = startHourParam ? parseInt(startHourParam, 10) : null;
+        const endHour = endHourParam ? parseInt(endHourParam, 10) : null;
+
+        try {
+          const metricsData = await getEpinetCustomMetrics(
+            id,
+            {
+              visitorType,
+              selectedUserId,
+              startHour,
+              endHour,
+            },
+            context
+          );
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: metricsData,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (error) {
+          console.error("Error in getEpinetCustomMetrics:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "An unknown error occurred",
+              data: {
+                epinet: {
+                  status: "error",
+                  message: "Failed to compute custom epinet metrics",
+                  id,
+                  title: "User Journey Flow (Error)",
+                },
+                availableVisitorIds: [],
+              },
             }),
             {
               status: 500,

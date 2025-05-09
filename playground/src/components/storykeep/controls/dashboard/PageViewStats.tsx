@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
+import EpinetDurationSelector from "./EpinetDurationSelector";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import {
   isDemoModeStore,
   analyticsStore,
   analyticsDuration,
+  epinetCustomFilters,
   storyfragmentAnalyticsStore,
 } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
@@ -48,6 +50,7 @@ export default function PageViewStats() {
   const analytics = useStore(analyticsStore);
   const $isDemoMode = useStore(isDemoModeStore);
   const $analyticsDuration = useStore(analyticsDuration);
+  const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
 
@@ -65,7 +68,14 @@ export default function PageViewStats() {
   }, []);
 
   const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
+    toggleCustomFilters(false);
     analyticsDuration.set(newValue);
+  };
+  const toggleCustomFilters = (enabled: boolean) => {
+    epinetCustomFilters.set({
+      ...$epinetCustomFilters,
+      enabled,
+    });
   };
 
   const downloadLeadsCSV = async () => {
@@ -433,7 +443,7 @@ export default function PageViewStats() {
           )}
         </div>
 
-        <div className="p-4 motion-safe:animate-fadeInUp">
+        <div className="px-4 motion-safe:animate-fadeInUp">
           <DurationSelector />
 
           {/* Dashboard Activity Chart */}
@@ -454,7 +464,9 @@ export default function PageViewStats() {
             </div>
           )}
 
-          <DurationSelector />
+          <div className="pt-6">
+            <hr />
+          </div>
 
           {/* Epinet Sankey Diagram */}
           {status === "loading" &&
@@ -494,9 +506,12 @@ export default function PageViewStats() {
                   <div className="absolute top-0 right-0 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-sm">
                     Updating...
                   </div>
-                ) : null}
-                <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
-                <DurationSelector />
+                ) : (
+                  <>
+                    <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
+                    <EpinetDurationSelector />
+                  </>
+                )}
               </div>
             </ErrorBoundary>
           ) : (

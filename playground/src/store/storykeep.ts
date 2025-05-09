@@ -78,6 +78,21 @@ export const analyticsStore = map({
   error: null as string | null,
   lastUpdated: null as number | null,
 });
+export const epinetCustomFilters = atom<{
+  enabled: boolean;
+  visitorType: "all" | "anonymous" | "known";
+  selectedUserId: string | null;
+  startHour: number | null;
+  endHour: number | null;
+  availableVisitorIds: string[];
+}>({
+  enabled: false,
+  visitorType: "all",
+  selectedUserId: null,
+  startHour: null,
+  endHour: null,
+  availableVisitorIds: [],
+});
 export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
 export const hasArtpacksStore = map<ArtpacksStore>({});
 export const tenantIdStore = atom<string>(`default`);
