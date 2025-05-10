@@ -44,6 +44,8 @@ import { getPanelAnalytics } from "@/utils/db/api/panelAnalytics";
 import { createEmptyDashboardAnalytics } from "@/utils/events/dashboardAnalytics";
 import { createEmptyLeadMetrics } from "@/store/analytics";
 import { getEpinetCustomMetrics } from "@/utils/events/epinetAnalytics";
+import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
+import { isEpinetCacheValid } from "@/store/analytics";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -199,15 +201,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         try {
           const analyticsData = await getAllAnalytics(durationParam, context);
 
-          // Type guard function to check if epinet has nodes and links properties
-          const hasNodesAndLinks = (epinet: any): epinet is { nodes: any[]; links: any[] } => {
-            return (
-              epinet &&
-              typeof epinet === "object" &&
-              Array.isArray(epinet.nodes) &&
-              Array.isArray(epinet.links)
-            );
-          };
+          // Type guard not needed anymore as epinet is removed
 
           // Check if the data is empty (but don't change the status)
           const isEmpty =
@@ -219,16 +213,12 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             !analyticsData.dashboard.hot_content?.length &&
             analyticsData.dashboard.stats.daily === 0 &&
             analyticsData.dashboard.stats.weekly === 0 &&
-            analyticsData.dashboard.stats.monthly === 0 &&
-            (!analyticsData.epinet ||
-              (hasNodesAndLinks(analyticsData.epinet) &&
-                (!analyticsData.epinet.nodes.length || !analyticsData.epinet.links.length)));
+            analyticsData.dashboard.stats.monthly === 0;
 
           // Preserve original status from analyticsData
           result = {
             dashboard: analyticsData.dashboard,
             leads: analyticsData.leads,
-            epinet: analyticsData.epinet,
           };
 
           return new Response(
@@ -252,7 +242,6 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
               data: {
                 dashboard: createEmptyDashboardAnalytics(),
                 leads: createEmptyLeadMetrics(),
-                epinet: null,
               },
               status: "error",
             }),
@@ -284,6 +273,19 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         const endHour = endHourParam ? parseInt(endHourParam, 10) : null;
 
         try {
+          const tenantId = context?.locals?.tenant?.id || "default";
+          const isEpinetValid = isEpinetCacheValid(tenantId);
+
+          // Check if we need to refresh epinet data
+          if (!isEpinetValid) {
+            // Use the larger of the two hour values to ensure we load enough data
+            const hoursToLoad = Math.max(startHour || 672, 672);
+
+            // Wait for epinet data to load
+            await loadHourlyEpinetData(hoursToLoad, context, false).catch((err) =>
+              console.error("Error loading epinet data:", err)
+            );
+          }
           const metricsData = await getEpinetCustomMetrics(
             id,
             {
