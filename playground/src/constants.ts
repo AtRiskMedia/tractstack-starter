@@ -51,7 +51,8 @@ export const IMPRESSIONS_DELAY = 5000;
 
 export const ANALYTICS_CACHE_TTL = 15 * 60 * 1000;
 export const EPINETS_CACHE_TTL = 30 * 60 * 1000;
-export const MAX_ANALYTICS_HOURS = 672;
+//export const MAX_ANALYTICS_HOURS = 672;
+export const MAX_ANALYTICS_HOURS = 4;
 //export const ANALYTICS_CACHE_TTL = 5000;
 //export const EPINETS_CACHE_TTL = 5000;
 //export const MAX_ANALYTICS_HOURS = 72;

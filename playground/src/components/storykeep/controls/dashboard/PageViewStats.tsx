@@ -475,19 +475,15 @@ export default function PageViewStats() {
             !epinetData.links ||
             epinetData.nodes.length === 0 ||
             epinetData.links.length === 0) ? (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-                  <p className="mt-4 text-sm text-gray-600">Computing user journey data...</p>
-                </div>
+            <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                <p className="mt-4 text-sm text-gray-600">Computing user journey data...</p>
               </div>
             </div>
           ) : error ? (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-red-100 mt-12">
-              <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
-                There was an error loading the user journey data. Please try refreshing the page.
-              </div>
+            <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
+              There was an error loading the user journey data. Please try refreshing the page.
             </div>
           ) : epinetData &&
             epinetData.nodes &&

@@ -1371,12 +1371,6 @@ export interface TimeRangeMetrics {
   eventCounts: Record<string, number>;
 }
 
-export interface VisitorIdentity {
-  id: string;
-  count: number;
-  isKnown?: boolean;
-}
-
 export interface EpinetCustomMetricsFilters {
   visitorType: "all" | "anonymous" | "known";
   selectedUserId: string | null;
@@ -1386,7 +1380,7 @@ export interface EpinetCustomMetricsFilters {
 
 export interface EpinetCustomMetricsResponse {
   epinet: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
-  availableVisitorIds: VisitorIdentity[];
+  availableVisitorIds: string[];
 }
 
 export interface FilteredComputedEpinet extends ComputedEpinet {

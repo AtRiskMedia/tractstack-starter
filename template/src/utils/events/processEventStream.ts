@@ -53,7 +53,7 @@ async function processBeliefEvent(
         visit_id,
         fingerprint_id,
         event.verb,
-        new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+        new Date().toISOString(),
       ],
     };
     if (VERBOSE) console.log(actionQuery);
@@ -76,7 +76,7 @@ async function processBeliefEvent(
         args: [
           event.verb,
           event.object || null,
-          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+          new Date().toISOString(),
           beliefId,
           fingerprint_id,
         ],
@@ -93,7 +93,7 @@ async function processBeliefEvent(
           fingerprint_id,
           event.verb,
           event.object || null,
-          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+          new Date().toISOString(),
         ],
       };
       if (VERBOSE) console.log(insertQuery);
@@ -172,7 +172,7 @@ export async function processEventStream(client: Client, payload: EventPayload) 
           fingerprint_id,
           event.verb,
           event.duration || null,
-          new Date(Date.now() + new Date().getTimezoneOffset() * 60 * 1000).toISOString(),
+          new Date().toISOString(),
         ],
       };
       if (VERBOSE) console.log(actionQuery);

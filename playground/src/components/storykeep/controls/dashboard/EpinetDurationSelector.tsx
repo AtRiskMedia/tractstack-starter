@@ -6,15 +6,8 @@ import { Select, createListCollection } from "@ark-ui/react";
 import { RadioGroup } from "@ark-ui/react/radio-group";
 import { Portal } from "@ark-ui/react/portal";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
-
-type EpinetCustomFilters = {
-  enabled: boolean;
-  visitorType: "all" | "anonymous" | "known";
-  selectedUserId: string | null;
-  startHour: number | null;
-  endHour: number | null;
-  availableVisitorIds: string[];
-};
+import ChevronLeftIcon from "@heroicons/react/24/outline/ChevronLeftIcon";
+import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
 
 const hourOptions = [
   ...Array.from({ length: 24 }, (_, i) => ({
@@ -31,33 +24,32 @@ const EpinetDurationSelector = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [currentUserPage, setCurrentUserPage] = useState(0);
+  const usersPerPage = 50;
 
   const $analyticsDuration = useStore(analyticsDuration);
-  const $epinetCustomFilters = useStore(epinetCustomFilters) as EpinetCustomFilters;
+  const $epinetCustomFilters = useStore(epinetCustomFilters);
 
-  // Local state for interim filter values
   const [localFilters, setLocalFilters] = useState({
     visitorType: $epinetCustomFilters.visitorType || "all",
-    startHour: "00", // Hour of day (00:00)
-    endHour: "23:59", // Hour of day (23:59)
+    selectedUserId: $epinetCustomFilters.selectedUserId || null,
+    startHour: "00",
+    endHour: "23:59",
   });
 
-  // Sync local state with epinetCustomFilters when it changes
   useEffect(() => {
     setLocalFilters((prev) => ({
       ...prev,
       visitorType: $epinetCustomFilters.visitorType || "all",
+      selectedUserId: $epinetCustomFilters.selectedUserId,
     }));
   }, [$epinetCustomFilters]);
 
-  // Initialize date range based on analyticsDuration when component mounts
   useEffect(() => {
-    // Use local time for display purposes in the UI
     const now = new Date();
     const endDate = new Date();
     let startDate = new Date();
 
-    // Set appropriate date range based on duration
     if ($analyticsDuration === "daily") {
       startDate.setHours(now.getHours() - 24);
     } else if ($analyticsDuration === "weekly") {
@@ -66,11 +58,9 @@ const EpinetDurationSelector = () => {
       startDate.setDate(now.getDate() - 28);
     }
 
-    // Set these dates for the UI display (in local time)
     setStartDate(startDate);
     setEndDate(endDate);
 
-    // Also update hour fields to match the start/end times
     const startHour = startDate.getHours().toString().padStart(2, "0");
     const endHour =
       endDate.getHours() === 23 ? "23:59" : endDate.getHours().toString().padStart(2, "0");
@@ -82,19 +72,20 @@ const EpinetDurationSelector = () => {
     }));
   }, [$analyticsDuration]);
 
-  // Helper to set hours based on current analyticsDuration
+  useEffect(() => {
+    setCurrentUserPage(0);
+  }, [localFilters.visitorType]);
+
   const getHoursFromDuration = useCallback((): [number, number] => {
-    // These hours represent UTC time differences
-    // Since our hourly bins are based on UTC, this is what we need to pass to the backend
     switch ($analyticsDuration) {
       case "daily":
-        return [0, 24]; // 24 hours ago to now
+        return [0, 24];
       case "weekly":
-        return [0, 168]; // 7 days ago to now
+        return [0, 168];
       case "monthly":
-        return [0, 672]; // 28 days ago to now
+        return [0, 672];
       default:
-        return [0, 168]; // Default to weekly
+        return [0, 168];
     }
   }, [$analyticsDuration]);
 
@@ -111,10 +102,7 @@ const EpinetDurationSelector = () => {
 
   const toggleCustomFilters = (enabled: boolean) => {
     if (enabled) {
-      // When enabling custom filters, use the current analyticsDuration to set
-      // appropriate start/end hours and trigger an immediate load
       const [endHour, startHour] = getHoursFromDuration();
-
       epinetCustomFilters.set({
         enabled,
         visitorType: localFilters.visitorType,
@@ -124,7 +112,6 @@ const EpinetDurationSelector = () => {
         availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
       });
     } else {
-      // When disabling, reset to defaults
       epinetCustomFilters.set({
         enabled,
         visitorType: "all",
@@ -137,7 +124,18 @@ const EpinetDurationSelector = () => {
   };
 
   const updateVisitorType = (type: "all" | "anonymous" | "known") => {
-    setLocalFilters((prev) => ({ ...prev, visitorType: type }));
+    setLocalFilters((prev) => ({
+      ...prev,
+      visitorType: type,
+      selectedUserId: null,
+    }));
+  };
+
+  const updateSelectedUser = (userId: string | null) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      selectedUserId: userId,
+    }));
   };
 
   const updateHour = (type: "startHour" | "endHour", hour: string) => {
@@ -150,10 +148,9 @@ const EpinetDurationSelector = () => {
   const updateDateRange = () => {
     if (!startDate || !endDate) return;
 
-    // Create date objects with the user's selected local date/time
     const startDateTime = new Date(startDate);
     const [startHour, startMinute] = localFilters.startHour.split(":").map(Number);
-    startDateTime.setHours(startHour, startMinute || 0, 0, 0); // Start of hour
+    startDateTime.setHours(startHour, startMinute || 0, 0, 0);
 
     const endDateTime = new Date(endDate);
     const [endHour, endMinute] = localFilters.endHour.split(":").map(Number);
@@ -162,13 +159,9 @@ const EpinetDurationSelector = () => {
       endMinute || 59,
       endMinute === 59 ? 59 : 0,
       endMinute === 59 ? 999 : 0
-    ); // End of hour for 23:59
+    );
 
-    // Get current time in UTC for baseline comparison
     const nowUtc = new Date();
-
-    // Convert local dates to UTC for calculating hours hence
-    // This ensures the "hours hence" calculation properly accounts for time zone
     const startUtc = new Date(
       Date.UTC(
         startDateTime.getFullYear(),
@@ -179,7 +172,6 @@ const EpinetDurationSelector = () => {
         startDateTime.getSeconds()
       )
     );
-
     const endUtc = new Date(
       Date.UTC(
         endDateTime.getFullYear(),
@@ -191,17 +183,37 @@ const EpinetDurationSelector = () => {
       )
     );
 
-    // Calculate hours hence relative to current UTC time
     const startHoursHence = Math.round((nowUtc.getTime() - startUtc.getTime()) / (1000 * 60 * 60));
     const endHoursHence = Math.round((nowUtc.getTime() - endUtc.getTime()) / (1000 * 60 * 60));
 
-    // Set the filter values
     epinetCustomFilters.set({
       ...$epinetCustomFilters,
       visitorType: localFilters.visitorType,
+      selectedUserId: localFilters.selectedUserId,
       startHour: Math.max(0, Math.min(startHoursHence, MAX_ANALYTICS_HOURS)),
       endHour: Math.max(0, Math.min(endHoursHence, MAX_ANALYTICS_HOURS)),
     });
+  };
+
+  const paginatedVisitorIds = ($epinetCustomFilters.availableVisitorIds || [])
+    .filter((id): id is string => typeof id === "string")
+    .slice(currentUserPage * usersPerPage, (currentUserPage + 1) * usersPerPage);
+
+  const totalUserPages = Math.ceil(
+    (($epinetCustomFilters.availableVisitorIds || []).filter((id) => typeof id === "string")
+      .length || 0) / usersPerPage
+  );
+
+  const nextUserPage = () => {
+    if (currentUserPage < totalUserPages - 1) {
+      setCurrentUserPage(currentUserPage + 1);
+    }
+  };
+
+  const prevUserPage = () => {
+    if (currentUserPage > 0) {
+      setCurrentUserPage(currentUserPage - 1);
+    }
   };
 
   const maxDate = new Date();
@@ -221,7 +233,6 @@ const EpinetDurationSelector = () => {
     return `${month}/${day}/${year} ${time} (Local Time)`;
   };
 
-  // Sets a preset date range based on duration
   const setPresetDateRange = (period: string) => {
     const newEndDate = new Date();
     const newStartDate = new Date();
@@ -244,22 +255,22 @@ const EpinetDurationSelector = () => {
 
   const radioGroupStyles = `
     .radio-control[data-state="unchecked"] .radio-dot {
-      background-color: #d1d5db; /* gray-300 */
+      background-color: #d1d5db;
     }
     .radio-control[data-state="checked"] .radio-dot {
-      background-color: #0891b2; /* cyan-600 */
+      background-color: #0891b2;
     }
     .radio-control[data-state="checked"] {
-      border-color: #0891b2; /* cyan-600 */
+      border-color: #0891b2;
     }
     .radio-item {
-      border: 1px solid #d1d5db; /* gray-300 */
+      border: 1px solid #d1d5db;
     }
     .radio-item[data-state="checked"] {
-      border-color: #0891b2; /* cyan-600 */
+      border-color: #0891b2;
     }
     .radio-item:hover {
-      background-color: #f3f4f6; /* gray-100 */
+      background-color: #f3f4f6;
     }
     @media (max-width: 640px) {
       .radio-item {
@@ -273,10 +284,17 @@ const EpinetDurationSelector = () => {
     }
   `;
 
-  // Helper to get a description of the current active filter
   const getActiveFilterDescription = () => {
     const duration = $analyticsDuration;
     return duration === "daily" ? "24 hours" : duration === "weekly" ? "7 days" : "4 weeks";
+  };
+
+  const formatVisitorId = (visitorId: unknown): string => {
+    if (typeof visitorId !== "string") {
+      console.warn("Invalid visitorId:", visitorId);
+      return "Unknown ID";
+    }
+    return `${visitorId.substring(0, 8)}...`;
   };
 
   return (
@@ -512,6 +530,95 @@ const EpinetDurationSelector = () => {
             </div>
           </div>
 
+          {paginatedVisitorIds.length > 0 && (
+            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-sm font-bold text-gray-700">Select Individual User</h3>
+                <div className="flex items-center space-x-2 text-sm">
+                  <button
+                    onClick={prevUserPage}
+                    disabled={currentUserPage === 0}
+                    className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5" />
+                  </button>
+                  <span>
+                    Page {currentUserPage + 1} of {totalUserPages}
+                  </span>
+                  <button
+                    onClick={nextUserPage}
+                    disabled={currentUserPage >= totalUserPages - 1}
+                    className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                  >
+                    <ChevronRightIcon className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-2">
+                <Select.Root
+                  collection={createListCollection({
+                    items: paginatedVisitorIds.map((visitorId) => ({
+                      value: visitorId,
+                      label: formatVisitorId(visitorId),
+                    })),
+                  })}
+                  value={localFilters.selectedUserId ? [localFilters.selectedUserId] : []}
+                  onValueChange={({ value }) => updateSelectedUser(value[0])}
+                >
+                  <Select.Control>
+                    <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm">
+                      <Select.ValueText placeholder="Select user">
+                        {localFilters.selectedUserId
+                          ? formatVisitorId(localFilters.selectedUserId)
+                          : "Select user"}
+                      </Select.ValueText>
+                      <Select.Indicator className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <span className="h-5 w-5 text-gray-500">▼</span>
+                      </Select.Indicator>
+                    </Select.Trigger>
+                  </Select.Control>
+                  <Portal>
+                    <Select.Positioner>
+                      <Select.Content className="z-10 mt-2 w-[var(--trigger-width)] max-h-96 overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        {paginatedVisitorIds.length > 0 ? (
+                          paginatedVisitorIds.map((visitorId) => (
+                            <Select.Item
+                              key={visitorId}
+                              item={{ value: visitorId, label: formatVisitorId(visitorId) }}
+                              className="cursor-pointer select-none p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
+                            >
+                              <Select.ItemText>{formatVisitorId(visitorId)}</Select.ItemText>
+                              <Select.ItemIndicator className="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
+                              </Select.ItemIndicator>
+                            </Select.Item>
+                          ))
+                        ) : (
+                          <div className="p-2 text-sm text-gray-500">No users available</div>
+                        )}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Portal>
+                </Select.Root>
+              </div>
+
+              {localFilters.selectedUserId && (
+                <div className="mt-2 text-sm bg-cyan-50 p-2 rounded">
+                  <p className="font-medium">
+                    Selected User: {formatVisitorId(localFilters.selectedUserId)}
+                  </p>
+                  <p className="text-xs text-cyan-700">
+                    {localFilters.visitorType === "known"
+                      ? "Known lead"
+                      : localFilters.visitorType === "anonymous"
+                        ? "Anonymous visitor"
+                        : "Visitor (mixed)"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex justify-end">
             <button
               onClick={updateDateRange}
@@ -531,14 +638,13 @@ const EpinetDurationSelector = () => {
                       ? `Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
                       : `Showing data from last ${getActiveFilterDescription()}`}{" "}
                     for{" "}
-                    {$epinetCustomFilters.visitorType === "all"
-                      ? "all visitors"
-                      : $epinetCustomFilters.visitorType === "anonymous"
-                        ? "anonymous visitors"
-                        : "known leads"}
                     {$epinetCustomFilters.selectedUserId
-                      ? ` - User: ${$epinetCustomFilters.selectedUserId}`
-                      : ""}
+                      ? `individual user ${formatVisitorId($epinetCustomFilters.selectedUserId)}`
+                      : $epinetCustomFilters.visitorType === "all"
+                        ? "all visitors"
+                        : $epinetCustomFilters.visitorType === "anonymous"
+                          ? "anonymous visitors"
+                          : "known leads"}
                   </p>
                   <p className="text-xs mt-1 text-cyan-700">
                     <span className="font-semibold">Note:</span> Time ranges are converted to UTC

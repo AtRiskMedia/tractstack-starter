@@ -109,8 +109,9 @@ export async function loadHourlyAnalytics(
 
       const hourParts = currentHourKey.split("-").map(Number);
       startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
-      endTime = new Date(startTime);
-      endTime.setHours(endTime.getHours() + 1);
+      endTime = new Date(
+        Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3])
+      );
     } else {
       // For full updates, get all hours in the specified range
       hourKeys = getHourKeysForTimeRange(hours);
@@ -125,21 +126,15 @@ export async function loadHourlyAnalytics(
       startTime = new Date(
         Date.UTC(firstHourParts[0], firstHourParts[1] - 1, firstHourParts[2], firstHourParts[3])
       );
-
       endTime = new Date(
-        lastHourParts[0],
-        lastHourParts[1] - 1,
-        lastHourParts[2],
-        lastHourParts[3]
+        Date.UTC(lastHourParts[0], lastHourParts[1] - 1, lastHourParts[2], lastHourParts[3])
       );
-      endTime.setHours(endTime.getHours() + 1);
     }
 
     if (VERBOSE) {
       console.log(
         `[DEBUG-ANALYTICS] Time range: ${startTime.toISOString()} to ${endTime.toISOString()}`
       );
-      console.log(`[DEBUG-ANALYTICS] Total hours to process: ${hourKeys.length}`);
     }
 
     // Initialize or get the current analytics data structure
@@ -328,23 +323,26 @@ async function processTimeRange(
 ): Promise<void> {
   if (VERBOSE) {
     console.log(
-      `[DEBUG-ANALYTICS] Processing time range: ${startTime.toISOString()} to ${endTime.toISOString()}`
+      `[DEBUG-ANALYTICS] Processing time range: ${startTime.toISOString()} to ${endTime.toISOString()}, hourKeys:`,
+      hourKeys
     );
   }
 
-  // SITE DATA QUERY: Corrected for COUNT() misuse
+  // SITE DATA QUERY: Updated to handle timestamp formats and future timestamps
   const siteStart = Date.now();
   const { rows: siteRows } = await client.execute({
     sql: `
       WITH hourly_visits AS (
         SELECT
-          strftime('%Y-%m-%d-%H', v.created_at) as hour_key,
+          strftime('%Y-%m-%d-%H', datetime(v.created_at, 'utc')) as hour_key,
           COUNT(DISTINCT v.id) as total_visits,
           GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NULL THEN v.fingerprint_id ELSE NULL END) as anonymous_fingerprints,
           GROUP_CONCAT(DISTINCT CASE WHEN f.lead_id IS NOT NULL THEN v.fingerprint_id ELSE NULL END) as known_fingerprints
         FROM visits v
         JOIN fingerprints f ON v.fingerprint_id = f.id
-        WHERE v.created_at >= ? AND v.created_at < ?
+        WHERE datetime(v.created_at, 'utc') >= datetime(?, 'utc')
+          AND datetime(v.created_at, 'utc') < datetime(?, 'utc')
+          AND datetime(v.created_at, 'utc') <= datetime('now', 'utc')
         GROUP BY hour_key
       ),
       hourly_actions AS (
@@ -353,18 +351,20 @@ async function processTimeRange(
           json_group_object(verb, verb_count) as event_counts
         FROM (
           SELECT
-            strftime('%Y-%m-%d-%H', created_at) as hour_key,
+            strftime('%Y-%m-%d-%H', datetime(created_at, 'utc')) as hour_key,
             verb,
             COUNT(*) as verb_count
           FROM actions
-          WHERE created_at >= ? AND created_at < ?
+          WHERE datetime(created_at, 'utc') >= datetime(?, 'utc')
+            AND datetime(created_at, 'utc') < datetime(?, 'utc')
+            AND datetime(created_at, 'utc') <= datetime('now', 'utc')
           GROUP BY hour_key, verb
         ) sub
         GROUP BY hour_key
       )
       SELECT
         COALESCE(hv.hour_key, ha.hour_key) as hour_key,
-        hv.total_visits,
+        COALESCE(hv.total_visits, 0) as total_visits,
         hv.anonymous_fingerprints,
         hv.known_fingerprints,
         COALESCE(ha.event_counts, '{}') as event_counts
@@ -379,12 +379,19 @@ async function processTimeRange(
       endTime.toISOString(),
     ],
   });
-  if (VERBOSE) console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
+  if (VERBOSE) {
+    console.log(`[DEBUG-ANALYTICS] Site query rows:`, siteRows);
+    console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
+  }
 
-  // Process site rows
+  // Process site rows with dynamic initialization
   for (const row of siteRows) {
     const hourKey = String(row.hour_key);
-    if (!hourKeys.includes(hourKey) || !siteData[hourKey]) continue;
+    // Initialize siteData if not already present
+    if (!siteData[hourKey]) {
+      siteData[hourKey] = createEmptyHourlySiteData();
+      if (VERBOSE) console.log(`[DEBUG-ANALYTICS] Initialized siteData for hourKey: ${hourKey}`);
+    }
 
     const anonymousFingerprints = row.anonymous_fingerprints
       ? String(row.anonymous_fingerprints).split(",").filter(Boolean)
@@ -407,19 +414,13 @@ async function processTimeRange(
       }
     }
   }
-  if (VERBOSE)
-    console.log(
-      `[DEBUG] siteRows.length: ${siteRows.length}, sample event_counts: ${
-        siteRows[0]?.event_counts || "{}"
-      }`
-    );
 
-  // CONTENT DATA QUERY: Unchanged
+  // CONTENT DATA QUERY: Unchanged, as leads metrics depend on siteData
   const contentStart = Date.now();
   const { rows: contentRows } = await client.execute({
     sql: `
       SELECT
-        strftime('%Y-%m-%d-%H', a.created_at) as hour_key,
+        strftime('%Y-%m-%d-%H', datetime(a.created_at, 'utc')) as hour_key,
         a.object_id,
         a.object_type,
         COUNT(DISTINCT a.id) as action_count,
@@ -428,24 +429,29 @@ async function processTimeRange(
       FROM actions a
       LEFT JOIN fingerprints f ON a.fingerprint_id = f.id
       WHERE
-        a.created_at >= ? AND a.created_at < ?
+        datetime(a.created_at, 'utc') >= datetime(?, 'utc')
+        AND datetime(a.created_at, 'utc') < datetime(?, 'utc')
+        AND datetime(a.created_at, 'utc') <= datetime('now', 'utc')
         AND a.object_type IN ('StoryFragment', 'Pane')
       GROUP BY hour_key, a.object_id, a.object_type
     `,
     args: [startTime.toISOString(), endTime.toISOString()],
   });
-  if (VERBOSE) console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
   if (VERBOSE) {
-    console.log(`[DEBUG] Content query found ${contentRows.length} rows`);
-    console.log(`[DEBUG] Sample content rows:`, contentRows);
+    console.log(`[DEBUG-ANALYTICS] Content query rows:`, contentRows);
+    console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
   }
 
   // Process content rows
   for (const row of contentRows) {
     const hourKey = String(row.hour_key);
     const contentId = String(row.object_id);
-    if (!hourKeys.includes(hourKey) || !contentData[contentId] || !contentData[contentId][hourKey])
-      continue;
+    if (!contentData[contentId]) {
+      contentData[contentId] = {};
+    }
+    if (!contentData[contentId][hourKey]) {
+      contentData[contentId][hourKey] = createEmptyHourlyContentData();
+    }
 
     const allFingerprints = row.fingerprints
       ? String(row.fingerprints).split(",").filter(Boolean)
@@ -462,12 +468,6 @@ async function processTimeRange(
     );
     hourData.actions = Number(row.action_count || 0);
   }
-  if (VERBOSE)
-    console.log(
-      `[DEBUG] contentRows.length: ${contentRows.length}, sample action_count: ${
-        contentRows[0]?.action_count || 0
-      }, object_type: ${contentRows[0]?.object_type || ""}`
-    );
 }
 
 /**

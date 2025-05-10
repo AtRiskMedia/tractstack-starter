@@ -12,6 +12,10 @@ export const PullDashboardAnalytics = () => {
   const [customFetchInProgress, setCustomFetchInProgress] = useState(false);
   const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
 
+  // Use a ref instead of state to track polling attempts across closures
+  const pollingAttemptsRef = useRef<number>(0);
+  const MAX_POLLING_ATTEMPTS = 3;
+
   // Clear any existing polling timer when component unmounts
   useEffect(() => {
     return () => {
@@ -24,6 +28,8 @@ export const PullDashboardAnalytics = () => {
   // Fetch all analytics data when duration changes or on initial mount
   useEffect(() => {
     if (!$epinetCustomFilters.enabled) {
+      // Reset polling attempts counter when duration changes
+      pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
     }
   }, [duration, $epinetCustomFilters.enabled]);
@@ -31,6 +37,7 @@ export const PullDashboardAnalytics = () => {
   // Make sure we poll at least once on initial mount
   useEffect(() => {
     if (!initialFetchDone) {
+      pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
       setInitialFetchDone(true);
     }
@@ -43,6 +50,7 @@ export const PullDashboardAnalytics = () => {
 
     if (wasEnabled && !$epinetCustomFilters.enabled) {
       // User switched from custom filters back to standard view
+      pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
     }
   }, [$epinetCustomFilters.enabled]);
@@ -70,6 +78,8 @@ export const PullDashboardAnalytics = () => {
 
   const fetchAllAnalytics = useCallback(async () => {
     try {
+      console.log(`Polling attempt ${pollingAttemptsRef.current + 1} of ${MAX_POLLING_ATTEMPTS}`);
+
       // Update loading state
       analyticsStore.setKey("isLoading", true);
 
@@ -97,6 +107,7 @@ export const PullDashboardAnalytics = () => {
         // Update the analytics store with the response data
         analyticsStore.setKey("dashboard", result.data.dashboard);
         analyticsStore.setKey("leads", result.data.leads);
+        console.log(result.data);
 
         // Only update epinet data if custom filters are disabled
         if (!$epinetCustomFilters.enabled) {
@@ -109,17 +120,42 @@ export const PullDashboardAnalytics = () => {
 
         // Schedule polling if data is still loading or refreshing
         if (result.status === "loading" || result.status === "refreshing") {
-          const timer = setTimeout(() => fetchAllAnalytics(), 5000); // Poll every 5 seconds
-          setPollingTimer(timer);
+          // Check if we've reached the maximum attempts
+          if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
+            // Increment the attempt counter
+            pollingAttemptsRef.current += 1;
+
+            // Schedule next poll
+            const timer = setTimeout(() => fetchAllAnalytics(), 15000); // Poll every 15 seconds
+            setPollingTimer(timer);
+          } else {
+            // For empty epinet data, we've reached max attempts but data is still empty
+            // Just set the status to complete to stop polling
+            console.log(`Reached maximum ${MAX_POLLING_ATTEMPTS} polling attempts, stopping.`);
+            analyticsStore.setKey("status", "complete");
+            // Reset counter for future polling
+            pollingAttemptsRef.current = 0;
+          }
+        } else {
+          // If we get a non-loading status, reset the attempts counter
+          pollingAttemptsRef.current = 0;
         }
       } else {
         // Handle API error
         analyticsStore.setKey("error", result.error || "Unknown API error");
         analyticsStore.setKey("status", "error");
 
-        // Schedule retry after error
-        const timer = setTimeout(() => fetchAllAnalytics(), 10000); // Retry after 10 seconds
-        setPollingTimer(timer);
+        // Schedule retry after error, respecting the maximum attempts
+        if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
+          pollingAttemptsRef.current += 1;
+          const timer = setTimeout(() => fetchAllAnalytics(), 10000); // Retry after 10 seconds
+          setPollingTimer(timer);
+        } else {
+          console.log(`Reached maximum ${MAX_POLLING_ATTEMPTS} error retry attempts, stopping.`);
+          analyticsStore.setKey("status", "error");
+          // Reset counter for future polling
+          pollingAttemptsRef.current = 0;
+        }
       }
     } catch (error) {
       // Handle fetch error
@@ -127,9 +163,17 @@ export const PullDashboardAnalytics = () => {
       analyticsStore.setKey("error", error instanceof Error ? error.message : "Unknown error");
       analyticsStore.setKey("status", "error");
 
-      // Schedule retry after error
-      const timer = setTimeout(() => fetchAllAnalytics(), 10000); // Retry after 10 seconds
-      setPollingTimer(timer);
+      // Schedule retry after error, respecting the maximum attempts
+      if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
+        pollingAttemptsRef.current += 1;
+        const timer = setTimeout(() => fetchAllAnalytics(), 10000); // Retry after 10 seconds
+        setPollingTimer(timer);
+      } else {
+        console.log(`Reached maximum ${MAX_POLLING_ATTEMPTS} error retry attempts, stopping.`);
+        analyticsStore.setKey("status", "error");
+        // Reset counter for future polling
+        pollingAttemptsRef.current = 0;
+      }
     } finally {
       // Always update loading state when done
       analyticsStore.setKey("isLoading", false);
@@ -197,6 +241,7 @@ export const PullDashboardAnalytics = () => {
       if (result.success) {
         // Update epinet data with filtered results
         analyticsStore.setKey("epinet", result.data.epinet);
+        console.log(result.data);
 
         // Update available visitor IDs in the filter store - respecting the atom pattern
         epinetCustomFilters.set({

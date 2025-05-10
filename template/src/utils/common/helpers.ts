@@ -609,7 +609,7 @@ export function parseHourKeyToDate(hourKey: string): Date {
   ) {
     throw new Error(`Invalid date values in hour key: ${hourKey}`);
   }
-  const date = new Date(year, month - 1, day, hour);
+  const date = new Date(Date.UTC(year, month - 1, day, hour));
   if (isNaN(date.getTime())) {
     throw new Error(`Invalid date from hour key: ${hourKey}`);
   }
