@@ -55,7 +55,7 @@ export default function PageViewStats() {
   const duration = $analyticsDuration;
 
   // Extract values from the store
-  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status, error } = analytics;
+  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status } = analytics;
 
   // Calculate total lifetime visitors from storyfragmentAnalytics
   const totalLifetimeVisitors = Object.values($storyfragmentAnalytics.byId).reduce(
@@ -469,53 +469,40 @@ export default function PageViewStats() {
           </div>
 
           {/* Epinet Sankey Diagram */}
-          {status === "loading" &&
-          (!epinetData ||
-            !epinetData.nodes ||
-            !epinetData.links ||
-            epinetData.nodes.length === 0 ||
-            epinetData.links.length === 0) ? (
+          {status === "loading" || status === "refreshing" ? (
             <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
               <div className="text-center">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
                 <p className="mt-4 text-sm text-gray-600">Computing user journey data...</p>
               </div>
             </div>
-          ) : error ? (
-            <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
-              There was an error loading the user journey data. Please try refreshing the page.
-            </div>
-          ) : epinetData &&
-            epinetData.nodes &&
-            epinetData.links &&
-            epinetData.nodes.length > 0 &&
-            epinetData.links.length > 0 ? (
-            <ErrorBoundary
-              fallback={
-                <div className="p-4 bg-red-50 text-red-800 rounded-lg">
-                  Error rendering user flow diagram. Please check the data and try again.
-                </div>
-              }
-            >
-              <div className="relative">
-                {status === "loading" || status === "refreshing" ? (
-                  <div className="absolute top-0 right-0 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-sm">
-                    Updating...
+          ) : epinetData && epinetData.nodes && epinetData.links ? (
+            epinetData.nodes.length > 0 && epinetData.links.length > 0 ? (
+              <ErrorBoundary
+                fallback={
+                  <div className="p-4 bg-red-50 text-red-800 rounded-lg">
+                    Error rendering user flow diagram. Please check the data and try again.
                   </div>
-                ) : (
-                  <>
-                    <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
-                    <EpinetDurationSelector />
-                  </>
-                )}
-              </div>
-            </ErrorBoundary>
+                }
+              >
+                <div className="relative">
+                  <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
+                  <EpinetDurationSelector />
+                </div>
+              </ErrorBoundary>
+            ) : (
+              <>
+                <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
+                  No matching data found with current filters. Try different filter settings or time
+                  ranges.
+                </div>
+                <EpinetDurationSelector />
+              </>
+            )
           ) : (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
-                No user journey data is available yet. This visualization will appear when users
-                start interacting with your content.
-              </div>
+            <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
+              No user journey data is available yet. This visualization will appear when users start
+              interacting with your content.
             </div>
           )}
         </div>
