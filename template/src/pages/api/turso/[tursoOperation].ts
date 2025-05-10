@@ -199,6 +199,32 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         try {
           const analyticsData = await getAllAnalytics(durationParam, context);
 
+          // Type guard function to check if epinet has nodes and links properties
+          const hasNodesAndLinks = (epinet: any): epinet is { nodes: any[]; links: any[] } => {
+            return (
+              epinet &&
+              typeof epinet === "object" &&
+              Array.isArray(epinet.nodes) &&
+              Array.isArray(epinet.links)
+            );
+          };
+
+          // Check if the data is empty (but don't change the status)
+          const isEmpty =
+            analyticsData.dashboard &&
+            (!analyticsData.dashboard.line?.length ||
+              analyticsData.dashboard.line.every(
+                (series) => !series.data?.length || series.data.every((point) => point.y === 0)
+              )) &&
+            !analyticsData.dashboard.hot_content?.length &&
+            analyticsData.dashboard.stats.daily === 0 &&
+            analyticsData.dashboard.stats.weekly === 0 &&
+            analyticsData.dashboard.stats.monthly === 0 &&
+            (!analyticsData.epinet ||
+              (hasNodesAndLinks(analyticsData.epinet) &&
+                (!analyticsData.epinet.nodes.length || !analyticsData.epinet.links.length)));
+
+          // Preserve original status from analyticsData
           result = {
             dashboard: analyticsData.dashboard,
             leads: analyticsData.leads,
@@ -209,7 +235,8 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             JSON.stringify({
               success: true,
               data: result,
-              status: analyticsData.status,
+              status: analyticsData.status, // Keep original status
+              isEmpty: isEmpty, // Just add the isEmpty flag
             }),
             {
               status: 200,

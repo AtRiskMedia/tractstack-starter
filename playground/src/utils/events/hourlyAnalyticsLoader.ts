@@ -109,9 +109,7 @@ export async function loadHourlyAnalytics(
 
       const hourParts = currentHourKey.split("-").map(Number);
       startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
-      endTime = new Date(
-        Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3])
-      );
+      endTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
     } else {
       // For full updates, get all hours in the specified range
       hourKeys = getHourKeysForTimeRange(hours);
