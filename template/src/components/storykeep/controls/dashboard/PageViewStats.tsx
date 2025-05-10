@@ -55,7 +55,10 @@ export default function PageViewStats() {
   const duration = $analyticsDuration;
 
   // Extract values from the store
-  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status } = analytics;
+  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading } = analytics;
+
+  // Check if storyfragment analytics is still loading
+  const isStoryfragmentLoading = $storyfragmentAnalytics.isLoading;
 
   // Calculate total lifetime visitors from storyfragmentAnalytics
   const totalLifetimeVisitors = Object.values($storyfragmentAnalytics.byId).reduce(
@@ -221,21 +224,7 @@ export default function PageViewStats() {
     </div>
   );
 
-  // Skeleton loader for lead metrics panel
-  const LeadMetricsSkeleton = () => (
-    <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
-      <div className="flex justify-between items-start">
-        <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
-        <div className="text-xs text-gray-500">Loading...</div>
-      </div>
-      <dd className="mt-2">
-        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-        <div className="text-sm text-gray-600 mt-1">Registered leads (emails collected)</div>
-      </dd>
-    </div>
-  );
-
-  // Skeleton loader for visitors panel
+  // Skeleton loader specifically for the visitors panel
   const VisitorsSkeleton = () => (
     <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
       <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
@@ -246,42 +235,9 @@ export default function PageViewStats() {
     </div>
   );
 
-  // Skeleton loader for stats panel
-  const StatsSkeleton = ({ name }: { name: string }) => (
-    <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
-      <dt className="text-sm font-bold text-gray-800">{name}</dt>
-      <dd className="mt-2">
-        <div className="flex justify-between items-end">
-          <div className="flex-1">
-            <div className="text-sm text-gray-600">Events</div>
-            <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-          </div>
-        </div>
-      </dd>
-      <hr className="my-3.5 border-gray-100" />
-      <dd>
-        <div className="flex justify-between items-end">
-          <div className="flex-1">
-            <div className="text-sm text-gray-600">Anonymous Visitors</div>
-            <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-          </div>
-          <div className="flex-1 text-right">
-            <div className="text-sm text-gray-600">Known Leads</div>
-            <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2 mb-1"></div>
-        <div className="flex justify-between text-xs text-gray-600 mt-1">
-          <span>-</span>
-          <span>-</span>
-        </div>
-      </dd>
-    </div>
-  );
-
   if (!isClient) return null;
 
-  if (isLoading && (!dashboard || !leadMetrics)) return <LoadingPlaceholder />;
+  if (isLoading || (!dashboard && !leadMetrics)) return <LoadingPlaceholder />;
 
   const stats: Stat[] = [
     {
@@ -306,19 +262,15 @@ export default function PageViewStats() {
       <div className="p-1.5 bg-white rounded-b-md w-full">
         <h3 className="font-bold font-action text-xl mb-4">
           Analytics Dashboard
-          {status === "loading" || status === "refreshing" ? (
+          {isLoading && (
             <span className="ml-2 text-sm font-normal text-gray-500">
               (Loading data in background...)
             </span>
-          ) : null}
+          )}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
-            if (status === "loading" && !dashboard) {
-              return <StatsSkeleton key={item.period} name={item.name} />;
-            }
-
             const period = item.period;
             const firstTimeValue =
               (leadMetrics?.[`first_time_${period}` as keyof typeof leadMetrics] as number) ?? 0;
@@ -391,8 +343,8 @@ export default function PageViewStats() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Visitors panel with skeleton loader if loading */}
-          {status === "loading" && !leadMetrics ? (
+          {/* Visitors panel */}
+          {isStoryfragmentLoading ? (
             <VisitorsSkeleton />
           ) : (
             <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
@@ -406,44 +358,36 @@ export default function PageViewStats() {
             </div>
           )}
 
-          {/* Leads panel with skeleton loader if loading */}
-          {status === "loading" && !leadMetrics ? (
-            <LeadMetricsSkeleton />
-          ) : (
-            <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
-              <div className="flex justify-between items-start">
-                <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
-                {leadMetrics && leadMetrics.total_leads > 0 && (
-                  <button
-                    onClick={downloadLeadsCSV}
-                    disabled={$isDemoMode || isDownloading}
-                    title={$isDemoMode ? `Not so fast!` : `Download leads report`}
-                    style={{
-                      textDecoration: $isDemoMode ? "line-through" : "none",
-                      cursor: $isDemoMode ? "not-allowed" : "pointer",
-                    }}
-                    className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"
-                  >
-                    <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
-                    {isDownloading ? "Downloading..." : "Download"}
-                  </button>
-                )}
-              </div>
-              <dd className="mt-2">
-                <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                  {leadMetrics?.total_leads === 0
-                    ? "-"
-                    : formatNumber(leadMetrics?.total_leads || 0)}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">
-                  Registered leads (emails collected)
-                </div>
-              </dd>
+          {/* Leads panel */}
+          <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
+            <div className="flex justify-between items-start">
+              <dt className="text-sm font-bold text-gray-800">Total Leads</dt>
+              {leadMetrics && leadMetrics.total_leads > 0 && (
+                <button
+                  onClick={downloadLeadsCSV}
+                  disabled={$isDemoMode || isDownloading}
+                  title={$isDemoMode ? `Not so fast!` : `Download leads report`}
+                  style={{
+                    textDecoration: $isDemoMode ? "line-through" : "none",
+                    cursor: $isDemoMode ? "not-allowed" : "pointer",
+                  }}
+                  className="flex items-center text-xs text-myblue hover:text-myorange transition-colors"
+                >
+                  <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
+                  {isDownloading ? "Downloading..." : "Download"}
+                </button>
+              )}
             </div>
-          )}
+            <dd className="mt-2">
+              <div className="text-2xl font-bold tracking-tight text-cyan-700">
+                {leadMetrics?.total_leads === 0 ? "-" : formatNumber(leadMetrics?.total_leads || 0)}
+              </div>
+              <div className="text-sm text-gray-600 mt-1">Registered leads (emails collected)</div>
+            </dd>
+          </div>
         </div>
 
-        <div className="px-4 motion-safe:animate-fadeInUp">
+        <div className="px-4 motion-safe:animate-fadeIn">
           <DurationSelector />
 
           {/* Dashboard Activity Chart */}
@@ -452,7 +396,7 @@ export default function PageViewStats() {
           ) : (
             <div className="h-64 bg-gray-100 rounded-lg w-full mb-6 flex items-center justify-center">
               <div className="text-center text-gray-500">
-                {status === "loading" ? (
+                {isLoading ? (
                   <div className="flex flex-col items-center">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
                     <p className="mt-4">Loading activity data...</p>
@@ -469,7 +413,7 @@ export default function PageViewStats() {
           </div>
 
           {/* Epinet Sankey Diagram */}
-          {status === "loading" || status === "refreshing" ? (
+          {isLoading ? (
             <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
               <div className="text-center">
                 <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>

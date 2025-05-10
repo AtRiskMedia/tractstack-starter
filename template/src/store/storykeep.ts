@@ -339,11 +339,13 @@ export const storyFragmentTopicsStore = map<{
 export interface StoryfragmentAnalyticsStore {
   byId: Record<string, StoryfragmentAnalytics>;
   lastUpdated: number | null;
+  isLoading: boolean;
 }
 
 export const storyfragmentAnalyticsStore = map<StoryfragmentAnalyticsStore>({
   byId: {},
   lastUpdated: null,
+  isLoading: true,
 });
 
 export const styleElementInfoStore = map<{

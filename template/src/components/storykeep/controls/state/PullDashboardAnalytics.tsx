@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import { analyticsDuration, analyticsStore, epinetCustomFilters } from "@/store/storykeep";
+import {
+  analyticsDuration,
+  analyticsStore,
+  epinetCustomFilters,
+  storyfragmentAnalyticsStore,
+} from "@/store/storykeep";
 import { contentMap } from "@/store/events";
 import { debounce } from "@/utils/common/helpers";
 
@@ -8,6 +13,7 @@ export const PullDashboardAnalytics = () => {
   const $analyticsDuration = useStore(analyticsDuration);
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $contentMap = useStore(contentMap);
+  const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
   const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
@@ -146,6 +152,14 @@ export const PullDashboardAnalytics = () => {
         analyticsStore.setKey("lastUpdated", Date.now());
         analyticsStore.setKey("error", null);
 
+        // Check if storyfragment analytics is ready
+        // If not, wait for it before proceeding with further polling
+        if ($storyfragmentAnalytics.isLoading) {
+          console.log("Waiting for storyfragment analytics to load before continuing polling");
+          // We'll keep the loading state active while waiting for storyfragment data
+          return;
+        }
+
         if (result.status === "loading" || result.status === "refreshing") {
           // Check if we've reached the maximum attempts
           if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
@@ -211,7 +225,7 @@ export const PullDashboardAnalytics = () => {
       // Always update loading state when done
       analyticsStore.setKey("isLoading", false);
     }
-  }, [duration, pollingTimer, $epinetCustomFilters.enabled]);
+  }, [duration, pollingTimer, $epinetCustomFilters.enabled, $storyfragmentAnalytics.isLoading]);
 
   // Fetch epinet data based on the current state
   const fetchEpinetData = useCallback(async () => {
