@@ -21,4 +21,7 @@ export default defineConfig({
     ],
   },
   integrations: [react()],
+  csrf: {
+    exemptPaths: ["/storykeep/login", "/storykeep/logout"],
+  },
 });
