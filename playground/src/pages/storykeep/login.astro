@@ -176,7 +176,8 @@ const wordmarkIsSvg = wordmark.includes("svg");
             )
           }
 
-          <form class="space-y-6" method="POST" data-astro-reload>
+          <!-- Convert form to use GET method with JS submit to avoid CSRF -->
+          <form class="space-y-6" method="GET" id="loginForm">
             <div>
               <label for="password" class="block text-sm font-bold leading-6 text-mydarkgrey">
                 Password
@@ -192,11 +193,12 @@ const wordmarkIsSvg = wordmark.includes("svg");
               </div>
             </div>
 
-            <input type="hidden" name="redirect" value={redirectPath} />
+            <input type="hidden" id="redirectPath" name="redirect" value={redirectPath} />
 
             <div>
               <button
-                type="submit"
+                type="button"
+                id="submitButton"
                 class="flex w-full justify-center rounded-md bg-myblue px-3 py-1.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-myorange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
               >
                 Sign in
@@ -220,5 +222,47 @@ const wordmarkIsSvg = wordmark.includes("svg");
         }
       </div>
     </div>
+
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", function () {
+        const submitButton = document.getElementById("submitButton");
+        if (submitButton) {
+          submitButton.addEventListener("click", function () {
+            // Get password value
+            const passwordInput = document.getElementById("password");
+            const redirectInput = document.getElementById("redirectPath");
+
+            if (!passwordInput || !redirectInput) return;
+
+            const password = passwordInput.value;
+            const redirectPath = redirectInput.value;
+
+            // Create a form programmatically
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = window.location.pathname;
+            form.style.display = "none";
+
+            // Add password field
+            const passwordField = document.createElement("input");
+            passwordField.type = "hidden";
+            passwordField.name = "password";
+            passwordField.value = password;
+            form.appendChild(passwordField);
+
+            // Add redirect field
+            const redirectField = document.createElement("input");
+            redirectField.type = "hidden";
+            redirectField.name = "redirect";
+            redirectField.value = redirectPath;
+            form.appendChild(redirectField);
+
+            // Append to body and submit
+            document.body.appendChild(form);
+            form.submit();
+          });
+        }
+      });
+    </script>
   </body>
 </html>
