@@ -37,6 +37,22 @@ const EpinetDurationSelector = () => {
     endHour: "23:59",
   });
 
+  // Check if there are unsaved changes that need Apply Filters
+  const hasUnsavedChanges = useCallback(() => {
+    // If the filter is disabled, there's no need to apply changes
+    if (!$epinetCustomFilters.enabled) return false;
+
+    return (
+      localFilters.visitorType !== $epinetCustomFilters.visitorType ||
+      localFilters.selectedUserId !== $epinetCustomFilters.selectedUserId ||
+      // Convert startHour and endHour to comparable values
+      (startDate &&
+        endDate &&
+        // If there's specific hours set that differ from stored values
+        ($epinetCustomFilters.startHour === null || $epinetCustomFilters.endHour === null))
+    );
+  }, [localFilters, $epinetCustomFilters, startDate, endDate]);
+
   useEffect(() => {
     setLocalFilters((prev) => ({
       ...prev,
@@ -76,52 +92,11 @@ const EpinetDurationSelector = () => {
     setCurrentUserPage(0);
   }, [localFilters.visitorType]);
 
-  const getHoursFromDuration = useCallback((): [number, number] => {
-    switch ($analyticsDuration) {
-      case "daily":
-        return [0, 24];
-      case "weekly":
-        return [0, 168];
-      case "monthly":
-        return [0, 672];
-      default:
-        return [0, 168];
-    }
-  }, [$analyticsDuration]);
-
   const visitorTypes = [
     { id: "all", title: "All Traffic", description: "All visitors" },
     { id: "anonymous", title: "Anonymous", description: "Anonymous visitors" },
     { id: "known", title: "Known Leads", description: "Known visitors" },
   ] as const;
-
-  const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
-    toggleCustomFilters(false);
-    analyticsDuration.set(newValue);
-  };
-
-  const toggleCustomFilters = (enabled: boolean) => {
-    if (enabled) {
-      const [endHour, startHour] = getHoursFromDuration();
-      epinetCustomFilters.set({
-        enabled,
-        visitorType: localFilters.visitorType,
-        startHour,
-        endHour,
-        selectedUserId: $epinetCustomFilters.selectedUserId,
-        availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
-      });
-    } else {
-      epinetCustomFilters.set({
-        enabled,
-        visitorType: "all",
-        startHour: null,
-        endHour: null,
-        selectedUserId: null,
-        availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
-      });
-    }
-  };
 
   const updateVisitorType = (type: "all" | "anonymous" | "known") => {
     setLocalFilters((prev) => ({
@@ -289,42 +264,49 @@ const EpinetDurationSelector = () => {
     return duration === "daily" ? "24 hours" : duration === "weekly" ? "7 days" : "4 weeks";
   };
 
-  const formatVisitorId = (visitorId: unknown): string => {
-    if (typeof visitorId !== "string") {
-      console.warn("Invalid visitorId:", visitorId);
-      return "Unknown ID";
+  // Get message for status box
+  const getFilterStatusMessage = () => {
+    const needsApply = hasUnsavedChanges();
+    const prefix = needsApply ? "Press Apply Filters to load: " : "";
+
+    let baseMessage = "";
+    if (startDate && endDate) {
+      baseMessage = `${prefix}Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`;
+    } else {
+      baseMessage = `${prefix}Showing data from last ${getActiveFilterDescription()}`;
     }
-    return `${visitorId.substring(0, 8)}...`;
+
+    // Add user information
+    let userInfo = "";
+    if (needsApply) {
+      // For pending changes, use local state
+      userInfo = localFilters.selectedUserId
+        ? ` for individual user ${localFilters.selectedUserId}`
+        : ` for ${
+            localFilters.visitorType === "all"
+              ? "all visitors"
+              : localFilters.visitorType === "anonymous"
+                ? "anonymous visitors"
+                : "known leads"
+          }`;
+    } else {
+      // For applied filters, use store state
+      userInfo = $epinetCustomFilters.selectedUserId
+        ? ` for individual user ${$epinetCustomFilters.selectedUserId}`
+        : ` for ${
+            $epinetCustomFilters.visitorType === "all"
+              ? "all visitors"
+              : $epinetCustomFilters.visitorType === "anonymous"
+                ? "anonymous visitors"
+                : "known leads"
+          }`;
+    }
+
+    return baseMessage + userInfo;
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-x-4 gap-y-2 justify-center text-sm mt-6">
-        {["daily", "weekly", "monthly"].map((period) => (
-          <button
-            key={period}
-            onClick={() => updateDuration(period as "daily" | "weekly" | "monthly")}
-            className={
-              $analyticsDuration === period && !$epinetCustomFilters.enabled
-                ? "px-3 py-1 rounded-full bg-cyan-600 text-white font-bold shadow-sm"
-                : "px-3 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-800"
-            }
-          >
-            {period === "daily" ? "24 hours" : period === "weekly" ? "7 days" : "4 weeks"}
-          </button>
-        ))}
-        <button
-          onClick={() => toggleCustomFilters(!$epinetCustomFilters.enabled)}
-          className={
-            $epinetCustomFilters.enabled
-              ? "px-3 py-1 rounded-full bg-cyan-600 text-white font-bold shadow-sm"
-              : "px-3 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-cyan-100 hover:text-cyan-800"
-          }
-        >
-          Custom View
-        </button>
-      </div>
-
       {$epinetCustomFilters.enabled && (
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
           <div className="flex flex-col space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
@@ -368,7 +350,7 @@ const EpinetDurationSelector = () => {
             </div>
 
             <div className="space-y-1">
-              <div className="block text-sm font-medium text-gray-700">Date Range</div>
+              <div className="block text-sm font-bold text-gray-700">Date Range</div>
               <div className="relative">
                 <button
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
@@ -409,15 +391,15 @@ const EpinetDurationSelector = () => {
                     </div>
 
                     <div className="mb-2">
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-bold">
                         Start date: {formatDateDisplay(startDate)}
                       </p>
-                      <p className="text-sm font-medium">End date: {formatDateDisplay(endDate)}</p>
+                      <p className="text-sm font-bold">End date: {formatDateDisplay(endDate)}</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="flex-1">
-                        <div className="block text-sm font-medium">Start</div>
+                        <div className="block text-sm font-bold">Start</div>
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
@@ -430,7 +412,7 @@ const EpinetDurationSelector = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <div className="block text-sm font-medium">End</div>
+                        <div className="block text-sm font-bold">End</div>
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
@@ -453,10 +435,10 @@ const EpinetDurationSelector = () => {
             </div>
 
             <div className="space-y-1">
-              <div className="block text-sm font-medium text-gray-700">Hour Range</div>
+              <div className="block text-sm font-bold text-gray-700">Hour Range</div>
               <div className="flex flex-row gap-4">
                 <div className="flex-1 space-y-1 min-w-0">
-                  <div className="block text-sm font-medium text-gray-700">Start Hour</div>
+                  <div className="block text-sm font-bold text-gray-700">Start Hour</div>
                   <Select.Root
                     collection={hourCollection}
                     value={[localFilters.startHour]}
@@ -492,7 +474,7 @@ const EpinetDurationSelector = () => {
                 </div>
 
                 <div className="flex-1 space-y-1 min-w-0">
-                  <div className="block text-sm font-medium text-gray-700">End Hour</div>
+                  <div className="block text-sm font-bold text-gray-700">End Hour</div>
                   <Select.Root
                     collection={hourCollection}
                     value={[localFilters.endHour]}
@@ -531,47 +513,51 @@ const EpinetDurationSelector = () => {
           </div>
 
           {paginatedVisitorIds.length > 0 && (
-            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm max-w-md">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-sm font-bold text-gray-700">Select Individual User</h3>
-                <div className="flex items-center space-x-2 text-sm">
-                  <button
-                    onClick={prevUserPage}
-                    disabled={currentUserPage === 0}
-                    className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
-                  >
-                    <ChevronLeftIcon className="h-5 w-5" />
-                  </button>
-                  <span>
-                    Page {currentUserPage + 1} of {totalUserPages}
-                  </span>
-                  <button
-                    onClick={nextUserPage}
-                    disabled={currentUserPage >= totalUserPages - 1}
-                    className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
-                  >
-                    <ChevronRightIcon className="h-5 w-5" />
-                  </button>
-                </div>
+                <h3 className="text-sm font-bold text-gray-700">View Individual User Journey</h3>
+                {/* Only show pagination if there's more than 1 page */}
+                {totalUserPages > 1 && (
+                  <div className="flex items-center space-x-2 text-sm">
+                    <button
+                      onClick={prevUserPage}
+                      disabled={currentUserPage === 0}
+                      className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      <ChevronLeftIcon className="h-5 w-5" />
+                    </button>
+                    <span>
+                      Page {currentUserPage + 1} of {totalUserPages}
+                    </span>
+                    <button
+                      onClick={nextUserPage}
+                      disabled={currentUserPage >= totalUserPages - 1}
+                      className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      <ChevronRightIcon className="h-5 w-5" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="mb-2">
                 <Select.Root
                   collection={createListCollection({
-                    items: paginatedVisitorIds.map((visitorId) => ({
-                      value: visitorId,
-                      label: formatVisitorId(visitorId),
-                    })),
+                    items: [
+                      { value: "", label: "Select user" },
+                      ...paginatedVisitorIds.map((visitorId) => ({
+                        value: visitorId,
+                        label: visitorId,
+                      })),
+                    ],
                   })}
-                  value={localFilters.selectedUserId ? [localFilters.selectedUserId] : []}
-                  onValueChange={({ value }) => updateSelectedUser(value[0])}
+                  value={localFilters.selectedUserId ? [localFilters.selectedUserId] : [""]}
+                  onValueChange={({ value }) => updateSelectedUser(value[0] || null)}
                 >
                   <Select.Control>
                     <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm">
                       <Select.ValueText placeholder="Select user">
-                        {localFilters.selectedUserId
-                          ? formatVisitorId(localFilters.selectedUserId)
-                          : "Select user"}
+                        {localFilters.selectedUserId ? localFilters.selectedUserId : "Select user"}
                       </Select.ValueText>
                       <Select.Indicator className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                         <span className="h-5 w-5 text-gray-500">▼</span>
@@ -582,18 +568,24 @@ const EpinetDurationSelector = () => {
                     <Select.Positioner>
                       <Select.Content className="z-10 mt-2 w-[var(--trigger-width)] max-h-96 overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                         {paginatedVisitorIds.length > 0 ? (
-                          paginatedVisitorIds.map((visitorId) => (
+                          [
                             <Select.Item
-                              key={visitorId}
-                              item={{ value: visitorId, label: formatVisitorId(visitorId) }}
-                              className="cursor-pointer select-none p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
+                              key="empty"
+                              item={{ value: "", label: "Select user" }}
+                              className="cursor-pointer select-none p-2 text-sm text-gray-500 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
                             >
-                              <Select.ItemText>{formatVisitorId(visitorId)}</Select.ItemText>
-                              <Select.ItemIndicator className="absolute inset-y-0 right-0 flex items-center pr-3">
-                                <CheckCircleIcon className="h-5 w-5" aria-hidden="true" />
-                              </Select.ItemIndicator>
-                            </Select.Item>
-                          ))
+                              <Select.ItemText>Select user</Select.ItemText>
+                            </Select.Item>,
+                            ...paginatedVisitorIds.map((visitorId) => (
+                              <Select.Item
+                                key={visitorId}
+                                item={{ value: visitorId, label: visitorId }}
+                                className="cursor-pointer select-none p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
+                              >
+                                <Select.ItemText>{visitorId}</Select.ItemText>
+                              </Select.Item>
+                            )),
+                          ]
                         ) : (
                           <div className="p-2 text-sm text-gray-500">No users available</div>
                         )}
@@ -602,54 +594,24 @@ const EpinetDurationSelector = () => {
                   </Portal>
                 </Select.Root>
               </div>
-
-              {localFilters.selectedUserId && (
-                <div className="mt-2 text-sm bg-cyan-50 p-2 rounded">
-                  <p className="font-medium">
-                    Selected User: {formatVisitorId(localFilters.selectedUserId)}
-                  </p>
-                  <p className="text-xs text-cyan-700">
-                    {localFilters.visitorType === "known"
-                      ? "Known lead"
-                      : localFilters.visitorType === "anonymous"
-                        ? "Anonymous visitor"
-                        : "Visitor (mixed)"}
-                  </p>
-                </div>
-              )}
             </div>
           )}
-          <div className="flex justify-end">
-            <button
-              onClick={updateDateRange}
-              className="px-4 py-2 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={!startDate || !endDate}
-            >
-              Apply Filters
-            </button>
-          </div>
 
           {$epinetCustomFilters.enabled && (
             <div className="p-2 bg-cyan-50 text-cyan-800 rounded-md text-sm">
               {$epinetCustomFilters.startHour !== null && $epinetCustomFilters.endHour !== null ? (
                 <div>
-                  <p>
-                    {startDate && endDate
-                      ? `Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
-                      : `Showing data from last ${getActiveFilterDescription()}`}{" "}
-                    for{" "}
-                    {$epinetCustomFilters.selectedUserId
-                      ? `individual user ${formatVisitorId($epinetCustomFilters.selectedUserId)}`
-                      : $epinetCustomFilters.visitorType === "all"
-                        ? "all visitors"
-                        : $epinetCustomFilters.visitorType === "anonymous"
-                          ? "anonymous visitors"
-                          : "known leads"}
-                  </p>
-                  <p className="text-xs mt-1 text-cyan-700">
-                    <span className="font-semibold">Note:</span> Time ranges are converted to UTC
-                    for data retrieval, but displayed in your local time.
-                  </p>
+                  <p>{getFilterStatusMessage()}</p>
+
+                  {hasUnsavedChanges() && (
+                    <button
+                      onClick={updateDateRange}
+                      className="mt-2 px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-bold"
+                      disabled={!startDate || !endDate}
+                    >
+                      Apply Filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <p>Select date range and filters to preview</p>

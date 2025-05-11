@@ -666,12 +666,11 @@ export async function computeEpinetSankey(
   // Sort nodes by count to keep the most significant ones
   const sortedNodes = Object.entries(nodeCounts)
     .sort((a, b) => b[1].size - a[1].size)
-    .slice(0, MAX_NODES); // Limit to ? most active nodes for readability
+    .slice(0, MAX_NODES);
 
-  // Convert node data to nodes array
-  const nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
+  let nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
     name: nodeNames[nodeId] || nodeId,
-    id: nodeId, // Include the node ID for reference
+    id: nodeId,
   }));
 
   // Create a map of node IDs to indices in the nodes array
@@ -701,6 +700,29 @@ export async function computeEpinetSankey(
       }
     });
   });
+
+  // Filter out nodes that don't have any connections
+  const connectedNodeIndices = new Set<number>();
+  links.forEach((link) => {
+    connectedNodeIndices.add(link.source);
+    connectedNodeIndices.add(link.target);
+  });
+
+  // Only keep nodes that appear in at least one link
+  const filteredNodes = nodes.filter((_, index) => connectedNodeIndices.has(index));
+  const indexMapping: Record<number, number> = {};
+  filteredNodes.forEach((node, newIndex) => {
+    indexMapping[nodes.indexOf(node)] = newIndex;
+  });
+
+  // Remap source and target indices in links
+  links.forEach((link) => {
+    link.source = indexMapping[link.source];
+    link.target = indexMapping[link.target];
+  });
+
+  // Replace the original nodes array
+  nodes = filteredNodes;
 
   if (VERBOSE) {
     console.log(
@@ -916,7 +938,6 @@ export async function getEpinetCustomMetrics(
   filters: EpinetCustomMetricsFilters,
   context?: APIContext
 ): Promise<EpinetCustomMetricsResponse> {
-  // Get visitor IDs for UI
   const availableVisitorIds = await getFilteredVisitorIds(
     id,
     filters.visitorType,
@@ -925,10 +946,9 @@ export async function getEpinetCustomMetrics(
     context
   );
 
-  // Use enhanced computeEpinetSankey with filters
   const epinet = await computeEpinetSankey(
     id,
-    filters.startHour || filters.endHour ? undefined : 168, // Don't use hours if startHour/endHour provided
+    filters.startHour || filters.endHour ? undefined : 168,
     context,
     filters.visitorType,
     filters.selectedUserId,

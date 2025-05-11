@@ -8,7 +8,6 @@ import {
   isDemoModeStore,
   analyticsStore,
   analyticsDuration,
-  epinetCustomFilters,
   storyfragmentAnalyticsStore,
 } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
@@ -50,7 +49,6 @@ export default function PageViewStats() {
   const analytics = useStore(analyticsStore);
   const $isDemoMode = useStore(isDemoModeStore);
   const $analyticsDuration = useStore(analyticsDuration);
-  const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
 
@@ -71,14 +69,7 @@ export default function PageViewStats() {
   }, []);
 
   const updateDuration = (newValue: "daily" | "weekly" | "monthly") => {
-    toggleCustomFilters(false);
     analyticsDuration.set(newValue);
-  };
-  const toggleCustomFilters = (enabled: boolean) => {
-    epinetCustomFilters.set({
-      ...$epinetCustomFilters,
-      enabled,
-    });
   };
 
   const downloadLeadsCSV = async () => {
