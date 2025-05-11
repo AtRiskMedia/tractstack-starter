@@ -133,6 +133,29 @@ const EpinetDurationSelector = () => {
     setHasLocalChanges(false);
   };
 
+  const handleDateChange = (type: 'start' | 'end', dateValue: string | null) => {
+  const newDate = dateValue ? new Date(dateValue) : null;
+  if (type === 'start') {
+    setStartDate(newDate);
+  } else {
+    setEndDate(newDate);
+  }
+  if (newDate && (type === 'start' ? endDate : startDate)) {
+    const otherDate = type === 'start' ? endDate : startDate;
+    if (otherDate && 
+        newDate.getFullYear() === otherDate.getFullYear() &&
+        newDate.getMonth() === otherDate.getMonth() &&
+        newDate.getDate() === otherDate.getDate()) {
+      setLocalFilters(prev => ({
+        ...prev,
+        startHour: "00",
+        endHour: "23:59"
+      }));
+    }
+  }
+  setHasLocalChanges(true);
+};
+
   const paginatedVisitorIds = ($epinetCustomFilters.availableVisitorIds || [])
     .filter((id): id is string => typeof id === "string")
     .slice(currentUserPage * usersPerPage, (currentUserPage + 1) * usersPerPage);
@@ -359,10 +382,7 @@ const EpinetDurationSelector = () => {
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
-                          onChange={(e) => {
-                            setStartDate(e.target.value ? new Date(e.target.value) : null);
-                            setHasLocalChanges(true);
-                          }}
+                          onChange={(e) => handleDateChange('start', e.target.value)}
                           value={startDate ? startDate.toISOString().split("T")[0] : ""}
                           min={minDate.toISOString().split("T")[0]}
                           max={maxDate.toISOString().split("T")[0]}
@@ -373,10 +393,7 @@ const EpinetDurationSelector = () => {
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
-                          onChange={(e) => {
-                            setEndDate(e.target.value ? new Date(e.target.value) : null);
-                            setHasLocalChanges(true);
-                          }}
+                          onChange={(e) => handleDateChange('end', e.target.value)}
                           value={endDate ? endDate.toISOString().split("T")[0] : ""}
                           min={
                             startDate
