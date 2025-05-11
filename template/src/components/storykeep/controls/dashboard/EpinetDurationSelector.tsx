@@ -562,7 +562,7 @@ const EpinetDurationSelector = () => {
               {!hasLocalChanges && (
                 <p className="mt-1 text-sm">
                   Total events:{" "}
-                  {analyticsStore.get().epinet?.links.reduce((sum, link) => sum + link.value, 0) ||
+                  {analyticsStore.get().epinet?.links?.reduce((sum, link) => sum + link.value, 0) ||
                     0}
                 </p>
               )}
