@@ -422,7 +422,6 @@ export default function PageViewStats() {
               >
                 <div className="relative">
                   <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
-                  <EpinetDurationSelector />
                 </div>
               </ErrorBoundary>
             ) : (
@@ -431,7 +430,6 @@ export default function PageViewStats() {
                   No matching data found with current filters. Try different filter settings or time
                   ranges.
                 </div>
-                <EpinetDurationSelector />
               </>
             )
           ) : (
@@ -440,6 +438,7 @@ export default function PageViewStats() {
               interacting with your content.
             </div>
           )}
+          <EpinetDurationSelector />
         </div>
       </div>
     </div>

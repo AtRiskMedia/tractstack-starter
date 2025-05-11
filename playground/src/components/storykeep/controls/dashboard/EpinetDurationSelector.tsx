@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
-import { analyticsDuration, epinetCustomFilters } from "@/store/storykeep";
+import { analyticsStore, analyticsDuration, epinetCustomFilters } from "@/store/storykeep";
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import { Select, createListCollection } from "@ark-ui/react";
 import { RadioGroup } from "@ark-ui/react/radio-group";
@@ -242,11 +242,11 @@ const EpinetDurationSelector = () => {
 
   const getFilterStatusMessage = () => {
     const needsApply = hasLocalChanges;
-    const prefix = needsApply ? "Press Apply Filters to load: " : "";
+    const prefix = needsApply ? "Press Apply Filters to load from" : "Showing from";
     let baseMessage =
       startDate && endDate
-        ? `${prefix}Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
-        : `${prefix}Showing data from last ${$analyticsDuration === "daily" ? "24 hours" : $analyticsDuration === "weekly" ? "7 days" : "4 weeks"}`;
+        ? `${prefix} from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
+        : `${prefix} from last ${$analyticsDuration === "daily" ? "24 hours" : $analyticsDuration === "weekly" ? "7 days" : "4 weeks"}`;
 
     const userInfo = needsApply
       ? localFilters.selectedUserId
@@ -263,7 +263,7 @@ const EpinetDurationSelector = () => {
     <div className="space-y-4">
       {$epinetCustomFilters.enabled && (
         <div
-          className={`${hasLocalChanges ? `bg-amber-50` : `bg-gray-50`} p-4 rounded-lg space-y-4`}
+          className={`border-2 border-dashed border-gray-200 bg-gray-50 p-4 rounded-lg space-y-4`}
         >
           <div className="flex flex-col space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
             <div className="space-y-2">
@@ -555,8 +555,17 @@ const EpinetDurationSelector = () => {
           )}
 
           {$epinetCustomFilters.enabled && (
-            <div className="p-2 bg-cyan-50 text-cyan-800 rounded-md text-sm">
+            <div
+              className={`p-2 ${hasLocalChanges ? `bg-cyan-50` : `font-bold`} text-cyan-800 rounded-md text-sm`}
+            >
               <p>{getFilterStatusMessage()}</p>
+              {!hasLocalChanges && (
+                <p className="mt-1 text-sm">
+                  Total events:{" "}
+                  {analyticsStore.get().epinet?.links.reduce((sum, link) => sum + link.value, 0) ||
+                    0}
+                </p>
+              )}
               {hasLocalChanges && (
                 <div className="mt-2 flex gap-2">
                   <button
