@@ -43,7 +43,6 @@ export default function WordMarkMode({ value, onChange }: WordMarkModeProps) {
   return (
     <div className="space-y-4">
       <style>{radioGroupStyles}</style>
-      <h3 className="text-lg font-bold text-mydarkgrey">Header Display Mode</h3>
       <RadioGroup.Root
         defaultValue={value}
         onValueChange={(details) => onChange(details.value || "")}

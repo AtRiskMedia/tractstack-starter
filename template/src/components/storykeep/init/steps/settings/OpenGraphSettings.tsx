@@ -17,9 +17,6 @@ export default function OpenGraphSettings({
   return (
     <div className="space-y-6" role="region" aria-labelledby="og-settings-title">
       <div className="space-y-2">
-        <h3 id="og-settings-title" className="text-lg font-bold text-mydarkgrey">
-          Open Graph Settings
-        </h3>
         <p id="og-settings-desc" className="text-sm text-mydarkgrey">
           Configure default social sharing metadata for your site
         </p>

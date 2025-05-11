@@ -2,7 +2,10 @@ import { useState, useEffect, useMemo } from "react";
 import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
+import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
+import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
 import { Combobox } from "@ark-ui/react";
+import { Accordion } from "@ark-ui/react/accordion";
 import { createListCollection } from "@ark-ui/react/collection";
 import BrandColorPicker from "@/components/storykeep/widgets/BrandColorPicker.tsx";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
@@ -108,8 +111,8 @@ export default function BrandStep({
   const [customColors, setCustomColors] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [accordionValue, setAccordionValue] = useState<string[]>([]);
 
-  // Create collection for Ark UI Combobox
   const presetCollection = useMemo(() => {
     const presets = [...Object.keys(knownBrand), "custom"];
     return createListCollection({
@@ -123,7 +126,6 @@ export default function BrandStep({
     if (config?.init) {
       const initConfig = config.init as InitConfig;
 
-      // Keep this essential change detection since code base relies on it
       const hasEssentialChanges =
         initConfig.SITE_URL !== initialValues.siteUrl ||
         initConfig.BRAND_COLOURS !== initialValues.brandColors ||
@@ -132,7 +134,6 @@ export default function BrandStep({
 
       if (hasEssentialChanges) {
         const values = {
-          // Merge new config values with current values rather than replacing
           ...currentValues,
           siteUrl: initConfig.SITE_URL || currentValues.siteUrl,
           slogan: initConfig.SLOGAN || currentValues.slogan,
@@ -157,7 +158,6 @@ export default function BrandStep({
         setInitialValues(values);
       }
 
-      // Keep the existing initialization code that project relies on
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
@@ -175,7 +175,6 @@ export default function BrandStep({
     }
   }, [config, onConfigUpdate]);
 
-  // update css vars of brand colours
   useEffect(() => {
     const colors = currentValues.brandColors.split(",");
     if (colors.length === 8) {
@@ -212,7 +211,6 @@ export default function BrandStep({
   const handleImageChange = async (id: string, base64: string, filename: string) => {
     try {
       if (!base64) {
-        // Handle image removal
         setImages((prev) => {
           const newImages = { ...prev };
           delete newImages[id];
@@ -322,10 +320,9 @@ export default function BrandStep({
   const commonInputClass =
     "block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-md xs:leading-6";
 
-  // CSS to properly style the combobox items with hover and selection
   const comboboxItemStyles = `
     .preset-item[data-highlighted] {
-      background-color: #0891b2; /* bg-cyan-600 */
+      background-color: #0891b2;
       color: white;
     }
     .preset-item[data-highlighted] .preset-indicator {
@@ -342,9 +339,43 @@ export default function BrandStep({
     }
   `;
 
+  const accordionStyles = `
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      background-color: #f3f4f6;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+    }
+    .accordion-trigger:hover {
+      background-color: #e5e7eb;
+    }
+    .accordion-trigger[data-state="open"] {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      background-color: #e5e7eb;
+    }
+    .accordion-content {
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      border-bottom-left-radius: 0.375rem;
+      border-bottom-right-radius: 0.375rem;
+      padding: 1rem;
+    }
+    .accordion-content[data-state="closed"] {
+      display: none;
+    }
+  `;
+
   return (
     <div className="space-y-6">
       <style>{comboboxItemStyles}</style>
+      <style>{accordionStyles}</style>
       <div className="flex items-center space-x-4 mb-6">
         <button
           onClick={onBack}
@@ -360,6 +391,12 @@ export default function BrandStep({
       <form onSubmit={handleSubmit} className="space-y-6 p-4 bg-myblue/5 rounded-lg">
         {error && <div className="p-4 bg-myred/10 text-myred rounded-md">{error}</div>}
 
+        <div className="space-y-4">
+          <p className="text-sm text-mydarkgrey">
+            Change these settings any time by clicking `Advanced Settings` in your storykeep.
+          </p>
+        </div>
+        {/* Basic Information - Outside Accordion (Original) */}
         <div className="space-y-4">
           <div className="block">
             <div className="flex items-center justify-between">
@@ -499,6 +536,7 @@ export default function BrandStep({
           </div>
         </div>
 
+        {/* Theme Selector - Outside Accordion (Original) */}
         <div className="mt-8 pt-6 border-t border-myblue/10">
           <div className="space-y-2">
             <span className="block text-sm font-normal text-mydarkgrey">Theme</span>
@@ -511,54 +549,121 @@ export default function BrandStep({
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <WordMarkMode
-            value={currentValues.wordmarkMode}
-            onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
-          />
-        </div>
+        {/* Accordion for specified sections */}
+        <Accordion.Root
+          value={accordionValue}
+          onValueChange={(e) => setAccordionValue(e.value)}
+          multiple
+          className="mt-8 pt-6 border-t border-myblue/10"
+        >
+          <Accordion.Item value="open-graph" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Open Graph Settings
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("open-graph") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <OpenGraphSettings
+                title={currentValues.ogTitle}
+                author={currentValues.ogAuthor}
+                description={currentValues.ogDesc}
+                onChange={handleOpenGraphChange}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <OpenGraphSettings
-            title={currentValues.ogTitle}
-            author={currentValues.ogAuthor}
-            description={currentValues.ogDesc}
-            onChange={handleOpenGraphChange}
-          />
-        </div>
+          <Accordion.Item value="brand-assets" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Brand Assets
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("brand-assets") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <BrandImageUploads
+                images={images}
+                initialConfig={config}
+                onImageChange={handleImageChange}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <BrandImageUploads
-            images={images}
-            initialConfig={config}
-            onImageChange={handleImageChange}
-          />
-        </div>
+          <Accordion.Item value="wordmark" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Header Display Mode
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("wordmark") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <WordMarkMode
+                value={currentValues.wordmarkMode}
+                onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <SocialLinks
-            value={currentValues.socialLinks}
-            onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
-          />
-        </div>
+          <Accordion.Item value="social-links" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Your Social Links
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("social-links") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <SocialLinks
+                value={currentValues.socialLinks}
+                onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <h3 className="text-lg font-bold text-mydarkgrey mb-4">Accessibility Settings</h3>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="keyboardAccessible"
-              checked={currentValues.keyboardAccessible}
-              onChange={(e) =>
-                setCurrentValues((prev) => ({ ...prev, keyboardAccessible: e.target.checked }))
-              }
-              className="h-4 w-4 rounded border-mylightgrey text-myblue focus:ring-myblue"
-            />
-            <label htmlFor="keyboardAccessible" className="text-sm text-mydarkgrey">
-              Enable Keyboard/Mouse Accessible Mode by Default
-            </label>
-          </div>
-        </div>
+          <Accordion.Item value="accessibility" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Accessibility Settings
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("accessibility") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="keyboardAccessible"
+                  checked={currentValues.keyboardAccessible}
+                  onChange={(e) =>
+                    setCurrentValues((prev) => ({ ...prev, keyboardAccessible: e.target.checked }))
+                  }
+                  className="h-4 w-4 rounded border-mylightgrey text-myblue focus:ring-myblue"
+                />
+                <label htmlFor="keyboardAccessible" className="text-sm text-mydarkgrey">
+                  Enable Keyboard/Mouse Accessible Mode by Default
+                </label>
+              </div>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
 
         <div className="flex justify-end pt-4 gap-x-4">
           <button
