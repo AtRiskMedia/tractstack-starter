@@ -28,18 +28,15 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
     const currentHour = formatHourKey(new Date());
     const tenantAnalyticsData = analyticStore.data[tenantId];
 
-    // Check if all data is fresh and complete
     if (
       isAnalyticsValid &&
       tenantAnalyticsData &&
       tenantAnalyticsData.lastFullHour === currentHour
     ) {
-      // All data is fresh
       const [dashboardData, leadMetrics] = await Promise.all([
         computeDashboardAnalytics(duration, context),
         computeLeadMetrics(context),
       ]);
-
       return {
         dashboard: dashboardData,
         leads: leadMetrics,

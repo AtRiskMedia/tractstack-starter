@@ -1,11 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import {
-  analyticsDuration,
-  analyticsStore,
-  epinetCustomFilters,
-  storyfragmentAnalyticsStore,
-} from "@/store/storykeep";
+import { analyticsDuration, analyticsStore, epinetCustomFilters } from "@/store/storykeep";
 import { contentMap } from "@/store/events";
 import { debounce } from "@/utils/common/helpers";
 
@@ -13,18 +8,14 @@ export const PullDashboardAnalytics = () => {
   const $analyticsDuration = useStore(analyticsDuration);
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $contentMap = useStore(contentMap);
-  const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
   const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const [customFetchInProgress, setCustomFetchInProgress] = useState(false);
   const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
 
-  // Use a ref instead of state to track polling attempts across closures
   const pollingAttemptsRef = useRef<number>(0);
   const MAX_POLLING_ATTEMPTS = 3;
-
-  // Progressive polling delays
   const POLLING_DELAYS = [2000, 5000, 10000]; // 2s, 5s, 10s
 
   // Clear any existing polling timer when component unmounts
@@ -38,7 +29,6 @@ export const PullDashboardAnalytics = () => {
 
   // Initialize epinet custom filters based on duration (on mount and when duration changes)
   useEffect(() => {
-    // Set hours based on duration
     let startHour;
     const endHour = 0; // Current hour
 
@@ -64,12 +54,9 @@ export const PullDashboardAnalytics = () => {
 
   // Fetch all analytics data when duration changes or on initial mount
   useEffect(() => {
-    if (!$epinetCustomFilters.enabled) {
-      // Reset polling attempts counter when duration changes
-      pollingAttemptsRef.current = 0;
-      fetchAllAnalytics();
-    }
-  }, [duration, $epinetCustomFilters.enabled]);
+    pollingAttemptsRef.current = 0;
+    fetchAllAnalytics();
+  }, [duration]);
 
   // Make sure we poll at least once on initial mount
   useEffect(() => {
@@ -96,6 +83,9 @@ export const PullDashboardAnalytics = () => {
   useEffect(() => {
     if (!$epinetCustomFilters.enabled) return;
 
+    // Skip if contentMap isn't loaded yet
+    if (!$contentMap || $contentMap.length === 0) return;
+
     // Check if we have valid filter criteria
     const hasValidFilters =
       $epinetCustomFilters.visitorType !== null &&
@@ -111,26 +101,23 @@ export const PullDashboardAnalytics = () => {
     $epinetCustomFilters.selectedUserId,
     $epinetCustomFilters.startHour,
     $epinetCustomFilters.endHour,
+    $contentMap,
   ]);
 
   // Add effect to fetch epinet data when analytics are fetched or duration changes
   useEffect(() => {
-    // Fetch epinet data regardless of custom filters status
     fetchEpinetData();
   }, [duration, analyticsStore.get().lastUpdated]);
 
   const fetchAllAnalytics = useCallback(async () => {
     try {
-      // Update loading state
       analyticsStore.setKey("isLoading", true);
 
-      // Clear any existing timer before making a new request
       if (pollingTimer) {
         clearTimeout(pollingTimer);
         setPollingTimer(null);
       }
 
-      // Make the API request
       const response = await fetch(`/api/turso/getAllAnalytics?duration=${duration}`, {
         method: "GET",
         headers: {
@@ -145,33 +132,20 @@ export const PullDashboardAnalytics = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update the analytics store with the response data
         analyticsStore.setKey("dashboard", result.data.dashboard);
         analyticsStore.setKey("leads", result.data.leads);
         analyticsStore.setKey("status", result.status);
         analyticsStore.setKey("lastUpdated", Date.now());
         analyticsStore.setKey("error", null);
 
-        // Check if storyfragment analytics is ready
-        // If not, wait for it before proceeding with further polling
-        if ($storyfragmentAnalytics.isLoading) {
-          console.log("Waiting for storyfragment analytics to load before continuing polling");
-          // We'll keep the loading state active while waiting for storyfragment data
-          return;
-        }
-
         if (result.status === "loading" || result.status === "refreshing") {
-          // Check if we've reached the maximum attempts
           if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
-            // Get the appropriate delay based on current attempt
             const delayMs =
               POLLING_DELAYS[pollingAttemptsRef.current] ||
               POLLING_DELAYS[POLLING_DELAYS.length - 1];
 
-            // Increment the attempt counter
             pollingAttemptsRef.current += 1;
 
-            // Schedule next poll
             const newTimer = setTimeout(() => {
               fetchAllAnalytics();
             }, delayMs);
@@ -179,19 +153,15 @@ export const PullDashboardAnalytics = () => {
             setPollingTimer(newTimer);
           } else {
             analyticsStore.setKey("status", "complete");
-            // Reset counter for future polling
             pollingAttemptsRef.current = 0;
           }
         } else {
-          // If we get a non-loading status, reset the attempts counter
           pollingAttemptsRef.current = 0;
         }
       } else {
-        // Handle API error
         analyticsStore.setKey("error", result.error || "Unknown API error");
         analyticsStore.setKey("status", "error");
 
-        // Schedule retry after error, respecting the maximum attempts
         if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
           const delayMs =
             POLLING_DELAYS[pollingAttemptsRef.current] || POLLING_DELAYS[POLLING_DELAYS.length - 1];
@@ -200,16 +170,13 @@ export const PullDashboardAnalytics = () => {
           setPollingTimer(newTimer);
         } else {
           analyticsStore.setKey("status", "error");
-          // Reset counter for future polling
           pollingAttemptsRef.current = 0;
         }
       }
     } catch (error) {
-      // Handle fetch error
       analyticsStore.setKey("error", error instanceof Error ? error.message : "Unknown error");
       analyticsStore.setKey("status", "error");
 
-      // Schedule retry after error, respecting the maximum attempts
       if (pollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
         const delayMs =
           POLLING_DELAYS[pollingAttemptsRef.current] || POLLING_DELAYS[POLLING_DELAYS.length - 1];
@@ -218,19 +185,15 @@ export const PullDashboardAnalytics = () => {
         setPollingTimer(newTimer);
       } else {
         analyticsStore.setKey("status", "error");
-        // Reset counter for future polling
         pollingAttemptsRef.current = 0;
       }
     } finally {
-      // Always update loading state when done
       analyticsStore.setKey("isLoading", false);
     }
-  }, [duration, pollingTimer, $epinetCustomFilters.enabled, $storyfragmentAnalytics.isLoading]);
+  }, [duration, pollingTimer, $epinetCustomFilters.enabled]);
 
-  // Fetch epinet data based on the current state
   const fetchEpinetData = useCallback(async () => {
     try {
-      // Find promoted epinet from content map
       const epinets = ($contentMap || []).filter(
         (item) => (item as any).type === "Epinet" && (item as any).promoted
       );
@@ -273,12 +236,11 @@ export const PullDashboardAnalytics = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Update epinet data with results
         analyticsStore.setKey("epinet", result.data.epinet);
 
-        // Update available visitor IDs in the filter store
+        const currentFilterState = epinetCustomFilters.get();
         epinetCustomFilters.set({
-          ...$epinetCustomFilters,
+          ...currentFilterState,
           availableVisitorIds: result.data.availableVisitorIds || [],
         });
       }
@@ -289,13 +251,11 @@ export const PullDashboardAnalytics = () => {
 
   const fetchCustomEpinetData = useCallback(
     async (epinetId: string) => {
-      // Don't fetch if already fetching
       if (customFetchInProgress) return;
 
       try {
         setCustomFetchInProgress(true);
 
-        // Build URL with custom filter parameters
         const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
         url.searchParams.append("id", epinetId);
         url.searchParams.append("visitorType", $epinetCustomFilters.visitorType);
@@ -312,7 +272,6 @@ export const PullDashboardAnalytics = () => {
           url.searchParams.append("endHour", $epinetCustomFilters.endHour.toString());
         }
 
-        // Make the API request
         const response = await fetch(url.toString(), {
           method: "GET",
           headers: {
@@ -327,12 +286,11 @@ export const PullDashboardAnalytics = () => {
         const result = await response.json();
 
         if (result.success) {
-          // Update epinet data with filtered results
           analyticsStore.setKey("epinet", result.data.epinet);
 
-          // Update available visitor IDs in the filter store
+          const currentFilterState = epinetCustomFilters.get();
           epinetCustomFilters.set({
-            ...$epinetCustomFilters,
+            ...currentFilterState,
             availableVisitorIds: result.data.availableVisitorIds || [],
           });
         }
@@ -345,10 +303,8 @@ export const PullDashboardAnalytics = () => {
     [$epinetCustomFilters, customFetchInProgress]
   );
 
-  // Create debounced version of fetchCustomEpinetData to avoid rapid re-fetching
   const debouncedFetchCustomEpinetData = useCallback(
     debounce(() => {
-      // Find promoted epinet from content map
       const epinets = ($contentMap || []).filter(
         (item) => (item as any).type === "Epinet" && (item as any).promoted
       );

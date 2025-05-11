@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { analyticsDuration, epinetCustomFilters } from "@/store/storykeep";
 import { MAX_ANALYTICS_HOURS } from "@/constants";
@@ -16,15 +16,14 @@ const hourOptions = [
   })),
   { value: "23:59", label: "23:59" },
 ];
-const hourCollection = createListCollection({
-  items: hourOptions,
-});
+const hourCollection = createListCollection({ items: hourOptions });
 
 const EpinetDurationSelector = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [currentUserPage, setCurrentUserPage] = useState(0);
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
   const usersPerPage = 50;
 
   const $analyticsDuration = useStore(analyticsDuration);
@@ -37,30 +36,7 @@ const EpinetDurationSelector = () => {
     endHour: "23:59",
   });
 
-  // Check if there are unsaved changes that need Apply Filters
-  const hasUnsavedChanges = useCallback(() => {
-    // If the filter is disabled, there's no need to apply changes
-    if (!$epinetCustomFilters.enabled) return false;
-
-    return (
-      localFilters.visitorType !== $epinetCustomFilters.visitorType ||
-      localFilters.selectedUserId !== $epinetCustomFilters.selectedUserId ||
-      // Convert startHour and endHour to comparable values
-      (startDate &&
-        endDate &&
-        // If there's specific hours set that differ from stored values
-        ($epinetCustomFilters.startHour === null || $epinetCustomFilters.endHour === null))
-    );
-  }, [localFilters, $epinetCustomFilters, startDate, endDate]);
-
-  useEffect(() => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      visitorType: $epinetCustomFilters.visitorType || "all",
-      selectedUserId: $epinetCustomFilters.selectedUserId,
-    }));
-  }, [$epinetCustomFilters]);
-
+  // Initialize dates and hours based on analytics duration
   useEffect(() => {
     const now = new Date();
     const endDate = new Date();
@@ -77,17 +53,23 @@ const EpinetDurationSelector = () => {
     setStartDate(startDate);
     setEndDate(endDate);
 
-    const startHour = startDate.getHours().toString().padStart(2, "0");
-    const endHour =
-      endDate.getHours() === 23 ? "23:59" : endDate.getHours().toString().padStart(2, "0");
-
     setLocalFilters((prev) => ({
       ...prev,
-      startHour,
-      endHour,
+      startHour: startDate.getHours().toString().padStart(2, "0"),
+      endHour: endDate.getHours() === 23 ? "23:59" : endDate.getHours().toString().padStart(2, "0"),
     }));
   }, [$analyticsDuration]);
 
+  // Sync local filters with global store changes
+  useEffect(() => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      visitorType: $epinetCustomFilters.visitorType || "all",
+      selectedUserId: $epinetCustomFilters.selectedUserId,
+    }));
+  }, [$epinetCustomFilters]);
+
+  // Reset pagination on visitor type change
   useEffect(() => {
     setCurrentUserPage(0);
   }, [localFilters.visitorType]);
@@ -104,22 +86,20 @@ const EpinetDurationSelector = () => {
       visitorType: type,
       selectedUserId: null,
     }));
+    setHasLocalChanges(true);
   };
 
   const updateSelectedUser = (userId: string | null) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      selectedUserId: userId,
-    }));
+    setLocalFilters((prev) => ({ ...prev, selectedUserId: userId }));
+    setHasLocalChanges(true);
   };
 
   const updateHour = (type: "startHour" | "endHour", hour: string) => {
-    setLocalFilters((prev) => ({
-      ...prev,
-      [type]: hour,
-    }));
+    setLocalFilters((prev) => ({ ...prev, [type]: hour }));
+    setHasLocalChanges(true);
   };
 
+  // Apply local changes to global store
   const updateDateRange = () => {
     if (!startDate || !endDate) return;
 
@@ -137,29 +117,10 @@ const EpinetDurationSelector = () => {
     );
 
     const nowUtc = new Date();
-    const startUtc = new Date(
-      Date.UTC(
-        startDateTime.getFullYear(),
-        startDateTime.getMonth(),
-        startDateTime.getDate(),
-        startDateTime.getHours(),
-        startDateTime.getMinutes(),
-        startDateTime.getSeconds()
-      )
+    const startHoursHence = Math.round(
+      (nowUtc.getTime() - startDateTime.getTime()) / (1000 * 60 * 60)
     );
-    const endUtc = new Date(
-      Date.UTC(
-        endDateTime.getFullYear(),
-        endDateTime.getMonth(),
-        endDateTime.getDate(),
-        endDateTime.getHours(),
-        endDateTime.getMinutes(),
-        endDateTime.getSeconds()
-      )
-    );
-
-    const startHoursHence = Math.round((nowUtc.getTime() - startUtc.getTime()) / (1000 * 60 * 60));
-    const endHoursHence = Math.round((nowUtc.getTime() - endUtc.getTime()) / (1000 * 60 * 60));
+    const endHoursHence = Math.round((nowUtc.getTime() - endDateTime.getTime()) / (1000 * 60 * 60));
 
     epinetCustomFilters.set({
       ...$epinetCustomFilters,
@@ -168,6 +129,8 @@ const EpinetDurationSelector = () => {
       startHour: Math.max(0, Math.min(startHoursHence, MAX_ANALYTICS_HOURS)),
       endHour: Math.max(0, Math.min(endHoursHence, MAX_ANALYTICS_HOURS)),
     });
+
+    setHasLocalChanges(false);
   };
 
   const paginatedVisitorIds = ($epinetCustomFilters.availableVisitorIds || [])
@@ -180,15 +143,11 @@ const EpinetDurationSelector = () => {
   );
 
   const nextUserPage = () => {
-    if (currentUserPage < totalUserPages - 1) {
-      setCurrentUserPage(currentUserPage + 1);
-    }
+    if (currentUserPage < totalUserPages - 1) setCurrentUserPage(currentUserPage + 1);
   };
 
   const prevUserPage = () => {
-    if (currentUserPage > 0) {
-      setCurrentUserPage(currentUserPage - 1);
-    }
+    if (currentUserPage > 0) setCurrentUserPage(currentUserPage - 1);
   };
 
   const maxDate = new Date();
@@ -208,99 +167,94 @@ const EpinetDurationSelector = () => {
     return `${month}/${day}/${year} ${time} (Local Time)`;
   };
 
+  // Set preset date range in local state
   const setPresetDateRange = (period: string) => {
     const newEndDate = new Date();
     const newStartDate = new Date();
 
     if (period === "24h") {
       newStartDate.setHours(newEndDate.getHours() - 24);
-      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+      setLocalFilters((prev) => ({
+        ...prev,
+        startHour: newStartDate.getHours().toString().padStart(2, "0"),
+        endHour: "23:59",
+      }));
     } else if (period === "7d") {
       newStartDate.setDate(newStartDate.getDate() - 7);
       setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
-    } else if (period === "30d") {
-      newStartDate.setDate(newStartDate.getDate() - 30);
+    } else if (period === "28d") {
+      newStartDate.setDate(newStartDate.getDate() - 28);
       setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
     }
 
     setStartDate(newStartDate);
     setEndDate(newEndDate);
     setIsDatePickerOpen(false);
+    setHasLocalChanges(true);
+  };
+
+  const cancelChanges = () => {
+    // Reset local filters to match global state
+    setLocalFilters({
+      visitorType: $epinetCustomFilters.visitorType || "all",
+      selectedUserId: $epinetCustomFilters.selectedUserId || null,
+      startHour:
+        $epinetCustomFilters.startHour !== null
+          ? $epinetCustomFilters.startHour.toString().padStart(2, "0")
+          : "00",
+      endHour:
+        $epinetCustomFilters.endHour !== null
+          ? $epinetCustomFilters.endHour === 0
+            ? "23:59"
+            : $epinetCustomFilters.endHour.toString().padStart(2, "0")
+          : "23:59",
+    });
+
+    // Reset date pickers if needed
+    const now = new Date();
+    const endDate = new Date();
+    let startDate = new Date();
+
+    if ($analyticsDuration === "daily") {
+      startDate.setHours(now.getHours() - 24);
+    } else if ($analyticsDuration === "weekly") {
+      startDate.setDate(now.getDate() - 7);
+    } else if ($analyticsDuration === "monthly") {
+      startDate.setDate(now.getDate() - 28);
+    }
+
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setIsDatePickerOpen(false);
+    setHasLocalChanges(false);
   };
 
   const radioGroupStyles = `
-    .radio-control[data-state="unchecked"] .radio-dot {
-      background-color: #d1d5db;
-    }
-    .radio-control[data-state="checked"] .radio-dot {
-      background-color: #0891b2;
-    }
-    .radio-control[data-state="checked"] {
-      border-color: #0891b2;
-    }
-    .radio-item {
-      border: 1px solid #d1d5db;
-    }
-    .radio-item[data-state="checked"] {
-      border-color: #0891b2;
-    }
-    .radio-item:hover {
-      background-color: #f3f4f6;
-    }
-    @media (max-width: 640px) {
-      .radio-item {
-        flex: 1 1 100%;
-      }
-    }
-    @media (min-width: 641px) {
-      .radio-item {
-        flex: 1 1 calc(33.333% - 0.5rem);
-      }
-    }
+    .radio-control[data-state="unchecked"] .radio-dot { background-color: #d1d5db; }
+    .radio-control[data-state="checked"] .radio-dot { background-color: #0891b2; }
+    .radio-control[data-state="checked"] { border-color: #0891b2; }
+    .radio-item { border: 1px solid #d1d5db; }
+    .radio-item[data-state="checked"] { border-color: #0891b2; }
+    .radio-item:hover { background-color: #f3f4f6; }
+    @media (max-width: 640px) { .radio-item { flex: 1 1 100%; } }
+    @media (min-width: 641px) { .radio-item { flex: 1 1 calc(33.333% - 0.5rem); } }
   `;
 
-  const getActiveFilterDescription = () => {
-    const duration = $analyticsDuration;
-    return duration === "daily" ? "24 hours" : duration === "weekly" ? "7 days" : "4 weeks";
-  };
-
-  // Get message for status box
   const getFilterStatusMessage = () => {
-    const needsApply = hasUnsavedChanges();
+    const needsApply = hasLocalChanges;
     const prefix = needsApply ? "Press Apply Filters to load: " : "";
+    let baseMessage =
+      startDate && endDate
+        ? `${prefix}Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
+        : `${prefix}Showing data from last ${$analyticsDuration === "daily" ? "24 hours" : $analyticsDuration === "weekly" ? "7 days" : "4 weeks"}`;
 
-    let baseMessage = "";
-    if (startDate && endDate) {
-      baseMessage = `${prefix}Showing data from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`;
-    } else {
-      baseMessage = `${prefix}Showing data from last ${getActiveFilterDescription()}`;
-    }
-
-    // Add user information
-    let userInfo = "";
-    if (needsApply) {
-      // For pending changes, use local state
-      userInfo = localFilters.selectedUserId
+    const userInfo = needsApply
+      ? localFilters.selectedUserId
         ? ` for individual user ${localFilters.selectedUserId}`
-        : ` for ${
-            localFilters.visitorType === "all"
-              ? "all visitors"
-              : localFilters.visitorType === "anonymous"
-                ? "anonymous visitors"
-                : "known leads"
-          }`;
-    } else {
-      // For applied filters, use store state
-      userInfo = $epinetCustomFilters.selectedUserId
+        : ` for ${localFilters.visitorType === "all" ? "all visitors" : localFilters.visitorType === "anonymous" ? "anonymous visitors" : "known leads"}`
+      : $epinetCustomFilters.selectedUserId
         ? ` for individual user ${$epinetCustomFilters.selectedUserId}`
-        : ` for ${
-            $epinetCustomFilters.visitorType === "all"
-              ? "all visitors"
-              : $epinetCustomFilters.visitorType === "anonymous"
-                ? "anonymous visitors"
-                : "known leads"
-          }`;
-    }
+        : ` for ${$epinetCustomFilters.visitorType === "all" ? "all visitors" : $epinetCustomFilters.visitorType === "anonymous" ? "anonymous visitors" : "known leads"}`;
 
     return baseMessage + userInfo;
   };
@@ -308,15 +262,17 @@ const EpinetDurationSelector = () => {
   return (
     <div className="space-y-4">
       {$epinetCustomFilters.enabled && (
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+        <div
+          className={`${hasLocalChanges ? `bg-amber-50` : `bg-gray-50`} p-4 rounded-lg space-y-4`}
+        >
           <div className="flex flex-col space-y-4 md:grid md:grid-cols-3 md:gap-4 md:space-y-0">
             <div className="space-y-2">
               <style>{radioGroupStyles}</style>
               <RadioGroup.Root
                 value={localFilters.visitorType}
-                onValueChange={({ value }) => {
-                  updateVisitorType(value as "all" | "anonymous" | "known");
-                }}
+                onValueChange={({ value }) =>
+                  updateVisitorType(value as "all" | "anonymous" | "known")
+                }
               >
                 <RadioGroup.Label className="sr-only">Visitor Type</RadioGroup.Label>
                 <div className="flex flex-wrap gap-2">
@@ -324,7 +280,7 @@ const EpinetDurationSelector = () => {
                     <RadioGroup.Item
                       key={type.id}
                       value={type.id}
-                      className="radio-item relative flex cursor-pointer rounded-lg px-4 py-2 focus:outline-none"
+                      className="radio-item bg-white relative flex cursor-pointer rounded-lg px-4 py-2 focus:outline-none"
                     >
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center">
@@ -365,22 +321,22 @@ const EpinetDurationSelector = () => {
                   <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-2 w-full sm:w-auto">
                     <div className="flex flex-wrap gap-2 justify-between mb-2">
                       <button
-                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "daily" ? "font-bold bg-cyan-50" : ""}`}
+                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
                         onClick={() => setPresetDateRange("24h")}
                       >
                         Last 24 hours
                       </button>
                       <button
-                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "weekly" ? "font-bold bg-cyan-50" : ""}`}
+                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
                         onClick={() => setPresetDateRange("7d")}
                       >
                         Last 7 days
                       </button>
                       <button
-                        className={`p-1 rounded-md hover:bg-gray-100 text-sm ${$analyticsDuration === "monthly" ? "font-bold bg-cyan-50" : ""}`}
-                        onClick={() => setPresetDateRange("30d")}
+                        className="p-1 rounded-md hover:bg-gray-100 text-sm"
+                        onClick={() => setPresetDateRange("28d")}
                       >
-                        Last 30 days
+                        Last 28 days
                       </button>
                       <button
                         className="p-1 rounded-md hover:bg-gray-100 text-sm"
@@ -403,9 +359,10 @@ const EpinetDurationSelector = () => {
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
-                          onChange={(e) =>
-                            setStartDate(e.target.value ? new Date(e.target.value) : null)
-                          }
+                          onChange={(e) => {
+                            setStartDate(e.target.value ? new Date(e.target.value) : null);
+                            setHasLocalChanges(true);
+                          }}
                           value={startDate ? startDate.toISOString().split("T")[0] : ""}
                           min={minDate.toISOString().split("T")[0]}
                           max={maxDate.toISOString().split("T")[0]}
@@ -416,9 +373,10 @@ const EpinetDurationSelector = () => {
                         <input
                           type="date"
                           className="w-full px-2 py-1 border rounded"
-                          onChange={(e) =>
-                            setEndDate(e.target.value ? new Date(e.target.value) : null)
-                          }
+                          onChange={(e) => {
+                            setEndDate(e.target.value ? new Date(e.target.value) : null);
+                            setHasLocalChanges(true);
+                          }}
                           value={endDate ? endDate.toISOString().split("T")[0] : ""}
                           min={
                             startDate
@@ -516,7 +474,6 @@ const EpinetDurationSelector = () => {
             <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm max-w-md">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-700">View Individual User Journey</h3>
-                {/* Only show pagination if there's more than 1 page */}
                 {totalUserPages > 1 && (
                   <div className="flex items-center space-x-2 text-sm">
                     <button
@@ -599,22 +556,23 @@ const EpinetDurationSelector = () => {
 
           {$epinetCustomFilters.enabled && (
             <div className="p-2 bg-cyan-50 text-cyan-800 rounded-md text-sm">
-              {$epinetCustomFilters.startHour !== null && $epinetCustomFilters.endHour !== null ? (
-                <div>
-                  <p>{getFilterStatusMessage()}</p>
-
-                  {hasUnsavedChanges() && (
-                    <button
-                      onClick={updateDateRange}
-                      className="mt-2 px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-bold"
-                      disabled={!startDate || !endDate}
-                    >
-                      Apply Filters
-                    </button>
-                  )}
+              <p>{getFilterStatusMessage()}</p>
+              {hasLocalChanges && (
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={updateDateRange}
+                    className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-bold"
+                    disabled={!startDate || !endDate}
+                  >
+                    Apply Filters
+                  </button>
+                  <button
+                    onClick={cancelChanges}
+                    className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-bold"
+                  >
+                    Cancel
+                  </button>
                 </div>
-              ) : (
-                <p>Select date range and filters to preview</p>
               )}
             </div>
           )}
