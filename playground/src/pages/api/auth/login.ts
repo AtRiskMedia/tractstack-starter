@@ -1,9 +1,12 @@
-// src/pages/api/auth/login.ts
-import type { APIContext } from "astro";
+import type { APIRoute } from "astro";
+import type { APIContext } from "@/types";
+import { withTenantContext } from "@/utils/api/middleware";
 import { AUTH_COOKIE_NAME, AUTH_COOKIE_MAX_AGE } from "@/constants";
+import { getConfig } from "@/utils/core/config";
 
-export async function POST({ request, cookies, locals }: APIContext) {
+export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
   try {
+    const { request, cookies, locals } = context;
     const body = await request.json();
     const { password, redirect: redirectPath = "/storykeep" } = body;
 
@@ -27,11 +30,14 @@ export async function POST({ request, cookies, locals }: APIContext) {
     const isMultiTenant =
       import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== "default";
 
+    // Load config with fallback if not present in locals
+    const config = locals.config || (await getConfig(locals.tenant?.paths.configPath, tenantId));
+    const initConfig = config?.init;
+
     let authSuccess = false;
     let isAdmin = false;
 
-    if (isMultiTenant && locals.config?.init) {
-      const initConfig = locals.config.init;
+    if (isMultiTenant && initConfig) {
       if (password === initConfig.ADMIN_PASSWORD) {
         const tokenValue = `admin:${tenantId}`;
         cookies.set(AUTH_COOKIE_NAME, tokenValue, {
@@ -120,4 +126,4 @@ export async function POST({ request, cookies, locals }: APIContext) {
       }
     );
   }
-}
+});
