@@ -378,7 +378,7 @@ const AddPaneNewPanel = ({
               value={[selectedTheme]}
               onValueChange={handleThemeChange}
             >
-              <Select.Label className="block text-sm font-medium text-gray-700">Theme</Select.Label>
+              <Select.Label className="block text-sm font-bold text-gray-700">Theme</Select.Label>
               <Select.Control className="mt-1 relative">
                 <Select.Trigger className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-cyan-600 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600">
                   <Select.ValueText className="block truncate capitalize">
