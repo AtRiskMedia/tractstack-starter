@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { MarkdownLookup, TupleValue } from "../../types";
-import { stopWords } from "@/constants";
+import type { MarkdownLookup, TupleValue } from "@/types";
+import { stopWords, MAX_ANALYTICS_HOURS } from "@/constants";
 import { type DragNode, Location } from "@/store/storykeep.ts";
 import { toHast } from "mdast-util-to-hast";
 import type { Root as HastRoot, RootContent } from "hast";
@@ -589,29 +589,85 @@ export function joinUrlPaths(base: string, path: string): string {
 }
 
 export function parseHourKeyToDate(hourKey: string): Date {
-  const parts = hourKey.split("-").map(Number);
-  if (parts.length !== 4) {
-    throw new Error(`Invalid hour key format: ${hourKey}`);
+  const [year, month, day, hour] = hourKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour));
+}
+
+/**
+ * Creates a Date object using UTC
+ * @param year The year
+ * @param month The month (0-11)
+ * @param day The day of month
+ * @param hour Optional hour
+ * @param minute Optional minute
+ * @param second Optional second
+ * @returns A Date object in UTC
+ */
+export function createUTCDate(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+  second = 0
+): Date {
+  return new Date(Date.UTC(year, month, day, hour, minute, second));
+}
+
+/**
+ * Format a date as YYYY-MM-DD-HH using UTC
+ * @param date The date to format
+ * @returns Formatted hour key
+ */
+export function formatUTCHourKey(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const hour = String(date.getUTCHours()).padStart(2, "0");
+  return `${year}-${month}-${day}-${hour}`;
+}
+
+/**
+ * Parse a YYYY-MM-DD-HH hour key to a Date object in UTC
+ * @param hourKey The hour key string
+ * @returns A Date object in UTC
+ */
+export function parseHourKeyToUTCDate(hourKey: string): Date {
+  const [year, month, day, hour] = hourKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour));
+}
+
+/**
+ * Calculate the number of hours between two hour keys
+ * @param startHourKey The starting hour key
+ * @param endHourKey The ending hour key
+ * @returns Number of hours between the two keys
+ */
+export function getHoursBetweenKeys(startHourKey: string, endHourKey: string): number {
+  if (!startHourKey || !endHourKey) return 0;
+
+  const [startYear, startMonth, startDay, startHour] = startHourKey.split("-").map(Number);
+  const [endYear, endMonth, endDay, endHour] = endHourKey.split("-").map(Number);
+
+  const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay, startHour));
+  const endDate = new Date(Date.UTC(endYear, endMonth - 1, endDay, endHour));
+
+  return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / (60 * 60 * 1000)));
+}
+
+/**
+ * Get an array of hour keys for a time range in the past
+ * @param hours Number of hours to go back from now
+ * @returns Array of hour keys
+ */
+export function getUTCHourKeysForTimeRange(hours: number): string[] {
+  const keys = [];
+  const now = new Date();
+  const hoursToGet = Math.min(hours, MAX_ANALYTICS_HOURS);
+  for (let i = 0; i < hoursToGet; i++) {
+    const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
+    const key = formatUTCHourKey(hourDate);
+    keys.push(key);
   }
-  const [year, month, day, hour] = parts;
-  if (
-    isNaN(year) ||
-    isNaN(month) ||
-    isNaN(day) ||
-    isNaN(hour) ||
-    year < 1000 ||
-    month < 1 ||
-    month > 12 ||
-    day < 1 ||
-    day > 31 ||
-    hour < 0 ||
-    hour > 23
-  ) {
-    throw new Error(`Invalid date values in hour key: ${hourKey}`);
-  }
-  const date = new Date(Date.UTC(year, month - 1, day, hour));
-  if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date from hour key: ${hourKey}`);
-  }
-  return date;
+  return keys;
 }

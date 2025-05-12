@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { colors } from "@/constants";
 
 // Maximum height constraint for the diagram
-const MAX_HEIGHT = 800;
+const MAX_HEIGHT = 1200;
 
 interface Node {
   name: string;

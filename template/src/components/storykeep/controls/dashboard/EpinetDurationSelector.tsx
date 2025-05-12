@@ -10,13 +10,27 @@ import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ChevronLeftIcon from "@heroicons/react/24/outline/ChevronLeftIcon";
 import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
 
-const hourOptions = [
-  ...Array.from({ length: 24 }, (_, i) => ({
-    value: i.toString().padStart(2, "0"),
-    label: `${i.toString().padStart(2, "0")}:00`,
-  })),
-  { value: "23:59", label: "23:59" },
-];
+// Generate hour options with local time labels but UTC hour values
+const getHourOptions = () => {
+  const now = new Date();
+  const offsetHours = Math.floor(now.getTimezoneOffset() / 60); // e.g., 4 for Toronto (UTC-4)
+  return [
+    ...Array.from({ length: 24 }, (_, i) => {
+      const utcHour = i;
+      const localHour = (i - offsetHours + 24) % 24; // Convert UTC hour to local
+      return {
+        value: utcHour.toString().padStart(2, "0"),
+        label: `${localHour.toString().padStart(2, "0")}:00`,
+      };
+    }),
+    {
+      value: "23:59",
+      label: `${((23 - offsetHours + 24) % 24).toString().padStart(2, "0")}:59`,
+    },
+  ];
+};
+
+const hourOptions = getHourOptions();
 const hourCollection = createListCollection({ items: hourOptions });
 
 const EpinetDurationSelector = () => {
@@ -25,6 +39,7 @@ const EpinetDurationSelector = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [currentUserPage, setCurrentUserPage] = useState(0);
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const usersPerPage = 50;
 
   const $analyticsDuration = useStore(analyticsDuration);
@@ -37,27 +52,29 @@ const EpinetDurationSelector = () => {
     endHour: "23:59",
   });
 
-  // Initialize dates and hours based on analytics duration
+  // Initialize dates based on analytics duration, using UTC hours
   useEffect(() => {
     const now = new Date();
-    const endDate = new Date();
-    let startDate = new Date();
+    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
+    const endDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
+    );
+    let startDate = new Date(endDate);
 
     if ($analyticsDuration === "daily") {
-      startDate.setHours(now.getHours() - 24);
+      startDate.setUTCHours(endDate.getUTCHours() - 24);
     } else if ($analyticsDuration === "weekly") {
-      startDate.setDate(now.getDate() - 7);
+      startDate.setUTCHours(endDate.getUTCHours() - 168);
     } else if ($analyticsDuration === "monthly") {
-      startDate.setDate(now.getDate() - 28);
+      startDate.setUTCHours(endDate.getUTCHours() - 672);
     }
 
     setStartDate(startDate);
     setEndDate(endDate);
-
     setLocalFilters((prev) => ({
       ...prev,
-      startHour: startDate.getHours().toString().padStart(2, "0"),
-      endHour: endDate.getHours() === 23 ? "23:59" : endDate.getHours().toString().padStart(2, "0"),
+      startHour: currentUtcHour.toString().padStart(2, "0"),
+      endHour: currentUtcHour.toString().padStart(2, "0"),
     }));
   }, [$analyticsDuration]);
 
@@ -98,56 +115,129 @@ const EpinetDurationSelector = () => {
   const updateHour = (type: "startHour" | "endHour", hour: string) => {
     setLocalFilters((prev) => ({ ...prev, [type]: hour }));
     setHasLocalChanges(true);
+    setErrorMessage(null);
   };
 
-  // Apply local changes to global store
+  // Apply local changes to global store with validation
   const updateDateRange = () => {
-    if (!startDate || !endDate) return;
+    if (!startDate || !endDate) {
+      setErrorMessage("Please select both start and end dates.");
+      return;
+    }
 
-    const startDateTime = new Date(startDate);
-    const [startHour, startMinute] = localFilters.startHour.split(":").map(Number);
-    startDateTime.setHours(startHour, startMinute || 0, 0, 0);
+    // Validate hour range
+    const startHourNum = parseInt(localFilters.startHour);
+    const endHourNum = localFilters.endHour === "23:59" ? 23.99 : parseInt(localFilters.endHour);
+    if (startDate.toDateString() === endDate.toDateString() && endHourNum < startHourNum) {
+      setErrorMessage("End hour cannot be earlier than start hour on the same day.");
+      return;
+    }
 
-    const endDateTime = new Date(endDate);
-    const [endHour, endMinute] = localFilters.endHour.split(":").map(Number);
-    endDateTime.setHours(
-      endHour,
-      endMinute || 59,
-      endMinute === 59 ? 59 : 0,
-      endMinute === 59 ? 999 : 0
+    // Create UTC date-times
+    const startDateTime = new Date(
+      Date.UTC(
+        startDate.getUTCFullYear(),
+        startDate.getUTCMonth(),
+        startDate.getUTCDate(),
+        parseInt(localFilters.startHour),
+        localFilters.startHour === "23:59" ? 59 : 0,
+        0,
+        localFilters.startHour === "23:59" ? 999 : 0
+      )
+    );
+    const endDateTime = new Date(
+      Date.UTC(
+        endDate.getUTCFullYear(),
+        endDate.getUTCMonth(),
+        endDate.getUTCDate(),
+        parseInt(localFilters.endHour),
+        localFilters.endHour === "23:59" ? 59 : 0,
+        0,
+        localFilters.endHour === "23:59" ? 999 : 0
+      )
     );
 
-    const nowUtc = new Date();
-    const startHoursHence = Math.round(
+    const nowUtc = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
+    let startHoursHence = Math.round(
       (nowUtc.getTime() - startDateTime.getTime()) / (1000 * 60 * 60)
     );
-    const endHoursHence = Math.round((nowUtc.getTime() - endDateTime.getTime()) / (1000 * 60 * 60));
+    let endHoursHence = Math.round((nowUtc.getTime() - endDateTime.getTime()) / (1000 * 60 * 60));
+
+    // Validate time range
+    if (startHoursHence < endHoursHence) {
+      setErrorMessage("Start time cannot be later than end time.");
+      return;
+    }
+
+    // Clamp to MAX_ANALYTICS_HOURS
+    startHoursHence = Math.min(startHoursHence, MAX_ANALYTICS_HOURS);
+    endHoursHence = Math.max(0, Math.min(endHoursHence, MAX_ANALYTICS_HOURS));
 
     epinetCustomFilters.set({
       ...$epinetCustomFilters,
       visitorType: localFilters.visitorType,
       selectedUserId: localFilters.selectedUserId,
-      startHour: Math.max(0, Math.min(startHoursHence, MAX_ANALYTICS_HOURS)),
-      endHour: Math.max(0, Math.min(endHoursHence, MAX_ANALYTICS_HOURS)),
+      startHour: startHoursHence,
+      endHour: endHoursHence,
     });
 
     setHasLocalChanges(false);
+    setErrorMessage(null);
   };
 
   const handleDateChange = (type: "start" | "end", dateValue: string | null) => {
-    const newDate = dateValue ? new Date(dateValue) : null;
+    if (!dateValue) {
+      setErrorMessage("Please select a valid date.");
+      return;
+    }
+
+    const newDate = new Date(
+      Date.UTC(
+        parseInt(dateValue.split("-")[0]),
+        parseInt(dateValue.split("-")[1]) - 1,
+        parseInt(dateValue.split("-")[2]),
+        0,
+        0,
+        0,
+        0
+      )
+    );
+
+    // Ensure date is within MAX_ANALYTICS_HOURS
+    const nowUtc = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
+    const hoursSince = Math.round((nowUtc.getTime() - newDate.getTime()) / (1000 * 60 * 60));
+    if (hoursSince > MAX_ANALYTICS_HOURS) {
+      setErrorMessage(`Date cannot be more than ${MAX_ANALYTICS_HOURS} hours in the past.`);
+      return;
+    }
+
     if (type === "start") {
       setStartDate(newDate);
     } else {
       setEndDate(newDate);
     }
+
     if (newDate && (type === "start" ? endDate : startDate)) {
       const otherDate = type === "start" ? endDate : startDate;
       if (
         otherDate &&
-        newDate.getFullYear() === otherDate.getFullYear() &&
-        newDate.getMonth() === otherDate.getMonth() &&
-        newDate.getDate() === otherDate.getDate()
+        newDate.getUTCFullYear() === otherDate.getUTCFullYear() &&
+        newDate.getUTCMonth() === otherDate.getUTCMonth() &&
+        newDate.getUTCDate() === otherDate.getUTCDate()
       ) {
         setLocalFilters((prev) => ({
           ...prev,
@@ -157,6 +247,7 @@ const EpinetDurationSelector = () => {
       }
     }
     setHasLocalChanges(true);
+    setErrorMessage(null);
   };
 
   const paginatedUserCounts = ($epinetCustomFilters.userCounts || []).slice(
@@ -178,81 +269,99 @@ const EpinetDurationSelector = () => {
 
   const maxDate = new Date();
   const minDate = new Date();
-  minDate.setHours(minDate.getHours() - MAX_ANALYTICS_HOURS);
+  minDate.setUTCHours(minDate.getUTCHours() - MAX_ANALYTICS_HOURS);
 
   const formatDateDisplay = (date: Date | null) => {
     if (!date) return "Select date";
-    return date.toLocaleDateString();
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const formatDateHourDisplay = (date: Date, hour: string) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const time = hour === "23:59" ? "23:59" : `${hour}:00`;
-    return `${month}/${day}/${year} ${time} (Local Time)`;
+    const utcDate = new Date(
+      Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        parseInt(hour),
+        hour === "23:59" ? 59 : 0,
+        0,
+        hour === "23:59" ? 999 : 0
+      )
+    );
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return (
+      utcDate.toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone,
+      }) + ` (${timeZone})`
+    );
   };
 
-  // Set preset date range in local state
   const setPresetDateRange = (period: string) => {
-    const newEndDate = new Date();
-    const newStartDate = new Date();
+    const now = new Date();
+    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
+    const endDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
+    );
+    const startDate = new Date(endDate);
 
     if (period === "24h") {
-      newStartDate.setHours(newEndDate.getHours() - 24);
-      setLocalFilters((prev) => ({
-        ...prev,
-        startHour: newStartDate.getHours().toString().padStart(2, "0"),
-        endHour: "23:59",
-      }));
+      startDate.setUTCHours(endDate.getUTCHours() - 24);
     } else if (period === "7d") {
-      newStartDate.setDate(newStartDate.getDate() - 7);
-      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+      startDate.setUTCHours(endDate.getUTCHours() - 168);
     } else if (period === "28d") {
-      newStartDate.setDate(newStartDate.getDate() - 28);
-      setLocalFilters((prev) => ({ ...prev, startHour: "00", endHour: "23:59" }));
+      startDate.setUTCHours(endDate.getUTCHours() - 672);
     }
 
-    setStartDate(newStartDate);
-    setEndDate(newEndDate);
+    setStartDate(startDate);
+    setEndDate(endDate);
+    setLocalFilters((prev) => ({
+      ...prev,
+      startHour: currentUtcHour.toString().padStart(2, "0"),
+      endHour: currentUtcHour.toString().padStart(2, "0"),
+    }));
     setIsDatePickerOpen(false);
     setHasLocalChanges(true);
+    setErrorMessage(null);
   };
 
   const cancelChanges = () => {
-    // Reset local filters to match global state
+    const now = new Date();
+    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
     setLocalFilters({
       visitorType: $epinetCustomFilters.visitorType || "all",
       selectedUserId: $epinetCustomFilters.selectedUserId || null,
-      startHour:
-        $epinetCustomFilters.startHour !== null
-          ? $epinetCustomFilters.startHour.toString().padStart(2, "0")
-          : "00",
-      endHour:
-        $epinetCustomFilters.endHour !== null
-          ? $epinetCustomFilters.endHour === 0
-            ? "23:59"
-            : $epinetCustomFilters.endHour.toString().padStart(2, "0")
-          : "23:59",
+      startHour: currentUtcHour.toString().padStart(2, "0"),
+      endHour: currentUtcHour.toString().padStart(2, "0"),
     });
 
-    // Reset date pickers if needed
-    const now = new Date();
-    const endDate = new Date();
-    let startDate = new Date();
+    const endDate = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
+    );
+    let startDate = new Date(endDate);
 
     if ($analyticsDuration === "daily") {
-      startDate.setHours(now.getHours() - 24);
+      startDate.setUTCHours(endDate.getUTCHours() - 24);
     } else if ($analyticsDuration === "weekly") {
-      startDate.setDate(now.getDate() - 7);
+      startDate.setUTCHours(endDate.getUTCHours() - 168);
     } else if ($analyticsDuration === "monthly") {
-      startDate.setDate(now.getDate() - 28);
+      startDate.setUTCHours(endDate.getUTCHours() - 672);
     }
 
     setStartDate(startDate);
     setEndDate(endDate);
     setIsDatePickerOpen(false);
     setHasLocalChanges(false);
+    setErrorMessage(null);
   };
 
   const radioGroupStyles = `
@@ -268,19 +377,41 @@ const EpinetDurationSelector = () => {
 
   const getFilterStatusMessage = () => {
     const needsApply = hasLocalChanges;
-    const prefix = needsApply ? "Press Apply Filters to load from" : "Showing from";
+    const prefix = needsApply ? "Press Apply Filters to load" : "Showing";
     let baseMessage =
       startDate && endDate
         ? `${prefix} from ${formatDateHourDisplay(startDate, localFilters.startHour)} to ${formatDateHourDisplay(endDate, localFilters.endHour)}`
-        : `${prefix} from last ${$analyticsDuration === "daily" ? "24 hours" : $analyticsDuration === "weekly" ? "7 days" : "4 weeks"}`;
+        : `${prefix} from last ${
+            $analyticsDuration === "daily"
+              ? "24 hours"
+              : $analyticsDuration === "weekly"
+                ? "7 days"
+                : "28 days"
+          }`;
+
+    if (!startDate || !endDate) {
+      baseMessage = "Apply date filter for visualization";
+    }
 
     const userInfo = needsApply
       ? localFilters.selectedUserId
         ? ` for individual user ${localFilters.selectedUserId}`
-        : ` for ${localFilters.visitorType === "all" ? "all visitors" : localFilters.visitorType === "anonymous" ? "anonymous visitors" : "known leads"}`
+        : ` for ${
+            localFilters.visitorType === "all"
+              ? "all visitors"
+              : localFilters.visitorType === "anonymous"
+                ? "anonymous visitors"
+                : "known leads"
+          }`
       : $epinetCustomFilters.selectedUserId
         ? ` for individual user ${$epinetCustomFilters.selectedUserId}`
-        : ` for ${$epinetCustomFilters.visitorType === "all" ? "all visitors" : $epinetCustomFilters.visitorType === "anonymous" ? "anonymous visitors" : "known leads"}`;
+        : ` for ${
+            $epinetCustomFilters.visitorType === "all"
+              ? "all visitors"
+              : $epinetCustomFilters.visitorType === "anonymous"
+                ? "anonymous visitors"
+                : "known leads"
+          }`;
 
     return baseMessage + userInfo;
   };
@@ -299,6 +430,7 @@ const EpinetDurationSelector = () => {
                 onValueChange={({ value }) =>
                   updateVisitorType(value as "all" | "anonymous" | "known")
                 }
+                aria-label="Select visitor type"
               >
                 <RadioGroup.Label className="sr-only">Visitor Type</RadioGroup.Label>
                 <div className="flex flex-wrap gap-2">
@@ -337,6 +469,7 @@ const EpinetDurationSelector = () => {
                 <button
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
                   className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-left"
+                  aria-label="Toggle date range picker"
                 >
                   {startDate && endDate
                     ? `${formatDateDisplay(startDate)} - ${formatDateDisplay(endDate)}`
@@ -381,8 +514,11 @@ const EpinetDurationSelector = () => {
 
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="flex-1">
-                        <div className="block text-sm font-bold">Start</div>
+                        <label htmlFor="start-date" className="block text-sm font-bold">
+                          Start
+                        </label>
                         <input
+                          id="start-date"
                           type="date"
                           className="w-full px-2 py-1 border rounded"
                           onChange={(e) => handleDateChange("start", e.target.value)}
@@ -392,8 +528,11 @@ const EpinetDurationSelector = () => {
                         />
                       </div>
                       <div className="flex-1">
-                        <div className="block text-sm font-bold">End</div>
+                        <label htmlFor="end-date" className="block text-sm font-bold">
+                          End
+                        </label>
                         <input
+                          id="end-date"
                           type="date"
                           className="w-full px-2 py-1 border rounded"
                           onChange={(e) => handleDateChange("end", e.target.value)}
@@ -416,14 +555,21 @@ const EpinetDurationSelector = () => {
               <div className="block text-sm font-bold text-gray-700">Hour Range</div>
               <div className="flex flex-row gap-4">
                 <div className="flex-1 space-y-1 min-w-0">
-                  <div className="block text-sm font-bold text-gray-700">Start Hour</div>
+                  <label htmlFor="start-hour" className="block text-sm font-bold text-gray-700">
+                    Start Hour
+                  </label>
                   <Select.Root
                     collection={hourCollection}
                     value={[localFilters.startHour]}
                     onValueChange={({ value }) => updateHour("startHour", value[0])}
+                    positioning={{ sameWidth: true }}
                   >
+                    <Select.Label className="sr-only">Start Hour</Select.Label>
                     <Select.Control>
-                      <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm">
+                      <Select.Trigger
+                        id="start-hour"
+                        className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
+                      >
                         <Select.ValueText>
                           {hourOptions.find((opt) => opt.value === localFilters.startHour)?.label ||
                             "00:00"}
@@ -452,14 +598,21 @@ const EpinetDurationSelector = () => {
                 </div>
 
                 <div className="flex-1 space-y-1 min-w-0">
-                  <div className="block text-sm font-bold text-gray-700">End Hour</div>
+                  <label htmlFor="end-hour" className="block text-sm font-bold text-gray-700">
+                    End Hour
+                  </label>
                   <Select.Root
                     collection={hourCollection}
                     value={[localFilters.endHour]}
                     onValueChange={({ value }) => updateHour("endHour", value[0])}
+                    positioning={{ sameWidth: true }}
                   >
+                    <Select.Label className="sr-only">End Hour</Select.Label>
                     <Select.Control>
-                      <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm">
+                      <Select.Trigger
+                        id="end-hour"
+                        className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
+                      >
                         <Select.ValueText>
                           {hourOptions.find((opt) => opt.value === localFilters.endHour)?.label ||
                             "23:59"}
@@ -490,6 +643,10 @@ const EpinetDurationSelector = () => {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="mt-2 p-2 bg-red-50 text-red-800 rounded-md text-sm">{errorMessage}</div>
+          )}
+
           {paginatedUserCounts.length > 0 && (
             <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200 shadow-sm max-w-md">
               <div className="flex justify-between items-center mb-2">
@@ -500,6 +657,7 @@ const EpinetDurationSelector = () => {
                       onClick={prevUserPage}
                       disabled={currentUserPage === 0}
                       className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                      aria-label="Previous page"
                     >
                       <ChevronLeftIcon className="h-5 w-5" />
                     </button>
@@ -510,6 +668,7 @@ const EpinetDurationSelector = () => {
                       onClick={nextUserPage}
                       disabled={currentUserPage >= totalUserPages - 1}
                       className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
+                      aria-label="Next page"
                     >
                       <ChevronRightIcon className="h-5 w-5" />
                     </button>
@@ -530,9 +689,14 @@ const EpinetDurationSelector = () => {
                   })}
                   value={localFilters.selectedUserId ? [localFilters.selectedUserId] : [""]}
                   onValueChange={({ value }) => updateSelectedUser(value[0] || null)}
+                  positioning={{ sameWidth: true }}
                 >
+                  <Select.Label className="sr-only">Select user</Select.Label>
                   <Select.Control>
-                    <Select.Trigger className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm">
+                    <Select.Trigger
+                      className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
+                      aria-label="Select individual user"
+                    >
                       <Select.ValueText placeholder="Select user">
                         {localFilters.selectedUserId ? localFilters.selectedUserId : "Select user"}
                       </Select.ValueText>
@@ -584,7 +748,9 @@ const EpinetDurationSelector = () => {
 
           {$epinetCustomFilters.enabled && (
             <div
-              className={`p-2 ${hasLocalChanges ? `bg-cyan-50` : `font-bold`} text-cyan-800 rounded-md text-sm`}
+              className={`p-2 ${
+                hasLocalChanges ? `bg-cyan-50` : `font-bold`
+              } text-cyan-800 rounded-md text-sm`}
             >
               <p>{getFilterStatusMessage()}</p>
               {!hasLocalChanges && (
@@ -600,12 +766,14 @@ const EpinetDurationSelector = () => {
                     onClick={updateDateRange}
                     className="px-3 py-1 bg-cyan-600 text-white rounded-md hover:bg-cyan-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm font-bold"
                     disabled={!startDate || !endDate}
+                    aria-label="Apply filters"
                   >
                     Apply Filters
                   </button>
                   <button
                     onClick={cancelChanges}
                     className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-bold"
+                    aria-label="Cancel changes"
                   >
                     Cancel
                   </button>

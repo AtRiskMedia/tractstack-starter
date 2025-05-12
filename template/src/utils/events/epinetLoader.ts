@@ -218,7 +218,15 @@ export async function loadHourlyEpinetData(
     let hourKeys: string[];
     let startTime: Date, endTime: Date;
     if (currentHourOnly) {
-      const currentHourKey = formatHourKey(new Date(Date.now()));
+      const currentDate = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      );
+      const currentHourKey = formatHourKey(currentDate);
       hourKeys = [currentHourKey];
       const hourParts = currentHourKey.split("-").map(Number);
       startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
@@ -246,18 +254,12 @@ export async function loadHourlyEpinetData(
       const firstHourParts = firstHourKey.split("-").map(Number);
       const lastHourParts = hourKeys[0].split("-").map(Number);
       startTime = new Date(
-        firstHourParts[0],
-        firstHourParts[1] - 1,
-        firstHourParts[2],
-        firstHourParts[3]
+        Date.UTC(firstHourParts[0], firstHourParts[1] - 1, firstHourParts[2], firstHourParts[3])
       );
       endTime = new Date(
-        lastHourParts[0],
-        lastHourParts[1] - 1,
-        lastHourParts[2],
-        lastHourParts[3]
+        Date.UTC(lastHourParts[0], lastHourParts[1] - 1, lastHourParts[2], lastHourParts[3])
       );
-      endTime.setHours(endTime.getHours() + 1);
+      endTime.setUTCHours(endTime.getUTCHours() + 1);
       if (VERBOSE)
         console.log("[DEBUG-EPINET] Time range parameters:", {
           startTime: startTime.toISOString(),
@@ -299,7 +301,7 @@ export async function loadHourlyEpinetData(
       if (recentHourKeys.length > 0) {
         const recentStartTime = parseHourKeyToDate(recentHourKeys[recentHourKeys.length - 1]);
         const recentEndTime = parseHourKeyToDate(recentHourKeys[0]);
-        recentEndTime.setHours(recentEndTime.getHours() + 1);
+        recentEndTime.setUTCHours(recentEndTime.getUTCHours() + 1);
 
         await processEpinetDataForTimeRange(
           recentHourKeys,
@@ -324,7 +326,7 @@ export async function loadHourlyEpinetData(
 
           const chunkStartTime = parseHourKeyToDate(chunkHourKeys[chunkHourKeys.length - 1]);
           const chunkEndTime = parseHourKeyToDate(chunkHourKeys[0]);
-          chunkEndTime.setHours(chunkEndTime.getHours() + 1);
+          chunkEndTime.setUTCHours(chunkEndTime.getUTCHours() + 1);
 
           await processEpinetDataForTimeRange(
             chunkHourKeys,
@@ -345,14 +347,29 @@ export async function loadHourlyEpinetData(
 
     // Trim old hourly bins that are outside our time window
     if (!currentHourOnly) {
-      const oldestAllowedDate = new Date(Date.now());
+      const oldestAllowedDate = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      );
       oldestAllowedDate.setUTCHours(oldestAllowedDate.getUTCHours() - MAX_ANALYTICS_HOURS);
       trimOldData(epinetData, oldestAllowedDate);
     }
 
     // Final store update
+    const currentDate = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
     currentStore.data[tenantId] = epinetData;
-    currentStore.lastFullHour[tenantId] = formatHourKey(new Date(Date.now()));
+    currentStore.lastFullHour[tenantId] = formatHourKey(currentDate);
     currentStore.lastUpdateTime[tenantId] = Date.now();
     hourlyEpinetStore.set(currentStore);
   } catch (error) {
@@ -421,8 +438,8 @@ function analyzeEpinets(
     beliefValues: new Set<string>(),
     identifyAsValues: new Set<string>(),
     actionVerbs: new Set<string>(),
-    actionTypes: new Set<string>(),
-    objectIds: new Set<string>(),
+    actionTypes: new Set<string>(), // Fix: Use `new Set<string>()`
+    objectIds: new Set<string>(), // Fix: Use `new Set<string>()`
   };
 
   epinets.forEach((epinet) => {

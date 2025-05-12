@@ -104,7 +104,15 @@ export async function loadHourlyAnalytics(
 
     if (currentHourOnly) {
       // For partial updates, only get the current hour
-      const currentHourKey = formatHourKey(new Date(Date.now()));
+      const currentDate = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      );
+      const currentHourKey = formatHourKey(currentDate);
       hourKeys = [currentHourKey];
 
       const hourParts = currentHourKey.split("-").map(Number);
@@ -196,7 +204,15 @@ export async function loadHourlyAnalytics(
       await processTimeRange(hourKeys, contentData, siteData, client, startTime, endTime);
     } else {
       // Split processing to handle current hour separately for more frequent updates
-      const currentHourKey = formatHourKey(new Date(Date.now()));
+      const currentDate = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      );
+      const currentHourKey = formatHourKey(currentDate);
       const currentHourKeys = [currentHourKey];
       const historicalHourKeys = hourKeys.filter((key) => key !== currentHourKey);
 
@@ -212,7 +228,7 @@ export async function loadHourlyAnalytics(
           )
         );
         const currentHourEnd = new Date(currentHourStart);
-        currentHourEnd.setHours(currentHourEnd.getHours() + 1);
+        currentHourEnd.setUTCHours(currentHourEnd.getUTCHours() + 1);
 
         await processTimeRange(
           currentHourKeys,
@@ -235,7 +251,7 @@ export async function loadHourlyAnalytics(
 
           const chunkStartTime = parseHourKeyToDate(chunkHourKeys[chunkHourKeys.length - 1]);
           const chunkEndTime = parseHourKeyToDate(chunkHourKeys[0]);
-          chunkEndTime.setHours(chunkEndTime.getHours() + 1);
+          chunkEndTime.setUTCHours(chunkEndTime.getUTCHours() + 1);
 
           await processTimeRange(
             chunkHourKeys,
@@ -254,8 +270,15 @@ export async function loadHourlyAnalytics(
 
     // Trim old hourly bins that are outside our time window
     if (!currentHourOnly) {
-      const oldestAllowedDate = new Date(Date.now());
-      oldestAllowedDate.setHours(oldestAllowedDate.getHours() - MAX_ANALYTICS_HOURS);
+      const oldestAllowedDate = new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      );
+      oldestAllowedDate.setUTCHours(oldestAllowedDate.getUTCHours() - MAX_ANALYTICS_HOURS);
 
       Object.keys(contentData).forEach((contentId) => {
         Object.keys(contentData[contentId]).forEach((hourKey) => {
@@ -283,10 +306,18 @@ export async function loadHourlyAnalytics(
     }
 
     // Final store update
+    const currentDate = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
     currentStore.data[tenantId] = {
       contentData,
       siteData,
-      lastFullHour: formatHourKey(new Date(Date.now())),
+      lastFullHour: formatHourKey(currentDate),
       lastUpdated: Date.now(),
       totalLeads,
       lastActivity,
@@ -476,7 +507,15 @@ export async function refreshHourlyAnalytics(context?: APIContext): Promise<void
   const tenantId = context?.locals?.tenant?.id || "default";
   const currentStore = hourlyAnalyticsStore.get();
   const lastFullHour = currentStore.data[tenantId]?.lastFullHour || "";
-  const currentHour = formatHourKey(new Date(Date.now()));
+  const now = new Date(
+    Date.UTC(
+      new Date().getUTCFullYear(),
+      new Date().getUTCMonth(),
+      new Date().getUTCDate(),
+      new Date().getUTCHours()
+    )
+  );
+  const currentHour = formatHourKey(now);
 
   if (lastFullHour === currentHour) {
     // Already updated this hour, just refresh current hour

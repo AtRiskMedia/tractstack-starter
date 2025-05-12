@@ -27,7 +27,7 @@ import type {
 } from "@/types";
 
 const VERBOSE = false;
-const MAX_NODES = 40;
+const MAX_NODES = 60;
 
 // Track computation state per tenant to avoid redundant calculations
 const computationState: Record<
@@ -184,9 +184,17 @@ export function findUserPreviousNode(
   if (!epinetData) return undefined;
 
   // Get current hour and the previous hour for recency
-  const currentHour = formatHourKey(new Date());
-  const prevDate = new Date();
-  prevDate.setHours(prevDate.getHours() - 1);
+  const now = new Date(
+    Date.UTC(
+      new Date().getUTCFullYear(),
+      new Date().getUTCMonth(),
+      new Date().getUTCDate(),
+      new Date().getUTCHours()
+    )
+  );
+  const currentHour = formatHourKey(now);
+  const prevDate = new Date(now);
+  prevDate.setUTCHours(prevDate.getUTCHours() - 1);
   const prevHour = formatHourKey(prevDate);
 
   // Check current hour first
@@ -224,7 +232,15 @@ export function updateEpinetHourlyData(
   context?: APIContext
 ): void {
   const tenantId = context?.locals?.tenant?.id || "default";
-  const currentHour = formatHourKey(new Date());
+  const now = new Date(
+    Date.UTC(
+      new Date().getUTCFullYear(),
+      new Date().getUTCMonth(),
+      new Date().getUTCDate(),
+      new Date().getUTCHours()
+    )
+  );
+  const currentHour = formatHourKey(now);
   const currentStore = hourlyEpinetStore.get();
 
   // Initialize data structures if needed
@@ -533,11 +549,18 @@ export async function computeEpinetSankey(
   let hourKeys: string[];
   if (startHour !== null && endHour !== null) {
     // Use specified time range
-    const currentDate = new Date();
+    const currentDate = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
     const startDate = new Date(currentDate);
-    startDate.setHours(currentDate.getHours() - (startHour ?? 0));
+    startDate.setUTCHours(currentDate.getUTCHours() - (startHour ?? 0));
     const endDate = new Date(currentDate);
-    endDate.setHours(currentDate.getHours() - (endHour ?? 168));
+    endDate.setUTCHours(currentDate.getUTCHours() - (endHour ?? 168));
 
     // Ensure proper order (min to max)
     const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
@@ -548,7 +571,7 @@ export async function computeEpinetSankey(
     let currentHour = new Date(minDate);
     while (currentHour <= maxDate) {
       hourKeys.push(formatHourKey(currentHour));
-      currentHour.setHours(currentHour.getHours() + 1);
+      currentHour.setUTCHours(currentHour.getUTCHours() + 1);
     }
   } else {
     // Use default hours-based range
@@ -849,11 +872,18 @@ export async function getFilteredVisitorCounts(
   // Determine hour keys based on startHour and endHour
   let hourKeys: string[];
   if (startHour !== null && endHour !== null) {
-    const now = new Date();
+    const now = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
     const startDate = new Date(now);
-    startDate.setHours(now.getHours() - startHour);
+    startDate.setUTCHours(now.getUTCHours() - (startHour ?? 0));
     const endDate = new Date(now);
-    endDate.setHours(now.getHours() - endHour);
+    endDate.setUTCHours(now.getUTCHours() - (endHour ?? 168));
 
     // Ensure startDate <= endDate
     const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
@@ -864,7 +894,7 @@ export async function getFilteredVisitorCounts(
     let currentDate = new Date(minDate);
     while (currentDate <= maxDate) {
       hourKeys.push(formatHourKey(currentDate));
-      currentDate.setHours(currentDate.getHours() + 1);
+      currentDate.setUTCHours(currentDate.getUTCHours() + 1);
     }
   } else {
     // Use all hours if no time range specified
@@ -1007,11 +1037,18 @@ export async function getHourlyNodeActivity(
   // Determine hour keys based on startHour and endHour
   let hourKeys: string[];
   if (startHour !== null && endHour !== null) {
-    const now = new Date();
+    const now = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
     const startDate = new Date(now);
-    startDate.setHours(now.getHours() - startHour);
+    startDate.setUTCHours(now.getUTCHours() - startHour);
     const endDate = new Date(now);
-    endDate.setHours(now.getHours() - endHour);
+    endDate.setUTCHours(now.getUTCHours() - endHour);
 
     // Ensure startDate <= endDate
     const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
@@ -1022,7 +1059,7 @@ export async function getHourlyNodeActivity(
     let currentDate = new Date(minDate);
     while (currentDate <= maxDate) {
       hourKeys.push(formatHourKey(currentDate));
-      currentDate.setHours(currentDate.getHours() + 1);
+      currentDate.setUTCHours(currentDate.getUTCHours() + 1);
     }
   } else {
     // Use all hours if no time range specified

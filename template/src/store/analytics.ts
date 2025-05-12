@@ -207,7 +207,7 @@ export function getHourKeysForTimeRange(hours: number): string[] {
   const hoursToGet = Math.min(hours, MAX_ANALYTICS_HOURS);
   for (let i = 0; i < hoursToGet; i++) {
     const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
-    const key = formatHourKey(hourDate);
+    const key = formatHourKey(hourDate); // This already uses UTC internally
     keys.push(key);
   }
   return keys;
@@ -219,8 +219,8 @@ export function getHoursBetween(startHourKey: string, endHourKey: string): numbe
   const [startYear, startMonth, startDay, startHour] = startHourKey.split("-").map(Number);
   const [endYear, endMonth, endDay, endHour] = endHourKey.split("-").map(Number);
 
-  const startDate = new Date(startYear, startMonth - 1, startDay, startHour);
-  const endDate = new Date(endYear, endMonth - 1, endDay, endHour);
+  const startDate = new Date(Date.UTC(startYear, startMonth - 1, startDay, startHour));
+  const endDate = new Date(Date.UTC(endYear, endMonth - 1, endDay, endHour));
 
   return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / (60 * 60 * 1000)));
 }

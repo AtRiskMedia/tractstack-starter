@@ -30,7 +30,7 @@ interface ActiveHourData {
   hourDisplay: string;
   contentItems: ContentItem[];
   hourlyTotal: number;
-  proportion: number;
+  relativeToMax: number; // New field: proportion relative to busiest hour
 }
 
 interface EmptyHourRange {
@@ -50,7 +50,6 @@ interface ContentMapItem {
 }
 
 const EpinetTableView = () => {
-  // Use the store directly without type casting to avoid type errors
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $contentMap = useStore(contentMap) as ContentMapItem[];
   const [showTable, setShowTable] = useState(false);
@@ -124,14 +123,18 @@ const EpinetTableView = () => {
     setCurrentDay(availableDays[newIndex]);
   };
 
-  const getCurrentDayData = (): { data: HourData[]; dailyTotal: number } => {
-    if (!currentDay) return { data: [], dailyTotal: 0 };
+  const getCurrentDayData = (): {
+    data: HourData[];
+    dailyTotal: number;
+    maxHourlyTotal: number;
+  } => {
+    if (!currentDay) return { data: [], dailyTotal: 0, maxHourlyTotal: 0 };
 
-    // Use the correct HourlyActivity type
     const hourlyActivity = $epinetCustomFilters.hourlyNodeActivity || {};
     const result: HourData[] = [];
     let emptyRangeStart: number | null = null;
     let dailyTotal = 0;
+    let maxHourlyTotal = 0; // Track the busiest hour's total
 
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
@@ -140,7 +143,6 @@ const EpinetTableView = () => {
     const isToday = currentDay === today;
     const currentLocalHour = now.getHours();
 
-    // Type for processed hour data
     type ProcessedHourData = {
       hourKey: string;
       data: Record<string, ContentItem>;
@@ -149,19 +151,17 @@ const EpinetTableView = () => {
 
     const activityByLocalHour: Record<number, ProcessedHourData> = {};
 
-    // Process hourly activity data
+    // First pass: Process hourly activity and calculate totals
     Object.entries(hourlyActivity).forEach(([hourKey, contentItems]) => {
       const { localDay, localHour } = getLocalDateTime(hourKey);
       if (localDay === currentDay) {
         let hourlyTotal = 0;
         const processedData: Record<string, ContentItem> = {};
 
-        // Process each content item
         Object.entries(contentItems).forEach(([contentId, data]) => {
           const contentInfo = getContentInfo(contentId);
           const events: ContentEvent[] = [];
 
-          // Process events from the hourlyActivity data structure
           Object.entries(data.events).forEach(([verb, count]) => {
             events.push({ verb, count: count as number });
             hourlyTotal += count as number;
@@ -176,6 +176,7 @@ const EpinetTableView = () => {
         });
 
         dailyTotal += hourlyTotal;
+        maxHourlyTotal = Math.max(maxHourlyTotal, hourlyTotal); // Update max
 
         activityByLocalHour[localHour] = {
           hourKey,
@@ -185,13 +186,12 @@ const EpinetTableView = () => {
       }
     });
 
-    // Generate hour data for display
+    // Second pass: Generate hour data with differential contribution
     for (let localHour = 0; localHour < 24; localHour++) {
       const activity = activityByLocalHour[localHour];
       const hasActivity = activity && Object.keys(activity.data).length > 0;
 
       if (hasActivity) {
-        // Handle empty range before this active hour
         if (emptyRangeStart !== null) {
           const localEmptyEnd = localHour - 1;
           const isFuture = isToday && emptyRangeStart > currentLocalHour;
@@ -210,12 +210,12 @@ const EpinetTableView = () => {
           emptyRangeStart = null;
         }
 
-        // Add the active hour
         const contentItems = Object.values(activity.data).sort((a, b) =>
           a.title.localeCompare(b.title)
         );
 
-        const proportion = dailyTotal > 0 ? activity.hourlyTotal / dailyTotal : 0;
+        // Calculate differential contribution relative to busiest hour
+        const relativeToMax = maxHourlyTotal > 0 ? activity.hourlyTotal / maxHourlyTotal : 0;
 
         result.push({
           type: "active",
@@ -224,17 +224,15 @@ const EpinetTableView = () => {
           hourDisplay: formatLocalHourDisplay(localHour),
           contentItems,
           hourlyTotal: activity.hourlyTotal,
-          proportion,
+          relativeToMax, // New field for differential contribution
         });
       } else {
-        // Start of an empty range
         if (emptyRangeStart === null) {
           emptyRangeStart = localHour;
         }
       }
     }
 
-    // Handle any remaining empty range at the end of the day
     if (emptyRangeStart !== null) {
       const localEmptyEnd = 23;
       const isFuture = isToday && emptyRangeStart > currentLocalHour;
@@ -252,7 +250,6 @@ const EpinetTableView = () => {
       });
     }
 
-    // Sort data by hour
     return {
       data: result.sort((a, b) => {
         if (a.type === "active" && b.type === "active") {
@@ -267,6 +264,7 @@ const EpinetTableView = () => {
         return 0;
       }),
       dailyTotal,
+      maxHourlyTotal,
     };
   };
 
@@ -397,8 +395,8 @@ const EpinetTableView = () => {
                     <div className="relative h-2 max-w-48 w-full bg-gray-200 rounded">
                       <div
                         className="absolute top-0 left-0 h-2 bg-cyan-600 rounded"
-                        style={{ width: `${Math.max(item.proportion * 100, 5)}%` }}
-                        title={`${item.hourlyTotal} events (${(item.proportion * 100).toFixed(1)}% of daily total)`}
+                        style={{ width: `${Math.max(item.relativeToMax * 100, 5)}%` }}
+                        title={`${item.hourlyTotal} events (${(item.relativeToMax * 100).toFixed(1)}% of busiest hour)`}
                       />
                     </div>
                   </div>
