@@ -320,7 +320,8 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
                   id,
                   title: "User Journey Flow (Error)",
                 },
-                availableVisitorIds: [],
+                userCounts: [],
+                hourlyNodeActivity: {},
               },
             }),
             {

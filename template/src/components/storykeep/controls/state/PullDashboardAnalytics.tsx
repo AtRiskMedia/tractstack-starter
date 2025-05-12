@@ -48,7 +48,8 @@ export const PullDashboardAnalytics = () => {
       selectedUserId: null,
       startHour,
       endHour,
-      availableVisitorIds: $epinetCustomFilters.availableVisitorIds || [],
+      userCounts: $epinetCustomFilters.userCounts || [],
+      hourlyNodeActivity: $epinetCustomFilters.hourlyNodeActivity || {},
     });
   }, [duration]);
 
@@ -103,11 +104,6 @@ export const PullDashboardAnalytics = () => {
     $epinetCustomFilters.endHour,
     $contentMap,
   ]);
-
-  // Add effect to fetch epinet data when analytics are fetched or duration changes
-  useEffect(() => {
-    fetchEpinetData();
-  }, [duration, analyticsStore.get().lastUpdated]);
 
   const fetchAllAnalytics = useCallback(async () => {
     try {
@@ -192,63 +188,6 @@ export const PullDashboardAnalytics = () => {
     }
   }, [duration, pollingTimer, $epinetCustomFilters.enabled]);
 
-  const fetchEpinetData = useCallback(async () => {
-    try {
-      const epinets = ($contentMap || []).filter(
-        (item) => (item as any).type === "Epinet" && (item as any).promoted
-      );
-      const epinetId = epinets.length > 0 ? epinets[0].id : null;
-      if (!epinetId) return;
-
-      if ($epinetCustomFilters.enabled) {
-        fetchCustomEpinetData(epinetId);
-        return;
-      }
-
-      let endHour = 0;
-      let startHour;
-
-      if (duration === "daily") {
-        startHour = 24;
-      } else if (duration === "weekly") {
-        startHour = 168;
-      } else {
-        startHour = 672;
-      }
-
-      const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
-      url.searchParams.append("id", epinetId);
-      url.searchParams.append("visitorType", "all");
-      url.searchParams.append("startHour", startHour.toString());
-      url.searchParams.append("endHour", endHour.toString());
-
-      const response = await fetch(url.toString(), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Epinet metrics request failed with status: ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        analyticsStore.setKey("epinet", result.data.epinet);
-
-        const currentFilterState = epinetCustomFilters.get();
-        epinetCustomFilters.set({
-          ...currentFilterState,
-          availableVisitorIds: result.data.availableVisitorIds || [],
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching epinet data:", error);
-    }
-  }, [duration, $epinetCustomFilters.enabled, $contentMap]);
-
   const fetchCustomEpinetData = useCallback(
     async (epinetId: string) => {
       if (customFetchInProgress) return;
@@ -291,7 +230,8 @@ export const PullDashboardAnalytics = () => {
           const currentFilterState = epinetCustomFilters.get();
           epinetCustomFilters.set({
             ...currentFilterState,
-            availableVisitorIds: result.data.availableVisitorIds || [],
+            userCounts: result.data.userCounts || [],
+            hourlyNodeActivity: result.data.hourlyNodeActivity || {},
           });
         }
       } catch (error) {

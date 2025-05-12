@@ -22,10 +22,12 @@ import type {
   APIContext,
   EpinetCustomMetricsFilters,
   EpinetCustomMetricsResponse,
+  UserCount,
+  HourlyActivity,
 } from "@/types";
 
 const VERBOSE = false;
-const MAX_NODES = 16;
+const MAX_NODES = 40;
 
 // Track computation state per tenant to avoid redundant calculations
 const computationState: Record<
@@ -820,21 +822,21 @@ export function triggerEpinetRefresh(epinetId: string, context?: APIContext): vo
 }
 
 /**
- * Get filtered visitor IDs with events in the specified time frame
+ * Get filtered visitor counts with events in the specified time frame
  * @param epinetId - The ID of the epinet
  * @param visitorType - Type of visitors to include: "all", "anonymous", or "known"
  * @param startHour - Number of hours back from now to start the time range (inclusive)
  * @param endHour - Number of hours back from now to end the time range (inclusive)
  * @param context - Optional API context for tenant information
- * @returns A sorted array of visitor IDs as strings
+ * @returns Array of user counts with event counts
  */
-export async function getFilteredVisitorIds(
+export async function getFilteredVisitorCounts(
   epinetId: string,
   visitorType: "all" | "anonymous" | "known" = "all",
   startHour: number | null = null,
   endHour: number | null = null,
   context?: APIContext
-): Promise<string[]> {
+): Promise<UserCount[]> {
   const tenantId = context?.locals?.tenant?.id || "default";
   const epinetStore = hourlyEpinetStore.get();
   const tenantData = epinetStore.data[tenantId] || {};
@@ -906,23 +908,26 @@ export async function getFilteredVisitorIds(
     }
   }
 
-  // Filter by visitorType and map to IDs
-  const filteredVisitorIds: string[] = [];
+  // Filter by visitorType and convert to array
+  const userCounts: UserCount[] = [];
+
   visitorMap.forEach((data, id) => {
     if (
       visitorType === "all" ||
       (visitorType === "known" && data.isKnown) ||
       (visitorType === "anonymous" && !data.isKnown)
     ) {
-      filteredVisitorIds.push(id);
+      userCounts.push({
+        id,
+        count: data.count,
+        isKnown: data.isKnown,
+      });
     }
   });
 
   // Sort by count (descending) and ID (alphabetically)
-  return filteredVisitorIds.sort((a, b) => {
-    const countA = visitorMap.get(a)!.count;
-    const countB = visitorMap.get(b)!.count;
-    return countB !== countA ? countB - countA : a.localeCompare(b);
+  return userCounts.sort((a, b) => {
+    return b.count !== a.count ? b.count - a.count : a.id.localeCompare(b.id);
   });
 }
 
@@ -931,18 +936,27 @@ export async function getFilteredVisitorIds(
  * @param id - The epinet ID
  * @param filters - Custom filters for visitor type, time range, and selected user
  * @param context - Optional API context
- * @returns Epinet metrics and filtered visitor IDs
+ * @returns Epinet metrics and user counts
  */
 export async function getEpinetCustomMetrics(
   id: string,
   filters: EpinetCustomMetricsFilters,
   context?: APIContext
 ): Promise<EpinetCustomMetricsResponse> {
-  const availableVisitorIds = await getFilteredVisitorIds(
+  const userCounts = await getFilteredVisitorCounts(
     id,
     filters.visitorType,
     filters.startHour,
     filters.endHour,
+    context
+  );
+
+  const hourlyNodeActivity = await getHourlyNodeActivity(
+    id,
+    filters.visitorType,
+    filters.startHour,
+    filters.endHour,
+    filters.selectedUserId,
     context
   );
 
@@ -958,6 +972,121 @@ export async function getEpinetCustomMetrics(
 
   return {
     epinet,
-    availableVisitorIds,
+    userCounts,
+    hourlyNodeActivity,
   };
+}
+
+/**
+ * Calculate node activity per hour
+ * @param epinetId - The ID of the epinet
+ * @param visitorType - Type of visitors to include: "all", "anonymous", or "known"
+ * @param startHour - Number of hours back from now to start the time range (inclusive)
+ * @param endHour - Number of hours back from now to end the time range (inclusive)
+ * @param selectedUserId - Optional specific user ID filter
+ * @param context - Optional API context for tenant information
+ * @returns Record of hourly activity per content with verb counts
+ */
+export async function getHourlyNodeActivity(
+  epinetId: string,
+  visitorType: "all" | "anonymous" | "known" = "all",
+  startHour: number | null = null,
+  endHour: number | null = null,
+  selectedUserId: string | null = null,
+  context?: APIContext
+): Promise<HourlyActivity> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const epinetStore = hourlyEpinetStore.get();
+  const tenantData = epinetStore.data[tenantId] || {};
+  const epinetData = tenantData[epinetId];
+
+  if (!epinetData) {
+    return {};
+  }
+
+  // Determine hour keys based on startHour and endHour
+  let hourKeys: string[];
+  if (startHour !== null && endHour !== null) {
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setHours(now.getHours() - startHour);
+    const endDate = new Date(now);
+    endDate.setHours(now.getHours() - endHour);
+
+    // Ensure startDate <= endDate
+    const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
+    const maxDate = new Date(Math.max(startDate.getTime(), endDate.getTime()));
+
+    // Generate hour keys
+    hourKeys = [];
+    let currentDate = new Date(minDate);
+    while (currentDate <= maxDate) {
+      hourKeys.push(formatHourKey(currentDate));
+      currentDate.setHours(currentDate.getHours() + 1);
+    }
+  } else {
+    // Use all hours if no time range specified
+    hourKeys = Object.keys(epinetData);
+  }
+
+  // Create hour-by-hour breakdown of node activity
+  const hourlyActivity: HourlyActivity = {};
+
+  // Process each hour's data
+  for (const hourKey of hourKeys) {
+    const hourData = epinetData[hourKey];
+    if (!hourData) continue;
+
+    // Initialize this hour's record
+    hourlyActivity[hourKey] = {};
+
+    // Process each node in this hour
+    for (const [nodeId, nodeData] of Object.entries(hourData.steps)) {
+      // Filter visitors based on type if needed
+      const filteredVisitors = Array.from(nodeData.visitors).filter((visitorId) => {
+        if (visitorType === "all") return true;
+
+        // Check if this visitor is known
+        const analyticStore = hourlyAnalyticsStore.get();
+        const tenantAnalyticsData = analyticStore.data[tenantId];
+        let isKnown = false;
+
+        if (tenantAnalyticsData && tenantAnalyticsData.siteData[hourKey]) {
+          isKnown = tenantAnalyticsData.siteData[hourKey].knownVisitors.has(visitorId);
+        }
+
+        return visitorType === "known" ? isKnown : !isKnown;
+      });
+
+      // Only process nodes with visitors after filtering
+      const count = filteredVisitors.length;
+      if (count === 0) continue;
+
+      // Skip if we have a specific user filter and this user isn't in the visitors
+      if (selectedUserId && !filteredVisitors.includes(selectedUserId)) continue;
+
+      // Parse the nodeId to extract content ID and verb
+      // Expected format: actionType-contentType-VERB-contentID
+      // e.g., 'commitmentAction-StoryFragment-ENTERED-01JD2RFH35HX8MQMBJ3344KHS5'
+      const parts = nodeId.split("-");
+
+      if (parts.length >= 4) {
+        const contentId = parts[parts.length - 1];
+        const verb = parts[parts.length - 2];
+        if (!hourlyActivity[hourKey][contentId]) {
+          hourlyActivity[hourKey][contentId] = {
+            events: {},
+          };
+        }
+        hourlyActivity[hourKey][contentId].events[verb] = count;
+      }
+    }
+
+    // Remove hour if no content was added after filtering
+    if (Object.keys(hourlyActivity[hourKey]).length === 0) {
+      delete hourlyActivity[hourKey];
+    }
+  }
+
+  return hourlyActivity;
 }

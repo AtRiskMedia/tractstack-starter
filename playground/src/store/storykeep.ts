@@ -15,6 +15,7 @@ import type {
   ArtpacksStore,
   LeadMetrics,
   ProcessedAnalytics,
+  HourlyActivity,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -84,14 +85,16 @@ export const epinetCustomFilters = atom<{
   selectedUserId: string | null;
   startHour: number | null;
   endHour: number | null;
-  availableVisitorIds: string[];
+  userCounts: Array<{ id: string; count: number; isKnown: boolean }>;
+  hourlyNodeActivity: HourlyActivity;
 }>({
   enabled: false,
   visitorType: "all",
   selectedUserId: null,
   startHour: null,
   endHour: null,
-  availableVisitorIds: [],
+  userCounts: [],
+  hourlyNodeActivity: {},
 });
 export const analyticsDuration = atom<`daily` | `weekly` | `monthly`>(`weekly`);
 export const hasArtpacksStore = map<ArtpacksStore>({});

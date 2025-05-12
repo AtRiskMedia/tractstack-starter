@@ -1378,9 +1378,27 @@ export interface EpinetCustomMetricsFilters {
   endHour: number | null;
 }
 
+export interface UserCount {
+  id: string;
+  count: number;
+  isKnown: boolean;
+}
+
+export type HourlyActivity = Record<
+  string,
+  {
+    [contentId: string]: {
+      events: {
+        [verb: string]: number;
+      };
+    };
+  }
+>;
+
 export interface EpinetCustomMetricsResponse {
   epinet: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
-  availableVisitorIds: string[];
+  userCounts: UserCount[];
+  hourlyNodeActivity: HourlyActivity;
 }
 
 export interface FilteredComputedEpinet extends ComputedEpinet {
