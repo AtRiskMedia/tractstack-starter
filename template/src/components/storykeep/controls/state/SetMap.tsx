@@ -41,6 +41,10 @@ const SetMap = (props: {
   } = props;
 
   useEffect(() => {
+    // First set the loading state to true before we begin processing the data
+    storyfragmentAnalyticsStore.setKey("isLoading", true);
+
+    // Set all other stores
     contentMap.set(payload);
     codehookMap.set(availableCodeHooks);
     brandColours.set(brand);
@@ -51,6 +55,8 @@ const SetMap = (props: {
     isDemoModeStore.set(isDemoMode);
     hasArtpacksStore.set(artpacks);
     tenantIdStore.set(tenantId);
+
+    // Process and set analytics data
     if (analytics.length > 0) {
       const analyticsById = analytics.reduce(
         (acc, item) => {
@@ -63,7 +69,11 @@ const SetMap = (props: {
       storyfragmentAnalyticsStore.set({
         byId: analyticsById,
         lastUpdated: Date.now(),
+        isLoading: false, // Set loading to false once data is processed
       });
+    } else {
+      // Even if no analytics exist, we should still mark loading as complete
+      storyfragmentAnalyticsStore.setKey("isLoading", false);
     }
   }, []);
 

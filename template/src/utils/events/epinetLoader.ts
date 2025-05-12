@@ -217,21 +217,33 @@ export async function loadHourlyEpinetData(
     // Set up time period for queries
     let hourKeys: string[];
     let startTime: Date, endTime: Date;
-
     if (currentHourOnly) {
       const currentHourKey = formatHourKey(new Date(Date.now()));
       hourKeys = [currentHourKey];
       const hourParts = currentHourKey.split("-").map(Number);
-      startTime = new Date(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]);
-      endTime = new Date(startTime);
-      endTime.setHours(endTime.getHours() + 1);
+      startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
+      endTime = new Date(
+        Date.UTC(
+          startTime.getUTCFullYear(),
+          startTime.getUTCMonth(),
+          startTime.getUTCDate(),
+          startTime.getUTCHours() + 1
+        )
+      );
     } else {
       hourKeys = getHourKeysForTimeRange(hours);
       if (!hourKeys.length) {
         loadingState[tenantId].loading = false;
         return;
       }
-      const firstHourParts = hourKeys[hours - 1].split("-").map(Number);
+
+      const firstHourKey = hourKeys.length > 0 ? hourKeys[hourKeys.length - 1] : null;
+      if (!firstHourKey) {
+        console.log("[DEBUG-EPINET-ERROR] No hour keys available");
+        // Handle the error case
+        return;
+      }
+      const firstHourParts = firstHourKey.split("-").map(Number);
       const lastHourParts = hourKeys[0].split("-").map(Number);
       startTime = new Date(
         firstHourParts[0],
@@ -559,7 +571,7 @@ async function processBeliefData(
   // Execute a single efficient query for all beliefs
   const query = `
     SELECT 
-      strftime('%Y-%m-%d-%H', updated_at) as hour_key,
+      strftime('%Y-%m-%d-%H', updated_at, 'utc') as hour_key,
       belief_id,
       fingerprint_id,
       verb,
@@ -661,7 +673,7 @@ async function processActionData(
   // Execute a single efficient query for all actions
   const query = `
     SELECT 
-      strftime('%Y-%m-%d-%H', created_at) as hour_key,
+      strftime('%Y-%m-%d-%H', created_at, 'utc') as hour_key,
       object_id,
       object_type,
       fingerprint_id,

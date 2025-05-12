@@ -1,14 +1,11 @@
 import { map } from "nanostores";
-import { ANALYTICS_CACHE_TTL } from "@/constants";
-import { EPINETS_CACHE_TTL } from "@/constants";
+import { ANALYTICS_CACHE_TTL, EPINETS_CACHE_TTL, MAX_ANALYTICS_HOURS } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
 const VERBOSE = false;
 
 export function formatHourKey(date: Date): string {
-  if (isNaN(date.getTime())) {
-    throw new Error("Invalid date provided to formatHourKey");
-  }
+  // Use UTC to match database timestamps
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
@@ -206,8 +203,9 @@ export function createEmptyStoryfragmentAnalytics(id: string): StoryfragmentAnal
 
 export function getHourKeysForTimeRange(hours: number): string[] {
   const keys = [];
-  const now = new Date(Date.now());
-  for (let i = 0; i < hours; i++) {
+  const now = new Date();
+  const hoursToGet = Math.min(hours, MAX_ANALYTICS_HOURS);
+  for (let i = 0; i < hoursToGet; i++) {
     const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
     const key = formatHourKey(hourDate);
     keys.push(key);

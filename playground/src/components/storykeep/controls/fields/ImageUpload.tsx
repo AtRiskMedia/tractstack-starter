@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect, type ChangeEvent } from "react";
+import { useState, useRef, useEffect, useMemo, type ChangeEvent } from "react";
 import { useDropdownDirection } from "@/utils/storykeep/useDropdownDirection";
-import { Combobox } from "@headlessui/react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import FolderIcon from "@heroicons/react/24/outline/FolderIcon";
@@ -62,6 +63,20 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
     };
     loadFiles();
   }, [currentFileId]);
+
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(() => {
+    const filteredFiles =
+      query === ""
+        ? files
+        : files.filter((file) => file.filename.toLowerCase().includes(query.toLowerCase()));
+
+    return createListCollection({
+      items: filteredFiles,
+      itemToValue: (item) => item.id,
+      itemToString: (item) => item.filename || "",
+    });
+  }, [files, query]);
 
   const resizeImage = async (file: File, targetWidth: number): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -231,7 +246,13 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
     }
   };
 
-  const handleFileSelect = (file: ImageFileNode) => {
+  const handleFileSelect = (details: { value: string[] }) => {
+    const fileId = details.value[0];
+    if (!fileId) return;
+
+    const file = files.find((f) => f.id === fileId);
+    if (!file) return;
+
     setSelectedFile(file);
     setCurrentImage(file.src);
     setIsSelectingFile(false);
@@ -243,13 +264,30 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
     });
   };
 
-  const filteredFiles =
-    query === ""
-      ? files
-      : files.filter((file) => file.filename.toLowerCase().includes(query.toLowerCase()));
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .file-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .file-item[data-highlighted] .file-indicator {
+      color: white;
+    }
+    .file-item[data-state="checked"] .file-indicator {
+      display: flex;
+    }
+    .file-item .file-indicator {
+      display: none;
+    }
+    .file-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
 
   return (
     <div ref={comboboxRef} className="flex items-center space-x-4">
+      <style>{comboboxItemStyles}</style>
+
       <div className="relative w-40 aspect-video bg-mylightgrey/5 rounded-md overflow-hidden border border-2 bg-slate-50">
         <img src={currentImage} alt="" className="w-full h-full object-contain" />
         {currentFileId && (
@@ -266,7 +304,7 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
         <div className="mt-2 flex space-x-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center text-sm text-myblue hover:text-myorange"
+            className="flex items-center text-sm text-myblue hover:text-cyan-600"
             disabled={isProcessing}
           >
             <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
@@ -274,7 +312,7 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
           </button>
           <button
             onClick={() => setIsSelectingFile(true)}
-            className="flex items-center text-sm text-myblue hover:text-myorange"
+            className="flex items-center text-sm text-myblue hover:text-cyan-600"
           >
             <FolderIcon className="w-4 h-4 mr-1" />
             Select
@@ -295,7 +333,7 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
           <div className="bg-white p-6 rounded-lg w-full max-w-md text-center">
             <h3 className="text-xl font-bold mb-4">Processing Image</h3>
             <div className="animate-pulse mb-4">
-              <div className="h-2 bg-myorange rounded"></div>
+              <div className="h-2 bg-cyan-600 rounded"></div>
             </div>
             <p className="text-lg text-mydarkgrey">{processingStep}</p>
           </div>
@@ -306,61 +344,60 @@ export const ImageUpload = ({ currentFileId, onUpdate, onRemove }: ImageUploadPr
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-4 rounded-lg w-full max-w-md">
             <h3 className="text-lg font-bold mb-2">Select a file</h3>
-            <Combobox value={selectedFile} onChange={handleFileSelect}>
+
+            <Combobox.Root
+              collection={collection}
+              value={selectedFile ? [selectedFile.id] : []}
+              onValueChange={handleFileSelect}
+              onInputValueChange={(details) => setQuery(details.inputValue)}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative mt-1">
-                <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-myorange sm:text-sm">
+                <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-cyan-600 sm:text-sm">
                   <Combobox.Input
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-myblack focus:ring-0"
-                    displayValue={(file: ImageFileNode) => file?.filename || ""}
-                    onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search files..."
                     autoComplete="off"
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-                <Combobox.Options
+
+                <Combobox.Content
                   className={`absolute z-10 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm ${
                     openAbove ? "bottom-full mb-1" : "top-full mt-1"
                   }`}
                   style={{ maxHeight: `${maxHeight}px` }}
                 >
-                  {filteredFiles.map((file) => (
-                    <Combobox.Option
-                      key={file.id}
-                      value={file}
-                      className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? "bg-myorange text-white" : "text-myblack"
-                        }`
-                      }
-                    >
-                      {({ selected, active }) => (
-                        <>
-                          <span
-                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                          >
-                            {file.altDescription}
-                          </span>
-                          {selected && (
-                            <span
-                              className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                active ? "text-white" : "text-myorange"
-                              }`}
-                            >
-                              <CheckIcon className="h-5 w-5" />
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
+                  {collection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    collection.items.map((file) => (
+                      <Combobox.Item
+                        key={file.id}
+                        item={file}
+                        className="file-item relative cursor-default select-none py-2 pl-10 pr-4 text-myblack"
+                      >
+                        <span className="block truncate">
+                          {file.altDescription || file.filename}
+                        </span>
+                        <span className="file-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" />
+                        </span>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
+
             <button
-              className="mt-4 bg-mylightgrey px-4 py-2 rounded-md text-sm text-myblack hover:bg-myorange hover:text-white"
+              className="mt-4 bg-mylightgrey px-4 py-2 rounded-md text-sm text-myblack hover:bg-cyan-600 hover:text-white"
               onClick={() => setIsSelectingFile(false)}
             >
               Cancel

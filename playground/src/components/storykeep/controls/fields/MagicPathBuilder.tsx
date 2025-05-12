@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
+import LinkIcon from "@heroicons/react/24/outline/LinkIcon";
 import type { BeliefNode } from "@/types";
 import { heldBeliefsScales } from "@/utils/common/beliefs";
 
@@ -23,6 +24,28 @@ const MagicPathBuilder = ({
   const [editingCustomBeliefId, setEditingCustomBeliefId] = useState<string | null>(null);
   const [customValue, setCustomValue] = useState("");
   const [customValues, setCustomValues] = useState<string[]>([]);
+  const [selectedLinkedBelief, setSelectedLinkedBelief] = useState<string>("");
+
+  // Get belief keys (excluding special keys)
+  const beliefKeys = Object.keys(paths).filter(
+    (key) => key !== "MATCH-ACROSS" && key !== "LINKED-BELIEFS"
+  );
+
+  // Get linked beliefs array
+  const linkedBeliefs = useMemo(() => {
+    return Array.isArray(paths["LINKED-BELIEFS"]) ? paths["LINKED-BELIEFS"] : [];
+  }, [paths]);
+
+  // Calculate available beliefs for linking (beliefs not in current path)
+  const availableLinkedBeliefs = useMemo(() => {
+    return availableBeliefs.filter(
+      (belief) =>
+        // Not already selected in the current path
+        !beliefKeys.includes(belief.slug) &&
+        // Not already in the linked beliefs
+        !linkedBeliefs.includes(belief.slug)
+    );
+  }, [availableBeliefs, beliefKeys, linkedBeliefs]);
 
   // Handle entering custom value edit mode
   const handleEditCustomValues = useCallback((beliefId: string, currentValues: string[]) => {
@@ -75,6 +98,18 @@ const MagicPathBuilder = ({
       delete updatedPaths[oldKey];
       if (newKey) {
         updatedPaths[newKey] = ["*"];
+
+        // If this belief was in LINKED-BELIEFS, remove it
+        if (updatedPaths["LINKED-BELIEFS"] && Array.isArray(updatedPaths["LINKED-BELIEFS"])) {
+          updatedPaths["LINKED-BELIEFS"] = updatedPaths["LINKED-BELIEFS"].filter(
+            (slug) => slug !== newKey
+          );
+
+          // Remove the LINKED-BELIEFS key if it's empty
+          if (updatedPaths["LINKED-BELIEFS"].length === 0) {
+            delete updatedPaths["LINKED-BELIEFS"];
+          }
+        }
       }
       setPaths(updatedPaths);
     },
@@ -108,7 +143,7 @@ const MagicPathBuilder = ({
     [paths, setPaths]
   );
 
-  // Get the current match-across beliefs
+  // Get the current match-across beliefs array
   const getMatchAcrossBeliefsArray = useCallback((): string[] => {
     return paths["MATCH-ACROSS"] || [];
   }, [paths]);
@@ -133,6 +168,44 @@ const MagicPathBuilder = ({
       setPaths(updatedPaths);
     },
     [paths, setPaths, getMatchAcrossBeliefsArray]
+  );
+
+  // Add a belief to the linked beliefs array
+  const handleAddLinkedBelief = useCallback(() => {
+    if (!selectedLinkedBelief) return;
+
+    const updatedPaths = { ...paths };
+    if (!updatedPaths["LINKED-BELIEFS"]) {
+      updatedPaths["LINKED-BELIEFS"] = [];
+    }
+
+    // Add the selected belief to the linked beliefs array if not already present
+    if (!updatedPaths["LINKED-BELIEFS"].includes(selectedLinkedBelief)) {
+      updatedPaths["LINKED-BELIEFS"] = [...updatedPaths["LINKED-BELIEFS"], selectedLinkedBelief];
+    }
+
+    setPaths(updatedPaths);
+    setSelectedLinkedBelief("");
+  }, [paths, setPaths, selectedLinkedBelief]);
+
+  // Remove a belief from the linked beliefs array
+  const handleRemoveLinkedBelief = useCallback(
+    (beliefSlug: string) => {
+      const updatedPaths = { ...paths };
+      if (updatedPaths["LINKED-BELIEFS"]) {
+        updatedPaths["LINKED-BELIEFS"] = updatedPaths["LINKED-BELIEFS"].filter(
+          (slug) => slug !== beliefSlug
+        );
+
+        // Remove the LINKED-BELIEFS key if it's empty
+        if (updatedPaths["LINKED-BELIEFS"].length === 0) {
+          delete updatedPaths["LINKED-BELIEFS"];
+        }
+      }
+
+      setPaths(updatedPaths);
+    },
+    [paths, setPaths]
   );
 
   // Check if a belief is in match-across
@@ -218,8 +291,11 @@ const MagicPathBuilder = ({
     );
   }
 
-  // Get all belief keys except MATCH-ACROSS
-  const beliefKeys = Object.keys(paths).filter((key) => key !== "MATCH-ACROSS");
+  // Determine if we have completed belief selections (no empty entries)
+  const hasCompletedBeliefSelections = beliefKeys.every((key) => key !== "");
+
+  // Count the number of valid beliefs (non-empty keys)
+  const validBeliefCount = beliefKeys.filter((key) => key !== "").length;
 
   return (
     <div className="space-y-4">
@@ -236,8 +312,8 @@ const MagicPathBuilder = ({
         </button>
       </div>
 
-      {/* Only show Match Across section for Show Conditions with multiple beliefs */}
-      {isShowCondition && beliefKeys.length > 1 && (
+      {/* Only show Match Across section for Show Conditions with multiple VALID beliefs */}
+      {isShowCondition && validBeliefCount > 1 && hasCompletedBeliefSelections && (
         <div className="p-4 border rounded-lg bg-white mb-4">
           <div className="flex items-center mb-2">
             <h4 className="font-bold text-md">Match Across Logic</h4>
@@ -250,19 +326,21 @@ const MagicPathBuilder = ({
             logic (all must match).
           </p>
           <div className="flex flex-wrap gap-2">
-            {beliefKeys.map((key) => (
-              <button
-                key={key}
-                onClick={() => handleToggleMatchAcross(key)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                  isBeliefInMatchAcross(key)
-                    ? "bg-cyan-600 text-white hover:bg-cyan-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                {availableBeliefs.find((b) => b.slug === key)?.title || key}
-              </button>
-            ))}
+            {beliefKeys
+              .filter((key) => key !== "")
+              .map((key) => (
+                <button
+                  key={key}
+                  onClick={() => handleToggleMatchAcross(key)}
+                  className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                    isBeliefInMatchAcross(key)
+                      ? "bg-cyan-600 text-white hover:bg-cyan-700"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {availableBeliefs.find((b) => b.slug === key)?.title || key}
+                </button>
+              ))}
           </div>
         </div>
       )}
@@ -351,6 +429,75 @@ const MagicPathBuilder = ({
           </div>
         </div>
       ))}
+
+      {/* Linked Beliefs section - always show */}
+      {isShowCondition && (
+        <div className="p-4 border rounded-lg bg-white mb-4">
+          <div className="flex items-center mb-2">
+            <h4 className="font-bold text-md">Linked Beliefs</h4>
+            <span className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded flex items-center">
+              <LinkIcon className="h-3 w-3 mr-1" />
+              Unset together
+            </span>
+          </div>
+          <p className="text-sm text-gray-600 mb-3">
+            Select beliefs to link with this condition. When any belief is unset, all linked beliefs
+            will be unset together.
+          </p>
+
+          {/* Dropdown to select new linked beliefs */}
+          <div className="flex gap-2 mb-3">
+            <select
+              value={selectedLinkedBelief}
+              onChange={(e) => setSelectedLinkedBelief(e.target.value)}
+              className="flex-1 px-3 py-2 border rounded-md"
+            >
+              <option value="">Select a belief to link</option>
+              {availableLinkedBeliefs.map((belief) => (
+                <option key={belief.slug} value={belief.slug}>
+                  {belief.title}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleAddLinkedBelief}
+              disabled={!selectedLinkedBelief}
+              className={`p-2 rounded-md ${
+                selectedLinkedBelief
+                  ? "bg-cyan-600 text-white hover:bg-cyan-700"
+                  : "bg-gray-200 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              <PlusIcon className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Display linked beliefs as tags */}
+          <div className="flex flex-wrap gap-2">
+            {linkedBeliefs.map((beliefSlug) => {
+              const belief = availableBeliefs.find((b) => b.slug === beliefSlug);
+              return (
+                <div
+                  key={beliefSlug}
+                  className="flex items-center gap-2 px-3 py-1 bg-cyan-100 text-cyan-800 rounded-full"
+                >
+                  <LinkIcon className="h-3 w-3" />
+                  <span>{belief?.title || beliefSlug}</span>
+                  <button
+                    onClick={() => handleRemoveLinkedBelief(beliefSlug)}
+                    className="text-cyan-600 hover:text-cyan-800"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              );
+            })}
+            {linkedBeliefs.length === 0 && (
+              <p className="text-sm text-gray-500 italic">No linked beliefs selected</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

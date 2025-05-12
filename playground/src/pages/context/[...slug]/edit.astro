@@ -119,6 +119,7 @@ if (!paneNode) {
       <div
         class="bg-myblue/20 px-4 pb-28 min-h-screen"
         style={{
+          paddingBottom: "8rem",
           backgroundImage:
             "repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px)",
         }}
@@ -135,7 +136,9 @@ if (!paneNode) {
     class="fixed right-1 z-[10000] flex flex-col items-end gap-2"
     style={{ bottom: `var(--bottom-right-controls-bottom-offset)` }}
   >
-    <HudDisplay client:only="react" />
+    <div id="hud">
+      <HudDisplay client:only="react" />
+    </div>
     <SettingsPanel
       config={config}
       availableCodeHooks={Object.keys(codeHookComponents)}
@@ -149,3 +152,10 @@ if (!paneNode) {
   setupLayoutStyles();
   setupLayoutObservers();
 </script>
+
+<style>
+  #hud:hover {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+</style>

@@ -63,7 +63,7 @@ const TemplateSetup = ({
         <h1 className="mb-6 text-3xl font-bold text-center">Template Editor</h1>
 
         <div className="mb-8">
-          <h2 className="mb-4 text-xl font-semibold">Create New Template</h2>
+          <h2 className="mb-4 text-xl font-bold">Create New Template</h2>
           <p className="mb-4">Start with a blank template and build it from scratch.</p>
           <button
             onClick={onCreateNew}
@@ -74,7 +74,7 @@ const TemplateSetup = ({
         </div>
 
         <div className="pt-8 border-t border-gray-200">
-          <h2 className="mb-4 text-xl font-semibold">Import Existing Template</h2>
+          <h2 className="mb-4 text-xl font-bold">Import Existing Template</h2>
           <p className="mb-4">Paste template JSON below to import and edit.</p>
 
           <textarea

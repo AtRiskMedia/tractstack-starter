@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Combobox } from "@headlessui/react";
+import { useState, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -52,7 +53,6 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
   }, []);
 
   useEffect(() => {
-    // When a menu is selected, find the corresponding menu object
     if (selectedMenuId) {
       const menu = menus.find((menu) => menu.id === selectedMenuId);
       setSelectedMenu(menu || null);
@@ -66,11 +66,20 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
       ? menus
       : menus.filter((menu) => menu.title.toLowerCase().includes(query.toLowerCase()));
 
-  const handleMenuSelect = (menuId: string | null) => {
-    // Just update the selected menu ID
+  const collection = useMemo(
+    () =>
+      createListCollection<MenuNode>({
+        items: filteredMenus,
+        itemToValue: (item) => item.id,
+        itemToString: (item) => item.title,
+      }),
+    [filteredMenus]
+  );
+
+  const handleMenuSelect = (details: { value: string[] }) => {
+    const menuId = details.value[0] || null;
     setSelectedMenuId(menuId);
 
-    // Also update the story fragment node's menu reference
     const updatedNode = {
       ...cloneDeep(storyfragmentNode),
       hasMenu: !!menuId,
@@ -81,7 +90,6 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
   };
 
   const handleUnlinkMenu = () => {
-    // Remove menu reference from story fragment
     const updatedNode = {
       ...cloneDeep(storyfragmentNode),
       hasMenu: false,
@@ -93,11 +101,33 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
     setSelectedMenu(null);
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .menu-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .menu-item[data-highlighted] .menu-indicator {
+      color: white;
+    }
+    .menu-item[data-state="checked"] .menu-indicator {
+      display: flex;
+    }
+    .menu-item .menu-indicator {
+      display: none;
+    }
+    .menu-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   if (loading) return <div className="px-3.5 py-6">Loading menus...</div>;
   if (error) return <div className="px-3.5 py-6 text-red-500">Error: {error}</div>;
 
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
+      <style>{comboboxItemStyles}</style>
+
       <div className="px-3.5">
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Menu Configuration</h3>
@@ -149,62 +179,47 @@ const StoryFragmentMenuPanel = ({ nodeId, setMode }: StoryFragmentMenuPanelProps
             )}
           </>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-6 max-w-md">
             <div className="relative">
-              <Combobox value={selectedMenuId} onChange={handleMenuSelect} nullable>
+              <Combobox.Root
+                collection={collection}
+                value={selectedMenuId ? [selectedMenuId] : []}
+                onValueChange={handleMenuSelect}
+                loopFocus={true}
+                openOnKeyPress={true}
+                composite={true}
+              >
                 <div className="relative">
                   <Combobox.Input
                     className="w-full rounded-md border border-mydarkgrey py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue text-sm"
-                    onChange={(event) => setQuery(event.target.value)}
-                    displayValue={(id: string | null) =>
-                      menus.find((menu) => menu.id === id)?.title || ""
-                    }
+                    onChange={(e) => setQuery(e.target.value)}
                     placeholder="Select a menu..."
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-
-                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
                   {filteredMenus.length === 0 && query !== "" ? (
                     <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
                       Nothing found.
                     </div>
                   ) : (
                     filteredMenus.map((menu) => (
-                      <Combobox.Option
+                      <Combobox.Item
                         key={menu.id}
-                        value={menu.id}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-myorange text-white" : "text-black"
-                          }`
-                        }
+                        item={menu}
+                        className="menu-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                       >
-                        {({ selected, active }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {menu.title}
-                            </span>
-                            {selected ? (
-                              <span
-                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                  active ? "text-white" : "text-myorange"
-                                }`}
-                              >
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Combobox.Option>
+                        <span className="block truncate">{menu.title}</span>
+                        <span className="menu-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-myblue">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      </Combobox.Item>
                     ))
                   )}
-                </Combobox.Options>
-              </Combobox>
+                </Combobox.Content>
+              </Combobox.Root>
             </div>
             <p className="text-gray-600">
               Select an existing menu to link to this page. To create new menus, use the Menu

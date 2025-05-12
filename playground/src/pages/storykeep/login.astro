@@ -1,6 +1,6 @@
 ---
 import { getAPIContext } from "@/utils/api/astroContext";
-import { isAuthenticated, setAuthenticated } from "@/utils/core/auth";
+import { isAuthenticated } from "@/utils/core/auth";
 import { getConfig, validateConfig } from "@/utils/core/config";
 
 // Validate config and environment
@@ -8,8 +8,6 @@ const context = getAPIContext(Astro);
 const tenantId = context.locals.tenant?.id || "default";
 const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
 const validation = await validateConfig(config);
-const isMultiTenant =
-  import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && Astro.locals.tenant?.id !== `default`;
 
 // If no password protection is set up, redirect to init
 if (!validation.hasPassword) {
@@ -21,52 +19,16 @@ const initConfig = config?.init as Record<string, unknown>;
 const wordmarkMode =
   (typeof initConfig?.WORDMARK_MODE === "string" && initConfig.WORDMARK_MODE) || "default";
 
-let loginError = false;
 let redirectPath = "/";
 
 const url = new URL(Astro.request.url);
-redirectPath = url.searchParams.get("redirect") || "/";
+redirectPath = url.searchParams.get("redirect") || "/storykeep";
 const forceLogin = url.searchParams.get("force") === "true";
 
 const authenticated = isAuthenticated(Astro);
 
 if (authenticated && !forceLogin) {
   return Astro.redirect(redirectPath);
-}
-
-if (Astro.request.method === "POST") {
-  const data = await Astro.request.formData();
-  const password = data.get("password")?.toString();
-
-  if (!password) {
-    loginError = true;
-    return;
-  }
-
-  try {
-    if (isMultiTenant && config?.init) {
-      const initConfig = config.init;
-      if (password === initConfig.ADMIN_PASSWORD) {
-        setAuthenticated(Astro, true, true);
-        return Astro.redirect(redirectPath);
-      } else if (password === initConfig.EDITOR_PASSWORD) {
-        setAuthenticated(Astro, true, false);
-        return Astro.redirect(redirectPath);
-      }
-    } else {
-      if (password === import.meta.env.PRIVATE_ADMIN_PASSWORD) {
-        setAuthenticated(Astro, true, true);
-        return Astro.redirect(redirectPath);
-      } else if (password === import.meta.env.PRIVATE_EDITOR_PASSWORD) {
-        setAuthenticated(Astro, true, false);
-        return Astro.redirect(redirectPath);
-      }
-    }
-    loginError = true;
-  } catch (error) {
-    console.error("Login error:", error);
-    loginError = true;
-  }
 }
 
 // Logo and branding configuration
@@ -140,36 +102,31 @@ const wordmarkIsSvg = wordmark.includes("svg");
 
       <div class="mx-auto">
         <div class="bg-white px-6 py-12 shadow-inner rounded-lg">
-          {
-            loginError && (
-              <div class="mb-6 rounded-md bg-myred/10 p-4">
-                <div class="flex">
-                  <div class="flex-shrink-0">
-                    <svg
-                      class="h-5 w-5 text-myred"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div class="ml-3">
-                    <h3 class="text-sm font-bold text-myred">Invalid credentials</h3>
-                    <div class="mt-2 text-sm text-myred/90">
-                      <p>Please check your password and try again.</p>
-                    </div>
-                  </div>
+          <div id="loginError" class="mb-6 rounded-md bg-myred/10 p-4" style="display: none;">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg
+                  class="h-5 w-5 text-myred"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z"
+                    clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-bold text-myred">Invalid credentials</h3>
+                <div class="mt-2 text-sm text-myred/90">
+                  <p>Please check your password and try again.</p>
                 </div>
               </div>
-            )
-          }
+            </div>
+          </div>
 
-          <form class="space-y-6" method="POST">
+          <div id="loginForm" class="space-y-6">
             <div>
               <label for="password" class="block text-sm font-bold leading-6 text-mydarkgrey">
                 Password
@@ -185,17 +142,18 @@ const wordmarkIsSvg = wordmark.includes("svg");
               </div>
             </div>
 
-            <input type="hidden" name="redirect" value={redirectPath} />
+            <input type="hidden" id="redirectPath" name="redirect" value={redirectPath} />
 
             <div>
               <button
-                type="submit"
+                type="button"
+                id="submitButton"
                 class="flex w-full justify-center rounded-md bg-myblue px-3 py-1.5 text-sm font-bold leading-6 text-white shadow-sm hover:bg-myorange focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
               >
                 Sign in
               </button>
             </div>
-          </form>
+          </div>
         </div>
 
         {
@@ -213,5 +171,72 @@ const wordmarkIsSvg = wordmark.includes("svg");
         }
       </div>
     </div>
+
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", function () {
+        const submitButton = document.getElementById("submitButton");
+        const passwordInput = document.getElementById("password");
+        const redirectInput = document.getElementById("redirectPath");
+        const loginErrorDiv = document.getElementById("loginError");
+
+        if (submitButton && passwordInput && redirectInput) {
+          // Add loading state to button
+          const buttonText = submitButton.textContent.trim();
+
+          submitButton.addEventListener("click", async function () {
+            // Show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = "Signing in...";
+
+            const password = passwordInput.value;
+            const redirectPath = redirectInput.value;
+
+            if (!password) {
+              if (loginErrorDiv) loginErrorDiv.style.display = "block";
+              submitButton.disabled = false;
+              submitButton.textContent = buttonText;
+              return;
+            }
+
+            try {
+              // Use the API endpoint approach instead of directly submitting the form
+              const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Accept: "application/json",
+                },
+                body: JSON.stringify({
+                  password,
+                  redirect: redirectPath,
+                }),
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                window.location.href = result.redirect || redirectPath;
+              } else {
+                if (loginErrorDiv) loginErrorDiv.style.display = "block";
+                submitButton.disabled = false;
+                submitButton.textContent = buttonText;
+              }
+            } catch (error) {
+              console.error("Login error:", error);
+              if (loginErrorDiv) loginErrorDiv.style.display = "block";
+              submitButton.disabled = false;
+              submitButton.textContent = buttonText;
+            }
+          });
+
+          passwordInput.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              submitButton.click();
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>

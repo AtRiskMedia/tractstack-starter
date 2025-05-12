@@ -1,7 +1,12 @@
-import { hourlyEpinetStore, formatHourKey, createEmptyHourlyEpinetData } from "@/store/analytics";
+import {
+  getHourKeysForTimeRange,
+  hourlyAnalyticsStore,
+  hourlyEpinetStore,
+  formatHourKey,
+  createEmptyHourlyEpinetData,
+} from "@/store/analytics";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { contentMap } from "@/store/events";
-import { getHourKeysForTimeRange } from "@/store/analytics";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getEventNodeId } from "@/utils/events/epinetLoader";
 import { loadHourlyEpinetData, getEpinetLoadingStatus } from "@/utils/events/epinetLoader";
@@ -15,9 +20,12 @@ import type {
   ComputedEpinetLink,
   ComputedEpinetNode,
   APIContext,
+  EpinetCustomMetricsFilters,
+  EpinetCustomMetricsResponse,
 } from "@/types";
 
 const VERBOSE = false;
+const MAX_NODES = 16;
 
 // Track computation state per tenant to avoid redundant calculations
 const computationState: Record<
@@ -418,11 +426,22 @@ function calculateStepToStepTransitions(
  * Compute a Sankey diagram from epinet data for the specified time period
  * This function supports asynchronous processing and returns a loading status
  * if data isn't ready yet
+ * @param epinetId - The ID of the epinet to compute data for
+ * @param hours - Number of hours to include in the time period (default: 168)
+ * @param context - Optional API context
+ * @param visitorType - Optional filter for visitor type: "all", "anonymous", or "known"
+ * @param selectedUserId - Optional specific visitor ID to filter for
+ * @param startHour - Optional start hour (hours ago from now)
+ * @param endHour - Optional end hour (hours ago from now)
  */
 export async function computeEpinetSankey(
   epinetId: string,
   hours: number = 168,
-  context?: APIContext
+  context?: APIContext,
+  visitorType?: "all" | "anonymous" | "known",
+  selectedUserId?: string | null,
+  startHour?: number | null,
+  endHour?: number | null
 ): Promise<ComputedEpinet | { status: string; message: string; id: string; title: string } | null> {
   const tenantId = context?.locals?.tenant?.id || "default";
 
@@ -508,8 +527,70 @@ export async function computeEpinetSankey(
   // Record computation time
   computationState[tenantId].epinetLastComputed[epinetId] = now;
 
-  // Get the hour keys for the time period
-  const hourKeys = getHourKeysForTimeRange(hours);
+  // Determine hour keys based on parameters
+  let hourKeys: string[];
+  if (startHour !== null && endHour !== null) {
+    // Use specified time range
+    const currentDate = new Date();
+    const startDate = new Date(currentDate);
+    startDate.setHours(currentDate.getHours() - (startHour ?? 0));
+    const endDate = new Date(currentDate);
+    endDate.setHours(currentDate.getHours() - (endHour ?? 168));
+
+    // Ensure proper order (min to max)
+    const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
+    const maxDate = new Date(Math.max(startDate.getTime(), endDate.getTime()));
+
+    // Generate hour keys for the range
+    hourKeys = [];
+    let currentHour = new Date(minDate);
+    while (currentHour <= maxDate) {
+      hourKeys.push(formatHourKey(currentHour));
+      currentHour.setHours(currentHour.getHours() + 1);
+    }
+  } else {
+    // Use default hours-based range
+    hourKeys = getHourKeysForTimeRange(hours);
+  }
+
+  // Create a set of filtered visitor IDs
+  const filterVisitorIds = new Set<string>();
+
+  // Apply visitor type and user ID filtering if specified
+  if (selectedUserId) {
+    // Single user filter
+    filterVisitorIds.add(selectedUserId);
+  } else if (visitorType && visitorType !== "all") {
+    // Filter by visitor type (known or anonymous)
+    const analyticStore = hourlyAnalyticsStore.get();
+    const tenantAnalyticsData = analyticStore.data[tenantId];
+
+    // Process each hour in the range
+    for (const hourKey of hourKeys) {
+      const hourData = epinetData[hourKey];
+      if (!hourData) continue;
+
+      // For each step, check if visitors meet the filter criteria
+      for (const step of Object.values(hourData.steps)) {
+        step.visitors.forEach((visitorId) => {
+          let isKnown = false;
+
+          // Check if visitor is known in analytics data
+          if (tenantAnalyticsData) {
+            const hourData = tenantAnalyticsData.siteData[hourKey];
+            if (hourData) {
+              isKnown = hourData.knownVisitors.has(visitorId);
+            }
+          }
+
+          // Add to filter set based on visitor type
+          if ((visitorType === "known" && isKnown) || (visitorType === "anonymous" && !isKnown)) {
+            filterVisitorIds.add(visitorId);
+          }
+        });
+      }
+    }
+  }
 
   // First, recalculate transitions for all hours using step-to-step approach
   for (const hourKey of hourKeys) {
@@ -540,8 +621,18 @@ export async function computeEpinetSankey(
         nodeStepIndices[nodeId] = data.stepIndex;
       }
 
+      // Add visitors to node counts, applying filters if specified
       data.visitors.forEach((visitor) => {
-        nodeCounts[nodeId].add(visitor);
+        // Apply filters if they exist
+        if ((visitorType && visitorType !== "all") || selectedUserId) {
+          // Only include visitors that pass the filter
+          if (filterVisitorIds.has(visitor)) {
+            nodeCounts[nodeId].add(visitor);
+          }
+        } else {
+          // No filtering, include all visitors
+          nodeCounts[nodeId].add(visitor);
+        }
       });
     });
 
@@ -556,8 +647,17 @@ export async function computeEpinetSankey(
           transitionCounts[fromNode][toNode] = new Set();
         }
 
+        // Apply filters to transitions if specified
         data.visitors.forEach((visitor) => {
-          transitionCounts[fromNode][toNode].add(visitor);
+          if ((visitorType && visitorType !== "all") || selectedUserId) {
+            // Only include visitors that pass the filter
+            if (filterVisitorIds.has(visitor)) {
+              transitionCounts[fromNode][toNode].add(visitor);
+            }
+          } else {
+            // No filtering, include all visitors
+            transitionCounts[fromNode][toNode].add(visitor);
+          }
         });
       });
     });
@@ -566,12 +666,11 @@ export async function computeEpinetSankey(
   // Sort nodes by count to keep the most significant ones
   const sortedNodes = Object.entries(nodeCounts)
     .sort((a, b) => b[1].size - a[1].size)
-    .slice(0, 20); // Limit to 20 most active nodes for readability
+    .slice(0, MAX_NODES);
 
-  // Convert node data to nodes array
-  const nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
+  let nodes: ComputedEpinetNode[] = sortedNodes.map(([nodeId]) => ({
     name: nodeNames[nodeId] || nodeId,
-    id: nodeId, // Include the node ID for reference
+    id: nodeId,
   }));
 
   // Create a map of node IDs to indices in the nodes array
@@ -601,6 +700,29 @@ export async function computeEpinetSankey(
       }
     });
   });
+
+  // Filter out nodes that don't have any connections
+  const connectedNodeIndices = new Set<number>();
+  links.forEach((link) => {
+    connectedNodeIndices.add(link.source);
+    connectedNodeIndices.add(link.target);
+  });
+
+  // Only keep nodes that appear in at least one link
+  const filteredNodes = nodes.filter((_, index) => connectedNodeIndices.has(index));
+  const indexMapping: Record<number, number> = {};
+  filteredNodes.forEach((node, newIndex) => {
+    indexMapping[nodes.indexOf(node)] = newIndex;
+  });
+
+  // Remap source and target indices in links
+  links.forEach((link) => {
+    link.source = indexMapping[link.source];
+    link.target = indexMapping[link.target];
+  });
+
+  // Replace the original nodes array
+  nodes = filteredNodes;
 
   if (VERBOSE) {
     console.log(
@@ -695,4 +817,147 @@ export function triggerEpinetRefresh(epinetId: string, context?: APIContext): vo
       computationState[tenantId].pendingComputations.delete(epinetId);
     });
   }
+}
+
+/**
+ * Get filtered visitor IDs with events in the specified time frame
+ * @param epinetId - The ID of the epinet
+ * @param visitorType - Type of visitors to include: "all", "anonymous", or "known"
+ * @param startHour - Number of hours back from now to start the time range (inclusive)
+ * @param endHour - Number of hours back from now to end the time range (inclusive)
+ * @param context - Optional API context for tenant information
+ * @returns A sorted array of visitor IDs as strings
+ */
+export async function getFilteredVisitorIds(
+  epinetId: string,
+  visitorType: "all" | "anonymous" | "known" = "all",
+  startHour: number | null = null,
+  endHour: number | null = null,
+  context?: APIContext
+): Promise<string[]> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const epinetStore = hourlyEpinetStore.get();
+  const tenantData = epinetStore.data[tenantId] || {};
+  const epinetData = tenantData[epinetId];
+
+  if (!epinetData) {
+    return [];
+  }
+
+  // Determine hour keys based on startHour and endHour
+  let hourKeys: string[];
+  if (startHour !== null && endHour !== null) {
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setHours(now.getHours() - startHour);
+    const endDate = new Date(now);
+    endDate.setHours(now.getHours() - endHour);
+
+    // Ensure startDate <= endDate
+    const minDate = new Date(Math.min(startDate.getTime(), endDate.getTime()));
+    const maxDate = new Date(Math.max(startDate.getTime(), endDate.getTime()));
+
+    // Generate hour keys
+    hourKeys = [];
+    let currentDate = new Date(minDate);
+    while (currentDate <= maxDate) {
+      hourKeys.push(formatHourKey(currentDate));
+      currentDate.setHours(currentDate.getHours() + 1);
+    }
+  } else {
+    // Use all hours if no time range specified
+    hourKeys = Object.keys(epinetData);
+  }
+
+  // Collect visitor IDs with counts and known status
+  const visitorMap = new Map<string, { count: number; isKnown: boolean }>();
+
+  // Process relevant hours
+  for (const hourKey of hourKeys) {
+    const hourData = epinetData[hourKey];
+    if (!hourData) continue;
+
+    // Collect visitors from steps
+    for (const step of Object.values(hourData.steps)) {
+      step.visitors.forEach((visitorId) => {
+        // Check if visitor is known
+        const analyticStore = hourlyAnalyticsStore.get();
+        const tenantAnalyticsData = analyticStore.data[tenantId];
+
+        let isKnown = false;
+        if (tenantAnalyticsData) {
+          const knownVisitorSets = Object.values(tenantAnalyticsData.siteData).map(
+            (hourData) => hourData.knownVisitors
+          );
+          isKnown = knownVisitorSets.some((set) => set.has(visitorId));
+        }
+
+        // Update visitor map
+        if (visitorMap.has(visitorId)) {
+          const existing = visitorMap.get(visitorId)!;
+          visitorMap.set(visitorId, {
+            count: existing.count + 1,
+            isKnown: existing.isKnown || isKnown,
+          });
+        } else {
+          visitorMap.set(visitorId, { count: 1, isKnown });
+        }
+      });
+    }
+  }
+
+  // Filter by visitorType and map to IDs
+  const filteredVisitorIds: string[] = [];
+  visitorMap.forEach((data, id) => {
+    if (
+      visitorType === "all" ||
+      (visitorType === "known" && data.isKnown) ||
+      (visitorType === "anonymous" && !data.isKnown)
+    ) {
+      filteredVisitorIds.push(id);
+    }
+  });
+
+  // Sort by count (descending) and ID (alphabetically)
+  return filteredVisitorIds.sort((a, b) => {
+    const countA = visitorMap.get(a)!.count;
+    const countB = visitorMap.get(b)!.count;
+    return countB !== countA ? countB - countA : a.localeCompare(b);
+  });
+}
+
+/**
+ * Compute epinet metrics with custom filtering
+ * @param id - The epinet ID
+ * @param filters - Custom filters for visitor type, time range, and selected user
+ * @param context - Optional API context
+ * @returns Epinet metrics and filtered visitor IDs
+ */
+export async function getEpinetCustomMetrics(
+  id: string,
+  filters: EpinetCustomMetricsFilters,
+  context?: APIContext
+): Promise<EpinetCustomMetricsResponse> {
+  const availableVisitorIds = await getFilteredVisitorIds(
+    id,
+    filters.visitorType,
+    filters.startHour,
+    filters.endHour,
+    context
+  );
+
+  const epinet = await computeEpinetSankey(
+    id,
+    filters.startHour || filters.endHour ? undefined : 168,
+    context,
+    filters.visitorType,
+    filters.selectedUserId,
+    filters.startHour,
+    filters.endHour
+  );
+
+  return {
+    epinet,
+    availableVisitorIds,
+  };
 }

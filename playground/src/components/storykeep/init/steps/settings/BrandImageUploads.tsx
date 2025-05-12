@@ -64,7 +64,6 @@ export default function BrandImageUploads({
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-bold text-mydarkgrey">Brand Assets</h3>
       <div className="grid grid-cols-1 gap-6">
         {imageFields.map((field) => (
           <div key={field.id} className="space-y-2">

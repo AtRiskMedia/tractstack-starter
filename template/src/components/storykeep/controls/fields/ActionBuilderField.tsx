@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Combobox } from "@headlessui/react";
+import { useState, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { GOTO_TARGETS } from "@/constants";
@@ -66,6 +67,44 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
     newValue += "))";
     onChange(newValue);
   };
+
+  // Create collection for target options
+  const targetCollection = useMemo(() => {
+    const targets = Object.entries(GOTO_TARGETS)
+      .filter(
+        ([key, data]) =>
+          data.name.toLowerCase().includes(targetQuery.toLowerCase()) ||
+          key.toLowerCase().includes(targetQuery.toLowerCase())
+      )
+      .map(([key, data]) => ({ key, data }));
+
+    return createListCollection({
+      items: targets,
+      itemToValue: (item) => item.key,
+      itemToString: (item) => item.data.name,
+    });
+  }, [GOTO_TARGETS, targetQuery]);
+
+  // Create collection for subcommand options when needed
+  const subcommandCollection = useMemo(() => {
+    if (!selectedTarget || !GOTO_TARGETS[selectedTarget]?.subcommands) {
+      return createListCollection({
+        items: [] as { value: string }[],
+        itemToValue: (item) => item.value,
+        itemToString: (item) => item.value,
+      });
+    }
+
+    const subcommands = GOTO_TARGETS[selectedTarget]
+      .subcommands!.filter((cmd) => cmd.toLowerCase().includes(subcommandQuery.toLowerCase()))
+      .map((cmd) => ({ value: cmd }));
+
+    return createListCollection({
+      items: subcommands,
+      itemToValue: (item) => item.value,
+      itemToString: (item) => item.value,
+    });
+  }, [selectedTarget, GOTO_TARGETS, subcommandQuery]);
 
   // Render parameter input based on target type
   const renderParamInput = (type: "param1" | "param2") => {
@@ -212,69 +251,105 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
     }
   };
 
+  const handleTargetSelect = (details: { value: string[] }) => {
+    const target = details.value[0] || "";
+    setSelectedTarget(target);
+    setSelectedSubcommand("");
+    setParam1("");
+    setParam2("");
+    updateValue(target);
+  };
+
+  const handleSubcommandSelect = (details: { value: string[] }) => {
+    const sub = details.value[0] || "";
+    setSelectedSubcommand(sub);
+    updateValue(selectedTarget, sub);
+  };
+
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .target-item[data-highlighted] {
+      background-color: #0891b2; /* bg-bg-cyan-600 */
+      color: white;
+    }
+    .target-item[data-highlighted] .target-indicator {
+      color: white;
+    }
+    .target-item[data-state="checked"] .target-indicator {
+      display: flex;
+    }
+    .target-item .target-indicator {
+      display: none;
+    }
+    .target-item[data-state="checked"] {
+      font-weight: bold;
+    }
+    
+    .subcommand-item[data-highlighted] {
+      background-color: #0891b2; /* bg-bg-cyan-600 */
+      color: white;
+    }
+    .subcommand-item[data-highlighted] .subcommand-indicator {
+      color: white;
+    }
+    .subcommand-item[data-state="checked"] .subcommand-indicator {
+      display: flex;
+    }
+    .subcommand-item .subcommand-indicator {
+      display: none;
+    }
+    .subcommand-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-4 max-w-md">
+      <style>{comboboxItemStyles}</style>
+
       <div className="space-y-2">
         <label className="block text-sm text-gray-700">Navigation Target</label>
-        <Combobox
-          value={selectedTarget}
-          onChange={(target) => {
-            setSelectedTarget(target);
-            setSelectedSubcommand("");
-            setParam1("");
-            setParam2("");
-            updateValue(target);
-          }}
+        <Combobox.Root
+          collection={targetCollection}
+          value={selectedTarget ? [selectedTarget] : []}
+          onValueChange={handleTargetSelect}
+          loopFocus={true}
+          openOnKeyPress={true}
+          composite={true}
         >
           <div className="relative">
             <Combobox.Input
               autoComplete="off"
               className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
               onChange={(e) => setTargetQuery(e.target.value)}
-              displayValue={(key: string) => GOTO_TARGETS[key]?.name || ""}
+              placeholder="Select a target..."
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-            </Combobox.Button>
+            </Combobox.Trigger>
           </div>
 
-          <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-            {Object.entries(GOTO_TARGETS)
-              .filter(
-                ([key, data]) =>
-                  data.name.toLowerCase().includes(targetQuery.toLowerCase()) ||
-                  key.toLowerCase().includes(targetQuery.toLowerCase())
-              )
-              .map(([key, data]) => (
-                <Combobox.Option
-                  key={key}
-                  value={key}
-                  className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                      active ? "bg-myorange text-white" : "text-gray-900"
-                    }`
-                  }
+          <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            {targetCollection.items.length === 0 ? (
+              <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                Nothing found.
+              </div>
+            ) : (
+              targetCollection.items.map((item) => (
+                <Combobox.Item
+                  key={item.key}
+                  item={item}
+                  className="target-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                 >
-                  {({ selected, active }) => (
-                    <>
-                      <span className={`block truncate ${selected ? "font-bold" : "font-normal"}`}>
-                        {data.name}
-                      </span>
-                      {selected ? (
-                        <span
-                          className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                            active ? "text-white" : "text-myorange"
-                          }`}
-                        >
-                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </Combobox.Option>
-              ))}
-          </Combobox.Options>
-        </Combobox>
+                  <span className="block truncate">{item.data.name}</span>
+                  <span className="target-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-bg-cyan-600">
+                    <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                </Combobox.Item>
+              ))
+            )}
+          </Combobox.Content>
+        </Combobox.Root>
 
         {GOTO_TARGETS[selectedTarget] && (
           <p className="mt-1 text-sm text-gray-500">{GOTO_TARGETS[selectedTarget].description}</p>
@@ -284,62 +359,47 @@ const ActionBuilderField = ({ value, onChange, contentMap, slug }: ActionBuilder
       {selectedTarget && GOTO_TARGETS[selectedTarget]?.subcommands && (
         <div className="space-y-2">
           <label className="block text-sm text-gray-700">Section</label>
-          <Combobox
-            value={selectedSubcommand}
-            onChange={(sub) => {
-              setSelectedSubcommand(sub);
-              updateValue(selectedTarget, sub);
-            }}
+          <Combobox.Root
+            collection={subcommandCollection}
+            value={selectedSubcommand ? [selectedSubcommand] : []}
+            onValueChange={handleSubcommandSelect}
+            loopFocus={true}
+            openOnKeyPress={true}
+            composite={true}
           >
             <div className="relative">
               <Combobox.Input
                 autoComplete="off"
                 className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
                 onChange={(e) => setSubcommandQuery(e.target.value)}
-                displayValue={(val: string) => val}
+                placeholder="Select a section..."
               />
-              <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </Combobox.Button>
+              </Combobox.Trigger>
             </div>
 
-            <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-              {GOTO_TARGETS[selectedTarget]
-                .subcommands!.filter((cmd) =>
-                  cmd.toLowerCase().includes(subcommandQuery.toLowerCase())
-                )
-                .map((cmd) => (
-                  <Combobox.Option
-                    key={cmd}
-                    value={cmd}
-                    className={({ active }) =>
-                      `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                        active ? "bg-myorange text-white" : "text-gray-900"
-                      }`
-                    }
+            <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full max-w-md overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              {subcommandCollection.items.length === 0 ? (
+                <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  Nothing found.
+                </div>
+              ) : (
+                subcommandCollection.items.map((item) => (
+                  <Combobox.Item
+                    key={item.value}
+                    item={item}
+                    className="subcommand-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                   >
-                    {({ selected, active }) => (
-                      <>
-                        <span
-                          className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                        >
-                          {cmd}
-                        </span>
-                        {selected ? (
-                          <span
-                            className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                              active ? "text-white" : "text-myorange"
-                            }`}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        ) : null}
-                      </>
-                    )}
-                  </Combobox.Option>
-                ))}
-            </Combobox.Options>
-          </Combobox>
+                    <span className="block truncate">{item.value}</span>
+                    <span className="subcommand-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-bg-cyan-600">
+                      <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  </Combobox.Item>
+                ))
+              )}
+            </Combobox.Content>
+          </Combobox.Root>
         </div>
       )}
 

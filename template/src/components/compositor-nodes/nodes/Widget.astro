@@ -39,7 +39,7 @@ const classNames = getCtx().getNodeClasses(nodeId, `auto`);
   hook === "signup" && value1 ? (
     <div class={classNames}>
       <SignUp
-        client:load
+        client:only="react"
         persona={value1 ?? "Major Updates Only"}
         prompt={value2 ?? "Keep in touch!"}
         clarifyConsent={value3 === "true"}
@@ -51,7 +51,7 @@ const classNames = getCtx().getNodeClasses(nodeId, `auto`);
 {
   hook === "belief" && value1 && value2 ? (
     <div class={classNames}>
-      <Belief client:visible value={{ slug: value1, scale: value2, extra: value3 }} />
+      <Belief client:only="react" value={{ slug: value1, scale: value2, extra: value3 }} />
     </div>
   ) : null
 }

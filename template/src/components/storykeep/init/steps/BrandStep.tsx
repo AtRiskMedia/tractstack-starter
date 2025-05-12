@@ -1,8 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
-import { Combobox } from "@headlessui/react";
+import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
+import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
+import { Combobox } from "@ark-ui/react";
+import { Accordion } from "@ark-ui/react/accordion";
+import { createListCollection } from "@ark-ui/react/collection";
 import BrandColorPicker from "@/components/storykeep/widgets/BrandColorPicker.tsx";
 import ThemeVisualSelector from "./settings/ThemeVisualSelector";
 import OpenGraphSettings from "./settings/OpenGraphSettings";
@@ -107,12 +111,21 @@ export default function BrandStep({
   const [customColors, setCustomColors] = useState<string | null>(null);
   const [images, setImages] = useState<Record<string, string>>({});
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [accordionValue, setAccordionValue] = useState<string[]>([]);
+
+  const presetCollection = useMemo(() => {
+    const presets = [...Object.keys(knownBrand), "custom"];
+    return createListCollection({
+      items: presets,
+      itemToValue: (item) => item,
+      itemToString: (item) => item.charAt(0).toUpperCase() + item.slice(1),
+    });
+  }, []);
 
   useEffect(() => {
     if (config?.init) {
       const initConfig = config.init as InitConfig;
 
-      // Keep this essential change detection since code base relies on it
       const hasEssentialChanges =
         initConfig.SITE_URL !== initialValues.siteUrl ||
         initConfig.BRAND_COLOURS !== initialValues.brandColors ||
@@ -121,7 +134,6 @@ export default function BrandStep({
 
       if (hasEssentialChanges) {
         const values = {
-          // Merge new config values with current values rather than replacing
           ...currentValues,
           siteUrl: initConfig.SITE_URL || currentValues.siteUrl,
           slogan: initConfig.SLOGAN || currentValues.slogan,
@@ -146,7 +158,6 @@ export default function BrandStep({
         setInitialValues(values);
       }
 
-      // Keep the existing initialization code that project relies on
       if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
         onConfigUpdate({
           SITE_INIT: initConfig.SITE_INIT || false,
@@ -164,7 +175,6 @@ export default function BrandStep({
     }
   }, [config, onConfigUpdate]);
 
-  // update css vars of brand colours
   useEffect(() => {
     const colors = currentValues.brandColors.split(",");
     if (colors.length === 8) {
@@ -201,7 +211,6 @@ export default function BrandStep({
   const handleImageChange = async (id: string, base64: string, filename: string) => {
     try {
       if (!base64) {
-        // Handle image removal
         setImages((prev) => {
           const newImages = { ...prev };
           delete newImages[id];
@@ -238,7 +247,9 @@ export default function BrandStep({
     }
   };
 
-  const handleBrandPresetChange = (preset: string) => {
+  const handleBrandPresetChange = (details: { value: string[] }) => {
+    const preset = details.value[0] || "";
+
     if (preset === "custom") {
       const colorsToUse = customColors || currentValues.brandColors;
       setCurrentValues((prev) => ({ ...prev, brandColors: colorsToUse }));
@@ -309,8 +320,62 @@ export default function BrandStep({
   const commonInputClass =
     "block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-md xs:leading-6";
 
+  const comboboxItemStyles = `
+    .preset-item[data-highlighted] {
+      background-color: #0891b2;
+      color: white;
+    }
+    .preset-item[data-highlighted] .preset-indicator {
+      color: white;
+    }
+    .preset-item[data-state="checked"] .preset-indicator {
+      display: flex;
+    }
+    .preset-item .preset-indicator {
+      display: none;
+    }
+    .preset-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
+  const accordionStyles = `
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      background-color: #f3f4f6;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+    }
+    .accordion-trigger:hover {
+      background-color: #e5e7eb;
+    }
+    .accordion-trigger[data-state="open"] {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      background-color: #e5e7eb;
+    }
+    .accordion-content {
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      border-top: none;
+      border-bottom-left-radius: 0.375rem;
+      border-bottom-right-radius: 0.375rem;
+      padding: 1rem;
+    }
+    .accordion-content[data-state="closed"] {
+      display: none;
+    }
+  `;
+
   return (
     <div className="space-y-6">
+      <style>{comboboxItemStyles}</style>
+      <style>{accordionStyles}</style>
       <div className="flex items-center space-x-4 mb-6">
         <button
           onClick={onBack}
@@ -326,6 +391,12 @@ export default function BrandStep({
       <form onSubmit={handleSubmit} className="space-y-6 p-4 bg-myblue/5 rounded-lg">
         {error && <div className="p-4 bg-myred/10 text-myred rounded-md">{error}</div>}
 
+        <div className="space-y-4">
+          <p className="text-sm text-mydarkgrey">
+            Change these settings any time by clicking `Advanced Settings` in your storykeep.
+          </p>
+        </div>
+        {/* Basic Information - Outside Accordion (Original) */}
         <div className="space-y-4">
           <div className="block">
             <div className="flex items-center justify-between">
@@ -409,62 +480,52 @@ export default function BrandStep({
               Brand Colors
             </label>
             <div className="space-y-4">
-              <Combobox value={selectedBrandPreset} onChange={handleBrandPresetChange}>
-                <div className="relative max-w-xs">
+              <div className="relative max-w-xs">
+                <Combobox.Root
+                  collection={presetCollection}
+                  value={selectedBrandPreset ? [selectedBrandPreset] : []}
+                  onValueChange={handleBrandPresetChange}
+                  loopFocus={true}
+                  openOnKeyPress={true}
+                  composite={true}
+                >
                   <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-sm">
                     <Combobox.Input
                       id="brandPreset"
                       name="brandPreset"
                       className={`${commonInputClass} pr-10`}
-                      displayValue={(preset: string) =>
-                        preset.charAt(0).toUpperCase() + preset.slice(1)
-                      }
                       onChange={(event) => {
                         const value = event.target.value.toLowerCase();
                         if (value === "custom" || value in knownBrand) {
-                          handleBrandPresetChange(value);
+                          handleBrandPresetChange({ value: [value] });
                         }
                       }}
-                      aria-label="Select brand color preset"
+                      placeholder="Select brand preset"
+                      autoComplete="off"
                     />
-                    <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                    <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                       <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                    </Combobox.Button>
+                    </Combobox.Trigger>
                   </div>
-                  <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                    {[...Object.keys(knownBrand), "custom"].map((preset) => (
-                      <Combobox.Option
+
+                  <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    {presetCollection.items.map((preset) => (
+                      <Combobox.Item
                         key={preset}
-                        value={preset}
-                        className={({ active }) =>
-                          `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                            active ? "bg-myorange/10 text-myblack" : "text-mydarkgrey"
-                          }`
-                        }
+                        item={preset}
+                        className="preset-item relative cursor-default select-none py-2 pl-10 pr-4 text-mydarkgrey"
                       >
-                        {({ selected, active }) => (
-                          <>
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {preset.charAt(0).toUpperCase() + preset.slice(1)}
-                            </span>
-                            {selected ? (
-                              <span
-                                className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                  active ? "text-myorange" : "text-myorange"
-                                }`}
-                              >
-                                <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                              </span>
-                            ) : null}
-                          </>
-                        )}
-                      </Combobox.Option>
+                        <span className="block truncate">
+                          {preset.charAt(0).toUpperCase() + preset.slice(1)}
+                        </span>
+                        <span className="preset-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                      </Combobox.Item>
                     ))}
-                  </Combobox.Options>
-                </div>
-              </Combobox>
+                  </Combobox.Content>
+                </Combobox.Root>
+              </div>
 
               <BrandColorPicker
                 value={currentValues.brandColors}
@@ -475,6 +536,7 @@ export default function BrandStep({
           </div>
         </div>
 
+        {/* Theme Selector - Outside Accordion (Original) */}
         <div className="mt-8 pt-6 border-t border-myblue/10">
           <div className="space-y-2">
             <span className="block text-sm font-normal text-mydarkgrey">Theme</span>
@@ -487,54 +549,121 @@ export default function BrandStep({
           </div>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <WordMarkMode
-            value={currentValues.wordmarkMode}
-            onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
-          />
-        </div>
+        {/* Accordion for specified sections */}
+        <Accordion.Root
+          value={accordionValue}
+          onValueChange={(e) => setAccordionValue(e.value)}
+          multiple
+          className="mt-8 pt-6 border-t border-myblue/10"
+        >
+          <Accordion.Item value="open-graph" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Open Graph Settings
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("open-graph") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <OpenGraphSettings
+                title={currentValues.ogTitle}
+                author={currentValues.ogAuthor}
+                description={currentValues.ogDesc}
+                onChange={handleOpenGraphChange}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <OpenGraphSettings
-            title={currentValues.ogTitle}
-            author={currentValues.ogAuthor}
-            description={currentValues.ogDesc}
-            onChange={handleOpenGraphChange}
-          />
-        </div>
+          <Accordion.Item value="brand-assets" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Brand Assets
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("brand-assets") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <BrandImageUploads
+                images={images}
+                initialConfig={config}
+                onImageChange={handleImageChange}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <BrandImageUploads
-            images={images}
-            initialConfig={config}
-            onImageChange={handleImageChange}
-          />
-        </div>
+          <Accordion.Item value="wordmark" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Header Display Mode
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("wordmark") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <WordMarkMode
+                value={currentValues.wordmarkMode}
+                onChange={(mode) => setCurrentValues((prev) => ({ ...prev, wordmarkMode: mode }))}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <SocialLinks
-            value={currentValues.socialLinks}
-            onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
-          />
-        </div>
+          <Accordion.Item value="social-links" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Your Social Links
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("social-links") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <SocialLinks
+                value={currentValues.socialLinks}
+                onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
+              />
+            </Accordion.ItemContent>
+          </Accordion.Item>
 
-        <div className="mt-8 pt-6 border-t border-myblue/10">
-          <h3 className="text-lg font-bold text-mydarkgrey mb-4">Accessibility Settings</h3>
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="keyboardAccessible"
-              checked={currentValues.keyboardAccessible}
-              onChange={(e) =>
-                setCurrentValues((prev) => ({ ...prev, keyboardAccessible: e.target.checked }))
-              }
-              className="h-4 w-4 rounded border-mylightgrey text-myblue focus:ring-myblue"
-            />
-            <label htmlFor="keyboardAccessible" className="text-sm text-mydarkgrey">
-              Enable Keyboard/Mouse Accessible Mode by Default
-            </label>
-          </div>
-        </div>
+          <Accordion.Item value="accessibility" className="mb-4">
+            <Accordion.ItemTrigger className="accordion-trigger">
+              Accessibility Settings
+              <Accordion.ItemIndicator>
+                {accordionValue.includes("accessibility") ? (
+                  <ChevronDownIcon className="h-5 w-5" />
+                ) : (
+                  <ChevronRightIcon className="h-5 w-5" />
+                )}
+              </Accordion.ItemIndicator>
+            </Accordion.ItemTrigger>
+            <Accordion.ItemContent className="accordion-content">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="keyboardAccessible"
+                  checked={currentValues.keyboardAccessible}
+                  onChange={(e) =>
+                    setCurrentValues((prev) => ({ ...prev, keyboardAccessible: e.target.checked }))
+                  }
+                  className="h-4 w-4 rounded border-mylightgrey text-myblue focus:ring-myblue"
+                />
+                <label htmlFor="keyboardAccessible" className="text-sm text-mydarkgrey">
+                  Enable Keyboard/Mouse Accessible Mode by Default
+                </label>
+              </div>
+            </Accordion.ItemContent>
+          </Accordion.Item>
+        </Accordion.Root>
 
         <div className="flex justify-end pt-4 gap-x-4">
           <button

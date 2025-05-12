@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import { Combobox } from "@headlessui/react";
-import { Switch } from "@headlessui/react";
 import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
+import { Switch } from "@ark-ui/react";
 import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { analyticsStore, homeSlugStore } from "@/store/storykeep.ts";
 import { classNames } from "@/utils/common/helpers.ts";
@@ -14,7 +13,11 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+  const [focusedIndex, setFocusedIndex] = useState(-1); // Track focused item in dropdown
   const itemsPerPage = 16;
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
 
   const analytics = useStore(analyticsStore);
   const dashboard = analytics.dashboard;
@@ -25,7 +28,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     setIsClient(true);
   }, []);
 
-  // Monitor analytics loading state
   useEffect(() => {
     if (analytics.status === "loading" || analytics.status === "refreshing") {
       setIsAnalyticsLoading(true);
@@ -36,6 +38,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
 
   useEffect(() => {
     setCurrentPage(1); // Reset pagination when filters change
+    setFocusedIndex(-1); // Reset focused index when query changes
   }, [query, showMostActive]);
 
   const safeContentMap = Array.isArray(contentMap) ? contentMap : [];
@@ -70,100 +73,159 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     currentPage * itemsPerPage
   );
 
-  if (!isClient) return null;
-
   const getContentUrl = (page: FullContentMap, isEdit = false) => {
     const basePath =
       page.type === "Pane" && page.isContext ? `/context/${page.slug}` : `/${page.slug}`;
     return isEdit ? `${basePath}/edit` : basePath;
   };
 
-  // Helper function for getting the event count with safety checks
   const getEventCount = (pageId: string): number => {
     if (!hotContent || hotContent.length === 0) return 0;
     return hotContent.find((h: HotItem) => h.id === pageId)?.total_events || 0;
   };
 
+  const handleItemSelect = (page: FullContentMap) => {
+    setQuery(page.title);
+    setFocusedIndex(-1);
+    inputRef.current?.focus();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!query || filteredPages.length === 0) return;
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev < filteredPages.length - 1 ? prev + 1 : 0;
+          listRef.current?.children[next]?.scrollIntoView({ block: "nearest" });
+          return next;
+        });
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setFocusedIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : filteredPages.length - 1;
+          listRef.current?.children[next]?.scrollIntoView({ block: "nearest" });
+          return next;
+        });
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (focusedIndex >= 0 && focusedIndex < filteredPages.length) {
+          handleItemSelect(filteredPages[focusedIndex]);
+        }
+        break;
+      case "Escape":
+        e.preventDefault();
+        setQuery("");
+        setFocusedIndex(-1);
+        inputRef.current?.focus();
+        break;
+      case "Tab":
+        // Allow Tab to move focus out, but close dropdown
+        setQuery("");
+        setFocusedIndex(-1);
+        break;
+    }
+  };
+
+  if (!isClient) return null;
+
   return (
-    <div className="space-y-4">
+    <div id="browse" className="space-y-4">
       <h3 className="text-xl font-bold font-action px-3.5">Browse Pages</h3>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3.5 space-y-4 md:space-y-0 md:space-x-6">
         <div className="relative w-full md:w-1/3 xl:w-1/4">
-          <Combobox
-            onChange={(item: FullContentMap | string) => {
-              if (typeof item === "string") {
-                setQuery(item);
-              } else if (item?.title) {
-                setQuery(item.title);
-              }
-            }}
-            nullable
-          >
-            <Combobox.Input
-              className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-myorange text-sm"
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search pages..."
+          <div className="w-full relative">
+            <input
+              ref={inputRef}
+              className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-cyan-600 text-sm"
               value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search pages..."
+              role="combobox"
+              aria-expanded={query !== "" && filteredPages.length > 0}
+              aria-controls="page-options"
+              aria-activedescendant={
+                focusedIndex >= 0 ? `page-option-${filteredPages[focusedIndex].id}` : undefined
+              }
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon className="h-5 w-5 text-myblack/60" aria-hidden="true" />
-            </Combobox.Button>
+            </div>
+          </div>
 
-            {query && filteredPages.length > 0 && (
-              <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
-                {filteredPages.map((page) => (
-                  <Combobox.Option
-                    key={page.id}
-                    value={page}
-                    className={({ active }) =>
-                      classNames(
-                        "relative cursor-default select-none py-2 pl-3 pr-9",
-                        active ? "bg-myorange/10 text-black" : "text-mydarkgrey"
-                      )
+          {query && filteredPages.length > 0 && (
+            <ul
+              ref={listRef}
+              id="page-options"
+              className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+              role="listbox"
+              tabIndex={-1}
+            >
+              {filteredPages.map((page, index) => (
+                <li
+                  id={`page-option-${page.id}`}
+                  key={page.id}
+                  className={classNames(
+                    "relative cursor-pointer select-none py-2 pl-3 pr-9",
+                    focusedIndex === index
+                      ? "bg-cyan-600 text-white"
+                      : "hover:bg-cyan-600/10 hover:text-black text-black"
+                  )}
+                  onClick={() => handleItemSelect(page)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleItemSelect(page);
                     }
-                  >
-                    {({ selected }) => (
-                      <>
-                        <span className={classNames("block truncate", selected ? "font-bold" : "")}>
-                          {page.title}
-                        </span>
-                        {selected && (
-                          <span
-                            className={classNames(
-                              "absolute inset-y-0 right-0 flex items-center pr-4"
-                            )}
-                          >
-                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            )}
-          </Combobox>
+                  }}
+                  role="option"
+                  aria-selected={page.title === query}
+                  tabIndex={-1}
+                >
+                  <span className="block truncate">{page.title}</span>
+                  {page.title === query && (
+                    <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-cyan-600">
+                      <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6">
-          <Switch.Group as="div" className="flex items-center whitespace-nowrap">
-            <Switch
+          <div className="flex items-center whitespace-nowrap">
+            <Switch.Root
               checked={showMostActive}
-              onChange={setShowMostActive}
-              className={classNames(
-                showMostActive ? "bg-cyan-600" : "bg-gray-200",
-                "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600"
-              )}
+              onCheckedChange={() => setShowMostActive(!showMostActive)}
+              aria-label="Sort by most active"
+              className="inline-flex items-center"
             >
-              <span
-                aria-hidden="true"
-                className={`${showMostActive ? "translate-x-5" : "translate-x-0"} pointer-events-none absolute inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200`}
-              />
-            </Switch>
-            <Switch.Label as="span" className="ml-3 text-sm">
-              Sort by Most Active
-            </Switch.Label>
-          </Switch.Group>
+              <Switch.Control
+                className={classNames(
+                  showMostActive ? "bg-cyan-600" : "bg-gray-200",
+                  "relative inline-flex flex-shrink-0 h-5 w-10 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-600"
+                )}
+              >
+                <Switch.Thumb
+                  className={classNames(
+                    showMostActive ? "translate-x-5" : "translate-x-0",
+                    "pointer-events-none absolute inline-block h-4 w-4 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200"
+                  )}
+                />
+              </Switch.Control>
+              <Switch.HiddenInput />
+              <div className="flex items-center h-5 ml-3">
+                <Switch.Label className="text-sm leading-none">Sort by Most Active</Switch.Label>
+              </div>
+            </Switch.Root>
+          </div>
         </div>
       </div>
 
@@ -214,7 +276,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                       <span className="flex space-x-1">
                         <a
                           href={getContentUrl(page)}
-                          className="pl-2 text-cyan-600 hover:text-myorange text-lg underline"
+                          className="pl-2 text-cyan-600 hover:text-cyan-600 text-lg underline"
                           title="Visit this Page"
                         >
                           Visit
@@ -222,7 +284,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                         {` `}
                         <a
                           href={getContentUrl(page, true)}
-                          className="pl-2 text-cyan-600 hover:text-myorange text-lg underline"
+                          className="pl-2 text-cyan-600 hover:text-cyan-600 text-lg underline"
                           title="Edit this Page"
                         >
                           Edit
@@ -245,7 +307,7 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
                     "px-3 py-1 rounded-md text-sm",
                     currentPage === page
                       ? "bg-cyan-600 text-white"
-                      : "bg-white text-mydarkgrey hover:bg-myorange/10"
+                      : "bg-white text-mydarkgrey hover:bg-cyan-600/10"
                   )}
                 >
                   {page}

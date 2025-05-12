@@ -1,6 +1,5 @@
-import { auth } from "../../store/auth";
-import { referrer } from "../../store/auth";
-import type { EventStream } from "../../types";
+import { auth, referrer } from "@/store/auth";
+import type { EventStream } from "@/types";
 
 export async function eventSync(payload: EventStream[]) {
   const authPayload = auth.get();

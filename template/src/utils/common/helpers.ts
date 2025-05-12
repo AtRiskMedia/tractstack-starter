@@ -119,7 +119,7 @@ export function startLoadingAnimation() {
   const loadingIndicator = document.getElementById("loading-indicator") as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
 
-  if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+  if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches && loadingIndicator) {
     loadingIndicator.style.transform = "scaleX(0)";
     loadingIndicator.style.display = "block";
     content.style.opacity = "0.5";
@@ -141,7 +141,7 @@ export function stopLoadingAnimation() {
   const loadingIndicator = document.getElementById("loading-indicator") as HTMLElement;
   const content = document.getElementById("content") as HTMLElement;
 
-  if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+  if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches && loadingIndicator) {
     if (progressInterval !== null) {
       clearInterval(progressInterval);
     }
@@ -609,7 +609,7 @@ export function parseHourKeyToDate(hourKey: string): Date {
   ) {
     throw new Error(`Invalid date values in hour key: ${hourKey}`);
   }
-  const date = new Date(year, month - 1, day, hour);
+  const date = new Date(Date.UTC(year, month - 1, day, hour));
   if (isNaN(date.getTime())) {
     throw new Error(`Invalid date from hour key: ${hourKey}`);
   }

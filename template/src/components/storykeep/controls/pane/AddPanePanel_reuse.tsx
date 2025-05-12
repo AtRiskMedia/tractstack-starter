@@ -1,5 +1,6 @@
-import { Fragment, useState, useEffect } from "react";
-import { Combobox, Transition } from "@headlessui/react";
+import { useState, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import { ChevronUpDownIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { contentMap } from "@/store/events";
 import { NodesContext, getCtx } from "@/store/nodes";
@@ -33,14 +34,23 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
     setAvailablePanes(unusedPanes);
   }, [nodeId]);
 
-  const filteredPanes =
-    query === ""
-      ? availablePanes
-      : availablePanes.filter(
-          (pane) =>
-            pane.title.toLowerCase().includes(query.toLowerCase()) ||
-            pane.slug.toLowerCase().includes(query.toLowerCase())
-        );
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(() => {
+    const filteredPanes =
+      query === ""
+        ? availablePanes
+        : availablePanes.filter(
+            (pane) =>
+              pane.title.toLowerCase().includes(query.toLowerCase()) ||
+              pane.slug.toLowerCase().includes(query.toLowerCase())
+          );
+
+    return createListCollection({
+      items: filteredPanes,
+      itemToValue: (item) => item.id,
+      itemToString: (item) => item.title,
+    });
+  }, [availablePanes, query]);
 
   useEffect(() => {
     if (!selected) {
@@ -117,8 +127,29 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
     }
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .pane-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .pane-item[data-highlighted] .pane-indicator {
+      color: white;
+    }
+    .pane-item[data-state="checked"] .pane-indicator {
+      display: flex;
+    }
+    .pane-item .pane-indicator {
+      display: none;
+    }
+    .pane-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{comboboxItemStyles}</style>
       <div className="p-1.5 bg-white rounded-md w-full">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex flex-wrap items-center gap-2 min-w-[200px]">
@@ -135,77 +166,57 @@ const AddPaneReUsePanel = ({ nodeId, first, setMode }: AddPaneReUsePanelProps) =
           </div>
 
           <div className="flex-1 min-w-[300px]">
-            <Combobox value={selected} onChange={setSelected}>
+            <Combobox.Root
+              collection={collection}
+              value={selected ? [selected.id] : []}
+              onValueChange={(details) => {
+                const selectedId = details.value[0];
+                if (selectedId) {
+                  const pane = availablePanes.find((p) => p.id === selectedId);
+                  setSelected(pane || null);
+                } else {
+                  setSelected(null);
+                }
+              }}
+              onInputValueChange={(details) => setQuery(details.inputValue)}
+              loopFocus={true}
+              openOnKeyPress={true}
+              composite={true}
+            >
               <div className="relative">
                 <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left border border-gray-200 focus-within:border-cyan-500 transition-colors">
                   <Combobox.Input
                     autoComplete="off"
                     className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    displayValue={(pane: PaneContentMap) => pane?.title || ""}
-                    onChange={(event) => setQuery(event.target.value)}
                     placeholder="Search for a pane..."
                   />
-                  <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </Combobox.Button>
+                  </Combobox.Trigger>
                 </div>
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                  afterLeave={() => setQuery("")}
-                >
-                  <Combobox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
-                    {filteredPanes.length === 0 && query !== "" ? (
-                      <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
-                        Nothing found.
-                      </div>
-                    ) : (
-                      filteredPanes.map((pane) => (
-                        <Combobox.Option
-                          key={pane.id}
-                          className={({ active }) =>
-                            `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                              active ? "bg-cyan-600 text-white" : "text-gray-900"
-                            }`
-                          }
-                          value={pane}
-                        >
-                          {({ selected, active }) => (
-                            <>
-                              <span
-                                className={`block truncate ${
-                                  selected ? "font-bold" : "font-normal"
-                                }`}
-                              >
-                                {pane.title}
-                              </span>
-                              {selected ? (
-                                <span
-                                  className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                                    active ? "text-white" : "text-cyan-600"
-                                  }`}
-                                >
-                                  <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                              ) : null}
-                              <span
-                                className={`block truncate text-sm ${
-                                  active ? "text-cyan-100" : "text-gray-500"
-                                }`}
-                              >
-                                {pane.slug}
-                              </span>
-                            </>
-                          )}
-                        </Combobox.Option>
-                      ))
-                    )}
-                  </Combobox.Options>
-                </Transition>
+                <Combobox.Content className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-50">
+                  {collection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    collection.items.map((pane) => (
+                      <Combobox.Item
+                        key={pane.id}
+                        item={pane}
+                        className="pane-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                      >
+                        <span className="block truncate">{pane.title}</span>
+                        <span className="pane-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                        </span>
+                        <span className="block truncate text-sm text-gray-500">{pane.slug}</span>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
           </div>
 
           {selected && (

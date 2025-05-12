@@ -30,6 +30,7 @@ export const HudDisplay = () => {
       key={message}
       className="text-white rounded-md p-3.5 text-lg text-right mb-2 transition-opacity duration-300 ease-in-out"
       style={{
+        marginBottom: `3em`,
         background: `rgb(0 0 0 / 90%)`,
         minHeight: `3em`,
         maxWidth: `320px`,

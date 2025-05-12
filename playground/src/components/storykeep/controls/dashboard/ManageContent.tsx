@@ -62,7 +62,7 @@ const ManageContent = () => {
     "px-2 py-1 bg-white text-gray-800 text-sm rounded-b-md inline-flex items-center whitespace-nowrap";
 
   return (
-    <div className="flex flex-col gap-4">
+    <div id="manage" className="flex flex-col gap-4">
       <h3 className="font-bold font-action text-xl">Manage Content</h3>
       <div className="w-fit p-0.5 shadow-md">
         <div className="p-1.5 bg-white rounded-b-md w-full flex flex-wrap gap-4">

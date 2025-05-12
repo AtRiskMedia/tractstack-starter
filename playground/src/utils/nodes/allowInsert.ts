@@ -23,7 +23,7 @@ const allowInsert = (
           case "identify":
           case "signup":
           case "img":
-            if (tagName === `ul` || tagNameAdjacent === `ul`) return false;
+            //if (tagName === `ul` || tagNameAdjacent === `ul`) return false;
             return true;
           case "p":
           case "h2":

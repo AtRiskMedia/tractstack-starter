@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
 import DashboardActivity from "@/components/storykeep/controls/recharts/DashboardActivity";
+import EpinetDurationSelector from "./EpinetDurationSelector";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
 import {
@@ -52,7 +53,10 @@ export default function PageViewStats() {
   const duration = $analyticsDuration;
 
   // Extract values from the store
-  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status, error } = analytics;
+  const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status } = analytics;
+
+  // Check if storyfragment analytics is still loading
+  const isStoryfragmentLoading = $storyfragmentAnalytics.isLoading;
 
   // Calculate total lifetime visitors from storyfragmentAnalytics
   const totalLifetimeVisitors = Object.values($storyfragmentAnalytics.byId).reduce(
@@ -211,7 +215,18 @@ export default function PageViewStats() {
     </div>
   );
 
-  // Skeleton loader for lead metrics panel
+  // Skeleton loader specifically for the visitors panel
+  const VisitorsSkeleton = () => (
+    <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
+      <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
+      <dd className="mt-2">
+        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+        <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
+      </dd>
+    </div>
+  );
+
+  // Skeleton loader for the leads panel
   const LeadMetricsSkeleton = () => (
     <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
       <div className="flex justify-between items-start">
@@ -221,17 +236,6 @@ export default function PageViewStats() {
       <dd className="mt-2">
         <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
         <div className="text-sm text-gray-600 mt-1">Registered leads (emails collected)</div>
-      </dd>
-    </div>
-  );
-
-  // Skeleton loader for visitors panel
-  const VisitorsSkeleton = () => (
-    <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
-      <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
-      <dd className="mt-2">
-        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-        <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
       </dd>
     </div>
   );
@@ -271,7 +275,8 @@ export default function PageViewStats() {
 
   if (!isClient) return null;
 
-  if (isLoading && (!dashboard || !leadMetrics)) return <LoadingPlaceholder />;
+  // Show full loading placeholder when no data is available yet
+  if (isLoading && !dashboard && !leadMetrics) return <LoadingPlaceholder />;
 
   const stats: Stat[] = [
     {
@@ -292,20 +297,21 @@ export default function PageViewStats() {
   ];
 
   return (
-    <div className="p-0.5 shadow-md">
+    <div id="analytics" className="p-0.5 shadow-md">
       <div className="p-1.5 bg-white rounded-b-md w-full">
         <h3 className="font-bold font-action text-xl mb-4">
           Analytics Dashboard
-          {status === "loading" || status === "refreshing" ? (
+          {(isLoading || status === "loading" || status === "refreshing") && (
             <span className="ml-2 text-sm font-normal text-gray-500">
               (Loading data in background...)
             </span>
-          ) : null}
+          )}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {stats.map((item) => {
-            if (status === "loading" && !dashboard) {
+            // Show skeleton when stats are loading
+            if ((isLoading || status === "loading") && !dashboard) {
               return <StatsSkeleton key={item.period} name={item.name} />;
             }
 
@@ -381,8 +387,8 @@ export default function PageViewStats() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Visitors panel with skeleton loader if loading */}
-          {status === "loading" && !leadMetrics ? (
+          {/* Visitors panel */}
+          {isStoryfragmentLoading || (isLoading && !$storyfragmentAnalytics.byId) ? (
             <VisitorsSkeleton />
           ) : (
             <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
@@ -396,8 +402,8 @@ export default function PageViewStats() {
             </div>
           )}
 
-          {/* Leads panel with skeleton loader if loading */}
-          {status === "loading" && !leadMetrics ? (
+          {/* Leads panel */}
+          {isLoading && !leadMetrics ? (
             <LeadMetricsSkeleton />
           ) : (
             <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors relative">
@@ -433,7 +439,7 @@ export default function PageViewStats() {
           )}
         </div>
 
-        <div className="p-4 motion-safe:animate-fadeInUp">
+        <div className="px-4 motion-safe:animate-fadeIn">
           <DurationSelector />
 
           {/* Dashboard Activity Chart */}
@@ -442,7 +448,7 @@ export default function PageViewStats() {
           ) : (
             <div className="h-64 bg-gray-100 rounded-lg w-full mb-6 flex items-center justify-center">
               <div className="text-center text-gray-500">
-                {status === "loading" ? (
+                {isLoading || status === "loading" || status === "refreshing" ? (
                   <div className="flex flex-col items-center">
                     <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
                     <p className="mt-4">Loading activity data...</p>
@@ -454,55 +460,50 @@ export default function PageViewStats() {
             </div>
           )}
 
+          <div className="pt-6">
+            <hr />
+          </div>
+
           {/* Epinet Sankey Diagram */}
-          {status === "loading" &&
-          (!epinetData ||
-            !epinetData.nodes ||
-            !epinetData.links ||
-            epinetData.nodes.length === 0 ||
-            epinetData.links.length === 0) ? (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-                  <p className="mt-4 text-sm text-gray-600">Computing user journey data...</p>
-                </div>
+          {isLoading || status === "loading" || status === "refreshing" ? (
+            <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-myblue border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+                <p className="mt-4 text-sm text-gray-600">Computing user journey data...</p>
               </div>
             </div>
-          ) : error ? (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-red-100 mt-12">
-              <div className="p-4 bg-red-50 text-red-800 rounded-lg mt-4">
-                There was an error loading the user journey data. Please try refreshing the page.
-              </div>
-            </div>
-          ) : epinetData &&
-            epinetData.nodes &&
-            epinetData.links &&
-            epinetData.nodes.length > 0 &&
-            epinetData.links.length > 0 ? (
-            <ErrorBoundary
-              fallback={
-                <div className="p-4 bg-red-50 text-red-800 rounded-lg">
-                  Error rendering user flow diagram. Please check the data and try again.
-                </div>
-              }
-            >
-              <div className="relative">
-                {status === "loading" || status === "refreshing" ? (
-                  <div className="absolute top-0 right-0 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-sm">
-                    Updating...
+          ) : epinetData && epinetData.nodes && epinetData.links ? (
+            epinetData.nodes.length > 0 && epinetData.links.length > 0 ? (
+              <ErrorBoundary
+                fallback={
+                  <div className="p-4 bg-red-50 text-red-800 rounded-lg">
+                    Error rendering user flow diagram. Please check the data and try again.
                   </div>
-                ) : null}
-                <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
-                <DurationSelector />
-              </div>
-            </ErrorBoundary>
+                }
+              >
+                <div className="relative">
+                  {(status as string) === "refreshing" && (
+                    <div className="absolute top-0 right-0 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow-sm">
+                      Updating...
+                    </div>
+                  )}
+                  <SankeyDiagram data={{ nodes: epinetData.nodes, links: epinetData.links }} />
+                  <EpinetDurationSelector />
+                </div>
+              </ErrorBoundary>
+            ) : (
+              <>
+                <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
+                  No matching data found with current filters. Try different filter settings or time
+                  ranges.
+                </div>
+                <EpinetDurationSelector />
+              </>
+            )
           ) : (
-            <div className="w-full p-4 bg-white rounded-lg shadow-sm border border-gray-100 mt-12">
-              <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
-                No user journey data is available yet. This visualization will appear when users
-                start interacting with your content.
-              </div>
+            <div className="p-4 bg-gray-50 text-gray-800 rounded-lg mt-4">
+              No user journey data is available yet. This visualization will appear when users start
+              interacting with your content.
             </div>
           )}
         </div>

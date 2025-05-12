@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { RadioGroup } from "@headlessui/react";
+import { RadioGroup } from "@ark-ui/react/radio-group";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckCircleIcon";
 import CubeTransparentIcon from "@heroicons/react/24/outline/CubeTransparentIcon";
 import DocumentIcon from "@heroicons/react/24/outline/DocumentIcon";
@@ -34,7 +34,7 @@ export const PageCreationSelector = ({
   ctx,
   isTemplate = false,
 }: PageCreationSelectorProps) => {
-  const [selected, setSelected] = useState<CreationMode["id"]>("design");
+  const [selectedMode, setSelectedMode] = useState<CreationMode["id"]>("design");
   const [showTemplates, setShowTemplates] = useState(false);
   const [showGen, setShowGen] = useState(false);
   const [showFeatured, setShowFeatured] = useState(false);
@@ -81,26 +81,40 @@ export const PageCreationSelector = ({
     return [...baseModesWithoutFeature, featuredMode] as CreationMode[];
   }, [hasStoryFragments]);
 
-  const handleModeSelect = (mode: CreationMode["id"]) => {
-    const selectedMode = modes.find((m) => m.id === mode);
-    if (selectedMode?.disabled) return;
-    setSelected(mode);
-    setShowTemplates(false);
-    setShowGen(false);
-    setShowFeatured(false);
-  };
-
   const handleContinue = () => {
-    const selectedMode = modes.find((m) => m.id === selected);
-    if (selectedMode?.disabled) return;
-    if (selected === "design") {
+    if (!selectedMode) return;
+
+    const selectedModeObj = modes.find((m) => m.id === selectedMode);
+    if (selectedModeObj?.disabled) return;
+
+    if (selectedMode === "design") {
       setShowTemplates(true);
-    } else if (selected === "generate") {
+    } else if (selectedMode === "generate") {
       setShowGen(true);
-    } else if (selected === "featured") {
+    } else if (selectedMode === "featured") {
       setShowFeatured(true);
     }
   };
+
+  const radioGroupStyles = `
+    .radio-control[data-state="unchecked"] .radio-dot {
+      background-color: #d1d5db; /* gray-300 */
+    }
+    .radio-control[data-state="checked"] .radio-dot {
+      background-color: #0891b2; /* cyan-600 */
+    }
+    .radio-control[data-state="checked"] {
+      border-color: #0891b2; /* cyan-600 */
+    }
+    .radio-item[data-state="checked"] {
+      background-color: #f9f9f9;
+      color: white;
+    }
+    .radio-item[data-disabled="true"] {
+      background-color: #f9fafb;
+      cursor: not-allowed;
+    }
+  `;
 
   if (showTemplates || isTemplate)
     return <AddPanePanel nodeId={nodeId} first={true} ctx={ctx} isStoryFragment={true} />;
@@ -109,64 +123,58 @@ export const PageCreationSelector = ({
 
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{radioGroupStyles}</style>
       <div className="p-6 bg-white rounded-md w-full">
         <h2 className="text-2xl font-bold text-gray-900 font-action mb-6">
           How would you like to create your page?
         </h2>
 
         <div className="w-full max-w-3xl">
-          <RadioGroup value={selected} onChange={handleModeSelect}>
+          <RadioGroup.Root
+            defaultValue="design"
+            onValueChange={(details) => {
+              if (details.value) {
+                setSelectedMode(details.value as CreationMode["id"]);
+              }
+            }}
+          >
             <RadioGroup.Label className="sr-only">Page Creation Mode</RadioGroup.Label>
             <div className="space-y-4">
               {modes.map((mode) => (
-                <RadioGroup.Option
+                <RadioGroup.Item
                   key={mode.id}
                   value={mode.id}
                   disabled={mode.disabled}
-                  className={({ active, checked }) =>
-                    `${active && !mode.disabled ? "ring-2 ring-cyan-600 ring-offset-2" : ""}
-                    ${checked ? "bg-cyan-700 text-white" : mode.disabled ? "bg-gray-50 cursor-not-allowed" : "bg-white"}
-                    relative flex cursor-pointer rounded-lg px-5 py-6 shadow-md focus:outline-none`
-                  }
+                  className={`radio-item relative flex cursor-pointer rounded-lg px-5 py-6 shadow-md focus:outline-none ${
+                    mode.disabled
+                      ? "bg-gray-50"
+                      : "bg-white hover:ring-2 hover:ring-cyan-600 hover:ring-offset-2"
+                  }`}
                 >
-                  {({ checked }) => (
-                    <div className="flex w-full items-center justify-between">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          {mode.disabled ? (
-                            <ExclamationTriangleIcon
-                              className="h-8 w-8 text-amber-500"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <mode.icon
-                              className={`h-8 w-8 ${checked ? "text-white" : "text-cyan-700"}`}
-                              aria-hidden="true"
-                            />
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <RadioGroup.Label
-                            as="p"
-                            className={`font-bold ${
-                              checked
-                                ? "text-white"
-                                : mode.disabled
-                                  ? "text-gray-400"
-                                  : "text-gray-900"
-                            }`}
+                  <div className="flex w-full items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0">
+                        {mode.disabled ? (
+                          <ExclamationTriangleIcon
+                            className="h-8 w-8 text-amber-500"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <mode.icon
+                            className="h-8 w-8 text-cyan-700 data-[state=checked]:text-white"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <RadioGroup.ItemText>
+                          <p
+                            className={`font-bold ${mode.disabled ? "text-gray-400" : "text-gray-900 data-[state=checked]:text-white"}`}
                           >
                             {mode.name}
-                          </RadioGroup.Label>
-                          <RadioGroup.Description
-                            as="span"
-                            className={`inline ${
-                              checked
-                                ? "text-cyan-100"
-                                : mode.disabled
-                                  ? "text-gray-400"
-                                  : "text-gray-500"
-                            }`}
+                          </p>
+                          <span
+                            className={`inline ${mode.disabled ? "text-gray-400" : "text-gray-500 data-[state=checked]:text-cyan-100"}`}
                           >
                             {mode.description}
                             {mode.disabled && mode.disabledReason && (
@@ -174,20 +182,22 @@ export const PageCreationSelector = ({
                                 {mode.disabledReason}
                               </span>
                             )}
-                          </RadioGroup.Description>
-                        </div>
+                          </span>
+                        </RadioGroup.ItemText>
                       </div>
-                      {checked && !mode.disabled && (
-                        <div className="shrink-0 text-white">
-                          <CheckCircleIcon className="h-6 w-6" />
-                        </div>
-                      )}
                     </div>
-                  )}
-                </RadioGroup.Option>
+                    <div className="shrink-0 text-white hidden data-[state=checked]:block">
+                      <CheckCircleIcon className="h-6 w-6" />
+                    </div>
+                  </div>
+                  <RadioGroup.ItemControl className="radio-control h-4 w-4 rounded-full border border-gray-300 mr-2 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full radio-dot" />
+                  </RadioGroup.ItemControl>
+                  <RadioGroup.ItemHiddenInput />
+                </RadioGroup.Item>
               ))}
             </div>
-          </RadioGroup>
+          </RadioGroup.Root>
         </div>
 
         <div className="mt-8 flex justify-end">

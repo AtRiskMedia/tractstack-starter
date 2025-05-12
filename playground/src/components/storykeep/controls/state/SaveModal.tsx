@@ -154,8 +154,10 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             );
             const pane = saveData.panes[i];
 
-            const options = JSON.parse(pane.options_payload);
-            const markdownNode = options.nodes?.find((n: any) => n.nodeType === "Markdown");
+            // Find the corresponding markdown from saveData.markdowns
+            const markdownData = pane.markdown_id
+              ? saveData.markdowns.find((m) => m.id === pane.markdown_id)
+              : undefined;
 
             const paneData = {
               rowData: {
@@ -169,12 +171,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                 is_context_pane: pane.is_context_pane,
                 options_payload: pane.options_payload,
               },
-              markdownData: markdownNode
-                ? {
-                    id: markdownNode.id,
-                    markdown_body: markdownNode.markdownBody,
-                  }
-                : undefined,
+              markdownData: markdownData,
             };
 
             const response = await fetch("/api/turso/upsertPane", {
@@ -474,6 +471,18 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
   const handleCloseClick = () => {
     if (stage === "COMPLETED" || stage === "ERROR") {
+      // If we're creating a new page and it was saved successfully, redirect to its edit URL
+      if (stage === "COMPLETED" && window.location.pathname.includes("/create")) {
+        // Redirect to the actual edit URL using the saved node's slug
+        const allNodes = getCtx().allNodes.get();
+        const node = allNodes.get(nodeId);
+        if (node && "slug" in node) {
+          const isContextPane = window.location.pathname.includes("/context/");
+          const newEditUrl = isContextPane ? `/context/${node.slug}/edit` : `/${node.slug}/edit`;
+          window.location.href = newEditUrl;
+          return;
+        }
+      }
       onClose();
     }
   };

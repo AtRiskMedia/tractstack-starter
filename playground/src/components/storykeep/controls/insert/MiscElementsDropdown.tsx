@@ -1,8 +1,9 @@
-import { Fragment, memo } from "react";
+import { memo } from "react";
+import { Menu } from "@ark-ui/react";
+import { Portal } from "@ark-ui/react/portal";
 import type { ToolAddMode } from "@/types.ts";
 import { toolAddModes, toolAddModesIcons, toolAddModeTitles } from "@/constants.ts";
-import { Menu, Transition } from "@headlessui/react";
-import ChevronUpIcon from "@heroicons/react/20/solid/ChevronUpIcon";
+import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import XMarkIcon from "@heroicons/react/20/solid/XMarkIcon";
 import { InsertDraggableElement } from "./InsertDraggableElement.tsx";
 
@@ -19,69 +20,80 @@ export const MiscElementsDropdown = memo((props: MiscElementsDropdownProps) => {
   const filteredModes = toolAddModes.filter(missingIcon);
   const showPill = filteredModes.includes(props.currentToolAddMode);
 
+  // CSS to ensure proper styling for menu items
+  const menuStyles = `
+    [data-part="content"] {
+      z-index: 11000 !important;
+    }
+
+    .misc-menu-item[data-highlighted] {
+      background-color: #0891b2 !important;
+      color: white !important;
+    }
+    
+    .misc-menu-item:focus {
+      outline: none;
+    }
+    
+    .misc-menu-root {
+      position: relative;
+      display: inline-block;
+    }
+  `;
+
   if (showPill) {
     return (
       <>
         <span className="text-sm">Add:</span>
-        <InsertDraggableElement el={props.currentToolAddMode} onClicked={props.onClickedOption}>
-          <button className="mx-1 rounded bg-white shadow-xl outline outline-2 outline-black py-2 px-4">
-            <div className="flex items-center gap-1 h-5">
-              <span className="text-sm text-black">
+        <div className="mx-1 rounded bg-white shadow-xl outline outline-2 outline-black py-2 px-4">
+          <div className="flex items-center gap-3 h-5">
+            <InsertDraggableElement el={props.currentToolAddMode} onClicked={props.onClickedOption}>
+              <span className="text-sm text-black cursor-move">
                 {toolAddModeTitles[props.currentToolAddMode]}
               </span>
-              <XMarkIcon
-                className="h-3 w-3 text-black/50 hover:text-black/70"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.onClickedOption("p");
-                }}
-              />
-            </div>
-          </button>
-        </InsertDraggableElement>
+            </InsertDraggableElement>
+            <button
+              className="h-5 w-5 rounded-full hover:bg-gray-200 flex items-center justify-center"
+              onClick={() => props.onClickedOption("p")}
+              aria-label="Clear selection"
+            >
+              <XMarkIcon className="h-4 w-4 text-black/50 hover:text-black/70" />
+            </button>
+          </div>
+        </div>
       </>
     );
   }
 
   return (
-    <Menu as="div" className="ml-4 relative inline-block text-left">
-      <div>
-        <Menu.Button className="inline-flex w-full justify-center rounded-md bg-white/20 px-4 py-2 text-sm text-black hover:bg-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75">
+    <div className="ml-4 inline-block misc-menu-root">
+      <style>{menuStyles}</style>
+      <Menu.Root positioning={{ placement: "top-start" }} closeOnSelect={true}>
+        <Menu.Trigger className="inline-flex w-full justify-center rounded-md bg-white/20 px-4 py-2 text-sm text-black hover:bg-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75">
           More elements
-          <ChevronUpIcon
-            className="-mr-1 ml-2 h-5 w-5 text-black/20 hover:text-myblack"
+          <ChevronUpDownIcon
+            className="-mr-1 ml-2 h-5 w-5 text-black/20 hover:text-black"
             aria-hidden="true"
           />
-        </Menu.Button>
-      </div>
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95 translate-y-2"
-        enterTo="transform opacity-100 scale-100 translate-y-0"
-        leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100 translate-y-0"
-        leaveTo="transform opacity-0 scale-95 translate-y-2"
-      >
-        <Menu.Items className="absolute bottom-full mb-2 w-56 origin-bottom-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-          {filteredModes.map((mode, idx) => (
-            <Menu.Item key={idx}>
-              {({ active }) => (
-                <button
-                  onClick={() => props.onClickedOption(mode)}
-                  className={`${
-                    active ? "bg-mygreen/20 text-black" : "text-mydarkgrey"
-                  } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+        </Menu.Trigger>
+
+        <Portal>
+          <Menu.Positioner>
+            <Menu.Content className="max-h-60 w-56 overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none z-[11000]">
+              {filteredModes.map((mode) => (
+                <Menu.Item
+                  key={mode}
+                  value={mode}
+                  className="misc-menu-item relative cursor-default select-none py-2 px-4 text-gray-900"
+                  onSelect={() => props.onClickedOption(mode as ToolAddMode)}
                 >
-                  <InsertDraggableElement el={mode} onClicked={props.onClickedOption}>
-                    <span className="w-full">{toolAddModeTitles[mode]}</span>
-                  </InsertDraggableElement>
-                </button>
-              )}
-            </Menu.Item>
-          ))}
-        </Menu.Items>
-      </Transition>
-    </Menu>
+                  {toolAddModeTitles[mode]}
+                </Menu.Item>
+              ))}
+            </Menu.Content>
+          </Menu.Positioner>
+        </Portal>
+      </Menu.Root>
+    </div>
   );
 });

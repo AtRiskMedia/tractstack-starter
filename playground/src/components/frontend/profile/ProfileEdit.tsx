@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, Fragment } from "react";
-import { Listbox, Transition } from "@headlessui/react";
+import { useEffect, useState, useMemo } from "react";
+import { Select } from "@ark-ui/react/select";
+import { Portal } from "@ark-ui/react/portal";
+import { createListCollection } from "@ark-ui/react/collection";
 import { useStore } from "@nanostores/react";
 import ChevronRightIcon from "@heroicons/react/20/solid/ChevronRightIcon";
 import ChevronDownIcon from "@heroicons/react/20/solid/ChevronDownIcon";
@@ -72,6 +74,15 @@ export const ProfileEdit = () => {
   const [saved, setSaved] = useState(false);
   const [personaSelected, setPersonaSelected] = useState<ContactPersona>(contactPersona[0]);
   const $profile = useStore(profile);
+
+  // Create collection for Ark UI Select
+  const personaCollection = useMemo(() => {
+    return createListCollection({
+      items: contactPersona,
+      itemToValue: (item) => item.id,
+      itemToString: (item) => item.title,
+    });
+  }, []);
 
   const Icon =
     personaSelected.title === `DMs open`
@@ -155,8 +166,39 @@ export const ProfileEdit = () => {
     }
   };
 
+  const handlePersonaChange = (details: { value: string[] }) => {
+    const selectedId = details.value[0];
+    if (selectedId) {
+      const selected = contactPersona.find((item) => item.id === selectedId);
+      if (selected) {
+        setPersonaSelected(selected);
+      }
+    }
+  };
+
+  // CSS to properly style the select items with hover and selection
+  const selectItemStyles = `
+    .persona-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .persona-item[data-highlighted] .persona-indicator {
+      color: white;
+    }
+    .persona-item[data-state="checked"] .persona-indicator {
+      display: flex;
+    }
+    .persona-item .persona-indicator {
+      display: none;
+    }
+    .persona-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <>
+      <style>{selectItemStyles}</style>
       <h3 className="font-action text-xl py-6 text-myblue">Welcome to Tract Stack</h3>
 
       <form onSubmit={handleSubmit}>
@@ -175,7 +217,7 @@ export const ProfileEdit = () => {
                   defaultValue={$profile.firstname || ``}
                   onChange={(e) => setFirstname(e.target.value)}
                   className={classNames(
-                    `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-myorange focus:ring-myorange`,
+                    `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-cyan-600 focus:ring-cyan-600`,
                     submitted && firstname === `` ? `border-red-500` : `border-mydarkgrey`
                   )}
                 />
@@ -196,7 +238,7 @@ export const ProfileEdit = () => {
                   defaultValue={$profile.email || ``}
                   onChange={(e) => setEmail(e.target.value)}
                   className={classNames(
-                    `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-myorange focus:ring-myorange`,
+                    `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-cyan-600 focus:ring-cyan-600`,
                     submitted && email === `` ? `border-red-500` : `border-mydarkgrey`
                   )}
                 />
@@ -210,63 +252,47 @@ export const ProfileEdit = () => {
           <div className="col-span-3 pt-6 px-4">
             <div className="flex items-center text-sm">
               <div className="pr-8 text-sm text-black">
-                <Listbox value={personaSelected} onChange={setPersonaSelected}>
-                  {({ open }) => (
-                    <>
-                      <Listbox.Label className="block text-sm text-mydarkgrey mb-2">
-                        Choose your level of consent:
-                      </Listbox.Label>
+                <Select.Root
+                  collection={personaCollection}
+                  defaultValue={[personaSelected.id]}
+                  onValueChange={handlePersonaChange}
+                >
+                  <Select.Label className="block text-sm text-mydarkgrey mb-2">
+                    Choose your level of consent:
+                  </Select.Label>
 
-                      <div className="relative mt-2">
-                        <Listbox.Button className="text-md relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-black shadow-sm ring-1 ring-inset ring-myorange focus:outline-none focus:ring-2 focus:ring-myorange leading-6">
-                          <span className="block truncate p-2">{personaSelected.title}</span>
-                          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                            <ChevronDownIcon
-                              className="h-5 w-5 text-mydarkgrey"
-                              aria-hidden="true"
-                            />
-                          </span>
-                        </Listbox.Button>
+                  <Select.Control className="relative mt-2">
+                    <Select.Trigger className="text-md relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-black shadow-sm ring-1 ring-inset ring-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-600 leading-6">
+                      <Select.ValueText className="block truncate p-2">
+                        {personaSelected.title}
+                      </Select.ValueText>
+                      <Select.Indicator className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                        <ChevronDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
+                      </Select.Indicator>
+                    </Select.Trigger>
+                  </Select.Control>
 
-                        <Transition
-                          show={open}
-                          as={Fragment}
-                          leave="transition ease-in duration-100"
-                          leaveFrom="opacity-100"
-                          leaveTo="opacity-0"
-                        >
-                          <Listbox.Options className="absolute z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            {contactPersona.map((option) => (
-                              <Listbox.Option
-                                key={option.id}
-                                className={({ active }) =>
-                                  classNames(
-                                    active ? `text-black bg-slate-100` : `text-black`,
-                                    `cursor-default select-none p-2 text-sm`
-                                  )
-                                }
-                                value={option}
-                              >
-                                {({ selected }) => (
-                                  <>
-                                    <span
-                                      className={classNames(
-                                        selected ? `underline` : ``,
-                                        `block truncate`
-                                      )}
-                                    >
-                                      {option.title}
-                                    </span>
-                                  </>
-                                )}
-                              </Listbox.Option>
-                            ))}
-                          </Listbox.Options>
-                        </Transition>
-                      </div>
-                    </>
-                  )}
-                </Listbox>
+                  <Portal>
+                    <Select.Positioner>
+                      <Select.Content className="z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        {personaCollection.items.map((option) => (
+                          <Select.Item
+                            key={option.id}
+                            item={option}
+                            className="persona-item cursor-default select-none p-2 text-sm text-black hover:bg-slate-100"
+                          >
+                            <Select.ItemText className="block truncate">
+                              {option.title}
+                            </Select.ItemText>
+                            <Select.ItemIndicator className="persona-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                              {/* CheckIcon would go here if needed */}
+                            </Select.ItemIndicator>
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Positioner>
+                  </Portal>
+                </Select.Root>
               </div>
               <div className="flex flex-1 items-center">
                 <div aria-hidden="true" className="ml-1 flex flex-1 items-center">
@@ -301,7 +327,7 @@ export const ProfileEdit = () => {
                 name="bio"
                 rows={3}
                 maxLength={280}
-                className="text-md bg-white p-3 block w-full rounded-md border-mydarkgrey shadow-sm focus:border-myorange focus:ring-myorange"
+                className="text-md bg-white p-3 block w-full rounded-md border-mydarkgrey shadow-sm focus:border-cyan-600 focus:ring-cyan-600"
                 placeholder="Your one-liner bio"
                 defaultValue={$profile.shortBio || ``}
                 onChange={(e) => setBio(e.target.value)}
@@ -320,7 +346,7 @@ export const ProfileEdit = () => {
               autoComplete="off"
               onChange={(e) => setCodeword(e.target.value)}
               className={classNames(
-                `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-myorange focus:ring-myorange`,
+                `text-md bg-white p-3 mt-2 block w-full rounded-md shadow-sm focus:border-cyan-600 focus:ring-cyan-600`,
                 submitted && codeword === `` ? `border-red-500` : `border-mydarkgrey`
               )}
             />
@@ -330,7 +356,7 @@ export const ProfileEdit = () => {
           </div>
 
           {saved ? (
-            <div className="col-span-3 flex justify-center align-center py-12 font-action text-red-500">
+            <div className="col-span-3 flex justify-center align-center py-12 font-action text-green-500">
               Profile Saved
             </div>
           ) : null}
@@ -340,7 +366,7 @@ export const ProfileEdit = () => {
               {!personaSelected?.disabled ? (
                 <button
                   type="submit"
-                  className="inline-flex rounded-md bg-myorange/10 hover:bg-black hover:text-white px-3.5 py-1.5 text-base leading-7 text-black shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-myorange"
+                  className="inline-flex rounded-md bg-cyan-600/10 hover:bg-black hover:text-white px-3.5 py-1.5 text-base leading-7 text-black shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
                 >
                   <span className="pr-4">Save Profile</span>
                   <ChevronRightIcon className="h-5 w-5 mr-3" aria-hidden="true" />

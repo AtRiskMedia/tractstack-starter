@@ -1,7 +1,8 @@
-import { pageLoadTime } from "../../store/events";
-import { auth, profile, sync, locked, error, success, loading, referrer } from "../../store/auth";
-import { syncVisit } from "./syncVisit.ts";
-import { JWT_LIFETIME } from "../../constants";
+import { pageLoadTime } from "@/store/events";
+import { auth, profile, sync, locked, error, success, loading, referrer } from "@/store/auth";
+import { syncVisit } from "@/utils/visit/syncVisit.ts";
+import { JWT_LIFETIME } from "@/constants";
+import { heldBeliefs } from "@/store/beliefs";
 
 export async function init() {
   pageLoadTime.set(Date.now());
@@ -14,7 +15,69 @@ export async function init() {
   const lastActive = authPayload?.active ? parseInt(authPayload.active) : 0;
   const mustSync = Date.now() > lastActive + JWT_LIFETIME;
 
-  // delete any session storage after > 1 hr if no consent provided
+  const hasCredentials = !!authPayload?.encryptedEmail && !!authPayload?.encryptedCode;
+  const hasBeliefs = heldBeliefs.get().length > 0;
+
+  if (hasCredentials && !hasBeliefs) {
+    try {
+      const response = await fetch("/api/turso/unlock", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fingerprint: authPayload.key,
+          encryptedEmail: authPayload.encryptedEmail,
+          encryptedCode: authPayload.encryptedCode,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success && result.data.beliefs) {
+        try {
+          const parsedBeliefs = JSON.parse(result.data.beliefs);
+
+          // Add or update KnownLead belief
+          const knownLeadIndex = parsedBeliefs.findIndex(
+            (b: { slug: string }) => b.slug === "KnownLead"
+          );
+          if (knownLeadIndex >= 0) {
+            parsedBeliefs[knownLeadIndex].verb = "BELIEVES_YES";
+          } else {
+            parsedBeliefs.push({
+              id: "KnownLead",
+              slug: "KnownLead",
+              verb: "BELIEVES_YES",
+            });
+          }
+
+          heldBeliefs.set(parsedBeliefs);
+        } catch (e) {
+          console.error("Error parsing beliefs:", e);
+        }
+      }
+    } catch (e) {
+      console.log("Silent belief restoration failed, continuing with regular init");
+    }
+  } else if (hasCredentials) {
+    // User has credentials and may already have beliefs - add KnownLead if not present
+    const beliefs = heldBeliefs.get();
+    const knownLeadIndex = beliefs.findIndex((b) => b.slug === "KnownLead");
+    if (knownLeadIndex >= 0) {
+      if (beliefs[knownLeadIndex].verb !== "BELIEVES_YES") {
+        beliefs[knownLeadIndex].verb = "BELIEVES_YES";
+        heldBeliefs.set(beliefs);
+      }
+    } else {
+      beliefs.push({
+        id: "KnownLead",
+        slug: "KnownLead",
+        verb: "BELIEVES_YES",
+      });
+      heldBeliefs.set(beliefs);
+    }
+  }
+
   if (authPayload?.consent !== "1" && Date.now() > lastActive + JWT_LIFETIME * 5) {
     auth.setKey(`active`, undefined);
     auth.setKey(`key`, undefined);
@@ -25,13 +88,10 @@ export async function init() {
     auth.setKey(`unlockedProfile`, undefined);
     auth.setKey(`key`, undefined);
     reset = true;
-    //window.location.reload();
   } else if (Date.now() > lastActive + JWT_LIFETIME * 5) {
-    // if consent provided; lock profile after > 1 hr
     auth.setKey(`unlockedProfile`, undefined);
   }
 
-  // sync once; unless soon inactive
   if (!mustSync && !reset) {
     sync.set(true);
     return null;
@@ -86,7 +146,6 @@ export async function init() {
   }
   auth.setKey(`active`, Date.now().toString());
 
-  // unlock; set sync
   sync.set(true);
   locked.set(false);
   error.set(undefined);

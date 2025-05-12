@@ -1370,3 +1370,23 @@ export interface TimeRangeMetrics {
   totalVisits: number;
   eventCounts: Record<string, number>;
 }
+
+export interface EpinetCustomMetricsFilters {
+  visitorType: "all" | "anonymous" | "known";
+  selectedUserId: string | null;
+  startHour: number | null;
+  endHour: number | null;
+}
+
+export interface EpinetCustomMetricsResponse {
+  epinet: ComputedEpinet | { status: string; message: string; id: string; title: string } | null;
+  availableVisitorIds: string[];
+}
+
+export interface FilteredComputedEpinet extends ComputedEpinet {
+  filterInfo?: {
+    visitorType: "all" | "anonymous" | "known";
+    selectedUserId?: string;
+    timeRange?: string;
+  };
+}

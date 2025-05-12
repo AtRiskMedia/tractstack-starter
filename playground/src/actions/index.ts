@@ -2,8 +2,6 @@ import { ActionError, defineAction } from "astro:actions";
 import { Resend } from "resend";
 import { generateEmailHtml } from "@/utils/email-templates/html";
 
-const resend = new Resend(import.meta.env.PRIVATE_RESEND_APIKEY);
-
 /*
  * will need to add api end-point with actions wrapper
  * e.g. reserve sandbox + create sandbox.json
@@ -75,6 +73,24 @@ export const server = {
           name,
           ...payload,
         });
+
+        // Initialize Resend only when needed, with error handling
+        let resend;
+        try {
+          const apiKey = import.meta.env.PRIVATE_RESEND_APIKEY;
+
+          if (!apiKey) {
+            throw new Error("Resend API key is not configured");
+          }
+
+          resend = new Resend(apiKey);
+        } catch (error) {
+          console.error("Failed to initialize Resend:", error);
+          throw new ActionError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Email service is not configured properly",
+          });
+        }
 
         const { data, error } = await resend.emails.send({
           from: "Adon - At Risk Media <a@atriskmedia.com>",

@@ -1,5 +1,7 @@
-import { useState, useRef, Fragment } from "react";
-import { Dialog, Transition, RadioGroup } from "@headlessui/react";
+import { useState, useRef } from "react";
+import { Dialog } from "@ark-ui/react/dialog";
+import { Portal } from "@ark-ui/react/portal";
+import { RadioGroup, type RadioGroup as RadioGroupNamespace } from "@ark-ui/react/radio-group";
 import CheckCircleIcon from "@heroicons/react/20/solid/CheckIcon";
 import { formatPrompt, pagePrompts, pagePromptsDetails } from "../../../../../config/prompts.json";
 import PageCreationPreview from "./PageCreationGen_preview";
@@ -40,7 +42,10 @@ export const PageCreationGen = ({ nodeId, ctx }: PageCreationGenProps) => {
 
   const dialogButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handlePromptTypeChange = (type: PromptType) => {
+  const handlePromptTypeChange = (details: RadioGroupNamespace.ValueChangeDetails) => {
+    if (!details.value) return;
+
+    const type = details.value as PromptType;
     setSelectedPromptType(type);
     setCustomizedPrompt(pagePrompts[type]);
   };
@@ -90,11 +95,11 @@ ${additionalInstructions}`;
     }
   };
 
-  const handleModalClose = () => {
+  const handleModalClose = (details: { open: boolean }) => {
     if (generationStatus === "generating") {
       return;
     }
-    if (generationStatus === "success") {
+    if (generationStatus === "success" && !details.open) {
       setShowModal(false);
       setShowPreview(true);
       return;
@@ -153,8 +158,50 @@ ${additionalInstructions}`;
     );
   }
 
+  // CSS for Dialog styles
+  const dialogStyles = `
+    [data-part="backdrop"] {
+      background-color: rgba(0, 0, 0, 0.3);
+    }
+    [data-part="content"] {
+      max-width: 32rem;
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      padding: 1.5rem;
+    }
+    [data-part="title"] {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+  `;
+
+  // CSS for RadioGroup styles
+  const radioGroupStyles = `
+    .radio-item[data-highlighted] {
+      outline: none;
+    }
+    .radio-item[data-state="checked"] {
+      background-color: #efefef;
+      color: white;
+    }
+    .radio-item[data-state="checked"] .radio-description {
+      color: black;
+    }
+    .radio-item[data-state="checked"] .check-icon {
+      display: flex;
+    }
+    .radio-item .check-icon {
+      display: none;
+    }
+  `;
+
   return (
     <div className="p-0.5 shadow-inner">
+      <style>{dialogStyles}</style>
+      <style>{radioGroupStyles}</style>
       <div className="p-6 bg-white rounded-md w-full">
         <h2 className="text-2xl font-bold text-gray-900 font-action mb-6">
           Generate Page Content with AI
@@ -163,50 +210,41 @@ ${additionalInstructions}`;
         <div className="space-y-8">
           {/* Prompt Type Selection */}
           <div className="w-full">
-            <RadioGroup value={selectedPromptType} onChange={handlePromptTypeChange}>
+            <RadioGroup.Root
+              defaultValue={selectedPromptType}
+              onValueChange={handlePromptTypeChange}
+            >
               <RadioGroup.Label className="block text-sm font-bold text-gray-900 mb-4">
                 Select Page Type
               </RadioGroup.Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {Object.entries(pagePromptsDetails).map(([key, details]) => (
-                  <RadioGroup.Option
+                  <RadioGroup.Item
                     key={key}
                     value={key}
-                    className={({ active, checked }) =>
-                      `${active ? "ring-2 ring-cyan-600 ring-offset-2" : ""}
-                      ${checked ? "bg-cyan-700 text-white" : "bg-white"}
-                      relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none`
-                    }
+                    className="radio-item relative flex cursor-pointer rounded-lg px-5 py-4 shadow-md focus:outline-none"
                   >
-                    {({ checked }) => (
-                      <div className="flex w-full items-center justify-between">
-                        <div className="flex items-center">
+                    <div className="flex w-full items-center justify-between">
+                      <div className="flex items-center">
+                        <RadioGroup.ItemControl className="hidden" />
+                        <RadioGroup.ItemText>
                           <div className="text-sm">
-                            <RadioGroup.Label
-                              as="p"
-                              className={`font-bold ${checked ? "text-white" : "text-gray-900"}`}
-                            >
-                              {details.title}
-                            </RadioGroup.Label>
-                            <RadioGroup.Description
-                              as="span"
-                              className={`inline ${checked ? "text-cyan-100" : "text-gray-500"}`}
-                            >
+                            <p className="font-bold text-black">{details.title}</p>
+                            <span className="inline text-gray-500 radio-description">
                               {details.description}
-                            </RadioGroup.Description>
+                            </span>
                           </div>
-                        </div>
-                        {checked && (
-                          <div className="shrink-0 text-white">
-                            <CheckCircleIcon className="h-6 w-6" />
-                          </div>
-                        )}
+                        </RadioGroup.ItemText>
                       </div>
-                    )}
-                  </RadioGroup.Option>
+                      <div className="shrink-0 text-white check-icon">
+                        <CheckCircleIcon className="h-6 w-6" />
+                      </div>
+                    </div>
+                    <RadioGroup.ItemHiddenInput />
+                  </RadioGroup.Item>
                 ))}
               </div>
-            </RadioGroup>
+            </RadioGroup.Root>
           </div>
 
           {/* Customizable Prompt */}
@@ -289,90 +327,70 @@ ${additionalInstructions}`;
         </div>
 
         {/* Generation Result Modal */}
-        <Transition appear show={showModal} as={Fragment}>
-          <Dialog
-            as="div"
-            className="fixed inset-0 z-10 overflow-y-auto"
-            onClose={handleModalClose}
-            initialFocus={dialogButtonRef}
-          >
-            <div className="min-h-screen px-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Dialog.Overlay className="fixed inset-0 bg-black opacity-30" />
-              </Transition.Child>
+        <Dialog.Root open={showModal} onOpenChange={handleModalClose} modal={true}>
+          <Portal>
+            <Dialog.Backdrop className="fixed inset-0" />
+            <Dialog.Positioner className="fixed inset-0 flex items-center justify-center p-4 z-50">
+              <Dialog.Content className="w-full max-w-md overflow-hidden text-left align-middle">
+                <Dialog.Title>
+                  {generationStatus === "error"
+                    ? "Generation Error"
+                    : generationStatus === "success"
+                      ? "Content Generated"
+                      : "Generating Content"}
+                </Dialog.Title>
 
-              <span className="inline-block h-screen align-middle" aria-hidden="true">
-                &#8203;
-              </span>
-
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 scale-100"
-                leaveTo="opacity-0 scale-95"
-              >
-                <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
-                  <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-gray-900">
-                    {generationStatus === "error"
-                      ? "Generation Error"
-                      : generationStatus === "success"
-                        ? "Content Generated"
-                        : "Generating Content"}
-                  </Dialog.Title>
-
-                  <div className="mt-2">
-                    {generationStatus === "error" ? (
-                      <p className="text-sm text-red-600">{error}</p>
-                    ) : generationStatus === "success" ? (
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600">
-                          Content has been generated successfully!
-                        </p>
-                        <div className="max-h-60 overflow-y-auto p-3 bg-gray-50 rounded-md">
-                          <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                            {generatedContent}
-                          </pre>
-                        </div>
+                <div className="mt-2">
+                  {generationStatus === "error" ? (
+                    <p className="text-sm text-red-600">{error}</p>
+                  ) : generationStatus === "success" ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">
+                        Content has been generated successfully!
+                      </p>
+                      <div className="max-h-60 overflow-y-auto p-3 bg-gray-50 rounded-md">
+                        <pre className="text-sm text-gray-800 whitespace-pre-wrap">
+                          {generatedContent}
+                        </pre>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600"></div>
-                        <p className="text-sm text-gray-500">Generating your page content...</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4">
-                    <button
-                      ref={dialogButtonRef}
-                      type="button"
-                      className="inline-flex justify-center px-4 py-2 text-sm font-bold text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cyan-500"
-                      onClick={handleModalClose}
-                      disabled={generationStatus === "generating"}
-                    >
-                      {generationStatus === "error"
-                        ? "Try Again"
-                        : generationStatus === "success"
-                          ? "Continue"
-                          : "Cancel"}
-                    </button>
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-600"></div>
+                      <p className="text-sm text-gray-500">Generating your page content...</p>
+                    </div>
+                  )}
                 </div>
-              </Transition.Child>
-            </div>
-          </Dialog>
-        </Transition>
+
+                <div className="mt-4">
+                  <button
+                    ref={dialogButtonRef}
+                    type="button"
+                    className="inline-flex justify-center px-4 py-2 text-sm font-bold text-white bg-cyan-600 border border-transparent rounded-md hover:bg-cyan-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-cyan-500"
+                    onClick={() => {
+                      if (generationStatus === "success") {
+                        setShowModal(false);
+                        setShowPreview(true);
+                      } else if (generationStatus === "error") {
+                        setShowModal(false);
+                        setGenerationStatus("idle");
+                      } else {
+                        // Don't close if still generating
+                      }
+                    }}
+                    disabled={generationStatus === "generating"}
+                  >
+                    {generationStatus === "error"
+                      ? "Try Again"
+                      : generationStatus === "success"
+                        ? "Continue"
+                        : "Cancel"}
+                  </button>
+                </div>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        </Dialog.Root>
       </div>
     </div>
   );

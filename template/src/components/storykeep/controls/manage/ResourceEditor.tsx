@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { ulid } from "ulid";
 import { navigate } from "astro:transitions/client";
-import { Switch } from "@headlessui/react";
+import { Switch } from "@ark-ui/react";
 import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -177,32 +177,25 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       switch (type) {
         case "boolean":
           return (
-            <Switch
+            <Switch.Root
               checked={value}
-              onChange={(newValue) => handleOptionsPayloadChange(key, newValue)}
-              className={`${
-                value ? "bg-cyan-700" : "bg-gray-300"
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+              onCheckedChange={(details) => handleOptionsPayloadChange(key, details.checked)}
+              aria-label={`Toggle ${key}`}
             >
-              <span
+              <Switch.Control
                 className={`${
-                  value ? "translate-x-6" : "translate-x-1"
-                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-              />
-            </Switch>
+                  value ? "bg-cyan-700" : "bg-gray-300"
+                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+              >
+                <Switch.Thumb
+                  className={`${
+                    value ? "translate-x-6" : "translate-x-1"
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                />
+              </Switch.Control>
+              <Switch.HiddenInput />
+            </Switch.Root>
           );
-        //case "date":
-        //  return (
-        //    <input
-        //      type="datetime-local"
-        //      value={value ? new Date(value * 1000).toISOString().slice(0, -8) : ""}
-        //      onChange={(e) => {
-        //        const date = new Date(e.target.value);
-        //        handleOptionsPayloadChange(key, Math.floor(date.getTime() / 1000));
-        //      }}
-        //      className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-        //    />
-        //  );
         default:
           return (
             <input

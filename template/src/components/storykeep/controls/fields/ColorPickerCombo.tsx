@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
-import { Combobox } from "@headlessui/react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
@@ -30,16 +31,48 @@ const ColorPickerCombo = ({
   allowNull = false,
 }: ColorPickerProps) => {
   const [hexColor, setHexColor] = useState(defaultColor);
-  const [selectedTailwindColor, setSelectedTailwindColor] = useState(() => {
-    return skipTailwind ? "" : hexToTailwind(defaultColor, config?.init?.BRAND_COLOURS) || "";
-  });
+  const initialTailwindColor = skipTailwind
+    ? ""
+    : hexToTailwind(defaultColor, config?.init?.BRAND_COLOURS) || "";
+  const [selectedTailwindColor, setSelectedTailwindColor] = useState(initialTailwindColor);
   const [query, setQuery] = useState("");
+  const [initialRender, setInitialRender] = useState(true);
 
-  const tailwindColorOptions = getTailwindColorOptions();
-  const filteredColors =
-    query === ""
-      ? tailwindColorOptions
-      : tailwindColorOptions.filter((color) => color.toLowerCase().includes(query.toLowerCase()));
+  // Get all available Tailwind color options
+  const allTailwindColorOptions = useMemo(() => {
+    return getTailwindColorOptions();
+  }, []);
+
+  // Filter colors based on search query
+  const filteredColors = useMemo(() => {
+    return query === ""
+      ? allTailwindColorOptions
+      : allTailwindColorOptions.filter((color) =>
+          color.toLowerCase().includes(query.toLowerCase())
+        );
+  }, [allTailwindColorOptions, query]);
+
+  // Create collection for combobox
+  const collection = useMemo(() => {
+    // Make sure all tailwind colors are included in the collection
+    const items = [...allTailwindColorOptions];
+
+    // Ensure the initial color is in the collection if it exists
+    if (initialTailwindColor && !items.includes(initialTailwindColor)) {
+      items.push(initialTailwindColor);
+    }
+
+    return createListCollection({
+      items,
+    });
+  }, [allTailwindColorOptions, initialTailwindColor]);
+
+  // Set default value during initial render
+  useEffect(() => {
+    if (initialRender && initialTailwindColor) {
+      setInitialRender(false);
+    }
+  }, [initialRender, initialTailwindColor]);
 
   // Handle hex color picker changes
   const handleHexColorChange = useCallback(
@@ -51,13 +84,13 @@ const ColorPickerCombo = ({
         const exactTailwindColor = hexToTailwind(computedColor, config?.init?.BRAND_COLOURS);
         if (exactTailwindColor) {
           setSelectedTailwindColor(exactTailwindColor);
-          setQuery(exactTailwindColor);
+          setQuery("");
         } else {
           const closestColor = findClosestTailwindColor(computedColor);
           if (closestColor) {
             const tailwindClass = `${closestColor.name}-${closestColor.shade}`;
             setSelectedTailwindColor(tailwindClass);
-            setQuery(tailwindClass);
+            setQuery("");
           } else {
             setSelectedTailwindColor("");
             setQuery("");
@@ -67,16 +100,17 @@ const ColorPickerCombo = ({
 
       onColorChange(computedColor);
     }, 16),
-    [onColorChange, skipTailwind]
+    [onColorChange, skipTailwind, config?.init?.BRAND_COLOURS]
   );
 
   // Handle Tailwind color selection
   const handleTailwindColorChange = useCallback(
-    (newTailwindColor: string) => {
+    (details: { value: string[] }) => {
       if (skipTailwind) return;
 
+      const newTailwindColor = details.value[0] || "";
       setSelectedTailwindColor(newTailwindColor);
-      setQuery(newTailwindColor);
+      setQuery(""); // Clear query after selection
 
       const newHexColor = getComputedColor(
         tailwindToHex(`bg-${newTailwindColor}`, config?.init?.BRAND_COLOURS || null)
@@ -94,6 +128,30 @@ const ColorPickerCombo = ({
     setQuery("");
     onColorChange("");
   }, [onColorChange]);
+
+  const handleInputChange = useCallback((details: Combobox.InputValueChangeDetails) => {
+    setQuery(details.inputValue);
+  }, []);
+
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .color-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .color-item[data-highlighted] .color-indicator {
+      color: white !important;
+    }
+    .color-item[data-state="checked"] .color-indicator {
+      display: flex;
+    }
+    .color-item .color-indicator {
+      display: none;
+    }
+    .color-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
 
   return (
     <div>
@@ -115,63 +173,58 @@ const ColorPickerCombo = ({
         )}
         {!skipTailwind && (
           <div className="flex-grow">
-            <Combobox value={selectedTailwindColor} onChange={handleTailwindColorChange}>
+            <style>{comboboxItemStyles}</style>
+            {/* Drop down menu for tailwind colors */}
+            <Combobox.Root
+              collection={collection}
+              defaultValue={initialTailwindColor ? [initialTailwindColor] : []}
+              value={selectedTailwindColor ? [selectedTailwindColor] : []}
+              onValueChange={handleTailwindColorChange}
+              onInputValueChange={handleInputChange}
+              selectionBehavior="replace"
+            >
               <div className="relative max-w-48">
                 <Combobox.Input
                   className="w-full border-mydarkgrey rounded-md py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue xs:text-sm"
-                  displayValue={(color: string) => color}
-                  onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search Tailwind colors..."
                   autoComplete="off"
                 />
-                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-                </Combobox.Button>
-                <Combobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none xs:text-sm">
-                  {filteredColors.map((color) => (
-                    <Combobox.Option
-                      key={color}
-                      value={color}
-                      className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-3 pr-4 ${
-                          active ? "bg-myorange text-white" : "text-black"
-                        }`
-                      }
-                    >
-                      {({ selected, active }) => (
-                        <>
-                          <div className="flex items-center">
-                            <div
-                              className="w-6 h-6 rounded mr-3 flex-shrink-0"
-                              style={{
-                                backgroundColor: tailwindToHex(
-                                  `bg-${color}`,
-                                  config?.init?.BRAND_COLOURS || null
-                                ),
-                              }}
-                            />
-                            <span
-                              className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                            >
-                              {color}
-                            </span>
-                          </div>
-                          {selected && (
-                            <span
-                              className={`absolute inset-y-0 right-0 flex items-center pr-3 ${
-                                active ? "text-white" : "text-myorange"
-                              }`}
-                            >
-                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
+                </Combobox.Trigger>
+                <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none xs:text-sm">
+                  {filteredColors.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 pl-3 pr-4 text-black">
+                      Nothing found.
+                    </div>
+                  ) : (
+                    filteredColors.map((color) => (
+                      <Combobox.Item
+                        key={color}
+                        item={color}
+                        className="color-item relative cursor-default select-none py-2 pl-3 pr-4"
+                      >
+                        <div className="flex items-center">
+                          <div
+                            className="w-6 h-6 rounded mr-3 flex-shrink-0"
+                            style={{
+                              backgroundColor: tailwindToHex(
+                                `bg-${color}`,
+                                config?.init?.BRAND_COLOURS || null
+                              ),
+                            }}
+                          />
+                          <span className="block truncate">{color}</span>
+                          <span className="color-indicator absolute inset-y-0 right-0 flex items-center pr-3 text-cyan-600">
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        </div>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
               </div>
-            </Combobox>
+            </Combobox.Root>
           </div>
         )}
       </div>

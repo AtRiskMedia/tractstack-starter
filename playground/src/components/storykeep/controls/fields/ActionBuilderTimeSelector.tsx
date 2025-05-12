@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Listbox, Transition } from "@headlessui/react";
+import { useState, useEffect, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import { type BunnyPlayer, hasPlayerJS } from "@/types";
@@ -141,6 +142,7 @@ export default function ActionBuilderTimeSelector({
   >([]);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     const ctx = getCtx();
@@ -155,7 +157,24 @@ export default function ActionBuilderTimeSelector({
     }
   }, [videoId]);
 
-  const handleVideoSelect = (url: string) => {
+  // Create collection for Ark UI Combobox
+  const collection = useMemo(() => {
+    const filteredVideos =
+      query === ""
+        ? availableVideos
+        : availableVideos.filter((video) =>
+            video.title.toLowerCase().includes(query.toLowerCase())
+          );
+
+    return createListCollection({
+      items: filteredVideos,
+      itemToValue: (item) => item.url,
+      itemToString: (item) => item.title,
+    });
+  }, [availableVideos, query]);
+
+  const handleVideoSelect = (details: { value: string[] }) => {
+    const url = details.value[0] || "";
     setSelectedVideoUrl(url);
     setValidationError(null);
 
@@ -189,66 +208,80 @@ export default function ActionBuilderTimeSelector({
     setShowModal(false);
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .video-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .video-item[data-highlighted] .video-indicator {
+      color: white;
+    }
+    .video-item[data-state="checked"] .video-indicator {
+      display: flex;
+    }
+    .video-item .video-indicator {
+      display: none;
+    }
+    .video-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
     <div className="space-y-4">
+      <style>{comboboxItemStyles}</style>
+
       <div className="space-y-2">
         <label className="block text-sm text-gray-700 font-bold">Select a Video</label>
 
-        <Listbox value={selectedVideoUrl} onChange={handleVideoSelect}>
-          <div className="relative mt-1">
-            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm border border-gray-300">
-              <span className="block truncate">
-                {selectedVideoUrl
-                  ? availableVideos.find((v) => v.url === selectedVideoUrl)?.title ||
-                    selectedVideoUrl
-                  : placeholder}
-              </span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </span>
-            </Listbox.Button>
-            <Transition
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm z-10">
-                {availableVideos.length > 0 ? (
-                  availableVideos.map((video) => (
-                    <Listbox.Option
-                      key={video.videoId}
-                      className={({ active }) =>
-                        `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                          active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                        }`
-                      }
-                      value={video.url}
-                    >
-                      {({ selected }) => (
-                        <>
-                          <span
-                            className={`block truncate ${selected ? "font-bold" : "font-normal"}`}
-                          >
-                            {video.title}
-                          </span>
-                          {selected ? (
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-amber-600">
-                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                    </Listbox.Option>
-                  ))
-                ) : (
-                  <div className="py-2 px-4 text-sm text-gray-500 italic">
-                    No videos found on this page
-                  </div>
-                )}
-              </Listbox.Options>
-            </Transition>
+        <Combobox.Root
+          collection={collection}
+          value={selectedVideoUrl ? [selectedVideoUrl] : []}
+          onValueChange={handleVideoSelect}
+          onInputValueChange={(details) => setQuery(details.inputValue)}
+          loopFocus={true}
+          openOnKeyPress={true}
+          composite={true}
+        >
+          <div className="relative">
+            <Combobox.Input
+              className="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-myblue focus:ring-myblue"
+              placeholder={placeholder}
+              autoComplete="off"
+            />
+            <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+            </Combobox.Trigger>
           </div>
-        </Listbox>
+
+          <Combobox.Content className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+            {availableVideos.length > 0 ? (
+              collection.items.length === 0 ? (
+                <div className="relative cursor-default select-none py-2 px-4 text-gray-700">
+                  No videos found matching your search.
+                </div>
+              ) : (
+                collection.items.map((video) => (
+                  <Combobox.Item
+                    key={video.videoId}
+                    item={video}
+                    className="video-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                  >
+                    <span className="block truncate">{video.title}</span>
+                    <span className="video-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                      <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                  </Combobox.Item>
+                ))
+              )
+            ) : (
+              <div className="py-2 px-4 text-sm text-gray-500 italic">
+                No videos found on this page
+              </div>
+            )}
+          </Combobox.Content>
+        </Combobox.Root>
 
         {validationError && <p className="text-sm text-red-500 mt-1">{validationError}</p>}
 

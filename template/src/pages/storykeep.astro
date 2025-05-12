@@ -2,6 +2,7 @@
 import { getAPIContext } from "@/utils/api/astroContext";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import StoryKeep from "@/layouts/StoryKeep.astro";
+import StoryKeepNav from "@/components/storykeep/controls/dashboard/StoryKeepNav";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
 import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
@@ -145,6 +146,7 @@ const remoteVersionInfo = await getRemoteVersionInfo();
               />
             )
           }
+          <StoryKeepNav />
           <PageViewStats client:only="react" />
           <SelectHome contentMap={filterPayload} config={config} client:only="react" />
           <BrowseContent contentMap={filterPayload} client:only="react" />

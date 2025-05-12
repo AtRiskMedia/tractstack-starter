@@ -46,20 +46,26 @@ const processHeldBeliefs = (
   filter: Record<string, string | string[]>,
   beliefs: BeliefStore[]
 ): boolean => {
+  // Extract match-across keys
   const matchAcrossKeys = filter["MATCH-ACROSS"]
     ? Array.isArray(filter["MATCH-ACROSS"])
       ? filter["MATCH-ACROSS"]
       : [filter["MATCH-ACROSS"]]
     : [];
 
-  const processingFilter = { ...filter };
-  delete processingFilter["MATCH-ACROSS"];
-
   const matchAcrossFilter: Record<string, string | string[]> = {};
   const regularFilter: Record<string, string | string[]> = {};
 
-  Object.entries(processingFilter).forEach(([key, value]) => {
+  // Categorize keys into match-across and regular filters, but skip LINKED-BELIEFS
+  Object.entries(filter).forEach(([key, value]) => {
+    // Skip the LINKED-BELIEFS key - it doesn't affect visibility
+    if (key === "LINKED-BELIEFS") return;
+
+    // Skip the MATCH-ACROSS key itself
+    if (key === "MATCH-ACROSS") return;
+
     if (value == null || (Array.isArray(value) && value.length === 0)) return;
+
     if (matchAcrossKeys.includes(key)) {
       matchAcrossFilter[key] = value;
     } else {
@@ -90,9 +96,13 @@ const processWithheldBeliefs = (
 ): boolean => {
   if (!filter || Object.keys(filter).length === 0) return true;
 
-  const matchesAny = Object.entries(filter).some(([key, valueOrValues]) =>
-    hasMatchingBelief(beliefs, key, valueOrValues)
-  );
+  // Check if any belief matches, ignoring LINKED-BELIEFS
+  const matchesAny = Object.entries(filter).some(([key, valueOrValues]) => {
+    // Skip LINKED-BELIEFS key - it doesn't affect visibility
+    if (key === "LINKED-BELIEFS") return false;
+
+    return hasMatchingBelief(beliefs, key, valueOrValues);
+  });
 
   return !matchesAny;
 };

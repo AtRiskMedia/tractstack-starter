@@ -113,7 +113,7 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <ResponsiveContainer width="100%" height={isMobile ? "80%" : "100%"}>
+      <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={rechartsData}
           margin={
@@ -172,7 +172,7 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
               backgroundColor: "#21252B",
               border: "1px solid #3E4451",
               color: "#ABB2BF",
-              fontSize: isMobile ? "0.9rem" : "1rem",
+              fontSize: isMobile ? 12 : 14,
             }}
           />
           <Legend
@@ -180,7 +180,7 @@ const ResponsiveLine = ({ data, duration }: DataProps) => {
             height={isMobile ? 100 : 80}
             wrapperStyle={{
               color: "#ABB2BF",
-              fontSize: isMobile ? "0.9rem" : "1rem",
+              fontSize: isMobile ? 11 : 16,
               paddingTop: isMobile ? "0.5rem" : 0,
               paddingBottom: isMobile ? "0.5rem" : 0,
               display: "flex",

@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
-import { Combobox } from "@headlessui/react";
+import { useState, useCallback, useMemo } from "react";
+import { Combobox } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import { settingsPanelStore } from "@/store/storykeep";
@@ -69,14 +70,24 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
   }
 
   const styles = getFilteredStyles(showAdvanced, currentClasses);
-  const filteredStyles =
-    query === ""
-      ? styles
-      : styles.filter(
-          (style) =>
-            style.title.toLowerCase().includes(query.toLowerCase()) ||
-            style.key.toLowerCase().includes(query.toLowerCase())
-        );
+
+  // Create filtered collection for combobox
+  const styleCollection = useMemo(() => {
+    const filteredStyles =
+      query === ""
+        ? styles
+        : styles.filter(
+            (style) =>
+              style.title.toLowerCase().includes(query.toLowerCase()) ||
+              style.key.toLowerCase().includes(query.toLowerCase())
+          );
+
+    return createListCollection({
+      items: filteredStyles,
+      itemToValue: (item) => item.key,
+      itemToString: (item) => item.title,
+    });
+  }, [styles, query]);
 
   // Get appropriate recommended styles
   const recommendedStyles = isHoverMode ? HOVER_STYLES : BUTTON_STYLES;
@@ -84,18 +95,25 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
     (style) => !currentClasses.has(style.key)
   );
 
-  const handleSelect = useCallback(
-    (styleKey: string) => {
-      setSelectedStyle(styleKey);
-      settingsPanelStore.set({
-        action: isHoverMode ? "style-link-update-hover" : "style-link-update",
-        nodeId: node.id,
-        className: styleKey,
-        expanded: true,
-      });
+  const handleValueChange = useCallback(
+    (details: { value: string[] }) => {
+      const styleKey = details.value[0] || null;
+      if (styleKey) {
+        setSelectedStyle(styleKey);
+        settingsPanelStore.set({
+          action: isHoverMode ? "style-link-update-hover" : "style-link-update",
+          nodeId: node.id,
+          className: styleKey,
+          expanded: true,
+        });
+      }
     },
     [node.id, isHoverMode]
   );
+
+  const handleInputChange = useCallback((details: Combobox.InputValueChangeDetails) => {
+    setQuery(details.inputValue);
+  }, []);
 
   const handleStyleClick = useCallback(
     (styleKey: string) => {
@@ -117,8 +135,30 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
     });
   };
 
+  // CSS to properly style the combobox items with hover and selection
+  const comboboxItemStyles = `
+    .style-item[data-highlighted] {
+      background-color: #0891b2; /* bg-cyan-600 */
+      color: white;
+    }
+    .style-item[data-highlighted] .style-indicator {
+      color: white;
+    }
+    .style-item[data-state="checked"] .style-indicator {
+      display: flex;
+    }
+    .style-item .style-indicator {
+      display: none;
+    }
+    .style-item[data-state="checked"] {
+      font-weight: bold;
+    }
+  `;
+
   return (
-    <div className="space-y-4 min-h-[400px]">
+    <div className="space-y-4 min-h-[400px] max-w-md">
+      <style>{comboboxItemStyles}</style>
+
       <div className="flex flex-row flex-nowrap justify-between">
         <h2 className="text-xl font-bold">Add Style ({isHoverMode ? "Hover" : "Button"} State)</h2>
         <button
@@ -136,7 +176,7 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
           id="show-advanced"
           checked={showAdvanced}
           onChange={(e) => setShowAdvanced(e.target.checked)}
-          className="h-4 w-4 text-myorange focus:ring-myorange border-mydarkgrey rounded"
+          className="h-4 w-4 text-cyan-600 focus:ring-cyan-600 border-mydarkgrey rounded"
         />
         <label htmlFor="show-advanced" className="text-sm text-mydarkgrey">
           Show Advanced Styles
@@ -144,57 +184,50 @@ const StyleLinkPanelAdd = ({ node }: BasePanelProps) => {
       </div>
 
       <div className="relative w-full">
-        <Combobox value={selectedStyle} onChange={handleSelect}>
+        <Combobox.Root
+          collection={styleCollection}
+          value={selectedStyle ? [selectedStyle] : []}
+          onValueChange={handleValueChange}
+          onInputValueChange={handleInputChange}
+          loopFocus={true}
+          openOnKeyPress={true}
+          composite={true}
+        >
           <div className="relative">
             <Combobox.Input
               className="w-full border-mydarkgrey rounded-md py-2 pl-3 pr-10 shadow-sm focus:border-myblue focus:ring-myblue text-xl"
-              onChange={(event) => setQuery(event.target.value)}
-              displayValue={(key: string) => styles.find((style) => style.key === key)?.title || ""}
               placeholder="Search styles..."
+              autoComplete="off"
             />
-            <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
               <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
-            </Combobox.Button>
+            </Combobox.Trigger>
           </div>
 
-          <Combobox.Options className="absolute z-50 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-64 mt-1">
-            {filteredStyles.length === 0 && query !== "" ? (
+          <Combobox.Content className="absolute z-50 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none max-h-64 mt-1">
+            {styleCollection.items.length === 0 ? (
               <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
                 Nothing found.
               </div>
             ) : (
-              filteredStyles.map((style) => (
-                <Combobox.Option
+              styleCollection.items.map((style) => (
+                <Combobox.Item
                   key={style.key}
-                  value={style.key}
-                  className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                      active ? "bg-myorange text-white" : "text-black"
-                    }`
-                  }
+                  item={style}
+                  className="style-item relative cursor-default select-none py-2 pl-10 pr-4 text-black"
                 >
-                  {({ selected, active }) => (
-                    <>
-                      <span className={`block truncate ${selected ? "font-bold" : "font-normal"}`}>
-                        {style.title}
-                        <span className="ml-2 text-sm opacity-60">{style.className}</span>
-                      </span>
-                      {selected ? (
-                        <span
-                          className={`absolute inset-y-0 left-0 flex items-center pl-3 ${
-                            active ? "text-white" : "text-myorange"
-                          }`}
-                        >
-                          <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      ) : null}
-                    </>
-                  )}
-                </Combobox.Option>
+                  <span className="block truncate">
+                    {style.title}
+                    <span className="ml-2 text-sm opacity-60">{style.className}</span>
+                  </span>
+                  <span className="style-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                    <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                </Combobox.Item>
               ))
             )}
-          </Combobox.Options>
-        </Combobox>
+          </Combobox.Content>
+        </Combobox.Root>
       </div>
 
       {availableRecommendedStyles.length > 0 && (
