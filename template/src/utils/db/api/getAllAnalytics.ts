@@ -25,7 +25,16 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
     const tenantId = context?.locals?.tenant?.id || "default";
     const isAnalyticsValid = isAnalyticsCacheValid(tenantId);
     const analyticStore = hourlyAnalyticsStore.get();
-    const currentHour = formatHourKey(new Date());
+    const currentHour = formatHourKey(
+      new Date(
+        Date.UTC(
+          new Date().getUTCFullYear(),
+          new Date().getUTCMonth(),
+          new Date().getUTCDate(),
+          new Date().getUTCHours()
+        )
+      )
+    );
     const tenantAnalyticsData = analyticStore.data[tenantId];
 
     if (

@@ -662,7 +662,14 @@ export function getHoursBetweenKeys(startHourKey: string, endHourKey: string): n
  */
 export function getUTCHourKeysForTimeRange(hours: number): string[] {
   const keys = [];
-  const now = new Date();
+  const now = new Date(
+    Date.UTC(
+      new Date().getUTCFullYear(),
+      new Date().getUTCMonth(),
+      new Date().getUTCDate(),
+      new Date().getUTCHours()
+    )
+  );
   const hoursToGet = Math.min(hours, MAX_ANALYTICS_HOURS);
   for (let i = 0; i < hoursToGet; i++) {
     const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
