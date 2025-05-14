@@ -26,7 +26,7 @@ const loadingState: Record<
 > = {};
 
 const LOADING_THROTTLE_MS = 60000; // 1 minute
-const VERBOSE = true;
+const VERBOSE = false;
 
 // Only use two bins to simplify code complexity
 const HISTORICAL_CHUNK_SIZE = 168; // Process historical data in 1-week chunks

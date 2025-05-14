@@ -2,7 +2,7 @@ import { map } from "nanostores";
 import { ANALYTICS_CACHE_TTL, EPINETS_CACHE_TTL, MAX_ANALYTICS_HOURS } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
-const VERBOSE = true;
+const VERBOSE = false;
 
 export function formatHourKey(date: Date): string {
   // Use UTC to match database timestamps

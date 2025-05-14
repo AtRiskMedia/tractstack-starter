@@ -1077,6 +1077,9 @@ export async function getHourlyNodeActivity(
     // Initialize this hour's record
     hourlyActivity[hourKey] = {};
 
+    // Track unique visitors per content item for this hour
+    const contentVisitors: Record<string, Set<string>> = {};
+
     // Process each node in this hour
     for (const [nodeId, nodeData] of Object.entries(hourData.steps)) {
       // Filter visitors based on type if needed
@@ -1110,12 +1113,32 @@ export async function getHourlyNodeActivity(
       if (parts.length >= 4) {
         const contentId = parts[parts.length - 1];
         const verb = parts[parts.length - 2];
+
         if (!hourlyActivity[hourKey][contentId]) {
           hourlyActivity[hourKey][contentId] = {
             events: {},
+            visitors: 0,
           };
+
+          // Initialize set for tracking unique visitors
+          contentVisitors[contentId] = new Set<string>();
         }
+
         hourlyActivity[hourKey][contentId].events[verb] = count;
+
+        // Add all visitors to the tracking set
+        filteredVisitors.forEach((visitorId) => {
+          if (contentVisitors[contentId]) {
+            contentVisitors[contentId].add(visitorId);
+          }
+        });
+      }
+    }
+
+    // After processing all nodes, update visitor counts for each content
+    for (const contentId in contentVisitors) {
+      if (hourlyActivity[hourKey][contentId]) {
+        hourlyActivity[hourKey][contentId].visitors = contentVisitors[contentId].size;
       }
     }
 

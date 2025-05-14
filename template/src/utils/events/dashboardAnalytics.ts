@@ -52,34 +52,12 @@ export async function computeDashboardAnalytics(
 function computeAllEvents(tenantData: Record<string, any>, hourKeys: string[]): number {
   let total = 0;
 
-  // Count events from content data
-  for (const contentId of Object.keys(tenantData.contentData)) {
-    for (const hourKey of hourKeys) {
-      const hourData = tenantData.contentData[contentId][hourKey];
-      if (hourData) {
-        total += hourData.actions || 0;
-      }
-    }
-  }
-  // Count events from site data
   for (const hourKey of hourKeys) {
     const hourData = tenantData.siteData[hourKey];
     if (hourData && hourData.eventCounts) {
-      // Count all event types, not just PAGEVIEWED
       Object.values(hourData.eventCounts).forEach((count) => {
         total += Number(count);
       });
-    }
-  }
-
-  // Count events from content data
-  for (const contentId of Object.keys(tenantData.contentData)) {
-    for (const hourKey of hourKeys) {
-      const hourData = tenantData.contentData[contentId][hourKey];
-      if (hourData) {
-        // Add actions from content-specific data
-        total += hourData.actions || 0;
-      }
     }
   }
   return total;

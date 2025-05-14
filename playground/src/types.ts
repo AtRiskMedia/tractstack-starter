@@ -1391,6 +1391,7 @@ export type HourlyActivity = Record<
       events: {
         [verb: string]: number;
       };
+      visitors?: number;
     };
   }
 >;

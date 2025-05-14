@@ -9,6 +9,7 @@ import ChevronDownIcon from "@heroicons/react/24/outline/ChevronDownIcon";
 import NewspaperIcon from "@heroicons/react/24/outline/NewspaperIcon";
 import DocumentCheckIcon from "@heroicons/react/24/outline/DocumentCheckIcon";
 import DocumentPlusIcon from "@heroicons/react/24/outline/DocumentPlusIcon";
+import UserGroupIcon from "@heroicons/react/24/outline/UserGroupIcon";
 import { classNames } from "@/utils/common/helpers";
 
 interface ContentEvent {
@@ -21,6 +22,7 @@ interface ContentItem {
   title: string;
   contentType: string;
   events: ContentEvent[];
+  visitors: number;
 }
 
 interface ActiveHourData {
@@ -30,6 +32,7 @@ interface ActiveHourData {
   hourDisplay: string;
   contentItems: ContentItem[];
   hourlyTotal: number;
+  hourlyVisitors: number;
   relativeToMax: number;
 }
 
@@ -126,15 +129,18 @@ const EpinetTableView = () => {
   const getCurrentDayData = (): {
     data: HourData[];
     dailyTotal: number;
+    dailyVisitors: number;
     maxHourlyTotal: number;
   } => {
-    if (!currentDay) return { data: [], dailyTotal: 0, maxHourlyTotal: 0 };
+    if (!currentDay) return { data: [], dailyTotal: 0, dailyVisitors: 0, maxHourlyTotal: 0 };
 
     const hourlyActivity = $epinetCustomFilters.hourlyNodeActivity || {};
     const result: HourData[] = [];
     let emptyRangeStart: number | null = null;
     let dailyTotal = 0;
-    let maxHourlyTotal = 0; // Track the busiest hour's total
+    let maxHourlyTotal = 0;
+
+    const dailyUniqueVisitors = new Set<string>();
 
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
@@ -147,15 +153,16 @@ const EpinetTableView = () => {
       hourKey: string;
       data: Record<string, ContentItem>;
       hourlyTotal: number;
+      hourlyVisitors: number;
     };
 
     const activityByLocalHour: Record<number, ProcessedHourData> = {};
 
-    // First pass: Process hourly activity and calculate totals
     Object.entries(hourlyActivity).forEach(([hourKey, contentItems]) => {
       const { localDay, localHour } = getLocalDateTime(hourKey);
       if (localDay === currentDay) {
         let hourlyTotal = 0;
+        const hourlyUniqueVisitors = new Set<string>();
         const processedData: Record<string, ContentItem> = {};
 
         Object.entries(contentItems).forEach(([contentId, data]) => {
@@ -172,21 +179,27 @@ const EpinetTableView = () => {
             title: contentInfo.title,
             contentType: contentInfo.type,
             events,
+            visitors: data.visitors || 0,
           };
+
+          if (typeof data.visitors === "number" && data.visitors > 0) {
+            hourlyUniqueVisitors.add(contentId + "-visitor-" + data.visitors);
+            dailyUniqueVisitors.add(contentId + "-visitor-" + data.visitors);
+          }
         });
 
         dailyTotal += hourlyTotal;
-        maxHourlyTotal = Math.max(maxHourlyTotal, hourlyTotal); // Update max
+        maxHourlyTotal = Math.max(maxHourlyTotal, hourlyTotal);
 
         activityByLocalHour[localHour] = {
           hourKey,
           data: processedData,
           hourlyTotal,
+          hourlyVisitors: hourlyUniqueVisitors.size,
         };
       }
     });
 
-    // Second pass: Generate hour data with differential contribution
     for (let localHour = 0; localHour < 24; localHour++) {
       const activity = activityByLocalHour[localHour];
       const hasActivity = activity && Object.keys(activity.data).length > 0;
@@ -214,7 +227,6 @@ const EpinetTableView = () => {
           a.title.localeCompare(b.title)
         );
 
-        // Calculate differential contribution relative to busiest hour
         const relativeToMax = maxHourlyTotal > 0 ? activity.hourlyTotal / maxHourlyTotal : 0;
 
         result.push({
@@ -224,7 +236,8 @@ const EpinetTableView = () => {
           hourDisplay: formatLocalHourDisplay(localHour),
           contentItems,
           hourlyTotal: activity.hourlyTotal,
-          relativeToMax, // New field for differential contribution
+          hourlyVisitors: activity.hourlyVisitors,
+          relativeToMax,
         });
       } else {
         if (emptyRangeStart === null) {
@@ -264,6 +277,7 @@ const EpinetTableView = () => {
         return 0;
       }),
       dailyTotal,
+      dailyVisitors: dailyUniqueVisitors.size,
       maxHourlyTotal,
     };
   };
@@ -279,7 +293,7 @@ const EpinetTableView = () => {
     }
   };
 
-  const { data: dayData, dailyTotal } = getCurrentDayData();
+  const { data: dayData, dailyTotal, dailyVisitors } = getCurrentDayData();
   const hasData = availableDays.length > 0;
 
   const formatDate = (dateStr: string): string => {
@@ -325,7 +339,8 @@ const EpinetTableView = () => {
       <div className="border border-gray-200 rounded-lg shadow-sm bg-white">
         <div className="flex justify-between items-center p-3 border-b border-gray-200">
           <h3 className="text-sm font-bold text-gray-800">
-            Hourly Activity ({getTimezoneName()}) - {dailyTotal} Total Events
+            Hourly Activity ({getTimezoneName()}) - {dailyTotal} Total Events / {dailyVisitors}{" "}
+            Unique Visitors
           </h3>
           <div className="flex items-center space-x-2">
             <button
@@ -389,9 +404,15 @@ const EpinetTableView = () => {
                     <span className="text-sm font-bold text-gray-700 min-w-[60px]">
                       {item.hourDisplay}
                     </span>
-                    <span className="text-xs font-medium text-cyan-600 min-w-[80px]">
-                      {item.hourlyTotal} {item.hourlyTotal === 1 ? "event" : "events"}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs font-bold text-cyan-600 min-w-[90px]">
+                        {item.hourlyTotal} {item.hourlyTotal === 1 ? "event" : "events"}
+                      </span>
+                      <span className="text-xs font-bold text-mydarkgrey flex items-center">
+                        <UserGroupIcon className="h-3 w-3 mr-1" />
+                        {item.hourlyVisitors} visitor{item.hourlyVisitors !== 1 ? "s" : ""}
+                      </span>
+                    </div>
                     <div className="relative h-2 max-w-48 w-full bg-gray-200 rounded">
                       <div
                         className="absolute top-0 left-0 h-2 bg-cyan-600 rounded"
@@ -423,9 +444,17 @@ const EpinetTableView = () => {
                   <div className="space-y-4">
                     {item.contentItems.map((content) => (
                       <div key={`${item.hourKey}-${content.contentId}`} className="mb-3">
-                        <div className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                          {getContentIcon(content.contentType)}
-                          {content.title}
+                        <div className="text-sm font-bold text-gray-700 mb-1 flex items-center justify-between">
+                          <div className="flex items-center">
+                            {getContentIcon(content.contentType)}
+                            {content.title}
+                          </div>
+                          {content.visitors > 0 && (
+                            <div className="text-xs text-mydarkgrey flex items-center">
+                              <UserGroupIcon className="h-3 w-3 mr-1" />
+                              {content.visitors} unique visitor{content.visitors !== 1 ? "s" : ""}
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {content.events.map((event, eventIdx) => (
