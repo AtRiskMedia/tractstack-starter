@@ -2,7 +2,7 @@ import { map } from "nanostores";
 import { ANALYTICS_CACHE_TTL, EPINETS_CACHE_TTL, MAX_ANALYTICS_HOURS } from "@/constants";
 import type { LeadMetrics, StoryfragmentAnalytics } from "@/types";
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 export function formatHourKey(date: Date): string {
   // Use UTC to match database timestamps
@@ -82,6 +82,7 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
     slugMap: new Map(),
   };
 
+  // Check if we have basic data structure
   if (!tenantData.lastFullHour || Object.keys(tenantData.contentData).length === 0) {
     if (VERBOSE)
       console.log("Lead metrics cache invalid: missing lastFullHour or contentData for tenant", {
@@ -90,11 +91,11 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
     return false;
   }
 
+  // Check if the current hour data needs refreshing
   const currentHour = formatHourKey(new Date(Date.now()));
   const timeSinceUpdate = Date.now() - tenantData.lastUpdated;
 
-  // Cache is valid if we have data for prior hours, even if TTL is exceeded
-  // Only the current hour needs refreshing
+  // Return false (invalid) if either TTL is exceeded or the hour has changed
   if (timeSinceUpdate >= ANALYTICS_CACHE_TTL || tenantData.lastFullHour !== currentHour) {
     if (VERBOSE)
       console.log("Lead metrics cache requires current hour refresh", {
@@ -102,7 +103,7 @@ export function isAnalyticsCacheValid(tenantId: string = "default"): boolean {
         currentHour,
         timeSinceUpdate,
       });
-    return true;
+    return false;
   }
 
   return true;
@@ -130,10 +131,11 @@ export function isEpinetCacheValid(tenantId: string = "default"): boolean {
   const lastUpdateTime = store.lastUpdateTime[tenantId];
   const currentHour = formatHourKey(new Date(Date.now()));
 
+  // Return false (invalid) if either TTL is exceeded or the hour has changed
   if (lastHourKey !== currentHour || Date.now() - lastUpdateTime >= EPINETS_CACHE_TTL) {
     if (VERBOSE)
       console.log("Epinet cache requires current hour refresh", { lastHourKey, currentHour });
-    return true;
+    return false;
   }
 
   return true;
@@ -214,7 +216,7 @@ export function getHourKeysForTimeRange(hours: number): string[] {
   const hoursToGet = Math.min(hours, MAX_ANALYTICS_HOURS);
   for (let i = 0; i < hoursToGet; i++) {
     const hourDate = new Date(now.getTime() - i * 60 * 60 * 1000);
-    const key = formatHourKey(hourDate); // This already uses UTC internally
+    const key = formatHourKey(hourDate);
     keys.push(key);
   }
   return keys;
@@ -230,4 +232,87 @@ export function getHoursBetween(startHourKey: string, endHourKey: string): numbe
   const endDate = new Date(Date.UTC(endYear, endMonth - 1, endDay, endHour));
 
   return Math.max(0, Math.floor((endDate.getTime() - startDate.getTime()) / (60 * 60 * 1000)));
+}
+
+// Lock management for cache refresh operations
+interface CacheLock {
+  acquiredAt: number;
+  expiresAt: number;
+  tenantId: string;
+  hourKey: string;
+}
+
+// Map of active locks: key format is "{type}-{tenantId}-{hourKey}"
+const cacheLocks = new Map<string, CacheLock>();
+
+// Lock TTL in milliseconds (30 seconds)
+const LOCK_TTL_MS = 30000;
+
+/**
+ * Try to acquire a lock for a specific cache refresh operation
+ * @param type The type of data being refreshed ('analytics' or 'epinet')
+ * @param tenantId The tenant ID
+ * @param hourKey The specific hour being refreshed, or 'current' for the current hour
+ * @returns True if the lock was acquired, false otherwise
+ */
+export function tryAcquireCacheLock(
+  type: "analytics" | "epinet",
+  tenantId: string = "default",
+  hourKey: string = "current"
+): boolean {
+  const now = Date.now();
+  const lockKey = `${type}-${tenantId}-${hourKey}`;
+
+  // Clean expired locks first
+  cleanExpiredLocks();
+
+  // Check if the lock is already held
+  if (cacheLocks.has(lockKey)) {
+    if (VERBOSE) console.log(`Cache lock already held for ${lockKey}`);
+    return false;
+  }
+
+  // Acquire the lock
+  cacheLocks.set(lockKey, {
+    acquiredAt: now,
+    expiresAt: now + LOCK_TTL_MS,
+    tenantId,
+    hourKey,
+  });
+
+  if (VERBOSE) console.log(`Cache lock acquired for ${lockKey}`);
+  return true;
+}
+
+/**
+ * Release a previously acquired lock
+ * @param type The type of data being refreshed ('analytics' or 'epinet')
+ * @param tenantId The tenant ID
+ * @param hourKey The specific hour being refreshed, or 'current' for the current hour
+ */
+export function releaseCacheLock(
+  type: "analytics" | "epinet",
+  tenantId: string = "default",
+  hourKey: string = "current"
+): void {
+  const lockKey = `${type}-${tenantId}-${hourKey}`;
+
+  if (cacheLocks.has(lockKey)) {
+    cacheLocks.delete(lockKey);
+    if (VERBOSE) console.log(`Cache lock released for ${lockKey}`);
+  }
+}
+
+/**
+ * Clean up any expired locks to prevent deadlocks
+ */
+function cleanExpiredLocks(): void {
+  const now = Date.now();
+
+  for (const [key, lock] of cacheLocks.entries()) {
+    if (lock.expiresAt <= now) {
+      cacheLocks.delete(key);
+      if (VERBOSE) console.log(`Expired cache lock removed for ${key}`);
+    }
+  }
 }

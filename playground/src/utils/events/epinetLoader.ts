@@ -4,6 +4,8 @@ import {
   formatHourKey,
   createEmptyHourlyEpinetData,
   getHourKeysForTimeRange,
+  releaseCacheLock,
+  tryAcquireCacheLock,
 } from "@/store/analytics";
 import { getFullContentMap } from "@/utils/db/turso";
 import { parseHourKeyToDate } from "@/utils/common/helpers";
@@ -19,7 +21,7 @@ import type {
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { Client } from "@libsql/client";
 
-const VERBOSE = false;
+const VERBOSE = true;
 const LOADING_THROTTLE_MS = 60000;
 const RECENT_CHUNK_SIZE = 48;
 const HISTORICAL_CHUNK_SIZE = 168;
@@ -154,6 +156,7 @@ export async function loadHourlyEpinetData(
   currentHourOnly: boolean = false
 ): Promise<void> {
   const tenantId = context?.locals?.tenant?.id || "default";
+
   if (!loadingState[tenantId]) {
     loadingState[tenantId] = {
       loading: false,
@@ -166,6 +169,23 @@ export async function loadHourlyEpinetData(
       },
     };
   }
+
+  // Check if this is a cold start or just needs current hour update
+  const storeSnapshot = hourlyEpinetStore.get();
+  const isCacheCold =
+    !storeSnapshot.data[tenantId] || Object.keys(storeSnapshot.data[tenantId] || {}).length === 0;
+
+  // Override parameters for cold start
+  if (isCacheCold && !currentHourOnly) {
+    hours = MAX_ANALYTICS_HOURS; // Use constant from @/constants.ts
+    if (VERBOSE) console.log(`[DEBUG-EPINET] Cold start detected, loading ${hours} hours`);
+  } else if (!currentHourOnly) {
+    // Force current hour only if we have cache data and not explicitly requesting currentHourOnly
+    currentHourOnly = true;
+    hours = 1;
+    if (VERBOSE) console.log(`[DEBUG-EPINET] Cache exists, forcing current hour update only`);
+  }
+
   const now = Date.now();
   if (loadingState[tenantId].loading) {
     if (VERBOSE) console.log(`Epinet loading already in progress for tenant: ${tenantId}`);
@@ -175,6 +195,28 @@ export async function loadHourlyEpinetData(
     if (VERBOSE) console.log(`Epinet loading throttled for tenant: ${tenantId}`);
     return;
   }
+
+  // Generate current hour key for lock
+  const currentHour = formatHourKey(
+    new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    )
+  );
+
+  // Try to acquire lock AFTER throttling check
+  if (!tryAcquireCacheLock("epinet", tenantId, currentHour)) {
+    if (VERBOSE)
+      console.log(
+        `[LOCK] Skipping epinet refresh for ${tenantId} as another process is handling it`
+      );
+    return;
+  }
+
   try {
     loadingState[tenantId].loading = true;
     loadingState[tenantId].lastLoadAttempt = now;
@@ -269,13 +311,17 @@ export async function loadHourlyEpinetData(
 
     // Initialize or get the current epinet data structure
     const currentStore = hourlyEpinetStore.get();
-    let epinetData: Record<string, Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>>;
 
-    if (currentHourOnly && currentStore.data[tenantId]) {
-      epinetData = { ...currentStore.data[tenantId] };
-    } else {
-      epinetData = {};
+    // Initialize the store data for this tenant if it doesn't exist
+    if (!currentStore.data[tenantId]) {
+      currentStore.data[tenantId] = {};
     }
+
+    // Create a working copy that will only contain the data we're processing
+    let epinetData: Record<
+      string,
+      Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>
+    > = {};
 
     // Pre-analyze all epinets to determine what data we need
     const epinetAnalysis = analyzeEpinets(epinets);
@@ -356,10 +402,26 @@ export async function loadHourlyEpinetData(
         )
       );
       oldestAllowedDate.setUTCHours(oldestAllowedDate.getUTCHours() - MAX_ANALYTICS_HOURS);
-      trimOldData(epinetData, oldestAllowedDate);
+
+      // Trim old data from existing store
+      for (const epinetId of Object.keys(currentStore.data[tenantId] || {})) {
+        if (currentStore.data[tenantId][epinetId]) {
+          const hourKeys = Object.keys(currentStore.data[tenantId][epinetId]);
+          hourKeys.forEach((hourKey) => {
+            try {
+              const hourDate = parseHourKeyToDate(hourKey);
+              if (hourDate < oldestAllowedDate) {
+                delete currentStore.data[tenantId][epinetId][hourKey];
+              }
+            } catch (error) {
+              console.error(`Error trimming epinet data hour key ${hourKey}:`, error);
+            }
+          });
+        }
+      }
     }
 
-    // Final store update
+    // Update the store with processed data
     const currentDate = new Date(
       Date.UTC(
         new Date().getUTCFullYear(),
@@ -368,7 +430,19 @@ export async function loadHourlyEpinetData(
         new Date().getUTCHours()
       )
     );
-    currentStore.data[tenantId] = epinetData;
+
+    // Selectively update each epinet's data for processed hours
+    for (const epinetId in epinetData) {
+      if (!currentStore.data[tenantId][epinetId]) {
+        currentStore.data[tenantId][epinetId] = {};
+      }
+
+      for (const hourKey in epinetData[epinetId]) {
+        currentStore.data[tenantId][epinetId][hourKey] = epinetData[epinetId][hourKey];
+      }
+    }
+
+    // Update metadata
     currentStore.lastFullHour[tenantId] = formatHourKey(currentDate);
     currentStore.lastUpdateTime[tenantId] = Date.now();
     hourlyEpinetStore.set(currentStore);
@@ -378,6 +452,29 @@ export async function loadHourlyEpinetData(
   } finally {
     loadingState[tenantId].loading = false;
     loadingState[tenantId].progress.currentEpinetId = null;
+    releaseCacheLock("epinet", tenantId, currentHour);
+  }
+  if (VERBOSE) {
+    const epinetStore = hourlyEpinetStore.get();
+    const epinetData = epinetStore.data[tenantId] || {};
+    const epinetCount = Object.keys(epinetData).length;
+    const hourCount = new Map();
+
+    // Count hours for each epinet
+    Object.entries(epinetData).forEach(([epinetId, hourData]) => {
+      const hoursForEpinet = Object.keys(hourData).length;
+      hourCount.set(epinetId, hoursForEpinet);
+    });
+
+    const totalHours = Array.from(hourCount.values()).reduce((sum, count) => sum + count, 0);
+    const averageHours = epinetCount > 0 ? totalHours / epinetCount : 0;
+
+    console.log(
+      `[DEBUG-EPINET] After refresh: tenant ${tenantId} has ${epinetCount} epinets with ${totalHours} total hour bins (avg ${averageHours.toFixed(1)} per epinet)`
+    );
+    console.log(
+      `[DEBUG-EPINET] Current hour: ${formatHourKey(new Date())}, Last full hour: ${epinetStore.lastFullHour[tenantId]}`
+    );
   }
 }
 
@@ -847,27 +944,6 @@ function calculateChronologicalTransitions(
           hourData.transitions[fromNodeId][toNodeId].visitors.add(visitorId);
         }
       }
-    }
-  }
-}
-
-function trimOldData(
-  epinetData: Record<string, Record<string, ReturnType<typeof createEmptyHourlyEpinetData>>>,
-  oldestAllowedDate: Date
-): void {
-  for (const epinetId of Object.keys(epinetData)) {
-    if (epinetData[epinetId]) {
-      const hourKeys = Object.keys(epinetData[epinetId]);
-      hourKeys.forEach((hourKey) => {
-        try {
-          const hourDate = parseHourKeyToDate(hourKey);
-          if (hourDate < oldestAllowedDate) {
-            delete epinetData[epinetId][hourKey];
-          }
-        } catch (error) {
-          console.error(`Error trimming epinet data hour key ${hourKey}:`, error);
-        }
-      });
     }
   }
 }

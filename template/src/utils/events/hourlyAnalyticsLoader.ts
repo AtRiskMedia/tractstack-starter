@@ -6,6 +6,8 @@ import {
   createEmptyHourlyContentData,
   getHourKeysForTimeRange,
   getHoursBetween,
+  releaseCacheLock,
+  tryAcquireCacheLock,
 } from "@/store/analytics";
 import { getFullContentMap } from "@/utils/db/turso";
 import { parseHourKeyToDate } from "@/utils/common/helpers";
@@ -24,7 +26,7 @@ const loadingState: Record<
 > = {};
 
 const LOADING_THROTTLE_MS = 60000; // 1 minute
-const VERBOSE = false;
+const VERBOSE = true;
 
 // Only use two bins to simplify code complexity
 const HISTORICAL_CHUNK_SIZE = 168; // Process historical data in 1-week chunks
@@ -51,6 +53,23 @@ export async function loadHourlyAnalytics(
     };
   }
 
+  // Check if this is a cold start or just needs current hour update
+  const storeSnapshot = hourlyAnalyticsStore.get();
+  const isCacheCold =
+    !storeSnapshot.data[tenantId] ||
+    Object.keys(storeSnapshot.data[tenantId]?.contentData || {}).length === 0;
+
+  // Override parameters for cold start
+  if (isCacheCold && !currentHourOnly) {
+    hours = MAX_ANALYTICS_HOURS; // Use constant from @/constants.ts
+    if (VERBOSE) console.log(`[DEBUG-ANALYTICS] Cold start detected, loading ${hours} hours`);
+  } else if (!currentHourOnly) {
+    // Force current hour only if we have cache data and not explicitly requesting currentHourOnly
+    currentHourOnly = true;
+    hours = 1;
+    if (VERBOSE) console.log(`[DEBUG-ANALYTICS] Cache exists, forcing current hour update only`);
+  }
+
   // Check if already loading or throttled
   const now = Date.now();
   if (loadingState[tenantId].loading) {
@@ -61,6 +80,27 @@ export async function loadHourlyAnalytics(
   // Don't retry loading too frequently if there was a recent attempt
   if (now - loadingState[tenantId].lastLoadAttempt < LOADING_THROTTLE_MS) {
     if (VERBOSE) console.log(`Analytics loading throttled for tenant: ${tenantId}`);
+    return;
+  }
+
+  // Generate current hour key for lock
+  const currentHour = formatHourKey(
+    new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    )
+  );
+
+  // Try to acquire lock AFTER throttling check
+  if (!tryAcquireCacheLock("analytics", tenantId, currentHour)) {
+    if (VERBOSE)
+      console.log(
+        `[LOCK] Skipping analytics refresh for ${tenantId} as another process is handling it`
+      );
     return;
   }
 
@@ -117,7 +157,7 @@ export async function loadHourlyAnalytics(
 
       const hourParts = currentHourKey.split("-").map(Number);
       startTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
-      endTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3]));
+      endTime = new Date(Date.UTC(hourParts[0], hourParts[1] - 1, hourParts[2], hourParts[3] + 1));
     } else {
       // For full updates, get all hours in the specified range
       hourKeys = getHourKeysForTimeRange(hours);
@@ -135,6 +175,7 @@ export async function loadHourlyAnalytics(
       endTime = new Date(
         Date.UTC(lastHourParts[0], lastHourParts[1] - 1, lastHourParts[2], lastHourParts[3])
       );
+      endTime.setUTCHours(endTime.getUTCHours() + 1);
     }
 
     if (VERBOSE) {
@@ -145,24 +186,30 @@ export async function loadHourlyAnalytics(
 
     // Initialize or get the current analytics data structure
     const currentStore = hourlyAnalyticsStore.get();
-    let contentData: Record<
+
+    // Initialize empty data structures if needed
+    if (!currentStore.data[tenantId]) {
+      currentStore.data[tenantId] = {
+        contentData: {},
+        siteData: {},
+        lastFullHour: "",
+        lastUpdated: 0,
+        totalLeads: 0,
+        lastActivity: null,
+        slugMap: new Map(),
+      };
+    }
+
+    // Create working copies that will only hold the data we're actually processing
+    const contentData: Record<
       string,
       Record<string, ReturnType<typeof createEmptyHourlyContentData>>
-    >;
-    let siteData: Record<string, ReturnType<typeof createEmptyHourlySiteData>>;
+    > = {};
+    const siteData: Record<string, ReturnType<typeof createEmptyHourlySiteData>> = {};
 
-    if (currentHourOnly && currentStore.data[tenantId]) {
-      // For partial updates, keep the existing data and only update the current hour
-      contentData = { ...currentStore.data[tenantId].contentData };
-      siteData = { ...currentStore.data[tenantId].siteData };
-    } else {
-      // For full updates, initialize a new structure
-      contentData = {};
-      siteData = {};
-      // Initialize all hour keys for site data
-      for (const hourKey of hourKeys) {
-        siteData[hourKey] = createEmptyHourlySiteData();
-      }
+    // Initialize empty data only for the hour keys we're processing
+    for (const hourKey of hourKeys) {
+      siteData[hourKey] = createEmptyHourlySiteData();
     }
 
     // FIRST PASS: Identify all relevant content IDs that have activity in the time period
@@ -192,9 +239,7 @@ export async function loadHourlyAnalytics(
 
       // Initialize only the hour keys we're updating
       for (const hourKey of hourKeys) {
-        if (!contentData[contentId][hourKey]) {
-          contentData[contentId][hourKey] = createEmptyHourlyContentData();
-        }
+        contentData[contentId][hourKey] = createEmptyHourlyContentData();
       }
     });
 
@@ -280,12 +325,12 @@ export async function loadHourlyAnalytics(
       );
       oldestAllowedDate.setUTCHours(oldestAllowedDate.getUTCHours() - MAX_ANALYTICS_HOURS);
 
-      Object.keys(contentData).forEach((contentId) => {
-        Object.keys(contentData[contentId]).forEach((hourKey) => {
+      Object.keys(currentStore.data[tenantId].contentData).forEach((contentId) => {
+        Object.keys(currentStore.data[tenantId].contentData[contentId]).forEach((hourKey) => {
           try {
             const hourDate = parseHourKeyToDate(hourKey);
             if (hourDate < oldestAllowedDate) {
-              delete contentData[contentId][hourKey];
+              delete currentStore.data[tenantId].contentData[contentId][hourKey];
             }
           } catch (error) {
             console.error(`Error trimming content data hour key ${hourKey}:`, error);
@@ -293,11 +338,11 @@ export async function loadHourlyAnalytics(
         });
       });
 
-      Object.keys(siteData).forEach((hourKey) => {
+      Object.keys(currentStore.data[tenantId].siteData).forEach((hourKey) => {
         try {
           const hourDate = parseHourKeyToDate(hourKey);
           if (hourDate < oldestAllowedDate) {
-            delete siteData[hourKey];
+            delete currentStore.data[tenantId].siteData[hourKey];
           }
         } catch (error) {
           console.error(`Error trimming site data hour key ${hourKey}:`, error);
@@ -305,7 +350,7 @@ export async function loadHourlyAnalytics(
       });
     }
 
-    // Final store update
+    // Final store update - selectively update only what we changed
     const currentDate = new Date(
       Date.UTC(
         new Date().getUTCFullYear(),
@@ -314,15 +359,30 @@ export async function loadHourlyAnalytics(
         new Date().getUTCHours()
       )
     );
-    currentStore.data[tenantId] = {
-      contentData,
-      siteData,
-      lastFullHour: formatHourKey(currentDate),
-      lastUpdated: Date.now(),
-      totalLeads,
-      lastActivity,
-      slugMap,
-    };
+
+    // Update contentData for processed hours
+    for (const contentId in contentData) {
+      if (!currentStore.data[tenantId].contentData[contentId]) {
+        currentStore.data[tenantId].contentData[contentId] = {};
+      }
+
+      for (const hourKey in contentData[contentId]) {
+        currentStore.data[tenantId].contentData[contentId][hourKey] =
+          contentData[contentId][hourKey];
+      }
+    }
+
+    // Update siteData for processed hours
+    for (const hourKey in siteData) {
+      currentStore.data[tenantId].siteData[hourKey] = siteData[hourKey];
+    }
+
+    // Update metadata
+    currentStore.data[tenantId].lastFullHour = formatHourKey(currentDate);
+    currentStore.data[tenantId].lastUpdated = Date.now();
+    currentStore.data[tenantId].totalLeads = totalLeads;
+    currentStore.data[tenantId].lastActivity = lastActivity;
+    currentStore.data[tenantId].slugMap = slugMap;
 
     hourlyAnalyticsStore.set(currentStore);
 
@@ -335,6 +395,25 @@ export async function loadHourlyAnalytics(
   } finally {
     // Clear loading state
     loadingState[tenantId].loading = false;
+    releaseCacheLock("analytics", tenantId, currentHour);
+  }
+  if (VERBOSE) {
+    const currentStore = hourlyAnalyticsStore.get();
+    const tenantData = currentStore.data[tenantId];
+    const contentHours = new Set();
+    const siteHours = Object.keys(tenantData?.siteData || {});
+
+    // Collect all unique hour keys from all content items
+    Object.values(tenantData?.contentData || {}).forEach((contentItem: any) => {
+      Object.keys(contentItem).forEach((hourKey) => contentHours.add(hourKey));
+    });
+
+    console.log(
+      `[DEBUG-ANALYTICS] After refresh: tenant ${tenantId} has ${contentHours.size} unique content hour bins and ${siteHours.length} site hour bins`
+    );
+    console.log(
+      `[DEBUG-ANALYTICS] Current hour: ${formatHourKey(new Date())}, Last full hour: ${tenantData?.lastFullHour}`
+    );
   }
 }
 
@@ -352,10 +431,12 @@ async function processTimeRange(
 ): Promise<void> {
   if (VERBOSE) {
     console.log(
-      `[DEBUG-ANALYTICS] Processing time range: ${startTime.toISOString()} to ${endTime.toISOString()}, hourKeys:`,
-      hourKeys
+      `[DEBUG-ANALYTICS] Processing time range: ${startTime.toISOString()} to ${endTime.toISOString()}`
     );
   }
+
+  // Create a Set for faster lookups
+  const validHourKeys = new Set(hourKeys);
 
   // SITE DATA QUERY: Updated to handle timestamp formats and future timestamps
   const siteStart = Date.now();
@@ -409,13 +490,16 @@ async function processTimeRange(
     ],
   });
   if (VERBOSE) {
-    console.log(`[DEBUG-ANALYTICS] Site query rows:`, siteRows);
     console.log(`[PERF] Site query took ${Date.now() - siteStart}ms`);
   }
 
   // Process site rows with dynamic initialization
   for (const row of siteRows) {
     const hourKey = String(row.hour_key);
+
+    // Only process if this hour key is in our requested list
+    if (!validHourKeys.has(hourKey)) continue;
+
     // Initialize siteData if not already present
     if (!siteData[hourKey]) {
       siteData[hourKey] = createEmptyHourlySiteData();
@@ -467,13 +551,16 @@ async function processTimeRange(
     args: [startTime.toISOString(), endTime.toISOString()],
   });
   if (VERBOSE) {
-    console.log(`[DEBUG-ANALYTICS] Content query rows:`, contentRows);
     console.log(`[PERF] Content query took ${Date.now() - contentStart}ms`);
   }
 
   // Process content rows
   for (const row of contentRows) {
     const hourKey = String(row.hour_key);
+
+    // Only process if this hour key is in our requested list
+    if (!validHourKeys.has(hourKey)) continue;
+
     const contentId = String(row.object_id);
     if (!contentData[contentId]) {
       contentData[contentId] = {};

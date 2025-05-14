@@ -49,11 +49,11 @@ export const THRESHOLD_GLOSSED = 7000;
 export const JWT_LIFETIME = 15 * 60 * 1000;
 export const IMPRESSIONS_DELAY = 5000;
 
-export const ANALYTICS_CACHE_TTL = 15 * 60 * 1000;
-export const EPINETS_CACHE_TTL = 30 * 60 * 1000;
+//export const ANALYTICS_CACHE_TTL = 15 * 60 * 1000;
+//export const EPINETS_CACHE_TTL = 30 * 60 * 1000;
 export const MAX_ANALYTICS_HOURS = 672;
-//export const ANALYTICS_CACHE_TTL = 5000;
-//export const EPINETS_CACHE_TTL = 5000;
+export const ANALYTICS_CACHE_TTL = 65000;
+export const EPINETS_CACHE_TTL = 65000;
 //export const MAX_ANALYTICS_HOURS = 72;
 
 export const collections = ["kCz"];
