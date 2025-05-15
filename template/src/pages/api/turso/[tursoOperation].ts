@@ -41,11 +41,13 @@ import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { deleteEpinet } from "@/utils/db/api/deleteEpinet";
 import { getAllAnalytics } from "@/utils/db/api/getAllAnalytics";
 import { getPanelAnalytics } from "@/utils/db/api/panelAnalytics";
-import { createEmptyDashboardAnalytics } from "@/utils/events/dashboardAnalytics";
-import { createEmptyLeadMetrics } from "@/store/analytics";
+import {
+  computeStoryfragmentAnalytics,
+  createEmptyDashboardAnalytics,
+} from "@/utils/events/dashboardAnalytics";
+import { isEpinetCacheValid, createEmptyLeadMetrics } from "@/store/analytics";
 import { getEpinetCustomMetrics } from "@/utils/events/epinetAnalytics";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
-import { isEpinetCacheValid } from "@/store/analytics";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -348,6 +350,36 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
 
         result = await getPanelAnalytics(id, type, duration, context);
         break;
+      }
+
+      case "getStoryfragmentAnalytics": {
+        try {
+          const analyticsData = await computeStoryfragmentAnalytics(context);
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              data: analyticsData,
+            }),
+            {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        } catch (error) {
+          console.error("Error getting storyfragment analytics:", error);
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: error instanceof Error ? error.message : "An unknown error occurred",
+              data: [],
+            }),
+            {
+              status: 500,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
       }
 
       case "getAllFiles":

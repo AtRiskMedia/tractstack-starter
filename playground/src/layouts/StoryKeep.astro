@@ -4,10 +4,9 @@ import { ClientRouter } from "astro:transitions";
 import SetMap from "@/components/storykeep/controls/state/SetMap";
 import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso";
-import { computeStoryfragmentAnalytics } from "@/utils/events/analyticsComputation";
 import { joinUrlPaths } from "@/utils/common/helpers";
 import { isOpenDemoMode } from "@/utils/core/auth";
-import type { Theme, FullContentMap, Config, StoryfragmentAnalytics } from "@/types";
+import type { Theme, FullContentMap, Config } from "@/types";
 
 export interface Props {
   config: Config;
@@ -48,7 +47,6 @@ const socialLogoWithVersion = joinUrlPaths(
 );
 const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
-const analyticsData: StoryfragmentAnalytics[] = await computeStoryfragmentAnalytics(context);
 const isDemoMode = isOpenDemoMode(Astro, config);
 ---
 
@@ -146,7 +144,6 @@ const isDemoMode = isOpenDemoMode(Astro, config);
 
     <SetMap
       payload={contentMap}
-      analytics={analyticsData}
       availableCodeHooks={Object.keys(codeHookComponents)}
       brand={config.init.BRAND_COLOURS || ``}
       theme={(config.init.THEME as Theme) || `light`}

@@ -6,16 +6,14 @@ import {
   homeSlugStore,
   tractstackSlugStore,
   hasAssemblyAIStore,
-  storyfragmentAnalyticsStore,
   isDemoModeStore,
   hasArtpacksStore,
   tenantIdStore,
 } from "@/store/storykeep.ts";
-import type { ArtpacksStore, Theme, FullContentMap, StoryfragmentAnalytics } from "@/types.ts";
+import type { ArtpacksStore, Theme, FullContentMap } from "@/types.ts";
 
 const SetMap = (props: {
   payload: FullContentMap[];
-  analytics: StoryfragmentAnalytics[];
   availableCodeHooks: string[];
   brand: string;
   theme: Theme;
@@ -28,7 +26,6 @@ const SetMap = (props: {
 }) => {
   const {
     payload,
-    analytics,
     availableCodeHooks,
     brand,
     theme,
@@ -41,10 +38,6 @@ const SetMap = (props: {
   } = props;
 
   useEffect(() => {
-    // First set the loading state to true before we begin processing the data
-    storyfragmentAnalyticsStore.setKey("isLoading", true);
-
-    // Set all other stores
     contentMap.set(payload);
     codehookMap.set(availableCodeHooks);
     brandColours.set(brand);
@@ -55,26 +48,6 @@ const SetMap = (props: {
     isDemoModeStore.set(isDemoMode);
     hasArtpacksStore.set(artpacks);
     tenantIdStore.set(tenantId);
-
-    // Process and set analytics data
-    if (analytics.length > 0) {
-      const analyticsById = analytics.reduce(
-        (acc, item) => {
-          acc[item.id] = item;
-          return acc;
-        },
-        {} as Record<string, StoryfragmentAnalytics>
-      );
-
-      storyfragmentAnalyticsStore.set({
-        byId: analyticsById,
-        lastUpdated: Date.now(),
-        isLoading: false, // Set loading to false once data is processed
-      });
-    } else {
-      // Even if no analytics exist, we should still mark loading as complete
-      storyfragmentAnalyticsStore.setKey("isLoading", false);
-    }
   }, []);
 
   return <div />;

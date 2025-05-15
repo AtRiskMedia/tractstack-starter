@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { contentMap } from "@/store/events";
-import { storyfragmentAnalyticsStore } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
 import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
-import type { StoryFragmentContentMap, PaneNode, Config } from "@/types";
+import type { StoryfragmentAnalytics, StoryFragmentContentMap, PaneNode, Config } from "@/types";
 
 const PER_PAGE = 20;
 
@@ -17,8 +16,9 @@ interface ListContentSetupProps {
 }
 
 const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => {
+  const [analyticsData, setAnalyticsData] = useState<Record<string, StoryfragmentAnalytics>>({});
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
   const $contentMap = useStore(contentMap);
-  const $analytics = useStore(storyfragmentAnalyticsStore);
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
@@ -62,6 +62,29 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
     }
   });
 
+  const fetchAnalyticsData = async () => {
+    try {
+      setIsAnalyticsLoading(true);
+      const response = await fetch("/api/turso/getStoryfragmentAnalytics");
+      const result = await response.json();
+      if (result.success) {
+        // Transform array to a map keyed by ID for easier lookup
+        const analyticsById = result.data.reduce(
+          (acc: Record<string, StoryfragmentAnalytics>, item: StoryfragmentAnalytics) => {
+            acc[item.id] = item;
+            return acc;
+          },
+          {}
+        );
+        setAnalyticsData(analyticsById);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+    } finally {
+      setIsAnalyticsLoading(false);
+    }
+  };
+
   const topics = Array.from(topicMap.entries())
     .map(([name, { count, pageIds }]) => ({
       name,
@@ -82,8 +105,8 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
 
   const sortedPages = [...filteredPages].sort((a, b) => {
     if (selectedMode === "popular") {
-      const aViews = $analytics.byId[a.id]?.total_actions || 0;
-      const bViews = $analytics.byId[b.id]?.total_actions || 0;
+      const aViews = analyticsData[a.id]?.total_actions || 0;
+      const bViews = analyticsData[b.id]?.total_actions || 0;
       return bViews - aViews;
     }
     const bDate = b.changed ? new Date(b.changed) : new Date(0);
@@ -125,7 +148,10 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
     }
   };
 
-  // Effect to update the node when settings change
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
+
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -251,6 +277,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
     );
   }
 
+  if (isAnalyticsLoading) return null;
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
       <div className="flex justify-between items-center">
@@ -420,7 +447,7 @@ const ListContentSetup = ({ params, nodeId, config }: ListContentSetupProps) => 
           <div className="divide-y divide-gray-200">
             {paginatedPages.map((page) => {
               const isExcluded = excludedIds.includes(page.id);
-              const analytics = $analytics.byId[page.id];
+              const analytics = analyticsData[page.id];
 
               return (
                 <div key={page.id} className="flex items-center p-4">

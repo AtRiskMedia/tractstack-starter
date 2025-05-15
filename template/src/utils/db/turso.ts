@@ -1,6 +1,5 @@
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
-import { computeStoryfragmentAnalytics as computeStoryfragmentAnalyticsFromEvents } from "@/utils/events/analyticsComputation";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
 import {
   invalidateEntry,
@@ -39,11 +38,10 @@ import type {
   ResourceContentMap,
   MenuContentMap,
   EpinetContentMap,
-  StoryfragmentAnalytics,
   Topic,
   TopicContentMap,
+  APIContext,
 } from "@/types.ts";
-import type { APIContext } from "@/types";
 
 export interface StoryFragmentFullRowData {
   storyfragment: StoryFragmentRowData;
@@ -1842,10 +1840,4 @@ export async function logTokenUsage(tokensUsed: number, context?: APIContext): P
     console.error("Error logging token usage:", error);
     return false;
   }
-}
-
-export async function computeStoryfragmentAnalytics(
-  context?: APIContext
-): Promise<StoryfragmentAnalytics[]> {
-  return computeStoryfragmentAnalyticsFromEvents(context);
 }

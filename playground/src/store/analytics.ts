@@ -316,3 +316,18 @@ function cleanExpiredLocks(): void {
     }
   }
 }
+
+// Add to @/store/analytics.ts
+export const knownFingerprintsStore = map<{
+  data: Record<string, Set<string>>;
+  lastLoaded: Record<string, number>;
+}>({
+  data: {},
+  lastLoaded: {},
+});
+
+// Helper function to check if a fingerprint is known
+export function isKnownFingerprint(fingerprintId: string, tenantId: string = "default"): boolean {
+  const store = knownFingerprintsStore.get();
+  return store.data[tenantId]?.has(fingerprintId) || false;
+}

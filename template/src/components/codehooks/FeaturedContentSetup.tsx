@@ -2,12 +2,11 @@ import { useState, useRef, useEffect, type DragEvent } from "react";
 import { useStore } from "@nanostores/react";
 import { RadioGroup } from "@ark-ui/react/radio-group";
 import { contentMap } from "@/store/events";
-import { storyfragmentAnalyticsStore } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 import { getCtx } from "@/store/nodes";
 import { cloneDeep } from "@/utils/common/helpers";
 import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
-import type { StoryFragmentContentMap, PaneNode, Config } from "@/types";
+import type { StoryfragmentAnalytics, StoryFragmentContentMap, PaneNode, Config } from "@/types";
 
 const radioGroupStyles = `
   .radio-control[data-state="unchecked"] .radio-dot {
@@ -40,8 +39,9 @@ interface FeaturedContentSetupProps {
 }
 
 const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupProps) => {
+  const [analyticsData, setAnalyticsData] = useState<Record<string, StoryfragmentAnalytics>>({});
+  const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
   const $contentMap = useStore(contentMap);
-  const $analytics = useStore(storyfragmentAnalyticsStore);
   const draggedRef = useRef<string | null>(null);
   const isInitialMount = useRef(true);
 
@@ -65,6 +65,29 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
 
   const hasConfiguration = selectedIds.length > 0 || selectedFeaturedId !== "";
 
+  const fetchAnalyticsData = async () => {
+    try {
+      setIsAnalyticsLoading(true);
+      const response = await fetch("/api/turso/getStoryfragmentAnalytics");
+      const result = await response.json();
+      if (result.success) {
+        // Transform array to a map keyed by ID for easier lookup
+        const analyticsById = result.data.reduce(
+          (acc: Record<string, StoryfragmentAnalytics>, item: StoryfragmentAnalytics) => {
+            acc[item.id] = item;
+            return acc;
+          },
+          {}
+        );
+        setAnalyticsData(analyticsById);
+      }
+    } catch (error) {
+      console.error("Error fetching analytics data:", error);
+    } finally {
+      setIsAnalyticsLoading(false);
+    }
+  };
+
   const validPages = $contentMap
     .filter(
       (item): item is StoryFragmentContentMap =>
@@ -78,7 +101,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     .sort((a, b) => {
       if (selectedMode === "popularity") {
         return (
-          ($analytics.byId[b.id]?.total_actions || 0) - ($analytics.byId[a.id]?.total_actions || 0)
+          (analyticsData[b.id]?.total_actions || 0) - (analyticsData[a.id]?.total_actions || 0)
         );
       }
       if (selectedMode === "recent") {
@@ -137,6 +160,10 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
       ctx.modifyNodes([updatedNode]);
     }
   };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -280,6 +307,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
     );
   }
 
+  if (isAnalyticsLoading) return null;
   return (
     <div className="w-full p-6 space-y-6 bg-slate-50">
       <style>{radioGroupStyles}</style>
@@ -375,7 +403,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
               </div>
               <p className="mt-1 text-sm text-gray-500 line-clamp-1">{featuredPage.description}</p>
               <div className="mt-1 text-xs text-gray-500">
-                {$analytics.byId[featuredPage.id]?.total_actions || 0} views
+                {analyticsData[featuredPage.id]?.total_actions || 0} views
               </div>
             </div>
           </div>
@@ -540,7 +568,7 @@ const FeaturedContentSetup = ({ params, nodeId, config }: FeaturedContentSetupPr
                   </div>
                   <p className="mt-1 text-sm text-gray-500 line-clamp-1">{page.description}</p>
                   <div className="mt-1 text-xs text-gray-500">
-                    {$analytics.byId[page.id]?.total_actions || 0} views • Updated{" "}
+                    {analyticsData[page.id]?.total_actions || 0} view • Updated{" "}
                     {new Date(page.changed || 0).toLocaleDateString()}
                   </div>
                 </div>

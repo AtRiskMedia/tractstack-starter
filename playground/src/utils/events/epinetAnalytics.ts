@@ -1,15 +1,17 @@
 import {
   getHourKeysForTimeRange,
-  hourlyAnalyticsStore,
   hourlyEpinetStore,
   formatHourKey,
   createEmptyHourlyEpinetData,
+  isKnownFingerprint,
+  knownFingerprintsStore,
 } from "@/store/analytics";
 import { upsertEpinet } from "@/utils/db/api/upsertEpinet";
 import { contentMap } from "@/store/events";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getEventNodeId } from "@/utils/events/epinetLoader";
 import { loadHourlyEpinetData, getEpinetLoadingStatus } from "@/utils/events/epinetLoader";
+import { tursoClient } from "@/utils/db/client";
 import type {
   EventStream,
   EpinetStepBelief,
@@ -29,16 +31,56 @@ import type {
 const VERBOSE = false;
 const MAX_NODES = 60;
 
-// Track computation state per tenant to avoid redundant calculations
 const computationState: Record<
   string,
   {
-    epinetLastComputed: Record<string, number>; // Per epinet ID
-    pendingComputations: Set<string>; // Epinet IDs with pending computations
+    epinetLastComputed: Record<string, number>;
+    pendingComputations: Set<string>;
   }
 > = {};
 
-const COMPUTATION_THROTTLE_MS = 5000; // 5 seconds
+const COMPUTATION_THROTTLE_MS = 5000;
+
+// Function to load known fingerprints
+export async function loadKnownFingerprints(
+  context?: APIContext,
+  force: boolean = false
+): Promise<void> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const now = Date.now();
+
+  // Skip if recently loaded and not forced
+  if (
+    !force &&
+    knownFingerprintsStore.get().lastLoaded[tenantId] &&
+    now - knownFingerprintsStore.get().lastLoaded[tenantId] < 60000
+  ) {
+    // 1 minute TTL
+    return;
+  }
+
+  try {
+    const client = await tursoClient.getClient(context);
+    if (!client) return;
+
+    const { rows } = await client.execute(
+      "SELECT DISTINCT id FROM fingerprints WHERE lead_id IS NOT NULL"
+    );
+
+    const knownIds = new Set<string>();
+    rows.forEach((row) => {
+      if (row.id) knownIds.add(String(row.id));
+    });
+
+    // Update store
+    const store = knownFingerprintsStore.get();
+    store.data[tenantId] = knownIds;
+    store.lastLoaded[tenantId] = now;
+    knownFingerprintsStore.set(store);
+  } catch (error) {
+    console.error("Error loading known fingerprints:", error);
+  }
+}
 
 /**
  * Process an event and update epinet data in real-time
@@ -462,6 +504,7 @@ export async function computeEpinetSankey(
   endHour?: number | null
 ): Promise<ComputedEpinet | { status: string; message: string; id: string; title: string } | null> {
   const tenantId = context?.locals?.tenant?.id || "default";
+  await loadKnownFingerprints(context);
 
   // Initialize computation state for this tenant if needed
   if (!computationState[tenantId]) {
@@ -587,8 +630,6 @@ export async function computeEpinetSankey(
     filterVisitorIds.add(selectedUserId);
   } else if (visitorType && visitorType !== "all") {
     // Filter by visitor type (known or anonymous)
-    const analyticStore = hourlyAnalyticsStore.get();
-    const tenantAnalyticsData = analyticStore.data[tenantId];
 
     // Process each hour in the range
     for (const hourKey of hourKeys) {
@@ -598,16 +639,7 @@ export async function computeEpinetSankey(
       // For each step, check if visitors meet the filter criteria
       for (const step of Object.values(hourData.steps)) {
         step.visitors.forEach((visitorId) => {
-          let isKnown = false;
-
-          // Check if visitor is known in analytics data
-          if (tenantAnalyticsData) {
-            const hourData = tenantAnalyticsData.siteData[hourKey];
-            if (hourData) {
-              isKnown = hourData.knownVisitors.has(visitorId);
-            }
-          }
-
+          const isKnown = isKnownFingerprint(visitorId, tenantId);
           // Add to filter set based on visitor type
           if ((visitorType === "known" && isKnown) || (visitorType === "anonymous" && !isKnown)) {
             filterVisitorIds.add(visitorId);
@@ -864,6 +896,7 @@ export async function getFilteredVisitorCounts(
   const epinetStore = hourlyEpinetStore.get();
   const tenantData = epinetStore.data[tenantId] || {};
   const epinetData = tenantData[epinetId];
+  await loadKnownFingerprints(context);
 
   if (!epinetData) {
     return [];
@@ -912,18 +945,7 @@ export async function getFilteredVisitorCounts(
     // Collect visitors from steps
     for (const step of Object.values(hourData.steps)) {
       step.visitors.forEach((visitorId) => {
-        // Check if visitor is known
-        const analyticStore = hourlyAnalyticsStore.get();
-        const tenantAnalyticsData = analyticStore.data[tenantId];
-
-        let isKnown = false;
-        if (tenantAnalyticsData) {
-          const knownVisitorSets = Object.values(tenantAnalyticsData.siteData).map(
-            (hourData) => hourData.knownVisitors
-          );
-          isKnown = knownVisitorSets.some((set) => set.has(visitorId));
-        }
-
+        const isKnown = isKnownFingerprint(visitorId, tenantId);
         // Update visitor map
         if (visitorMap.has(visitorId)) {
           const existing = visitorMap.get(visitorId)!;
@@ -1029,6 +1051,7 @@ export async function getHourlyNodeActivity(
   const epinetStore = hourlyEpinetStore.get();
   const tenantData = epinetStore.data[tenantId] || {};
   const epinetData = tenantData[epinetId];
+  await loadKnownFingerprints(context);
 
   if (!epinetData) {
     return {};
@@ -1085,16 +1108,7 @@ export async function getHourlyNodeActivity(
       // Filter visitors based on type if needed
       const filteredVisitors = Array.from(nodeData.visitors).filter((visitorId) => {
         if (visitorType === "all") return true;
-
-        // Check if this visitor is known
-        const analyticStore = hourlyAnalyticsStore.get();
-        const tenantAnalyticsData = analyticStore.data[tenantId];
-        let isKnown = false;
-
-        if (tenantAnalyticsData && tenantAnalyticsData.siteData[hourKey]) {
-          isKnown = tenantAnalyticsData.siteData[hourKey].knownVisitors.has(visitorId);
-        }
-
+        const isKnown = isKnownFingerprint(visitorId, tenantId);
         return visitorType === "known" ? isKnown : !isKnown;
       });
 

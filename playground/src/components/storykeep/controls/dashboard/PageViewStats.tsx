@@ -4,12 +4,7 @@ import DashboardActivity from "@/components/storykeep/controls/recharts/Dashboar
 import EpinetDurationSelector from "./EpinetDurationSelector";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import ArrowDownTrayIcon from "@heroicons/react/24/outline/ArrowDownTrayIcon";
-import {
-  isDemoModeStore,
-  analyticsStore,
-  analyticsDuration,
-  storyfragmentAnalyticsStore,
-} from "@/store/storykeep";
+import { isDemoModeStore, analyticsStore, analyticsDuration } from "@/store/storykeep";
 import { classNames } from "@/utils/common/helpers";
 
 interface Stat {
@@ -49,20 +44,10 @@ export default function PageViewStats() {
   const analytics = useStore(analyticsStore);
   const $isDemoMode = useStore(isDemoModeStore);
   const $analyticsDuration = useStore(analyticsDuration);
-  const $storyfragmentAnalytics = useStore(storyfragmentAnalyticsStore);
   const duration = $analyticsDuration;
 
   // Extract values from the store
   const { dashboard, leads: leadMetrics, epinet: epinetData, isLoading, status } = analytics;
-
-  // Check if storyfragment analytics is still loading
-  const isStoryfragmentLoading = $storyfragmentAnalytics.isLoading;
-
-  // Calculate total lifetime visitors from storyfragmentAnalytics
-  const totalLifetimeVisitors = Object.values($storyfragmentAnalytics.byId).reduce(
-    (sum, fragment) => sum + (fragment.unique_visitors || 0),
-    0
-  );
 
   useEffect(() => {
     setIsClient(true);
@@ -216,15 +201,15 @@ export default function PageViewStats() {
   );
 
   // Skeleton loader specifically for the visitors panel
-  const VisitorsSkeleton = () => (
-    <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
-      <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
-      <dd className="mt-2">
-        <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
-        <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
-      </dd>
-    </div>
-  );
+  //const VisitorsSkeleton = () => (
+  //  <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
+  //    <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
+  //    <dd className="mt-2">
+  //      <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+  //      <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
+  //    </dd>
+  //  </div>
+  //);
 
   // Skeleton loader for the leads panel
   const LeadMetricsSkeleton = () => (
@@ -387,21 +372,6 @@ export default function PageViewStats() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          {/* Visitors panel */}
-          {isStoryfragmentLoading || (isLoading && !$storyfragmentAnalytics.byId) ? (
-            <VisitorsSkeleton />
-          ) : (
-            <div className="px-4 py-3 bg-white rounded-lg shadow-sm border border-gray-100 hover:border-cyan-100 transition-colors">
-              <dt className="text-sm font-bold text-gray-800">Lifetime Unique Visitors</dt>
-              <dd className="mt-2">
-                <div className="text-2xl font-bold tracking-tight text-cyan-700">
-                  {totalLifetimeVisitors === 0 ? "-" : formatNumber(totalLifetimeVisitors)}
-                </div>
-                <div className="text-sm text-gray-600 mt-1">Total unique users all time</div>
-              </dd>
-            </div>
-          )}
-
           {/* Leads panel */}
           {isLoading && !leadMetrics ? (
             <LeadMetricsSkeleton />

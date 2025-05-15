@@ -177,7 +177,7 @@ export async function loadHourlyEpinetData(
 
   // Override parameters for cold start
   if (isCacheCold && !currentHourOnly) {
-    hours = MAX_ANALYTICS_HOURS; // Use constant from @/constants.ts
+    hours = MAX_ANALYTICS_HOURS;
     if (VERBOSE) console.log(`[DEBUG-EPINET] Cold start detected, loading ${hours} hours`);
   } else if (!currentHourOnly) {
     // Force current hour only if we have cache data and not explicitly requesting currentHourOnly

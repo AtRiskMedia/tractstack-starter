@@ -1,20 +1,16 @@
-import {
-  formatHourKey,
-  hourlyAnalyticsStore,
-  isAnalyticsCacheValid,
-  createEmptyLeadMetrics,
-} from "@/store/analytics";
-import { loadHourlyAnalytics } from "@/utils/events/hourlyAnalyticsLoader";
+import { isEpinetCacheValid, createEmptyLeadMetrics } from "@/store/analytics";
+import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
 import {
   computeDashboardAnalytics,
   createEmptyDashboardAnalytics,
 } from "@/utils/events/dashboardAnalytics";
-import { computeLeadMetrics } from "@/utils/events/analyticsComputation";
+import { computeLeadMetrics } from "@/utils/events/leadMetrics";
+import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { APIContext } from "@/types";
 
 /**
  * Get all analytics data including dashboard metrics and lead metrics
- * Handles cache validation and background loading
+ * Handles cache validation and background loading for both analytics and epinet data
  */
 export async function getAllAnalytics(durationParam: string = "weekly", context?: APIContext) {
   const duration = ["daily", "weekly", "monthly"].includes(durationParam)
@@ -23,25 +19,8 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
 
   try {
     const tenantId = context?.locals?.tenant?.id || "default";
-    const isAnalyticsValid = isAnalyticsCacheValid(tenantId);
-    const analyticStore = hourlyAnalyticsStore.get();
-    const currentHour = formatHourKey(
-      new Date(
-        Date.UTC(
-          new Date().getUTCFullYear(),
-          new Date().getUTCMonth(),
-          new Date().getUTCDate(),
-          new Date().getUTCHours()
-        )
-      )
-    );
-    const tenantAnalyticsData = analyticStore.data[tenantId];
-
-    if (
-      isAnalyticsValid &&
-      tenantAnalyticsData &&
-      tenantAnalyticsData.lastFullHour === currentHour
-    ) {
+    const isEpinetValid = isEpinetCacheValid(tenantId);
+    if (isEpinetValid) {
       const [dashboardData, leadMetrics] = await Promise.all([
         computeDashboardAnalytics(duration, context),
         computeLeadMetrics(context),
@@ -53,20 +32,15 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
       };
     }
 
-    // Refresh data in the background if needed
-    const needsAnalyticsRefresh =
-      !isAnalyticsValid || !tenantAnalyticsData || tenantAnalyticsData.lastFullHour !== currentHour;
-
-    const hoursToLoad =
-      tenantAnalyticsData && Object.keys(tenantAnalyticsData.contentData).length > 0 ? 1 : 672;
-
+    // Determine if we need to refresh epinet data
+    const needsEpinetRefresh = !isEpinetValid;
     // Start background processing
     const processingPromises = [];
 
-    if (needsAnalyticsRefresh) {
+    if (needsEpinetRefresh) {
       processingPromises.push(
-        loadHourlyAnalytics(hoursToLoad, context).catch((err) =>
-          console.error("Async analytics processing error:", err)
+        loadHourlyEpinetData(MAX_ANALYTICS_HOURS, context).catch((err) =>
+          console.error("Async epinet processing error:", err)
         )
       );
     }
@@ -76,14 +50,16 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
       console.error("Error in background processing:", err)
     );
 
+    // Use whatever data we have available now
     const [dashboardData, leadMetrics] = await Promise.all([
-      tenantAnalyticsData
+      isEpinetValid
         ? computeDashboardAnalytics(duration, context)
         : createEmptyDashboardAnalytics(),
-      tenantAnalyticsData ? computeLeadMetrics(context) : createEmptyLeadMetrics(),
+      isEpinetValid ? computeLeadMetrics(context) : createEmptyLeadMetrics(),
     ]);
 
-    const status = needsAnalyticsRefresh ? "refreshing" : "complete";
+    // Set status based on what needs refreshing
+    const status = needsEpinetRefresh ? "refreshing" : "complete";
 
     return {
       dashboard: dashboardData,

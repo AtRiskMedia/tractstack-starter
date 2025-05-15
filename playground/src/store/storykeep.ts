@@ -11,7 +11,6 @@ import type {
   SettingsPanelSignal,
   Theme,
   Tag,
-  StoryfragmentAnalytics,
   ArtpacksStore,
   LeadMetrics,
   ProcessedAnalytics,
@@ -338,18 +337,6 @@ export const storyFragmentTopicsStore = map<{
     topics: { id?: string; title: string }[];
   };
 }>({});
-
-export interface StoryfragmentAnalyticsStore {
-  byId: Record<string, StoryfragmentAnalytics>;
-  lastUpdated: number | null;
-  isLoading: boolean;
-}
-
-export const storyfragmentAnalyticsStore = map<StoryfragmentAnalyticsStore>({
-  byId: {},
-  lastUpdated: null,
-  isLoading: true,
-});
 
 export const styleElementInfoStore = map<{
   markdownParentId: string | null;
