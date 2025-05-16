@@ -162,7 +162,7 @@ export type ContentMapBase = {
   id: string;
   title: string;
   slug: string;
-  type: "Menu" | "Pane" | "Resource" | "StoryFragment" | "TractStack";
+  type: "Menu" | "Pane" | "Resource" | "StoryFragment" | "TractStack" | "Epinet";
 };
 
 export type EpinetContentMap = ContentMapBase & {

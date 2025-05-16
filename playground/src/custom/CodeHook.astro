@@ -7,6 +7,7 @@ import CustomHero from "./CustomHero.astro";
 import FeaturedContent from "@/components/codehooks/FeaturedContent.astro";
 import ListContent from "@/components/codehooks/ListContent.astro";
 import BunnyVideoWrapper from "@/components/codehooks/BunnyVideoWrapper.astro";
+import EpinetWrapper from "@/components/codehooks/EpinetWrapper";
 
 export interface Props {
   target: string;
@@ -25,6 +26,7 @@ export const components = {
   "featured-content": true,
   "list-content": true,
   "bunny-video": true,
+  epinet: true,
 };
 
 // if passing props:
@@ -41,6 +43,8 @@ export const components = {
     <BunnyVideoWrapper options={options} />
   ) : target === "custom-hero" ? (
     <CustomHero />
+  ) : target === "epinet" ? (
+    <EpinetWrapper client:only="react" />
   ) : (
     <div>Code hook not found</div>
   )

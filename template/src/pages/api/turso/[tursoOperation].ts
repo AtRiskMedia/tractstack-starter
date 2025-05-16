@@ -27,7 +27,7 @@ import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode";
 import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode";
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode";
-import { initializeContent } from "@/utils/db/turso";
+import { initializeContent, getFullContentMap } from "@/utils/db/turso";
 //import { getAllTopics } from "@/utils/db/api/getAllTopics";
 //import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
 //import { linkTopicToStoryFragment } from "@/utils/db/api/linkTopicToStoryFragment";
@@ -48,6 +48,7 @@ import {
 import { isEpinetCacheValid, createEmptyLeadMetrics } from "@/store/analytics";
 import { getEpinetCustomMetrics } from "@/utils/events/epinetAnalytics";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
+import type { EpinetContentMap } from "@/types";
 
 const PUBLIC_CONCIERGE_AUTH_SECRET = import.meta.env.PUBLIC_CONCIERGE_AUTH_SECRET;
 
@@ -266,8 +267,26 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         const startHourParam = url.searchParams.get("startHour");
         const endHourParam = url.searchParams.get("endHour");
 
-        if (!id) {
-          throw new Error("Missing required parameter: id");
+        // If no epinet ID is provided, find the first promoted epinet
+        let epinetId = id;
+        if (!epinetId) {
+          const contentMap = await getFullContentMap(context);
+          const promotedEpinet = contentMap.find(
+            (item) =>
+              (item as EpinetContentMap).type === "Epinet" && (item as EpinetContentMap).promoted
+          );
+          if (promotedEpinet) {
+            epinetId = promotedEpinet.id;
+          } else {
+            // If no promoted epinet, get the first epinet from getAllEpinets
+            const allEpinets = await getAllEpinets(context);
+            if (allEpinets && allEpinets.length > 0) {
+              epinetId = allEpinets[0].id;
+            }
+          }
+        }
+        if (!epinetId) {
+          throw new Error("No epinet ID provided and no default epinet found");
         }
 
         // Parse hour parameters if provided
@@ -289,7 +308,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
             );
           }
           const metricsData = await getEpinetCustomMetrics(
-            id,
+            epinetId,
             {
               visitorType,
               selectedUserId,
@@ -319,7 +338,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
                 epinet: {
                   status: "error",
                   message: "Failed to compute custom epinet metrics",
-                  id,
+                  epinetId,
                   title: "User Journey Flow (Error)",
                 },
                 userCounts: [],
