@@ -50,7 +50,7 @@ export async function computeLeadMetrics(
   if (!isValid && !loadingStatus.loading) {
     computationState[tenantId].pendingComputations = true;
 
-    const loadingPromise = loadHourlyEpinetData(672, context).catch((error) => {
+    const loadingPromise = loadHourlyEpinetData(context).catch((error) => {
       console.error("Error loading epinet data for lead metrics:", error);
     });
 
@@ -229,7 +229,7 @@ export function triggerLeadMetricsRefresh(context?: APIContext): void {
   if (!computationState[tenantId].pendingComputations) {
     computationState[tenantId].pendingComputations = true;
 
-    const loadingPromise = loadHourlyEpinetData(672, context).catch((error) => {
+    const loadingPromise = loadHourlyEpinetData(context).catch((error) => {
       console.error("Error refreshing epinet data for lead metrics:", error);
     });
 

@@ -21,7 +21,7 @@ import type {
 import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { Client } from "@libsql/client";
 
-const VERBOSE = false;
+const VERBOSE = true;
 const LOADING_THROTTLE_MS = 60000;
 const RECENT_CHUNK_SIZE = 48;
 const HISTORICAL_CHUNK_SIZE = 168;
@@ -150,11 +150,7 @@ export function getEpinetLoadingStatus(tenantId: string = "default"): {
   };
 }
 
-export async function loadHourlyEpinetData(
-  hours: number = 672,
-  context?: APIContext,
-  currentHourOnly: boolean = false
-): Promise<void> {
+export async function loadHourlyEpinetData(context?: APIContext): Promise<void> {
   const tenantId = context?.locals?.tenant?.id || "default";
 
   if (!loadingState[tenantId]) {
@@ -170,20 +166,69 @@ export async function loadHourlyEpinetData(
     };
   }
 
-  // Check if this is a cold start or just needs current hour update
+  // Check if this is a cold start
   const storeSnapshot = hourlyEpinetStore.get();
   const isCacheCold =
     !storeSnapshot.data[tenantId] || Object.keys(storeSnapshot.data[tenantId] || {}).length === 0;
 
-  // Override parameters for cold start
-  if (isCacheCold && !currentHourOnly) {
+  // Determine hours to load and mode based on cache state
+  let hours: number;
+  let currentHourOnly: boolean;
+
+  if (isCacheCold) {
+    // Cold start - load full history
     hours = MAX_ANALYTICS_HOURS;
+    currentHourOnly = false;
     if (VERBOSE) console.log(`[DEBUG-EPINET] Cold start detected, loading ${hours} hours`);
-  } else if (!currentHourOnly) {
-    // Force current hour only if we have cache data and not explicitly requesting currentHourOnly
-    currentHourOnly = true;
-    hours = 1;
-    if (VERBOSE) console.log(`[DEBUG-EPINET] Cache exists, forcing current hour update only`);
+  } else {
+    // Get the last processed hour
+    const lastProcessedHourKey = storeSnapshot.lastFullHour[tenantId];
+
+    // Calculate the current hour
+    const currentDate = new Date(
+      Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours()
+      )
+    );
+    const currentHourKey = formatHourKey(currentDate);
+
+    if (!lastProcessedHourKey) {
+      // No last processed hour - MUST pull full history
+      hours = MAX_ANALYTICS_HOURS;
+      currentHourOnly = false;
+      if (VERBOSE)
+        console.log(`[DEBUG-EPINET] No last hour recorded, loading full history of ${hours} hours`);
+    } else if (lastProcessedHourKey !== currentHourKey) {
+      // Last hour different from current hour - check for gap
+      const lastProcessedDate = parseHourKeyToDate(lastProcessedHourKey);
+
+      // Calculate hours difference
+      const diffMs = currentDate.getTime() - lastProcessedDate.getTime();
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+
+      if (diffHours > 1) {
+        // Gap detected - load enough hours to fill the gap
+        hours = diffHours;
+        currentHourOnly = false;
+        if (VERBOSE)
+          console.log(
+            `[DEBUG-EPINET] Gap detected! Loading ${hours} hours to fill gap from ${lastProcessedHourKey} to ${currentHourKey}`
+          );
+      } else {
+        // No gap - just update current hour
+        hours = 1;
+        currentHourOnly = true;
+        if (VERBOSE) console.log(`[DEBUG-EPINET] No gap detected, updating current hour only`);
+      }
+    } else {
+      // Last hour is current hour - just refresh it
+      hours = 1;
+      currentHourOnly = true;
+      if (VERBOSE) console.log(`[DEBUG-EPINET] Refreshing current hour data`);
+    }
   }
 
   const now = Date.now();

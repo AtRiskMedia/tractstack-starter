@@ -299,11 +299,7 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
 
           // Check if we need to refresh epinet data
           if (!isEpinetValid) {
-            // Use the larger of the two hour values to ensure we load enough data
-            const hoursToLoad = Math.max(startHour || 672, 672);
-
-            // Wait for epinet data to load
-            await loadHourlyEpinetData(hoursToLoad, context, false).catch((err) =>
+            await loadHourlyEpinetData(context).catch((err) =>
               console.error("Error loading epinet data:", err)
             );
           }

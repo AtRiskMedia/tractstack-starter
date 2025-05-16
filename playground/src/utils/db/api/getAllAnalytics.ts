@@ -5,7 +5,6 @@ import {
   createEmptyDashboardAnalytics,
 } from "@/utils/events/dashboardAnalytics";
 import { computeLeadMetrics } from "@/utils/events/leadMetrics";
-import { MAX_ANALYTICS_HOURS } from "@/constants";
 import type { APIContext } from "@/types";
 
 /**
@@ -39,7 +38,7 @@ export async function getAllAnalytics(durationParam: string = "weekly", context?
 
     if (needsEpinetRefresh) {
       processingPromises.push(
-        loadHourlyEpinetData(MAX_ANALYTICS_HOURS, context).catch((err) =>
+        loadHourlyEpinetData(context).catch((err) =>
           console.error("Async epinet processing error:", err)
         )
       );

@@ -553,7 +553,7 @@ export async function computeEpinetSankey(
     computationState[tenantId].pendingComputations.add(epinetId);
 
     // Trigger loading in the background
-    const loadingPromise = loadHourlyEpinetData(hours, context, false).catch((error) => {
+    const loadingPromise = loadHourlyEpinetData(context).catch((error) => {
       console.error(`Error loading epinet data for ${epinetId}:`, error);
     });
 
@@ -865,7 +865,7 @@ export function triggerEpinetRefresh(epinetId: string, context?: APIContext): vo
     computationState[tenantId].pendingComputations.add(epinetId);
 
     // Create a non-blocking promise to load the data
-    const loadingPromise = loadHourlyEpinetData(672, context, false).catch((error) => {
+    const loadingPromise = loadHourlyEpinetData(context).catch((error) => {
       console.error(`Error refreshing epinet data for ${epinetId}:`, error);
     });
 
