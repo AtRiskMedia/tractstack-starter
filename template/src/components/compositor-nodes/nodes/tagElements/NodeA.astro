@@ -28,7 +28,7 @@ const targetAttr = isExternal ? { target: "_blank", rel: "noopener noreferrer" }
 ---
 
 <a class={getCtx().getNodeClasses(nodeId, `auto`)} href={node.href} {...targetAttr}>
-  <span
+  <span class="whitespace-nowrap"
     >{
       getCtx()
         .getChildNodeIDs(nodeId)

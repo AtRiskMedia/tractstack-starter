@@ -44,7 +44,7 @@ const isVideo = !!node.buttonPayload?.bunnyPayload;
   paneId={paneId}
   config={config!}
   isVideo={isVideo}
-  className={node.elementCss || ""}
+  className={`${node.elementCss || ""} whitespace-nowrap`}
 >
   {
     getCtx()
