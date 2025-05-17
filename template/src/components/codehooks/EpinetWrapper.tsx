@@ -21,17 +21,7 @@ const ErrorBoundary = ({ children, fallback }: ErrorBoundaryProps) => {
   return <div onError={handleError}>{children}</div>;
 };
 
-interface EpinetWrapperProps {
-  epinetId?: string;
-  title?: string;
-  showFilters?: boolean;
-}
-
-const EpinetWrapper = ({
-  epinetId,
-  title = "User Journey Flow",
-  showFilters = true,
-}: EpinetWrapperProps) => {
+const EpinetWrapper = () => {
   const $analyticsDuration = useStore(analyticsDuration);
   const analytics = useStore(analyticsStore);
   const $epinetCustomFilters = useStore(epinetCustomFilters);
@@ -96,22 +86,14 @@ const EpinetWrapper = ({
         setPollingTimer(null);
       }
 
-      // Build the URL - if epinetId is provided, use it, otherwise let server find it
       const url = new URL("/api/turso/getEpinetCustomMetrics", window.location.origin);
-      if (epinetId) {
-        url.searchParams.append("id", epinetId);
-      }
-
       url.searchParams.append("visitorType", $epinetCustomFilters.visitorType || "all");
-
       if ($epinetCustomFilters.selectedUserId) {
         url.searchParams.append("userId", $epinetCustomFilters.selectedUserId);
       }
-
       if ($epinetCustomFilters.startHour !== null) {
         url.searchParams.append("startHour", $epinetCustomFilters.startHour.toString());
       }
-
       if ($epinetCustomFilters.endHour !== null) {
         url.searchParams.append("endHour", $epinetCustomFilters.endHour.toString());
       }
@@ -183,7 +165,7 @@ const EpinetWrapper = ({
     } finally {
       analyticsStore.setKey("isLoading", false);
     }
-  }, [epinetId, $epinetCustomFilters, pollingAttempts]);
+  }, [$epinetCustomFilters, pollingAttempts]);
 
   // Extract values from the store
   const { epinet, isLoading, status, error } = analytics;
@@ -229,7 +211,6 @@ const EpinetWrapper = ({
   ) {
     return (
       <div className="p-8 bg-gray-50 text-gray-800 rounded-lg text-center">
-        <h3 className="text-lg font-bold mb-2">{title}</h3>
         <p>
           No user journey data is available yet. This visualization will appear when users start
           interacting with your content.
@@ -241,9 +222,6 @@ const EpinetWrapper = ({
   // Render epinet visualization
   return (
     <div className="epinet-wrapper p-4 bg-white rounded-lg shadow">
-      <h3 className="text-lg font-bold mb-4">{title}</h3>
-
-      {/* Sankey Diagram */}
       <ErrorBoundary
         fallback={
           <div className="p-4 bg-red-50 text-red-800 rounded-lg">
@@ -258,7 +236,7 @@ const EpinetWrapper = ({
             </div>
           )}
           <SankeyDiagram data={{ nodes: epinet.nodes, links: epinet.links }} />
-          {showFilters && <EpinetDurationSelector />}
+          <EpinetDurationSelector />
         </div>
       </ErrorBoundary>
     </div>
