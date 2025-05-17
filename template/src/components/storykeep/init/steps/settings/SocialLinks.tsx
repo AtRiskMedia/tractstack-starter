@@ -37,7 +37,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
     null
   );
 
-  const availablePlatforms = Object.keys(socialIconKeys) as string[];
+  const availablePlatforms = socialIconKeys as string[];
 
   // Create collection for Ark UI Combobox
   const collection = useMemo(() => {
