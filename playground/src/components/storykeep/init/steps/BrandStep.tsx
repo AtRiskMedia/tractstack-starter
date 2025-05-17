@@ -217,6 +217,10 @@ export default function BrandStep({
           return newImages;
         });
         onConfigUpdate({ [id]: "" });
+        setCurrentValues((prev) => ({
+          ...prev,
+          [id.toLowerCase()]: "",
+        }));
         return;
       }
       setIsUploadingImages(true);
@@ -239,6 +243,10 @@ export default function BrandStep({
           [id]: base64,
         }));
         onConfigUpdate({ [id]: result.path });
+        setCurrentValues((prev) => ({
+          ...prev,
+          [id.toLowerCase()]: result.path,
+        }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload image");
