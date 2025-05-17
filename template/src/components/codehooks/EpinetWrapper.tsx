@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
-import { analyticsDuration, analyticsStore, epinetCustomFilters } from "@/store/storykeep";
+import { analyticsStore, epinetCustomFilters } from "@/store/storykeep";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import EpinetDurationSelector from "@/components/storykeep/controls/dashboard/EpinetDurationSelector";
 
@@ -22,7 +22,6 @@ const ErrorBoundary = ({ children, fallback }: ErrorBoundaryProps) => {
 };
 
 const EpinetWrapper = () => {
-  const $analyticsDuration = useStore(analyticsDuration);
   const analytics = useStore(analyticsStore);
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
@@ -40,21 +39,11 @@ const EpinetWrapper = () => {
     };
   }, [pollingTimer]);
 
-  // Initialize epinet custom filters based on duration
+  // Initialize epinet custom filters with default values on mount
   useEffect(() => {
-    let startHour;
+    const startHour = 168; // Default to one week
     const endHour = 0; // Current hour
 
-    if ($analyticsDuration === "daily") {
-      startHour = 24;
-    } else if ($analyticsDuration === "weekly") {
-      startHour = 168;
-    } else {
-      // monthly
-      startHour = 672;
-    }
-
-    // Always enable custom filters with the appropriate hours
     epinetCustomFilters.set({
       enabled: true,
       visitorType: "all",
@@ -64,18 +53,30 @@ const EpinetWrapper = () => {
       userCounts: $epinetCustomFilters.userCounts || [],
       hourlyNodeActivity: $epinetCustomFilters.hourlyNodeActivity || {},
     });
-  }, [$analyticsDuration]);
-
-  // Fetch data when duration changes
-  useEffect(() => {
-    setPollingAttempts(0);
-    fetchEpinetData();
-  }, [$analyticsDuration]);
+  }, []);
 
   // Fetch data on initial mount
   useEffect(() => {
     fetchEpinetData();
   }, []);
+
+  useEffect(() => {
+    if (
+      $epinetCustomFilters.enabled &&
+      $epinetCustomFilters.visitorType !== null &&
+      $epinetCustomFilters.startHour !== null &&
+      $epinetCustomFilters.endHour !== null
+    ) {
+      setPollingAttempts(0);
+      fetchEpinetData();
+    }
+  }, [
+    $epinetCustomFilters.enabled,
+    $epinetCustomFilters.visitorType,
+    $epinetCustomFilters.selectedUserId,
+    $epinetCustomFilters.startHour,
+    $epinetCustomFilters.endHour,
+  ]);
 
   const fetchEpinetData = useCallback(async () => {
     try {
@@ -131,7 +132,6 @@ const EpinetWrapper = () => {
           }
         }
 
-        // Update the stores with the data
         analyticsStore.setKey("epinet", result.data.epinet);
         analyticsStore.setKey("status", "complete");
 
@@ -167,10 +167,8 @@ const EpinetWrapper = () => {
     }
   }, [$epinetCustomFilters, pollingAttempts]);
 
-  // Extract values from the store
   const { epinet, isLoading, status, error } = analytics;
 
-  // Render loading state
   if ((isLoading || status === "loading") && !epinet) {
     return (
       <div className="h-96 bg-gray-100 rounded w-full flex items-center justify-center">
@@ -182,7 +180,6 @@ const EpinetWrapper = () => {
     );
   }
 
-  // Render error state
   if (error && !epinet) {
     return (
       <div className="p-4 bg-red-50 text-red-800 rounded-lg">
@@ -201,7 +198,6 @@ const EpinetWrapper = () => {
     );
   }
 
-  // Render empty state
   if (
     !epinet ||
     !epinet.nodes ||
@@ -219,7 +215,6 @@ const EpinetWrapper = () => {
     );
   }
 
-  // Render epinet visualization
   return (
     <div className="epinet-wrapper p-4 bg-white rounded-lg shadow">
       <ErrorBoundary
