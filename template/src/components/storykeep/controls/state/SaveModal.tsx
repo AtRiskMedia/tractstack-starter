@@ -471,17 +471,14 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
   const handleCloseClick = () => {
     if (stage === "COMPLETED" || stage === "ERROR") {
-      // If we're creating a new page and it was saved successfully, redirect to its edit URL
-      if (stage === "COMPLETED" && window.location.pathname.includes("/create")) {
-        // Redirect to the actual edit URL using the saved node's slug
-        const allNodes = getCtx().allNodes.get();
-        const node = allNodes.get(nodeId);
-        if (node && "slug" in node) {
-          const isContextPane = window.location.pathname.includes("/context/");
-          const newEditUrl = isContextPane ? `/context/${node.slug}/edit` : `/${node.slug}/edit`;
-          window.location.href = newEditUrl;
-          return;
-        }
+      // Redirect to the actual edit URL using the saved node's slug
+      const allNodes = getCtx().allNodes.get();
+      const node = allNodes.get(nodeId);
+      if (node && "slug" in node) {
+        const isContextPane = window.location.pathname.includes("/context/");
+        const newEditUrl = isContextPane ? `/context/${node.slug}/edit` : `/${node.slug}/edit`;
+        window.location.href = newEditUrl;
+        return;
       }
       onClose();
     }
