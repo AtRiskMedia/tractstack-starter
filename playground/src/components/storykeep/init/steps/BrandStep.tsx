@@ -49,8 +49,8 @@ interface BrandFormValues {
 
 const getDefaultValues = (): BrandFormValues => ({
   siteUrl: "https://example.com",
-  slogan: "make a website that converts",
-  footer: "make a website that converts with Tract Stack | free web press",
+  slogan: "no-code community building tool-kit and website maker",
+  footer: "Enjoy the Sandbox",
   brandColors: knownBrand.default,
   theme: "light-bold",
   gtag: "",

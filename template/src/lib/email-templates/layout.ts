@@ -9,9 +9,9 @@ export interface EmailLayoutProps {
 }
 
 export function getEmailLayout({
-  preheader = "make a website that converts with Tract Stack | free web press",
+  preheader = "no-code community building tool-kit and website maker",
   content,
-  footerText = "no-code build your own funnel website",
+  footerText = "websites that build community",
   companyAddress = "Proudly Canadian",
   unsubscribeUrl = "http://example.com/unsubscribe",
   poweredByText = "TractStack",
