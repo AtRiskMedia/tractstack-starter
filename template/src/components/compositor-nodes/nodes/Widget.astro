@@ -50,7 +50,7 @@ const classNames = getCtx().getNodeClasses(nodeId, `auto`);
 
 {
   hook === "belief" && value1 && value2 ? (
-    <div class={classNames}>
+    <div class={classNames} data-belief={value1}>
       <Belief client:only="react" value={{ slug: value1, scale: value2, extra: value3 }} />
     </div>
   ) : null
@@ -58,17 +58,19 @@ const classNames = getCtx().getNodeClasses(nodeId, `auto`);
 
 {
   hook === "identifyAs" && value1 && value2 ? (
-    <IdentifyAs
-      client:visible
-      value={{ slug: value1, target: value2, extra: value3 }}
-      classNames={classNames}
-    />
+    <div class={classNames} data-belief={value1}>
+      <IdentifyAs
+        client:visible
+        value={{ slug: value1, target: value2, extra: value3 }}
+        classNames={classNames}
+      />
+    </div>
   ) : null
 }
 
 {
   hook === "toggle" && value1 && value2 ? (
-    <div class={classNames}>
+    <div class={classNames} data-belief={value1}>
       <ToggleBelief client:visible belief={value1} prompt={value2} />
     </div>
   ) : null
