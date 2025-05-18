@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { analyticsStore, analyticsDuration, epinetCustomFilters } from "@/store/storykeep";
 import { MAX_ANALYTICS_HOURS } from "@/constants";
-import { Select, createListCollection } from "@ark-ui/react";
+import { createListCollection } from "@ark-ui/react/collection";
+import { Select } from "@ark-ui/react/select";
 import { RadioGroup } from "@ark-ui/react/radio-group";
 import { Portal } from "@ark-ui/react/portal";
 import EpinetTableView from "./EpinetTableView";
@@ -249,7 +250,6 @@ const EpinetDurationSelector = () => {
     setHasLocalChanges(true);
     setErrorMessage(null);
   };
-
   const paginatedUserCounts = ($epinetCustomFilters.userCounts || []).slice(
     currentUserPage * usersPerPage,
     (currentUserPage + 1) * usersPerPage
@@ -560,17 +560,16 @@ const EpinetDurationSelector = () => {
                   </label>
                   <Select.Root
                     collection={hourCollection}
-                    value={[localFilters.startHour]}
+                    defaultValue={[localFilters.startHour]}
                     onValueChange={({ value }) => updateHour("startHour", value[0])}
-                    positioning={{ sameWidth: true }}
                   >
                     <Select.Label className="sr-only">Start Hour</Select.Label>
-                    <Select.Control>
+                    <Select.Control className="relative">
                       <Select.Trigger
                         id="start-hour"
                         className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
                       >
-                        <Select.ValueText>
+                        <Select.ValueText className="block truncate">
                           {hourOptions.find((opt) => opt.value === localFilters.startHour)?.label ||
                             "00:00"}
                         </Select.ValueText>
@@ -579,16 +578,19 @@ const EpinetDurationSelector = () => {
                         </Select.Indicator>
                       </Select.Trigger>
                     </Select.Control>
+
                     <Portal>
                       <Select.Positioner>
-                        <Select.Content className="z-10 mt-2 w-[var(--trigger-width)] max-h-96 overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Select.Content className="z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           {hourOptions.map((option) => (
                             <Select.Item
                               key={option.value}
                               item={option}
-                              className="cursor-pointer select-none p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
+                              className="cursor-pointer select-none relative p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
                             >
-                              <Select.ItemText>{option.label}</Select.ItemText>
+                              <Select.ItemText className="block truncate">
+                                {option.label}
+                              </Select.ItemText>
                             </Select.Item>
                           ))}
                         </Select.Content>
@@ -603,17 +605,16 @@ const EpinetDurationSelector = () => {
                   </label>
                   <Select.Root
                     collection={hourCollection}
-                    value={[localFilters.endHour]}
+                    defaultValue={[localFilters.endHour]}
                     onValueChange={({ value }) => updateHour("endHour", value[0])}
-                    positioning={{ sameWidth: true }}
                   >
                     <Select.Label className="sr-only">End Hour</Select.Label>
-                    <Select.Control>
+                    <Select.Control className="relative">
                       <Select.Trigger
                         id="end-hour"
                         className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
                       >
-                        <Select.ValueText>
+                        <Select.ValueText className="block truncate">
                           {hourOptions.find((opt) => opt.value === localFilters.endHour)?.label ||
                             "23:59"}
                         </Select.ValueText>
@@ -622,16 +623,19 @@ const EpinetDurationSelector = () => {
                         </Select.Indicator>
                       </Select.Trigger>
                     </Select.Control>
+
                     <Portal>
                       <Select.Positioner>
-                        <Select.Content className="z-10 mt-2 w-[var(--trigger-width)] max-h-96 overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <Select.Content className="z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                           {hourOptions.map((option) => (
                             <Select.Item
                               key={option.value}
                               item={option}
-                              className="cursor-pointer select-none p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
+                              className="cursor-pointer select-none relative p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
                             >
-                              <Select.ItemText>{option.label}</Select.ItemText>
+                              <Select.ItemText className="block truncate">
+                                {option.label}
+                              </Select.ItemText>
                             </Select.Item>
                           ))}
                         </Select.Content>
@@ -689,7 +693,6 @@ const EpinetDurationSelector = () => {
                   })}
                   value={localFilters.selectedUserId ? [localFilters.selectedUserId] : [""]}
                   onValueChange={({ value }) => updateSelectedUser(value[0] || null)}
-                  positioning={{ sameWidth: true }}
                 >
                   <Select.Label className="sr-only">Select user</Select.Label>
                   <Select.Control>
