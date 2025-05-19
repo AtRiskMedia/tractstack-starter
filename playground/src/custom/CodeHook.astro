@@ -44,7 +44,7 @@ export const components = {
   ) : target === "custom-hero" ? (
     <CustomHero />
   ) : target === "epinet" ? (
-    <EpinetWrapper client:only="react" />
+    <EpinetWrapper fullContentMap={contentMap} client:only="react" />
   ) : (
     <div>Code hook not found</div>
   )

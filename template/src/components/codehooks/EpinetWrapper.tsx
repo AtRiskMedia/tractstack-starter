@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback, type ReactNode } from "react";
 import { useStore } from "@nanostores/react";
+import { contentMap } from "@/store/events.ts";
 import { analyticsStore, epinetCustomFilters } from "@/store/storykeep";
 import SankeyDiagram from "@/components/storykeep/controls/d3/SankeyDiagram";
 import EpinetDurationSelector from "@/components/storykeep/controls/dashboard/EpinetDurationSelector";
+import { type FullContentMap } from "@/types";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -21,11 +23,12 @@ const ErrorBoundary = ({ children, fallback }: ErrorBoundaryProps) => {
   return <div onError={handleError}>{children}</div>;
 };
 
-const EpinetWrapper = () => {
+const EpinetWrapper = ({ fullContentMap }: { fullContentMap: FullContentMap[] }) => {
   const analytics = useStore(analyticsStore);
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
   const [pollingAttempts, setPollingAttempts] = useState(0);
+  contentMap.set(fullContentMap);
 
   const MAX_POLLING_ATTEMPTS = 3;
   const POLLING_DELAYS = [2000, 5000, 10000]; // 2s, 5s, 10s

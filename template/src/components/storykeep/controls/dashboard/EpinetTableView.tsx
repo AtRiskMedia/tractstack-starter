@@ -22,7 +22,7 @@ interface ContentItem {
   title: string;
   contentType: string;
   events: ContentEvent[];
-  visitors: number;
+  visitorIds: string[];
 }
 
 interface ActiveHourData {
@@ -54,6 +54,7 @@ interface ContentMapItem {
 
 const EpinetTableView = () => {
   const $epinetCustomFilters = useStore(epinetCustomFilters);
+  console.log($epinetCustomFilters);
   const $contentMap = useStore(contentMap) as ContentMapItem[];
   const [showTable, setShowTable] = useState(false);
   const [currentDay, setCurrentDay] = useState<string | null>(null);
@@ -173,19 +174,17 @@ const EpinetTableView = () => {
             events.push({ verb, count: count as number });
             hourlyTotal += count as number;
           });
-
           processedData[contentId] = {
             contentId,
             title: contentInfo.title,
             contentType: contentInfo.type,
             events,
-            visitors: data.visitors || 0,
+            visitorIds: data.visitorIds || [],
           };
-
-          if (typeof data.visitors === "number" && data.visitors > 0) {
-            hourlyUniqueVisitors.add(contentId + "-visitor-" + data.visitors);
-            dailyUniqueVisitors.add(contentId + "-visitor-" + data.visitors);
-          }
+          data.visitorIds?.forEach((visitorId) => {
+            hourlyUniqueVisitors.add(visitorId);
+            dailyUniqueVisitors.add(visitorId);
+          });
         });
 
         dailyTotal += hourlyTotal;
@@ -449,10 +448,11 @@ const EpinetTableView = () => {
                             {getContentIcon(content.contentType)}
                             {content.title}
                           </div>
-                          {content.visitors > 0 && (
+                          {content.visitorIds.length > 0 && (
                             <div className="text-xs text-mydarkgrey flex items-center">
                               <UserGroupIcon className="h-3 w-3 mr-1" />
-                              {content.visitors} unique visitor{content.visitors !== 1 ? "s" : ""}
+                              {content.visitorIds.length} unique visitor
+                              {content.visitorIds.length !== 1 ? "s" : ""}
                             </div>
                           )}
                         </div>

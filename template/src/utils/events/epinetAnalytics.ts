@@ -1131,7 +1131,7 @@ export async function getHourlyNodeActivity(
         if (!hourlyActivity[hourKey][contentId]) {
           hourlyActivity[hourKey][contentId] = {
             events: {},
-            visitors: 0,
+            visitorIds: [],
           };
 
           // Initialize set for tracking unique visitors
@@ -1152,7 +1152,7 @@ export async function getHourlyNodeActivity(
     // After processing all nodes, update visitor counts for each content
     for (const contentId in contentVisitors) {
       if (hourlyActivity[hourKey][contentId]) {
-        hourlyActivity[hourKey][contentId].visitors = contentVisitors[contentId].size;
+        hourlyActivity[hourKey][contentId].visitorIds = Array.from(contentVisitors[contentId]);
       }
     }
 
