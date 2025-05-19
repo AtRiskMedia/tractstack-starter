@@ -146,7 +146,7 @@ const remoteVersionInfo = await getRemoteVersionInfo();
               />
             )
           }
-          <StoryKeepNav />
+          <StoryKeepNav client:only="react" />
           <PageViewStats client:only="react" />
           <SelectHome contentMap={filterPayload} config={config} client:only="react" />
           <BrowseContent contentMap={filterPayload} client:only="react" />

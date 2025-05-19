@@ -1,4 +1,6 @@
+import { useStore } from "@nanostores/react";
 import { classNames } from "@/utils/common/helpers";
+import { isDemoModeStore } from "@/store/storykeep";
 import { colors } from "@/constants";
 
 type Action = {
@@ -7,17 +9,21 @@ type Action = {
   color?: string;
 };
 
-// Sample actions - you'll replace these with your actual values
-const ACTIONS: Action[] = [
+const allActions: Action[] = [
   { buttonText: "Create New Web Page", href: "/create/edit" },
   { buttonText: "View Analytics", href: "/storykeep#analytics" },
   { buttonText: "Browse Pages", href: "/storykeep#browse" },
+];
+const adminActions: Action[] = [
   { buttonText: "Choose Home Page", href: "/storykeep#select-home" },
   { buttonText: "Manage Content", href: "/storykeep#manage" },
   { buttonText: "Advanced Setup", href: "/storykeep/settings" },
 ];
 
 export const StoryKeepNav = () => {
+  const $isDemoMode = useStore(isDemoModeStore);
+  const ACTIONS = $isDemoMode ? allActions : allActions.concat(adminActions);
+
   return (
     <div className="w-full py-6">
       <h2 className="text-2xl font-bold mb-6">What would you like to do today?</h2>
