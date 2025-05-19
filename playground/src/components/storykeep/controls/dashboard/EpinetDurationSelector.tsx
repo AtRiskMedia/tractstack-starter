@@ -11,28 +11,18 @@ import CheckCircleIcon from "@heroicons/react/24/outline/CheckCircleIcon";
 import ChevronLeftIcon from "@heroicons/react/24/outline/ChevronLeftIcon";
 import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
 
-// Generate hour options with local time labels but UTC hour values
 const getHourOptions = () => {
-  const now = new Date();
-  const offsetHours = Math.floor(now.getTimezoneOffset() / 60); // e.g., 4 for Toronto (UTC-4)
-  return [
-    ...Array.from({ length: 24 }, (_, i) => {
-      const utcHour = i;
-      const localHour = (i - offsetHours + 24) % 24; // Convert UTC hour to local
-      return {
-        value: utcHour.toString().padStart(2, "0"),
-        label: `${localHour.toString().padStart(2, "0")}:00`,
-      };
-    }),
-    {
-      value: "23:59",
-      label: `${((23 - offsetHours + 24) % 24).toString().padStart(2, "0")}:59`,
-    },
-  ];
+  const hours = Array.from({ length: 24 }, (_, i) => ({
+    value: i.toString().padStart(2, "0"),
+    label: `${i.toString().padStart(2, "0")}:00`,
+    sortOrder: i,
+  }));
+  hours.push({ value: "24", label: "23:59", sortOrder: 24 });
+  hours.sort((a, b) => a.sortOrder - b.sortOrder);
+  return hours.map(({ value, label }) => ({ value, label }));
 };
 
 const hourOptions = getHourOptions();
-const hourCollection = createListCollection({ items: hourOptions });
 
 const EpinetDurationSelector = () => {
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -53,33 +43,27 @@ const EpinetDurationSelector = () => {
     endHour: "23:59",
   });
 
-  // Initialize dates based on analytics duration, using UTC hours
   useEffect(() => {
     const now = new Date();
-    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
-    const endDate = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
-    );
+    const endDate = new Date(now);
     let startDate = new Date(endDate);
-
     if ($analyticsDuration === "daily") {
-      startDate.setUTCHours(endDate.getUTCHours() - 24);
+      startDate.setDate(startDate.getDate() - 1);
     } else if ($analyticsDuration === "weekly") {
-      startDate.setUTCHours(endDate.getUTCHours() - 168);
+      startDate.setDate(startDate.getDate() - 7);
     } else if ($analyticsDuration === "monthly") {
-      startDate.setUTCHours(endDate.getUTCHours() - 672);
+      startDate.setDate(startDate.getDate() - 28);
     }
-
     setStartDate(startDate);
     setEndDate(endDate);
+    const currentHour = now.getHours().toString().padStart(2, "0");
     setLocalFilters((prev) => ({
       ...prev,
-      startHour: currentUtcHour.toString().padStart(2, "0"),
-      endHour: currentUtcHour.toString().padStart(2, "0"),
+      startHour: currentHour,
+      endHour: currentHour,
     }));
   }, [$analyticsDuration]);
 
-  // Sync local filters with global store changes
   useEffect(() => {
     setLocalFilters((prev) => ({
       ...prev,
@@ -88,7 +72,6 @@ const EpinetDurationSelector = () => {
     }));
   }, [$epinetCustomFilters]);
 
-  // Reset pagination on visitor type change
   useEffect(() => {
     setCurrentUserPage(0);
   }, [localFilters.visitorType]);
@@ -119,65 +102,52 @@ const EpinetDurationSelector = () => {
     setErrorMessage(null);
   };
 
-  // Apply local changes to global store with validation
+  const getLocalDateTime = (date: Date, hourStr: string) => {
+    const result = new Date(date);
+    const hour = hourStr === "24" ? 23 : parseInt(hourStr);
+    const minute = hourStr === "24" ? 59 : 0;
+    result.setHours(hour, minute, 0, 0);
+    return result;
+  };
+
+  const getUtcDateTime = (localDate: Date) => {
+    return new Date(
+      Date.UTC(
+        localDate.getFullYear(),
+        localDate.getMonth(),
+        localDate.getDate(),
+        localDate.getHours(),
+        localDate.getMinutes(),
+        localDate.getSeconds(),
+        localDate.getMilliseconds()
+      )
+    );
+  };
+
   const updateDateRange = () => {
     if (!startDate || !endDate) {
       setErrorMessage("Please select both start and end dates.");
       return;
     }
 
-    // Validate hour range
-    const startHourNum = parseInt(localFilters.startHour);
-    const endHourNum = localFilters.endHour === "23:59" ? 23.99 : parseInt(localFilters.endHour);
-    if (startDate.toDateString() === endDate.toDateString() && endHourNum < startHourNum) {
-      setErrorMessage("End hour cannot be earlier than start hour on the same day.");
+    const startLocalTime = getLocalDateTime(startDate, localFilters.startHour);
+    const endLocalTime = getLocalDateTime(endDate, localFilters.endHour);
+
+    if (endLocalTime < startLocalTime) {
+      setErrorMessage("End time cannot be earlier than start time.");
       return;
     }
 
-    // Create UTC date-times
-    const startDateTime = new Date(
-      Date.UTC(
-        startDate.getUTCFullYear(),
-        startDate.getUTCMonth(),
-        startDate.getUTCDate(),
-        parseInt(localFilters.startHour),
-        localFilters.startHour === "23:59" ? 59 : 0,
-        0,
-        localFilters.startHour === "23:59" ? 999 : 0
-      )
-    );
-    const endDateTime = new Date(
-      Date.UTC(
-        endDate.getUTCFullYear(),
-        endDate.getUTCMonth(),
-        endDate.getUTCDate(),
-        parseInt(localFilters.endHour),
-        localFilters.endHour === "23:59" ? 59 : 0,
-        0,
-        localFilters.endHour === "23:59" ? 999 : 0
-      )
-    );
+    const startUtcTime = getUtcDateTime(startLocalTime);
+    const endUtcTime = getUtcDateTime(endLocalTime);
 
-    const nowUtc = new Date(
-      Date.UTC(
-        new Date().getUTCFullYear(),
-        new Date().getUTCMonth(),
-        new Date().getUTCDate(),
-        new Date().getUTCHours()
-      )
-    );
+    const nowUtc = new Date();
+
     let startHoursHence = Math.round(
-      (nowUtc.getTime() - startDateTime.getTime()) / (1000 * 60 * 60)
+      (nowUtc.getTime() - startUtcTime.getTime()) / (1000 * 60 * 60)
     );
-    let endHoursHence = Math.round((nowUtc.getTime() - endDateTime.getTime()) / (1000 * 60 * 60));
+    let endHoursHence = Math.round((nowUtc.getTime() - endUtcTime.getTime()) / (1000 * 60 * 60));
 
-    // Validate time range
-    if (startHoursHence < endHoursHence) {
-      setErrorMessage("Start time cannot be later than end time.");
-      return;
-    }
-
-    // Clamp to MAX_ANALYTICS_HOURS
     startHoursHence = Math.min(startHoursHence, MAX_ANALYTICS_HOURS);
     endHoursHence = Math.max(0, Math.min(endHoursHence, MAX_ANALYTICS_HOURS));
 
@@ -200,27 +170,14 @@ const EpinetDurationSelector = () => {
     }
 
     const newDate = new Date(
-      Date.UTC(
-        parseInt(dateValue.split("-")[0]),
-        parseInt(dateValue.split("-")[1]) - 1,
-        parseInt(dateValue.split("-")[2]),
-        0,
-        0,
-        0,
-        0
-      )
+      parseInt(dateValue.split("-")[0]),
+      parseInt(dateValue.split("-")[1]) - 1,
+      parseInt(dateValue.split("-")[2])
     );
 
-    // Ensure date is within MAX_ANALYTICS_HOURS
-    const nowUtc = new Date(
-      Date.UTC(
-        new Date().getUTCFullYear(),
-        new Date().getUTCMonth(),
-        new Date().getUTCDate(),
-        new Date().getUTCHours()
-      )
-    );
+    const nowUtc = new Date();
     const hoursSince = Math.round((nowUtc.getTime() - newDate.getTime()) / (1000 * 60 * 60));
+
     if (hoursSince > MAX_ANALYTICS_HOURS) {
       setErrorMessage(`Date cannot be more than ${MAX_ANALYTICS_HOURS} hours in the past.`);
       return;
@@ -232,24 +189,38 @@ const EpinetDurationSelector = () => {
       setEndDate(newDate);
     }
 
-    if (newDate && (type === "start" ? endDate : startDate)) {
-      const otherDate = type === "start" ? endDate : startDate;
-      if (
-        otherDate &&
-        newDate.getUTCFullYear() === otherDate.getUTCFullYear() &&
-        newDate.getUTCMonth() === otherDate.getUTCMonth() &&
-        newDate.getUTCDate() === otherDate.getUTCDate()
-      ) {
-        setLocalFilters((prev) => ({
-          ...prev,
-          startHour: "00",
-          endHour: "23:59",
-        }));
-      }
-    }
     setHasLocalChanges(true);
     setErrorMessage(null);
   };
+
+  const formatDateDisplay = (date: Date | null) => {
+    if (!date) return "Select date";
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatDateHourDisplay = (date: Date, hourStr: string) => {
+    if (!date) return "";
+
+    const localDateTime = getLocalDateTime(date, hourStr);
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    return (
+      localDateTime.toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        timeZone,
+      }) + ` (${timeZone})`
+    );
+  };
+
   const paginatedUserCounts = ($epinetCustomFilters.userCounts || []).slice(
     currentUserPage * usersPerPage,
     (currentUserPage + 1) * usersPerPage
@@ -269,66 +240,31 @@ const EpinetDurationSelector = () => {
 
   const maxDate = new Date();
   const minDate = new Date();
-  minDate.setUTCHours(minDate.getUTCHours() - MAX_ANALYTICS_HOURS);
-
-  const formatDateDisplay = (date: Date | null) => {
-    if (!date) return "Select date";
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
-  const formatDateHourDisplay = (date: Date, hour: string) => {
-    const utcDate = new Date(
-      Date.UTC(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        parseInt(hour),
-        hour === "23:59" ? 59 : 0,
-        0,
-        hour === "23:59" ? 999 : 0
-      )
-    );
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    return (
-      utcDate.toLocaleString(undefined, {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-        timeZone,
-      }) + ` (${timeZone})`
-    );
-  };
+  minDate.setHours(minDate.getHours() - MAX_ANALYTICS_HOURS);
 
   const setPresetDateRange = (period: string) => {
     const now = new Date();
-    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
-    const endDate = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
-    );
+    const endDate = new Date(now);
     const startDate = new Date(endDate);
 
     if (period === "24h") {
-      startDate.setUTCHours(endDate.getUTCHours() - 24);
+      startDate.setDate(startDate.getDate() - 1);
     } else if (period === "7d") {
-      startDate.setUTCHours(endDate.getUTCHours() - 168);
+      startDate.setDate(startDate.getDate() - 7);
     } else if (period === "28d") {
-      startDate.setUTCHours(endDate.getUTCHours() - 672);
+      startDate.setDate(startDate.getDate() - 28);
     }
 
     setStartDate(startDate);
     setEndDate(endDate);
+
+    const currentHour = now.getHours().toString().padStart(2, "0");
     setLocalFilters((prev) => ({
       ...prev,
-      startHour: currentUtcHour.toString().padStart(2, "0"),
-      endHour: currentUtcHour.toString().padStart(2, "0"),
+      startHour: currentHour,
+      endHour: currentHour,
     }));
+
     setIsDatePickerOpen(false);
     setHasLocalChanges(true);
     setErrorMessage(null);
@@ -336,25 +272,22 @@ const EpinetDurationSelector = () => {
 
   const cancelChanges = () => {
     const now = new Date();
-    const currentUtcHour = now.getUTCHours(); // Align with UTC bins
     setLocalFilters({
       visitorType: $epinetCustomFilters.visitorType || "all",
       selectedUserId: $epinetCustomFilters.selectedUserId || null,
-      startHour: currentUtcHour.toString().padStart(2, "0"),
-      endHour: currentUtcHour.toString().padStart(2, "0"),
+      startHour: now.getHours().toString().padStart(2, "0"),
+      endHour: now.getHours().toString().padStart(2, "0"),
     });
 
-    const endDate = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours())
-    );
+    const endDate = new Date(now);
     let startDate = new Date(endDate);
 
     if ($analyticsDuration === "daily") {
-      startDate.setUTCHours(endDate.getUTCHours() - 24);
+      startDate.setDate(startDate.getDate() - 1);
     } else if ($analyticsDuration === "weekly") {
-      startDate.setUTCHours(endDate.getUTCHours() - 168);
+      startDate.setDate(startDate.getDate() - 7);
     } else if ($analyticsDuration === "monthly") {
-      startDate.setUTCHours(endDate.getUTCHours() - 672);
+      startDate.setDate(startDate.getDate() - 28);
     }
 
     setStartDate(startDate);
@@ -554,94 +487,42 @@ const EpinetDurationSelector = () => {
             <div className="space-y-1">
               <div className="block text-sm font-bold text-gray-700">Hour Range</div>
               <div className="flex flex-row gap-4">
-                <div className="flex-1 space-y-1 min-w-0">
-                  <label htmlFor="start-hour" className="block text-sm font-bold text-gray-700">
-                    Start Hour
-                  </label>
-                  <Select.Root
-                    collection={hourCollection}
-                    defaultValue={[localFilters.startHour]}
-                    onValueChange={({ value }) => updateHour("startHour", value[0])}
-                  >
-                    <Select.Label className="sr-only">Start Hour</Select.Label>
-                    <Select.Control className="relative">
-                      <Select.Trigger
-                        id="start-hour"
-                        className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
-                      >
-                        <Select.ValueText className="block truncate">
-                          {hourOptions.find((opt) => opt.value === localFilters.startHour)?.label ||
-                            "00:00"}
-                        </Select.ValueText>
-                        <Select.Indicator className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <span className="h-5 w-5 text-gray-500">▼</span>
-                        </Select.Indicator>
-                      </Select.Trigger>
-                    </Select.Control>
+                <div className="flex flex-row gap-4">
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label htmlFor="start-hour" className="block text-sm font-bold text-gray-700">
+                      Start Hour
+                    </label>
+                    <select
+                      id="start-hour"
+                      value={localFilters.startHour}
+                      onChange={(e) => updateHour("startHour", e.target.value)}
+                      className="w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
+                    >
+                      {hourOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                    <Portal>
-                      <Select.Positioner>
-                        <Select.Content className="z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          {hourOptions.map((option) => (
-                            <Select.Item
-                              key={option.value}
-                              item={option}
-                              className="cursor-pointer select-none relative p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
-                            >
-                              <Select.ItemText className="block truncate">
-                                {option.label}
-                              </Select.ItemText>
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Portal>
-                  </Select.Root>
-                </div>
-
-                <div className="flex-1 space-y-1 min-w-0">
-                  <label htmlFor="end-hour" className="block text-sm font-bold text-gray-700">
-                    End Hour
-                  </label>
-                  <Select.Root
-                    collection={hourCollection}
-                    defaultValue={[localFilters.endHour]}
-                    onValueChange={({ value }) => updateHour("endHour", value[0])}
-                  >
-                    <Select.Label className="sr-only">End Hour</Select.Label>
-                    <Select.Control className="relative">
-                      <Select.Trigger
-                        id="end-hour"
-                        className="relative w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
-                      >
-                        <Select.ValueText className="block truncate">
-                          {hourOptions.find((opt) => opt.value === localFilters.endHour)?.label ||
-                            "23:59"}
-                        </Select.ValueText>
-                        <Select.Indicator className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <span className="h-5 w-5 text-gray-500">▼</span>
-                        </Select.Indicator>
-                      </Select.Trigger>
-                    </Select.Control>
-
-                    <Portal>
-                      <Select.Positioner>
-                        <Select.Content className="z-10 mt-2 w-full overflow-auto rounded-md bg-white text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          {hourOptions.map((option) => (
-                            <Select.Item
-                              key={option.value}
-                              item={option}
-                              className="cursor-pointer select-none relative p-2 text-sm text-gray-700 hover:bg-slate-100 data-[highlighted]:bg-cyan-600 data-[highlighted]:text-white"
-                            >
-                              <Select.ItemText className="block truncate">
-                                {option.label}
-                              </Select.ItemText>
-                            </Select.Item>
-                          ))}
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Portal>
-                  </Select.Root>
+                  <div className="flex-1 space-y-1 min-w-0">
+                    <label htmlFor="end-hour" className="block text-sm font-bold text-gray-700">
+                      End Hour
+                    </label>
+                    <select
+                      id="end-hour"
+                      value={localFilters.endHour}
+                      onChange={(e) => updateHour("endHour", e.target.value)}
+                      className="w-full cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 text-sm"
+                    >
+                      {hourOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>

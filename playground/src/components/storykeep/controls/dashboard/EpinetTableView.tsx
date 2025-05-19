@@ -54,7 +54,6 @@ interface ContentMapItem {
 
 const EpinetTableView = () => {
   const $epinetCustomFilters = useStore(epinetCustomFilters);
-  console.log($epinetCustomFilters);
   const $contentMap = useStore(contentMap) as ContentMapItem[];
   const [showTable, setShowTable] = useState(false);
   const [currentDay, setCurrentDay] = useState<string | null>(null);
@@ -407,7 +406,12 @@ const EpinetTableView = () => {
                       <span className="text-xs font-bold text-cyan-600 min-w-[90px]">
                         {item.hourlyTotal} {item.hourlyTotal === 1 ? "event" : "events"}
                       </span>
-                      <span className="text-xs font-bold text-mydarkgrey flex items-center">
+                      <span
+                        className="text-xs font-bold text-mydarkgrey flex items-center"
+                        title={Array.from(
+                          new Set(item.contentItems.flatMap((content) => content.visitorIds))
+                        ).join(", ")}
+                      >
                         <UserGroupIcon className="h-3 w-3 mr-1" />
                         {item.hourlyVisitors} visitor{item.hourlyVisitors !== 1 ? "s" : ""}
                       </span>
@@ -449,7 +453,10 @@ const EpinetTableView = () => {
                             {content.title}
                           </div>
                           {content.visitorIds.length > 0 && (
-                            <div className="text-xs text-mydarkgrey flex items-center">
+                            <div
+                              className="text-xs text-mydarkgrey flex items-center"
+                              title={content.visitorIds.join(", ")}
+                            >
                               <UserGroupIcon className="h-3 w-3 mr-1" />
                               {content.visitorIds.length} unique visitor
                               {content.visitorIds.length !== 1 ? "s" : ""}
