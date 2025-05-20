@@ -64,14 +64,22 @@ export function getStepNodeId(
     | EpinetStepIdentifyAs
     | EpinetStepCommitmentAction
     | EpinetStepConversionAction,
-  contentId: string
+  contentId: string,
+  matchedVerb?: string
 ): string {
   const parts: string[] = [step.gateType];
   if (step.gateType === "belief" || step.gateType === "identifyAs") {
     if (step.values?.length) parts.push(step.values[0]);
   } else if (step.gateType === "commitmentAction" || step.gateType === "conversionAction") {
     parts.push(String(step.objectType || ""));
-    if (step.values?.length) parts.push(step.values[0]);
+
+    // Use the matched verb if provided and it's in the values array
+    if (matchedVerb && step.values.includes(matchedVerb)) {
+      parts.push(matchedVerb);
+    } else if (step.values?.length) {
+      // Fall back to first value if no matched verb provided
+      parts.push(step.values[0]);
+    }
   }
   parts.push(contentId);
   return parts.join("-");
@@ -95,7 +103,8 @@ export function getEventNodeId(event: {
 export function getNodeName(
   step: EpinetStep,
   contentId: string,
-  contentItems: Record<string, FullContentMap>
+  contentItems: Record<string, FullContentMap>,
+  matchedVerb?: string
 ): string {
   const content = contentItems[contentId];
   const contentTitle = content?.title || "Unknown Content";
@@ -104,7 +113,12 @@ export function getNodeName(
   } else if (step.gateType === "identifyAs") {
     return `Identifies as: ${step.title || step.values.join("/")}`;
   } else if (["commitmentAction", "conversionAction"].includes(step.gateType)) {
-    const actionVerb = step.values[0] || "";
+    let actionVerb = "";
+    if (matchedVerb && step.values.includes(matchedVerb)) {
+      actionVerb = matchedVerb;
+    } else if (step.values?.length) {
+      actionVerb = step.values[0]; // Fall back to first value
+    }
     return `${actionVerb}: ${contentTitle}`;
   }
   console.warn(`Unexpected gateType: ${step.gateType}`);
@@ -774,7 +788,8 @@ async function processBeliefData(
               beliefId,
               fingerprintId,
               index,
-              contentItems
+              contentItems,
+              verb
             );
           } else if (step.gateType === "identifyAs" && object && step.values.includes(object)) {
             addNodeVisitor(
@@ -785,7 +800,8 @@ async function processBeliefData(
               beliefId,
               fingerprintId,
               index,
-              contentItems
+              contentItems,
+              verb
             );
           }
         }
@@ -879,7 +895,8 @@ async function processActionData(
                 objectId,
                 fingerprintId,
                 index,
-                contentItems
+                contentItems,
+                verb
               );
             }
           }
@@ -899,7 +916,8 @@ function addNodeVisitor(
   contentId: string,
   fingerprintId: string,
   stepIndex: number,
-  contentItems: Record<string, FullContentMap>
+  contentItems: Record<string, FullContentMap>,
+  matchedVerb?: string
 ): void {
   // Create a unique node ID for this step/content combination
   const nodeId = getStepNodeId(
@@ -908,11 +926,12 @@ function addNodeVisitor(
       | EpinetStepIdentifyAs
       | EpinetStepCommitmentAction
       | EpinetStepConversionAction,
-    contentId
+    contentId,
+    matchedVerb
   );
 
   // Create a human-readable name for this node
-  const nodeName = getNodeName(step, contentId, contentItems);
+  const nodeName = getNodeName(step, contentId, contentItems, matchedVerb);
 
   // Initialize the node if needed
   if (!epinetData[epinetId][hourKey].steps[nodeId]) {
