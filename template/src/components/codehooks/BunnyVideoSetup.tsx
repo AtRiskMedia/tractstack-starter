@@ -592,20 +592,27 @@ const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
                 <h3 className="text-lg font-bold text-gray-900">Chapter Links (Plain Text)</h3>
               </div>
 
-              <pre className="p-4 whitespace-pre-wrap text-sm font-mono bg-gray-50 overflow-auto">
-                {chapters
-                  .map((chapter) => {
-                    const fragmentLink = `#${chapter.title.toLowerCase().replace(/\s+/g, "-")}`;
-                    const timeLink = `?t=${chapter.startTime}s`;
+              <div className="p-4 font-mono text-sm bg-gray-50">
+                {chapters.map((chapter) => {
+                  // Get the linked pane's slug if available
+                  const paneSlug = chapter.linkedPaneId
+                    ? getLinkedPaneSlug(chapter.linkedPaneId)
+                    : "";
 
-                    return `${chapter.title}
-${fragmentLink}
-${timeLink}
+                  if (!paneSlug) return null;
 
-`;
-                  })
-                  .join("")}
-              </pre>
+                  const fragmentLink = `#${paneSlug}`;
+                  const timeLink = `?t=${chapter.startTime}s`;
+
+                  return (
+                    <div key={chapter.id} className="mb-4">
+                      <p className="mb-1">{chapter.title}</p>
+                      <p className="mb-1">{fragmentLink}</p>
+                      <p>{timeLink}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
