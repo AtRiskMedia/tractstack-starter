@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
-import CheckIcon from "@heroicons/react/20/solid/CheckIcon";
 import { Switch } from "@ark-ui/react";
-import ChevronUpDownIcon from "@heroicons/react/20/solid/ChevronUpDownIcon";
 import { analyticsStore, homeSlugStore } from "@/store/storykeep.ts";
 import { classNames } from "@/utils/common/helpers.ts";
 import type { FullContentMap, HotItem } from "@/types.ts";
@@ -13,11 +11,9 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
-  const [focusedIndex, setFocusedIndex] = useState(-1); // Track focused item in dropdown
   const itemsPerPage = 16;
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
 
   const analytics = useStore(analyticsStore);
   const dashboard = analytics.dashboard;
@@ -38,7 +34,6 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
 
   useEffect(() => {
     setCurrentPage(1); // Reset pagination when filters change
-    setFocusedIndex(-1); // Reset focused index when query changes
   }, [query, showMostActive]);
 
   const safeContentMap = Array.isArray(contentMap) ? contentMap : [];
@@ -84,119 +79,32 @@ const BrowsePages = ({ contentMap = [] }: { contentMap?: FullContentMap[] }) => 
     return hotContent.find((h: HotItem) => h.id === pageId)?.total_events || 0;
   };
 
-  const handleItemSelect = (page: FullContentMap) => {
-    setQuery(page.title);
-    setFocusedIndex(-1);
-    inputRef.current?.focus();
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!query || filteredPages.length === 0) return;
-
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setFocusedIndex((prev) => {
-          const next = prev < filteredPages.length - 1 ? prev + 1 : 0;
-          listRef.current?.children[next]?.scrollIntoView({ block: "nearest" });
-          return next;
-        });
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setFocusedIndex((prev) => {
-          const next = prev > 0 ? prev - 1 : filteredPages.length - 1;
-          listRef.current?.children[next]?.scrollIntoView({ block: "nearest" });
-          return next;
-        });
-        break;
-      case "Enter":
-      case " ":
-        e.preventDefault();
-        if (focusedIndex >= 0 && focusedIndex < filteredPages.length) {
-          handleItemSelect(filteredPages[focusedIndex]);
-        }
-        break;
-      case "Escape":
-        e.preventDefault();
-        setQuery("");
-        setFocusedIndex(-1);
-        inputRef.current?.focus();
-        break;
-      case "Tab":
-        // Allow Tab to move focus out, but close dropdown
-        setQuery("");
-        setFocusedIndex(-1);
-        break;
-    }
-  };
-
   if (!isClient) return null;
 
   return (
     <div id="browse" className="space-y-4">
       <h3 className="text-xl font-bold font-action px-3.5">Browse Pages</h3>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between px-3.5 space-y-4 md:space-y-0 md:space-x-6">
-        <div className="relative w-full md:w-1/3 xl:w-1/4">
-          <div className="w-full relative">
+        <div className="relative w-full xl:w-1/3">
+          <div className="relative">
             <input
               ref={inputRef}
-              className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-cyan-600 text-sm"
+              type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
+              className="w-full rounded-md border-0 bg-white py-1.5 pl-3 pr-10 text-black shadow-sm ring-1 ring-inset ring-myblack/20 focus:ring-2 focus:ring-inset focus:ring-cyan-600 text-sm"
               placeholder="Search pages..."
-              role="combobox"
-              aria-expanded={query !== "" && filteredPages.length > 0}
-              aria-controls="page-options"
-              aria-activedescendant={
-                focusedIndex >= 0 ? `page-option-${filteredPages[focusedIndex].id}` : undefined
-              }
             />
-            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-              <ChevronUpDownIcon className="h-5 w-5 text-myblack/60" aria-hidden="true" />
-            </div>
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                aria-label="Clear search"
+              >
+                <span className="text-myblack/60 hover:text-black">×</span>
+              </button>
+            )}
           </div>
-
-          {query && filteredPages.length > 0 && (
-            <ul
-              ref={listRef}
-              id="page-options"
-              className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
-              role="listbox"
-              tabIndex={-1}
-            >
-              {filteredPages.map((page, index) => (
-                <li
-                  id={`page-option-${page.id}`}
-                  key={page.id}
-                  className={classNames(
-                    "relative cursor-pointer select-none py-2 pl-3 pr-9",
-                    focusedIndex === index
-                      ? "bg-cyan-600 text-white"
-                      : "hover:bg-cyan-600/10 hover:text-black text-black"
-                  )}
-                  onClick={() => handleItemSelect(page)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      handleItemSelect(page);
-                    }
-                  }}
-                  role="option"
-                  aria-selected={page.title === query}
-                  tabIndex={-1}
-                >
-                  <span className="block truncate">{page.title}</span>
-                  {page.title === query && (
-                    <span className="absolute inset-y-0 right-0 flex items-center pr-4 text-cyan-600">
-                      <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-x-6">

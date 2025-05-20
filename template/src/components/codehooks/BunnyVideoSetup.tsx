@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { getCtx } from "@/store/nodes";
+import { canonicalURLStore } from "@/store/storykeep";
 import { cloneDeep } from "@/utils/common/helpers";
 import ColorPickerCombo from "@/components/storykeep/controls/fields/ColorPickerCombo";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -37,6 +38,7 @@ const generateId = (): string => {
 const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
   const ctx = getCtx();
   const allNodes = ctx.allNodes.get();
+  const canonicalURL = canonicalURLStore.get();
   const storyFragmentId = ctx.getClosestNodeTypeFromId(nodeId, "StoryFragment");
   const storyFragmentNode = allNodes.get(storyFragmentId) as StoryFragmentNode | undefined;
   const paneIds = storyFragmentNode?.paneIds || [];
@@ -593,6 +595,8 @@ const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
               </div>
 
               <div className="p-4 font-mono text-sm bg-gray-50">
+                <p className="mb-4 font-bold">{canonicalURL}</p>
+                <p className="mb-4">{canonicalURL}?t=0s</p>
                 {chapters.map((chapter) => {
                   // Get the linked pane's slug if available
                   const paneSlug = chapter.linkedPaneId
@@ -601,12 +605,12 @@ const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
 
                   if (!paneSlug) return null;
 
-                  const fragmentLink = `#${paneSlug}`;
-                  const timeLink = `?t=${chapter.startTime}s`;
+                  const fragmentLink = `${canonicalURL}#${paneSlug}`;
+                  const timeLink = `${canonicalURL}?t=${chapter.startTime}s`;
 
                   return (
                     <div key={chapter.id} className="mb-4">
-                      <p className="mb-1">{chapter.title}</p>
+                      <p className="mb-1 italic">{chapter.title}</p>
                       <p className="mb-1">{fragmentLink}</p>
                       <p>{timeLink}</p>
                     </div>

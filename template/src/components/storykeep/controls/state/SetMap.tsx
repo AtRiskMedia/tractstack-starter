@@ -8,6 +8,7 @@ import {
   hasAssemblyAIStore,
   isDemoModeStore,
   isAdminStore,
+  canonicalURLStore,
   hasArtpacksStore,
   tenantIdStore,
 } from "@/store/storykeep.ts";
@@ -25,6 +26,7 @@ const SetMap = (props: {
   artpacks: ArtpacksStore;
   tenantId: string;
   isAdmin: boolean;
+  canonicalURL: string;
 }) => {
   const {
     payload,
@@ -38,6 +40,7 @@ const SetMap = (props: {
     artpacks,
     tenantId,
     isAdmin,
+    canonicalURL,
   } = props;
 
   useEffect(() => {
@@ -50,6 +53,7 @@ const SetMap = (props: {
     hasAssemblyAIStore.set(hasAssemblyAI);
     isDemoModeStore.set(isDemoMode);
     isAdminStore.set(isAdmin);
+    canonicalURLStore.set(canonicalURL);
     hasArtpacksStore.set(artpacks);
     tenantIdStore.set(tenantId);
   }, []);

@@ -156,6 +156,7 @@ const isAdmin = user?.isAdmin || false;
       artpacks={config?.artpacks || {}}
       tenantId={Astro.locals.tenant?.id || "default"}
       isAdmin={isAdmin}
+      canonicalURL={fullCanonicalUrl}
       client:only="react"
     />
     <ClientRouter />

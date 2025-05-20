@@ -28,6 +28,7 @@ export const tractstackSlugStore = atom<string>("");
 export const hasAssemblyAIStore = atom<boolean>(false);
 export const isDemoModeStore = atom<boolean>(false);
 export const isAdminStore = atom<boolean>(false);
+export const canonicalURLStore = atom<string>("");
 export const keyboardAccessible = atom<boolean>(false);
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
