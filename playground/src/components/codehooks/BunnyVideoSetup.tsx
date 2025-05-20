@@ -596,6 +596,7 @@ const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
 
               <div className="p-4 font-mono text-sm bg-gray-50">
                 <p className="mb-4 font-bold">{canonicalURL}</p>
+                <p className="mb-4">{canonicalURL}?t=0s</p>
                 {chapters.map((chapter) => {
                   // Get the linked pane's slug if available
                   const paneSlug = chapter.linkedPaneId
