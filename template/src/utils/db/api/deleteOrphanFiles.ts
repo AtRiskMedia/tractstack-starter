@@ -1,10 +1,15 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { APIContext } from "@/types";
 
 export async function deleteOrphanFiles(
   ids: string | string[],
   context?: APIContext
 ): Promise<{ success: boolean; deleted: number; error?: string }> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) {
@@ -26,6 +31,14 @@ export async function deleteOrphanFiles(
         sql: `DELETE FROM files WHERE id IN (${placeholders})`,
         args: fileIds,
       });
+
+      if (!isMultiTenant && rowsAffected > 0) {
+        fileIds.forEach((id) => {
+          invalidateEntry("file", id);
+        });
+        setCachedContentMap([]);
+      }
+
       return { success: true, deleted: rowsAffected };
     } catch (error) {
       throw error;

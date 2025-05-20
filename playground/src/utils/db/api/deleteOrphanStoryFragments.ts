@@ -1,10 +1,15 @@
 import { tursoClient } from "../client";
+import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
 import type { APIContext } from "@/types";
 
 export async function deleteOrphanStoryFragments(
   ids: string | string[],
   context?: APIContext
 ): Promise<{ success: boolean; deleted: number; error?: string }> {
+  const tenantId = context?.locals?.tenant?.id || "default";
+  const isMultiTenant =
+    import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
+
   try {
     const client = await tursoClient.getClient(context);
     if (!client) {
@@ -42,6 +47,13 @@ export async function deleteOrphanStoryFragments(
         sql: `DELETE FROM storyfragments WHERE id IN (${placeholders})`,
         args: fragmentIds,
       });
+
+      if (!isMultiTenant && rowsAffected > 0) {
+        fragmentIds.forEach((id) => {
+          invalidateEntry("storyfragment", id);
+        });
+        setCachedContentMap([]);
+      }
 
       return { success: true, deleted: rowsAffected };
     } catch (error) {
