@@ -1,0 +1,66 @@
+---
+import { getAPIContext } from "@/utils/api/astroContext";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import StoryKeep from "@/layouts/StoryKeep.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import DeleteSelect from "@/components/storykeep/controls/delete/DeleteSelect.tsx";
+import type { AuthStatus, MenuDatum } from "@/types.ts";
+
+const context = getAPIContext(Astro);
+const user = Astro.locals.user as AuthStatus;
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
+const validation = await validateConfig(config);
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+const canonicalURL = `/storykeep/content/delete`;
+const menuPayload: MenuDatum = {
+  id: `storykeep`,
+  title: "Story Keep Menu",
+  theme: "default",
+  optionsPayload: [
+    {
+      name: "Dashboard",
+      description: "Your Story Keep Dashboard",
+      featured: true,
+      actionLisp: "(goto (storykeep dashboard))",
+    },
+    {
+      name: "Logout",
+      description: "Close this session",
+      featured: true,
+      actionLisp: "(goto (storykeep logout))",
+    },
+  ],
+};
+---
+
+<StoryKeep title="Manage Content Deletion" canonicalURL={canonicalURL} config={config}>
+  <Header
+    title="Manage Content Deletion"
+    menu={menuPayload}
+    slug="storykeep-manage-delete"
+    isContext={false}
+    user={user}
+    isStoryKeep={true}
+    isEditable={false}
+    config={config}
+  />
+  <main id="main-content" class="min-h-screen">
+    <div class="px-1.5 pt-1.5 pb-0 pr-0 pl-1.5 py-1.5">
+      <div class="py-1.5 bg-white px-3.5">
+        <DeleteSelect client:only="react" />
+      </div>
+    </div>
+  </main>
+  <Footer
+    menu={menuPayload}
+    backToTop={true}
+    slug={`storykeep-manage-delete`}
+    isContext={false}
+    config={config}
+  />
+</StoryKeep>

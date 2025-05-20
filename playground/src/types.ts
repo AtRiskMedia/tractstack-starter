@@ -1409,3 +1409,13 @@ export interface FilteredComputedEpinet extends ComputedEpinet {
     timeRange?: string;
   };
 }
+
+export type OrphanContentType = "StoryFragment" | "Pane" | "File" | "Menu";
+
+export interface OrphanItem {
+  id: string;
+  title: string;
+  usageCount: number;
+  usedIn: string[];
+  slug?: string;
+}

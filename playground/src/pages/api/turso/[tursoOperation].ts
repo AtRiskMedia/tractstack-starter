@@ -34,6 +34,14 @@ import { initializeContent, getFullContentMap } from "@/utils/db/turso";
 //import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
 //import { upsertTopic } from "@/utils/db/api/upsertTopic";
 //import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
+import { deleteOrphanMenus } from "@/utils/db/api/deleteOrphanMenus";
+import { deleteOrphanFiles } from "@/utils/db/api/deleteOrphanFiles";
+import { deleteOrphanPanes } from "@/utils/db/api/deleteOrphanPanes";
+import { deleteOrphanStoryFragments } from "@/utils/db/api/deleteOrphanStoryFragments";
+import { getOrphanMenus } from "@/utils/db/api/getOrphanMenus";
+import { getOrphanFiles } from "@/utils/db/api/getOrphanFiles";
+import { getOrphanPanes } from "@/utils/db/api/getOrphanPanes";
+import { getOrphanStoryFragments } from "@/utils/db/api/getOrphanStoryFragments";
 import { getAllEpinets } from "@/utils/db/api/getAllEpinets";
 import { getAllPromotedEpinets } from "@/utils/db/api/getAllPromotedEpinets";
 import { getEpinetById } from "@/utils/db/api/getEpinetById";
@@ -160,6 +168,25 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
       //case "unlinkTopicFromStoryFragment":
       //  result = await unlinkTopicFromStoryFragment(body.storyFragmentId, body.topicId, context);
       //  break;
+
+      // Case blocks for [tursoOperation].ts POST handler
+
+      case "deleteOrphanMenus":
+        result = await deleteOrphanMenus(body.ids, context);
+        break;
+
+      case "deleteOrphanFiles":
+        result = await deleteOrphanFiles(body.ids, context);
+        break;
+
+      case "deleteOrphanPanes":
+        result = await deleteOrphanPanes(body.ids, context);
+        break;
+
+      case "deleteOrphanStoryFragments":
+        result = await deleteOrphanStoryFragments(body.ids, context);
+        break;
+
       default:
         throw new Error(`Unknown operation: ${tursoOperation}`);
     }
@@ -442,6 +469,27 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
         result = await getEpinetById(id, context);
         break;
       }
+
+      case "getOrphanMenus": {
+        result = await getOrphanMenus(context);
+        break;
+      }
+
+      case "getOrphanFiles": {
+        result = await getOrphanFiles(context);
+        break;
+      }
+
+      case "getOrphanPanes": {
+        result = await getOrphanPanes(context);
+        break;
+      }
+
+      case "getOrphanStoryFragments": {
+        result = await getOrphanStoryFragments(context);
+        break;
+      }
+
       default:
         if (tursoOperation === "read") {
           return POST(context as any);

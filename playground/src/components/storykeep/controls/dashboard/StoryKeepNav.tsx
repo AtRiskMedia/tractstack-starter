@@ -17,6 +17,7 @@ const allActions: Action[] = [
 const adminActions: Action[] = [
   { buttonText: "Choose Home Page", href: "/storykeep#select-home" },
   { buttonText: "Manage Content", href: "/storykeep#manage" },
+  { buttonText: "Delete Orphan Content", href: "/storykeep/delete" },
   { buttonText: "Advanced Setup", href: "/storykeep/settings" },
 ];
 

@@ -15,6 +15,8 @@ import type {
   LeadMetrics,
   ProcessedAnalytics,
   HourlyActivity,
+  OrphanContentType,
+  OrphanItem,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -356,5 +358,67 @@ export const resetStyleElementInfo = () => {
     tagName: null,
     overrideNodeId: null,
     className: null,
+  });
+};
+
+export const orphanContentTypeStore = atom<OrphanContentType>("StoryFragment");
+
+// Store for orphaned content items of the selected type
+export const orphanItemsStore = map<{
+  items: OrphanItem[];
+  isLoading: boolean;
+  error: string | null;
+}>({
+  items: [],
+  isLoading: false,
+  error: null,
+});
+
+// Store for tracking items selected for deletion
+export const selectedForDeletionStore = map<{
+  [id: string]: boolean;
+}>({});
+
+// Store for deletion operation status
+export const deletionStatusStore = map<{
+  isDeleting: boolean;
+  success: boolean;
+  error: string | null;
+}>({
+  isDeleting: false,
+  success: false,
+  error: null,
+});
+
+// Helper functions for the stores
+export const setOrphanContentType = (type: OrphanContentType) => {
+  orphanContentTypeStore.set(type);
+
+  // Reset selection and items when changing type
+  selectedForDeletionStore.set({});
+  orphanItemsStore.set({
+    items: [],
+    isLoading: true,
+    error: null,
+  });
+};
+
+export const toggleItemForDeletion = (id: string) => {
+  const current = selectedForDeletionStore.get();
+  selectedForDeletionStore.set({
+    ...current,
+    [id]: !current[id],
+  });
+};
+
+export const clearSelectedForDeletion = () => {
+  selectedForDeletionStore.set({});
+};
+
+export const resetDeletionStatus = () => {
+  deletionStatusStore.set({
+    isDeleting: false,
+    success: false,
+    error: null,
   });
 };
