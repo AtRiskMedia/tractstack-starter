@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, type KeyboardEvent } from "react";
 import { Combobox } from "@ark-ui/react";
+import { Portal } from "@ark-ui/react/portal";
 import { createListCollection } from "@ark-ui/react/collection";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
@@ -260,7 +261,7 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
             openOnKeyPress={true}
             composite={true}
           >
-            <div className="relative">
+            <Combobox.Control>
               <Combobox.Input
                 className={baseInputClass}
                 autoComplete="off"
@@ -268,44 +269,48 @@ export default function SocialLinks({ value, onChange }: SocialLinksProps) {
                 onKeyDown={handleComboboxKeyDown}
                 aria-label="Search social platforms"
               />
-              <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <Combobox.Trigger className="absolute top-2 right-0 flex items-center pr-2">
                 <ChevronUpDownIcon className="h-5 w-5 text-mydarkgrey" aria-hidden="true" />
               </Combobox.Trigger>
-            </div>
+            </Combobox.Control>
 
-            <Combobox.Content
-              className="absolute z-10 mt-1 w-full rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
-              aria-label="Available social platforms"
-            >
-              {collection.items.length === 0 ? (
-                <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
-                  Nothing found.
-                </div>
-              ) : (
-                collection.items.map((platform) => (
-                  <Combobox.Item
-                    key={platform}
-                    item={platform}
-                    className="platform-item relative cursor-pointer select-none py-2 px-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={`/socials/${platform}.svg`}
-                        alt=""
-                        width="24"
-                        height="24"
-                        className="h-6 w-6"
-                        aria-hidden="true"
-                      />
-                      <span className="text-mydarkgrey">{platform}</span>
-                      <span className="platform-indicator absolute inset-y-0 right-0 flex items-center pr-3 text-cyan-600">
-                        <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                      </span>
+            <Portal>
+              <Combobox.Positioner>
+                <Combobox.Content
+                  className="mt-1 w-full rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5"
+                  aria-label="Available social platforms"
+                >
+                  {collection.items.length === 0 ? (
+                    <div className="relative cursor-default select-none py-2 px-4 text-mydarkgrey">
+                      Nothing found.
                     </div>
-                  </Combobox.Item>
-                ))
-              )}
-            </Combobox.Content>
+                  ) : (
+                    collection.items.map((platform) => (
+                      <Combobox.Item
+                        key={platform}
+                        item={platform}
+                        className="platform-item relative cursor-pointer select-none py-2 px-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={`/socials/${platform}.svg`}
+                            alt=""
+                            width="24"
+                            height="24"
+                            className="h-6 w-6"
+                            aria-hidden="true"
+                          />
+                          <span className="text-mydarkgrey">{platform}</span>
+                          <span className="platform-indicator absolute inset-y-0 right-0 flex items-center pr-3 text-cyan-600">
+                            <CheckIcon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        </div>
+                      </Combobox.Item>
+                    ))
+                  )}
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Portal>
           </Combobox.Root>
 
           <div className="mt-2">
