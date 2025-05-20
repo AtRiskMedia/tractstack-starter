@@ -32,6 +32,7 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
   const [successMessage, setSuccessMessage] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
   const checkTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [activationUrl, setActivationUrl] = useState("");
 
   // Handle input changes
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -216,6 +217,9 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
           ? `Success! We've sent an activation email to ${formValues.email}. Please check your inbox to complete the setup. In some instances it may take up to 5-10 minutes!`
           : `Your tenant has been reserved, but we couldn't send the activation email. Please contact support.`
       );
+      if (data.activationUrl) {
+        setActivationUrl(data.activationUrl);
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
       setFormErrors({
@@ -254,6 +258,21 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
           </div>
           <h2 className="mt-3 text-lg font-bold text-mydarkgrey">Registration Successful!</h2>
           <p className="mt-2 text-myblue">{successMessage}</p>
+
+          {activationUrl && (
+            <div className="mt-4 p-4 bg-gray-100 rounded">
+              <p className="text-sm text-mydarkgrey mb-2">
+                Or, skip the email! Click here to continue:
+              </p>
+              <button
+                type="button"
+                onClick={() => (window.location.href = activationUrl)}
+                className="w-full py-3 px-6 border border-transparent rounded-md shadow-lg text-lg font-bold text-white bg-myblue hover:bg-myorange focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-myblue transition-colors duration-200"
+              >
+                Activate Now!
+              </button>
+            </div>
+          )}
 
           <div className="mt-6">
             <p className="text-sm text-mylightgrey mb-2">Didn't receive the activation email?</p>

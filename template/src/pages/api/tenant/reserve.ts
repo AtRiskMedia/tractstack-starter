@@ -158,6 +158,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         success: true,
         tenantId,
         emailSent,
+        activationUrl,
         message: emailSent
           ? "Tenant reserved successfully. Check your email for activation instructions."
           : "Tenant reserved successfully, but activation email could not be sent.",
