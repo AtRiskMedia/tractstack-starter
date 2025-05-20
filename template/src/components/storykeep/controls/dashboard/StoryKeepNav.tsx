@@ -1,6 +1,6 @@
 import { useStore } from "@nanostores/react";
 import { classNames } from "@/utils/common/helpers";
-import { isDemoModeStore } from "@/store/storykeep";
+import { isAdminStore, isDemoModeStore } from "@/store/storykeep";
 import { colors } from "@/constants";
 
 type Action = {
@@ -14,16 +14,21 @@ const allActions: Action[] = [
   { buttonText: "View Analytics", href: "/storykeep#analytics" },
   { buttonText: "Browse Pages", href: "/storykeep#browse" },
 ];
-const adminActions: Action[] = [
+const editorActions: Action[] = [
   { buttonText: "Choose Home Page", href: "/storykeep#select-home" },
   { buttonText: "Manage Content", href: "/storykeep#manage" },
+];
+const adminActions: Action[] = [
   { buttonText: "Delete Orphan Content", href: "/storykeep/delete" },
   { buttonText: "Advanced Setup", href: "/storykeep/settings" },
 ];
 
 export const StoryKeepNav = () => {
   const $isDemoMode = useStore(isDemoModeStore);
-  const ACTIONS = $isDemoMode ? allActions : allActions.concat(adminActions);
+  const $isAdmin = useStore(isAdminStore);
+  const ACTIONS = $isDemoMode
+    ? allActions
+    : [...allActions, ...editorActions, ...($isAdmin ? adminActions : [])];
 
   return (
     <div className="w-full py-6">

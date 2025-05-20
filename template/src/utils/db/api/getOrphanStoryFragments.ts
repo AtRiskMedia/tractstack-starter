@@ -42,6 +42,38 @@ export async function getOrphanStoryFragments(context?: APIContext): Promise<Orp
       storyFragmentUsageMap.set(homeSlug, ["Home Page"]);
     }
 
+    // Get topic associations for all story fragments in a single query
+    const { rows: topicAssociations } = await client.execute(`
+      SELECT 
+        sf.slug AS storyfragment_slug,
+        t.title AS topic_title
+      FROM 
+        storyfragments sf
+      JOIN 
+        storyfragment_has_topic ht ON sf.id = ht.storyfragment_id
+      JOIN 
+        storyfragment_topics t ON ht.topic_id = t.id
+    `);
+
+    // Add topic associations to the usage map
+    topicAssociations.forEach((association) => {
+      if (
+        association.storyfragment_slug &&
+        typeof association.storyfragment_slug === "string" &&
+        association.topic_title &&
+        typeof association.topic_title === "string"
+      ) {
+        const slug = association.storyfragment_slug;
+        const usages = storyFragmentUsageMap.get(slug) || [];
+        const topicUsage = `Topic: ${association.topic_title}`;
+
+        if (!usages.includes(topicUsage)) {
+          usages.push(topicUsage);
+          storyFragmentUsageMap.set(slug, usages);
+        }
+      }
+    });
+
     // Get all menus to check for references (even if there might not be any)
     const { rows: allMenus } = await client.execute(`
       SELECT id, title, options_payload FROM menus

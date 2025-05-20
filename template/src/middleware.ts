@@ -177,6 +177,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/api/concierge/publish",
     "/api/concierge/status",
     "/api/tenant/archive",
+    "/api/turso/getOrphanFiles",
+    "/api/turso/getOrphanMenus",
+    "/api/turso/getOrphanStoryFragments",
+    "/api/turso/getOrphanPanes",
+    "/api/turso/deleteOrphanFiles",
+    "/api/turso/deleteOrphanMenus",
+    "/api/turso/deleteOrphanStoryFragments",
+    "/api/turso/deleteOrphanPanes",
   ];
 
   const protectedRoutes = [

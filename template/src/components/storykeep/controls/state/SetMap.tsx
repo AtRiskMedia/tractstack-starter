@@ -7,6 +7,7 @@ import {
   tractstackSlugStore,
   hasAssemblyAIStore,
   isDemoModeStore,
+  isAdminStore,
   hasArtpacksStore,
   tenantIdStore,
 } from "@/store/storykeep.ts";
@@ -23,6 +24,7 @@ const SetMap = (props: {
   isDemoMode: boolean;
   artpacks: ArtpacksStore;
   tenantId: string;
+  isAdmin: boolean;
 }) => {
   const {
     payload,
@@ -35,6 +37,7 @@ const SetMap = (props: {
     isDemoMode,
     artpacks,
     tenantId,
+    isAdmin,
   } = props;
 
   useEffect(() => {
@@ -46,6 +49,7 @@ const SetMap = (props: {
     tractstackSlugStore.set(tractstackSlug);
     hasAssemblyAIStore.set(hasAssemblyAI);
     isDemoModeStore.set(isDemoMode);
+    isAdminStore.set(isAdmin);
     hasArtpacksStore.set(artpacks);
     tenantIdStore.set(tenantId);
   }, []);

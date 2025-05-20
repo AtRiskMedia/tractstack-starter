@@ -6,7 +6,7 @@ import { components as codeHookComponents } from "@/custom/CodeHook.astro";
 import { getFullContentMap } from "@/utils/db/turso";
 import { joinUrlPaths } from "@/utils/common/helpers";
 import { isOpenDemoMode } from "@/utils/core/auth";
-import type { Theme, FullContentMap, Config } from "@/types";
+import type { AuthStatus, Theme, FullContentMap, Config } from "@/types";
 
 export interface Props {
   config: Config;
@@ -48,6 +48,8 @@ const socialLogoWithVersion = joinUrlPaths(
 const contentMap: FullContentMap[] = await getFullContentMap(context);
 const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL);
 const isDemoMode = isOpenDemoMode(Astro, config);
+const user = Astro.locals.user as AuthStatus;
+const isAdmin = user?.isAdmin || false;
 ---
 
 <!doctype html>
@@ -153,6 +155,7 @@ const isDemoMode = isOpenDemoMode(Astro, config);
       isDemoMode={isDemoMode}
       artpacks={config?.artpacks || {}}
       tenantId={Astro.locals.tenant?.id || "default"}
+      isAdmin={isAdmin}
       client:only="react"
     />
     <ClientRouter />
