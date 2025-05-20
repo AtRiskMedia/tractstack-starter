@@ -586,6 +586,28 @@ const BunnyVideoSetup = ({ nodeId, params, config }: BunnyVideoSetupProps) => {
               );
             })}
           </div>
+          {showDetails && chapters.length > 0 && (
+            <div className="mt-6 bg-white rounded-lg shadow overflow-hidden">
+              <div className="p-4 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900">Chapter Links (Plain Text)</h3>
+              </div>
+
+              <pre className="p-4 whitespace-pre-wrap text-sm font-mono bg-gray-50 overflow-auto">
+                {chapters
+                  .map((chapter) => {
+                    const fragmentLink = `#${chapter.title.toLowerCase().replace(/\s+/g, "-")}`;
+                    const timeLink = `?t=${chapter.startTime}s`;
+
+                    return `${chapter.title}
+${fragmentLink}
+${timeLink}
+
+`;
+                  })
+                  .join("")}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>

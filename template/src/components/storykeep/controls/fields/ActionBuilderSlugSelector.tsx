@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { Combobox } from "@ark-ui/react";
 import { createListCollection } from "@ark-ui/react/collection";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -28,6 +28,10 @@ const ActionBuilderSlugSelector = ({
   contentMap,
   parentSlug,
 }: ActionBuilderSlugSelectorProps) => {
+  // Use a ref to track if the initial sync has occurred
+  const initialSyncDone = useRef(false);
+
+  // Filter items based on type and query
   const filteredItems = useMemo(() => {
     let items: FullContentMap[] = [];
     switch (type) {
@@ -66,6 +70,7 @@ const ActionBuilderSlugSelector = ({
     );
   }, [contentMap, type, query, parentSlug]);
 
+  // Create collection
   const collection = useMemo(() => {
     return createListCollection({
       items: filteredItems,
@@ -74,18 +79,21 @@ const ActionBuilderSlugSelector = ({
     });
   }, [filteredItems]);
 
+  // Perform initial sync of value to query display
   useEffect(() => {
-    if (value) {
-      const selectedItem = contentMap.find((item) => item.slug === value);
-      if (selectedItem) {
-        setQuery(`${selectedItem.title} (${selectedItem.slug})`);
-      } else {
-        setQuery("");
+    // Only perform this sync once or when value changes
+    if (!initialSyncDone.current || (value && query === "")) {
+      initialSyncDone.current = true;
+
+      if (value) {
+        const selectedItem = contentMap.find((item) => item.slug === value);
+        if (selectedItem) {
+          // This won't cause an infinite loop because we're not including setQuery in dependencies
+          setQuery(`${selectedItem.title} (${selectedItem.slug})`);
+        }
       }
-    } else {
-      setQuery("");
     }
-  }, [value, contentMap, setQuery]);
+  }, [value, contentMap, query]);
 
   const comboboxItemStyles = `
     .slug-item[data-highlighted] {
@@ -118,7 +126,9 @@ const ActionBuilderSlugSelector = ({
           const selectedValue = details.value[0] || "";
           onSelect(selectedValue);
         }}
-        onInputValueChange={(details) => setQuery(details.inputValue)}
+        onInputValueChange={(details) => {
+          setQuery(details.inputValue);
+        }}
       >
         <div className="relative">
           <Combobox.Input
