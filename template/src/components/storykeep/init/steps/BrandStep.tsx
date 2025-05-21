@@ -25,6 +25,7 @@ interface BrandStepProps {
   config: Config | null;
   isProcessing: boolean;
   onConfigUpdate: (updates: Record<string, unknown>) => void;
+  sandbox: boolean;
 }
 
 interface BrandFormValues {
@@ -94,6 +95,7 @@ export default function BrandStep({
   config,
   isProcessing,
   onConfigUpdate,
+  sandbox,
 }: BrandStepProps) {
   const [error, setError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
@@ -406,31 +408,33 @@ export default function BrandStep({
         </div>
         {/* Basic Information - Outside Accordion (Original) */}
         <div className="space-y-4">
-          <div className="block">
-            <div className="flex items-center justify-between">
-              <label htmlFor="siteUrl" className="text-mydarkgrey font-bold">
-                Site URL
-              </label>
-              {urlError && <span className="text-sm text-myred">{urlError}</span>}
+          {!sandbox && (
+            <div className="block">
+              <div className="flex items-center justify-between">
+                <label htmlFor="siteUrl" className="text-mydarkgrey font-bold">
+                  Site URL
+                </label>
+                {urlError && <span className="text-sm text-myred">{urlError}</span>}
+              </div>
+              <input
+                id="siteUrl"
+                name="siteUrl"
+                type="url"
+                value={currentValues.siteUrl}
+                onChange={(e) => setCurrentValues((prev) => ({ ...prev, siteUrl: e.target.value }))}
+                onBlur={handleUrlBlur}
+                placeholder="https://example.com"
+                className={`${commonInputClass} ${urlError ? "ring-myred/50" : ""}`}
+                required
+                aria-describedby={urlError ? "siteUrl-error" : undefined}
+              />
+              {urlError && (
+                <span id="siteUrl-error" className="sr-only">
+                  {urlError}
+                </span>
+              )}
             </div>
-            <input
-              id="siteUrl"
-              name="siteUrl"
-              type="url"
-              value={currentValues.siteUrl}
-              onChange={(e) => setCurrentValues((prev) => ({ ...prev, siteUrl: e.target.value }))}
-              onBlur={handleUrlBlur}
-              placeholder="https://example.com"
-              className={`${commonInputClass} ${urlError ? "ring-myred/50" : ""}`}
-              required
-              aria-describedby={urlError ? "siteUrl-error" : undefined}
-            />
-            {urlError && (
-              <span id="siteUrl-error" className="sr-only">
-                {urlError}
-              </span>
-            )}
-          </div>
+          )}
 
           <div className="block">
             <label htmlFor="slogan" className="text-mydarkgrey font-bold">
@@ -464,24 +468,26 @@ export default function BrandStep({
             />
           </div>
 
-          <div className="block">
-            <label htmlFor="gtag" className="text-mydarkgrey font-bold">
-              Google Analytics ID
-            </label>
-            <input
-              id="gtag"
-              name="gtag"
-              type="text"
-              value={currentValues.gtag}
-              onChange={(e) => setCurrentValues((prev) => ({ ...prev, gtag: e.target.value }))}
-              placeholder="G-XXXXXXXXXX"
-              className={commonInputClass}
-              aria-describedby="gtag-desc"
-            />
-            <span id="gtag-desc" className="text-sm text-mydarkgrey mt-1 block">
-              Optional: Enter your Google Analytics 4 Measurement ID
-            </span>
-          </div>
+          {!sandbox && (
+            <div className="block">
+              <label htmlFor="gtag" className="text-mydarkgrey font-bold">
+                Google Analytics ID
+              </label>
+              <input
+                id="gtag"
+                name="gtag"
+                type="text"
+                value={currentValues.gtag}
+                onChange={(e) => setCurrentValues((prev) => ({ ...prev, gtag: e.target.value }))}
+                placeholder="G-XXXXXXXXXX"
+                className={commonInputClass}
+                aria-describedby="gtag-desc"
+              />
+              <span id="gtag-desc" className="text-sm text-mydarkgrey mt-1 block">
+                Optional: Enter your Google Analytics 4 Measurement ID
+              </span>
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="brandPreset" className="text-mydarkgrey font-bold block">

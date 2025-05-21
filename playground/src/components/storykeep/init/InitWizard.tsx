@@ -369,7 +369,7 @@ export default function InitWizard({
         case "setup":
           return <SetupStep {...commonProps} hasConcierge={hasConcierge} />;
         case "brand":
-          return <BrandStep {...commonProps} />;
+          return <BrandStep sandbox={isMultiTenant} {...commonProps} />;
         case "integrations":
           return <IntegrationsStep {...commonProps} />;
         case "security":
