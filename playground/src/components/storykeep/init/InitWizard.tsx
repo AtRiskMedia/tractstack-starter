@@ -6,6 +6,8 @@ import {
   completeStep,
   uncompleteStep,
   updateValidation,
+  quickSetup,
+  toggleQuickSetup,
 } from "@/store/init";
 import { tenantIdStore } from "@/store/storykeep.ts";
 import SetupStep from "./steps/SetupStep";
@@ -51,6 +53,7 @@ export default function InitWizard({
     import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
   const initialConfig = initialValidation.config;
   const $store = useStore(initWizardStore);
+  const isQuickSetup = useStore(quickSetup);
   const [steps, setSteps] = useState<InitStepConfig[]>([]);
   const [validation, setValidation] = useState<ValidationResult>(initialValidation);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,6 +96,37 @@ export default function InitWizard({
       setValidation(initialValidation);
     }
   }, [initialValidation]);
+
+  // Effect for quick setup mode - when activated, complete all prerequisite steps
+  useEffect(() => {
+    if (isQuickSetup && $store.currentStep === "setup") {
+      // Mark all steps as completed
+      completeStep("setup");
+      completeStep("brand");
+
+      if (hasConcierge && !isMultiTenant) {
+        completeStep("integrations");
+      }
+
+      if (hasConcierge || isMultiTenant) {
+        completeStep("security");
+      }
+
+      // Skip publish step if needed
+      if (configState.needsPublish.size > 0) {
+        completeStep("publish");
+      }
+
+      // Set current step to createHome
+      setCurrentStep("createHome");
+    }
+  }, [
+    isQuickSetup,
+    $store.currentStep,
+    hasConcierge,
+    isMultiTenant,
+    configState.needsPublish.size,
+  ]);
 
   // Central handler for all configuration updates
   const handleConfigUpdate = useCallback(
@@ -234,13 +268,18 @@ export default function InitWizard({
   );
 
   const handleBack = useCallback(() => {
+    // Turn off quick setup mode when going back
+    if (isQuickSetup) {
+      toggleQuickSetup(false);
+    }
+
     const currentIndex = steps.findIndex((s) => s.id === $store.currentStep);
     if (currentIndex > 0) {
       const previousStep = steps[currentIndex - 1].id;
       uncompleteStep(previousStep);
       setCurrentStep(previousStep);
     }
-  }, [steps, $store.currentStep]);
+  }, [steps, $store.currentStep, isQuickSetup]);
 
   // Step configuration and management
   useEffect(() => {

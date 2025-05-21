@@ -42,3 +42,8 @@ export function updateValidation(validation: ValidationResult) {
     validation,
   });
 }
+
+export const quickSetup = atom<boolean>(false);
+export function toggleQuickSetup(value: boolean) {
+  quickSetup.set(value);
+}
