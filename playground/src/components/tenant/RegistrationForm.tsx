@@ -44,7 +44,7 @@ export default function RegistrationForm({ isMultiTenant }: RegistrationFormProp
 
     if (name === "tenantId") {
       // Filter out all illegal characters - only allow lowercase letters, numbers, and dashes
-      const sanitizedValue = value.replace(/[^a-z0-9-]/g, "");
+      const sanitizedValue = value.replace(/[^a-zA-Z0-9-]/g, "").toLowerCase();
 
       setFormValues((prev) => ({ ...prev, [name]: sanitizedValue }));
 
