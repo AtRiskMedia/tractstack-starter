@@ -88,8 +88,6 @@ export default function ActivationForm({
             init: true,
           }),
         });
-
-        const leadData = await leadResponse.json();
       } catch (leadError) {
         console.error("Error creating lead:", leadError);
         // Continue with activation even if lead creation fails
