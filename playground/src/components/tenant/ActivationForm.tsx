@@ -103,6 +103,7 @@ export default function ActivationForm({
         BRAND_COLOURS: "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
         THEME: "light",
         WORDMARK_MODE: "default",
+        KEYBOARD_ACCESSIBLE: true,
       };
 
       // Begin tenant activation with init config
