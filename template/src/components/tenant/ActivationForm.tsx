@@ -73,7 +73,7 @@ export default function ActivationForm({
           throw new Error("Missing email information");
         }
         const currentDate = new Date().toLocaleDateString();
-        const leadResponse = await fetch("/api/turso/create", {
+        await fetch("/api/turso/create", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
