@@ -92,6 +92,7 @@ export async function verifyActivationToken(token: string): Promise<TokenVerific
       valid: true,
       tenantId,
       email: tenantConfig.email,
+      name: tenantConfig.name,
       message: "Token verified successfully",
     };
   } catch (error) {

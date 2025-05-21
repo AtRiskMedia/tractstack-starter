@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { ulid } from "ulid";
+import { auth } from "@/store/auth";
 import type { FormEvent } from "react";
 
 interface ActivationFormProps {
   token: string;
-  tenantDetails: { id: string; email: string } | null;
+  tenantDetails: { id: string; email: string; name: string } | null;
   verificationError: string | null;
 }
 
@@ -62,6 +64,35 @@ export default function ActivationForm({
         setFormState("error");
         setErrorMessage(claimData.error || "Failed to claim tenant");
         return;
+      }
+
+      try {
+        const fingerprint = auth?.get()?.key || ulid();
+        if (!tenantDetails || !tenantDetails.email) {
+          console.error("Missing email from tenantDetails");
+          throw new Error("Missing email information");
+        }
+        const currentDate = new Date().toLocaleDateString();
+        const leadResponse = await fetch("/api/turso/create", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstname: tenantDetails?.name || tenantDetails.id,
+            email: tenantDetails.email,
+            codeword: password,
+            persona: "major",
+            bio: `Created first Tract Stack on ${currentDate}`,
+            fingerprint: fingerprint,
+            init: true,
+          }),
+        });
+
+        const leadData = await leadResponse.json();
+      } catch (leadError) {
+        console.error("Error creating lead:", leadError);
+        // Continue with activation even if lead creation fails
       }
 
       // Now that tenant is claimed, start activation process

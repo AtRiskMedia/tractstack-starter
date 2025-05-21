@@ -1266,6 +1266,7 @@ export interface TokenVerificationResult {
   valid: boolean;
   tenantId?: string;
   email?: string;
+  name?: string;
   expired?: boolean;
   message?: string;
 }

@@ -20,7 +20,7 @@ if (!token) {
 }
 
 // Fetch token verification details
-let tenantDetails: { id: string; email: string } | null = null;
+let tenantDetails: { id: string; email: string; name: string } | null = null;
 let verificationError: string | null = null;
 
 const verification = await verifyActivationToken(token);
@@ -28,6 +28,7 @@ if (verification.valid && verification.tenantId && verification.email) {
   tenantDetails = {
     id: verification.tenantId,
     email: verification.email,
+    name: verification.name || "Friend",
   };
 } else {
   verificationError = verification.message || "Invalid activation token";
@@ -36,6 +37,7 @@ if (verification.valid && verification.tenantId && verification.email) {
     valid: verification.valid,
     tenantId: verification.tenantId,
     email: verification.email,
+    name: verification.name,
     message: verification.message,
   });
 }
