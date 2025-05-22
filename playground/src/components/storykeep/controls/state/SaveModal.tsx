@@ -225,7 +225,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
                   setDebugImage(imageData);
 
-                  const filename = `${fragment.id}.png`;
+                  const filename = `${fragment.id}-${Date.now()}.png`;
                   addDebugMessage(`Saving OG image with filename: ${filename}`);
 
                   const imgResponse = await fetch("/api/fs/saveOgImage", {

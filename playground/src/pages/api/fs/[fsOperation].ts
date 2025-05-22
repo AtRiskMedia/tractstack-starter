@@ -7,6 +7,7 @@ import fs from "fs/promises";
 import path from "path";
 import { getConfig } from "@/utils/core/config";
 import { invalidateEntry, setCachedContentMap } from "@/store/contentCache";
+import { handleBrandImageUpload } from "@/utils/fs/brandImage";
 import { processImage } from "@/utils/images/processImage";
 
 interface ConfigUpdatePayload {
@@ -216,25 +217,11 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
       }
       case "saveBrandImage": {
         const { data, filename } = await context.request.json();
-        const customDir = path.join(tenantPaths.publicPath, "custom");
-        await fs.mkdir(customDir, { recursive: true });
-        const existingFiles = await fs.readdir(customDir);
-        const matchingFiles = existingFiles.filter((file) =>
-          file.startsWith(filename.split(".")[0])
-        );
-        for (const file of matchingFiles) {
-          await fs.unlink(path.join(customDir, file));
-        }
-        if (filename.toLowerCase().endsWith(".svg")) {
-          const svgData = data.replace(/^data:image\/svg\+xml;base64,/, "");
-          const svgText = Buffer.from(svgData, "base64").toString("utf-8");
-          await fs.writeFile(path.join(customDir, filename), svgText);
-        } else {
-          const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
-          const buffer = Buffer.from(base64Data, "base64");
-          await fs.writeFile(path.join(customDir, filename), buffer);
-        }
-        result = { success: true, path: `/custom/${filename}` };
+        result = await handleBrandImageUpload({
+          data,
+          filename,
+          tenantPaths,
+        });
         break;
       }
       case "storykeepWhitelist": {

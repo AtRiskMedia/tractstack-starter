@@ -1,3 +1,4 @@
+import path from "path";
 import { ulid } from "ulid";
 import { tursoClient } from "./client";
 import { getTailwindWhitelist } from "../tailwind/getTailwindWhitelist";
@@ -1262,15 +1263,15 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
 
           const cacheBuster = row.changed ? new Date(String(row.changed)).getTime() : Date.now();
 
-          if (
-            !socialImagePath ||
-            socialImagePath.match(new RegExp(`${row.id}\\.(jpg|png|webp)$`))
-          ) {
-            baseData.thumbSrc = `/images/thumbs/${row.id}_1200px.webp?v=${cacheBuster}`;
+          if (socialImagePath) {
+            const basename = socialImagePath
+              ? path.basename(socialImagePath, path.extname(socialImagePath))
+              : row.id;
+            baseData.thumbSrc = `/images/thumbs/${basename}_1200px.webp?v=${cacheBuster}`;
             baseData.thumbSrcSet = [
-              `/images/thumbs/${row.id}_1200px.webp?v=${cacheBuster} 1200w`,
-              `/images/thumbs/${row.id}_600px.webp?v=${cacheBuster} 600w`,
-              `/images/thumbs/${row.id}_300px.webp?v=${cacheBuster} 300w`,
+              `/images/thumbs/${basename}_1200px.webp?v=${cacheBuster} 1200w`,
+              `/images/thumbs/${basename}_600px.webp?v=${cacheBuster} 600w`,
+              `/images/thumbs/${basename}_300px.webp?v=${cacheBuster} 300w`,
             ].join(", ");
             baseData.socialImagePath = socialImagePath
               ? `${socialImagePath}?v=${cacheBuster}`

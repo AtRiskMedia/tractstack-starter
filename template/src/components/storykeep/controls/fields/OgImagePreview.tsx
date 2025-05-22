@@ -124,7 +124,7 @@ const OgImagePreview = ({
 
       // Create new filename using node ID and original extension
       const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filename = `${nodeId}.${fileExtension}`;
+      const filename = `${nodeId}-${Date.now()}.${fileExtension}`;
       const imageDir = "/images/og";
 
       // Read file as base64

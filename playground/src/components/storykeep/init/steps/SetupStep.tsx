@@ -82,9 +82,11 @@ export default function SetupStep({ onComplete, isActive, hasConcierge }: SetupS
                   ? "Your Story Keep is live and ready to be made your own!"
                   : "Thank you for trying Tract Stack!"}
               </p>
-              <p className="font-bold text-mydarkgrey">
-                Full set-up only takes a few minutes. Or, Quick Start now and customize later!
-              </p>
+              {isMultiTenant && (
+                <p className="font-bold text-mydarkgrey">
+                  Full set-up only takes a few minutes. Or, Quick Start now and customize later!
+                </p>
+              )}
               {hasConcierge && lastBuild > 0 && (
                 <p className="text-sm text-mydarkgrey">
                   Last Build: {new Date(lastBuild * 1000).toLocaleString()}

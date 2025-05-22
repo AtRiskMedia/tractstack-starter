@@ -1,6 +1,6 @@
 import BrandImageUpload from "./BrandImageUpload";
 import InformationCircleIcon from "@heroicons/react/24/outline/InformationCircleIcon";
-import type { Config } from "../../../../../types";
+import type { Config } from "@/types";
 
 export interface ImageConfig {
   height?: number;
@@ -80,7 +80,12 @@ export default function BrandImageUploads({
               id={field.id}
               value={field.value}
               path={field.path}
-              onChange={(base64, filename) => onImageChange(field.id, base64, filename)}
+              onChange={(base64, filename) => {
+                // Override user filename with config filename + original extension
+                const fileExtension = filename.split(".").pop() || "png";
+                const standardizedFilename = `${field.config.filename}.${fileExtension}`;
+                onImageChange(field.id, base64, standardizedFilename);
+              }}
               height={field.config.height}
               width={field.config.width}
               allowedTypes={field.config.types}

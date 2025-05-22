@@ -301,7 +301,7 @@ const StoryFragmentOpenGraphPanel = ({
       }
 
       const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filename = `${nodeId}.${fileExtension}`;
+      const filename = `${nodeId}-${Date.now()}.${fileExtension}`;
       const imageDir = "/images/og";
 
       const reader = new FileReader();
