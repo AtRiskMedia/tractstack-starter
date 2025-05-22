@@ -191,7 +191,7 @@ export default function BeliefEditor({
             navigate(`/storykeep/content/beliefs/${updatedBelief.id}`);
           }
         }
-      }, 2000);
+      }, 100);
     } catch (error) {
       console.error("Error saving belief:", error);
     } finally {

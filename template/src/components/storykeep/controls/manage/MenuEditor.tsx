@@ -93,7 +93,7 @@ export default function MenuEditor({
         if (create && !embedded) {
           navigate(`/storykeep/manage/menu/${localMenu.id}`);
         }
-      }, 7000);
+      }, 100);
     } catch (error) {
       console.error("Error saving menu:", error);
     } finally {

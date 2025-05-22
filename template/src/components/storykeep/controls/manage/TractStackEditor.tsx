@@ -52,7 +52,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
         if (create) {
           navigate(`/storykeep/manage/tractstack/${localTractStack.slug}`);
         }
-      }, 7000);
+      }, 100);
     } catch (error) {
       console.error("Error saving tractstack:", error);
     } finally {

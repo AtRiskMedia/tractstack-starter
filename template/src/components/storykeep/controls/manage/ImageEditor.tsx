@@ -44,7 +44,7 @@ export default function ImageEditor({ image }: ImageEditorProps) {
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
-      }, 7000);
+      }, 100);
     } catch (error) {
       console.error("Error saving image:", error);
     } finally {
