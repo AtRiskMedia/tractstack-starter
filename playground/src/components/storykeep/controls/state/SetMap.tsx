@@ -11,6 +11,7 @@ import {
   canonicalURLStore,
   hasArtpacksStore,
   tenantIdStore,
+  urlParamsStore,
 } from "@/store/storykeep.ts";
 import type { ArtpacksStore, Theme, FullContentMap } from "@/types.ts";
 
@@ -27,6 +28,7 @@ const SetMap = (props: {
   tenantId: string;
   isAdmin: boolean;
   canonicalURL: string;
+  urlParams: Record<string, string | boolean>;
 }) => {
   const {
     payload,
@@ -41,6 +43,7 @@ const SetMap = (props: {
     tenantId,
     isAdmin,
     canonicalURL,
+    urlParams,
   } = props;
 
   useEffect(() => {
@@ -56,6 +59,7 @@ const SetMap = (props: {
     canonicalURLStore.set(canonicalURL);
     hasArtpacksStore.set(artpacks);
     tenantIdStore.set(tenantId);
+    urlParamsStore.set(urlParams);
   }, []);
 
   return <div />;

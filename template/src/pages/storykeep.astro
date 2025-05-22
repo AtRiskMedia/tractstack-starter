@@ -1,21 +1,32 @@
 ---
 import { getAPIContext } from "@/utils/api/astroContext";
-import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import { getConfig, validateConfig } from "@/utils/core/config";
 import StoryKeep from "@/layouts/StoryKeep.astro";
 import StoryKeepNav from "@/components/storykeep/controls/dashboard/StoryKeepNav";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
-import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
-import BrowseContent from "@/components/storykeep/controls/dashboard/BrowseContent.tsx";
-import PullDashboardAnalytics from "@/components/storykeep/controls/state/PullDashboardAnalytics.tsx";
-import VersionCheck from "@/components/storykeep/init/VersionCheck.tsx";
-import SelectHome from "@/components/storykeep/controls/dashboard/SelectHome.tsx";
-import ManageContent from "@/components/storykeep/controls/dashboard/ManageContent.tsx";
-import PageViewStats from "@/components/storykeep/controls/dashboard/PageViewStats.tsx";
-import { getFullContentMap } from "@/utils/db/turso.ts";
-import { isOpenDemoMode } from "@/utils/core/auth.ts";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper";
+import BrowseContent from "@/components/storykeep/controls/dashboard/BrowseContent";
+import PullDashboardAnalytics from "@/components/storykeep/controls/state/PullDashboardAnalytics";
+import VersionCheck from "@/components/storykeep/init/VersionCheck";
+import SelectHome from "@/components/storykeep/controls/dashboard/SelectHome";
+import ManageContent from "@/components/storykeep/controls/dashboard/ManageContent";
+import PageViewStats from "@/components/storykeep/controls/dashboard/PageViewStats";
+import StoryKeepWizard from "@/components/storykeep/controls/dashboard/StoryKeepWizard";
+import { getFullContentMap, getStoryFragmentBySlugFullRowData } from "@/utils/db/turso";
+import { isOpenDemoMode } from "@/utils/core/auth";
 import { getRemoteVersionInfo } from "@/store/versionCache";
-import type { FullContentMap, AuthStatus, ImpressionDatum, MenuDatum } from "@/types.ts";
+import { NodesDeserializer_Json } from "@/store/nodesDeserializer_Json";
+import { NodesContext } from "@/store/nodes";
+import type { LoadData } from "@/store/nodesSerializer.ts";
+import type {
+  StoryFragmentContentMap,
+  FullContentMap,
+  AuthStatus,
+  ImpressionDatum,
+  MenuDatum,
+  WizardData,
+} from "@/types";
 
 const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
@@ -83,6 +94,54 @@ const impressions = user.isOpenDemo
   : ([] as ImpressionDatum[]);
 
 const remoteVersionInfo = await getRemoteVersionInfo();
+
+// Get home page from content map for basic checks
+const homeSlug = config.init.HOME_SLUG || "";
+const homePage = filterPayload.find(
+  (item) => item.type === "StoryFragment" && item.slug === homeSlug
+) as StoryFragmentContentMap | undefined;
+
+// Set up wizard data object
+const wizardData: WizardData = {
+  hasTitle: !!(homePage?.title && homePage.title.trim() !== ""),
+  hasPanes: false,
+  hasAnyMenu: false,
+  hasMenu: false,
+  hasSeo: false,
+};
+
+// If home page exists, get detailed information using deserializer
+if (homePage && homePage.type === "StoryFragment") {
+  wizardData.hasPanes = !!(homePage.panes && homePage.panes.length > 0);
+  wizardData.hasSeo = !!homePage.description;
+  wizardData.homeSlug = homeSlug;
+  wizardData.hasAnyMenu = payload.some((item) => item.type === "Menu");
+
+  // Get full data for the home page to check menu association
+  const homeFullData = await getStoryFragmentBySlugFullRowData(homeSlug, context);
+  if (homeFullData) {
+    // Initialize deserializer
+    const deserializer = new NodesDeserializer_Json();
+    const loadData: LoadData = {};
+    deserializer.processTractStackRowData(homeFullData.tractstack, loadData);
+    deserializer.processStoryFragmentRowData(homeFullData.storyfragment, loadData);
+    homeFullData.panes.forEach((pane) => {
+      deserializer.processPaneRowData(pane, loadData);
+    });
+    if (homeFullData.menu) {
+      deserializer.processMenuRowData(homeFullData.menu, loadData);
+    }
+
+    const tempCtx = new NodesContext();
+    tempCtx.buildNodesTreeFromRowDataMadeNodes(loadData);
+
+    // Get the full story fragment node
+    const storyfragmentNode = tempCtx.getStoryFragmentNodeBySlug(homeSlug);
+
+    // Check for menu
+    wizardData.hasMenu = !!storyfragmentNode?.menuId;
+  }
+}
 ---
 
 <StoryKeep title="Welcome to your Story Keep" canonicalURL={canonicalURL} config={config}>
@@ -146,6 +205,7 @@ const remoteVersionInfo = await getRemoteVersionInfo();
               />
             )
           }
+          <StoryKeepWizard wizardData={wizardData} client:only="react" />
           <StoryKeepNav client:only="react" />
           <PageViewStats client:only="react" />
           <SelectHome contentMap={filterPayload} config={config} client:only="react" />

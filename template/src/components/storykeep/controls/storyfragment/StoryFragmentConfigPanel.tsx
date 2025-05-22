@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { contentMap } from "@/store/events";
-import { settingsPanelStore, storyFragmentTopicsStore } from "@/store/storykeep";
+import { settingsPanelStore, storyFragmentTopicsStore, urlParamsStore } from "@/store/storykeep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
@@ -21,12 +21,14 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   const [storyfragmentNode, setStoryfragmentNode] = useState<StoryFragmentNode | null>(null);
   const [isSEOReady, setIsSEOReady] = useState(false);
   const [tempBgColor, setTempBgColor] = useState<string | null>(null);
+  const urlParamsProcessed = useRef(false);
 
   const ctx = getCtx();
   const isTemplate = useStore(ctx.isTemplate);
   const activePaneMode = useStore(ctx.activePaneMode);
   const $contentMap = useStore(contentMap) as FullContentMap[];
   const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
+  const $urlParams = useStore(urlParamsStore);
 
   // Check if this specific panel is active
   const isActive = activePaneMode.panel === "storyfragment" && activePaneMode.paneId === nodeId;
@@ -75,6 +77,31 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
       clearInterval(intervalId);
     };
   }, [nodeId, isNodeAvailable]);
+
+  // Handle URL params auto-opening
+  useEffect(() => {
+    if (!isNodeAvailable || urlParamsProcessed.current) return;
+
+    const params = $urlParams;
+
+    // Check for URL params and auto-open panels
+    if (params.menu || params.seo) {
+      // Menu takes priority if both are present
+      if (params.menu) {
+        setMode(StoryFragmentMode.MENU);
+      } else if (params.seo) {
+        setMode(StoryFragmentMode.OG);
+      }
+
+      // Remove the flags from URL params store (one-time action)
+      const cleanedParams = { ...params };
+      delete cleanedParams.menu;
+      delete cleanedParams.seo;
+      urlParamsStore.set(cleanedParams);
+
+      urlParamsProcessed.current = true;
+    }
+  }, [isNodeAvailable, $urlParams]);
 
   // Check if SEO is ready by checking the content map and store
   useEffect(() => {

@@ -1420,3 +1420,12 @@ export interface OrphanItem {
   usedIn: string[];
   slug?: string;
 }
+
+export type WizardData = {
+  hasTitle: boolean;
+  hasPanes: boolean;
+  hasAnyMenu: boolean;
+  hasMenu: boolean;
+  hasSeo: boolean;
+  homeSlug?: string;
+};

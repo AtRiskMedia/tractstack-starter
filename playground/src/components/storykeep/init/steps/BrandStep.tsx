@@ -172,6 +172,7 @@ export default function BrandStep({
           TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || ``,
           THEME: initConfig.THEME || "light-bold",
           SOCIALS: initConfig.SOCIALS || "",
+          KEYBOARD_ACCESSIBLE: true,
         });
       }
     }

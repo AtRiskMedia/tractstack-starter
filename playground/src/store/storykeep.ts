@@ -30,6 +30,7 @@ export const isDemoModeStore = atom<boolean>(false);
 export const isAdminStore = atom<boolean>(false);
 export const canonicalURLStore = atom<string>("");
 export const keyboardAccessible = atom<boolean>(false);
+export const urlParamsStore = atom<Record<string, string | boolean>>({});
 export const showAnalytics = atom<boolean>(false);
 export const storedAnalytics = map<Analytics>();
 export interface PanelAnalyticsCache {

@@ -50,6 +50,11 @@ const fullCanonicalUrl = joinUrlPaths(config?.init?.SITE_URL || ``, canonicalURL
 const isDemoMode = isOpenDemoMode(Astro, config);
 const user = Astro.locals.user as AuthStatus;
 const isAdmin = user?.isAdmin || false;
+
+const urlParams: Record<string, string | boolean> = {};
+for (const [key, value] of Astro.url.searchParams) {
+  urlParams[key] = value === "" ? true : value;
+}
 ---
 
 <!doctype html>
@@ -157,6 +162,7 @@ const isAdmin = user?.isAdmin || false;
       tenantId={Astro.locals.tenant?.id || "default"}
       isAdmin={isAdmin}
       canonicalURL={fullCanonicalUrl}
+      urlParams={urlParams}
       client:only="react"
     />
     <ClientRouter />
