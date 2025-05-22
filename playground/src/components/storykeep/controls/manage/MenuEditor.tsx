@@ -91,7 +91,7 @@ export default function MenuEditor({
       setTimeout(() => {
         setSaveSuccess(false);
         if (create && !embedded) {
-          navigate(`/storykeep/manage/menu/${localMenu.id}`);
+          navigate(`/storykeep/content/menus/${localMenu.id}`);
         }
       }, 100);
     } catch (error) {

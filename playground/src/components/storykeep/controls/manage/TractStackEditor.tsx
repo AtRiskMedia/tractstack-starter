@@ -50,7 +50,7 @@ export default function TractStackEditor({ tractstack, create }: TractStackEdito
       setTimeout(() => {
         setSaveSuccess(false);
         if (create) {
-          navigate(`/storykeep/manage/tractstack/${localTractStack.slug}`);
+          navigate(`/storykeep/content/tractstacks/${localTractStack.slug}`);
         }
       }, 100);
     } catch (error) {
