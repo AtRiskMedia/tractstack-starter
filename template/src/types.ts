@@ -1429,3 +1429,14 @@ export type WizardData = {
   hasSeo: boolean;
   homeSlug?: string;
 };
+
+export interface PendingImageOperation {
+  type: "upload" | "remove" | "custom";
+  data?: string;
+  path?: string;
+  filename?: string;
+}
+
+export type PendingImageOperationsStore = {
+  [storyFragmentId: string]: PendingImageOperation | null;
+};

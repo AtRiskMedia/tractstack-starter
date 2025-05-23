@@ -3,7 +3,7 @@ import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import { generateOgImageWithFontLoading } from "@/utils/images/ogImageGenerator";
-import { tenantIdStore, storyFragmentTopicsStore } from "@/store/storykeep.ts";
+import { tenantIdStore, storyFragmentTopicsStore, getPendingImageOperation, clearPendingImageOperation } from "@/store/storykeep.ts";
 import { contentMap } from "@/store/events.ts";
 import type { SaveData } from "@/store/nodesSerializer";
 import type { StoryFragmentNode, StoryFragmentContentMap, TopicContentMap, Topic } from "@/types";
@@ -154,7 +154,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             );
             const pane = saveData.panes[i];
 
-            // Find the corresponding markdown from saveData.markdowns
             const markdownData = pane.markdown_id
               ? saveData.markdowns.find((m) => m.id === pane.markdown_id)
               : undefined;
@@ -190,7 +189,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
         const storySEOData = storyFragmentTopicsStore.get();
         const hasStorySEOData = Object.keys(storySEOData).length > 0;
 
-        // Track all updated topics with their real database IDs
         const allUpdatedTopics: Map<string, Topic[]> = new Map();
 
         if (saveData.storyfragments?.length > 0) {
@@ -205,9 +203,73 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               `Processing fragment ${i + 1}/${saveData.storyfragments.length}: ${fragment.id}`
             );
 
-            if (typeof fragment.social_image_path !== "string") {
-              fragment.social_image_path = null;
+            const pendingImageOp = getPendingImageOperation(fragment.id);
+            if (pendingImageOp) {
+              addDebugMessage(`Found pending image operation for fragment ${fragment.id}: ${pendingImageOp.type}`);
 
+              if (pendingImageOp.type === "remove" && fragment.social_image_path) {
+                try {
+                  addDebugMessage(`Deleting existing OG image: ${fragment.social_image_path}`);
+                  const deleteResponse = await fetch("/api/fs/deleteOgImage", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      path: fragment.social_image_path,
+                    }),
+                  });
+
+                  if (deleteResponse.ok) {
+                    addDebugMessage(`Successfully deleted OG image`);
+                    fragment.social_image_path = null;
+                  } else {
+                    addDebugMessage(`Failed to delete OG image: ${deleteResponse.status}`);
+                  }
+                } catch (deleteError) {
+                  addDebugMessage(`Error deleting OG image: ${deleteError instanceof Error ? deleteError.message : String(deleteError)}`);
+                }
+              } else if (pendingImageOp.type === "upload" && pendingImageOp.data) {
+                try {
+                  if (fragment.social_image_path) {
+                    addDebugMessage(`Deleting previous OG image before upload: ${fragment.social_image_path}`);
+                    await fetch("/api/fs/deleteOgImage", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        path: fragment.social_image_path,
+                      }),
+                    });
+                  }
+
+                  addDebugMessage(`Uploading new OG image: ${pendingImageOp.filename}`);
+                  setDebugImage(pendingImageOp.data);
+
+                  const uploadResponse = await fetch("/api/fs/saveOgImage", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      path: "/images/og",
+                      filename: pendingImageOp.filename,
+                      data: pendingImageOp.data,
+                    }),
+                  });
+
+                  if (uploadResponse.ok) {
+                    const { path } = await uploadResponse.json();
+                    addDebugMessage(`Successfully uploaded OG image to: ${path}`);
+                    fragment.social_image_path = path;
+                  } else {
+                    addDebugMessage(`Failed to upload OG image: ${uploadResponse.status}`);
+                  }
+                } catch (uploadError) {
+                  addDebugMessage(`Error uploading OG image: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
+                }
+              }
+
+              clearPendingImageOperation(fragment.id);
+            }
+
+            // Generate OG image if no custom image
+            if (!fragment.social_image_path) {
               try {
                 const allNodes = ctx.allNodes.get();
                 const node = allNodes.get(fragment.id) as StoryFragmentNode;
@@ -225,7 +287,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
                   setDebugImage(imageData);
 
-                  const filename = `${fragment.id}-${Date.now()}.png`;
+                  const filename = `${fragment.id}--${Date.now()}.png`; // Use -- for generated
                   addDebugMessage(`Saving OG image with filename: ${filename}`);
 
                   const imgResponse = await fetch("/api/fs/saveOgImage", {
@@ -241,6 +303,7 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                   if (imgResponse.ok) {
                     const { path } = await imgResponse.json();
                     addDebugMessage(`OG image saved at: ${path}`);
+                    fragment.social_image_path = path;
                   } else {
                     addDebugMessage(`Failed to save OG image: ${imgResponse.status}`);
                   }
@@ -268,7 +331,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               `Saving fragment: ${fragment.id}, socialImagePath: ${fragment.social_image_path}`
             );
 
-            // Make the API call and get the response with updated topic IDs
             const response = await fetch("/api/turso/upsertStoryFragment", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -279,7 +341,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
               throw new Error("Failed to save story fragment");
             }
 
-            // Extract the updatedTopics from the response
             const responseData = await response.json();
             if (responseData.data?.updatedTopics && responseData.data.updatedTopics.length > 0) {
               allUpdatedTopics.set(fragment.id, responseData.data.updatedTopics);
@@ -302,7 +363,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
           const updatedContentMap = [...currentContentMap];
           let allTopics: Topic[] = [];
 
-          // First find the all-topics entry and collect existing topics
           const topicsMapIndex = updatedContentMap.findIndex(
             (item) => item.type === "Topic" && item.id === "all-topics"
           );
@@ -312,7 +372,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             allTopics = [...topicsMap.topics];
           }
 
-          // Update story fragments and collect topics with real IDs
           for (const [fragmentId, seoData] of Object.entries(storySEOData)) {
             const fragmentIndex = updatedContentMap.findIndex(
               (item) => item.type === "StoryFragment" && item.id === fragmentId
@@ -321,7 +380,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             if (fragmentIndex !== -1) {
               const fragment = updatedContentMap[fragmentIndex] as StoryFragmentContentMap;
 
-              // Get the updated topics with real IDs from the server response
               const updatedTopicsFromServer = allUpdatedTopics.get(fragmentId) || [];
 
               updatedContentMap[fragmentIndex] = {
@@ -330,10 +388,8 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                 description: seoData.description || fragment.description,
               };
 
-              // Add any topics to the all-topics collection, using real IDs from server when available
               if (seoData.topics && seoData.topics.length > 0) {
                 for (const topicItem of seoData.topics) {
-                  // Find if this topic has a real ID from the server response
                   const matchingServerTopic = updatedTopicsFromServer.find(
                     (serverTopic) =>
                       serverTopic.title.toLowerCase() === topicItem.title.toLowerCase()
@@ -341,22 +397,18 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
                   const realTopicId = matchingServerTopic ? matchingServerTopic.id : -1;
 
-                  // Create proper Topic object with real ID from server when available
                   const topic: Topic = {
                     id: realTopicId,
                     title: topicItem.title,
                   };
 
-                  // Check if topic already exists by title, case-insensitive
                   const existingIndex = allTopics.findIndex(
                     (t) => t.title.toLowerCase() === topic.title.toLowerCase()
                   );
 
                   if (existingIndex === -1) {
-                    // Topic doesn't exist, add it
                     allTopics.push(topic);
                   } else if (realTopicId !== -1 && allTopics[existingIndex].id === -1) {
-                    // If we now have a real ID for a previously temporary topic, update it
                     allTopics[existingIndex].id = realTopicId;
                     addDebugMessage(
                       `Updated topic ID for "${topic.title}" from -1 to ${realTopicId}`
@@ -369,14 +421,12 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             }
           }
 
-          // Update the all-topics entry if it exists
           if (topicsMapIndex !== -1) {
             updatedContentMap[topicsMapIndex] = {
               ...updatedContentMap[topicsMapIndex],
               topics: allTopics,
             } as TopicContentMap;
 
-            // Log topic statistics for debugging
             const newTopics = allTopics.filter((t) => t.id === -1).length;
             const realIdTopics = allTopics.length - newTopics;
 
@@ -385,7 +435,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
             );
           }
 
-          // Set the updated content map
           contentMap.set(updatedContentMap);
         }
 
@@ -471,7 +520,6 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
   const handleCloseClick = () => {
     if (stage === "COMPLETED" || stage === "ERROR") {
-      // Redirect to the actual edit URL using the saved node's slug
       const allNodes = getCtx().allNodes.get();
       const node = allNodes.get(nodeId);
       if (node && "slug" in node) {

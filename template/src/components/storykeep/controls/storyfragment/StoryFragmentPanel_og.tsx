@@ -1,17 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { contentMap } from "@/store/events";
-import { storyFragmentTopicsStore, isDemoModeStore } from "@/store/storykeep";
+import {
+  storyFragmentTopicsStore,
+  isDemoModeStore,
+  setPendingImageOperation,
+  getPendingImageOperation,
+} from "@/store/storykeep";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
 import TagIcon from "@heroicons/react/24/outline/TagIcon";
 import PlusIcon from "@heroicons/react/24/outline/PlusIcon";
 import ArrowUpTrayIcon from "@heroicons/react/24/outline/ArrowUpTrayIcon";
 import ExclamationTriangleIcon from "@heroicons/react/24/outline/ExclamationTriangleIcon";
-import { getCtx } from "@/store/nodes.ts";
-import { cloneDeep, findUniqueSlug, titleToSlug } from "@/utils/common/helpers.ts";
-import { isStoryFragmentNode } from "@/utils/nodes/type-guards.tsx";
+import { getCtx } from "@/store/nodes";
+import { cloneDeep, findUniqueSlug, titleToSlug } from "@/utils/common/helpers";
+import { isStoryFragmentNode } from "@/utils/nodes/type-guards";
 import OgImagePreview from "../fields/OgImagePreview";
+import { StoryFragmentMode } from "@/types.ts";
 import type {
   FullContentMap,
   StoryFragmentContentMap,
@@ -20,9 +26,8 @@ import type {
   Topic,
   TopicContentMap,
   PaneContentMap,
-} from "@/types.ts";
-import { StoryFragmentMode } from "@/types.ts";
-import type { MouseEventHandler, ChangeEvent } from "react";
+} from "@/types";
+import type { ChangeEvent, MouseEventHandler } from "react";
 
 const TARGET_WIDTH = 1200;
 const TARGET_HEIGHT = 630;
@@ -44,27 +49,38 @@ const StoryFragmentOpenGraphPanel = ({
   setMode,
   config,
 }: StoryFragmentOpenGraphPanelProps) => {
-  const isDemoMode = isDemoModeStore.get();
-  const [title, setTitle] = useState("");
+  const isDemoMode = useStore(isDemoModeStore);
+  const $contentMap = useStore(contentMap) as FullContentMap[];
+  const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
+  const storedData = $storyFragmentTopics[nodeId];
+
+  // Local state for draft changes
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftTopics, setDraftTopics] = useState<Topic[]>([]);
+  const [draftDetails, setDraftDetails] = useState("");
+  const [draftImagePath, setDraftImagePath] = useState<string | null>(null);
+  const [draftImageData, setDraftImageData] = useState<string | null>(null);
   const [isValid, setIsValid] = useState(false);
   const [warning, setWarning] = useState(false);
   const [charCount, setCharCount] = useState(0);
-  const [topics, setTopics] = useState<Topic[]>([]);
   const [existingTopics, setExistingTopics] = useState<Topic[]>([]);
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [loading, setLoading] = useState(true);
-  const [details, setDetails] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [dataFetched, setDataFetched] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Track initial state for change detection
   const initialState = useRef<{
     title: string;
     details: string;
     topics: Topic[];
     socialImagePath: string | null;
+    textColor: string;
+    bgColor: string;
   } | null>(null);
 
   const ctx = getCtx();
@@ -78,37 +94,68 @@ const StoryFragmentOpenGraphPanel = ({
 
   const initialized = useRef(false);
 
-  const $contentMap = useStore(contentMap) as FullContentMap[];
-  const $storyFragmentTopics = useStore(storyFragmentTopicsStore);
-  const storedData = $storyFragmentTopics[nodeId];
-
+  // Initialize draft state and colors
   useEffect(() => {
-    setTitle(storyfragmentNode.title);
+    const ogParams = ctx.getOgImageParams(nodeId);
+    setDraftTitle(storyfragmentNode.title);
     setCharCount(storyfragmentNode.title.length);
-  }, [storyfragmentNode.title]);
+    setDraftImagePath(storyfragmentNode.socialImagePath || null);
+
+    initialState.current = {
+      title: storyfragmentNode.title,
+      details: "",
+      topics: [],
+      socialImagePath: storyfragmentNode.socialImagePath ?? null,
+      textColor: ogParams.textColor,
+      bgColor: ogParams.bgColor,
+    };
+
+    const pendingOp = getPendingImageOperation(nodeId);
+    if (pendingOp) {
+      if (pendingOp.type === "upload" && pendingOp.data) {
+        setDraftImageData(pendingOp.data);
+        setDraftImagePath(pendingOp.path || null);
+      } else if (pendingOp.type === "remove") {
+        setDraftImagePath(null);
+        setDraftImageData(null);
+      }
+    }
+  }, [storyfragmentNode.title, storyfragmentNode.socialImagePath, nodeId]);
+
+  // Handle color changes from OgImagePreview
+  const handleColorChange = (newTextColor: string, newBgColor: string) => {
+    if (!initialState.current) return;
+
+    if (
+      (newTextColor !== initialState.current.textColor ||
+        newBgColor !== initialState.current.bgColor) &&
+      draftImagePath?.includes("--")
+    ) {
+      setPendingImageOperation(nodeId, {
+        type: "remove",
+        path: draftImagePath,
+      });
+      setDraftImagePath(null);
+      setDraftImageData(null);
+    }
+  };
 
   const handleTitleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     if (newTitle.length <= 70) {
-      setTitle(newTitle);
+      setDraftTitle(newTitle);
       setCharCount(newTitle.length);
       setIsValid(newTitle.length >= 35 && newTitle.length <= 60);
       setWarning(newTitle.length > 60 && newTitle.length <= 70);
-    }
-  };
 
-  const handleTitleBlur = () => {
-    if (title.length >= 10) {
-      const existingSlugs = $contentMap.filter(hasSlug).map((item) => item.slug);
-      const newSlug =
-        storyfragmentNode.slug === `` ? findUniqueSlug(titleToSlug(title), existingSlugs) : null;
-      const updatedNode = cloneDeep({
-        ...storyfragmentNode,
-        title,
-        ...(newSlug ? { slug: newSlug } : {}),
-        isChanged: true,
-      });
-      ctx.modifyNodes([updatedNode]);
+      if (draftImagePath?.includes("--") && newTitle !== initialState.current?.title) {
+        setPendingImageOperation(nodeId, {
+          type: "remove",
+          path: draftImagePath,
+        });
+        setDraftImagePath(null);
+        setDraftImageData(null);
+      }
     }
   };
 
@@ -146,133 +193,103 @@ const StoryFragmentOpenGraphPanel = ({
   };
 
   useEffect(() => {
-    const loadContentData = () => {
-      if (initialized.current || dataFetched) return;
+    if (initialized.current || dataFetched) return;
 
-      setLoading(true);
-      try {
-        const topicsContent = $contentMap.find(
-          (item) => item.type === "Topic" && item.id === "all-topics"
-        ) as TopicContentMap | undefined;
+    setLoading(true);
+    try {
+      const topicsContent = $contentMap.find(
+        (item) => item.type === "Topic" && item.id === "all-topics"
+      ) as TopicContentMap | undefined;
 
-        setExistingTopics(topicsContent?.topics || []);
+      setExistingTopics(topicsContent?.topics || []);
 
-        let initialTopics: Topic[] = [];
-        let initialDescription = "";
+      let initialTopics: Topic[] = [];
+      let initialDescription = "";
 
-        if (storedData) {
-          initialTopics = Array.isArray(storedData.topics)
-            ? storedData.topics.map((t) => ({
-                id: typeof t.id === "string" ? parseInt(t.id, 10) : (t.id ?? -1),
-                title: t.title,
-              }))
-            : [];
-          initialDescription = storedData.description || "";
-          setTopics(initialTopics);
-          setDetails(initialDescription);
+      if (storedData) {
+        initialTopics = Array.isArray(storedData.topics)
+          ? storedData.topics.map((t) => ({
+              id: typeof t.id === "string" ? parseInt(t.id, 10) : (t.id ?? -1),
+              title: t.title,
+            }))
+          : [];
+        initialDescription = storedData.description || "";
+        setDraftTopics(initialTopics);
+        setDraftDetails(initialDescription);
+      } else {
+        const sfContent = $contentMap.find(
+          (item): item is StoryFragmentContentMap =>
+            item.type === "StoryFragment" && item.id === nodeId
+        );
+
+        if (sfContent && sfContent.topics && sfContent.topics.length > 0) {
+          initialTopics = sfContent.topics.map((topicTitle) => {
+            const existingTopic = topicsContent?.topics.find(
+              (t) => t.title.toLowerCase() === topicTitle.toLowerCase()
+            );
+            return existingTopic || { id: -1, title: topicTitle };
+          });
+          initialDescription = sfContent.description || "";
+          setDraftTopics(initialTopics);
+          setDraftDetails(initialDescription);
         } else {
-          const sfContent = $contentMap.find(
-            (item): item is StoryFragmentContentMap =>
-              item.type === "StoryFragment" && item.id === nodeId
-          );
-
-          if (sfContent) {
-            if (sfContent.topics && sfContent.topics.length > 0) {
-              initialTopics = sfContent.topics.map((topicTitle) => {
-                const existingTopic = topicsContent?.topics.find(
-                  (t) => t.title.toLowerCase() === topicTitle.toLowerCase()
-                );
-                return existingTopic || { id: -1, title: topicTitle };
-              });
-            }
-            initialDescription = sfContent.description || "";
-            setTopics(initialTopics);
-            setDetails(initialDescription);
-          } else {
-            setTopics([]);
-            setDetails("");
-          }
+          setDraftTopics([]);
+          setDraftDetails("");
         }
-
-        // Store initial state for change detection
-        initialState.current = {
-          title: storyfragmentNode.title,
-          details: initialDescription,
-          topics: cloneDeep(initialTopics),
-          socialImagePath: storyfragmentNode.socialImagePath ?? null,
-        };
-
-        setDataFetched(true);
-        initialized.current = true;
-      } catch (err) {
-        console.error("Error in loadContentData:", err);
-        setError(err instanceof Error ? err.message : "Failed to load data");
-      } finally {
-        setLoading(false);
       }
-    };
 
-    loadContentData();
-  }, [nodeId, storedData, storyfragmentNode.socialImagePath, $contentMap]);
+      if (initialState.current) {
+        initialState.current.details = initialDescription;
+        initialState.current.topics = cloneDeep(initialTopics);
+      }
 
+      setDataFetched(true);
+      initialized.current = true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  }, [nodeId, storedData, $contentMap, dataFetched]);
+
+  // Detect changes
   useEffect(() => {
     if (!loading && dataFetched && initialState.current) {
-      const topicsArray = Array.isArray(topics) ? topics : [];
-      const storeTopics = topicsArray.map((topic) => ({
-        id: topic.id !== undefined && topic.id !== -1 ? String(topic.id) : undefined,
-        title: topic.title,
-      }));
-
-      storyFragmentTopicsStore.setKey(nodeId, {
-        topics: storeTopics,
-        description: details,
-      });
-
-      // Detect changes
       const initial = initialState.current;
+      const pendingOp = getPendingImageOperation(nodeId);
+
       const topicsChanged =
-        topics.length !== initial.topics.length ||
-        topics.some(
+        draftTopics.length !== initial.topics.length ||
+        draftTopics.some(
           (t, i) =>
             t.title.toLowerCase() !== initial.topics[i]?.title.toLowerCase() ||
             t.id !== initial.topics[i]?.id
         );
+
+      const imageChanged = pendingOp !== null || draftImagePath !== initial.socialImagePath;
+
       const hasChangesDetected =
-        title !== initial.title ||
-        details !== initial.details ||
+        draftTitle !== initial.title ||
+        draftDetails !== initial.details ||
         topicsChanged ||
-        (storyfragmentNode.socialImagePath ?? null) !== initial.socialImagePath;
+        imageChanged;
 
       setHasChanges(hasChangesDetected);
     }
-  }, [topics, details, title, storyfragmentNode.socialImagePath, nodeId, loading, dataFetched]);
+  }, [draftTopics, draftDetails, draftTitle, draftImagePath, nodeId, loading, dataFetched]);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleCustomImageUpload = (path: string) => {
-    const updatedNode = cloneDeep({
-      ...storyfragmentNode,
-      socialImagePath: path,
-      isChanged: true,
+  const handleRemoveImage = () => {
+    setPendingImageOperation(nodeId, {
+      type: "remove",
+      path: draftImagePath || undefined,
     });
-    ctx.modifyNodes([updatedNode]);
+    setDraftImagePath(null);
+    setDraftImageData(null);
     setImageError(null);
-  };
-
-  const handleRemoveImage = async () => {
-    if (storyfragmentNode.socialImagePath) {
-      setIsProcessing(true);
-      const updatedNode = cloneDeep({
-        ...storyfragmentNode,
-        socialImagePath: null,
-        isChanged: true,
-      });
-      ctx.modifyNodes([updatedNode]);
-      setImageError(null);
-      setIsProcessing(false);
-    }
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -290,20 +307,6 @@ const StoryFragmentOpenGraphPanel = ({
         return;
       }
 
-      if (storyfragmentNode.socialImagePath) {
-        await fetch("/api/fs/deleteOgImage", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            path: storyfragmentNode.socialImagePath,
-          }),
-        });
-      }
-
-      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const filename = `${nodeId}-${Date.now()}.${fileExtension}`;
-      const imageDir = "/images/og";
-
       const reader = new FileReader();
       const base64Promise = new Promise<string>((resolve) => {
         reader.onload = (e) => resolve(e.target?.result as string);
@@ -311,30 +314,21 @@ const StoryFragmentOpenGraphPanel = ({
       reader.readAsDataURL(file);
       const base64 = await base64Promise;
 
-      const response = await fetch("/api/fs/saveOgImage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          path: imageDir,
-          filename,
-          data: base64,
-        }),
+      const fileExtension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filename = `${nodeId}-${Date.now()}.${fileExtension}`; // Custom upload with -
+
+      setPendingImageOperation(nodeId, {
+        type: "upload",
+        data: base64,
+        path: `/images/og/${filename}`,
+        filename,
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
-      }
-
-      const { path: savedPath } = await response.json();
-      const updatedNode = cloneDeep({
-        ...storyfragmentNode,
-        socialImagePath: savedPath,
-        isChanged: true,
-      });
-      ctx.modifyNodes([updatedNode]);
+      setDraftImageData(base64);
+      setDraftImagePath(`/images/og/${filename}`);
     } catch (err) {
       setImageError("Failed to process image");
-      console.error("Error uploading image:", err);
+      console.error("Error processing image:", err);
     } finally {
       setIsProcessing(false);
     }
@@ -345,16 +339,17 @@ const StoryFragmentOpenGraphPanel = ({
 
     const titleLower = titleToAdd.toLowerCase().trim();
 
-    if (topics.some((topic) => topic.title.toLowerCase() === titleLower)) return;
+    if (draftTopics.some((topic) => topic.title.toLowerCase() === titleLower)) return;
 
     const existingTopicsArray = Array.isArray(existingTopics) ? existingTopics : [];
     const matchingTopic =
-      sourceTopic || existingTopicsArray.find((topic) => topic.title.toLowerCase() === titleLower);
+      sourceTopic ||
+      existingTopicsArray.find((topic) => topic.title.toLowerCase() === titleLower);
 
     if (matchingTopic) {
-      setTopics([...topics, { id: matchingTopic.id, title: matchingTopic.title }]);
+      setDraftTopics([...draftTopics, { id: matchingTopic.id, title: matchingTopic.title }]);
     } else {
-      setTopics([...topics, { id: -1, title: titleToAdd.trim() }]);
+      setDraftTopics([...draftTopics, { id: -1, title: titleToAdd.trim() }]);
       setExistingTopics([...existingTopicsArray, { id: -1, title: titleToAdd.trim() }]);
     }
   };
@@ -366,31 +361,55 @@ const StoryFragmentOpenGraphPanel = ({
   };
 
   const handleRemoveTopic = (topicToRemove: Topic) => {
-    setTopics((prevTopics) =>
-      prevTopics.filter((topic) => topic.title.toLowerCase() !== topicToRemove.title.toLowerCase())
+    setDraftTopics((prevTopics) =>
+      prevTopics.filter(
+        (topic) => topic.title.toLowerCase() !== topicToRemove.title.toLowerCase()
+      )
     );
   };
 
   const handleDescriptionChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setDetails(e.target.value);
+    setDraftDetails(e.target.value);
   };
 
-  const nodeIsChanged = () => {
-    if (storyfragmentNode) {
+  const handleApplyChanges = () => {
+    if (draftTitle !== storyfragmentNode.title) {
+      const existingSlugs = $contentMap.filter(hasSlug).map((item) => item.slug);
+      const newSlug =
+        storyfragmentNode.slug === ""
+          ? findUniqueSlug(titleToSlug(draftTitle), existingSlugs)
+          : null;
+
+      const updatedNode = cloneDeep({
+        ...storyfragmentNode,
+        title: draftTitle,
+        ...(newSlug ? { slug: newSlug } : {}),
+        isChanged: true,
+      });
+      ctx.modifyNodes([updatedNode]);
+    }
+
+    const topicsArray = Array.isArray(draftTopics) ? draftTopics : [];
+    const storeTopics = topicsArray.map((topic) => ({
+      id: topic.id !== undefined && topic.id !== -1 ? String(topic.id) : undefined,
+      title: topic.title,
+    }));
+
+    storyFragmentTopicsStore.setKey(nodeId, {
+      topics: storeTopics,
+      description: draftDetails,
+    });
+
+    if (draftTitle === storyfragmentNode.title) {
       const updatedNode = cloneDeep({
         ...storyfragmentNode,
         isChanged: true,
       });
       ctx.modifyNodes([updatedNode]);
     }
-  };
 
-  const handleApplyChanges = () => {
-    nodeIsChanged();
     setMode(StoryFragmentMode.DEFAULT);
   };
-
-  const hasDescription = details && details.trim().length > 0;
 
   return (
     <div className="px-1.5 py-6 bg-white rounded-b-md w-full group mb-4">
@@ -398,11 +417,8 @@ const StoryFragmentOpenGraphPanel = ({
         <div className="flex justify-between mb-4">
           <h3 className="text-lg font-bold">Page SEO</h3>
           <button
-            onClick={() => {
-              nodeIsChanged();
-              setMode(StoryFragmentMode.DEFAULT);
-            }}
-            className="text-myblue hover:text-black"
+            onClick={() => setMode(StoryFragmentMode.DEFAULT)}
+            className="text-blue-600 hover:text-black"
           >
             ← Close Panel
           </button>
@@ -427,22 +443,16 @@ const StoryFragmentOpenGraphPanel = ({
             <div className="relative">
               <input
                 type="text"
-                value={title}
+                value={draftTitle}
                 onChange={handleTitleChange}
-                onBlur={handleTitleBlur}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.currentTarget.blur();
-                  }
-                }}
                 className={`w-full px-2 py-1 pr-16 rounded-md border ${
                   charCount < 10
                     ? "border-red-500 bg-red-50"
                     : isValid
-                      ? "border-green-500 bg-green-50"
-                      : warning
-                        ? "border-yellow-500 bg-yellow-50"
-                        : "border-gray-300"
+                    ? "border-green-500 bg-green-50"
+                    : warning
+                    ? "border-yellow-500 bg-yellow-50"
+                    : "border-gray-300"
                 }`}
                 placeholder="Enter story fragment title (50-60 characters recommended)"
               />
@@ -459,10 +469,10 @@ const StoryFragmentOpenGraphPanel = ({
                     charCount < 10
                       ? "text-red-500"
                       : isValid
-                        ? "text-green-500"
-                        : warning
-                          ? "text-yellow-500"
-                          : "text-gray-500"
+                      ? "text-green-500"
+                      : warning
+                      ? "text-yellow-500"
+                      : "text-gray-500"
                   }`}
                 >
                   {charCount}/70
@@ -505,11 +515,11 @@ const StoryFragmentOpenGraphPanel = ({
             <textarea
               id="description"
               rows={3}
-              className={`w-full rounded-md border border-gray-300 shadow-sm p-2 focus:border-myblue focus:ring-myblue ${
+              className={`w-full rounded-md border border-gray-300 shadow-sm p-2 focus:border-blue-600 focus:ring-blue-600 ${
                 isDemoMode ? "opacity-75 cursor-not-allowed" : ""
               }`}
               placeholder="Add a description for this page..."
-              value={details}
+              value={draftDetails}
               onChange={handleDescriptionChange}
               disabled={isDemoMode}
               title={isDemoMode ? "Description editing is disabled in demo mode" : ""}
@@ -522,80 +532,70 @@ const StoryFragmentOpenGraphPanel = ({
           <div>
             <h3 className="block text-sm font-bold text-gray-700 mb-2">Social Share Image</h3>
 
-            {storyfragmentNode.socialImagePath ? (
-              <>
-                <div className="flex items-start space-x-4">
-                  <div
-                    className="relative w-64 bg-mylightgrey/5 rounded-md overflow-hidden"
-                    style={{
-                      aspectRatio: 1.91 / 1,
-                    }}
+            {draftImageData || draftImagePath ? (
+              <div className="flex items-start space-x-4">
+                <div
+                  className="relative w-64 bg-gray-100 rounded-md overflow-hidden"
+                  style={{ aspectRatio: 1.91 / 1 }}
+                >
+                  <img
+                    src={draftImageData || `${draftImagePath}?v=${Date.now()}`}
+                    alt="Open Graph preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={handleRemoveImage}
+                    disabled={isProcessing || isDemoMode}
+                    title={isDemoMode ? "Image removal is disabled in demo mode" : "Remove image"}
+                    className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-200 disabled:opacity-50"
                   >
-                    <img
-                      src={`${storyfragmentNode.socialImagePath}?v=${Date.now()}`}
-                      alt="Open Graph preview"
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={handleRemoveImage}
-                      disabled={isProcessing || isDemoMode}
-                      title={isDemoMode ? "Image removal is disabled in demo mode" : "Remove image"}
-                      className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-mylightgrey disabled:opacity-50"
-                    >
-                      <XMarkIcon className="w-4 h-4 text-mydarkgrey" />
-                    </button>
-                  </div>
-
-                  <div className="flex-grow">
-                    <button
-                      onClick={handleUploadClick}
-                      disabled={isProcessing || isDemoMode}
-                      title={
-                        isDemoMode ? "Image uploads are disabled in demo mode" : "Replace image"
-                      }
-                      className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
-                    >
-                      <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
-                      {isProcessing ? "Processing..." : "Replace Image"}
-                    </button>
-
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      accept="image/jpeg,image/png"
-                      className="hidden"
-                    />
-
-                    <p className="mt-2 text-xs text-mydarkgrey break-all">
-                      {storyfragmentNode.socialImagePath}
-                    </p>
-                    {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
-                  </div>
+                    <XMarkIcon className="w-4 h-4 text-gray-800" />
+                  </button>
                 </div>
-              </>
-            ) : config ? (
-              <OgImagePreview
-                nodeId={nodeId}
-                config={config}
-                onCustomImageUpload={handleCustomImageUpload}
-                isDemoMode={isDemoMode}
-              />
+
+                <div className="flex-grow">
+                  <button
+                    onClick={handleUploadClick}
+                    disabled={isProcessing || isDemoMode}
+                    title={isDemoMode ? "Image uploads are disabled in demo mode" : "Replace image"}
+                    className="flex items-center text-sm text-blue-600 hover:text-orange-600 disabled:opacity-50"
+                  >
+                    <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
+                    {isProcessing ? "Processing..." : "Replace Image"}
+                  </button>
+
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/jpeg,image/png"
+                    className="hidden"
+                  />
+
+                  <p className="mt-2 text-xs text-gray-800 break-all">
+                    {draftImageData ? "New image (pending save)" : draftImagePath}
+                  </p>
+                  {imageError && <p className="mt-2 text-sm text-red-600">{imageError}</p>}
+                </div>
+              </div>
             ) : (
               <>
-                <span className="block text-sm text-mydarkgrey mb-2">
-                  Upload an image (required size: {TARGET_WIDTH}x{TARGET_HEIGHT}px)
-                </span>
-
-                <div className="flex space-x-4">
+                  {config && (
+                <OgImagePreview
+                  nodeId={nodeId}
+                  title={draftTitle}
+                  socialImagePath={draftImagePath}
+                  config={config}
+                  onColorChange={handleColorChange}
+                />
+                  )}
+                <div className="flex space-x-4 mt-4">
                   <div
-                    className="relative w-64 bg-mylightgrey/5 rounded-md overflow-hidden"
-                    style={{
-                      aspectRatio: 1.91 / 1,
-                    }}
+                    className="relative w-64 bg-gray-100 rounded-md overflow-hidden"
+                    style={{ aspectRatio: 1.91 / 1 }}
                   >
-                    <div className="flex items-center justify-center w-full h-full border-2 border-dashed border-mydarkgrey/30 rounded-md">
-                      <span className="text-sm text-mydarkgrey">No image selected</span>
+                    <div className="flex items-center justify-center w-full h-full border-2 border-dashed border-gray-400 rounded-md">
+                      <span className="text-sm text-gray-600">No image selected</span>
                     </div>
                   </div>
 
@@ -603,10 +603,8 @@ const StoryFragmentOpenGraphPanel = ({
                     <button
                       onClick={handleUploadClick}
                       disabled={isProcessing || isDemoMode}
-                      title={
-                        isDemoMode ? "Image uploads are disabled in demo mode" : "Upload image"
-                      }
-                      className="flex items-center text-sm text-myblue hover:text-myorange disabled:opacity-50"
+                      title={isDemoMode ? "Image uploads are disabled in demo mode" : "Upload image"}
+                      className="flex items-center text-sm text-blue-600 hover:text-orange-600 disabled:opacity-50"
                     >
                       <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
                       {isProcessing ? "Processing..." : "Upload Image"}
@@ -624,13 +622,11 @@ const StoryFragmentOpenGraphPanel = ({
                   </div>
                 </div>
 
-                <div className="text-sm text-mydarkgrey space-y-2 mt-2">
+                <div className="text-sm text-gray-600 space-y-2 mt-2">
                   <p>This image will be used when your page is shared on social media.</p>
                   <p>Requirements:</p>
                   <ul className="list-disc ml-5 space-y-1">
-                    <li>
-                      Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels
-                    </li>
+                    <li>Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels</li>
                     <li>Only JPG or PNG formats are accepted</li>
                     <li>Keep important content centered</li>
                     <li>Use clear, high-contrast imagery</li>
@@ -641,14 +637,14 @@ const StoryFragmentOpenGraphPanel = ({
             )}
           </div>
 
-          {!isDemoMode && hasDescription ? (
+          {!isDemoMode && draftDetails.trim().length > 0 && (
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">Topics</label>
 
               <div className="flex mb-3">
                 <input
                   type="text"
-                  className="flex-grow rounded-l-md border border-gray-300 shadow-sm p-2 focus:border-myblue focus:ring-myblue"
+                  className="flex-grow rounded-l-md border border-gray-300 shadow-sm p-2 focus:border-blue-600 focus:ring-blue-600"
                   placeholder="Add a new tag..."
                   value={newTopicTitle}
                   onChange={(e) => setNewTopicTitle(e.target.value)}
@@ -663,14 +659,14 @@ const StoryFragmentOpenGraphPanel = ({
                 <button
                   onClick={handleAddTopic}
                   disabled={!newTopicTitle.trim()}
-                  className="bg-myblue text-white rounded-r-md px-3 py-2 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white rounded-r-md px-3 py-2 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                   <PlusIcon className="h-5 w-5" />
                 </button>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {topics.map((topic) => (
+                {draftTopics.map((topic) => (
                   <div
                     key={`topic-${topic.title}`}
                     className="flex items-center bg-gray-100 rounded-full px-3 py-1"
@@ -685,7 +681,7 @@ const StoryFragmentOpenGraphPanel = ({
                     </button>
                   </div>
                 ))}
-                {topics.length === 0 && (
+                {draftTopics.length === 0 && (
                   <p className="text-sm text-gray-500 italic">
                     No topics added yet. Topics help organize and categorize your content.
                   </p>
@@ -697,7 +693,7 @@ const StoryFragmentOpenGraphPanel = ({
                   {existingTopics
                     .filter(
                       (existingTopic) =>
-                        !topics.some(
+                        !draftTopics.some(
                           (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
                         )
                     )
@@ -711,18 +707,20 @@ const StoryFragmentOpenGraphPanel = ({
                         <span className="text-xs text-gray-600">{availableTopic.title}</span>
                       </button>
                     ))}
-                  {existingTopics.filter(
-                    (existingTopic) =>
-                      !topics.some(
-                        (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
-                      )
-                  ).length === 0 && (
+                  {existingTopics
+                    .filter(
+                      (existingTopic) =>
+                        !draftTopics.some(
+                          (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
+                        )
+                    )
+                    .length === 0 && (
                     <p className="text-xs text-gray-500 italic">No additional topics available.</p>
                   )}
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
         </div>
 
         {hasChanges && (

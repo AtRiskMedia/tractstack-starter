@@ -17,6 +17,8 @@ import type {
   HourlyActivity,
   OrphanContentType,
   OrphanItem,
+  PendingImageOperation,
+  PendingImageOperationsStore,
 } from "@/types";
 import { toolAddModes } from "@/constants";
 import { createNodeIdFromDragNode } from "@/utils/common/helpers.ts";
@@ -424,4 +426,32 @@ export const resetDeletionStatus = () => {
     success: false,
     error: null,
   });
+};
+
+export const pendingImageOperationsStore = map<PendingImageOperationsStore>({});
+
+export const setPendingImageOperation = (
+  storyFragmentId: string,
+  operation: PendingImageOperation | null
+) => {
+  const current = pendingImageOperationsStore.get();
+  pendingImageOperationsStore.set({
+    ...current,
+    [storyFragmentId]: operation,
+  });
+};
+
+export const getPendingImageOperation = (storyFragmentId: string): PendingImageOperation | null => {
+  return pendingImageOperationsStore.get()[storyFragmentId] || null;
+};
+
+export const clearPendingImageOperation = (storyFragmentId: string) => {
+  const current = pendingImageOperationsStore.get();
+  const updated = { ...current };
+  delete updated[storyFragmentId];
+  pendingImageOperationsStore.set(updated);
+};
+
+export const clearAllPendingImageOperations = () => {
+  pendingImageOperationsStore.set({});
 };
