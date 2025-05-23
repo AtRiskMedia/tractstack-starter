@@ -268,7 +268,6 @@ export default function InitWizard({
   );
 
   const handleBack = useCallback(() => {
-    // Turn off quick setup mode when going back
     if (isQuickSetup) {
       toggleQuickSetup(false);
     }
@@ -281,25 +280,28 @@ export default function InitWizard({
     }
   }, [steps, $store.currentStep, isQuickSetup]);
 
-  // Step configuration and management
   useEffect(() => {
     const requiresPublish = configState.needsPublish.size > 0;
-    const newSteps: InitStepConfig[] = [
-      {
+    const newSteps: InitStepConfig[] = [];
+
+    if (init) {
+      newSteps.push({
         id: "setup",
         title: "Welcome to your Story Keep",
         description: "Make it your own Tract Stack instance",
         isComplete: hasInit || $store.completedSteps.includes("setup"),
         isLocked: false,
-      },
-      {
-        id: "brand",
-        title: "Brand Customization",
-        description: "Customize your site's look and feel",
-        isComplete: hasInit || $store.completedSteps.includes("brand"),
-        isLocked: !$store.completedSteps.includes("setup"),
-      },
-    ];
+      });
+    }
+
+    newSteps.push({
+      id: "brand",
+      title: "Brand Customization",
+      description: "Customize your site's look and feel",
+      isComplete: hasInit || $store.completedSteps.includes("brand"),
+      isLocked: init ? !$store.completedSteps.includes("setup") : false,
+    });
+
     if (hasConcierge && !isMultiTenant) {
       newSteps.push({
         id: "integrations",
@@ -309,6 +311,7 @@ export default function InitWizard({
         isLocked: !$store.completedSteps.includes("brand"),
       });
     }
+
     if (hasConcierge || isMultiTenant) {
       newSteps.push({
         id: "security",
@@ -320,7 +323,8 @@ export default function InitWizard({
         ),
       });
     }
-    if (requiresPublish)
+
+    if (requiresPublish) {
       newSteps.push({
         id: "publish",
         title: "Republish with New Config",
@@ -328,6 +332,8 @@ export default function InitWizard({
         isComplete: hasInit || $store.completedSteps.includes("publish"),
         isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
       });
+    }
+
     newSteps.push({
       id: "createHome",
       title: "Create Home Page",
@@ -344,9 +350,8 @@ export default function InitWizard({
     if (nextStep) {
       setCurrentStep(nextStep.id);
     }
-  }, [$store.completedSteps, configState, hasInitCompleted]);
+  }, [$store.completedSteps, configState, hasInitCompleted, init]);
 
-  // Step renderer with unified props
   const renderStep = useCallback(
     (step: InitStepConfig) => {
       const isActive = $store.currentStep === step.id;

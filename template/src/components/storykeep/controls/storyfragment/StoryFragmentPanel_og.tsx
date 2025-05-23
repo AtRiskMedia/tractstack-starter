@@ -343,8 +343,7 @@ const StoryFragmentOpenGraphPanel = ({
 
     const existingTopicsArray = Array.isArray(existingTopics) ? existingTopics : [];
     const matchingTopic =
-      sourceTopic ||
-      existingTopicsArray.find((topic) => topic.title.toLowerCase() === titleLower);
+      sourceTopic || existingTopicsArray.find((topic) => topic.title.toLowerCase() === titleLower);
 
     if (matchingTopic) {
       setDraftTopics([...draftTopics, { id: matchingTopic.id, title: matchingTopic.title }]);
@@ -362,9 +361,7 @@ const StoryFragmentOpenGraphPanel = ({
 
   const handleRemoveTopic = (topicToRemove: Topic) => {
     setDraftTopics((prevTopics) =>
-      prevTopics.filter(
-        (topic) => topic.title.toLowerCase() !== topicToRemove.title.toLowerCase()
-      )
+      prevTopics.filter((topic) => topic.title.toLowerCase() !== topicToRemove.title.toLowerCase())
     );
   };
 
@@ -449,10 +446,10 @@ const StoryFragmentOpenGraphPanel = ({
                   charCount < 10
                     ? "border-red-500 bg-red-50"
                     : isValid
-                    ? "border-green-500 bg-green-50"
-                    : warning
-                    ? "border-yellow-500 bg-yellow-50"
-                    : "border-gray-300"
+                      ? "border-green-500 bg-green-50"
+                      : warning
+                        ? "border-yellow-500 bg-yellow-50"
+                        : "border-gray-300"
                 }`}
                 placeholder="Enter story fragment title (50-60 characters recommended)"
               />
@@ -469,10 +466,10 @@ const StoryFragmentOpenGraphPanel = ({
                     charCount < 10
                       ? "text-red-500"
                       : isValid
-                      ? "text-green-500"
-                      : warning
-                      ? "text-yellow-500"
-                      : "text-gray-500"
+                        ? "text-green-500"
+                        : warning
+                          ? "text-yellow-500"
+                          : "text-gray-500"
                   }`}
                 >
                   {charCount}/70
@@ -580,15 +577,15 @@ const StoryFragmentOpenGraphPanel = ({
               </div>
             ) : (
               <>
-                  {config && (
-                <OgImagePreview
-                  nodeId={nodeId}
-                  title={draftTitle}
-                  socialImagePath={draftImagePath}
-                  config={config}
-                  onColorChange={handleColorChange}
-                />
-                  )}
+                {config && (
+                  <OgImagePreview
+                    nodeId={nodeId}
+                    title={draftTitle}
+                    socialImagePath={draftImagePath}
+                    config={config}
+                    onColorChange={handleColorChange}
+                  />
+                )}
                 <div className="flex space-x-4 mt-4">
                   <div
                     className="relative w-64 bg-gray-100 rounded-md overflow-hidden"
@@ -603,7 +600,9 @@ const StoryFragmentOpenGraphPanel = ({
                     <button
                       onClick={handleUploadClick}
                       disabled={isProcessing || isDemoMode}
-                      title={isDemoMode ? "Image uploads are disabled in demo mode" : "Upload image"}
+                      title={
+                        isDemoMode ? "Image uploads are disabled in demo mode" : "Upload image"
+                      }
                       className="flex items-center text-sm text-blue-600 hover:text-orange-600 disabled:opacity-50"
                     >
                       <ArrowUpTrayIcon className="w-4 h-4 mr-1" />
@@ -626,7 +625,9 @@ const StoryFragmentOpenGraphPanel = ({
                   <p>This image will be used when your page is shared on social media.</p>
                   <p>Requirements:</p>
                   <ul className="list-disc ml-5 space-y-1">
-                    <li>Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels</li>
+                    <li>
+                      Image must be exactly {TARGET_WIDTH}x{TARGET_HEIGHT} pixels
+                    </li>
                     <li>Only JPG or PNG formats are accepted</li>
                     <li>Keep important content centered</li>
                     <li>Use clear, high-contrast imagery</li>
@@ -707,14 +708,12 @@ const StoryFragmentOpenGraphPanel = ({
                         <span className="text-xs text-gray-600">{availableTopic.title}</span>
                       </button>
                     ))}
-                  {existingTopics
-                    .filter(
-                      (existingTopic) =>
-                        !draftTopics.some(
-                          (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
-                        )
-                    )
-                    .length === 0 && (
+                  {existingTopics.filter(
+                    (existingTopic) =>
+                      !draftTopics.some(
+                        (topic) => topic.title.toLowerCase() === existingTopic.title.toLowerCase()
+                      )
+                  ).length === 0 && (
                     <p className="text-xs text-gray-500 italic">No additional topics available.</p>
                   )}
                 </div>

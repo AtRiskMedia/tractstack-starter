@@ -12,6 +12,7 @@ import { hasAssemblyAIStore } from "@/store/storykeep";
 import { contentMap } from "@/store/events.ts";
 import { useStore } from "@nanostores/react";
 import type { NodesContext } from "@/store/nodes";
+import type { StoryFragmentContentMap } from "@/types";
 
 interface PageCreationSelectorProps {
   nodeId: string;
@@ -40,8 +41,15 @@ export const PageCreationSelector = ({
   const [showFeatured, setShowFeatured] = useState(false);
   const $contentMap = useStore(contentMap);
 
-  const hasStoryFragments = useMemo(() => {
-    return $contentMap.some((item) => item.type === "StoryFragment");
+  const validPagesCount = useMemo(() => {
+    return $contentMap.filter(
+      (item): item is StoryFragmentContentMap =>
+        item.type === "StoryFragment" &&
+        typeof item.description === "string" &&
+        typeof item.thumbSrc === "string" &&
+        typeof item.thumbSrcSet === "string" &&
+        typeof item.changed === "string"
+    ).length;
   }, [$contentMap]);
 
   const modes = useMemo(() => {
@@ -58,7 +66,7 @@ export const PageCreationSelector = ({
             {
               id: "generate",
               name: "Generate with AI",
-              description: "Let AI help you create a complete page from your description",
+              description: "Tell us what kind of page you want and AI will generate a first draft",
               icon: CubeTransparentIcon,
               active: hasAssemblyAIStore.get(),
             },
@@ -69,17 +77,19 @@ export const PageCreationSelector = ({
     const featuredMode = {
       id: "featured",
       name: "Featured Content home page",
-      description: hasStoryFragments
-        ? "A layout with a prominent hero section showcasing a featured article and grid of additional top articles."
-        : "A layout with a prominent hero section showcasing a featured article and grid of additional top articles.",
+      description:
+        "A layout with a prominent hero section showcasing a featured article and grid of additional top articles",
       icon: NewspaperIcon,
       active: true,
-      disabled: !hasStoryFragments,
-      disabledReason: "Not yet available; no pages found.",
+      disabled: validPagesCount < 3,
+      disabledReason:
+        validPagesCount === 0
+          ? "Not yet available; no pages with SEO metadata found."
+          : `Not yet available; requires at least 3 pages with SEO metadata (currently ${validPagesCount}).`,
     };
 
     return [...baseModesWithoutFeature, featuredMode] as CreationMode[];
-  }, [hasStoryFragments]);
+  }, [validPagesCount]);
 
   const handleContinue = () => {
     if (!selectedMode) return;

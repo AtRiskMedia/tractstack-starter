@@ -11,7 +11,11 @@ import { brandColours, preferredTheme } from "@/store/storykeep.ts";
 import type { Theme, PageDesign, StoryFragmentNode } from "@/types";
 import type { SnapshotData } from "@/utils/nodes/NodesSnapshotRenderer";
 import { getTemplateVisualBreakPane } from "@/utils/TemplatePanes";
-import { getJustCopyDesign, getIntroDesign } from "@/utils/designs/templateMarkdownStyles";
+import {
+  getJustCopyDesign,
+  getIntroDesign,
+  getWithArtpackImageDesign,
+} from "@/utils/designs/templateMarkdownStyles";
 import {
   parsePageMarkdown,
   createPagePanes,
@@ -20,6 +24,27 @@ import {
 
 function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
   return [
+    {
+      id: "bg-default-pretty",
+      title: "Pretty with Hero Background",
+      introDesign: () =>
+        getWithArtpackImageDesign(
+          getIntroDesign,
+          theme,
+          brand,
+          false,
+          "kCz",
+          "wavedrips",
+          "cover",
+          true,
+          "default"
+        ),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `default`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
+    },
     {
       id: "min-default",
       title: "Default, Minimal",
@@ -37,6 +62,27 @@ function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
       },
     },
     {
+      id: "bg-onecol-pretty",
+      title: "One-Column, Pretty with Hero Background",
+      introDesign: () =>
+        getWithArtpackImageDesign(
+          getIntroDesign,
+          theme,
+          brand,
+          false,
+          "kCz",
+          "wavedrips",
+          "cover",
+          true,
+          "onecol"
+        ),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
+    },
+    {
       id: "min-onecol",
       title: "One-Column, Minimal",
       introDesign: () => getIntroDesign(theme, brand, false, true, `onecol`),
@@ -47,6 +93,27 @@ function getPageDesigns(brand: string, theme: Theme): PageDesign[] {
       title: "One-Column, Pretty",
       introDesign: () => getIntroDesign(theme, brand, false, true, `onecol`),
       contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `onecol`),
+      visualBreaks: {
+        odd: () => getTemplateVisualBreakPane("cutwide2"),
+        even: () => getTemplateVisualBreakPane("cutwide1"),
+      },
+    },
+    {
+      id: "bg-center-pretty",
+      title: "Centered, Pretty with Hero Background",
+      introDesign: () =>
+        getWithArtpackImageDesign(
+          getIntroDesign,
+          theme,
+          brand,
+          false,
+          "kCz",
+          "wavedrips",
+          "cover",
+          true,
+          "center"
+        ),
+      contentDesign: (useOdd: boolean) => getJustCopyDesign(theme, brand, useOdd, false, `center`),
       visualBreaks: {
         odd: () => getTemplateVisualBreakPane("cutwide2"),
         even: () => getTemplateVisualBreakPane("cutwide1"),

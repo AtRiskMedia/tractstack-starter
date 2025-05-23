@@ -3,7 +3,12 @@ import { getCtx } from "@/store/nodes";
 import { classNames } from "@/utils/common/helpers";
 import { NodesSerializer_Json } from "@/store/nodesSerializer_Json";
 import { generateOgImageWithFontLoading } from "@/utils/images/ogImageGenerator";
-import { tenantIdStore, storyFragmentTopicsStore, getPendingImageOperation, clearPendingImageOperation } from "@/store/storykeep.ts";
+import {
+  tenantIdStore,
+  storyFragmentTopicsStore,
+  getPendingImageOperation,
+  clearPendingImageOperation,
+} from "@/store/storykeep.ts";
 import { contentMap } from "@/store/events.ts";
 import type { SaveData } from "@/store/nodesSerializer";
 import type { StoryFragmentNode, StoryFragmentContentMap, TopicContentMap, Topic } from "@/types";
@@ -205,7 +210,9 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
 
             const pendingImageOp = getPendingImageOperation(fragment.id);
             if (pendingImageOp) {
-              addDebugMessage(`Found pending image operation for fragment ${fragment.id}: ${pendingImageOp.type}`);
+              addDebugMessage(
+                `Found pending image operation for fragment ${fragment.id}: ${pendingImageOp.type}`
+              );
 
               if (pendingImageOp.type === "remove" && fragment.social_image_path) {
                 try {
@@ -225,12 +232,16 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                     addDebugMessage(`Failed to delete OG image: ${deleteResponse.status}`);
                   }
                 } catch (deleteError) {
-                  addDebugMessage(`Error deleting OG image: ${deleteError instanceof Error ? deleteError.message : String(deleteError)}`);
+                  addDebugMessage(
+                    `Error deleting OG image: ${deleteError instanceof Error ? deleteError.message : String(deleteError)}`
+                  );
                 }
               } else if (pendingImageOp.type === "upload" && pendingImageOp.data) {
                 try {
                   if (fragment.social_image_path) {
-                    addDebugMessage(`Deleting previous OG image before upload: ${fragment.social_image_path}`);
+                    addDebugMessage(
+                      `Deleting previous OG image before upload: ${fragment.social_image_path}`
+                    );
                     await fetch("/api/fs/deleteOgImage", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -261,7 +272,9 @@ const SaveModal = ({ nodeId, onClose, onSaveComplete }: SaveModalProps) => {
                     addDebugMessage(`Failed to upload OG image: ${uploadResponse.status}`);
                   }
                 } catch (uploadError) {
-                  addDebugMessage(`Error uploading OG image: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`);
+                  addDebugMessage(
+                    `Error uploading OG image: ${uploadError instanceof Error ? uploadError.message : String(uploadError)}`
+                  );
                 }
               }
 
