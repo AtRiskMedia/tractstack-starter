@@ -7,6 +7,8 @@ export const GET: APIRoute = async ({ request }) => {
   const robotsTxt = `
 User-agent: *
 Disallow: /concierge/
+Disallow: /storykeep/
+Disallow: /storykeep/*
 Allow: /
 
 Sitemap: ${new URL("sitemap.xml", config?.init?.SITE_URL).href}
