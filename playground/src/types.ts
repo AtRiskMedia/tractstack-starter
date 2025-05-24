@@ -1427,6 +1427,17 @@ export type WizardData = {
   hasAnyMenu: boolean;
   hasMenu: boolean;
   hasSeo: boolean;
+  hasSlogan: boolean;
+  hasFooter: boolean;
+  hasLogo: boolean;
+  hasWordmark: boolean;
+  hasOgTitle: boolean;
+  hasOgAuthor: boolean;
+  hasOgDesc: boolean;
+  hasOg: boolean;
+  hasOgLogo: boolean;
+  hasFavicon: boolean;
+  hasSocials: boolean;
   homeSlug?: string;
 };
 

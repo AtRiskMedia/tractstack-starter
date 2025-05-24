@@ -101,16 +101,25 @@ const homePage = filterPayload.find(
   (item) => item.type === "StoryFragment" && item.slug === homeSlug
 ) as StoryFragmentContentMap | undefined;
 
-// Set up wizard data object
 const wizardData: WizardData = {
   hasTitle: !!(homePage?.title && homePage.title.trim() !== ""),
   hasPanes: false,
   hasAnyMenu: false,
   hasMenu: false,
   hasSeo: false,
+  hasSlogan: !!config.init.SLOGAN,
+  hasFooter: !!config.init.FOOTER,
+  hasLogo: !!config.init.LOGO,
+  hasWordmark: !!config.init.WORDMARK,
+  hasOgTitle: !!config.init.OGTITLE,
+  hasOgAuthor: !!config.init.OGAUTHOR,
+  hasOgDesc: !!config.init.OGDESC,
+  hasOg: !!config.init.OG,
+  hasOgLogo: !!config.init.OGLOGO,
+  hasFavicon: !!config.init.FAVICON,
+  hasSocials: !!config.init.SOCIALS,
 };
 
-// If home page exists, get detailed information using deserializer
 if (homePage && homePage.type === "StoryFragment") {
   wizardData.hasPanes = !!(homePage.panes && homePage.panes.length > 0);
   wizardData.hasSeo = !!homePage.description;

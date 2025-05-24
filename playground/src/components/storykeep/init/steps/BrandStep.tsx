@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { urlParamsStore } from "@/store/storykeep";
 import ArrowLeftIcon from "@heroicons/react/24/outline/ArrowLeftIcon";
 import CheckIcon from "@heroicons/react/24/outline/CheckIcon";
 import ChevronUpDownIcon from "@heroicons/react/24/outline/ChevronUpDownIcon";
@@ -102,7 +103,6 @@ export default function BrandStep({
 
   const defaultValues = getDefaultValues();
   const [currentValues, setCurrentValues] = useState<BrandFormValues>(defaultValues);
-  const [initialValues, setInitialValues] = useState<BrandFormValues>(defaultValues);
 
   const matchingPreset = Object.entries(knownBrand).find(
     ([, value]) => value === config?.init?.BRAND_COLOURS
@@ -125,58 +125,75 @@ export default function BrandStep({
   }, []);
 
   useEffect(() => {
+    const urlParams = urlParamsStore.get();
+    if (!urlParams || Object.keys(urlParams).length === 0) return;
+
+    const accordionSections: Set<string> = new Set();
+    let scrollTargetId: string | null = null;
+
+    if (urlParams.slogan) scrollTargetId = "slogan";
+    else if (urlParams.footer) scrollTargetId = "footer";
+    else if (urlParams.seo) {
+      scrollTargetId = "ogTitle";
+      accordionSections.add("open-graph");
+    } else if (
+      urlParams.logo ||
+      urlParams.wordmark ||
+      urlParams.og ||
+      urlParams.ogLogo ||
+      urlParams.favicon
+    ) {
+      accordionSections.add("brand-assets");
+      scrollTargetId = "brand-assets-section";
+    } else if (urlParams.ogTitle || urlParams.ogAuthor || urlParams.ogDesc) {
+      accordionSections.add("open-graph");
+      scrollTargetId = "open-graph-section";
+    } else if (urlParams.socials) {
+      accordionSections.add("social-links");
+      scrollTargetId = "social-links-section";
+    }
+
+    if (accordionSections.size > 0) setAccordionValue(Array.from(accordionSections));
+
+    if (scrollTargetId) {
+      setTimeout(
+        () => {
+          const element = document.getElementById(scrollTargetId);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+            if (element.tagName === "INPUT") (element as HTMLInputElement).focus();
+          }
+        },
+        accordionSections.size > 0 ? 300 : 100
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     if (config?.init) {
       const initConfig = config.init as InitConfig;
-
-      const hasEssentialChanges =
-        initConfig.SITE_URL !== initialValues.siteUrl ||
-        initConfig.BRAND_COLOURS !== initialValues.brandColors ||
-        initConfig.THEME !== initialValues.theme ||
-        initConfig.WORDMARK_MODE !== initialValues.wordmarkMode;
-
-      if (hasEssentialChanges) {
-        const values = {
-          ...currentValues,
-          siteUrl: initConfig.SITE_URL || currentValues.siteUrl,
-          slogan: initConfig.SLOGAN || currentValues.slogan,
-          footer: initConfig.FOOTER || currentValues.footer,
-          brandColors: initConfig.BRAND_COLOURS || currentValues.brandColors,
-          gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : currentValues.gtag,
-          theme: (initConfig.THEME as Theme) || currentValues.theme,
-          wordmarkMode: initConfig.WORDMARK_MODE || currentValues.wordmarkMode,
-          ogTitle: initConfig.OGTITLE || currentValues.ogTitle,
-          ogAuthor: initConfig.OGAUTHOR || currentValues.ogAuthor,
-          ogDesc: initConfig.OGDESC || currentValues.ogDesc,
-          socialLinks: initConfig.SOCIALS || currentValues.socialLinks,
-          og: initConfig.OG || currentValues.og,
-          oglogo: initConfig.OGLOGO || currentValues.oglogo,
-          logo: initConfig.LOGO || currentValues.logo,
-          wordmark: initConfig.WORDMARK || currentValues.wordmark,
-          favicon: initConfig.FAVICON || currentValues.favicon,
-          keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE || currentValues.keyboardAccessible,
-        };
-
-        setCurrentValues(values);
-        setInitialValues(values);
-      }
-
-      if (!initConfig.WORDMARK_MODE || !initConfig.BRAND_COLOURS) {
-        onConfigUpdate({
-          SITE_INIT: initConfig.SITE_INIT || false,
-          WORDMARK_MODE: initConfig.WORDMARK_MODE || "default",
-          BRAND_COLOURS:
-            initConfig.BRAND_COLOURS || "10120d,fcfcfc,f58333,c8df8c,293f58,a7b1b7,393d34,e3e3e3",
-          OPEN_DEMO: initConfig.OPEN_DEMO || false,
-          STYLES_VER: initConfig.STYLES_VER || ``,
-          HOME_SLUG: initConfig.HOME_SLUG || ``,
-          TRACTSTACK_HOME_SLUG: initConfig.TRACTSTACK_HOME_SLUG || ``,
-          THEME: initConfig.THEME || "light-bold",
-          SOCIALS: initConfig.SOCIALS || "",
-          KEYBOARD_ACCESSIBLE: true,
-        });
-      }
+      const values = {
+        siteUrl: initConfig.SITE_URL || defaultValues.siteUrl,
+        slogan: initConfig.SLOGAN || defaultValues.slogan,
+        footer: initConfig.FOOTER || defaultValues.footer,
+        brandColors: initConfig.BRAND_COLOURS || defaultValues.brandColors,
+        gtag: typeof initConfig.GTAG === "string" ? initConfig.GTAG : defaultValues.gtag,
+        theme: (initConfig.THEME as Theme) || defaultValues.theme,
+        wordmarkMode: initConfig.WORDMARK_MODE || defaultValues.wordmarkMode,
+        ogTitle: initConfig.OGTITLE || defaultValues.ogTitle,
+        ogAuthor: initConfig.OGAUTHOR || defaultValues.ogAuthor,
+        ogDesc: initConfig.OGDESC || defaultValues.ogDesc,
+        socialLinks: initConfig.SOCIALS || defaultValues.socialLinks,
+        og: initConfig.OG || defaultValues.og,
+        oglogo: initConfig.OGLOGO || defaultValues.oglogo,
+        logo: initConfig.LOGO || defaultValues.logo,
+        wordmark: initConfig.WORDMARK || defaultValues.wordmark,
+        favicon: initConfig.FAVICON || defaultValues.favicon,
+        keyboardAccessible: initConfig?.KEYBOARD_ACCESSIBLE ?? defaultValues.keyboardAccessible,
+      };
+      setCurrentValues(values);
     }
-  }, [config, onConfigUpdate]);
+  }, [config]);
 
   useEffect(() => {
     const colors = currentValues.brandColors.split(",");
@@ -198,17 +215,8 @@ export default function BrandStep({
 
   const handleUrlBlur = (e: FocusEvent<HTMLInputElement>) => {
     const result = formatAndValidateUrl(e.target.value);
-
-    setCurrentValues((prev) => ({
-      ...prev,
-      siteUrl: result.url,
-    }));
-
-    if (!result.isValid) {
-      setUrlError(result.error || null);
-    } else {
-      setUrlError(null);
-    }
+    setCurrentValues((prev) => ({ ...prev, siteUrl: result.url }));
+    setUrlError(result.isValid ? null : result.error || null);
   };
 
   const handleImageChange = async (id: string, base64: string, filename: string) => {
@@ -220,10 +228,7 @@ export default function BrandStep({
           return newImages;
         });
         onConfigUpdate({ [id]: "" });
-        setCurrentValues((prev) => ({
-          ...prev,
-          [id.toLowerCase()]: "",
-        }));
+        setCurrentValues((prev) => ({ ...prev, [id.toLowerCase()]: "" }));
         return;
       }
       setIsUploadingImages(true);
@@ -231,25 +236,14 @@ export default function BrandStep({
       const response = await fetch("/api/fs/saveBrandImage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: base64,
-          filename,
-        }),
+        body: JSON.stringify({ data: base64, filename }),
       });
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
-      }
+      if (!response.ok) throw new Error("Failed to upload image");
       const result = await response.json();
       if (result.success) {
-        setImages((prev) => ({
-          ...prev,
-          [id]: base64,
-        }));
+        setImages((prev) => ({ ...prev, [id]: base64 }));
         onConfigUpdate({ [id]: result.path });
-        setCurrentValues((prev) => ({
-          ...prev,
-          [id.toLowerCase()]: result.path,
-        }));
+        setCurrentValues((prev) => ({ ...prev, [id.toLowerCase()]: result.path }));
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload image");
@@ -260,20 +254,15 @@ export default function BrandStep({
 
   const handleBrandPresetChange = (details: { value: string[] }) => {
     const preset = details.value[0] || "";
-
     if (preset === "custom") {
       const colorsToUse = customColors || currentValues.brandColors;
       setCurrentValues((prev) => ({ ...prev, brandColors: colorsToUse }));
       setSelectedBrandPreset("custom");
       return;
     }
-
     const currentColors = currentValues.brandColors;
     const isCurrentPreset = Object.entries(knownBrand).some(([, value]) => value === currentColors);
-    if (!isCurrentPreset && currentColors) {
-      setCustomColors(currentColors);
-    }
-
+    if (!isCurrentPreset && currentColors) setCustomColors(currentColors);
     const presetColors = knownBrand[preset];
     setCurrentValues((prev) => ({ ...prev, brandColors: presetColors }));
     setSelectedBrandPreset(preset);
@@ -285,10 +274,7 @@ export default function BrandStep({
       author: "ogAuthor",
       description: "ogDesc",
     };
-    setCurrentValues((prev) => ({
-      ...prev,
-      [fieldMap[field]]: value,
-    }));
+    setCurrentValues((prev) => ({ ...prev, [fieldMap[field]]: value }));
   };
 
   const handleColorChange = (newValue: string) => {
@@ -299,9 +285,7 @@ export default function BrandStep({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (isUploadingImages || isProcessing) {
-      return;
-    }
+    if (isUploadingImages || isProcessing) return;
     setError(null);
 
     try {
@@ -319,9 +303,7 @@ export default function BrandStep({
         },
         {} as Record<string, unknown>
       );
-      if (Object.keys(updates).length > 0) {
-        onConfigUpdate(updates);
-      }
+      if (Object.keys(updates).length > 0) onConfigUpdate(updates);
       onComplete();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save changes");
@@ -332,56 +314,56 @@ export default function BrandStep({
     "block w-full rounded-md border-0 px-2.5 py-1.5 pr-12 text-myblack ring-1 ring-inset ring-myorange/20 placeholder:text-mydarkgrey focus:ring-2 focus:ring-inset focus:ring-myorange xs:text-md xs:leading-6";
 
   const comboboxItemStyles = `
-    .preset-item[data-highlighted] {
-      background-color: #0891b2;
-      color: white;
-    }
-    .preset-item[data-highlighted] .preset-indicator {
-      color: white;
-    }
-    .preset-item[data-state="checked"] .preset-indicator {
-      display: flex;
-    }
-    .preset-item .preset-indicator {
-      display: none;
-    }
-    .preset-item[data-state="checked"] {
-      font-weight: bold;
-    }
-  `;
+   .preset-item[data-highlighted] {
+     background-color: #0891b2;
+     color: white;
+   }
+   .preset-item[data-highlighted] .preset-indicator {
+     color: white;
+   }
+   .preset-item[data-state="checked"] .preset-indicator {
+     display: flex;
+   }
+   .preset-item .preset-indicator {
+     display: none;
+   }
+   .preset-item[data-state="checked"] {
+     font-weight: bold;
+   }
+ `;
 
   const accordionStyles = `
-    .accordion-trigger {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      font-weight: 600;
-      background-color: #f3f4f6;
-      border-radius: 0.375rem;
-      transition: all 0.2s;
-    }
-    .accordion-trigger:hover {
-      background-color: #e5e7eb;
-    }
-    .accordion-trigger[data-state="open"] {
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-      background-color: #e5e7eb;
-    }
-    .accordion-content {
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-      border-top: none;
-      border-bottom-left-radius: 0.375rem;
-      border-bottom-right-radius: 0.375rem;
-      padding: 1rem;
-    }
-    .accordion-content[data-state="closed"] {
-      display: none;
-    }
-  `;
+   .accordion-trigger {
+     width: 100%;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     padding: 0.75rem 1rem;
+     font-weight: 600;
+     background-color: #f3f4f6;
+     border-radius: 0.375rem;
+     transition: all 0.2s;
+   }
+   .accordion-trigger:hover {
+     background-color: #e5e7eb;
+   }
+   .accordion-trigger[data-state="open"] {
+     border-bottom-left-radius: 0;
+     border-bottom-right-radius: 0;
+     background-color: #e5e7eb;
+   }
+   .accordion-content {
+     overflow: hidden;
+     border: 1px solid #e5e7eb;
+     border-top: none;
+     border-bottom-left-radius: 0.375rem;
+     border-bottom-right-radius: 0.375rem;
+     padding: 1rem;
+   }
+   .accordion-content[data-state="closed"] {
+     display: none;
+   }
+ `;
 
   return (
     <div className="space-y-6">
@@ -583,12 +565,14 @@ export default function BrandStep({
               </Accordion.ItemIndicator>
             </Accordion.ItemTrigger>
             <Accordion.ItemContent className="accordion-content">
-              <OpenGraphSettings
-                title={currentValues.ogTitle}
-                author={currentValues.ogAuthor}
-                description={currentValues.ogDesc}
-                onChange={handleOpenGraphChange}
-              />
+              <div id="open-graph-section">
+                <OpenGraphSettings
+                  title={currentValues.ogTitle}
+                  author={currentValues.ogAuthor}
+                  description={currentValues.ogDesc}
+                  onChange={handleOpenGraphChange}
+                />
+              </div>
             </Accordion.ItemContent>
           </Accordion.Item>
 
@@ -604,11 +588,13 @@ export default function BrandStep({
               </Accordion.ItemIndicator>
             </Accordion.ItemTrigger>
             <Accordion.ItemContent className="accordion-content">
-              <BrandImageUploads
-                images={images}
-                initialConfig={config}
-                onImageChange={handleImageChange}
-              />
+              <div id="brand-assets-section">
+                <BrandImageUploads
+                  images={images}
+                  initialConfig={config}
+                  onImageChange={handleImageChange}
+                />
+              </div>
             </Accordion.ItemContent>
           </Accordion.Item>
 
@@ -643,10 +629,14 @@ export default function BrandStep({
               </Accordion.ItemIndicator>
             </Accordion.ItemTrigger>
             <Accordion.ItemContent className="accordion-content">
-              <SocialLinks
-                value={currentValues.socialLinks}
-                onChange={(value) => setCurrentValues((prev) => ({ ...prev, socialLinks: value }))}
-              />
+              <div id="social-links-section">
+                <SocialLinks
+                  value={currentValues.socialLinks}
+                  onChange={(value) =>
+                    setCurrentValues((prev) => ({ ...prev, socialLinks: value }))
+                  }
+                />
+              </div>
             </Accordion.ItemContent>
           </Accordion.Item>
 

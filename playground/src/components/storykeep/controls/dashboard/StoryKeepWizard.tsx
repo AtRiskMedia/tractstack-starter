@@ -7,75 +7,120 @@ interface StoryKeepWizardProps {
 }
 
 type WizardStep = {
+  key: keyof WizardData;
   message: string;
   buttonText: string;
   href: string;
 };
 
-const wizardSteps: Record<string, WizardStep> = {
-  hasTitle: {
+const wizardSteps: WizardStep[] = [
+  {
+    key: "hasTitle",
     message: "Make your first page!",
     buttonText: "Edit Home Page",
     href: "/hello/edit",
   },
-  hasPanes: {
+  {
+    key: "hasPanes",
     message: "Your page needs some content. Add panes to build it out!",
     buttonText: "Edit Home Page",
     href: "/hello/edit",
   },
-  hasAnyMenu: {
+  {
+    key: "hasAnyMenu",
     message: "A menu helps visitors navigate. Let's create one now.",
     buttonText: "Create a Menu",
     href: "/storykeep/content/menus/create",
   },
-  hasMenu: {
+  {
+    key: "hasMenu",
     message: "A menu helps visitors navigate. Link it to your Home Page.",
     buttonText: "Add Menu to Home Page",
     href: "/hello/edit?menu",
   },
-  hasSeo: {
+  {
+    key: "hasSeo",
     message: "Each page can be customized for SEO rankings",
     buttonText: "Describe Home Page",
     href: "/hello/edit?seo",
   },
-};
+  {
+    key: "hasSlogan",
+    message: "Add a catchy slogan.",
+    buttonText: "Add Site Slogan",
+    href: "/storykeep/settings?slogan",
+  },
+  {
+    key: "hasFooter",
+    message: "Create a footer message to appear on every page.",
+    buttonText: "Add Footer Text",
+    href: "/storykeep/settings?footer",
+  },
+  {
+    key: "hasLogo",
+    message: "Upload your logo to brand your website.",
+    buttonText: "Upload Logo",
+    href: "/storykeep/settings?logo",
+  },
+  {
+    key: "hasWordmark",
+    message: "Add a wordmark for branding.",
+    buttonText: "Upload Wordmark",
+    href: "/storykeep/settings?wordmark",
+  },
+  {
+    key: "hasOgTitle",
+    message: "Set a title for social media sharing previews.",
+    buttonText: "Add OG Title",
+    href: "/storykeep/settings?ogTitle",
+  },
+  {
+    key: "hasOgAuthor",
+    message: "Add an author name for social media attribution.",
+    buttonText: "Add OG Author",
+    href: "/storykeep/settings?ogAuthor",
+  },
+  {
+    key: "hasOgDesc",
+    message: "Write a description for social media previews.",
+    buttonText: "Add OG Description",
+    href: "/storykeep/settings?ogDesc",
+  },
+  {
+    key: "hasOg",
+    message: "Upload an image for social media sharing previews.",
+    buttonText: "Upload OG Image",
+    href: "/storykeep/settings?og",
+  },
+  {
+    key: "hasOgLogo",
+    message: "Add a logo for social media previews.",
+    buttonText: "Upload OG Logo",
+    href: "/storykeep/settings?ogLogo",
+  },
+  {
+    key: "hasFavicon",
+    message: "Upload a favicon to appear in browser tabs.",
+    buttonText: "Upload Favicon",
+    href: "/storykeep/settings?favicon",
+  },
+  {
+    key: "hasSocials",
+    message: "Connect your social media accounts.",
+    buttonText: "Add Social Links",
+    href: "/storykeep/settings?socials",
+  },
+];
 
 export const StoryKeepWizard = ({ wizardData }: StoryKeepWizardProps) => {
-  if (
-    wizardData.hasTitle &&
-    wizardData.hasPanes &&
-    wizardData.hasAnyMenu &&
-    wizardData.hasMenu &&
-    wizardData.hasSeo
-  ) {
+  const currentStepIndex = wizardSteps.findIndex((step) => {
+    const value = wizardData[step.key];
+    return typeof value === "boolean" && !value;
+  });
+  if (currentStepIndex === -1) {
     return null;
   }
-
-  let currentStep: WizardStep | null = null;
-  let stepKey = "";
-  if (!wizardData.hasTitle) {
-    currentStep = wizardSteps.hasTitle;
-    stepKey = "hasTitle";
-  } else if (!wizardData.hasPanes) {
-    currentStep = wizardSteps.hasPanes;
-    stepKey = "hasPanes";
-  } else if (!wizardData.hasAnyMenu) {
-    currentStep = wizardSteps.hasAnyMenu;
-    stepKey = "hasAnyMenu";
-  } else if (!wizardData.hasMenu) {
-    currentStep = wizardSteps.hasMenu;
-    stepKey = "hasMenu";
-  } else if (!wizardData.hasSeo) {
-    currentStep = wizardSteps.hasSeo;
-    stepKey = "hasSeo";
-  }
-
-  if (!currentStep) {
-    return null;
-  }
-
-  const stepOrder = ["hasPage", "hasTitle", "hasPanes", "hasAnyMenu", "hasMenu", "hasSeo"];
-  const colorIndex = stepOrder.indexOf(stepKey);
+  const currentStep = wizardSteps[currentStepIndex];
 
   return (
     <div className="w-full py-6">
@@ -93,7 +138,7 @@ export const StoryKeepWizard = ({ wizardData }: StoryKeepWizardProps) => {
             <span
               aria-label="Color indicator"
               className="inline-block h-2 w-2 flex-shrink-0 rounded-full"
-              style={{ backgroundColor: colors[colorIndex % colors.length] }}
+              style={{ backgroundColor: colors[currentStepIndex % colors.length] }}
             />
             <span className="ml-3 block whitespace-normal text-left w-fit">
               {currentStep.buttonText}

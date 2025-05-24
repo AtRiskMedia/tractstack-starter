@@ -24,7 +24,6 @@ import type { InitStep, InitStepConfig, ValidationResult, Config } from "../../.
 interface InitWizardProps {
   hasConcierge: boolean;
   validation: ValidationResult;
-  config: Config | null;
   init: boolean;
 }
 
@@ -45,7 +44,6 @@ const PUBLISH_TRIGGERS = [
 export default function InitWizard({
   hasConcierge,
   validation: initialValidation,
-  config,
   init,
 }: InitWizardProps) {
   const tenantId = tenantIdStore.get();
@@ -61,10 +59,10 @@ export default function InitWizard({
   const hasInit = init && initialConfig?.init?.SITE_INIT;
   const [hasInitCompleted, setHasInitCompleted] = useState(false);
   const hasHome = !!(
-    typeof config?.init?.HOME_SLUG === `string` &&
-    config.init.HOME_SLUG &&
-    typeof config?.init?.TRACTSTACK_HOME_SLUG === `string` &&
-    config.init.TRACTSTACK_HOME_SLUG
+    typeof initialConfig?.init?.HOME_SLUG === `string` &&
+    initialConfig.init.HOME_SLUG &&
+    typeof initialConfig?.init?.TRACTSTACK_HOME_SLUG === `string` &&
+    initialConfig.init.TRACTSTACK_HOME_SLUG
   );
 
   // Logo and branding configuration
@@ -100,24 +98,11 @@ export default function InitWizard({
   // Effect for quick setup mode - when activated, complete all prerequisite steps
   useEffect(() => {
     if (isQuickSetup && $store.currentStep === "setup") {
-      // Mark all steps as completed
       completeStep("setup");
       completeStep("brand");
-
-      if (hasConcierge && !isMultiTenant) {
-        completeStep("integrations");
-      }
-
-      if (hasConcierge || isMultiTenant) {
-        completeStep("security");
-      }
-
-      // Skip publish step if needed
-      if (configState.needsPublish.size > 0) {
-        completeStep("publish");
-      }
-
-      // Set current step to createHome
+      if (hasConcierge && !isMultiTenant) completeStep("integrations");
+      if (hasConcierge || isMultiTenant) completeStep("security");
+      if (configState.needsPublish.size > 0) completeStep("publish");
       setCurrentStep("createHome");
     }
   }, [
@@ -134,34 +119,15 @@ export default function InitWizard({
       setConfigState((prev) => {
         const newStepChanges = {
           ...prev.stepChanges,
-          [step]: {
-            ...prev.stepChanges[step],
-            ...updates,
-          },
+          [step]: { ...prev.stepChanges[step], ...updates },
         };
-
         const newNeedsPublish = new Set(prev.needsPublish);
-        // Only mark for publish if any of the changes are to publish-triggering settings
-        if (Object.keys(updates).some((key) => PUBLISH_TRIGGERS.includes(key))) {
+        if (Object.keys(updates).some((key) => PUBLISH_TRIGGERS.includes(key)))
           newNeedsPublish.add(step);
-        }
-
-        // Create properly typed new config
         const newCurrent = prev.current
-          ? ({
-              ...prev.current,
-              init: {
-                ...prev.current.init,
-                ...updates,
-              },
-            } as Config)
+          ? ({ ...prev.current, init: { ...prev.current.init, ...updates } } as Config)
           : null;
-
-        return {
-          current: newCurrent,
-          stepChanges: newStepChanges,
-          needsPublish: newNeedsPublish,
-        };
+        return { current: newCurrent, stepChanges: newStepChanges, needsPublish: newNeedsPublish };
       });
 
       try {
@@ -180,38 +146,20 @@ export default function InitWizard({
   // Central save handler
   async function saveConfigChanges(changes: Record<string, unknown>) {
     try {
-      // Save the config file
       const configResponse = await fetch("/api/fs/update", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Init-Operation": "true",
-        },
-        body: JSON.stringify({
-          file: "init",
-          updates: changes,
-        }),
+        headers: { "Content-Type": "application/json", "X-Init-Operation": "true" },
+        body: JSON.stringify({ file: "init", updates: changes }),
       });
+      if (!configResponse.ok) throw new Error("Failed to save configuration");
 
-      if (!configResponse.ok) {
-        throw new Error("Failed to save configuration");
-      }
-
-      // If brand colors were changed, update CSS through API
       if ("BRAND_COLOURS" in changes) {
         const cssResponse = await fetch("/api/fs/updateCss", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            brandColors: changes.BRAND_COLOURS,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brandColors: changes.BRAND_COLOURS }),
         });
-
-        if (!cssResponse.ok) {
-          throw new Error("Failed to update CSS variables");
-        }
+        if (!cssResponse.ok) throw new Error("Failed to update CSS variables");
       }
 
       return await configResponse.json();
@@ -225,17 +173,13 @@ export default function InitWizard({
   const handlePublish = async () => {
     if (!hasConcierge) return true;
     try {
-      // Only publish if we have changes that require it
       if (configState.needsPublish.size > 0) {
         const response = await fetch("/api/concierge/publish", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ target: "all" }),
         });
-
-        if (!response.ok) {
-          throw new Error("Failed to trigger rebuild");
-        }
+        if (!response.ok) throw new Error("Failed to trigger rebuild");
       }
       return true;
     } catch (error) {
@@ -252,9 +196,7 @@ export default function InitWizard({
         setError(null);
         if (step === "publish") {
           if (!hasInit) setHasInitCompleted(true);
-          if (configState.needsPublish.size > 0) {
-            await handlePublish();
-          }
+          if (configState.needsPublish.size > 0) await handlePublish();
         }
         completeStep(step);
       } catch (err) {
@@ -268,10 +210,7 @@ export default function InitWizard({
   );
 
   const handleBack = useCallback(() => {
-    if (isQuickSetup) {
-      toggleQuickSetup(false);
-    }
-
+    if (isQuickSetup) toggleQuickSetup(false);
     const currentIndex = steps.findIndex((s) => s.id === $store.currentStep);
     if (currentIndex > 0) {
       const previousStep = steps[currentIndex - 1].id;
@@ -284,7 +223,7 @@ export default function InitWizard({
     const requiresPublish = configState.needsPublish.size > 0;
     const newSteps: InitStepConfig[] = [];
 
-    if (init) {
+    if (init)
       newSteps.push({
         id: "setup",
         title: "Welcome to your Story Keep",
@@ -292,7 +231,6 @@ export default function InitWizard({
         isComplete: hasInit || $store.completedSteps.includes("setup"),
         isLocked: false,
       });
-    }
 
     newSteps.push({
       id: "brand",
@@ -302,7 +240,7 @@ export default function InitWizard({
       isLocked: init ? !$store.completedSteps.includes("setup") : false,
     });
 
-    if (hasConcierge && !isMultiTenant) {
+    if (hasConcierge && !isMultiTenant)
       newSteps.push({
         id: "integrations",
         title: "Set Up Integrations",
@@ -310,9 +248,8 @@ export default function InitWizard({
         isComplete: hasInit || $store.completedSteps.includes("integrations"),
         isLocked: !$store.completedSteps.includes("brand"),
       });
-    }
 
-    if (hasConcierge || isMultiTenant) {
+    if (hasConcierge || isMultiTenant)
       newSteps.push({
         id: "security",
         title: "Secure Your Site",
@@ -322,9 +259,8 @@ export default function InitWizard({
           hasConcierge && !isMultiTenant ? "integrations" : "brand"
         ),
       });
-    }
 
-    if (requiresPublish) {
+    if (requiresPublish)
       newSteps.push({
         id: "publish",
         title: "Republish with New Config",
@@ -332,7 +268,6 @@ export default function InitWizard({
         isComplete: hasInit || $store.completedSteps.includes("publish"),
         isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
       });
-    }
 
     newSteps.push({
       id: "createHome",
@@ -345,11 +280,8 @@ export default function InitWizard({
     });
 
     setSteps(newSteps);
-
     const nextStep = newSteps.find((s) => !s.isComplete && !s.isLocked);
-    if (nextStep) {
-      setCurrentStep(nextStep.id);
-    }
+    if (nextStep) setCurrentStep(nextStep.id);
   }, [$store.completedSteps, configState, hasInitCompleted, init]);
 
   const renderStep = useCallback(
@@ -366,9 +298,7 @@ export default function InitWizard({
       };
 
       if (hasHome && hasInitCompleted) return <HasHomeStep {...commonProps} />;
-      if (hasInit || hasInitCompleted) {
-        return <CreateHomeStep {...commonProps} />;
-      }
+      if (hasInit || hasInitCompleted) return <CreateHomeStep {...commonProps} />;
 
       switch (step.id) {
         case "setup":
@@ -388,8 +318,7 @@ export default function InitWizard({
             />
           );
         case "createHome":
-          if (hasHome) return <HasHomeStep {...commonProps} />;
-          return <CreateHomeStep {...commonProps} />;
+          return hasHome ? <HasHomeStep {...commonProps} /> : <CreateHomeStep {...commonProps} />;
         default:
           return null;
       }
