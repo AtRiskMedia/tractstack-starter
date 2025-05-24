@@ -10,11 +10,13 @@ export const PullDashboardAnalytics = () => {
   const $contentMap = useStore(contentMap);
   const duration = $analyticsDuration;
   const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
+  const [epinetPollingTimer, setEpinetPollingTimer] = useState<NodeJS.Timeout | null>(null);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
   const [customFetchInProgress, setCustomFetchInProgress] = useState(false);
   const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
 
   const pollingAttemptsRef = useRef<number>(0);
+  const epinetPollingAttemptsRef = useRef<number>(0);
   const MAX_POLLING_ATTEMPTS = 3;
   const POLLING_DELAYS = [2000, 5000, 10000]; // 2s, 5s, 10s
 
@@ -24,8 +26,11 @@ export const PullDashboardAnalytics = () => {
       if (pollingTimer) {
         clearTimeout(pollingTimer);
       }
+      if (epinetPollingTimer) {
+        clearTimeout(epinetPollingTimer);
+      }
     };
-  }, [pollingTimer]);
+  }, [pollingTimer, epinetPollingTimer]);
 
   // Initialize epinet custom filters based on duration (on mount and when duration changes)
   useEffect(() => {
@@ -195,6 +200,11 @@ export const PullDashboardAnalytics = () => {
       try {
         setCustomFetchInProgress(true);
 
+        if (epinetPollingTimer) {
+          clearTimeout(epinetPollingTimer);
+          setEpinetPollingTimer(null);
+        }
+
         const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
         url.searchParams.append("id", epinetId);
         url.searchParams.append("visitorType", $epinetCustomFilters.visitorType);
@@ -233,6 +243,26 @@ export const PullDashboardAnalytics = () => {
             userCounts: result.data.userCounts || [],
             hourlyNodeActivity: result.data.hourlyNodeActivity || {},
           });
+
+          if (result.status === "loading" || result.status === "refreshing") {
+            if (epinetPollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
+              const delayMs =
+                POLLING_DELAYS[epinetPollingAttemptsRef.current] ||
+                POLLING_DELAYS[POLLING_DELAYS.length - 1];
+
+              epinetPollingAttemptsRef.current += 1;
+
+              const newTimer = setTimeout(() => {
+                fetchCustomEpinetData(epinetId);
+              }, delayMs);
+
+              setEpinetPollingTimer(newTimer);
+            } else {
+              epinetPollingAttemptsRef.current = 0;
+            }
+          } else {
+            epinetPollingAttemptsRef.current = 0;
+          }
         }
       } catch (error) {
         console.error("Error fetching custom epinet data:", error);
@@ -240,7 +270,7 @@ export const PullDashboardAnalytics = () => {
         setCustomFetchInProgress(false);
       }
     },
-    [$epinetCustomFilters, customFetchInProgress]
+    [$epinetCustomFilters, customFetchInProgress, epinetPollingTimer]
   );
 
   const debouncedFetchCustomEpinetData = useCallback(

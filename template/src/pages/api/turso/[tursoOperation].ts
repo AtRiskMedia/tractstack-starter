@@ -54,7 +54,11 @@ import {
   createEmptyDashboardAnalytics,
 } from "@/utils/events/dashboardAnalytics";
 import { isEpinetCacheValid, createEmptyLeadMetrics } from "@/store/analytics";
-import { getEpinetCustomMetrics } from "@/utils/events/epinetAnalytics";
+import {
+  computeEpinetSankey,
+  getFilteredVisitorCounts,
+  getHourlyNodeActivity,
+} from "@/utils/events/epinetAnalytics";
 import { loadHourlyEpinetData } from "@/utils/events/epinetLoader";
 import type { EpinetContentMap } from "@/types";
 
@@ -330,21 +334,64 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
               console.error("Error loading epinet data:", err)
             );
           }
-          const metricsData = await getEpinetCustomMetrics(
+
+          // Compute epinet sankey data
+          const epinet = await computeEpinetSankey(
             epinetId,
-            {
-              visitorType,
-              selectedUserId,
-              startHour,
-              endHour,
-            },
+            startHour || endHour ? undefined : 168,
+            context,
+            visitorType,
+            selectedUserId,
+            startHour,
+            endHour
+          );
+
+          // Check if epinet is still loading
+          if (epinet && "status" in epinet && epinet.status === "loading") {
+            return new Response(
+              JSON.stringify({
+                success: true,
+                data: {
+                  epinet,
+                  userCounts: [],
+                  hourlyNodeActivity: {},
+                },
+                status: "loading",
+              }),
+              {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+              }
+            );
+          }
+
+          // Only compute additional metrics if epinet data is ready
+          const userCounts = await getFilteredVisitorCounts(
+            epinetId,
+            visitorType,
+            startHour,
+            endHour,
+            context
+          );
+
+          const hourlyNodeActivity = await getHourlyNodeActivity(
+            epinetId,
+            visitorType,
+            startHour,
+            endHour,
+            selectedUserId,
             context
           );
 
           return new Response(
             JSON.stringify({
               success: true,
-              data: metricsData,
+              data: {
+                epinet,
+                userCounts,
+                hourlyNodeActivity,
+              },
+              status: "complete",
             }),
             {
               status: 200,
@@ -361,12 +408,13 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
                 epinet: {
                   status: "error",
                   message: "Failed to compute custom epinet metrics",
-                  epinetId,
+                  id: epinetId,
                   title: "User Journey Flow (Error)",
                 },
                 userCounts: [],
                 hourlyNodeActivity: {},
               },
+              status: "error",
             }),
             {
               status: 500,

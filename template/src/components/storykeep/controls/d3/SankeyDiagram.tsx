@@ -3,7 +3,6 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 import { useEffect, useRef, useState } from "react";
 import { colors } from "@/constants";
 
-// Maximum height constraint for the diagram
 const MAX_HEIGHT = 1200;
 
 interface Node {
@@ -39,9 +38,7 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
         const nodeCount = data.nodes.length || 1;
-        // Height: 40px per node + 10px padding + 50px buffer
         const calculatedHeight = nodeCount * (40 + 10) + 50;
-        // Apply maximum height constraint
         const constrainedHeight = Math.min(MAX_HEIGHT, calculatedHeight);
         setDimensions({ width: containerWidth, height: constrainedHeight });
       }
@@ -80,7 +77,6 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
 
     const { width, height } = dimensions;
 
-    // Add margins to reserve space for labels
     const margin = { top: 20, bottom: 20 };
     const layoutHeight = height - margin.top - margin.bottom;
 
@@ -99,27 +95,22 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
         links: validLinks.map((d) => ({ ...d })),
       });
 
-      // Calculate the actual vertical span of the layout
       const minY = nodes.reduce((min, node) => Math.min(min, node.y0 ?? 0), Infinity);
       const maxY = nodes.reduce((max, node) => Math.max(max, node.y1 ?? 0), 0);
       const actualHeight = maxY - minY;
 
-      // If the layout exceeds the intended height, scale the y-positions
       let scale = 1;
       if (actualHeight > layoutHeight) {
         scale = layoutHeight / actualHeight;
       }
 
-      // Apply scaling to node positions
       nodes.forEach((node) => {
         node.y0 = margin.top + (node.y0! - margin.top) * scale;
         node.y1 = margin.top + (node.y1! - margin.top) * scale;
       });
 
-      // Update SVG dimensions and viewBox
       svg.attr("width", width).attr("height", height).attr("viewBox", `0 0 ${width} ${height}`);
 
-      // Draw links with updated positions
       svg
         .append("g")
         .selectAll("path")
@@ -128,7 +119,7 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
         .append("path")
         .attr("d", sankeyLinkHorizontal())
         .attr("stroke", "#999")
-        .attr("stroke-width", (d) => Math.max(1, (d.width || 1) * scale)) // Scale link width as well
+        .attr("stroke-width", (d) => Math.max(1, (d.width || 1) * scale))
         .attr("fill", "none")
         .attr("opacity", 0.5)
         .append("title")
@@ -140,7 +131,6 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
           }\n${d.value} events`;
         });
 
-      // Draw nodes with updated positions
       svg
         .append("g")
         .selectAll("rect")
@@ -149,13 +139,12 @@ const SankeyDiagram = ({ data }: SankeyDiagramProps) => {
         .append("rect")
         .attr("x", (d) => d.x0 ?? 0)
         .attr("y", (d) => d.y0 ?? 0)
-        .attr("height", (d) => (d.y1 ?? 0) - (d.y0 ?? 0))
+        .attr("height", (d) => Math.max(0, (d.y1 ?? 0) - (d.y0 ?? 0)))
         .attr("width", sankeyGenerator.nodeWidth())
         .attr("fill", (_, i) => colors[i % colors.length])
         .append("title")
         .text((d) => `${d.name}\n${d.value} events`);
 
-      // Draw labels with updated positions
       svg
         .append("g")
         .selectAll("text")
