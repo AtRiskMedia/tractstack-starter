@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useStore } from "@nanostores/react";
+import { Steps } from "@ark-ui/react/steps";
 import {
   initWizardStore,
   setCurrentStep,
@@ -52,10 +53,9 @@ export default function InitWizard({
   const initialConfig = initialValidation.config;
   const $store = useStore(initWizardStore);
   const isQuickSetup = useStore(quickSetup);
-  const [steps, setSteps] = useState<InitStepConfig[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [validation, setValidation] = useState<ValidationResult>(initialValidation);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const hasInit = init && initialConfig?.init?.SITE_INIT;
   const [hasInitCompleted, setHasInitCompleted] = useState(false);
   const hasHome = !!(
@@ -88,6 +88,121 @@ export default function InitWizard({
     needsPublish: new Set(),
   });
 
+  // Calculate steps array based on quick setup mode
+  const stepsConfig = useMemo(() => {
+    if (isQuickSetup) {
+      // Quick setup mode: only setup and createHome steps
+      return [
+        {
+          id: "setup" as InitStep,
+          title: "Quick Start Setup",
+          description: "Get started quickly",
+          isComplete: hasInit || $store.completedSteps.includes("setup"),
+          isLocked: false,
+        },
+        {
+          id: "createHome" as InitStep,
+          title: "Create Home Page",
+          description: "Set up your site's landing page",
+          isComplete: $store.completedSteps.includes("createHome"),
+          isLocked: !$store.completedSteps.includes("setup"),
+        },
+      ];
+    }
+
+    // Full setup mode: all steps
+    const requiresPublish = configState.needsPublish.size > 0;
+    const steps: InitStepConfig[] = [];
+
+    if (init) {
+      steps.push({
+        id: "setup",
+        title: "Welcome to your Story Keep",
+        description: "Make it your own Tract Stack instance",
+        isComplete: hasInit || $store.completedSteps.includes("setup"),
+        isLocked: false,
+      });
+    }
+
+    steps.push({
+      id: "brand",
+      title: "Brand Customization",
+      description: "Customize your site's look and feel",
+      isComplete: hasInit || $store.completedSteps.includes("brand"),
+      isLocked: init ? !$store.completedSteps.includes("setup") : false,
+    });
+
+    if (hasConcierge && !isMultiTenant) {
+      steps.push({
+        id: "integrations",
+        title: "Set Up Integrations",
+        description: "Connect external services and APIs",
+        isComplete: hasInit || $store.completedSteps.includes("integrations"),
+        isLocked: !$store.completedSteps.includes("brand"),
+      });
+    }
+
+    if (hasConcierge || isMultiTenant) {
+      steps.push({
+        id: "security",
+        title: "Secure Your Site",
+        description: "Set up authentication and access control",
+        isComplete: hasInit || $store.completedSteps.includes("security"),
+        isLocked: !$store.completedSteps.includes(
+          hasConcierge && !isMultiTenant ? "integrations" : "brand"
+        ),
+      });
+    }
+
+    if (requiresPublish) {
+      steps.push({
+        id: "publish",
+        title: "Republish with New Config",
+        description: "Apply your configuration changes",
+        isComplete: hasInit || $store.completedSteps.includes("publish"),
+        isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
+      });
+    }
+
+    steps.push({
+      id: "createHome",
+      title: "Create Home Page",
+      description: "Set up your site's landing page",
+      isComplete: $store.completedSteps.includes("createHome"),
+      isLocked: !$store.completedSteps.includes(
+        requiresPublish ? "publish" : hasConcierge ? "security" : "brand"
+      ),
+    });
+
+    return steps;
+  }, [
+    isQuickSetup,
+    $store.completedSteps,
+    configState.needsPublish.size,
+    hasInit,
+    hasConcierge,
+    isMultiTenant,
+    init,
+  ]);
+
+  // Find initial step index
+  const initialStepIndex = useMemo(() => {
+    const firstIncompleteUnlocked = stepsConfig.findIndex((s) => !s.isComplete && !s.isLocked);
+    return firstIncompleteUnlocked !== -1 ? firstIncompleteUnlocked : 0;
+  }, [stepsConfig]);
+
+  // Controlled step state
+  const [currentStepIndex, setCurrentStepIndex] = useState(initialStepIndex);
+
+  // Update current step index when store changes
+  useEffect(() => {
+    const currentStepId = $store.currentStep;
+    const index = stepsConfig.findIndex((s) => s.id === currentStepId);
+    if (index !== -1 && index !== currentStepIndex) {
+      setCurrentStepIndex(index);
+    }
+  }, [$store.currentStep, stepsConfig]);
+
   useEffect(() => {
     if (initialValidation) {
       updateValidation(initialValidation);
@@ -95,15 +210,14 @@ export default function InitWizard({
     }
   }, [initialValidation]);
 
-  // Effect for quick setup mode - when activated, complete all prerequisite steps
+  // Effect for quick setup mode - auto-complete intermediate steps when activated
   useEffect(() => {
     if (isQuickSetup && $store.currentStep === "setup") {
-      completeStep("setup");
+      // Auto-complete all intermediate steps that would be skipped
       completeStep("brand");
       if (hasConcierge && !isMultiTenant) completeStep("integrations");
       if (hasConcierge || isMultiTenant) completeStep("security");
       if (configState.needsPublish.size > 0) completeStep("publish");
-      setCurrentStep("createHome");
     }
   }, [
     isQuickSetup,
@@ -112,6 +226,18 @@ export default function InitWizard({
     isMultiTenant,
     configState.needsPublish.size,
   ]);
+
+  // Handle step change from Ark UI
+  const handleStepChange = useCallback(
+    (details: { step: number }) => {
+      const newStep = stepsConfig[details.step];
+      if (newStep && !newStep.isLocked) {
+        setCurrentStepIndex(details.step);
+        setCurrentStep(newStep.id);
+      }
+    },
+    [stepsConfig]
+  );
 
   // Central handler for all configuration updates
   const handleConfigUpdate = useCallback(
@@ -140,7 +266,7 @@ export default function InitWizard({
         setIsProcessing(false);
       }
     },
-    [configState]
+    []
   );
 
   // Central save handler
@@ -199,6 +325,17 @@ export default function InitWizard({
           if (configState.needsPublish.size > 0) await handlePublish();
         }
         completeStep(step);
+
+        // Move to next step if not at last
+        const currentIndex = stepsConfig.findIndex((s) => s.id === step);
+        if (currentIndex < stepsConfig.length - 1) {
+          const nextIndex = currentIndex + 1;
+          setCurrentStepIndex(nextIndex);
+          const nextStep = stepsConfig[nextIndex];
+          if (nextStep) {
+            setCurrentStep(nextStep.id);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
         throw err;
@@ -206,87 +343,31 @@ export default function InitWizard({
         setIsProcessing(false);
       }
     },
-    [configState, hasConcierge]
+    [configState, hasConcierge, hasInit, stepsConfig]
   );
 
   const handleBack = useCallback(() => {
-    if (isQuickSetup) toggleQuickSetup(false);
-    const currentIndex = steps.findIndex((s) => s.id === $store.currentStep);
-    if (currentIndex > 0) {
-      const previousStep = steps[currentIndex - 1].id;
-      uncompleteStep(previousStep);
-      setCurrentStep(previousStep);
+    if (isQuickSetup) {
+      // In quick setup mode, back means exit quick setup
+      toggleQuickSetup(false);
+      return;
     }
-  }, [steps, $store.currentStep, isQuickSetup]);
 
-  useEffect(() => {
-    const requiresPublish = configState.needsPublish.size > 0;
-    const newSteps: InitStepConfig[] = [];
+    // Check if not at first step
+    if (currentStepIndex > 0) {
+      const previousIndex = currentStepIndex - 1;
+      const previousStep = stepsConfig[previousIndex];
+      if (previousStep) {
+        uncompleteStep(previousStep.id);
+        setCurrentStepIndex(previousIndex);
+        setCurrentStep(previousStep.id);
+      }
+    }
+  }, [currentStepIndex, isQuickSetup, stepsConfig]);
 
-    if (init)
-      newSteps.push({
-        id: "setup",
-        title: "Welcome to your Story Keep",
-        description: "Make it your own Tract Stack instance",
-        isComplete: hasInit || $store.completedSteps.includes("setup"),
-        isLocked: false,
-      });
-
-    newSteps.push({
-      id: "brand",
-      title: "Brand Customization",
-      description: "Customize your site's look and feel",
-      isComplete: hasInit || $store.completedSteps.includes("brand"),
-      isLocked: init ? !$store.completedSteps.includes("setup") : false,
-    });
-
-    if (hasConcierge && !isMultiTenant)
-      newSteps.push({
-        id: "integrations",
-        title: "Set Up Integrations",
-        description: "Connect external services and APIs",
-        isComplete: hasInit || $store.completedSteps.includes("integrations"),
-        isLocked: !$store.completedSteps.includes("brand"),
-      });
-
-    if (hasConcierge || isMultiTenant)
-      newSteps.push({
-        id: "security",
-        title: "Secure Your Site",
-        description: "Set up authentication and access control",
-        isComplete: hasInit || $store.completedSteps.includes("security"),
-        isLocked: !$store.completedSteps.includes(
-          hasConcierge && !isMultiTenant ? "integrations" : "brand"
-        ),
-      });
-
-    if (requiresPublish)
-      newSteps.push({
-        id: "publish",
-        title: "Republish with New Config",
-        description: "Apply your configuration changes",
-        isComplete: hasInit || $store.completedSteps.includes("publish"),
-        isLocked: !$store.completedSteps.includes(hasConcierge ? "security" : "brand"),
-      });
-
-    newSteps.push({
-      id: "createHome",
-      title: "Create Home Page",
-      description: "Set up your site's landing page",
-      isComplete: $store.completedSteps.includes("createHome"),
-      isLocked: !$store.completedSteps.includes(
-        requiresPublish ? "publish" : hasConcierge ? "security" : "brand"
-      ),
-    });
-
-    setSteps(newSteps);
-    const nextStep = newSteps.find((s) => !s.isComplete && !s.isLocked);
-    if (nextStep) setCurrentStep(nextStep.id);
-  }, [$store.completedSteps, configState, hasInitCompleted, init]);
-
-  const renderStep = useCallback(
-    (step: InitStepConfig) => {
-      const isActive = $store.currentStep === step.id;
+  const renderStepContent = useCallback(
+    (step: InitStepConfig, index: number) => {
+      const isActive = currentStepIndex === index;
       const commonProps = {
         onComplete: () => handleStepComplete(step.id),
         onBack: handleBack,
@@ -324,18 +405,23 @@ export default function InitWizard({
       }
     },
     [
-      $store.currentStep,
+      currentStepIndex,
       configState,
       hasConcierge,
       validation,
       handleBack,
       handleStepComplete,
       isProcessing,
+      hasHome,
+      hasInit,
+      hasInitCompleted,
+      isMultiTenant,
+      handleConfigUpdate,
     ]
   );
 
   return (
-    <div className="outline-2 outline-dashed outline-myblue/10 outline-offset-[-2px] bg-myblue/20 py-4">
+    <div className="py-4">
       <div className="rounded-lg px-3.5 py-6 shadow-inner bg-white mx-4">
         <div className="flex flex-col space-y-8">
           <div className="relative">
@@ -381,54 +467,58 @@ export default function InitWizard({
 
           {error && <div className="p-4 bg-myred/10 text-myred rounded-md">{error}</div>}
 
-          <div className="flex justify-between mb-8">
-            {steps.map((step, index) => (
-              <div
-                key={step.id}
-                className={`flex items-center ${index < steps.length - 1 ? "w-full" : ""}`}
-              >
-                <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    step.isComplete
-                      ? "bg-mygreen text-black"
-                      : $store.currentStep === step.id
-                        ? "bg-myorange text-black"
-                        : step.isLocked
-                          ? "bg-mylightgrey text-mydarkgrey"
-                          : "bg-myblue text-white"
-                  }`}
-                >
-                  {step.isComplete ? (
-                    <CheckIcon className="h-5 w-5" />
-                  ) : step.isLocked ? (
-                    <LockClosedIcon className="h-4 w-4" />
-                  ) : (
-                    index + 1
+          <Steps.Root
+            count={stepsConfig.length}
+            step={currentStepIndex}
+            onStepChange={handleStepChange}
+            linear={false}
+          >
+            <Steps.List className="flex justify-between mb-8">
+              {stepsConfig.map((step, index) => (
+                <Steps.Item key={step.id} index={index} className="flex items-center flex-1">
+                  <Steps.Trigger
+                    disabled={step.isLocked}
+                    className={`flex items-center ${step.isLocked ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                  >
+                    <Steps.Indicator
+                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                        step.isComplete
+                          ? "bg-mydarkgrey text-myoffwhite"
+                          : currentStepIndex === index
+                            ? "bg-cyan-600 text-white"
+                            : step.isLocked
+                              ? "bg-mylightgrey text-mydarkgrey"
+                              : "bg-myblue text-white"
+                      }`}
+                    >
+                      {step.isComplete ? (
+                        <CheckIcon className="h-5 w-5" />
+                      ) : step.isLocked ? (
+                        <LockClosedIcon className="h-4 w-4" />
+                      ) : (
+                        index + 1
+                      )}
+                    </Steps.Indicator>
+                  </Steps.Trigger>
+                  {index < stepsConfig.length - 1 && (
+                    <Steps.Separator
+                      className={`flex-1 h-0.5 mx-2 ${
+                        step.isComplete ? "bg-mydarkgrey" : "bg-mylightgrey"
+                      }`}
+                    />
                   )}
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-full h-0.5 mx-2 ${
-                      step.isComplete ? "bg-mygreen" : "bg-mylightgrey"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+                </Steps.Item>
+              ))}
+            </Steps.List>
 
-          <div className="space-y-6">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={`transition-all duration-200 ${
-                  $store.currentStep === step.id ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
-                }`}
-              >
-                {renderStep(step)}
-              </div>
-            ))}
-          </div>
+            <div className="space-y-6">
+              {stepsConfig.map((step, index) => (
+                <Steps.Content key={step.id} index={index}>
+                  {renderStepContent(step, index)}
+                </Steps.Content>
+              ))}
+            </div>
+          </Steps.Root>
         </div>
       </div>
     </div>
