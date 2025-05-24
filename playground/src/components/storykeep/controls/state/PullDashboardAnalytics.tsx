@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useStore } from "@nanostores/react";
 import { analyticsDuration, analyticsStore, epinetCustomFilters } from "@/store/storykeep";
 import { contentMap } from "@/store/events";
@@ -9,44 +9,45 @@ export const PullDashboardAnalytics = () => {
   const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $contentMap = useStore(contentMap);
   const duration = $analyticsDuration;
-  const [pollingTimer, setPollingTimer] = useState<NodeJS.Timeout | null>(null);
-  const [epinetPollingTimer, setEpinetPollingTimer] = useState<NodeJS.Timeout | null>(null);
-  const [initialFetchDone, setInitialFetchDone] = useState(false);
-  const [customFetchInProgress, setCustomFetchInProgress] = useState(false);
-  const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
 
   const pollingAttemptsRef = useRef<number>(0);
   const epinetPollingAttemptsRef = useRef<number>(0);
-  const MAX_POLLING_ATTEMPTS = 3;
-  const POLLING_DELAYS = [2000, 5000, 10000]; // 2s, 5s, 10s
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const epinetPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initialFetchDoneRef = useRef<boolean>(false);
+  const customFetchInProgressRef = useRef<boolean>(false);
+  const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
 
-  // Clear any existing polling timer when component unmounts
+  const MAX_POLLING_ATTEMPTS = 6;
+  const POLLING_DELAYS = [2000, 3000, 5000, 7000, 10000, 15000];
+
+  // Clear timers on unmount
   useEffect(() => {
     return () => {
-      if (pollingTimer) {
-        clearTimeout(pollingTimer);
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+        pollingTimerRef.current = null;
       }
-      if (epinetPollingTimer) {
-        clearTimeout(epinetPollingTimer);
+      if (epinetPollingTimerRef.current) {
+        clearTimeout(epinetPollingTimerRef.current);
+        epinetPollingTimerRef.current = null;
       }
     };
-  }, [pollingTimer, epinetPollingTimer]);
+  }, []);
 
-  // Initialize epinet custom filters based on duration (on mount and when duration changes)
+  // Initialize epinet custom filters based on duration
   useEffect(() => {
     let startHour;
-    const endHour = 0; // Current hour
+    const endHour = 0;
 
     if (duration === "daily") {
       startHour = 24;
     } else if (duration === "weekly") {
       startHour = 168;
     } else {
-      // monthly
       startHour = 672;
     }
 
-    // Always enable custom filters with the appropriate hours
     epinetCustomFilters.set({
       enabled: true,
       visitorType: "all",
@@ -58,28 +59,27 @@ export const PullDashboardAnalytics = () => {
     });
   }, [duration]);
 
-  // Fetch all analytics data when duration changes or on initial mount
+  // Fetch analytics on duration change
   useEffect(() => {
     pollingAttemptsRef.current = 0;
     fetchAllAnalytics();
   }, [duration]);
 
-  // Make sure we poll at least once on initial mount
+  // Initial fetch
   useEffect(() => {
-    if (!initialFetchDone) {
+    if (!initialFetchDoneRef.current) {
       pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
-      setInitialFetchDone(true);
+      initialFetchDoneRef.current = true;
     }
-  }, [initialFetchDone]);
+  }, []);
 
-  // Handle custom filter toggle: refresh standard data when toggling off custom view
+  // Handle custom filter toggle
   useEffect(() => {
     const wasEnabled = previousEnabledRef.current;
     previousEnabledRef.current = $epinetCustomFilters.enabled;
 
     if (wasEnabled && !$epinetCustomFilters.enabled) {
-      // User switched from custom filters back to standard view
       pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
     }
@@ -88,11 +88,8 @@ export const PullDashboardAnalytics = () => {
   // Handle custom filter changes
   useEffect(() => {
     if (!$epinetCustomFilters.enabled) return;
-
-    // Skip if contentMap isn't loaded yet
     if (!$contentMap || $contentMap.length === 0) return;
 
-    // Check if we have valid filter criteria
     const hasValidFilters =
       $epinetCustomFilters.visitorType !== null &&
       $epinetCustomFilters.startHour !== null &&
@@ -114,9 +111,9 @@ export const PullDashboardAnalytics = () => {
     try {
       analyticsStore.setKey("isLoading", true);
 
-      if (pollingTimer) {
-        clearTimeout(pollingTimer);
-        setPollingTimer(null);
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+        pollingTimerRef.current = null;
       }
 
       const response = await fetch(`/api/turso/getAllAnalytics?duration=${duration}`, {
@@ -144,14 +141,10 @@ export const PullDashboardAnalytics = () => {
             const delayMs =
               POLLING_DELAYS[pollingAttemptsRef.current] ||
               POLLING_DELAYS[POLLING_DELAYS.length - 1];
-
             pollingAttemptsRef.current += 1;
-
-            const newTimer = setTimeout(() => {
+            pollingTimerRef.current = setTimeout(() => {
               fetchAllAnalytics();
             }, delayMs);
-
-            setPollingTimer(newTimer);
           } else {
             analyticsStore.setKey("status", "complete");
             pollingAttemptsRef.current = 0;
@@ -167,14 +160,16 @@ export const PullDashboardAnalytics = () => {
           const delayMs =
             POLLING_DELAYS[pollingAttemptsRef.current] || POLLING_DELAYS[POLLING_DELAYS.length - 1];
           pollingAttemptsRef.current += 1;
-          const newTimer = setTimeout(() => fetchAllAnalytics(), delayMs);
-          setPollingTimer(newTimer);
+          pollingTimerRef.current = setTimeout(() => {
+            fetchAllAnalytics();
+          }, delayMs);
         } else {
           analyticsStore.setKey("status", "error");
           pollingAttemptsRef.current = 0;
         }
       }
     } catch (error) {
+      console.error("fetchAllAnalytics error:", error);
       analyticsStore.setKey("error", error instanceof Error ? error.message : "Unknown error");
       analyticsStore.setKey("status", "error");
 
@@ -182,96 +177,88 @@ export const PullDashboardAnalytics = () => {
         const delayMs =
           POLLING_DELAYS[pollingAttemptsRef.current] || POLLING_DELAYS[POLLING_DELAYS.length - 1];
         pollingAttemptsRef.current += 1;
-        const newTimer = setTimeout(() => fetchAllAnalytics(), delayMs);
-        setPollingTimer(newTimer);
+        pollingTimerRef.current = setTimeout(() => {
+          fetchAllAnalytics();
+        }, delayMs);
       } else {
-        analyticsStore.setKey("status", "error");
         pollingAttemptsRef.current = 0;
       }
     } finally {
       analyticsStore.setKey("isLoading", false);
     }
-  }, [duration, pollingTimer, $epinetCustomFilters.enabled]);
+  }, [duration]);
 
-  const fetchCustomEpinetData = useCallback(
-    async (epinetId: string) => {
-      if (customFetchInProgress) return;
+  const fetchCustomEpinetData = useCallback(async (epinetId: string) => {
+    if (customFetchInProgressRef.current) {
+      return;
+    }
 
-      try {
-        setCustomFetchInProgress(true);
+    try {
+      customFetchInProgressRef.current = true;
 
-        if (epinetPollingTimer) {
-          clearTimeout(epinetPollingTimer);
-          setEpinetPollingTimer(null);
-        }
+      if (epinetPollingTimerRef.current) {
+        clearTimeout(epinetPollingTimerRef.current);
+        epinetPollingTimerRef.current = null;
+      }
 
-        const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
-        url.searchParams.append("id", epinetId);
-        url.searchParams.append("visitorType", $epinetCustomFilters.visitorType);
+      const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
+      url.searchParams.append("id", epinetId);
+      url.searchParams.append("visitorType", $epinetCustomFilters.visitorType);
+      if ($epinetCustomFilters.selectedUserId) {
+        url.searchParams.append("userId", $epinetCustomFilters.selectedUserId);
+      }
+      if ($epinetCustomFilters.startHour !== null) {
+        url.searchParams.append("startHour", $epinetCustomFilters.startHour.toString());
+      }
+      if ($epinetCustomFilters.endHour !== null) {
+        url.searchParams.append("endHour", $epinetCustomFilters.endHour.toString());
+      }
 
-        if ($epinetCustomFilters.selectedUserId) {
-          url.searchParams.append("userId", $epinetCustomFilters.selectedUserId);
-        }
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-        if ($epinetCustomFilters.startHour !== null) {
-          url.searchParams.append("startHour", $epinetCustomFilters.startHour.toString());
-        }
+      if (!response.ok) {
+        throw new Error(`Custom epinet metrics request failed with status: ${response.status}`);
+      }
 
-        if ($epinetCustomFilters.endHour !== null) {
-          url.searchParams.append("endHour", $epinetCustomFilters.endHour.toString());
-        }
+      const result = await response.json();
 
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      if (result.success) {
+        analyticsStore.setKey("epinet", result.data.epinet);
+        const currentFilterState = epinetCustomFilters.get();
+        epinetCustomFilters.set({
+          ...currentFilterState,
+          userCounts: result.data.userCounts || [],
+          hourlyNodeActivity: result.data.hourlyNodeActivity || {},
         });
 
-        if (!response.ok) {
-          throw new Error(`Custom epinet metrics request failed with status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-          analyticsStore.setKey("epinet", result.data.epinet);
-
-          const currentFilterState = epinetCustomFilters.get();
-          epinetCustomFilters.set({
-            ...currentFilterState,
-            userCounts: result.data.userCounts || [],
-            hourlyNodeActivity: result.data.hourlyNodeActivity || {},
-          });
-
-          if (result.status === "loading" || result.status === "refreshing") {
-            if (epinetPollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
-              const delayMs =
-                POLLING_DELAYS[epinetPollingAttemptsRef.current] ||
-                POLLING_DELAYS[POLLING_DELAYS.length - 1];
-
-              epinetPollingAttemptsRef.current += 1;
-
-              const newTimer = setTimeout(() => {
-                fetchCustomEpinetData(epinetId);
-              }, delayMs);
-
-              setEpinetPollingTimer(newTimer);
-            } else {
-              epinetPollingAttemptsRef.current = 0;
-            }
+        if (result.status === "loading" || result.status === "refreshing") {
+          if (epinetPollingAttemptsRef.current < MAX_POLLING_ATTEMPTS - 1) {
+            const delayMs =
+              POLLING_DELAYS[epinetPollingAttemptsRef.current] ||
+              POLLING_DELAYS[POLLING_DELAYS.length - 1];
+            epinetPollingAttemptsRef.current += 1;
+            epinetPollingTimerRef.current = setTimeout(() => {
+              fetchCustomEpinetData(epinetId);
+            }, delayMs);
           } else {
             epinetPollingAttemptsRef.current = 0;
+            // Ensure analyticsStore reflects that epinet data fetch is done
           }
+        } else {
+          epinetPollingAttemptsRef.current = 0;
         }
-      } catch (error) {
-        console.error("Error fetching custom epinet data:", error);
-      } finally {
-        setCustomFetchInProgress(false);
       }
-    },
-    [$epinetCustomFilters, customFetchInProgress, epinetPollingTimer]
-  );
+    } catch (error) {
+      console.error("fetchCustomEpinetData error:", error);
+    } finally {
+      customFetchInProgressRef.current = false;
+    }
+  }, []);
 
   const debouncedFetchCustomEpinetData = useCallback(
     debounce(() => {
