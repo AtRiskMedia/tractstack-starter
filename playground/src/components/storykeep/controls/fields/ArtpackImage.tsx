@@ -393,7 +393,7 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
                       <label className="block text-sm font-bold text-mydarkgrey mb-2">
                         Select Image from {selectedCollection}
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-60 overflow-y-auto p-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-2">
                         {availableImages.map((image) => (
                           <div
                             key={image}
