@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo } from "react";
-import { Combobox, Switch } from "@ark-ui/react";
+import { Switch } from "@ark-ui/react";
 import { Select } from "@ark-ui/react/select";
 import { Portal } from "@ark-ui/react/portal";
 import { createListCollection } from "@ark-ui/react/collection";
@@ -62,7 +62,6 @@ const AddPaneNewPanel = ({
   const [renderedPages, setRenderedPages] = useState<Set<number>>(new Set([0]));
   const [selectedTheme, setSelectedTheme] = useState<Theme>(preferredTheme.get());
   const [useOddVariant, setUseOddVariant] = useState(false);
-  const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>(
     templateCategories[first ? 4 : 0]
   );
@@ -70,7 +69,7 @@ const AddPaneNewPanel = ({
   const [aiContentGenerated, setAiContentGenerated] = useState(false);
   const shouldShowDesigns = copyMode !== "ai" || aiContentGenerated;
 
-  // Create collection for Ark UI Combobox
+  // Create collection for Ark UI Select
   const categoryCollection = useMemo(() => {
     // Filter categories based on copy mode
     const categories = copyMode === `ai` ? [templateCategories[1]] : templateCategories;
@@ -95,24 +94,13 @@ const AddPaneNewPanel = ({
     if (copyMode === `ai` || isContextPane)
       return templateCategories[1].getTemplates(selectedTheme, brand, useOddVariant);
 
-    if (query === "") {
-      return selectedCategory.getTemplates(selectedTheme, brand, useOddVariant);
-    }
-
-    const searchQuery = query.toLowerCase();
-    const allTemplates = templateCategories[0].getTemplates(selectedTheme, brand, useOddVariant);
-
-    return allTemplates.filter(
-      (template) =>
-        template.title?.toLowerCase().includes(searchQuery) ||
-        template.slug?.toLowerCase().includes(searchQuery)
-    );
-  }, [selectedTheme, useOddVariant, query, selectedCategory, copyMode, isContextPane]);
+    return selectedCategory.getTemplates(selectedTheme, brand, useOddVariant);
+  }, [selectedTheme, useOddVariant, selectedCategory, copyMode, isContextPane]);
 
   useEffect(() => {
     if (copyMode !== "ai") setAiContentGenerated(false);
     if (copyMode !== "ai" || isContextPane) setSelectedCategory(templateCategories[first ? 4 : 0]);
-  }, [copyMode]);
+  }, [copyMode, first, isContextPane]);
 
   const handleAiContentGenerated = (content: string) => {
     setCustomMarkdown(content);
@@ -139,7 +127,7 @@ const AddPaneNewPanel = ({
     setPreviews(newPreviews);
     setCurrentPage(0);
     setRenderedPages(new Set([0]));
-  }, [filteredTemplates, customMarkdown, copyMode]);
+  }, [filteredTemplates, customMarkdown, copyMode, aiContentGenerated]);
 
   const totalPages = Math.ceil(previews.length / ITEMS_PER_PAGE);
 
@@ -239,7 +227,16 @@ const AddPaneNewPanel = ({
     }
   };
 
-  // CSS to properly style the combobox and listbox items with hover and selection
+  // Handle category selection with Ark UI
+  const handleCategoryChange = (details: { value: string[] }) => {
+    const id = details.value[0];
+    if (id) {
+      const category = templateCategories.find((cat) => cat.id === id);
+      if (category) setSelectedCategory(category);
+    }
+  };
+
+  // CSS to properly style the select items with hover and selection
   const customStyles = `
     .category-item[data-highlighted] {
       background-color: #0891b2; /* bg-cyan-600 */
@@ -317,55 +314,45 @@ const AddPaneNewPanel = ({
             1. What kind of layout
           </h3>
           <div className="max-w-md">
-            <Combobox.Root
+            <Select.Root
               collection={categoryCollection}
               value={[selectedCategory.id]}
-              onValueChange={(details) => {
-                const id = details.value[0];
-                if (id) {
-                  const category = templateCategories.find((cat) => cat.id === id);
-                  if (category) setSelectedCategory(category);
-                }
-              }}
-              onInputValueChange={(details) => setQuery(details.inputValue)}
-              loopFocus={true}
-              openOnKeyPress={true}
-              composite={true}
+              onValueChange={handleCategoryChange}
             >
-              <div className="relative">
-                <div className="relative w-full cursor-default overflow-hidden rounded-lg bg-white text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
-                  <Combobox.Input
-                    autoComplete="off"
-                    className="w-full border-none py-2 pl-3 pr-10 text-sm leading-5 text-gray-900 focus:ring-0"
-                    placeholder="Select layout category..."
-                  />
-                  <Combobox.Trigger className="absolute inset-y-0 right-0 flex items-center pr-2">
+              <Select.Label className="block text-sm font-bold text-gray-700">
+                Category
+              </Select.Label>
+              <Select.Control className="mt-1 relative">
+                <Select.Trigger className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-300 sm:text-sm">
+                  <Select.ValueText className="block truncate">
+                    {selectedCategory.title}
+                  </Select.ValueText>
+                  <Select.Indicator className="absolute inset-y-0 right-0 flex items-center pr-2">
                     <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </Combobox.Trigger>
-                </div>
-
-                <Combobox.Content className="absolute z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
-                  {categoryCollection.items.length === 0 ? (
-                    <div className="relative cursor-default select-none py-2 px-4 text-gray-900">
-                      Nothing found.
-                    </div>
-                  ) : (
-                    categoryCollection.items.map((category) => (
-                      <Combobox.Item
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content className="z-50 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+                    {categoryCollection.items.map((category) => (
+                      <Select.Item
                         key={category.id}
                         item={category}
                         className="category-item relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                       >
-                        <span className="block truncate">{category.title}</span>
-                        <span className="category-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
+                        <Select.ItemText className="block truncate">
+                          {category.title}
+                        </Select.ItemText>
+                        <Select.ItemIndicator className="category-indicator absolute inset-y-0 left-0 flex items-center pl-3 text-cyan-600">
                           <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                      </Combobox.Item>
-                    ))
-                  )}
-                </Combobox.Content>
-              </div>
-            </Combobox.Root>
+                        </Select.ItemIndicator>
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+            </Select.Root>
           </div>
 
           <h3 className="px-3.5 pt-4 pb-1.5 font-bold text-black text-xl font-action">
