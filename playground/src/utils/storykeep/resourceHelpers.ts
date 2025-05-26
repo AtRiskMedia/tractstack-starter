@@ -1,26 +1,69 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ResourceSetting } from "@/types";
 
-import knownResourcesRaw from "../../../config/knownResources.json";
+let cachedKnownResources: { [K: string]: ResourceSetting } | null = null;
 
-// Type assertion to narrow string to specific literals
-const knownResources = knownResourcesRaw as {
-  [K: string]: {
-    [P: string]: {
-      type: "string" | "boolean" | "number" | "date";
-      defaultValue?: any;
-    };
-  };
-};
+export async function getKnownResources(): Promise<{ [K: string]: ResourceSetting }> {
+  if (cachedKnownResources) {
+    return cachedKnownResources;
+  }
 
-export function isKnownResourceSetting(
-  categorySlug: string | number
-): categorySlug is keyof typeof knownResources {
-  return typeof categorySlug === "string" && categorySlug in knownResources;
+  try {
+    const response = await fetch("/api/fs/getKnownResources");
+    const result = await response.json();
+
+    if (result.success && result.data) {
+      cachedKnownResources = result.data;
+      return result.data;
+    }
+
+    return {};
+  } catch (error) {
+    console.error("Error fetching known resources:", error);
+    return {};
+  }
 }
 
-export function getResourceSetting(categorySlug: string | number): ResourceSetting | undefined {
-  return isKnownResourceSetting(categorySlug) ? knownResources[categorySlug] : undefined;
+export async function updateKnownResource(
+  categorySlug: string,
+  resourceDefinition: ResourceSetting
+): Promise<boolean> {
+  try {
+    const response = await fetch("/api/fs/updateKnownResource", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categorySlug, resourceDefinition }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Clear cache to force reload on next access
+      cachedKnownResources = null;
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("Error updating known resource:", error);
+    return false;
+  }
+}
+
+export async function isKnownResourceSetting(categorySlug: string | number): Promise<boolean> {
+  if (typeof categorySlug !== "string") return false;
+
+  const knownResources = await getKnownResources();
+  return categorySlug in knownResources;
+}
+
+export async function getResourceSetting(
+  categorySlug: string | number
+): Promise<ResourceSetting | undefined> {
+  if (typeof categorySlug !== "string") return undefined;
+
+  const knownResources = await getKnownResources();
+  return knownResources[categorySlug];
 }
 
 export function processResourceValue(key: string, value: any, setting: ResourceSetting): any {
@@ -42,4 +85,9 @@ export function processResourceValue(key: string, value: any, setting: ResourceS
     }
   }
   return value;
+}
+
+// Clear cache function for manual cache invalidation if needed
+export function clearKnownResourcesCache(): void {
+  cachedKnownResources = null;
 }

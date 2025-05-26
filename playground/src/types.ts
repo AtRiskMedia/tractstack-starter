@@ -650,13 +650,6 @@ export interface SyncOptions {
 
 export type ValidationFunction = (value: string) => boolean;
 
-export interface ResourceSetting {
-  [key: string]: {
-    type: "string" | "boolean" | "number" | "date";
-    defaultValue?: any;
-  };
-}
-
 //
 // Transcribe
 //
@@ -1451,3 +1444,21 @@ export interface PendingImageOperation {
 export type PendingImageOperationsStore = {
   [storyFragmentId: string]: PendingImageOperation | null;
 };
+
+export interface ResourceSetting {
+  [key: string]: {
+    type: "string" | "boolean" | "number" | "date";
+    defaultValue?: any;
+    belongsToCategory?: string;
+    customValues?: string[];
+    maxTextLength?: number;
+    maxNumber?: number;
+    minNumber?: number;
+    isUrl?: boolean;
+    optional?: boolean;
+  };
+}
+
+export interface KnownResource {
+  [categorySlug: string]: ResourceSetting;
+}

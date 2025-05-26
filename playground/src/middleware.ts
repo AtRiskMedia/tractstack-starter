@@ -191,6 +191,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     "/*/edit",
     "/context/*/edit",
     "/storykeep",
+    "/storykeep/content/*/",
     "/api/aai/askLemur",
     "/api/fs/writeAppWhitelist",
     "/api/fs/deleteImage",

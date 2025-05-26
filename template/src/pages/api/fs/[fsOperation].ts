@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createRequire } from "module";
 import type { APIRoute } from "astro";
-import type { APIContext } from "@/types";
+import type { KnownResource, APIContext } from "@/types";
 import { withTenantContext } from "@/utils/api/middleware";
 import fs from "fs/promises";
 import path from "path";
@@ -39,7 +39,7 @@ async function readConfigFile(
 
 async function updateEnvFile(updates: Record<string, unknown>, basePath: string) {
   try {
-    const envPath = path.join(basePath, ".env"); // Define envPath here based on basePath
+    const envPath = path.join(basePath, ".env");
     let envContent = "";
     try {
       envContent = await fs.readFile(envPath, "utf-8");
@@ -107,6 +107,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         result = { success: true, data: fileContent };
         break;
       }
+
       case "tailwindConfig": {
         const tailwindConfigPath = path.join(process.cwd(), "tailwind.config.cjs");
         const require = createRequire(import.meta.url);
@@ -119,6 +120,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         }
         break;
       }
+
       case "writeAppWhitelist": {
         const { frontendCss, appCss } = await context.request.json();
         const stylesDir = path.join(tenantPaths.publicPath, "styles");
@@ -130,6 +132,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         result = { success: true, message: "CSS files written successfully" };
         break;
       }
+
       case "deleteImage": {
         const { path: imagePath } = await context.request.json();
         const fullPath = path.join(tenantPaths.publicPath, imagePath);
@@ -145,6 +148,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         }
         break;
       }
+
       case "saveImage": {
         const { path: imagePath, filename, data } = await context.request.json();
         const fullPath = path.join(tenantPaths.publicPath, imagePath);
@@ -155,6 +159,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         result = { success: true, path: path.join(imagePath, filename) };
         break;
       }
+
       case "saveOgImage": {
         const { data, filename } = await context.request.json();
         const ogDir = path.join(tenantPaths.publicPath, "images", "og");
@@ -184,6 +189,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         };
         break;
       }
+
       case "deleteOgImage": {
         const { path: imagePath } = await context.request.json();
         const filename = path.basename(imagePath);
@@ -215,6 +221,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         }
         break;
       }
+
       case "saveBrandImage": {
         const { data, filename } = await context.request.json();
         result = await handleBrandImageUpload({
@@ -224,15 +231,18 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         });
         break;
       }
+
       case "storykeepWhitelist": {
         const fileContent = await readConfigFile("tailwindWhitelist.json", tenantPaths.configPath);
         result = { success: true, data: fileContent?.safelist || [] };
         break;
       }
+
       case "generateTailwindWhitelist": {
         result = { success: true, message: "CSS generated successfully" }; // Placeholder
         break;
       }
+
       case "update": {
         const { file, updates } = (await context.request.json()) as ConfigUpdatePayload;
         const envUpdates: Record<string, unknown> = {};
@@ -260,6 +270,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         result = { success: true, data: configUpdates };
         break;
       }
+
       case "updateCss": {
         const { brandColors } = (await context.request.json()) as { brandColors: string };
         const cssPath = path.join(tenantPaths.publicPath, "styles", "custom.css");
@@ -280,6 +291,27 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         result = { success: true, message: "CSS variables updated successfully" };
         break;
       }
+
+      case "updateKnownResource": {
+        const { categorySlug, resourceDefinition } = await context.request.json();
+        const knownResourcesPath = path.join(tenantPaths.configPath, "knownResources.json");
+
+        let knownResources: KnownResource = {};
+        try {
+          const fileContent = await fs.readFile(knownResourcesPath, "utf-8");
+          knownResources = JSON.parse(fileContent);
+        } catch {
+          // File doesn't exist, start with empty object
+        }
+        knownResources[categorySlug] = resourceDefinition;
+
+        await fs.mkdir(tenantPaths.configPath, { recursive: true });
+        await fs.writeFile(knownResourcesPath, JSON.stringify(knownResources, null, 2));
+
+        result = { success: true, data: knownResources };
+        break;
+      }
+
       default:
         throw new Error(`Unknown operation: ${fsOperation}`);
     }
@@ -304,18 +336,79 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
 });
 
 export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
-  if (context.params.fsOperation === "read") {
-    return POST(context as any); // Type assertion for simplicity
-  }
+  const { fsOperation } = context.params;
+  const tenantPaths = context.locals.tenant?.paths || {
+    configPath: path.join(process.cwd(), "config"),
+    publicPath: path.join(process.cwd(), "public"),
+    dbPath: path.join(process.cwd(), ".tractstack"),
+  };
 
-  return new Response(
-    JSON.stringify({
-      success: false,
-      error: "Method not allowed",
-    }),
-    {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
+  try {
+    const tenantId = context.locals.tenant?.id || "default";
+    const config = context.locals.config || (await getConfig(tenantPaths.configPath, tenantId));
+    const isInitOperation = context.request.headers.get("X-Init-Operation") === "true";
+
+    if (!config && !isInitOperation) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "No configuration available",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-  );
+
+    let result;
+    switch (fsOperation) {
+      case "read": {
+        // Redirect to POST for read operations
+        return POST(context as any);
+      }
+
+      case "getKnownResources": {
+        const knownResourcesPath = path.join(tenantPaths.configPath, "knownResources.json");
+        try {
+          const fileContent = await fs.readFile(knownResourcesPath, "utf-8");
+          const knownResources = JSON.parse(fileContent);
+          result = { success: true, data: knownResources };
+        } catch (error) {
+          // If file doesn't exist, return empty object
+          result = { success: true, data: {} };
+        }
+        break;
+      }
+
+      default:
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Unknown operation: ${fsOperation}`,
+          }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+    }
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error(`Error in filesystem ${fsOperation} operation:`, error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "An error occurred",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
 });

@@ -1,16 +1,40 @@
 {
+  "location": {
+    "address": {
+      "type": "string",
+      "defaultValue": "",
+      "maxTextLength": 142
+    },
+    "directions": {
+      "type": "string",
+      "defaultValue": "",
+      "maxTextLength": 1500
+    },
+    "logo": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "map": {
+      "type": "string",
+      "defaultValue": ""
+    }
+  },
   "crusade": {
     "location": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "belongsToCategory": "location"
     },
     "details": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "maxTextLength": 142
     },
     "ytembed": {
       "type": "string",
-      "defaultValue": ""
+      "defaultValue": "",
+      "maxTextLength": 11,
+      "optional": true
     },
     "date": {
       "type": "date",
@@ -26,7 +50,8 @@
     },
     "quiet": {
       "type": "boolean",
-      "defaultValue": false
+      "defaultValue": false,
+      "optional": true
     }
   }
 }
