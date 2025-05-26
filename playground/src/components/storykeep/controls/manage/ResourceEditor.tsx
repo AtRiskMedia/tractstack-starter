@@ -40,8 +40,17 @@ function processResourceValue(key: string, value: any, setting: ResourceSetting)
         return typeof value === "boolean" ? value : (defaultValue ?? false);
       case "number":
         return typeof value === "number" ? value : (defaultValue ?? 0);
-      case "date":
-        return typeof value === "number" ? value : (defaultValue ?? 0);
+      case "date": {
+        const numericValue = typeof value === "string" ? Number(value) : value;
+        if (
+          typeof numericValue === "number" &&
+          !isNaN(numericValue) &&
+          !isNaN(new Date(numericValue * 1000).getTime())
+        ) {
+          return numericValue;
+        }
+        return defaultValue ?? null;
+      }
       default:
         return value;
     }
@@ -110,27 +119,33 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
     loadResourceSettings();
   }, [localResource?.category]);
 
-  // Initialize dateTimeState for date fields
   useEffect(() => {
     if (resourceSetting && localResource.optionsPayload) {
       const initialState: typeof dateTimeState = {};
       Object.entries(localResource.optionsPayload).forEach(([key, value]) => {
         const setting = resourceSetting[key];
-        if (setting?.type === "date" && typeof value === "number") {
-          // Convert UTC timestamp (in seconds) to local time
-          const date = new Date(value * 1000);
-          // Format as "YYYY-MM-DDThh:mm" for datetime-local input
-          const localDateString = date
-            .toLocaleString("sv-SE", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-            })
-            .replace(" ", "T");
-          initialState[key] = localDateString;
+        if (setting?.type === "date") {
+          const numericValue = typeof value === "string" ? Number(value) : value;
+          if (
+            typeof numericValue === "number" &&
+            !isNaN(numericValue) &&
+            !isNaN(new Date(numericValue * 1000).getTime())
+          ) {
+            // Convert UTC timestamp (in seconds) to local time
+            const date = new Date(numericValue * 1000);
+            // Format as "YYYY-MM-DDThh:mm" for datetime-local input
+            const localDateString = date
+              .toLocaleString("sv-SE", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
+              .replace(" ", "T");
+            initialState[key] = localDateString;
+          }
         }
       });
       setDateTimeState(initialState);
