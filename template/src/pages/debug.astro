@@ -1,0 +1,64 @@
+---
+import { hourlyEpinetStore } from "@/store/analytics";
+
+const epinetData = hourlyEpinetStore.get();
+const tenantId = Astro.locals.tenant?.id || "default";
+
+// Helper to get hourly summary for epinet
+function getHourlySummary(epinetId: string) {
+  const tenantData = epinetData.data[tenantId];
+  if (!tenantData || !tenantData[epinetId]) return "No data";
+
+  const epinetHourlyData = tenantData[epinetId];
+  const hourKeys = Object.keys(epinetHourlyData).sort();
+
+  return hourKeys
+    .map((hourKey) => {
+      const hourData = epinetHourlyData[hourKey];
+
+      // Count unique visitors and total events
+      const uniqueVisitors = new Set<string>();
+      let totalEvents = 0;
+
+      Object.values(hourData.steps).forEach((step) => {
+        step.visitors.forEach((v) => uniqueVisitors.add(v));
+        totalEvents += step.visitors.size;
+      });
+
+      if (totalEvents === 0 && uniqueVisitors.size === 0) return `    ${hourKey}: no activity`;
+      return `    ${hourKey}: ${totalEvents} events, ${uniqueVisitors.size} unique visitors`;
+    })
+    .join("\n");
+}
+---
+
+<pre><code>
+EPINET HOURLY SUMMARY
+=====================
+
+TENANT: {tenantId}
+
+{epinetData.data[tenantId] ? `
+${Object.entries(epinetData.data[tenantId]).map(([epinetId, hourlyData]) => {
+  const hourKeys = Object.keys(hourlyData).sort();
+  const totalHours = hourKeys.length;
+  
+  // Calculate total events across all hours
+  let allTimeEvents = 0;
+  const allTimeVisitors = new Set<string>();
+  
+  hourKeys.forEach(hourKey => {
+    const hourData = hourlyData[hourKey];
+    Object.values(hourData.steps).forEach(step => {
+      allTimeEvents += step.visitors.size;
+      step.visitors.forEach(v => allTimeVisitors.add(v));
+    });
+  });
+  
+  return `Epinet ${epinetId}:
+  Total: ${allTimeEvents} events, ${allTimeVisitors.size} unique visitors across ${totalHours} hours
+  
+${getHourlySummary(epinetId)}`
+}).join("\n\n")}
+` : "No epinet data for this tenant"}
+</code></pre>

@@ -6,7 +6,6 @@ import { debounce } from "@/utils/common/helpers";
 
 export const PullDashboardAnalytics = () => {
   const $analyticsDuration = useStore(analyticsDuration);
-  const $epinetCustomFilters = useStore(epinetCustomFilters);
   const $contentMap = useStore(contentMap);
   const duration = $analyticsDuration;
 
@@ -16,7 +15,7 @@ export const PullDashboardAnalytics = () => {
   const epinetPollingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const initialFetchDoneRef = useRef<boolean>(false);
   const customFetchInProgressRef = useRef<boolean>(false);
-  const previousEnabledRef = useRef<boolean>($epinetCustomFilters.enabled);
+  const previousEnabledRef = useRef<boolean>(epinetCustomFilters.get().enabled);
 
   const MAX_POLLING_ATTEMPTS = 6;
   const POLLING_DELAYS = [2000, 3000, 5000, 7000, 10000, 15000];
@@ -54,8 +53,8 @@ export const PullDashboardAnalytics = () => {
       selectedUserId: null,
       startHour,
       endHour,
-      userCounts: $epinetCustomFilters.userCounts || [],
-      hourlyNodeActivity: $epinetCustomFilters.hourlyNodeActivity || {},
+      userCounts: epinetCustomFilters.get().userCounts || [],
+      hourlyNodeActivity: epinetCustomFilters.get().hourlyNodeActivity || {},
     });
   }, [duration]);
 
@@ -77,33 +76,33 @@ export const PullDashboardAnalytics = () => {
   // Handle custom filter toggle
   useEffect(() => {
     const wasEnabled = previousEnabledRef.current;
-    previousEnabledRef.current = $epinetCustomFilters.enabled;
+    previousEnabledRef.current = epinetCustomFilters.get().enabled;
 
-    if (wasEnabled && !$epinetCustomFilters.enabled) {
+    if (wasEnabled && !epinetCustomFilters.get().enabled) {
       pollingAttemptsRef.current = 0;
       fetchAllAnalytics();
     }
-  }, [$epinetCustomFilters.enabled]);
+  }, [epinetCustomFilters]);
 
   // Handle custom filter changes
   useEffect(() => {
-    if (!$epinetCustomFilters.enabled) return;
+    if (!epinetCustomFilters.get().enabled) return;
     if (!$contentMap || $contentMap.length === 0) return;
 
     const hasValidFilters =
-      $epinetCustomFilters.visitorType !== null &&
-      $epinetCustomFilters.startHour !== null &&
-      $epinetCustomFilters.endHour !== null;
+      epinetCustomFilters.get().visitorType !== null &&
+      epinetCustomFilters.get().startHour !== null &&
+      epinetCustomFilters.get().endHour !== null;
 
     if (hasValidFilters) {
       debouncedFetchCustomEpinetData();
     }
   }, [
-    $epinetCustomFilters.enabled,
-    $epinetCustomFilters.visitorType,
-    $epinetCustomFilters.selectedUserId,
-    $epinetCustomFilters.startHour,
-    $epinetCustomFilters.endHour,
+    epinetCustomFilters.get().enabled,
+    epinetCustomFilters.get().visitorType,
+    epinetCustomFilters.get().selectedUserId,
+    epinetCustomFilters.get().startHour,
+    epinetCustomFilters.get().endHour,
     $contentMap,
   ]);
 
@@ -203,15 +202,18 @@ export const PullDashboardAnalytics = () => {
 
       const url = new URL(`/api/turso/getEpinetCustomMetrics`, window.location.origin);
       url.searchParams.append("id", epinetId);
-      url.searchParams.append("visitorType", $epinetCustomFilters.visitorType);
-      if ($epinetCustomFilters.selectedUserId) {
-        url.searchParams.append("userId", $epinetCustomFilters.selectedUserId);
+      url.searchParams.append("visitorType", epinetCustomFilters.get().visitorType);
+      const userId = epinetCustomFilters.get().selectedUserId;
+      if (userId) {
+        url.searchParams.append("userId", userId);
       }
-      if ($epinetCustomFilters.startHour !== null) {
-        url.searchParams.append("startHour", $epinetCustomFilters.startHour.toString());
+      const startHour = epinetCustomFilters.get().startHour;
+      if (startHour !== null) {
+        url.searchParams.append("startHour", startHour.toString());
       }
-      if ($epinetCustomFilters.endHour !== null) {
-        url.searchParams.append("endHour", $epinetCustomFilters.endHour.toString());
+      const endHour = epinetCustomFilters.get().endHour;
+      if (endHour !== null) {
+        url.searchParams.append("endHour", endHour.toString());
       }
 
       const response = await fetch(url.toString(), {
@@ -229,9 +231,8 @@ export const PullDashboardAnalytics = () => {
 
       if (result.success) {
         analyticsStore.setKey("epinet", result.data.epinet);
-        const currentFilterState = epinetCustomFilters.get();
         epinetCustomFilters.set({
-          ...currentFilterState,
+          ...epinetCustomFilters.get(),
           userCounts: result.data.userCounts || [],
           hourlyNodeActivity: result.data.hourlyNodeActivity || {},
         });
