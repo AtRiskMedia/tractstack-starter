@@ -9,9 +9,9 @@ export interface EmailLayoutProps {
 }
 
 export function getEmailLayout({
-  preheader = "no-code community building tool-kit and website maker",
+  preheader = "no-code community engine and website maker",
   content,
-  footerText = "websites that build community",
+  footerText = "no-code community engine and website maker",
   companyAddress = "Proudly Canadian",
   unsubscribeUrl = "http://example.com/unsubscribe",
   poweredByText = "TractStack",
