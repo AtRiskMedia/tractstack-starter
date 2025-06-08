@@ -910,6 +910,7 @@ export interface FlatNode extends BaseNode {
   href?: string;
   text?: string;
   fileId?: string;
+  isPlaceholder?: boolean;
   codeHookParams?: (string | string[])[];
   overrideClasses?: {
     mobile?: Record<string, string>;

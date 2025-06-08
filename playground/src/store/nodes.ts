@@ -81,11 +81,73 @@ export class NodesContext {
     mode: "",
     panel: "",
   });
+  editingNodeId = atom<string | null>(null);
   history = new NodesHistory(this, UNDO_REDO_HISTORY_CAPACITY);
 
   toolModeValStore = map<{ value: ToolModeVal }>({
     value: "text",
   });
+
+  /**
+   * Sets an edit lock on a specific node to prevent re-renders during editing
+   * @param nodeId - The node ID to lock, or null to clear the lock
+   */
+  setEditLock(nodeId: string | null): void {
+    this.editingNodeId.set(nodeId);
+  }
+
+  /**
+   * Checks if a specific node is currently edit-locked
+   * @param nodeId - The node ID to check
+   * @returns true if the node is locked for editing
+   */
+  isEditLocked(nodeId: string): boolean {
+    return this.editingNodeId.get() === nodeId;
+  }
+
+  /**
+   * Clears the current edit lock
+   */
+  clearEditLock(): void {
+    this.editingNodeId.set(null);
+  }
+
+  /**
+   * Cleanup method to handle orphaned edit locks
+   */
+  cleanupEditState(): void {
+    const editingId = this.editingNodeId.get();
+    if (editingId) {
+      // Check if the node still exists
+      const node = this.allNodes.get().get(editingId);
+      if (!node) {
+        this.clearEditLock();
+      }
+    }
+  }
+
+  notifyNode(nodeId: string, payload?: BaseNode) {
+    // Skip notification if this node is edit-locked
+    if (this.isEditLocked(nodeId)) {
+      // Still notify parent nodes as they may need updates
+      const node = this.allNodes.get().get(nodeId);
+      if (node && node.parentId) {
+        const parentNodeToNotify = this.nodeToNotify(nodeId, node.nodeType);
+        if (parentNodeToNotify && parentNodeToNotify !== nodeId) {
+          this.notifyNode(parentNodeToNotify, payload);
+        }
+      }
+      return;
+    }
+    // Original notifyNode implementation
+    let notifyNodeId = nodeId;
+    if (notifyNodeId === this.rootNodeId.get()) {
+      notifyNodeId = ROOT_NODE_NAME;
+    }
+    if (nodeId === `root`) startLoadingAnimation();
+    this.updateHasPanesStatus();
+    this.notifications.notify(notifyNodeId, payload);
+  }
 
   getPanelMode(nodeId: string, panel: string): string {
     const activeMode = this.activePaneMode.get();
@@ -975,16 +1037,6 @@ export class NodesContext {
         }
       }
     }
-  }
-
-  notifyNode(nodeId: string, payload?: BaseNode) {
-    let notifyNodeId = nodeId;
-    if (notifyNodeId === this.rootNodeId.get()) {
-      notifyNodeId = ROOT_NODE_NAME;
-    }
-    if (nodeId === `root`) startLoadingAnimation();
-    this.updateHasPanesStatus();
-    this.notifications.notify(notifyNodeId, payload);
   }
 
   addContextTemplatePane(ownerId: string, pane: TemplatePane) {

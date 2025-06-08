@@ -29,7 +29,7 @@ import StoryFragmentTitlePanel from "@/components/storykeep/controls/storyfragme
 import ContextPaneTitlePanel from "@/components/storykeep/controls/context/ContextPaneConfig_title.tsx";
 import ContextPanePanel from "@/components/storykeep/controls/context/ContextPaneConfig.tsx";
 import PanelVisibilityWrapper from "./PanelVisibilityWrapper";
-import { memo, type ReactElement } from "react";
+import { memo, type ReactElement, useEffect, useState } from "react";
 import type { NodeProps, StoryFragmentNode, PaneNode, BaseNode, FlatNode } from "@/types.ts";
 import { NodeBasicTag_settings } from "@/components/compositor-nodes/nodes/tagElements/NodeBasicTag_settings.tsx";
 import { getType } from "@/utils/nodes/type-guards";
@@ -84,7 +84,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
   const type = getType(node);
   switch (type) {
     case "Markdown":
-      return <Markdown {...sharedProps} key={node.id} />;
+      return <Markdown {...sharedProps} />;
 
     case "StoryFragment": {
       const sf = node as StoryFragmentNode;
@@ -109,7 +109,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
                 <StoryFragmentConfigPanel nodeId={props.nodeId} config={props.config!} />
               </PanelVisibilityWrapper>
               <AnalyticsPanel nodeId={props.nodeId} />
-              <StoryFragment {...sharedProps} key={node.id} />
+              <StoryFragment {...sharedProps} />
             </>
           )}
         </>
@@ -131,7 +131,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
             ) : null}
             {!isPreview && <AnalyticsPanel nodeId={node.id} />}
             <div>
-              <Pane {...sharedProps} key={node.id} />
+              <Pane {...sharedProps} />
               {!isPreview && paneNode.slug && paneNode.title && paneNodes.length === 0 && (
                 <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
                   <AddPanePanel
@@ -150,7 +150,7 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
       const storyFragmentId = getCtx(props).getClosestNodeTypeFromId(node.id, "StoryFragment");
       const storyFragment = getCtx(props).allNodes.get().get(storyFragmentId) as StoryFragmentNode;
       const firstPane = storyFragment?.paneIds?.length && storyFragment.paneIds[0];
-      if (isPreview) return <Pane {...sharedProps} key={node.id} />;
+      if (isPreview) return <Pane {...sharedProps} />;
       return (
         <>
           {storyFragment && firstPane === node.id && (
@@ -163,11 +163,11 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
               <ConfigPanePanel nodeId={node.id} />
             </PanelVisibilityWrapper>
             {toolModeVal === `eraser` ? (
-              <PaneEraser {...sharedProps} key={node.id} />
+              <PaneEraser {...sharedProps} />
             ) : toolModeVal === `layout` ? (
-              <PaneLayout {...sharedProps} key={node.id} />
+              <PaneLayout {...sharedProps} />
             ) : (
-              <Pane {...sharedProps} key={node.id} />
+              <Pane {...sharedProps} />
             )}
           </div>
           <PanelVisibilityWrapper nodeId={node.id} panelType="add" ctx={getCtx(props)}>
@@ -178,9 +178,9 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     }
 
     case "BgPane":
-      return <BgPaneWrapper {...sharedProps} key={node.id} />;
+      return <BgPaneWrapper {...sharedProps} />;
     case "TagElement":
-      return <TagElement {...sharedProps} key={node.id} />;
+      return <TagElement {...sharedProps} />;
     // tag elements
     case "h2":
     case "h3":
@@ -191,36 +191,35 @@ const getElement = (node: BaseNode | FlatNode, props: NodeProps): ReactElement =
     case "aside":
     case "p": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      if (toolModeVal === `insert`)
-        return <NodeBasicTagInsert {...sharedProps} tagName={type} key={node.id} />;
+      if (toolModeVal === `insert`) return <NodeBasicTagInsert {...sharedProps} tagName={type} />;
       else if (toolModeVal === `eraser`)
-        return <NodeBasicTagEraser {...sharedProps} tagName={type} key={node.id} />;
+        return <NodeBasicTagEraser {...sharedProps} tagName={type} />;
       else if (toolModeVal === `move`)
-        return <NodeBasicTag_settings {...sharedProps} tagName={type} key={node.id} />;
-      return <NodeBasicTag {...sharedProps} tagName={type} key={node.id} />;
+        return <NodeBasicTag_settings {...sharedProps} tagName={type} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} />;
     }
 
     case "strong":
     case "em":
-      return <NodeBasicTag {...sharedProps} tagName={type} key={node.id} />;
+      return <NodeBasicTag {...sharedProps} tagName={type} />;
 
     case "text":
-      return <NodeText {...sharedProps} key={node.id} />;
+      return <NodeText {...sharedProps} />;
     case "button": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      if (toolModeVal === `eraser`) return <NodeButtonEraser {...sharedProps} key={node.id} />;
-      return <NodeButton {...sharedProps} key={node.id} />;
+      if (toolModeVal === `eraser`) return <NodeButtonEraser {...sharedProps} />;
+      return <NodeButton {...sharedProps} />;
     }
     case "a": {
       const toolModeVal = getCtx(props).toolModeValStore.get().value;
-      if (toolModeVal === `eraser`) return <NodeAEraser {...sharedProps} key={node.id} />;
-      return <NodeA {...sharedProps} key={node.id} />;
+      if (toolModeVal === `eraser`) return <NodeAEraser {...sharedProps} />;
+      return <NodeA {...sharedProps} />;
     }
     case "img":
-      return <NodeImg {...sharedProps} key={node.id} />;
+      return <NodeImg {...sharedProps} />;
     case "code": {
       const hookData = parseCodeHook(node);
-      return hookData ? <Widget {...hookData} {...sharedProps} key={node.id} /> : <></>;
+      return hookData ? <Widget {...hookData} {...sharedProps} /> : <></>;
     }
     case "impression":
       return <></>;
@@ -239,6 +238,29 @@ const Node = memo((props: NodeProps) => {
     tagName: styleTagName,
     overrideNodeId,
   } = useStore(styleElementInfoStore, { keys: ["markdownParentId", "tagName", "overrideNodeId"] });
+
+  // Subscribe to edit lock state for this node
+  const [isEditLocked, setIsEditLocked] = useState(false);
+
+  useEffect(() => {
+    // Check initial state
+    setIsEditLocked(getCtx(props).isEditLocked(props.nodeId));
+
+    // Subscribe to changes in edit lock
+    const unsubscribe = getCtx(props).editingNodeId.subscribe((editingId) => {
+      setIsEditLocked(editingId === props.nodeId);
+    });
+
+    return () => unsubscribe();
+  }, [props.nodeId]);
+
+  useEffect(() => {
+    // Only subscribe to notifications if not edit-locked
+    if (!isEditLocked) {
+      const unsubscribe = getCtx(props).notifications.subscribe(props.nodeId, () => {});
+      return () => unsubscribe();
+    }
+  }, [props.nodeId, isEditLocked]);
 
   const nodeTagName = node?.tagName || "";
   const isBlockTag = ["h2", "h3", "h4", "ol", "ul", "li", "p"].includes(nodeTagName);

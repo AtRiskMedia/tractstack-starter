@@ -2,7 +2,6 @@ import { getCtx } from "@/store/nodes.ts";
 import { viewportKeyStore } from "@/store/storykeep.ts";
 import { isEditingStore } from "@/store/help";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
-import { showGuids } from "@/store/development.ts";
 import {
   type JSX,
   type FocusEvent,
@@ -14,407 +13,501 @@ import {
   useState,
   createElement,
 } from "react";
-import { canEditText, processRichTextToNodes } from "@/utils/common/nodesHelper.ts";
+import { processRichTextToNodes, getTemplateNode } from "@/utils/common/nodesHelper.ts";
 import { cloneDeep } from "@/utils/common/helpers.ts";
 import type { NodeProps, FlatNode, PaneNode } from "@/types.ts";
-import GhostText from "./GhostText";
+import TabIndicator from "./TabIndicator";
 
 export type NodeTagProps = NodeProps & { tagName: keyof JSX.IntrinsicElements };
 
+type EditState = "viewing" | "editing";
+const VERBOSE = false;
+
 export const NodeBasicTag = (props: NodeTagProps) => {
   const nodeId = props.nodeId;
-  const editIntentRef = useRef<boolean>(false);
-  const children = getCtx(props).getChildNodeIDs(props.nodeId);
-  const originalTextRef = useRef<string>("");
-  const elementRef = useRef<HTMLElement | null>(null);
-  const doubleClickedRef = useRef<boolean>(false);
-  const [showGhostText, setShowGhostText] = useState(false);
-  const bypassEarlyReturnRef = useRef(false);
-  const currentContentRef = useRef(originalTextRef.current);
-  const cursorPosRef = useRef<{ node: Node; offset: number } | null>(null);
-  const focusTransitionRef = useRef(false);
-  const ghostTextRef = useRef<HTMLDivElement | null>(null);
   const Tag = props.tagName;
-  const isEditableMode = [`text`].includes(getCtx(props).toolModeValStore.get().value);
-  const supportsEditing = canEditText(props);
-  const hasEditedRef = useRef(false);
+  const ctx = getCtx(props);
 
+  // Core state
+  const [editState, setEditState] = useState<EditState>("viewing");
+  const [showTabIndicator, setShowTabIndicator] = useState(false);
+  const elementRef = useRef<HTMLElement | null>(null);
+  const originalContentRef = useRef<string>("");
+  const cursorPositionRef = useRef<{ node: Node; offset: number } | null>(null);
+
+  // Get node data
+  const node = ctx.allNodes.get().get(nodeId) as FlatNode;
+  const children = ctx.getChildNodeIDs(nodeId);
+  const isEditableMode = ctx.toolModeValStore.get().value === "text";
+  const supportsEditing = !["ol", "ul"].includes(props.tagName);
+  const isPlaceholder = node?.isPlaceholder === true;
+  const isEmpty = elementRef.current?.textContent?.trim() === "";
+
+  // Auto-enter edit mode for new placeholder nodes
   useEffect(() => {
-    if (showGhostText && ghostTextRef.current) {
-      ghostTextRef.current.focus();
+    if (isPlaceholder && isEditableMode && supportsEditing && editState === "viewing") {
+      if (VERBOSE)
+        console.log(`[NodeBasicTag] Auto-entering edit mode for placeholder nodeId: ${nodeId}`);
+      setEditState("editing");
+      if (elementRef.current) {
+        elementRef.current.focus();
+        const selection = window.getSelection();
+        if (selection) {
+          const range = document.createRange();
+          const textNode = findFirstTextNode(elementRef.current) || elementRef.current;
+          range.setStart(textNode, 0);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          if (VERBOSE)
+            console.log(
+              `[NodeBasicTag] Set cursor for nodeId: ${nodeId}, contentEditable: ${elementRef.current.contentEditable}, activeElement: ${document.activeElement === elementRef.current}`
+            );
+        } else {
+          console.warn(`[NodeBasicTag] No selection available for nodeId: ${nodeId}`);
+        }
+      } else {
+        console.warn(`[NodeBasicTag] elementRef not ready for nodeId: ${nodeId}`);
+      }
     }
-  }, [showGhostText]);
+  }, [isPlaceholder, isEditableMode, supportsEditing, nodeId]);
 
+  // Sync edit state with global store
   useEffect(() => {
-    getCtx(props).closeAllPanels();
-    const isCurrentlyEditing = editIntentRef.current || showGhostText;
-    isEditingStore.set(isCurrentlyEditing);
+    isEditingStore.set(editState === "editing");
     return () => {
-      if (isCurrentlyEditing) {
+      if (editState === "editing") {
         isEditingStore.set(false);
       }
     };
-  }, [editIntentRef.current, showGhostText]);
+  }, [editState]);
 
+  // Set edit lock when editing
   useEffect(() => {
-    const unsubscribe = getCtx(props).ghostTextActiveId.subscribe((activeId) => {
-      if (activeId !== nodeId) {
-        setShowGhostText(false);
+    if (editState === "editing") {
+      ctx.setEditLock(nodeId);
+      setShowTabIndicator(true);
+    } else {
+      if (ctx.isEditLocked(nodeId)) {
+        ctx.clearEditLock();
       }
-    });
-    return () => unsubscribe();
-  }, [nodeId]);
-
-  useEffect(() => {
-    if (!showGhostText) return;
-
-    const handleClickOutside = (event: globalThis.MouseEvent) => {
-      if (focusTransitionRef.current) return;
-      if (!isEditableMode || !supportsEditing) return;
-
-      const mainElement = elementRef.current;
-      const ghostElements = document.querySelectorAll("[data-ghost-text]");
-      let clickedInsideGhost = false;
-
-      for (let i = 0; i < ghostElements.length; i++) {
-        if (ghostElements[i].contains(event.target as Node)) {
-          clickedInsideGhost = true;
-          break;
-        }
-      }
-
-      if (mainElement && !mainElement.contains(event.target as Node) && !clickedInsideGhost) {
-        const ghostTextElements = Array.from(ghostElements) as HTMLElement[];
-        if (ghostTextElements.length > 0) {
-          const deepestGhostElement = ghostTextElements[ghostTextElements.length - 1];
-          if ((deepestGhostElement as any).complete) {
-            (deepestGhostElement as any).complete();
-          }
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showGhostText, isEditableMode, supportsEditing]);
-
-  useEffect(() => {
-    getCtx(props).clickedNodeId.subscribe((val) => {
-      if (editIntentRef.current && val !== nodeId) {
-        editIntentRef.current = false;
-        originalTextRef.current = "";
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isEditableMode && editIntentRef.current && cursorPosRef.current && elementRef.current) {
-      setTimeout(() => {
-        restoreCursorPosition();
-      }, 10);
+      setShowTabIndicator(false);
     }
-  });
+  }, [editState, nodeId]);
 
+  // Auto-delete empty placeholder on blur
+  useEffect(() => {
+    if (editState === "viewing" && isPlaceholder && isEmpty && !ctx.isEditLocked(nodeId)) {
+      const timer = setTimeout(() => {
+        if (elementRef.current?.textContent?.trim() === "" && !ctx.isEditLocked(nodeId)) {
+          if (VERBOSE) console.log(`[NodeBasicTag] Deleting empty placeholder nodeId: ${nodeId}`);
+          ctx.deleteNode(nodeId);
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [editState, isPlaceholder, isEmpty, nodeId]);
+
+  // Helper functions for text nodes
+  const findFirstTextNode = (node: Node): Node | null => {
+    if (node.nodeType === Node.TEXT_NODE) return node;
+    for (let i = 0; i < node.childNodes.length; i++) {
+      const found = findFirstTextNode(node.childNodes[i]);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const findLastTextNode = (node: Node): Node | null => {
+    if (node.nodeType === Node.TEXT_NODE) return node;
+    for (let i = node.childNodes.length - 1; i >= 0; i--) {
+      const found = findLastTextNode(node.childNodes[i]);
+      if (found) return found;
+    }
+    return null;
+  };
+
+  // Restore cursor position
   const restoreCursorPosition = () => {
-    if (!cursorPosRef.current || !elementRef.current) return;
+    if (!cursorPositionRef.current || !elementRef.current) return;
 
     const selection = window.getSelection();
-    if (!selection) return;
+    if (!selection) {
+      console.warn(
+        `[NodeBasicTag] No selection available for cursor restoration in nodeId: ${nodeId}`
+      );
+      return;
+    }
 
     try {
       const range = document.createRange();
+      const { node, offset } = cursorPositionRef.current;
 
-      if (elementRef.current.contains(cursorPosRef.current.node)) {
-        range.setStart(cursorPosRef.current.node, cursorPosRef.current.offset);
+      if (elementRef.current.contains(node)) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const maxOffset = node.textContent?.length || 0;
+          range.setStart(node, Math.min(offset, maxOffset));
+        } else {
+          const maxOffset = node.childNodes.length;
+          range.setStart(node, Math.min(offset, maxOffset));
+        }
       } else {
-        const walkTreeForTextNode = (node: Node): Node | null => {
-          if (node.nodeType === Node.TEXT_NODE) return node;
-
-          for (let i = 0; i < node.childNodes.length; i++) {
-            const found = walkTreeForTextNode(node.childNodes[i]);
-            if (found) return found;
-          }
-
-          return null;
-        };
-
-        const textNode = walkTreeForTextNode(elementRef.current);
-        if (!textNode) return;
-
-        const maxOffset = textNode.textContent?.length || 0;
-        range.setStart(textNode, Math.min(cursorPosRef.current.offset, maxOffset));
+        const textNode = findFirstTextNode(elementRef.current);
+        if (textNode) {
+          range.setStart(textNode, 0);
+        } else {
+          range.setStart(elementRef.current, 0);
+        }
       }
 
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
-    } catch (e) {}
-
-    if (!focusTransitionRef.current) {
-      cursorPosRef.current = null;
+      if (VERBOSE) console.log(`[NodeBasicTag] Cursor restored for nodeId: ${nodeId}`);
+    } catch (e) {
+      console.warn(`[NodeBasicTag] Cursor restoration failed for nodeId: ${nodeId}:`, e);
+      if (elementRef.current) {
+        elementRef.current.focus();
+      }
     }
+
+    cursorPositionRef.current = null;
+  };
+
+  // Apply cursor position when entering edit mode
+  useEffect(() => {
+    if (editState === "editing" && elementRef.current && cursorPositionRef.current) {
+      requestAnimationFrame(() => {
+        restoreCursorPosition();
+      });
+    }
+  }, [editState]);
+
+  // For formatting nodes and interactive elements like <a> and <button>
+  if (["em", "strong", "a", "button"].includes(props.tagName)) {
+    return createElement(
+      Tag,
+      {
+        className: ctx.getNodeClasses(nodeId, viewportKeyStore.get().value),
+        onClick: (e: MouseEvent) => {
+          if (isEditableMode) {
+            ctx.setClickedNodeId(nodeId);
+          } else {
+            ctx.setClickedNodeId(nodeId);
+            e.stopPropagation();
+          }
+        },
+        "data-node-id": nodeId,
+        tabIndex: isEditableMode ? -1 : undefined,
+      },
+      <RenderChildren children={children} nodeProps={props} />
+    );
+  }
+
+  const startEditing = () => {
+    if (!isEditableMode || !supportsEditing || editState === "editing") return;
+
+    originalContentRef.current = elementRef.current?.innerHTML || "";
+    setEditState("editing");
+    if (VERBOSE) console.log(`[NodeBasicTag] Started editing nodeId: ${nodeId}`);
   };
 
   const handleInsertSignal = (tagName: string, nodeId: string) => {
     setTimeout(() => {
-      getCtx(props).handleInsertSignal(tagName, nodeId);
-    }, 500);
+      ctx.handleInsertSignal(tagName, nodeId);
+    }, 50);
   };
 
-  const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
-    editIntentRef.current = true;
-    e.preventDefault();
+  const saveAndExit = () => {
+    if (editState !== "editing") return;
 
-    const text = e.clipboardData.getData("text/plain");
+    const currentContent = elementRef.current?.innerHTML || "";
 
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      const textNode = document.createTextNode(text);
-      range.insertNode(textNode);
+    if (currentContent !== originalContentRef.current) {
+      try {
+        const originalNodes = ctx
+          .getNodesRecursively(node)
+          .filter(
+            (childNode): childNode is FlatNode =>
+              "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
+          ) as FlatNode[];
 
-      range.setStartAfter(textNode);
-      range.setEndAfter(textNode);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    } else {
-      const el = e.currentTarget;
-      el.textContent = (el.textContent || "") + text;
+        const parsedNodes = processRichTextToNodes(
+          currentContent,
+          nodeId,
+          originalNodes,
+          handleInsertSignal
+        );
+
+        if (parsedNodes.length > 0) {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(parsedNodes);
+
+          if (isPlaceholder) {
+            const updatedNode = {
+              ...cloneDeep(node),
+              isPlaceholder: false,
+              isChanged: true,
+            };
+            ctx.modifyNodes([updatedNode]);
+          }
+
+          const paneNodeId = ctx.getClosestNodeTypeFromId(nodeId, "Pane");
+          if (paneNodeId) {
+            const paneNode = cloneDeep(ctx.allNodes.get().get(paneNodeId)) as PaneNode;
+            ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
+          }
+        }
+      } catch (error) {
+        console.error(`[NodeBasicTag] Error saving content for nodeId: ${nodeId}:`, error);
+      }
     }
+
+    setEditState("viewing");
+    if (VERBOSE) console.log(`[NodeBasicTag] Exited editing for nodeId: ${nodeId}`);
+
+    // Check if content is empty and delete the node if it is
+    if (elementRef.current?.textContent?.trim() === "") {
+      if (VERBOSE) console.log(`[NodeBasicTag] Deleting empty nodeId: ${nodeId}`);
+      ctx.deleteNode(nodeId);
+    }
+  };
+
+  const createNextParagraph = () => {
+    if (VERBOSE) console.log(`[NodeBasicTag] Creating next paragraph after nodeId: ${nodeId}`);
+
+    const currentContent = elementRef.current?.innerHTML || "";
+
+    if (currentContent !== originalContentRef.current) {
+      try {
+        const originalNodes = ctx
+          .getNodesRecursively(node)
+          .filter(
+            (childNode): childNode is FlatNode =>
+              "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
+          ) as FlatNode[];
+
+        const parsedNodes = processRichTextToNodes(
+          currentContent,
+          nodeId,
+          originalNodes,
+          handleInsertSignal
+        );
+
+        if (parsedNodes.length > 0) {
+          ctx.deleteChildren(nodeId);
+          ctx.addNodes(parsedNodes);
+
+          if (isPlaceholder) {
+            const updatedNode = {
+              ...cloneDeep(node),
+              isPlaceholder: false,
+              isChanged: true,
+            };
+            ctx.modifyNodes([updatedNode]);
+          }
+        }
+      } catch (error) {
+        console.error(`[NodeBasicTag] Error saving content for nodeId: ${nodeId}:`, error);
+      }
+    }
+
+    const paneNodeId = ctx.getClosestNodeTypeFromId(nodeId, "Pane");
+    if (paneNodeId) {
+      const paneNode = cloneDeep(ctx.allNodes.get().get(paneNodeId)) as PaneNode;
+      ctx.modifyNodes([{ ...paneNode, isChanged: true }]);
+    }
+
+    ctx.clearEditLock();
+    setEditState("viewing");
+
+    const templateNode = getTemplateNode("p");
+    const newNode = {
+      ...templateNode,
+      isPlaceholder: true,
+    };
+    if (newNode?.nodes?.length) {
+      const firstNode = newNode.nodes.at(0);
+      if (firstNode && typeof firstNode.copy === "string") {
+        firstNode.copy = "";
+      }
+    }
+
+    const newNodeId = ctx.addTemplateNode(nodeId, newNode, nodeId, "after");
+    if (VERBOSE) console.log(`[NodeBasicTag] New paragraph created with id: ${newNodeId}`);
+
+    if (newNodeId) {
+      ctx.setEditLock(newNodeId);
+      const attemptFocus = (attempts = 5, delay = 50) => {
+        const newElement = document.querySelector(`[data-node-id="${newNodeId}"]`) as HTMLElement;
+        if (newElement) {
+          if (newElement.contentEditable === "true") {
+            newElement.focus();
+            const selection = window.getSelection();
+            if (selection) {
+              const range = document.createRange();
+              const textNode = findFirstTextNode(newElement) || newElement;
+              range.setStart(textNode, 0);
+              range.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+            if (document.activeElement === newElement) {
+              if (VERBOSE) console.log(`[NodeBasicTag] Successfully focused nodeId: ${newNodeId}`);
+            } else {
+              console.warn(
+                `[NodeBasicTag] Focus failed for nodeId: ${newNodeId}, contentEditable: ${newElement.contentEditable}, activeElement: ${document.activeElement?.getAttribute("data-node-id")}`
+              );
+            }
+          } else if (attempts > 0) {
+            if (VERBOSE)
+              console.log(
+                `[NodeBasicTag] Element ${newNodeId} not yet editable, retrying. Attempts left: ${attempts}`
+              );
+            setTimeout(() => attemptFocus(attempts - 1, delay), delay);
+          } else {
+            console.error(
+              `[NodeBasicTag] Failed to focus nodeId: ${newNodeId}, not editable after retries`
+            );
+          }
+        } else if (attempts > 0) {
+          if (VERBOSE)
+            console.log(
+              `[NodeBasicTag] Element ${newNodeId} not found, retrying. Attempts left: ${attempts}`
+            );
+          setTimeout(() => attemptFocus(attempts - 1, delay), delay);
+        } else {
+          console.error(
+            `[NodeBasicTag] Failed to find element for nodeId: ${newNodeId} after retries`
+          );
+        }
+      };
+      requestAnimationFrame(() => attemptFocus());
+    }
+  };
+
+  // Event Handlers
+  const handleFocus = () => {
+    if (!supportsEditing) return;
+    startEditing();
   };
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
-    if (!canEditText(props) || e.target.tagName === "BUTTON") return;
-
-    const isFocusInGhostText = ghostTextRef.current?.contains(e.relatedTarget as Node);
-    const isFocusInNode = elementRef.current?.contains(e.relatedTarget as Node);
-
+    const relatedTarget = e.relatedTarget as HTMLElement | null;
+    if (VERBOSE) console.log(`[NodeBasicTag] Blur event, relatedTarget:`, e.relatedTarget);
     if (
-      doubleClickedRef.current ||
-      (!editIntentRef.current && !bypassEarlyReturnRef.current && !hasEditedRef.current)
+      relatedTarget?.hasAttribute("data-tab-indicator") ||
+      (relatedTarget && elementRef.current?.contains(relatedTarget))
     ) {
-      doubleClickedRef.current = false;
-      editIntentRef.current = false;
-      if (!isFocusInNode && !isFocusInGhostText) {
-        setShowGhostText(false);
-      }
       return;
     }
-
-    const node = getCtx(props).allNodes.get().get(nodeId);
-    const newHTML = currentContentRef.current;
-
-    if (!focusTransitionRef.current) editIntentRef.current = false;
-
-    if (newHTML === originalTextRef.current) {
-      if (isEditableMode && supportsEditing && !showGhostText && !focusTransitionRef.current) {
-        setShowGhostText(true);
-      }
-      return;
-    }
-
-    try {
-      const originalNodes = getCtx(props)
-        .getNodesRecursively(node)
-        .filter(
-          (childNode): childNode is FlatNode =>
-            "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
-        ) as FlatNode[];
-
-      const parsedNodes = processRichTextToNodes(
-        newHTML,
-        nodeId,
-        originalNodes,
-        handleInsertSignal
-      );
-
-      if (parsedNodes.length > 0) {
-        getCtx(props).deleteChildren(nodeId);
-        getCtx(props).addNodes(parsedNodes);
-
-        const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
-        if (paneNodeId) {
-          const paneNode = cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)) as PaneNode;
-          getCtx(props).modifyNodes([{ ...paneNode, isChanged: true }]);
-        }
-      }
-
-      if (isEditableMode && supportsEditing) setShowGhostText(true);
-    } catch (error) {
-      getCtx(props).notifyNode(node?.parentId || "");
-    }
-
-    if (!isFocusInNode && !isFocusInGhostText) {
-      setShowGhostText(false);
-    }
+    saveAndExit();
   };
 
-  const getGhostTextElement = (): HTMLElement | null => {
-    const element = document.querySelector(
-      '[data-ghost-text="placeholder"], [data-ghost-text="true"]'
-    );
-    if (element && element instanceof HTMLDivElement) {
-      ghostTextRef.current = element;
-      return element;
-    }
-    return null;
-  };
+  const handleKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (editState !== "editing") return;
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    editIntentRef.current = true;
-
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      if (elementRef.current) {
-        currentContentRef.current = elementRef.current.innerHTML;
-      }
-      handleBlur(e as unknown as FocusEvent<HTMLElement>);
-      if (elementRef.current) {
-        elementRef.current.blur();
-      }
-    } else if (e.key === "Tab") {
+      saveAndExit();
+    } else if (e.key === "Tab" && !e.shiftKey) {
       e.preventDefault();
-
-      focusTransitionRef.current = true;
-
-      if (!showGhostText) {
-        setShowGhostText(true);
-
-        setTimeout(() => {
-          const ghostElement = getGhostTextElement();
-          if (ghostElement && "activate" in ghostElement) {
-            (ghostElement as any).activate();
-          }
-        }, 50);
-      } else {
-        const ghostElement = getGhostTextElement();
-        if (ghostElement && "activate" in ghostElement) {
-          (ghostElement as any).activate();
-        }
+      e.stopPropagation();
+      createNextParagraph();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      if (elementRef.current && originalContentRef.current) {
+        elementRef.current.innerHTML = originalContentRef.current;
       }
+      setEditState("viewing");
     }
   };
 
-  const handleFocus = (e: FocusEvent) => {
-    if (!canEditText(props) || e.target.tagName === "BUTTON") {
-      return;
-    }
-    originalTextRef.current = e.currentTarget.innerHTML;
-    hasEditedRef.current = false;
-    if (isEditableMode && supportsEditing) {
-      getCtx(props).ghostTextActiveId.set("");
-      getCtx(props).ghostTextActiveId.set(nodeId);
-      setShowGhostText(true);
-    }
-    if (cursorPosRef.current) {
-      restoreCursorPosition();
-    }
-    if (!showGhostText && !doubleClickedRef.current) {
-      getCtx(props).setClickedNodeId(nodeId);
-    }
-  };
+  const handlePaste = (e: ClipboardEvent<HTMLElement>) => {
+    if (editState !== "editing") return;
 
-  const handleMouseDown = (e: MouseEvent) => {
-    getCtx(props).setClickedNodeId(nodeId);
-    e.stopPropagation();
+    e.preventDefault();
+    const text = e.clipboardData.getData("text/plain");
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
+
+    range.setStartAfter(textNode);
+    range.setEndAfter(textNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
   };
 
   const handleClick = (e: MouseEvent) => {
-    if (isEditableMode && supportsEditing) {
-      setTimeout(() => {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          cursorPosRef.current = {
+    if (
+      isEditableMode &&
+      (e.target instanceof HTMLAnchorElement || e.target instanceof HTMLButtonElement)
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (isEditableMode && supportsEditing && editState === "viewing") {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (elementRef.current?.contains(range.commonAncestorContainer)) {
+          cursorPositionRef.current = {
             node: range.startContainer,
             offset: range.startOffset,
           };
+        } else if (elementRef.current) {
+          const textNode =
+            findLastTextNode(elementRef.current) || findFirstTextNode(elementRef.current);
+          if (textNode) {
+            cursorPositionRef.current = {
+              node: textNode,
+              offset: textNode.textContent?.length || 0,
+            };
+          }
         }
-      }, 0);
-      editIntentRef.current = true;
+      }
+      startEditing();
+      if (elementRef.current) {
+        elementRef.current.contentEditable = "true";
+        elementRef.current.focus();
+        requestAnimationFrame(() => {
+          restoreCursorPosition();
+          if (elementRef.current && document.activeElement !== elementRef.current) {
+            console.warn(`[NodeBasicTag] Focus lost after click for nodeId: ${nodeId}, retrying`);
+            elementRef.current.focus();
+          }
+        });
+        setTimeout(() => {
+          if (elementRef.current && document.activeElement !== elementRef.current) {
+            elementRef.current.focus();
+          }
+        }, 0);
+      }
     }
-    e.stopPropagation();
+    ctx.setClickedNodeId(nodeId);
+    if (!(e.target instanceof HTMLAnchorElement || e.target instanceof HTMLButtonElement)) {
+      e.stopPropagation();
+    }
   };
 
   const handleDoubleClick = (e: MouseEvent) => {
     if (!isEditableMode) {
-      doubleClickedRef.current = true;
-      editIntentRef.current = false;
-
-      if (elementRef.current) {
-        elementRef.current.blur();
-      }
-      getCtx(props).setClickedNodeId(nodeId, true);
+      ctx.setClickedNodeId(nodeId, true);
     }
     e.stopPropagation();
   };
 
-  const handleGhostContentSaved = () => {
-    if (!canEditText(props)) return;
-
-    if (elementRef.current) {
-      currentContentRef.current = elementRef.current.innerHTML;
-    }
-
-    const node = getCtx(props).allNodes.get().get(nodeId);
-    const newHTML = currentContentRef.current;
-
-    if (newHTML === originalTextRef.current) {
-      return;
-    }
-
-    try {
-      const originalNodes = getCtx(props)
-        .getNodesRecursively(node)
-        .filter(
-          (childNode): childNode is FlatNode =>
-            "tagName" in childNode && ["a", "button"].includes(childNode.tagName as string)
-        ) as FlatNode[];
-
-      const parsedNodes = processRichTextToNodes(
-        newHTML,
-        nodeId,
-        originalNodes,
-        handleInsertSignal
-      );
-
-      if (parsedNodes.length > 0) {
-        getCtx(props).deleteChildren(nodeId);
-        getCtx(props).addNodes(parsedNodes);
-
-        const paneNodeId = getCtx(props).getClosestNodeTypeFromId(nodeId, "Pane");
-        if (paneNodeId) {
-          const paneNode = cloneDeep(getCtx(props).allNodes.get().get(paneNodeId)) as PaneNode;
-          getCtx(props).modifyNodes([{ ...paneNode, isChanged: true }]);
-        }
-      }
-
-      getCtx(props).notifyNode(node?.parentId || "");
-    } catch (error) {
-      getCtx(props).notifyNode(node?.parentId || "");
-    }
-  };
-
-  const handleGhostComplete = () => {
-    setShowGhostText(false);
-    focusTransitionRef.current = false;
-    editIntentRef.current = false;
-
-    if (getCtx(props).ghostTextActiveId.get() === nodeId) {
-      getCtx(props).ghostTextActiveId.set("");
-    }
-  };
-
-  if (showGuids.get()) {
-    return (
-      <div className={getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value)}>
-        <RenderChildren children={children} nodeProps={props} />
-      </div>
-    );
-  }
+  // Determine classes
+  const baseClasses = ctx.getNodeClasses(nodeId, viewportKeyStore.get().value);
+  const editingClasses =
+    editState === "editing" ? "outline-2 outline-cyan-500 outline-offset-2" : "";
+  const className = `${baseClasses} ${editingClasses}`.trim();
 
   return (
     <>
@@ -422,42 +515,26 @@ export const NodeBasicTag = (props: NodeTagProps) => {
         Tag,
         {
           ref: elementRef,
-          className: getCtx(props).getNodeClasses(nodeId, viewportKeyStore.get().value),
-          contentEditable: isEditableMode,
+          className,
+          contentEditable: editState === "editing",
           suppressContentEditableWarning: true,
-          onPaste: handlePaste,
-          onBlur: handleBlur,
-          onMouseDown: handleMouseDown,
-          onClick: handleClick,
-          onKeyDown: handleKeyDown,
           onFocus: handleFocus,
+          onBlur: handleBlur,
+          onKeyDown: handleKeyDown,
+          onPaste: handlePaste,
+          onClick: handleClick,
           onDoubleClick: handleDoubleClick,
           style: {
-            cursor: isEditableMode ? "text" : "crosshair",
+            cursor: isEditableMode && supportsEditing ? "text" : "default",
+            minHeight: isPlaceholder ? "1.5em" : undefined,
           },
-          onInput: () => {
-            editIntentRef.current = true;
-            hasEditedRef.current = true;
-            if (elementRef.current) {
-              currentContentRef.current = elementRef.current.innerHTML;
-            }
-          },
+          "data-node-id": nodeId,
+          "data-placeholder": isPlaceholder,
         },
         <RenderChildren children={children} nodeProps={props} />
       )}
-
-      {showGhostText && isEditableMode && supportsEditing && (
-        <GhostText
-          parentId={nodeId}
-          onComplete={handleGhostComplete}
-          onContentSaved={handleGhostContentSaved}
-          onActivate={() => {
-            focusTransitionRef.current = false;
-            editIntentRef.current = false;
-          }}
-          ctx={props.ctx}
-          ref={ghostTextRef}
-        />
+      {showTabIndicator && editState === "editing" && (
+        <TabIndicator onTab={createNextParagraph} parentNodeId={nodeId} />
       )}
     </>
   );

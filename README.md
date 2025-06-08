@@ -1,8 +1,7 @@
 # Tract Stack
 
-no-code build your own funnel website
-make a website that converts with Tract Stack | free web press
-by [At Risk Media](https://atriskmedia.com)
+no-code community engine and website maker
+the free web press from [At Risk Media](https://atriskmedia.com)
 
 ## Try Tract Stack
 
