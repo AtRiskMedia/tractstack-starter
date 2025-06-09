@@ -1,0 +1,20 @@
+---
+export interface Props {
+  slug?: string;
+  variation?: string;
+}
+
+const { slug, variation } = Astro.props;
+---
+
+{
+  variation ? (
+    <div>
+      you are on {slug}/{variation} collection page
+    </div>
+  ) : slug ? (
+    <div>you are on {slug} collection page</div>
+  ) : (
+    <div>you are on collections page</div>
+  )
+}

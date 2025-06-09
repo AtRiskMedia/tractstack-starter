@@ -1,0 +1,15 @@
+---
+import CustomRoutes, { routes } from "@/custom/CustomRoutes.astro";
+
+const { param1 } = Astro.params;
+
+// Check if route is enabled
+if (!routes.collections) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+---
+
+<CustomRoutes route="collections" slug={param1} />

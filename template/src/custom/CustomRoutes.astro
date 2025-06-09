@@ -1,0 +1,23 @@
+---
+import Collections from "@/custom/pages/Collections.astro";
+
+export interface Props {
+  route: string;
+  slug?: string;
+  variation?: string;
+}
+
+const { route, slug, variation } = Astro.props;
+
+export const routes = {
+  collections: false, //true,
+};
+---
+
+{
+  route === "collections" ? (
+    <Collections slug={slug} variation={variation} />
+  ) : (
+    <div>Route not found</div>
+  )
+}
