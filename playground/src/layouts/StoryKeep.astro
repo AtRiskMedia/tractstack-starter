@@ -65,17 +65,19 @@ for (const [key, value] of Astro.url.searchParams) {
     <link rel="icon" type="image/svg+xml" href={defaultFavIcon} />
     <link rel="canonical" href={fullCanonicalUrl} />
     <meta name="generator" content={Astro.generator} />
-
-    <!-- Custom styles -->
     <link rel="stylesheet" href="/styles/custom.css" />
     <link rel="stylesheet" href="/styles/storykeep.css" />
+    <link rel="sitemap" href="/sitemap.xml" />
 
     <!-- General Meta Tags -->
     <title>{defaultSocialTitle}</title>
     <meta name="title" content={defaultSocialTitle} />
     <meta name="description" content={defaultSocialDesc} />
     <meta name="author" content={defaultSocialAuthor} />
-    <link rel="sitemap" href="/sitemap.xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${defaultSocialTitle} - Social Preview Image`} />
+    <meta property="og:locale" content="en_US" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:title" content={defaultSocialTitle} />
