@@ -133,6 +133,17 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       }
 
+      case "saveImage": {
+        const { path: imagePath, filename, data } = await context.request.json();
+        const fullPath = path.join(tenantPaths.publicPath, imagePath);
+        await fs.mkdir(fullPath, { recursive: true });
+        const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+        await fs.writeFile(path.join(fullPath, filename), buffer);
+        result = { success: true, path: path.join(imagePath, filename) };
+        break;
+      }
+
       case "deleteImage": {
         const { path: imagePath } = await context.request.json();
         const fullPath = path.join(tenantPaths.publicPath, imagePath);
@@ -149,7 +160,7 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       }
 
-      case "saveImage": {
+      case "saveResourceImage": {
         const { path: imagePath, filename, data } = await context.request.json();
         const fullPath = path.join(tenantPaths.publicPath, imagePath);
         await fs.mkdir(fullPath, { recursive: true });
@@ -157,6 +168,22 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         const buffer = Buffer.from(base64Data, "base64");
         await fs.writeFile(path.join(fullPath, filename), buffer);
         result = { success: true, path: path.join(imagePath, filename) };
+        break;
+      }
+
+      case "deleteResourceImage": {
+        const { path: imagePath } = await context.request.json();
+        const fullPath = path.join(tenantPaths.publicPath, imagePath);
+        try {
+          await fs.unlink(fullPath);
+          result = { success: true, message: "Resource image deleted successfully" };
+        } catch (err: any) {
+          if (err?.code === "ENOENT") {
+            result = { success: true, message: "File already removed" };
+          } else {
+            throw err;
+          }
+        }
         break;
       }
 

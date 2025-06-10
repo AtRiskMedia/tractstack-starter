@@ -22,11 +22,13 @@ import { upsertResource } from "@/utils/db/api/upsertResource";
 import { upsertTractStack } from "@/utils/db/api/upsertTractStack";
 import { upsertBeliefNode } from "@/utils/db/api/upsertBeliefNode";
 import { upsertFileNode } from "@/utils/db/api/upsertFileNode";
+import { upsertResourceFile } from "@/utils/db/api/upsertResourceFile";
 import { upsertMenuNode } from "@/utils/db/api/upsertMenuNode";
 import { upsertPaneNode } from "@/utils/db/api/upsertPaneNode";
 import { upsertStoryFragmentNode } from "@/utils/db/api/upsertStoryFragmentNode";
 import { upsertResourceNode } from "@/utils/db/api/upsertResourceNode";
 import { upsertTractStackNode } from "@/utils/db/api/upsertTractStackNode";
+import { removeResourceFile } from "@/utils/db/api/removeResourceFile";
 import { initializeContent, getFullContentMap } from "@/utils/db/turso";
 //import { getAllTopics } from "@/utils/db/api/getAllTopics";
 //import { getTopicsForStoryFragment } from "@/utils/db/api/getTopicsForStoryFragment";
@@ -34,6 +36,7 @@ import { initializeContent, getFullContentMap } from "@/utils/db/turso";
 //import { unlinkTopicFromStoryFragment } from "@/utils/db/api/unlinkTopicFromStoryFragment";
 //import { upsertTopic } from "@/utils/db/api/upsertTopic";
 //import { getStoryFragmentDetails } from "@/utils/db/api/getStoryFragmentDetails";
+import { getResourceFilesByResourceId } from "@/utils/db/turso";
 import { deleteOrphanMenus } from "@/utils/db/api/deleteOrphanMenus";
 import { deleteOrphanFiles } from "@/utils/db/api/deleteOrphanFiles";
 import { deleteOrphanPanes } from "@/utils/db/api/deleteOrphanPanes";
@@ -108,6 +111,12 @@ export const POST: APIRoute = withTenantContext(async (context: APIContext) => {
         break;
       case "upsertFileNode":
         result = await upsertFileNode(body, context);
+        break;
+      case "upsertResourceFile":
+        result = await upsertResourceFile(body, context);
+        break;
+      case "removeResourceFile":
+        result = await removeResourceFile(body, context);
         break;
       case "upsertPaneNode":
         result = await upsertPaneNode(body, context);
@@ -220,6 +229,16 @@ export const GET: APIRoute = withTenantContext(async (context: APIContext) => {
   try {
     let result;
     switch (tursoOperation) {
+      case "getResourceFiles": {
+        const url = new URL(context.request.url);
+        const resourceId = url.searchParams.get("resourceId");
+        if (!resourceId) {
+          throw new Error("Missing required parameter: resourceId");
+        }
+        result = await getResourceFilesByResourceId(resourceId, context);
+        break;
+      }
+
       case "getResourceNodes": {
         const url = new URL(context.request.url);
         const slugs = url.searchParams.get("slugs")?.split(/[,|]/).filter(Boolean);

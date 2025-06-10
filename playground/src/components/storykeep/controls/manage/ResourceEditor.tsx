@@ -5,6 +5,8 @@ import { Select, Slider, Switch, Portal } from "@ark-ui/react";
 import { createListCollection } from "@ark-ui/react/select";
 import { ulid } from "ulid";
 import { cleanString } from "@/utils/common/helpers.ts";
+import ResourceImageUpload from "./ResourceImageUpload";
+import { processResourceImage } from "@/utils/images/processResourceImage";
 import { getResourceSetting, getKnownResources } from "@/utils/storykeep/resourceHelpers.ts";
 import type {
   ResourceNode,
@@ -51,6 +53,8 @@ function processResourceValue(key: string, value: any, setting: ResourceSetting)
         }
         return defaultValue ?? null;
       }
+      case "image":
+        return typeof value === "string" ? value : (defaultValue ?? null);
       default:
         return value;
     }
@@ -98,8 +102,18 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
   const [resourceSetting, setResourceSetting] = useState<ResourceSetting | undefined>(undefined);
   const [knownResources, setKnownResources] = useState<KnownResource>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [dateTimeState, setDateTimeState] = useState<{
-    [key: string]: string;
+  const [dateTimeState, setDateTimeState] = useState<{ [key: string]: string }>({});
+  const [pendingImageFiles, setPendingImageFiles] = useState<{
+    [key: string]: { file: File; tempUrl: string } | null;
+  }>({});
+  const [processingImages, setProcessingImages] = useState<Set<string>>(new Set());
+  const [resolvedImages, setResolvedImages] = useState<{
+    [fieldName: string]: {
+      fileId: string;
+      src: string;
+      srcSet?: string;
+      altDescription: string;
+    } | null;
   }>({});
 
   useEffect(() => {
@@ -110,7 +124,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
     loadKnownResources();
   }, []);
 
-  // Load resource settings
   useEffect(() => {
     const loadResourceSettings = async () => {
       const settings = await getResourceSetting(localResource?.category || "");
@@ -131,9 +144,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
             !isNaN(numericValue) &&
             !isNaN(new Date(numericValue * 1000).getTime())
           ) {
-            // Convert UTC timestamp (in seconds) to local time
             const date = new Date(numericValue * 1000);
-            // Format as "YYYY-MM-DDThh:mm" for datetime-local input
             const localDateString = date
               .toLocaleString("sv-SE", {
                 year: "numeric",
@@ -152,7 +163,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
     }
   }, [resourceSetting, localResource.optionsPayload]);
 
-  // Handle category change to update options payload with defaults
   useEffect(() => {
     if (resourceSetting && localResource.category) {
       setLocalResource((prev) => {
@@ -166,6 +176,51 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       });
     }
   }, [resourceSetting, localResource.category]);
+
+  useEffect(() => {
+    const loadResourceImages = async () => {
+      if (!create && localResource.id) {
+        try {
+          const response = await fetch(
+            `/api/turso/getResourceFiles?resourceId=${localResource.id}`
+          );
+          const result = await response.json();
+          if (result.success && result.data) {
+            const resolved: typeof resolvedImages = {};
+            Object.entries(localResource.optionsPayload).forEach(([fieldName, value]) => {
+              if (resourceSetting && resourceSetting[fieldName]?.type === "image" && value) {
+                const file = result.data.find((f: any) => f.id === value);
+                if (file) {
+                  resolved[fieldName] = {
+                    fileId: file.id,
+                    src: file.url,
+                    srcSet: file.src_set,
+                    altDescription: file.alt_description,
+                  };
+                }
+              }
+            });
+
+            setResolvedImages(resolved);
+          }
+        } catch (error) {
+          console.error("Error loading resource images:", error);
+        }
+      }
+    };
+    loadResourceImages();
+  }, [create, localResource.id, localResource.optionsPayload, resourceSetting]);
+
+  // Cleanup temporary URLs
+  useEffect(() => {
+    return () => {
+      Object.values(pendingImageFiles).forEach((pending) => {
+        if (pending && pending.tempUrl) {
+          URL.revokeObjectURL(pending.tempUrl);
+        }
+      });
+    };
+  }, [pendingImageFiles]);
 
   const handleChange = useCallback((field: keyof ResourceNode, value: any) => {
     setLocalResource((prev) => {
@@ -189,6 +244,13 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       delete newState[oldKey];
       if (stateValue) newState[newKey] = stateValue;
       return newState;
+    });
+    setPendingImageFiles((prev) => {
+      const newPending = { ...prev };
+      const pendingValue = newPending[oldKey];
+      delete newPending[oldKey];
+      if (pendingValue !== undefined) newPending[newKey] = pendingValue;
+      return newPending;
     });
     setUnsavedChanges(true);
   }, []);
@@ -225,7 +287,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       }));
 
       if (value) {
-        // Convert local time to UTC timestamp (in seconds)
         const localDate = new Date(value);
         if (!isNaN(localDate.getTime())) {
           const utcTimestamp = Math.floor(localDate.getTime() / 1000);
@@ -236,6 +297,51 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       } else {
         handleOptionsPayloadChange(key, null);
       }
+    },
+    [handleOptionsPayloadChange]
+  );
+
+  const handleImageChange = useCallback((key: string, file: File | null) => {
+    setPendingImageFiles((prev) => {
+      // Cleanup old URL if exists
+      if (prev[key] && prev[key] !== null) {
+        URL.revokeObjectURL(prev[key]!.tempUrl);
+      }
+
+      if (file) {
+        const tempUrl = URL.createObjectURL(file);
+        return {
+          ...prev,
+          [key]: { file, tempUrl },
+        };
+      } else {
+        return {
+          ...prev,
+          [key]: null,
+        };
+      }
+    });
+    setUnsavedChanges(true);
+  }, []);
+
+  const handleImageRemove = useCallback(
+    (key: string) => {
+      // Mark for removal
+      handleOptionsPayloadChange(key, null);
+      setPendingImageFiles((prev) => {
+        if (prev[key] && prev[key] !== null) {
+          URL.revokeObjectURL(prev[key]!.tempUrl);
+        }
+        return {
+          ...prev,
+          [key]: null,
+        };
+      });
+      setResolvedImages((prev) => {
+        const newResolved = { ...prev };
+        delete newResolved[key];
+        return newResolved;
+      });
     },
     [handleOptionsPayloadChange]
   );
@@ -256,6 +362,14 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       delete newState[key];
       return newState;
     });
+    setPendingImageFiles((prev) => {
+      const newPending = { ...prev };
+      if (newPending[key] && newPending[key] !== null) {
+        URL.revokeObjectURL(newPending[key]!.tempUrl);
+      }
+      delete newPending[key];
+      return newPending;
+    });
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[key];
@@ -265,13 +379,29 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
   }, []);
 
   const validateFields = useCallback(() => {
-    if (!resourceSetting) return true; // Allow save if no settings
+    if (!resourceSetting) return true;
     const newErrors: { [key: string]: string } = {};
+
+    if (!localResource.title || localResource.title.trim() === "") {
+      newErrors.title = "Title is required";
+    }
+    if (!localResource.slug || localResource.slug.trim() === "") {
+      newErrors.slug = "Slug is required";
+    }
+    //if (!localResource.oneliner || localResource.oneliner.trim() === "") {
+    //  newErrors.oneliner = "Oneliner is required";
+    //}
 
     Object.entries(resourceSetting).forEach(([key, setting]) => {
       const value = localResource.optionsPayload[key];
-      if (!setting.optional && (value === undefined || value === "" || value === null)) {
+      const pending = pendingImageFiles[key];
+      const effectiveValue = pending !== undefined ? (pending ? pending.file : null) : value;
+
+      if (!setting.optional && (effectiveValue === undefined || effectiveValue === null)) {
         newErrors[key] = "This field is required";
+      }
+      if (setting.type === "image" && value && typeof value !== "string") {
+        newErrors[key] = "Invalid image reference";
       }
       if (
         setting.type === "string" &&
@@ -314,7 +444,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [resourceSetting, localResource.optionsPayload, contentMap]);
+  }, [resourceSetting, localResource.optionsPayload, contentMap, pendingImageFiles]);
 
   const handleSave = useCallback(async () => {
     if (!unsavedChanges || isSaving) return;
@@ -323,11 +453,66 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
     try {
       setIsSaving(true);
+
+      // First save the resource to get an ID if creating
+      let resourceId = localResource.id;
+      if (create) {
+        const response = await fetch("/api/turso/upsertResourceNode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(localResource),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to create resource: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create resource");
+        }
+        resourceId = localResource.id; // We already set it with ulid()
+      }
+
+      // Process pending images
+      const updatedOptionsPayload = { ...localResource.optionsPayload };
+
+      for (const [key, pending] of Object.entries(pendingImageFiles)) {
+        if (pending === null) {
+          // Remove image
+          updatedOptionsPayload[key] = null;
+        } else if (pending) {
+          // Upload new image
+          setProcessingImages((prev) => new Set(prev).add(key));
+          try {
+            const result = await processResourceImage(
+              pending.file,
+              resourceId,
+              localResource.title
+            );
+            if (result.success) {
+              updatedOptionsPayload[key] = result.fileId;
+            } else {
+              throw new Error(`Failed to upload image for ${key}`);
+            }
+          } finally {
+            setProcessingImages((prev) => {
+              const newSet = new Set(prev);
+              newSet.delete(key);
+              return newSet;
+            });
+          }
+        }
+      }
+
+      // Save the resource with updated options
+      const resourceToSave = { ...localResource, optionsPayload: updatedOptionsPayload };
       const response = await fetch("/api/turso/upsertResourceNode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(localResource),
+        body: JSON.stringify(resourceToSave),
       });
+
       if (!response.ok) {
         throw new Error(`Failed to save resource changes: ${response.statusText}`);
       }
@@ -337,16 +522,28 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         throw new Error(result.error || "Failed to save resource changes");
       }
 
+      // Cleanup temp URLs
+      Object.values(pendingImageFiles).forEach((pending) => {
+        if (pending && pending.tempUrl) {
+          URL.revokeObjectURL(pending.tempUrl);
+        }
+      });
+      setPendingImageFiles({});
       setUnsavedChanges(false);
+
       if (create) {
         navigate(`/storykeep/content/resources/${localResource.slug}`);
+      } else {
+        // Reload the page to ensure data accuracy
+        window.location.reload();
       }
     } catch (error) {
       console.error("Error saving resource:", error);
+      setErrors({ save: error instanceof Error ? error.message : "Failed to save resource" });
     } finally {
       setIsSaving(false);
     }
-  }, [localResource, create, unsavedChanges, isSaving, validateFields]);
+  }, [localResource, create, unsavedChanges, isSaving, validateFields, pendingImageFiles]);
 
   const handleCancel = useCallback(() => {
     if (unsavedChanges) {
@@ -369,6 +566,39 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       const type = setting ? setting.type : typeof value;
       const isRequired = setting ? !setting.optional : false;
       const errorId = errors[key] ? `error-${key}` : undefined;
+      const isProcessing = processingImages.has(key);
+
+      if (type === "image") {
+        const pending = pendingImageFiles[key];
+        const imageToShow =
+          pending !== undefined
+            ? pending
+              ? pending.tempUrl
+              : null
+            : resolvedImages[key]
+              ? resolvedImages[key]!.src
+              : null;
+
+        return (
+          <div className="space-y-2">
+            <label htmlFor={key} className="hidden text-sm font-bold text-gray-800">
+              {key}
+            </label>
+            <ResourceImageUpload
+              imageToShow={imageToShow}
+              imageSrcSet={resolvedImages[key]?.srcSet}
+              onFileSelect={(file) => handleImageChange(key, file)}
+              onRemove={() => handleImageRemove(key)}
+              isProcessing={isProcessing}
+            />
+            {errors[key] && (
+              <span id={errorId} className="text-red-600 text-sm" role="alert">
+                {errors[key]}
+              </span>
+            )}
+          </div>
+        );
+      }
 
       switch (type) {
         case "boolean":
@@ -525,7 +755,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                                   className="ml-2"
                                   style={{
                                     display: value === option.slug ? "block" : "none",
-                                    color: "#155E75", // cyan-700
+                                    color: "#155E75",
                                     fontWeight: "bold",
                                   }}
                                 >
@@ -581,6 +811,12 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       dateTimeState,
       handleDateTimeChange,
       contentMap,
+      pendingImageFiles,
+      handleImageChange,
+      handleImageRemove,
+      processingImages,
+      localResource.optionsPayload,
+      resolvedImages,
     ]
   );
 
@@ -652,7 +888,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                                   className="ml-2"
                                   style={{
                                     display: localResource.category === option ? "block" : "none",
-                                    color: "#155E75", // cyan-700
+                                    color: "#155E75",
                                     fontWeight: "bold",
                                   }}
                                 >
@@ -699,10 +935,8 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                 <div key={key} className="border rounded-lg p-4 bg-gray-50">
                   <div className="flex items-center space-x-2">
                     {resourceSetting && key in resourceSetting ? (
-                      // Render read-only key for known types
                       <span className="w-1/3 text-base text-gray-800">{key}</span>
                     ) : (
-                      // Render EditableKey for unknown types
                       <EditableKey originalKey={key} onKeyChange={handleKeyChange} />
                     )}
                     {renderOptionField(key, value)}
@@ -756,6 +990,10 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
             </div>
           </div>
 
+          {errors.save && (
+            <div className="p-4 bg-red-50 text-red-800 rounded-md">{errors.save}</div>
+          )}
+
           <div className="flex justify-end space-x-4">
             <button
               onClick={handleCancel}
@@ -766,7 +1004,12 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
             {unsavedChanges && (
               <button
                 onClick={handleSave}
-                disabled={isSaving || Object.keys(errors).length > 0}
+                disabled={
+                  isSaving ||
+                  Object.keys(errors).length > 0 ||
+                  !localResource.title ||
+                  !localResource.slug
+                }
                 className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
               >
                 {isSaving ? "Saving..." : "Save"}

@@ -11,6 +11,9 @@
     "resources": {
       "sql": "CREATE TABLE IF NOT EXISTS resources (id TEXT PRIMARY KEY, title TEXT NOT NULL, slug TEXT NOT NULL UNIQUE, category_slug TEXT, oneliner TEXT NOT NULL, options_payload TEXT NOT NULL, action_lisp TEXT)"
     },
+    "files_resource": {
+      "sql": "CREATE TABLE IF NOT EXISTS files_resource (id TEXT PRIMARY KEY, resource_id TEXT NOT NULL REFERENCES resources(id), file_id TEXT NOT NULL REFERENCES files(id), UNIQUE(resource_id, file_id))"
+    },
     "epinets": {
       "sql": "CREATE TABLE IF NOT EXISTS epinets (id TEXT PRIMARY KEY, title TEXT NOT NULL, options_payload TEXT NOT NULL)"
     },
@@ -129,6 +132,9 @@
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_has_topic_storyfragment_id ON storyfragment_has_topic(storyfragment_id)",
     "CREATE INDEX IF NOT EXISTS idx_storyfragment_has_topic_topic_id ON storyfragment_has_topic(topic_id)",
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_storyfragment_has_topic_unique ON storyfragment_has_topic(storyfragment_id, topic_id)",
-    "CREATE INDEX IF NOT EXISTS idx_storyfragment_details_storyfragment_id ON storyfragment_details(storyfragment_id)"
+    "CREATE INDEX IF NOT EXISTS idx_storyfragment_details_storyfragment_id ON storyfragment_details(storyfragment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_files_resource_resource_id ON files_resource(resource_id)",
+    "CREATE INDEX IF NOT EXISTS idx_files_resource_file_id ON files_resource(file_id)",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_files_resource_unique ON files_resource(resource_id, file_id)"
   ]
 }

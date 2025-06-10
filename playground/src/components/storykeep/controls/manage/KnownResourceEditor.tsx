@@ -587,7 +587,7 @@ export default function KnownResourceEditor({
     [unsavedChanges]
   );
 
-  const typeOptions = ["string", "boolean", "number", "date"];
+  const typeOptions = ["string", "boolean", "number", "date", "image"];
   const typeCollection = useMemo(() => createListCollection({ items: typeOptions }), []);
 
   const belongsToCategoryCollection = useMemo(
@@ -1247,6 +1247,19 @@ export default function KnownResourceEditor({
                                 </div>
                               </div>
                             )}
+                          </>
+                        )}
+
+                        {fieldDef.type === "image" && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-800">
+                                Image Field
+                              </label>
+                              <p className="text-sm text-gray-600 mt-1">
+                                This field will store a single image reference
+                              </p>
+                            </div>
                           </>
                         )}
 

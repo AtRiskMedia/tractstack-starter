@@ -1448,7 +1448,7 @@ export type PendingImageOperationsStore = {
 
 export interface ResourceSetting {
   [key: string]: {
-    type: "string" | "boolean" | "number" | "date";
+    type: "string" | "boolean" | "number" | "date" | "image";
     defaultValue?: any;
     belongsToCategory?: string;
     customValues?: string[];

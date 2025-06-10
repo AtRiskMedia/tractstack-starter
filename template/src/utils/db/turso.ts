@@ -1368,6 +1368,35 @@ export async function getAllResourcesRowData(context?: APIContext): Promise<Reso
   }
 }
 
+export async function getResourceFilesByResourceId(
+  resourceId: string,
+  context?: APIContext
+): Promise<ImageFileRowData[]> {
+  try {
+    const client = await tursoClient.getClient(context);
+    if (!client) return [];
+
+    const { rows } = await client.execute({
+      sql: `SELECT f.id, f.filename, f.alt_description, f.url, f.src_set 
+            FROM files f
+            JOIN files_resource rf ON f.id = rf.file_id
+            WHERE rf.resource_id = ?`,
+      args: [resourceId],
+    });
+
+    return rows.map((row) => ({
+      id: row.id as string,
+      filename: row.filename as string,
+      alt_description: row.alt_description as string,
+      url: row.url as string,
+      ...(row.src_set ? { src_set: row.src_set as string } : {}),
+    }));
+  } catch (error) {
+    console.error("Error fetching resource files:", error);
+    return [];
+  }
+}
+
 // Fetch Resources by Category Slug
 export async function getResourcesByCategorySlugRowData(
   categorySlug: string,
