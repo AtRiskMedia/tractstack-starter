@@ -24,7 +24,7 @@ interface KnownResourceEditorProps {
 }
 
 interface FieldDefinition {
-  type: "string" | "boolean" | "number" | "date";
+  type: "string" | "multi" | "boolean" | "number" | "date" | "image";
   defaultValue?: any;
   belongsToCategory?: string;
   customValues?: string[];
@@ -121,7 +121,7 @@ export default function KnownResourceEditor({
     Object.entries(localResourceSetting).forEach(([fieldName, fieldDef]) => {
       // Validate existing resources
       if (hasResourcesUsingCategory) {
-        if (!fieldDef.optional) {
+        if (!fieldDef.optional && fieldDef.type !== "multi") {
           const missingResources = resourcesUsingCategory.filter(
             (resource) => !(fieldName in (resource.optionsPayload || {}))
           );
@@ -137,7 +137,57 @@ export default function KnownResourceEditor({
           }
         }
 
-        if (fieldDef.type === "string") {
+        if (fieldDef.type === "multi") {
+          const invalidResources = resourcesUsingCategory.filter((resource) => {
+            const value = resource.optionsPayload?.[fieldName];
+            return value !== undefined && !Array.isArray(value);
+          });
+          if (invalidResources.length > 0) {
+            conflicts.push({
+              fieldName,
+              message: `Field "${fieldName}" must be an array in some resources`,
+              problematicResources: invalidResources.map((res) => ({
+                slug: res.slug,
+                title: res.title,
+              })),
+            });
+          }
+          if (!fieldDef.optional) {
+            const emptyResources = resourcesUsingCategory.filter((resource) => {
+              const value = resource.optionsPayload?.[fieldName];
+              return Array.isArray(value) && value.length === 0;
+            });
+            if (emptyResources.length > 0) {
+              conflicts.push({
+                fieldName,
+                message: `Field "${fieldName}" is required and must have at least one value in some resources`,
+                problematicResources: emptyResources.map((res) => ({
+                  slug: res.slug,
+                  title: res.title,
+                })),
+              });
+            }
+          }
+          if (fieldDef.maxTextLength) {
+            const exceedingResources = resourcesUsingCategory.filter((resource) => {
+              const value = resource.optionsPayload?.[fieldName];
+              return (
+                Array.isArray(value) &&
+                value.some((str: string) => str.length > fieldDef.maxTextLength!)
+              );
+            });
+            if (exceedingResources.length > 0) {
+              conflicts.push({
+                fieldName,
+                message: `Field "${fieldName}" has values exceeding max length ${fieldDef.maxTextLength} in some resources`,
+                problematicResources: exceedingResources.map((res) => ({
+                  slug: res.slug,
+                  title: res.title,
+                })),
+              });
+            }
+          }
+        } else if (fieldDef.type === "string") {
           if (fieldDef.maxTextLength) {
             const exceedingResources = resourcesUsingCategory.filter((resource) => {
               const value = resource.optionsPayload?.[fieldName];
@@ -190,9 +240,7 @@ export default function KnownResourceEditor({
               });
             }
           }
-        }
-
-        if (fieldDef.type === "number") {
+        } else if (fieldDef.type === "number") {
           const violatingResources = resourcesUsingCategory.filter((resource) => {
             const value = resource.optionsPayload?.[fieldName];
             if (typeof value !== "number") return false;
@@ -210,9 +258,7 @@ export default function KnownResourceEditor({
               })),
             });
           }
-        }
-
-        if (fieldDef.type === "boolean") {
+        } else if (fieldDef.type === "boolean") {
           const invalidTypeResources = resourcesUsingCategory.filter((resource) => {
             const value = resource.optionsPayload?.[fieldName];
             return value !== undefined && typeof value !== "boolean";
@@ -227,9 +273,7 @@ export default function KnownResourceEditor({
               })),
             });
           }
-        }
-
-        if (fieldDef.type === "date") {
+        } else if (fieldDef.type === "date") {
           const defaultValue = fieldDef.defaultValue;
           if (
             defaultValue != null &&
@@ -249,7 +293,24 @@ export default function KnownResourceEditor({
 
       // Validate defaultValue (only if defined)
       if (fieldDef.defaultValue !== undefined) {
-        if (fieldDef.type === "string") {
+        if (fieldDef.type === "multi") {
+          if (!Array.isArray(fieldDef.defaultValue)) {
+            conflicts.push({
+              fieldName,
+              message: `Default value for "${fieldName}" must be an array`,
+            });
+          } else if (
+            fieldDef.defaultValue.some(
+              (str: string) =>
+                fieldDef.maxTextLength !== undefined && str.length > fieldDef.maxTextLength
+            )
+          ) {
+            conflicts.push({
+              fieldName,
+              message: `Default value for "${fieldName}" has values exceeding max length ${fieldDef.maxTextLength}`,
+            });
+          }
+        } else if (fieldDef.type === "string") {
           if (
             fieldDef.maxTextLength &&
             typeof fieldDef.defaultValue === "string" &&
@@ -287,9 +348,7 @@ export default function KnownResourceEditor({
               });
             }
           }
-        }
-
-        if (fieldDef.type === "number") {
+        } else if (fieldDef.type === "number") {
           const value = Number(fieldDef.defaultValue);
           if (fieldDef.minNumber !== undefined && value < fieldDef.minNumber) {
             conflicts.push({
@@ -374,7 +433,7 @@ export default function KnownResourceEditor({
       setLocalResourceSetting((prev) => {
         const newFieldDef = { ...prev[fieldName], [key]: value };
         if (key === "type" && newFields.includes(fieldName)) {
-          newFieldDef.defaultValue = undefined;
+          newFieldDef.defaultValue = value === "multi" ? [] : undefined;
         }
         return {
           ...prev,
@@ -467,7 +526,19 @@ export default function KnownResourceEditor({
 
       const fieldDef = localResourceSetting[fieldName];
       if (fieldDef.defaultValue !== undefined) {
-        if (fieldDef.type === "string") {
+        if (fieldDef.type === "multi") {
+          if (!Array.isArray(fieldDef.defaultValue)) {
+            newErrors[`default_${fieldName}`] = `Default value must be an array`;
+          } else if (
+            fieldDef.defaultValue.some(
+              (str: string) =>
+                fieldDef.maxTextLength !== undefined && str.length > fieldDef.maxTextLength
+            )
+          ) {
+            newErrors[`default_${fieldName}`] =
+              `Default values exceed max length ${fieldDef.maxTextLength}`;
+          }
+        } else if (fieldDef.type === "string") {
           if (
             fieldDef.maxTextLength &&
             typeof fieldDef.defaultValue === "string" &&
@@ -498,8 +569,7 @@ export default function KnownResourceEditor({
                 `Default value is not a valid resource in category ${fieldDef.belongsToCategory}`;
             }
           }
-        }
-        if (fieldDef.type === "number") {
+        } else if (fieldDef.type === "number") {
           const value = Number(fieldDef.defaultValue);
           if (fieldDef.minNumber !== undefined && value < fieldDef.minNumber) {
             newErrors[`default_${fieldName}`] = `Default value is below min ${fieldDef.minNumber}`;
@@ -507,8 +577,7 @@ export default function KnownResourceEditor({
           if (fieldDef.maxNumber !== undefined && value > fieldDef.maxNumber) {
             newErrors[`default_${fieldName}`] = `Default value exceeds max ${fieldDef.maxNumber}`;
           }
-        }
-        if (fieldDef.type === "date" && isNaN(new Date(fieldDef.defaultValue).getTime())) {
+        } else if (fieldDef.type === "date" && isNaN(new Date(fieldDef.defaultValue).getTime())) {
           newErrors[`default_${fieldName}`] = `Default value is not a valid date`;
         }
       }
@@ -587,7 +656,7 @@ export default function KnownResourceEditor({
     [unsavedChanges]
   );
 
-  const typeOptions = ["string", "boolean", "number", "date", "image"];
+  const typeOptions = ["string", "multi", "boolean", "number", "date", "image"];
   const typeCollection = useMemo(() => createListCollection({ items: typeOptions }), []);
 
   const belongsToCategoryCollection = useMemo(
@@ -813,6 +882,7 @@ export default function KnownResourceEditor({
 
                         {/* Default Value */}
                         {(fieldDef.type === "string" ||
+                          fieldDef.type === "multi" ||
                           fieldDef.type === "number" ||
                           fieldDef.type === "boolean") && (
                           <div>
@@ -826,7 +896,35 @@ export default function KnownResourceEditor({
                             >
                               Default Value
                             </label>
-                            {fieldDef.type === "boolean" ? (
+                            {fieldDef.type === "multi" ? (
+                              <div className="mt-1">
+                                <input
+                                  type="text"
+                                  id={`defaultValue_${fieldName}`}
+                                  value={
+                                    Array.isArray(fieldDef.defaultValue)
+                                      ? fieldDef.defaultValue.join(", ")
+                                      : ""
+                                  }
+                                  onChange={(e) =>
+                                    handleFieldDefinitionChange(
+                                      fieldName,
+                                      "defaultValue",
+                                      e.target.value
+                                        ? e.target.value.split(",").map((s) => s.trim())
+                                        : []
+                                    )
+                                  }
+                                  disabled={!isFieldNameValid(fieldName)}
+                                  className={`w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm disabled:bg-gray-100 ${
+                                    errors[`default_${fieldName}`] ? "border-red-600" : ""
+                                  }`}
+                                  placeholder="Enter values separated by commas"
+                                  aria-invalid={!!errors[`default_${fieldName}`]}
+                                  aria-describedby={defaultErrorId}
+                                />
+                              </div>
+                            ) : fieldDef.type === "boolean" ? (
                               <Switch.Root
                                 checked={fieldDef.defaultValue ?? false}
                                 onCheckedChange={(details) =>
@@ -996,46 +1094,47 @@ export default function KnownResourceEditor({
                           </div>
                         )}
 
-                        {/* Optional */}
-                        {(isNewField || fieldDef.optional !== undefined) && (
-                          <div>
-                            <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                              Optional
-                              <Switch.Root
-                                checked={fieldDef.optional ?? false}
-                                onCheckedChange={(details) =>
-                                  handleFieldDefinitionChange(
-                                    fieldName,
-                                    "optional",
-                                    details.checked
-                                  )
-                                }
-                                disabled={isFieldLocked}
-                                aria-required={false}
-                                aria-invalid={false}
-                              >
-                                <Switch.Control
-                                  id={`optional_${fieldName}`}
-                                  className={`${
-                                    (fieldDef.optional ?? false) ? "bg-cyan-700" : "bg-gray-300"
-                                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+                        {/* Optional - Hidden for multi fields */}
+                        {(isNewField || fieldDef.optional !== undefined) &&
+                          fieldDef.type !== "multi" && (
+                            <div>
+                              <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                                Optional
+                                <Switch.Root
+                                  checked={fieldDef.optional ?? false}
+                                  onCheckedChange={(details) =>
+                                    handleFieldDefinitionChange(
+                                      fieldName,
+                                      "optional",
+                                      details.checked
+                                    )
+                                  }
+                                  disabled={isFieldLocked}
+                                  aria-required={false}
+                                  aria-invalid={false}
                                 >
-                                  <Switch.Thumb
+                                  <Switch.Control
+                                    id={`optional_${fieldName}`}
                                     className={`${
-                                      (fieldDef.optional ?? false)
-                                        ? "translate-x-6"
-                                        : "translate-x-1"
-                                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                                  />
-                                </Switch.Control>
-                                <Switch.HiddenInput />
-                              </Switch.Root>
-                            </label>
-                          </div>
-                        )}
+                                      (fieldDef.optional ?? false) ? "bg-cyan-700" : "bg-gray-300"
+                                    } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+                                  >
+                                    <Switch.Thumb
+                                      className={`${
+                                        (fieldDef.optional ?? false)
+                                          ? "translate-x-6"
+                                          : "translate-x-1"
+                                      } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                    />
+                                  </Switch.Control>
+                                  <Switch.HiddenInput />
+                                </Switch.Root>
+                              </label>
+                            </div>
+                          )}
 
                         {/* Validation Parameters */}
-                        {fieldDef.type === "string" && (
+                        {(fieldDef.type === "string" || fieldDef.type === "multi") && (
                           <>
                             <div>
                               <label
@@ -1066,42 +1165,44 @@ export default function KnownResourceEditor({
                                 />
                               </NumberInput.Root>
                             </div>
-                            {(isNewField || fieldDef.isUrl !== undefined) && (
-                              <div>
-                                <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
-                                  Is URL
-                                  <Switch.Root
-                                    checked={fieldDef.isUrl ?? false}
-                                    onCheckedChange={(details) =>
-                                      handleFieldDefinitionChange(
-                                        fieldName,
-                                        "isUrl",
-                                        details.checked
-                                      )
-                                    }
-                                    disabled={isFieldLocked || !isFieldNameValid(fieldName)}
-                                    aria-required={false}
-                                    aria-invalid={false}
-                                  >
-                                    <Switch.Control
-                                      id={`isUrl_${fieldName}`}
-                                      className={`${
-                                        fieldDef.isUrl ? "bg-cyan-700" : "bg-gray-300"
-                                      } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+                            {(isNewField || fieldDef.isUrl !== undefined) &&
+                              fieldDef.type === "string" && (
+                                <div>
+                                  <label className="flex items-center gap-2 text-sm font-bold text-gray-800">
+                                    Is URL
+                                    <Switch.Root
+                                      checked={fieldDef.isUrl ?? false}
+                                      onCheckedChange={(details) =>
+                                        handleFieldDefinitionChange(
+                                          fieldName,
+                                          "isUrl",
+                                          details.checked
+                                        )
+                                      }
+                                      disabled={isFieldLocked || !isFieldNameValid(fieldName)}
+                                      aria-required={false}
+                                      aria-invalid={false}
                                     >
-                                      <Switch.Thumb
+                                      <Switch.Control
+                                        id={`isUrl_${fieldName}`}
                                         className={`${
-                                          fieldDef.isUrl ? "translate-x-6" : "translate-x-1"
-                                        } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                                      />
-                                    </Switch.Control>
-                                    <Switch.HiddenInput />
-                                  </Switch.Root>
-                                </label>
-                              </div>
-                            )}
+                                          fieldDef.isUrl ? "bg-cyan-700" : "bg-gray-300"
+                                        } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-700 focus:ring-offset-2`}
+                                      >
+                                        <Switch.Thumb
+                                          className={`${
+                                            fieldDef.isUrl ? "translate-x-6" : "translate-x-1"
+                                          } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                        />
+                                      </Switch.Control>
+                                      <Switch.HiddenInput />
+                                    </Switch.Root>
+                                  </label>
+                                </div>
+                              )}
                             {availableCategories.length > 0 &&
-                              (isNewField || fieldDef.belongsToCategory) && (
+                              (isNewField || fieldDef.belongsToCategory) &&
+                              fieldDef.type === "string" && (
                                 <div>
                                   <label
                                     htmlFor={`select-belongsToCategory-${fieldName}`}

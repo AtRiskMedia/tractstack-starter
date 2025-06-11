@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useCallback, useMemo } from "react";
 import { ulid } from "ulid";
-import { cleanString } from "@/utils/common/helpers.ts";
 import type { ResourceNode, ResourceSetting } from "@/types";
 
 interface ResourceBulkIngestProps {
@@ -75,12 +75,11 @@ export default function ResourceBulkIngest({
         if (!node.slug || typeof node.slug !== "string") {
           errors.push({ index, field: "slug", message: "Slug is required and must be a string" });
         } else {
-          const cleanedSlug = cleanString(node.slug);
-          if (cleanedSlug !== node.slug) {
+          if (!/^[a-z0-9-]+$/.test(node.slug)) {
             errors.push({
               index,
               field: "slug",
-              message: `Slug must be lowercase alphanumeric with hyphens only (would be cleaned to: ${cleanedSlug})`,
+              message: "Slug must be lowercase alphanumeric characters and hyphens only",
             });
           }
           if (slugs.has(node.slug)) {
@@ -113,6 +112,39 @@ export default function ResourceBulkIngest({
 
             // Validate by type
             switch (fieldDef.type) {
+              case "multi":
+                if (!Array.isArray(value)) {
+                  errors.push({
+                    index,
+                    field: fieldName,
+                    message: `${fieldName} must be an array of strings`,
+                  });
+                } else {
+                  if (!fieldDef.optional && value.length === 0) {
+                    errors.push({
+                      index,
+                      field: fieldName,
+                      message: `${fieldName} must have at least one value`,
+                    });
+                  }
+                  value.forEach((str: any, i: number) => {
+                    if (typeof str !== "string") {
+                      errors.push({
+                        index,
+                        field: fieldName,
+                        message: `${fieldName}[${i}] must be a string`,
+                      });
+                    } else if (fieldDef.maxTextLength && str.length > fieldDef.maxTextLength) {
+                      errors.push({
+                        index,
+                        field: fieldName,
+                        message: `${fieldName}[${i}] exceeds max length of ${fieldDef.maxTextLength}`,
+                      });
+                    }
+                  });
+                  optionsPayload[fieldName] = value.filter((str: string) => str !== "");
+                }
+                break;
               case "string":
                 if (typeof value !== "string") {
                   errors.push({
@@ -141,7 +173,6 @@ export default function ResourceBulkIngest({
                   }
                 }
                 break;
-
               case "number":
                 if (typeof value !== "number") {
                   errors.push({
@@ -166,7 +197,6 @@ export default function ResourceBulkIngest({
                   }
                 }
                 break;
-
               case "boolean":
                 if (typeof value !== "boolean") {
                   errors.push({
@@ -176,7 +206,6 @@ export default function ResourceBulkIngest({
                   });
                 }
                 break;
-
               case "date":
                 // Accept either number (timestamp) or ISO string
                 if (typeof value === "string") {
@@ -205,7 +234,6 @@ export default function ResourceBulkIngest({
                   });
                 }
                 break;
-
               case "image":
                 if (typeof value !== "string") {
                   errors.push({
@@ -244,7 +272,7 @@ export default function ResourceBulkIngest({
             parentId: null,
             nodeType: "Resource",
             title: title.trim(),
-            slug: cleanString(slug),
+            slug: node.slug,
             oneliner: oneliner?.trim() || "",
             optionsPayload: processedOptionsPayload,
             category: nodeCategory || category,
@@ -294,6 +322,9 @@ export default function ResourceBulkIngest({
     if (resourceSetting) {
       Object.entries(resourceSetting).forEach(([key, def]) => {
         switch (def.type) {
+          case "multi":
+            example[key] = def.defaultValue || ["example1", "example2"];
+            break;
           case "string":
             example[key] = def.defaultValue || "example text";
             break;

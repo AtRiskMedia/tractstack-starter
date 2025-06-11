@@ -39,6 +39,8 @@ function processResourceValue(key: string, value: any, setting: ResourceSetting)
     switch (type) {
       case "string":
         return typeof value === "string" ? value : (defaultValue ?? "");
+      case "multi":
+        return Array.isArray(value) ? value : (defaultValue ?? []);
       case "boolean":
         return typeof value === "boolean" ? value : (defaultValue ?? false);
       case "number":
@@ -63,6 +65,25 @@ function processResourceValue(key: string, value: any, setting: ResourceSetting)
   return value;
 }
 
+// Standardized RemoveButton component for consistency
+const RemoveButton = ({ onClick, label }: { onClick: () => void; label: string }) => (
+  <button
+    onClick={onClick}
+    className="text-red-600 hover:text-red-800 focus:outline-none"
+    aria-label={label}
+  >
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+);
+
 const EditableKey = ({ originalKey, onKeyChange }: EditableKeyProps) => {
   const [editingKey, setEditingKey] = useState(originalKey);
 
@@ -86,9 +107,74 @@ const EditableKey = ({ originalKey, onKeyChange }: EditableKeyProps) => {
       onChange={handleKeyChange}
       onBlur={handleKeyBlur}
       pattern="[A-Za-z]+"
-      className="w-1/3 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+      className="w-full rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
       aria-label={`Edit key for ${originalKey}`}
     />
+  );
+};
+
+const MultiStringInput = ({
+  values,
+  onChange,
+  maxTextLength,
+  error,
+}: {
+  values: string[];
+  onChange: (newValues: string[]) => void;
+  maxTextLength?: number;
+  error?: string;
+}) => {
+  // Always ensure there's a trailing empty string for new input
+  const [inputs, setInputs] = useState<string[]>(() => {
+    if (values.length === 0) {
+      return [""];
+    }
+    // If the last value is not empty, add an empty string for new input
+    return values[values.length - 1] === "" ? values : [...values, ""];
+  });
+
+  const handleInputChange = (index: number, newValue: string) => {
+    const newInputs = [...inputs];
+    newInputs[index] = newValue;
+
+    // If typing in the last input and it's not empty, add a new empty input
+    if (newValue && index === inputs.length - 1) {
+      newInputs.push("");
+    }
+
+    setInputs(newInputs);
+    onChange(newInputs.filter((v) => v !== ""));
+  };
+
+  const handleRemove = (index: number) => {
+    const newInputs = inputs.filter((_, i) => i !== index);
+    // Ensure there's always at least one input (empty if needed)
+    const finalInputs = newInputs.length ? newInputs : [""];
+    setInputs(finalInputs);
+    onChange(finalInputs.filter((v) => v !== ""));
+  };
+
+  return (
+    <div className="space-y-2">
+      {inputs.map((val, idx) => (
+        <div key={idx} className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={val}
+            onChange={(e) => handleInputChange(idx, e.target.value)}
+            maxLength={maxTextLength}
+            placeholder="Enter a value"
+            className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+          />
+          {val && <RemoveButton onClick={() => handleRemove(idx)} label={`Remove value ${val}`} />}
+        </div>
+      ))}
+      {error && (
+        <span className="text-red-600 text-sm" role="alert">
+          {error}
+        </span>
+      )}
+    </div>
   );
 };
 
@@ -202,7 +288,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                 }
               }
             });
-
             setResolvedImages(resolved);
           }
         } catch (error) {
@@ -213,7 +298,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
     loadResourceImages();
   }, [create, localResource.id, localResource.optionsPayload, resourceSetting]);
 
-  // Cleanup temporary URLs
   useEffect(() => {
     return () => {
       Object.values(pendingImageFiles).forEach((pending) => {
@@ -226,25 +310,20 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
   const handleBulkSave = useCallback(async (resources: ResourceNode[]) => {
     try {
-      // Save each resource
       for (let i = 0; i < resources.length; i++) {
         const response = await fetch("/api/turso/upsertResourceNode", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(resources[i]),
         });
-
         if (!response.ok) {
           throw new Error(`Failed to save resource ${i + 1}: ${response.statusText}`);
         }
-
         const result = await response.json();
         if (!result.success) {
           throw new Error(result.error || `Failed to save resource ${i + 1}`);
         }
       }
-
-      // Success - navigate to resources list
       navigate("/storykeep/content/resources");
     } catch (error) {
       console.error("Error in bulk save:", error);
@@ -293,10 +372,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
           : value;
         return {
           ...prev,
-          optionsPayload: {
-            ...prev.optionsPayload,
-            [key]: processedValue,
-          },
+          optionsPayload: { ...prev.optionsPayload, [key]: processedValue },
         };
       });
       setErrors((prev) => {
@@ -311,11 +387,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
   const handleDateTimeChange = useCallback(
     (key: string, value: string) => {
-      setDateTimeState((prev) => ({
-        ...prev,
-        [key]: value,
-      }));
-
+      setDateTimeState((prev) => ({ ...prev, [key]: value }));
       if (value) {
         const localDate = new Date(value);
         if (!isNaN(localDate.getTime())) {
@@ -333,22 +405,14 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
   const handleImageChange = useCallback((key: string, file: File | null) => {
     setPendingImageFiles((prev) => {
-      // Cleanup old URL if exists
       if (prev[key] && prev[key] !== null) {
         URL.revokeObjectURL(prev[key]!.tempUrl);
       }
-
       if (file) {
         const tempUrl = URL.createObjectURL(file);
-        return {
-          ...prev,
-          [key]: { file, tempUrl },
-        };
+        return { ...prev, [key]: { file, tempUrl } };
       } else {
-        return {
-          ...prev,
-          [key]: null,
-        };
+        return { ...prev, [key]: null };
       }
     });
     setUnsavedChanges(true);
@@ -356,16 +420,12 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
   const handleImageRemove = useCallback(
     (key: string) => {
-      // Mark for removal
       handleOptionsPayloadChange(key, null);
       setPendingImageFiles((prev) => {
         if (prev[key] && prev[key] !== null) {
           URL.revokeObjectURL(prev[key]!.tempUrl);
         }
-        return {
-          ...prev,
-          [key]: null,
-        };
+        return { ...prev, [key]: null };
       });
       setResolvedImages((prev) => {
         const newResolved = { ...prev };
@@ -411,23 +471,27 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
   const validateFields = useCallback(() => {
     if (!resourceSetting) return true;
     const newErrors: { [key: string]: string } = {};
-
     if (!localResource.title || localResource.title.trim() === "") {
       newErrors.title = "Title is required";
     }
     if (!localResource.slug || localResource.slug.trim() === "") {
       newErrors.slug = "Slug is required";
     }
-    //if (!localResource.oneliner || localResource.oneliner.trim() === "") {
-    //  newErrors.oneliner = "Oneliner is required";
-    //}
-
     Object.entries(resourceSetting).forEach(([key, setting]) => {
       const value = localResource.optionsPayload[key];
       const pending = pendingImageFiles[key];
       const effectiveValue = pending !== undefined ? (pending ? pending.file : null) : value;
-
-      if (!setting.optional && (effectiveValue === undefined || effectiveValue === null)) {
+      if (setting.type === "multi") {
+        if (!setting.optional && (!Array.isArray(value) || value.length === 0)) {
+          newErrors[key] = "At least one value is required";
+        }
+        if (setting.maxTextLength && Array.isArray(value)) {
+          const exceeding = value.filter((str: string) => str.length > setting.maxTextLength!);
+          if (exceeding.length) {
+            newErrors[key] = `Each value must be under ${setting.maxTextLength} characters`;
+          }
+        }
+      } else if (!setting.optional && (effectiveValue === undefined || effectiveValue === null)) {
         newErrors[key] = "This field is required";
       }
       if (setting.type === "image" && value && typeof value !== "string") {
@@ -471,7 +535,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         }
       }
     });
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }, [resourceSetting, localResource.optionsPayload, contentMap, pendingImageFiles]);
@@ -480,11 +543,8 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
     if (!unsavedChanges || isSaving) return;
     const isValid = validateFields();
     if (!isValid) return;
-
     try {
       setIsSaving(true);
-
-      // First save the resource to get an ID if creating
       let resourceId = localResource.id;
       if (create) {
         const response = await fetch("/api/turso/upsertResourceNode", {
@@ -492,27 +552,20 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(localResource),
         });
-
         if (!response.ok) {
           throw new Error(`Failed to create resource: ${response.statusText}`);
         }
-
         const result = await response.json();
         if (!result.success) {
           throw new Error(result.error || "Failed to create resource");
         }
-        resourceId = localResource.id; // We already set it with ulid()
+        resourceId = localResource.id;
       }
-
-      // Process pending images
       const updatedOptionsPayload = { ...localResource.optionsPayload };
-
       for (const [key, pending] of Object.entries(pendingImageFiles)) {
         if (pending === null) {
-          // Remove image
           updatedOptionsPayload[key] = null;
         } else if (pending) {
-          // Upload new image
           setProcessingImages((prev) => new Set(prev).add(key));
           try {
             const result = await processResourceImage(
@@ -534,25 +587,19 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
           }
         }
       }
-
-      // Save the resource with updated options
       const resourceToSave = { ...localResource, optionsPayload: updatedOptionsPayload };
       const response = await fetch("/api/turso/upsertResourceNode", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(resourceToSave),
       });
-
       if (!response.ok) {
         throw new Error(`Failed to save resource changes: ${response.statusText}`);
       }
-
       const result = await response.json();
       if (!result.success) {
         throw new Error(result.error || "Failed to save resource changes");
       }
-
-      // Cleanup temp URLs
       Object.values(pendingImageFiles).forEach((pending) => {
         if (pending && pending.tempUrl) {
           URL.revokeObjectURL(pending.tempUrl);
@@ -560,11 +607,9 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       });
       setPendingImageFiles({});
       setUnsavedChanges(false);
-
       if (create) {
         navigate(`/storykeep/content/resources/${localResource.slug}`);
       } else {
-        // Reload the page to ensure data accuracy
         window.location.reload();
       }
     } catch (error) {
@@ -608,9 +653,8 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
             : resolvedImages[key]
               ? resolvedImages[key]!.src
               : null;
-
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <label htmlFor={key} className="hidden text-sm font-bold text-gray-800">
               {key}
             </label>
@@ -631,6 +675,15 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       }
 
       switch (type) {
+        case "multi":
+          return (
+            <MultiStringInput
+              values={Array.isArray(value) ? value : []}
+              onChange={(newValues) => handleOptionsPayloadChange(key, newValues)}
+              maxTextLength={setting?.maxTextLength}
+              error={errors[key]}
+            />
+          );
         case "boolean":
           return (
             <Switch.Root
@@ -658,7 +711,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         case "date": {
           const dateTime = dateTimeState[key] || "";
           return (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <label htmlFor={key} className="hidden text-sm font-bold text-gray-800">
                 {key}
               </label>
@@ -684,7 +737,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
           const numericValue =
             typeof value === "number" ? value : Number(setting?.defaultValue) || 0;
           return (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <label htmlFor={key} className="hidden text-sm font-bold text-gray-800">
                 {key}
               </label>
@@ -748,7 +801,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                   aria-describedby={errorId}
                   className="w-full"
                 >
-                  <Select.Control className="w-full max-w-96">
+                  <Select.Control className="w-full">
                     <Select.Trigger className="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm">
                       <Select.ValueText placeholder={`Select ${key}`}>
                         {options.find((opt) => opt.slug === value)?.title || `Select ${key}`}
@@ -810,7 +863,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
           }
         default:
           return (
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <label htmlFor={key} className="hidden text-sm font-bold text-gray-800">
                 {key}
               </label>
@@ -856,7 +909,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Resource" : "Edit Resource"}
         </h3>
-
         <div className="space-y-6 max-w-screen-xl mx-auto">
           {isBulkMode ? (
             <ResourceBulkIngest
@@ -876,7 +928,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                     <input
                       type="text"
                       id={field}
-                      disabled={!create}
+                      disabled={field !== `title` && !create}
                       value={localResource[field as keyof ResourceNode] || ""}
                       onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
                       className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
@@ -895,7 +947,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                       collection={categoryCollection}
                       className="w-full"
                     >
-                      <Select.Control className="w-full max-w-96">
+                      <Select.Control className="w-full">
                         <Select.Trigger className="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm">
                           <Select.ValueText placeholder="Select category" />
                         </Select.Trigger>
@@ -969,44 +1021,28 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
                     />
                   </div>
                 ))}
-
                 <div className="space-y-4">
                   <h4 className="text-lg font-bold text-gray-800">Options Payload</h4>
                   {Object.entries(localResource?.optionsPayload || {}).map(([key, value]) => (
                     <div key={key} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex items-center space-x-2">
-                        {resourceSetting && key in resourceSetting ? (
-                          <span className="w-1/3 text-base text-gray-800">{key}</span>
-                        ) : (
-                          <EditableKey originalKey={key} onKeyChange={handleKeyChange} />
-                        )}
-                        {renderOptionField(key, value)}
+                      <div className="flex items-center space-x-2 w-full">
+                        <div className="w-1/3">
+                          {resourceSetting && key in resourceSetting ? (
+                            <span className="text-base text-gray-800">{key}</span>
+                          ) : (
+                            <EditableKey originalKey={key} onKeyChange={handleKeyChange} />
+                          )}
+                        </div>
+                        <div className="flex-grow">{renderOptionField(key, value)}</div>
                         {(!resourceSetting || !(key in resourceSetting)) && (
-                          <button
+                          <RemoveButton
                             onClick={() => handleRemoveOptionPayloadField(key)}
-                            className="text-gray-500 hover:text-gray-700"
-                            aria-label={`Remove ${key} field`}
-                          >
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              aria-hidden="true"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
+                            label={`Remove ${key} field`}
+                          />
                         )}
                       </div>
                     </div>
                   ))}
-
                   <button
                     onClick={handleAddOptionPayloadField}
                     className="flex items-center text-cyan-700 hover:text-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
@@ -1032,7 +1068,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
               </div>
             </>
           )}
-
           {errors.save && (
             <div className="p-4 bg-red-50 text-red-800 rounded-md">{errors.save}</div>
           )}
@@ -1046,7 +1081,6 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
               </button>
             </div>
           )}
-
           <div className="flex justify-end space-x-4">
             <button
               onClick={handleCancel}
