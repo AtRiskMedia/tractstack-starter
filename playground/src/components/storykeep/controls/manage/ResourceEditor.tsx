@@ -6,6 +6,7 @@ import { createListCollection } from "@ark-ui/react/select";
 import { ulid } from "ulid";
 import { cleanString } from "@/utils/common/helpers.ts";
 import ResourceImageUpload from "./ResourceImageUpload";
+import ResourceBulkIngest from "./ResourceBulkIngest";
 import { processResourceImage } from "@/utils/images/processResourceImage";
 import { getResourceSetting, getKnownResources } from "@/utils/storykeep/resourceHelpers.ts";
 import type {
@@ -115,6 +116,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       altDescription: string;
     } | null;
   }>({});
+  const [isBulkMode, setIsBulkMode] = useState(false);
 
   useEffect(() => {
     const loadKnownResources = async () => {
@@ -221,6 +223,34 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
       });
     };
   }, [pendingImageFiles]);
+
+  const handleBulkSave = useCallback(async (resources: ResourceNode[]) => {
+    try {
+      // Save each resource
+      for (let i = 0; i < resources.length; i++) {
+        const response = await fetch("/api/turso/upsertResourceNode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(resources[i]),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to save resource ${i + 1}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || `Failed to save resource ${i + 1}`);
+        }
+      }
+
+      // Success - navigate to resources list
+      navigate("/storykeep/content/resources");
+    } catch (error) {
+      console.error("Error in bulk save:", error);
+      throw error;
+    }
+  }, []);
 
   const handleChange = useCallback((field: keyof ResourceNode, value: any) => {
     setLocalResource((prev) => {
@@ -826,172 +856,195 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
         <h3 className="font-bold font-action text-xl mb-4">
           {create ? "Create Resource" : "Edit Resource"}
         </h3>
+
         <div className="space-y-6 max-w-screen-xl mx-auto">
-          <div className="grid grid-cols-1 gap-4">
-            {["title", "slug"].map((field) => (
-              <div key={field}>
-                <label htmlFor={field} className="block text-sm font-bold text-gray-800">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-                <input
-                  type="text"
-                  id={field}
-                  disabled={!create}
-                  value={localResource[field as keyof ResourceNode] || ""}
-                  onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
-                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-                />
-              </div>
-            ))}
-            <div>
-              <label htmlFor="category" className="block text-sm font-bold text-gray-800">
-                Category
-              </label>
-              {create ? (
-                <Select.Root
-                  id="category"
-                  value={[localResource.category || ""]}
-                  onValueChange={(details) => handleChange("category", details.value[0])}
-                  collection={categoryCollection}
-                  className="w-full"
-                >
-                  <Select.Control className="w-full max-w-96">
-                    <Select.Trigger className="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm">
-                      <Select.ValueText placeholder="Select category" />
-                    </Select.Trigger>
-                    <Select.ClearTrigger className="ml-2 px-2 py-1 text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700">
-                      Clear
-                    </Select.ClearTrigger>
-                  </Select.Control>
-                  <Portal>
-                    <Select.Positioner>
-                      <Select.Content
-                        className="bg-white border border-gray-300 rounded-md shadow-lg z-50"
-                        style={{
-                          width: "var(--trigger-width)",
-                          minWidth: "200px",
-                          maxWidth: "400px",
-                        }}
-                      >
-                        <Select.ItemGroup>
-                          {Object.keys(knownResources).map((option) => (
-                            <Select.Item
-                              key={option}
-                              item={option}
-                              className="p-2 hover:bg-cyan-100 cursor-pointer"
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <Select.ItemText className="text-gray-800 truncate">
-                                  {option}
-                                </Select.ItemText>
-                                <Select.ItemIndicator
-                                  className="ml-2"
-                                  style={{
-                                    display: localResource.category === option ? "block" : "none",
-                                    color: "#155E75",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  ✓
-                                </Select.ItemIndicator>
-                              </div>
-                            </Select.Item>
-                          ))}
-                        </Select.ItemGroup>
-                      </Select.Content>
-                    </Select.Positioner>
-                  </Portal>
-                  <Select.HiddenSelect />
-                </Select.Root>
-              ) : (
-                <input
-                  type="text"
-                  id="category"
-                  value={localResource.category || ""}
-                  disabled
-                  className="mt-1 block w-full p-2 rounded-md border-gray-300 bg-gray-100 sm:text-sm"
-                  aria-disabled="true"
-                />
-              )}
-            </div>
-            {["oneliner"].map((field) => (
-              <div key={field}>
-                <label htmlFor={field} className="block text-sm font-bold text-gray-800">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-                <input
-                  type="text"
-                  id={field}
-                  value={localResource[field as keyof ResourceNode] || ""}
-                  onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
-                  className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
-                />
-              </div>
-            ))}
-
-            <div className="space-y-4">
-              <h4 className="text-lg font-bold text-gray-800">Options Payload</h4>
-              {Object.entries(localResource?.optionsPayload || {}).map(([key, value]) => (
-                <div key={key} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center space-x-2">
-                    {resourceSetting && key in resourceSetting ? (
-                      <span className="w-1/3 text-base text-gray-800">{key}</span>
-                    ) : (
-                      <EditableKey originalKey={key} onKeyChange={handleKeyChange} />
-                    )}
-                    {renderOptionField(key, value)}
-                    {(!resourceSetting || !(key in resourceSetting)) && (
-                      <button
-                        onClick={() => handleRemoveOptionPayloadField(key)}
-                        className="text-gray-500 hover:text-gray-700"
-                        aria-label={`Remove ${key} field`}
-                      >
-                        <svg
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    )}
+          {isBulkMode ? (
+            <ResourceBulkIngest
+              category={localResource.category || ""}
+              resourceSetting={resourceSetting}
+              onSave={handleBulkSave}
+              onCancel={() => setIsBulkMode(false)}
+            />
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4">
+                {["title", "slug"].map((field) => (
+                  <div key={field}>
+                    <label htmlFor={field} className="block text-sm font-bold text-gray-800">
+                      {field.charAt(0).toUpperCase() + field.slice(1)}
+                    </label>
+                    <input
+                      type="text"
+                      id={field}
+                      disabled={!create}
+                      value={localResource[field as keyof ResourceNode] || ""}
+                      onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
+                      className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                    />
                   </div>
+                ))}
+                <div>
+                  <label htmlFor="category" className="block text-sm font-bold text-gray-800">
+                    Category
+                  </label>
+                  {create ? (
+                    <Select.Root
+                      id="category"
+                      value={[localResource.category || ""]}
+                      onValueChange={(details) => handleChange("category", details.value[0])}
+                      collection={categoryCollection}
+                      className="w-full"
+                    >
+                      <Select.Control className="w-full max-w-96">
+                        <Select.Trigger className="w-full p-2 rounded-md border border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm">
+                          <Select.ValueText placeholder="Select category" />
+                        </Select.Trigger>
+                        <Select.ClearTrigger className="ml-2 px-2 py-1 text-sm text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-700">
+                          Clear
+                        </Select.ClearTrigger>
+                      </Select.Control>
+                      <Portal>
+                        <Select.Positioner>
+                          <Select.Content
+                            className="bg-white border border-gray-300 rounded-md shadow-lg z-50"
+                            style={{
+                              width: "var(--trigger-width)",
+                              minWidth: "200px",
+                              maxWidth: "400px",
+                            }}
+                          >
+                            <Select.ItemGroup>
+                              {Object.keys(knownResources).map((option) => (
+                                <Select.Item
+                                  key={option}
+                                  item={option}
+                                  className="p-2 hover:bg-cyan-100 cursor-pointer"
+                                >
+                                  <div className="flex items-center justify-between w-full">
+                                    <Select.ItemText className="text-gray-800 truncate">
+                                      {option}
+                                    </Select.ItemText>
+                                    <Select.ItemIndicator
+                                      className="ml-2"
+                                      style={{
+                                        display:
+                                          localResource.category === option ? "block" : "none",
+                                        color: "#155E75",
+                                        fontWeight: "bold",
+                                      }}
+                                    >
+                                      ✓
+                                    </Select.ItemIndicator>
+                                  </div>
+                                </Select.Item>
+                              ))}
+                            </Select.ItemGroup>
+                          </Select.Content>
+                        </Select.Positioner>
+                      </Portal>
+                      <Select.HiddenSelect />
+                    </Select.Root>
+                  ) : (
+                    <input
+                      type="text"
+                      id="category"
+                      value={localResource.category || ""}
+                      disabled
+                      className="mt-1 block w-full p-2 rounded-md border-gray-300 bg-gray-100 sm:text-sm"
+                      aria-disabled="true"
+                    />
+                  )}
                 </div>
-              ))}
+                {["oneliner"].map((field) => (
+                  <div key={field}>
+                    <label htmlFor={field} className="block text-sm font-bold text-gray-800">
+                      {field.charAt(0).toUpperCase() + field.slice(1)}
+                    </label>
+                    <input
+                      type="text"
+                      id={field}
+                      value={localResource[field as keyof ResourceNode] || ""}
+                      onChange={(e) => handleChange(field as keyof ResourceNode, e.target.value)}
+                      className="mt-1 block w-full p-2 rounded-md border-gray-300 shadow-sm focus:border-cyan-700 focus:ring-cyan-700 sm:text-sm"
+                    />
+                  </div>
+                ))}
 
-              <button
-                onClick={handleAddOptionPayloadField}
-                className="flex items-center text-cyan-700 hover:text-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                aria-label="Add new field"
-              >
-                <svg
-                  className="h-5 w-5 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Field
-              </button>
-            </div>
-          </div>
+                <div className="space-y-4">
+                  <h4 className="text-lg font-bold text-gray-800">Options Payload</h4>
+                  {Object.entries(localResource?.optionsPayload || {}).map(([key, value]) => (
+                    <div key={key} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center space-x-2">
+                        {resourceSetting && key in resourceSetting ? (
+                          <span className="w-1/3 text-base text-gray-800">{key}</span>
+                        ) : (
+                          <EditableKey originalKey={key} onKeyChange={handleKeyChange} />
+                        )}
+                        {renderOptionField(key, value)}
+                        {(!resourceSetting || !(key in resourceSetting)) && (
+                          <button
+                            onClick={() => handleRemoveOptionPayloadField(key)}
+                            className="text-gray-500 hover:text-gray-700"
+                            aria-label={`Remove ${key} field`}
+                          >
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <button
+                    onClick={handleAddOptionPayloadField}
+                    className="flex items-center text-cyan-700 hover:text-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    aria-label="Add new field"
+                  >
+                    <svg
+                      className="h-5 w-5 mr-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    Add Field
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
           {errors.save && (
             <div className="p-4 bg-red-50 text-red-800 rounded-md">{errors.save}</div>
+          )}
+          {create && (
+            <div className="mb-4">
+              <button
+                onClick={() => setIsBulkMode(!isBulkMode)}
+                className="px-4 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+                {isBulkMode ? "Single Entry Mode" : "Bulk Ingest"}
+              </button>
+            </div>
           )}
 
           <div className="flex justify-end space-x-4">
