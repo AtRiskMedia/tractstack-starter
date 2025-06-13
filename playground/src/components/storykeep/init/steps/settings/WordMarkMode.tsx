@@ -43,10 +43,7 @@ export default function WordMarkMode({ value, onChange }: WordMarkModeProps) {
   return (
     <div className="space-y-4">
       <style>{radioGroupStyles}</style>
-      <RadioGroup.Root
-        defaultValue={value}
-        onValueChange={(details) => onChange(details.value || "")}
-      >
+      <RadioGroup.Root value={value} onValueChange={(details) => onChange(details.value || "")}>
         <div className="space-y-2">
           {modes.map((mode) => (
             <RadioGroup.Item
