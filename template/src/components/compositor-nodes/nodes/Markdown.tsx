@@ -4,7 +4,12 @@ import { viewportKeyStore } from "@/store/storykeep.ts";
 import { RenderChildren } from "@/components/compositor-nodes/nodes/RenderChildren.tsx";
 import { GhostInsertBlock } from "./GhostInsertBlock";
 import { type NodeProps } from "@/types";
-import type { MarkdownPaneFragmentNode, ParentClassesPayload } from "@/types.ts";
+import type {
+  MarkdownPaneFragmentNode,
+  ParentClassesPayload,
+  BgImageNode,
+  ArtpackImageNode,
+} from "@/types.ts";
 
 export const Markdown = (props: NodeProps) => {
   const id = props.nodeId;
@@ -29,16 +34,91 @@ export const Markdown = (props: NodeProps) => {
     };
   }, []);
 
+  // Check for positioned background image
+  const allNodes = getCtx(props).allNodes.get();
+  const parentPaneId = node.parentId;
+  const bgNode = parentPaneId
+    ? (() => {
+        const childNodeIds = getCtx(props).getChildNodeIDs(parentPaneId);
+        return childNodeIds
+          .map((id) => allNodes.get(id))
+          .find(
+            (n) =>
+              n?.nodeType === "BgPane" &&
+              "type" in n &&
+              (n.type === "background-image" || n.type === "artpack-image") &&
+              "position" in n &&
+              (n.position === "left" || n.position === "right")
+          ) as (BgImageNode | ArtpackImageNode) | undefined;
+      })()
+    : undefined;
+
+  // Helper function for size styles - NO MODIFIERS needed since React rerenders on viewport change
+  function getSizeClasses(size: string, side: "image" | "content", viewport: string): string {
+    // Mobile always gets full width (stacked layout)
+    if (viewport === "mobile") {
+      return "w-full";
+    }
+
+    // Desktop/tablet get fractional widths
+    switch (size) {
+      case "narrow":
+        return side === "image" ? "w-1/3" : "w-2/3";
+      case "wide":
+        return side === "image" ? "w-2/3" : "w-1/3";
+      default: // "equal"
+        return "w-1/2";
+    }
+  }
+
+  const useFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
+
+  // Set flex direction based on currentViewport
+  const flexDirection =
+    currentViewport === "mobile"
+      ? "flex-col"
+      : bgNode?.position === "right"
+        ? "flex-row-reverse"
+        : "flex-row";
+
   let nodesToRender = (
     <>
-      <RenderChildren children={children} nodeProps={props} />
-      {!isPreview && [`text`, `insert`].includes(toolModeVal) && (
-        <GhostInsertBlock
-          nodeId={props.nodeId}
-          ctx={props.ctx}
-          isEmpty={isEmpty}
-          lastChildId={lastChildId}
-        />
+      {useFlexLayout ? (
+        <div
+          className={`flex flex-nowrap justify-center items-center gap-6 md:gap-10 xl:gap-12 ${flexDirection}`}
+        >
+          {/* Image Side - NO MODIFIERS because React rerenders on viewport change */}
+          <div
+            className={`relative overflow-hidden ${getSizeClasses(bgNode.size || "equal", "image", currentViewport)}`}
+          >
+            <RenderChildren children={[bgNode.id]} nodeProps={props} />
+          </div>
+
+          {/* Content Side - NO MODIFIERS because React rerenders on viewport change */}
+          <div className={getSizeClasses(bgNode.size || "equal", "content", currentViewport)}>
+            <RenderChildren children={children} nodeProps={props} />
+            {!isPreview && [`text`, `insert`].includes(toolModeVal) && (
+              <GhostInsertBlock
+                nodeId={props.nodeId}
+                ctx={props.ctx}
+                isEmpty={isEmpty}
+                lastChildId={lastChildId}
+              />
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <RenderChildren children={children} nodeProps={props} />
+          {!isPreview && [`text`, `insert`].includes(toolModeVal) && (
+            <GhostInsertBlock
+              nodeId={props.nodeId}
+              ctx={props.ctx}
+              isEmpty={isEmpty}
+              lastChildId={lastChildId}
+            />
+          )}
+        </>
       )}
     </>
   );

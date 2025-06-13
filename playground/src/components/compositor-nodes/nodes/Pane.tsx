@@ -36,22 +36,22 @@ const CodeHookContainer = ({
   </div>
 );
 
-// Helper function for inline size styles
-function getSizeStyles(size: string, side: "image" | "content", viewport: string): CSSProperties {
-  const isMobile = viewport === "mobile"; // Treat mobile as 768px or less
-  return {
-    width: isMobile
-      ? "100%"
-      : size === "narrow"
-        ? side === "image"
-          ? "30%"
-          : "70%"
-        : size === "wide"
-          ? side === "image"
-            ? "70%"
-            : "30%"
-          : "50%", // equal
-  };
+// Helper function for size classes - NO MODIFIERS needed since React rerenders on viewport change
+function getSizeClasses(size: string, side: "image" | "content", viewport: string): string {
+  // Mobile always gets full width (stacked layout)
+  if (viewport === "mobile") {
+    return "w-full";
+  }
+
+  // Desktop/tablet get fractional widths
+  switch (size) {
+    case "narrow":
+      return side === "image" ? "w-1/3" : "w-2/3";
+    case "wide":
+      return side === "image" ? "w-2/3" : "w-1/3";
+    default: // "equal"
+      return "w-1/2";
+  }
 }
 
 const Pane = memo(
@@ -103,13 +103,15 @@ const Pane = memo(
       ) as (BgImageNode | ArtpackImageNode) | undefined;
 
     // Check if we should use flexbox layout
-    const useFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
+    const useFlexLayout =
+      bgNode && (bgNode.position === "leftBleed" || bgNode.position === "rightBleed");
+    const deferFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
 
     // Set flex direction based on currentViewport
     const flexDirection =
       currentViewport === "mobile"
         ? "flex-col"
-        : bgNode?.position === "right"
+        : bgNode?.position === "rightBleed"
           ? "flex-row-reverse"
           : "flex-row";
 
@@ -147,8 +149,7 @@ const Pane = memo(
             >
               {/* Image Side */}
               <div
-                className="relative overflow-hidden"
-                style={getSizeStyles(bgNode.size || "equal", "image", currentViewport)}
+                className={`relative overflow-hidden ${getSizeClasses(bgNode.size || "equal", "image", currentViewport)}`}
               >
                 <RenderChildren
                   children={children.filter((id) => {
@@ -162,11 +163,8 @@ const Pane = memo(
 
               {/* Content Side */}
               <div
-                className={contentClasses}
-                style={{
-                  ...getCtx(props).getNodeCSSPropertiesStyles(props.nodeId),
-                  ...getSizeStyles(bgNode.size || "equal", "content", currentViewport),
-                }}
+                className={`${contentClasses} ${getSizeClasses(bgNode.size || "equal", "content", currentViewport)}`}
+                style={getCtx(props).getNodeCSSPropertiesStyles(props.nodeId)}
                 onClick={(e) => {
                   getCtx(props).setClickedNodeId(props.nodeId, true);
                   e.stopPropagation();
@@ -181,6 +179,34 @@ const Pane = memo(
                   key={`content-children-${props.nodeId}-${renderCount}`}
                 />
               </div>
+            </div>
+          ) : deferFlexLayout ? (
+            // Current Grid Layout (default)
+            <div
+              className={contentClasses}
+              style={contentStyles}
+              onClick={(e) => {
+                if (
+                  !(
+                    codeHookPayload &&
+                    typeof codeHookTarget === "string" &&
+                    ["list-content", "featured-content", "bunny-video"].includes(codeHookTarget)
+                  )
+                )
+                  getCtx(props).setClickedNodeId(props.nodeId, true);
+                e.stopPropagation();
+              }}
+            >
+              <RenderChildren
+                children={children.filter((id) => {
+                  const node = allNodes.get(id);
+                  return node?.nodeType !== "BgPane";
+                })}
+                nodeProps={props}
+                key={`content-children-${props.nodeId}-${renderCount}`}
+              />
+
+              {$showAnalytics ? <PaneAnalyticsPanel nodeId={props.nodeId} /> : null}
             </div>
           ) : (
             // Current Grid Layout (default)

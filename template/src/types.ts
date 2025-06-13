@@ -826,7 +826,7 @@ export interface BgImageNode extends PaneFragmentNode {
   srcSet?: string;
   alt?: string;
   objectFit: "cover" | "contain" | "fill";
-  position?: "background" | "left" | "right";
+  position?: "background" | "left" | "right" | "leftBleed" | "rightBleed";
   size?: "equal" | "narrow" | "wide";
 }
 export interface ArtpackImageNode extends PaneFragmentNode {
@@ -837,7 +837,7 @@ export interface ArtpackImageNode extends PaneFragmentNode {
   srcSet?: string;
   alt?: string;
   objectFit: "cover" | "contain" | "fill";
-  position?: "background" | "left" | "right";
+  position?: "background" | "left" | "right" | "leftBleed" | "rightBleed";
   size?: "equal" | "narrow" | "wide";
 }
 

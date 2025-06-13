@@ -52,7 +52,9 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
     ctx.modifyNodes([updatedPaneNode]);
   };
 
-  const handlePositionChange = (newPosition: "background" | "left" | "right") => {
+  const handlePositionChange = (
+    newPosition: "background" | "left" | "right" | "leftBleed" | "rightBleed"
+  ) => {
     if (!bgNode) return;
     const updatedBgNode = cloneDeep(bgNode);
     updatedBgNode.position = newPosition;
@@ -106,7 +108,7 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
           <div className="space-y-2">
             <label className="block text-sm font-bold text-gray-700">Position</label>
             <div className="flex space-x-4">
-              {(["background", "left", "right"] as const).map((pos) => (
+              {(["background", "left", "right", "leftBleed", "rightBleed"] as const).map((pos) => (
                 <label key={pos} className="inline-flex items-center">
                   <input
                     type="radio"
@@ -139,10 +141,10 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
                     />
                     <span className="ml-2 text-sm text-gray-700 capitalize">
                       {s === "narrow"
-                        ? "Narrow (30%)"
+                        ? "Narrow (1/3)"
                         : s === "wide"
-                          ? "Wide (70%)"
-                          : "Equal (50%)"}
+                          ? "Wide (2/3)"
+                          : "Equal (1/2)"}
                     </span>
                   </label>
                 ))}

@@ -48,26 +48,24 @@ const bgNode = childNodeIds
       (node.type === "background-image" || node.type === "artpack-image")
   ) as (BgImageNode | ArtpackImageNode) | undefined;
 
-// Helper function for inline size styles
-function getSizeStyles(size: string, side: string) {
+// Helper function for size classes - MUST USE RESPONSIVE MODIFIERS because Astro is static
+function getSizeClasses(size: string, side: string): string {
   switch (size) {
     case "narrow":
-      return side === "image"
-        ? "width: 100%; @media (min-width: 768px) { width: 30%; }"
-        : "width: 100%; @media (min-width: 768px) { width: 70%; }";
+      return side === "image" ? "w-full md:w-1/3" : "w-full md:w-2/3";
     case "wide":
-      return side === "image"
-        ? "width: 100%; @media (min-width: 768px) { width: 70%; }"
-        : "width: 100%; @media (min-width: 768px) { width: 30%; }";
+      return side === "image" ? "w-full md:w-2/3" : "w-full md:w-1/3";
     default: // "equal"
-      return "width: 100%; @media (min-width: 768px) { width: 50%; }";
+      return "w-full md:w-1/2";
   }
 }
 
 // Check if we should use flexbox layout
-const useFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
+const useFlexLayout =
+  bgNode && (bgNode.position === "leftBleed" || bgNode.position === "rightBleed");
+const deferFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
 const flexDirection =
-  bgNode?.position === "right" ? "flex-col md:flex-row-reverse" : "flex-col md:flex-row";
+  bgNode?.position === "rightBleed" ? "flex-col md:flex-row-reverse" : "flex-col md:flex-row";
 ---
 
 <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`} style="position: relative;">
@@ -95,10 +93,7 @@ const flexDirection =
         id={slug}
         class={`flex flex-nowrap ${flexDirection} ${getCtx().getNodeClasses(nodeId, `auto`)}`}
       >
-        <div
-          class="relative overflow-hidden"
-          style={getSizeStyles(bgNode.size || "equal", "image")}
-        >
+        <div class={`relative overflow-hidden ${getSizeClasses(bgNode.size || "equal", "image")}`}>
           {getCtx()
             .getChildNodeIDs(nodeId)
             .filter((childId: string) => {
@@ -111,9 +106,23 @@ const flexDirection =
         </div>
 
         <div
-          class={contentClasses}
-          style={`${getCtx().getNodeStringStyles(nodeId)}; ${getSizeStyles(bgNode.size || "equal", "content")}`}
+          class={`${contentClasses} ${getSizeClasses(bgNode.size || "equal", "content")}`}
+          style={getCtx().getNodeStringStyles(nodeId)}
         >
+          {getCtx()
+            .getChildNodeIDs(nodeId)
+            .filter((childId: string) => {
+              const node = allNodes.get(childId);
+              return node?.nodeType !== "BgPane";
+            })
+            .map((childId: string) => (
+              <Node nodeId={childId} />
+            ))}
+        </div>
+      </div>
+    ) : deferFlexLayout ? (
+      <div id={slug} class={wrapperClasses}>
+        <div class={contentClasses} style={contentStyles}>
           {getCtx()
             .getChildNodeIDs(nodeId)
             .filter((childId: string) => {

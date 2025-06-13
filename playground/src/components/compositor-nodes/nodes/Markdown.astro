@@ -1,11 +1,49 @@
 ---
 import Node from "@/components/compositor-nodes/Node.astro";
 import { getCtx } from "@/store/nodes.ts";
-import type { MarkdownPaneFragmentNode } from "@/types.ts";
+import type { MarkdownPaneFragmentNode, BgImageNode, ArtpackImageNode } from "@/types.ts";
 
 const { nodeId, depth = 0 } = Astro.props;
 const node = getCtx().allNodes.get().get(nodeId) as MarkdownPaneFragmentNode;
 const parentCss = (node?.parentCss as string[]) || [];
+
+// Check for positioned background image
+const allNodes = getCtx().allNodes.get();
+const parentPaneId = node.parentId;
+const bgNode = parentPaneId
+  ? (() => {
+      const childNodeIds = getCtx().getChildNodeIDs(parentPaneId);
+      return childNodeIds
+        .map((id) => allNodes.get(id))
+        .find(
+          (n) =>
+            n?.nodeType === "BgPane" &&
+            "type" in n &&
+            (n.type === "background-image" || n.type === "artpack-image") &&
+            "position" in n &&
+            (n.position === "left" || n.position === "right")
+        ) as (BgImageNode | ArtpackImageNode) | undefined;
+    })()
+  : undefined;
+
+// Helper function for size classes - MUST USE RESPONSIVE MODIFIERS in Astro
+function getSizeClasses(size: string, side: string): string {
+  switch (size) {
+    case "narrow":
+      return side === "image" ? "w-full md:w-1/3" : "w-full md:w-2/3";
+    case "wide":
+      return side === "image" ? "w-full md:w-2/3" : "w-full md:w-1/3";
+    default: // "equal"
+      return "w-full md:w-1/2";
+  }
+}
+
+const useFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
+const flexDirection =
+  bgNode?.position === "right" ? "flex-col md:flex-row-reverse" : "flex-col md:flex-row";
+
+// Build content nodes - everything except BgPane
+const contentNodes = getCtx().getChildNodeIDs(nodeId);
 ---
 
 {
@@ -15,11 +53,27 @@ const parentCss = (node?.parentCss as string[]) || [];
     </div>
   ) : (
     <div style="position: relative; z-index: 10;">
-      {getCtx()
-        .getChildNodeIDs(nodeId)
-        .map((x) => (
-          <Node nodeId={x} />
-        ))}
+      {useFlexLayout ? (
+        <div
+          class={`flex flex-nowrap justify-center items-center gap-6 md:gap-10 xl:gap-12 ${flexDirection}`}
+        >
+          {/* Image Side - MUST USE RESPONSIVE MODIFIERS because Astro is static */}
+          <div
+            class={`relative overflow-hidden ${getSizeClasses(bgNode.size || "equal", "image")}`}
+          >
+            <Node nodeId={bgNode.id} />
+          </div>
+
+          {/* Content Side - MUST USE RESPONSIVE MODIFIERS because Astro is static */}
+          <div class={`${getSizeClasses(bgNode.size || "equal", "content")}`}>
+            {contentNodes.map((x) => (
+              <Node nodeId={x} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        contentNodes.map((x) => <Node nodeId={x} />)
+      )}
     </div>
   )
 }
