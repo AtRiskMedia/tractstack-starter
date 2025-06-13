@@ -12,6 +12,9 @@ export const BgImage = ({ payload, viewportKey }: BgImageProps) => {
     return !!payload[key];
   };
 
+  // Check if we should render as normal image
+  const isFlexImage = payload.position === "left" || payload.position === "right";
+
   // For viewport-specific rendering
   if (viewportKey === "mobile" || viewportKey === "tablet" || viewportKey === "desktop") {
     const viewportCapitalized = viewportKey.charAt(0).toUpperCase() + viewportKey.slice(1);
@@ -20,6 +23,18 @@ export const BgImage = ({ payload, viewportKey }: BgImageProps) => {
     // Skip rendering if this viewport should be hidden
     if (payload[hiddenViewportKey]) {
       return null;
+    }
+
+    if (isFlexImage) {
+      return (
+        <img
+          src={payload.src}
+          {...(payload.srcSet ? { srcSet: payload.srcSet } : {})}
+          alt={payload.alt || "Background image"}
+          className={`w-full h-full object-${payload.objectFit || "cover"}`}
+          style={{ objectFit: payload.objectFit || "cover" }}
+        />
+      );
     }
 
     return (
@@ -58,7 +73,20 @@ export const BgImage = ({ payload, viewportKey }: BgImageProps) => {
     return classes.join(" ");
   };
 
-  // Render a single responsive element
+  // Render based on position
+  if (isFlexImage) {
+    return (
+      <img
+        src={payload.src}
+        {...(payload.srcSet ? { srcSet: payload.srcSet } : {})}
+        alt={payload.alt || "Background image"}
+        className={`w-full h-full object-${payload.objectFit || "cover"} ${buildResponsiveClass()}`}
+        style={{ objectFit: payload.objectFit || "cover" }}
+      />
+    );
+  }
+
+  // Render as background (default)
   return (
     <div
       className={`w-full h-full absolute top-0 left-0 ${buildResponsiveClass()}`}

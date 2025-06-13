@@ -139,7 +139,9 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
       src,
       srcSet,
       alt: `Artpack image from ${collection} collection`,
-      objectFit: "cover",
+      objectFit,
+      position: artpackNode?.position || "background",
+      size: artpackNode?.size || "equal",
       isChanged: true,
     };
     ctx.addNode(updatedArtNode);
@@ -203,7 +205,7 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
 
   const comboboxItemStyles = `
     .collection-item[data-highlighted] {
-      background-color: #0891b2; /* bg-cyan-600 */
+      background-color: #0891b2;
       color: white;
     }
     .collection-item[data-highlighted] .collection-indicator {
@@ -220,7 +222,6 @@ const ArtpackImage = ({ paneId, onUpdate }: ArtpackImageProps) => {
     }
   `;
 
-  // CSS for Dialog styles
   const dialogStyles = `
     .dialog-backdrop {
       background-color: rgba(0, 0, 0, 0.3);

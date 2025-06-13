@@ -246,6 +246,8 @@ export class NodesDeserializer_Json implements NodesDeserializer {
         rowData.alt_description || `We apologize this image description could not be found.`,
       src: rowData.url,
       ...(typeof rowData.src_set === `string` ? { srcSet: rowData.src_set } : {}),
+      position: rowData.position || `background`,
+      ...(typeof rowData.size === `string` ? { size: rowData.size } : {}),
     });
   }
 

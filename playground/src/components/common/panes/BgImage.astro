@@ -30,18 +30,31 @@ const buildResponsiveClass = (): string => {
 
   return classes.join(" ");
 };
+
+// Check if we should render as normal image
+const isFlexImage = payload.position === "left" || payload.position === "right";
 ---
 
-<div
-  class={`w-full h-full absolute top-0 left-0 ${buildResponsiveClass()}`}
-  style={{
-    backgroundImage: `url(${payload.src})`,
-    backgroundSize: payload.objectFit || "cover",
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "center",
-    zIndex: 0,
-  }}
-  role="img"
-  aria-label={payload.alt || "Background image"}
->
-</div>
+{
+  isFlexImage ? (
+    <img
+      src={payload.src}
+      {...(payload.srcSet ? { srcSet: payload.srcSet } : {})}
+      alt={payload.alt || "Background image"}
+      class={`w-full h-full object-${payload.objectFit || "cover"} ${buildResponsiveClass()}`}
+    />
+  ) : (
+    <div
+      class={`w-full h-full absolute top-0 left-0 ${buildResponsiveClass()}`}
+      style={{
+        backgroundImage: `url(${payload.src})`,
+        backgroundSize: payload.objectFit || "cover",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center",
+        zIndex: 0,
+      }}
+      role="img"
+      aria-label={payload.alt || "Background image"}
+    />
+  )
+}

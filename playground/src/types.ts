@@ -769,6 +769,8 @@ export interface ImageFileNode extends BaseNode {
   src: string;
   nodeType: `File`;
   srcSet?: string;
+  position?: string;
+  size?: string;
 }
 
 export interface PaneNode extends BaseNode {
@@ -824,6 +826,8 @@ export interface BgImageNode extends PaneFragmentNode {
   srcSet?: string;
   alt?: string;
   objectFit: "cover" | "contain" | "fill";
+  position?: "background" | "left" | "right";
+  size?: "equal" | "narrow" | "wide";
 }
 export interface ArtpackImageNode extends PaneFragmentNode {
   type: "artpack-image";
@@ -833,6 +837,8 @@ export interface ArtpackImageNode extends PaneFragmentNode {
   srcSet?: string;
   alt?: string;
   objectFit: "cover" | "contain" | "fill";
+  position?: "background" | "left" | "right";
+  size?: "equal" | "narrow" | "wide";
 }
 
 export interface VisualBreakNode extends PaneFragmentNode {

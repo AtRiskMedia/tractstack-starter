@@ -184,6 +184,8 @@ export class NodesSerializer_Json extends NodesSerializer {
           fileNode.altDescription || `Alt description missing; we apologize for this`,
         url: fileNode.src,
         ...(typeof fileNode.srcSet === `string` ? { src_set: fileNode.srcSet } : {}),
+        position: fileNode.position || `background`,
+        ...(typeof fileNode.size === `string` ? { size: fileNode.size } : {}),
       });
   }
 

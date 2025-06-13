@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import CreateNewButton from "./CreateNewButton";
 import ManageKnownResources from "./ManageKnownResources";
 import BeakerIcon from "@heroicons/react/24/outline/BeakerIcon";
 import XMarkIcon from "@heroicons/react/24/outline/XMarkIcon";
+import ChevronLeftIcon from "@heroicons/react/24/outline/ChevronLeftIcon";
+import ChevronRightIcon from "@heroicons/react/24/outline/ChevronRightIcon";
 import { getKnownResources } from "@/utils/storykeep/resourceHelpers.ts";
+import { Pagination } from "@ark-ui/react/pagination";
 import type { ResourceNode } from "@/types.ts";
 
 interface ResourcesTableProps {
@@ -14,6 +17,8 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
   const [query, setQuery] = useState("");
   const [knownCategories, setKnownCategories] = useState<string[]>([]);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // Load known resource categories on mount
   useEffect(() => {
@@ -38,24 +43,42 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
     });
   };
 
-  const filteredResources = resources.filter((resource) => {
-    // First filter by search query
-    if (!resource.title.toLowerCase().includes(query.toLowerCase())) {
-      return false;
-    }
+  // Memoize filtered resources to optimize performance
+  const filteredResources = useMemo(() => {
+    return resources.filter((resource) => {
+      if (!resource.title.toLowerCase().includes(query.toLowerCase())) {
+        return false;
+      }
+      if (resource.category && knownCategories.includes(resource.category)) {
+        return activeCategories.has(resource.category);
+      }
+      return true;
+    });
+  }, [resources, query, activeCategories, knownCategories]);
 
-    // Then filter by active categories
-    // If resource has a category and it's a known category, check if it's active
-    if (resource.category && knownCategories.includes(resource.category)) {
-      return activeCategories.has(resource.category);
-    }
+  // Pagination calculations
+  const totalCount = filteredResources.length;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedResources = filteredResources.slice(startIndex, endIndex);
 
-    // Resources without categories or with unknown categories are always shown
-    return true;
-  });
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, activeCategories, pageSize]);
+
+  // Adjust currentPage if it exceeds the maximum page
+  useEffect(() => {
+    const maxPage = Math.ceil(totalCount / pageSize) || 1;
+    if (currentPage > maxPage) {
+      setCurrentPage(maxPage);
+    }
+  }, [totalCount, pageSize, currentPage]);
 
   return (
-    <div className="mx-auto max-w-screen-xl">
+    <div className="mx-auto max-w-7xl">
+      {" "}
+      {/* Increased max-width for more flexibility */}
       {/* Category Pills */}
       {knownCategories.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
@@ -83,18 +106,25 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
           })}
         </div>
       )}
-
       {/* Search Input */}
-      <div className="mb-4">
+      <div className="mb-4 flex items-center gap-4">
         <input
           type="text"
           placeholder="Search resources..."
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border border-mylightgrey rounded-md focus:outline-none focus:ring-2 focus:ring-myblue"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
+        <select
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+          className="p-2 border border-mylightgrey rounded-md focus:outline-none focus:ring-2 focus:ring-myblue"
+        >
+          <option value={25}>25 items</option>
+          <option value={50}>50 items</option>
+          <option value={100}>100 items</option>
+        </select>
       </div>
-
       {/* Resources Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-mylightgrey/20">
@@ -115,16 +145,14 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
             </tr>
           </thead>
           <tbody className="bg-mywhite divide-y divide-mylightgrey/10">
-            {!filteredResources.length ? (
+            {paginatedResources.length === 0 ? (
               <tr>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack" colSpan={4}>
-                  {resources.length === 0
-                    ? "No resources found."
-                    : "No resources match your filters."}
+                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
+                  No resources found.
                 </td>
               </tr>
             ) : (
-              filteredResources.map((resource) => (
+              paginatedResources.map((resource) => (
                 <tr key={resource.slug}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-myblack">
                     {resource.title}
@@ -150,6 +178,52 @@ export default function ResourcesTable({ resources }: ResourcesTableProps) {
           </tbody>
         </table>
       </div>
+      {/* Pagination Controls */}
+      {totalCount > pageSize && (
+        <div className="flex items-center w-full justify-center gap-2 mt-4 flex-nowrap">
+          <Pagination.Root
+            count={totalCount}
+            pageSize={pageSize}
+            siblingCount={2}
+            page={currentPage}
+            onPageChange={(details) => setCurrentPage(details.page)}
+          >
+            <Pagination.PrevTrigger className="p-2 bg-myblue text-white rounded hover:bg-myorange disabled:opacity-50">
+              <ChevronLeftIcon className="h-3 w-3" />
+            </Pagination.PrevTrigger>
+            <Pagination.Context>
+              {(pagination) =>
+                pagination.pages.map((page, index) =>
+                  page.type === "page" ? (
+                    <Pagination.Item
+                      key={index}
+                      {...page}
+                      className={`px-3 py-1 rounded ${
+                        pagination.page === page.value
+                          ? "bg-myblue text-white"
+                          : "bg-white border border-mylightgrey text-mydarkgrey hover:bg-gray-100"
+                      }`}
+                    >
+                      {page.value}
+                    </Pagination.Item>
+                  ) : (
+                    <Pagination.Ellipsis
+                      key={index}
+                      index={index}
+                      className="px-3 py-1 text-mydarkgrey"
+                    >
+                      …
+                    </Pagination.Ellipsis>
+                  )
+                )
+              }
+            </Pagination.Context>
+            <Pagination.NextTrigger className="p-2 bg-myblue text-white rounded hover:bg-myorange disabled:opacity-50">
+              <ChevronRightIcon className="h-3 w-3" />
+            </Pagination.NextTrigger>
+          </Pagination.Root>
+        </div>
+      )}
       <CreateNewButton type="Resource" href="/storykeep/content/resources/create" />
       <ManageKnownResources knownCategories={knownCategories} />
     </div>

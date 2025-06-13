@@ -44,6 +44,8 @@ export type ImageFileRowData = {
   alt_description: string | null;
   url: string;
   src_set?: string;
+  position?: string;
+  size?: string;
 };
 
 export type PaneRowData = {

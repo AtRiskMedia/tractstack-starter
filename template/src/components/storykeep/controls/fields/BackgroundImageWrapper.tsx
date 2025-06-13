@@ -52,6 +52,31 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
     ctx.modifyNodes([updatedPaneNode]);
   };
 
+  const handlePositionChange = (newPosition: "background" | "left" | "right") => {
+    if (!bgNode) return;
+    const updatedBgNode = cloneDeep(bgNode);
+    updatedBgNode.position = newPosition;
+    updatedBgNode.isChanged = true;
+    const updatedPaneNode = cloneDeep(allNodes.get(paneId) as PaneNode);
+    updatedPaneNode.isChanged = true;
+    ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
+    onUpdate();
+  };
+
+  const handleSizeChange = (newSize: "equal" | "narrow" | "wide") => {
+    if (!bgNode) return;
+    const updatedBgNode = cloneDeep(bgNode);
+    updatedBgNode.size = newSize;
+    updatedBgNode.isChanged = true;
+    const updatedPaneNode = cloneDeep(allNodes.get(paneId) as PaneNode);
+    updatedPaneNode.isChanged = true;
+    ctx.modifyNodes([updatedBgNode, updatedPaneNode]);
+    onUpdate();
+  };
+
+  const position = bgNode?.position || "background";
+  const size = bgNode?.size || "equal";
+
   return (
     <div className="space-y-6 w-full">
       <h3 className="text-sm font-bold text-gray-700">Background</h3>
@@ -76,7 +101,56 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
       )}
 
       {bgNode && (
-        <div className="w-full">
+        <div className="w-full space-y-6">
+          {/* Position Toggle */}
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700">Position</label>
+            <div className="flex space-x-4">
+              {(["background", "left", "right"] as const).map((pos) => (
+                <label key={pos} className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    name="position"
+                    value={pos}
+                    checked={position === pos}
+                    onChange={() => handlePositionChange(pos)}
+                    className="focus:ring-myblue h-4 w-4 text-myblue border-gray-300"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 capitalize">{pos}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Size Toggle - Only show when position is left or right */}
+          {position !== "background" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-gray-700">Size</label>
+              <div className="flex space-x-4">
+                {(["equal", "narrow", "wide"] as const).map((s) => (
+                  <label key={s} className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="size"
+                      value={s}
+                      checked={size === s}
+                      onChange={() => handleSizeChange(s)}
+                      className="focus:ring-myblue h-4 w-4 text-myblue border-gray-300"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 capitalize">
+                      {s === "narrow"
+                        ? "Narrow (30%)"
+                        : s === "wide"
+                          ? "Wide (70%)"
+                          : "Equal (50%)"}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Render the appropriate image component */}
           {isArtpackImageNode(bgNode) ? (
             <ArtpackImage paneId={paneId} onUpdate={onUpdate} />
           ) : (

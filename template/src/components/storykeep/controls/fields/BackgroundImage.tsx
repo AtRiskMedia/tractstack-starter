@@ -73,7 +73,6 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
           tablet: !!bgNode.hiddenViewportTablet,
           desktop: !!bgNode.hiddenViewportDesktop,
         });
-        // Use nullish coalescing to ensure we always set a string
         setLocalAltDescription(bgNode.alt || "");
       } else {
         setBgImageNode(null);
@@ -119,7 +118,9 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       src: file.src,
       srcSet: file.srcSet,
       alt: file.altDescription || defaultAlt,
-      objectFit: "cover",
+      objectFit,
+      position: bgImageNode?.position || "background",
+      size: bgImageNode?.size || "equal",
       isChanged: true,
     };
     ctx.addNode(updatedBgNode);
@@ -127,7 +128,6 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     updatedPaneNode.isChanged = true;
     ctx.modifyNodes([updatedPaneNode]);
     setBgImageNode(updatedBgNode);
-    // Use nullish coalescing to ensure we always set a string
     setLocalAltDescription(updatedBgNode.alt || "");
     onUpdate();
   };
@@ -195,7 +195,9 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
         fileId: fileId,
         src: savedPath,
         alt: defaultAlt,
-        objectFit: "cover",
+        objectFit,
+        position: bgImageNode?.position || "background",
+        size: bgImageNode?.size || "equal",
         isChanged: true,
       };
       ctx.addNode(updatedBgNode);
@@ -204,7 +206,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
       ctx.modifyNodes([updatedPaneNode]);
       setBgImageNode(updatedBgNode);
       setLocalAltDescription(defaultAlt);
-      onUpdate(); // Tell wrapper to re-render
+      onUpdate();
     } catch (err) {
       setImageError("Failed to process image");
       console.error("[BackgroundImage] Error:", err);
@@ -221,7 +223,7 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     ctx.modifyNodes([updatedPaneNode]);
     setBgImageNode(null);
     setLocalAltDescription("");
-    onUpdate(); // Tell wrapper to re-render
+    onUpdate();
   };
 
   const handleAltDescriptionBlur = () => {
@@ -264,7 +266,6 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     }
   };
 
-  // Create collection for Ark UI Combobox
   const collection = useMemo(() => {
     const filteredFiles =
       query === ""
@@ -283,10 +284,9 @@ const BackgroundImage = ({ paneId, onUpdate }: BackgroundImageProps) => {
     });
   }, [files, query]);
 
-  // CSS to properly style the combobox items with hover and selection
   const comboboxItemStyles = `
     .file-item[data-highlighted] {
-      background-color: #0891b2; /* bg-cyan-600 */
+      background-color: #0891b2;
       color: white;
     }
     .file-item[data-highlighted] .file-indicator {

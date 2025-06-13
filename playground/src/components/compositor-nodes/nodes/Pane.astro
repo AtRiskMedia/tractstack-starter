@@ -4,7 +4,7 @@ import { getCtx } from "@/store/nodes.ts";
 import Node from "../Node.astro";
 import Filter from "@/components/frontend/state/Filter.tsx";
 import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
-import type { ResourceNode, CodeHookPayload } from "@/types.ts";
+import type { ResourceNode, CodeHookPayload, BgImageNode, ArtpackImageNode } from "@/types.ts";
 
 const { nodeId } = Astro.props;
 const slug = getCtx().getPaneSlug(nodeId);
@@ -35,6 +35,39 @@ const wrapperClasses = `grid ${getCtx().getNodeClasses(nodeId, `auto`)}`;
 const contentClasses = "relative w-full h-auto justify-self-start";
 const contentStyles =
   getCtx().getNodeStringStyles(nodeId) + "; grid-area: 1/1/1/1; position: relative; z-index: 1";
+
+// Get background node if it exists
+const allNodes = getCtx().allNodes.get();
+const childNodeIds = getCtx().getChildNodeIDs(nodeId);
+const bgNode = childNodeIds
+  .map((id) => allNodes.get(id))
+  .find(
+    (node) =>
+      node?.nodeType === "BgPane" &&
+      "type" in node &&
+      (node.type === "background-image" || node.type === "artpack-image")
+  ) as (BgImageNode | ArtpackImageNode) | undefined;
+
+// Helper function for inline size styles
+function getSizeStyles(size: string, side: string) {
+  switch (size) {
+    case "narrow":
+      return side === "image"
+        ? "width: 100%; @media (min-width: 768px) { width: 30%; }"
+        : "width: 100%; @media (min-width: 768px) { width: 70%; }";
+    case "wide":
+      return side === "image"
+        ? "width: 100%; @media (min-width: 768px) { width: 70%; }"
+        : "width: 100%; @media (min-width: 768px) { width: 30%; }";
+    default: // "equal"
+      return "width: 100%; @media (min-width: 768px) { width: 50%; }";
+  }
+}
+
+// Check if we should use flexbox layout
+const useFlexLayout = bgNode && (bgNode.position === "left" || bgNode.position === "right");
+const flexDirection =
+  bgNode?.position === "right" ? "flex-col md:flex-row-reverse" : "flex-col md:flex-row";
 ---
 
 <div id={`pane-${nodeId}`} class={isDecorative ? `` : `pane`} style="position: relative;">
@@ -56,6 +89,41 @@ const contentStyles =
           resources={resources}
           options={codeHookPayload || null}
         />
+      </div>
+    ) : useFlexLayout ? (
+      <div
+        id={slug}
+        class={`flex flex-nowrap ${flexDirection} ${getCtx().getNodeClasses(nodeId, `auto`)}`}
+      >
+        <div
+          class="relative overflow-hidden"
+          style={getSizeStyles(bgNode.size || "equal", "image")}
+        >
+          {getCtx()
+            .getChildNodeIDs(nodeId)
+            .filter((childId: string) => {
+              const node = allNodes.get(childId);
+              return node?.nodeType === "BgPane";
+            })
+            .map((childId: string) => (
+              <Node nodeId={childId} />
+            ))}
+        </div>
+
+        <div
+          class={contentClasses}
+          style={`${getCtx().getNodeStringStyles(nodeId)}; ${getSizeStyles(bgNode.size || "equal", "content")}`}
+        >
+          {getCtx()
+            .getChildNodeIDs(nodeId)
+            .filter((childId: string) => {
+              const node = allNodes.get(childId);
+              return node?.nodeType !== "BgPane";
+            })
+            .map((childId: string) => (
+              <Node nodeId={childId} />
+            ))}
+        </div>
       </div>
     ) : (
       <div id={slug} class={wrapperClasses}>
