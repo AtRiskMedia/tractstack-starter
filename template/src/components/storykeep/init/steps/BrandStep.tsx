@@ -103,7 +103,6 @@ export default function BrandStep({
 
   const defaultValues = getDefaultValues();
   const [currentValues, setCurrentValues] = useState<BrandFormValues>(defaultValues);
-  console.log(currentValues.wordmarkMode);
 
   const matchingPreset = Object.entries(knownBrand).find(
     ([, value]) => value === config?.init?.BRAND_COLOURS
