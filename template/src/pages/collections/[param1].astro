@@ -1,10 +1,42 @@
 ---
 import CustomRoutes, { routes } from "@/custom/CustomRoutes.astro";
+import { getAPIContext } from "@/utils/api/astroContext";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
 
 const { param1 } = Astro.params;
+const route = `collections`;
 
 // Check if route is enabled
-if (!routes.collections) {
+if (!param1 || !routes[route]) {
+  return new Response(null, {
+    status: 404,
+    statusText: "Not Found",
+  });
+}
+
+const CATEGORIES = [`collections`];
+
+// Get API context and fetch resources
+const context = getAPIContext(Astro);
+let resources = [];
+
+try {
+  resources = await getResourceNodes({ categories: CATEGORIES }, context);
+} catch (error) {
+  console.error("Error fetching resources:", error);
+  return new Response(null, {
+    status: 500,
+    statusText: "Internal Server Error",
+  });
+}
+
+// Check if the specific resource exists
+const targetSlug = `${route}-${param1}`;
+const resourceExists = resources.some(
+  (resource) => resource.category === route && resource.slug === targetSlug
+);
+
+if (!resourceExists) {
   return new Response(null, {
     status: 404,
     statusText: "Not Found",
@@ -12,4 +44,4 @@ if (!routes.collections) {
 }
 ---
 
-<CustomRoutes route="collections" slug={param1} />
+<CustomRoutes route={route} slug={param1} resources={resources} />

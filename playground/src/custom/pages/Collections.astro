@@ -1,26 +1,23 @@
 ---
-import type { ResourceNode, AuthStatus, ImpressionDatum } from "@/types";
+import type { ResourceNode, AuthStatus } from "@/types";
 import { getAPIContext } from "@/utils/api/astroContext";
 import { getConfig, validateConfig } from "@/utils/core/config.ts";
 import Layout from "@/layouts/Layout.astro";
-import HeaderWidget from "@/custom/HeaderWidget.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
-import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
-import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
 import { getMenuByIdRowData } from "@/utils/db/turso.ts";
 
 export interface Props {
-  slug?: string;
+  route: string;
+  slug: string;
   variation?: string;
   resources: ResourceNode[];
 }
 
 // Hardcoded constants
-const route = "class";
 const hardcodedMenuId = "01JXP63R451DWPMYESC59KM95V";
 
-const { slug, resources /*, variation */ } = Astro.props;
+const { route, slug, resources /*, variation */ } = Astro.props;
 
 const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
@@ -32,11 +29,8 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
-// Get menu data using hardcoded menu ID
-const menuRowData = await getMenuByIdRowData(hardcodedMenuId, context);
-
-// Convert menu row data to MenuDatum format for Header component
 let menuPayload = null;
+const menuRowData = await getMenuByIdRowData(hardcodedMenuId, context);
 if (menuRowData) {
   try {
     const options = JSON.parse(menuRowData.options_payload);
@@ -51,49 +45,12 @@ if (menuRowData) {
   }
 }
 
-// Get resource nodes for HeaderWidget if enabled
-let headerResources: ResourceNode[] = [];
-const requiredResources = config.init.HEADER_WIDGET_RESOURCE_CATEGORY;
-if (typeof requiredResources === `string` && config.init?.HEADER_WIDGET_RESOURCE_CATEGORY) {
-  try {
-    const categories = requiredResources.split(/[|,]/).filter(Boolean);
-    if (categories.length > 0) {
-      headerResources = await getResourceNodes({ categories }, context);
-    }
-  } catch (error) {
-    console.error("Error fetching header resources:", error);
-  }
-}
-
-// Filter resources from the existing resources array
 let filteredResources: ResourceNode[] = [];
-
-//if (!variation) {
-// No variation: find resource where category === route and slug === `${route}-${slug}`
 const targetSlug = `${route}-${slug}`;
 filteredResources = resources.filter(
   (resource) => resource.category === route && resource.slug === targetSlug
 );
-//} else {
-//  // Variation is set: find resource where category === variation and slug === `${variation}-${slug}`
-//  const targetSlug = `${variation}-${slug}`;
-//  filteredResources = resources.filter(resource =>
-//    resource.category === variation && resource.slug === targetSlug
-//  );
-//}
-
-// Generate page title
-//const pageTitle = variation
-//  ? `${slug}/${variation} Collection`
-//  : slug
-//    ? `${slug} Collection`
-//    : "Collections";
-const pageTitle = slug ? `${route}=${slug}` : "Collections";
-
-// Create current slug for routing
-//const currentSlug = variation ? `${slug}/${variation}` : slug || "collections";
-const currentSlug = slug || "collections";
-const impressionNodes: ImpressionDatum[] = [];
+const pageTitle = `${route}=${slug}`;
 ---
 
 <Layout
@@ -105,19 +62,13 @@ const impressionNodes: ImpressionDatum[] = [];
   config={config}
   id="collections-page"
 >
-  {
-    config?.init?.ENABLE_HEADER_WIDGET && (
-      <HeaderWidget slug={currentSlug} resources={headerResources} />
-    )
-  }
-
   <Header
     title={pageTitle}
     menu={menuPayload}
-    slug={currentSlug}
+    slug={slug}
     isContext={false}
     isEditable={false}
-    impressions={impressionNodes}
+    impressions={[]}
     user={user}
     config={config}
   />
@@ -125,15 +76,6 @@ const impressionNodes: ImpressionDatum[] = [];
   <main id="main-content" class="w-full">
     <div class="bg-white">
       {
-        /* variation ? (
-          <div>
-            <p>
-              You are on {slug}/{variation} collection page
-            </p>
-            <p>Total resources: {JSON.stringify(filteredResources)}</p>
-          </div>
-          ) : 
-          */
         slug ? (
           <div>
             <p>
@@ -146,23 +88,11 @@ const impressionNodes: ImpressionDatum[] = [];
     </div>
   </main>
 
-  {
-    impressionNodes && impressionNodes.length > 0 && (
-      <ImpressionWrapper
-        slug={currentSlug}
-        isContext={true}
-        payload={impressionNodes}
-        config={config}
-        client:idle
-      />
-    )
-  }
-
   <Footer
     created={new Date()}
     menuId={hardcodedMenuId}
     backToTop={true}
-    slug={currentSlug}
+    slug={slug}
     isContext={false}
     config={config}
   />
