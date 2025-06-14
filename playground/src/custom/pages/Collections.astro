@@ -6,12 +6,13 @@ import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
 import { getMenuByIdRowData } from "@/utils/db/turso.ts";
+import type { ExtractedResources } from "@/custom/utils/extractResources";
 
 export interface Props {
   route: string;
   slug: string;
   variation?: string;
-  resources: ResourceNode[];
+  resources: ExtractedResources;
 }
 
 // Hardcoded constants
@@ -45,11 +46,12 @@ if (menuRowData) {
   }
 }
 
-let filteredResources: ResourceNode[] = [];
 const targetSlug = `${route}-${slug}`;
-filteredResources = resources.filter(
-  (resource) => resource.category === route && resource.slug === targetSlug
+const categoryResources = resources[route] || [];
+const activeResource = categoryResources.find(
+  (resource: ResourceNode) => resource.slug === targetSlug
 );
+
 const pageTitle = `${route}=${slug}`;
 ---
 
@@ -81,7 +83,8 @@ const pageTitle = `${route}=${slug}`;
             <p>
               You are on {route}={slug} collection page
             </p>
-            <p>Total resources: {JSON.stringify(filteredResources)}</p>
+            <p>Active resource: {JSON.stringify(activeResource)}</p>
+            <p>Extracted resources: {JSON.stringify(resources)}</p>
           </div>
         ) : null
       }

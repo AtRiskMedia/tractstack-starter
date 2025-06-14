@@ -1,5 +1,6 @@
 ---
 import Collections from "@/custom/pages/Collections.astro";
+import { extractResources } from "@/custom/utils/extractResources";
 import type { ResourceNode } from "@/types";
 
 export interface Props {
@@ -14,11 +15,14 @@ const { route, slug, resources } = Astro.props;
 export const routes = {
   collections: true,
 };
+
+// Extract resources by category
+const payload = extractResources(resources);
 ---
 
 {
   route === "collections" ? (
-    <Collections route={route} slug={slug} resources={resources} />
+    <Collections route={route} slug={slug} resources={payload} />
   ) : (
     <div>Route not found</div>
   )
