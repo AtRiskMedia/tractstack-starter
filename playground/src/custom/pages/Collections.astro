@@ -1,20 +1,53 @@
 ---
+import { getAPIContext } from "@/utils/api/astroContext";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import type { ResourceNode } from "@/types";
+
 export interface Props {
   slug?: string;
   variation?: string;
 }
 
 const { slug, variation } = Astro.props;
+
+const CATEGORIES = [`class`, `species`, `profession`, `attack`, `special`, `people`, `animals`, `stuff`];
+
+// Get API context for database operations
+const context = getAPIContext(Astro);
+
+// Fetch ALL resources
+let resources: ResourceNode[] = [];
+try {
+  resources = await getResourceNodes({ categories: CATEGORIES }, context);
+  //console.log("Total resources found:", resources.length);
+  //console.log("Categories represented:", [...new Set(resources.map(r => r.category))]);
+} catch (error) {
+  console.error("Error fetching resources:", error);
+}
 ---
 
 {
   variation ? (
     <div>
-      you are on {slug}/{variation} collection page
+      <p>You are on {slug}/{variation} collection page</p>
+      <p>Total resources: {resources.length}</p>
     </div>
   ) : slug ? (
-    <div>you are on {slug} collection page</div>
+    <div>
+      <p>You are on {slug} collection page</p>
+      <p>Total resources: {resources.length}</p>
+    </div>
   ) : (
-    <div>you are on collections page</div>
+    <div>
+      <p>You are on collections page</p>
+      <p>Total resources: {resources.length}</p>
+      <h2>All Resources:</h2>
+      {resources.map(resource => (
+        <div>
+          <h3>{resource.title} (Category: {resource.category || 'No category'})</h3>
+          <p>{resource.oneliner}</p>
+        </div>
+      ))}
+    </div>
   )
 }
