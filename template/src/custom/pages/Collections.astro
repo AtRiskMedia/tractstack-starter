@@ -8,6 +8,7 @@ import Header from "@/components/common/Header.astro";
 import Footer from "@/components/common/Footer.astro";
 import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
 import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import { getMenuByIdRowData } from "@/utils/db/turso.ts";
 
 export interface Props {
   slug?: string;
@@ -29,6 +30,23 @@ if (!validation.isValid || !config) {
 
 // Get menu data using hardcoded menu ID
 const hardcodedMenuId = "01JXP63R451DWPMYESC59KM95V";
+const menuRowData = await getMenuByIdRowData(hardcodedMenuId, context);
+
+// Convert menu row data to MenuDatum format for Header component
+let menuPayload = null;
+if (menuRowData) {
+  try {
+    const options = JSON.parse(menuRowData.options_payload);
+    menuPayload = {
+      id: menuRowData.id,
+      title: menuRowData.title,
+      theme: menuRowData.theme,
+      optionsPayload: options, // This should be MenuLink[] array
+    };
+  } catch (error) {
+    console.error("Error parsing menu options_payload:", error);
+  }
+}
 
 // Get resource nodes for HeaderWidget if enabled
 let headerResources: ResourceNode[] = [];
@@ -73,7 +91,7 @@ const impressionNodes: ImpressionDatum[] = [];
 
   <Header
     title={pageTitle}
-    menuId={hardcodedMenuId}
+    menu={menuPayload}
     slug={currentSlug}
     isContext={false}
     isEditable={false}
