@@ -65,6 +65,14 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
     ctx.setPanelMode(nodeId, "settings", resolvedMode);
   };
 
+  const handleCodeHookConfig = () => {
+    settingsPanelStore.set({
+      action: "setup-codehook",
+      nodeId: nodeId,
+      expanded: true,
+    });
+  };
+
   const handleEditStyles = () => {
     ctx.closeAllPanels();
     ctx.toolModeValStore.set({ value: "styles" });
@@ -166,6 +174,11 @@ const ConfigPanePanel = ({ nodeId }: ConfigPanePanelProps) => {
                       )}
                     </button>
                   </>
+                )}
+                {isCodeHook && (
+                  <button onClick={handleCodeHookConfig} className={buttonClass}>
+                    Configure Code Hook
+                  </button>
                 )}
                 {!isCodeHook && (
                   <button onClick={handleEditStyles} className={buttonClass}>
