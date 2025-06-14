@@ -16,7 +16,11 @@ export interface Props {
   resources: ResourceNode[];
 }
 
-const { slug, variation, resources } = Astro.props;
+// Hardcoded constants
+const route = "class";
+const hardcodedMenuId = "01JXP63R451DWPMYESC59KM95V";
+
+const { slug, resources /*, variation */ } = Astro.props;
 
 const context = getAPIContext(Astro);
 const user = Astro.locals.user as AuthStatus;
@@ -29,7 +33,6 @@ if (!validation.isValid || !config) {
 }
 
 // Get menu data using hardcoded menu ID
-const hardcodedMenuId = "01JXP63R451DWPMYESC59KM95V";
 const menuRowData = await getMenuByIdRowData(hardcodedMenuId, context);
 
 // Convert menu row data to MenuDatum format for Header component
@@ -41,7 +44,7 @@ if (menuRowData) {
       id: menuRowData.id,
       title: menuRowData.title,
       theme: menuRowData.theme,
-      optionsPayload: options, // This should be MenuLink[] array
+      optionsPayload: options,
     };
   } catch (error) {
     console.error("Error parsing menu options_payload:", error);
@@ -62,15 +65,34 @@ if (typeof requiredResources === `string` && config.init?.HEADER_WIDGET_RESOURCE
   }
 }
 
+// Filter resources from the existing resources array
+let filteredResources: ResourceNode[] = [];
+
+//if (!variation) {
+// No variation: find resource where category === route and slug === `${route}-${slug}`
+const targetSlug = `${route}-${slug}`;
+filteredResources = resources.filter(
+  (resource) => resource.category === route && resource.slug === targetSlug
+);
+//} else {
+//  // Variation is set: find resource where category === variation and slug === `${variation}-${slug}`
+//  const targetSlug = `${variation}-${slug}`;
+//  filteredResources = resources.filter(resource =>
+//    resource.category === variation && resource.slug === targetSlug
+//  );
+//}
+
 // Generate page title
-const pageTitle = variation
-  ? `${slug}/${variation} Collection`
-  : slug
-    ? `${slug} Collection`
-    : "Collections";
+//const pageTitle = variation
+//  ? `${slug}/${variation} Collection`
+//  : slug
+//    ? `${slug} Collection`
+//    : "Collections";
+const pageTitle = slug ? `${route}=${slug}` : "Collections";
 
 // Create current slug for routing
-const currentSlug = variation ? `${slug}/${variation}` : slug || "collections";
+//const currentSlug = variation ? `${slug}/${variation}` : slug || "collections";
+const currentSlug = slug || "collections";
 const impressionNodes: ImpressionDatum[] = [];
 ---
 
@@ -103,17 +125,21 @@ const impressionNodes: ImpressionDatum[] = [];
   <main id="main-content" class="w-full">
     <div class="bg-white">
       {
-        variation ? (
+        /* variation ? (
           <div>
             <p>
               You are on {slug}/{variation} collection page
             </p>
-            <p>Total resources: {resources.length}</p>
+            <p>Total resources: {JSON.stringify(filteredResources)}</p>
           </div>
-        ) : slug ? (
+          ) : 
+          */
+        slug ? (
           <div>
-            <p>You are on {slug} collection page</p>
-            <p>Total resources: {resources.length}</p>
+            <p>
+              You are on {route}={slug} collection page
+            </p>
+            <p>Total resources: {JSON.stringify(filteredResources)}</p>
           </div>
         ) : null
       }
