@@ -1,5 +1,8 @@
 ---
 import Collections from "@/custom/pages/Collections.astro";
+import { getAPIContext } from "@/utils/api/astroContext";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
+import type { ResourceNode } from "@/types";
 
 export interface Props {
   route: string;
@@ -10,13 +13,37 @@ export interface Props {
 const { route, slug, variation } = Astro.props;
 
 export const routes = {
-  collections: false, //true,
+  collections: true, //false, //true,
 };
+
+const CATEGORIES = [
+  `class`,
+  `species`,
+  `profession`,
+  `attack`,
+  `special`,
+  `people`,
+  `animals`,
+  `stuff`,
+];
+
+// Get API context for database operations
+const context = getAPIContext(Astro);
+
+// Fetch ALL resources
+let resources: ResourceNode[] = [];
+try {
+  resources = await getResourceNodes({ categories: CATEGORIES }, context);
+  //console.log("Total resources found:", resources.length);
+  //console.log("Categories represented:", [...new Set(resources.map(r => r.category))]);
+} catch (error) {
+  console.error("Error fetching resources:", error);
+}
 ---
 
 {
   route === "collections" ? (
-    <Collections slug={slug} variation={variation} />
+    <Collections slug={slug} variation={variation} resources={resources} />
   ) : (
     <div>Route not found</div>
   )
