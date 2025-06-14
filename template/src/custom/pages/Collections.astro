@@ -1,5 +1,13 @@
 ---
-import type { ResourceNode } from "@/types";
+import type { ResourceNode, AuthStatus, ImpressionDatum } from "@/types";
+import { getAPIContext } from "@/utils/api/astroContext";
+import { getConfig, validateConfig } from "@/utils/core/config.ts";
+import Layout from "@/layouts/Layout.astro";
+import HeaderWidget from "@/custom/HeaderWidget.astro";
+import Header from "@/components/common/Header.astro";
+import Footer from "@/components/common/Footer.astro";
+import ImpressionWrapper from "@/components/common/widgets/ImpressionWrapper.tsx";
+import { getResourceNodes } from "@/utils/db/api/getResourceNodes";
 
 export interface Props {
   slug?: string;
@@ -8,20 +16,109 @@ export interface Props {
 }
 
 const { slug, variation, resources } = Astro.props;
+
+const context = getAPIContext(Astro);
+const user = Astro.locals.user as AuthStatus;
+const tenantId = context.locals.tenant?.id || "default";
+const config = await getConfig(Astro.locals.tenant?.paths.configPath, tenantId);
+const validation = await validateConfig(config);
+
+if (!validation.isValid || !config) {
+  return Astro.redirect("/storykeep/init");
+}
+
+// Get resource nodes for HeaderWidget if enabled
+let headerResources: ResourceNode[] = [];
+const requiredResources = config.init.HEADER_WIDGET_RESOURCE_CATEGORY;
+if (typeof requiredResources === `string` && config.init?.HEADER_WIDGET_RESOURCE_CATEGORY) {
+  try {
+    const categories = requiredResources.split(/[|,]/).filter(Boolean);
+    if (categories.length > 0) {
+      headerResources = await getResourceNodes({ categories }, context);
+    }
+  } catch (error) {
+    console.error("Error fetching header resources:", error);
+  }
+}
+
+// Generate page title
+const pageTitle = variation
+  ? `${slug}/${variation} Collection`
+  : slug
+    ? `${slug} Collection`
+    : "Collections";
+
+// Create current slug for routing
+const currentSlug = variation ? `${slug}/${variation}` : slug || "collections";
+
+// Mock impression nodes (you may need to adjust this based on your needs)
+const impressionNodes: ImpressionDatum[] = [];
 ---
 
-{
-  variation ? (
-    <div>
-      <p>
-        You are on {slug}/{variation} collection page
-      </p>
-      <p>Total resources: {resources.length}</p>
+<Layout
+  title={pageTitle}
+  pubDatetime={new Date()}
+  modDatetime={new Date()}
+  canonicalURL={Astro.url.pathname}
+  ogImage={`/images/og/collections.png`}
+  config={config}
+  id="collections-page"
+>
+  {
+    config?.init?.ENABLE_HEADER_WIDGET && (
+      <HeaderWidget slug={currentSlug} resources={headerResources} />
+    )
+  }
+
+  <Header
+    title={pageTitle}
+    menuId={null}
+    slug={currentSlug}
+    isContext={false}
+    isEditable={false}
+    impressions={impressionNodes}
+    user={user}
+    config={config}
+  />
+
+  <main id="main-content" class="w-full">
+    <div class="bg-white">
+      {
+        variation ? (
+          <div>
+            <p>
+              You are on {slug}/{variation} collection page
+            </p>
+            <p>Total resources: {resources.length}</p>
+          </div>
+        ) : slug ? (
+          <div>
+            <p>You are on {slug} collection page</p>
+            <p>Total resources: {resources.length}</p>
+          </div>
+        ) : null
+      }
     </div>
-  ) : slug ? (
-    <div>
-      <p>You are on {slug} collection page</p>
-      <p>Total resources: {resources.length}</p>
-    </div>
-  ) : null
-}
+  </main>
+
+  {
+    impressionNodes && impressionNodes.length > 0 && (
+      <ImpressionWrapper
+        slug={currentSlug}
+        isContext={true}
+        payload={impressionNodes}
+        config={config}
+        client:idle
+      />
+    )
+  }
+
+  <Footer
+    created={new Date()}
+    menuId={null}
+    backToTop={true}
+    slug={currentSlug}
+    isContext={false}
+    config={config}
+  />
+</Layout>
