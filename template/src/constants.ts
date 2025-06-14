@@ -246,6 +246,7 @@ export const knownBrand: Record<string, string> = {
 
 export const reservedSlugs = [
   `api`,
+  `collections`,
   `create`,
   `edit`,
   `concierge`,
