@@ -8,6 +8,7 @@ interface ResourceBulkIngestProps {
   resourceSetting: ResourceSetting | undefined;
   onSave: (resources: ResourceNode[]) => Promise<void>;
   onCancel: () => void;
+  saveProgress: { current: number; total: number };
 }
 
 interface ParsedResource {
@@ -29,13 +30,10 @@ export default function ResourceBulkIngest({
   resourceSetting,
   onSave,
   onCancel,
+  saveProgress,
 }: ResourceBulkIngestProps) {
   const [jsonInput, setJsonInput] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [saveProgress, setSaveProgress] = useState<{
-    current: number;
-    total: number;
-  } | null>(null);
 
   const parseResults = useMemo(() => {
     if (!jsonInput.trim()) {
@@ -300,7 +298,6 @@ export default function ResourceBulkIngest({
     if (parseResults.validNodes.length === 0 || isSaving) return;
 
     setIsSaving(true);
-    setSaveProgress({ current: 0, total: parseResults.validNodes.length });
 
     try {
       await onSave(parseResults.validNodes);
@@ -308,7 +305,6 @@ export default function ResourceBulkIngest({
       console.error("Error saving resources:", error);
     } finally {
       setIsSaving(false);
-      setSaveProgress(null);
     }
   }, [parseResults.validNodes, isSaving, onSave]);
 
@@ -347,6 +343,10 @@ export default function ResourceBulkIngest({
     return JSON.stringify([example], null, 2);
   }, [resourceSetting]);
 
+  // Determine if we're actively saving based on either local state or parent progress
+  const isActivelySaving =
+    isSaving || (saveProgress.current > 0 && saveProgress.current < saveProgress.total);
+
   return (
     <div className="p-0.5 shadow-md mx-auto max-w-screen-xl">
       <div className="p-1.5 bg-white rounded-b-md w-full">
@@ -373,6 +373,7 @@ export default function ResourceBulkIngest({
             rows={10}
             className="w-full p-2 font-mono text-sm border rounded-md"
             placeholder={exampleJson}
+            disabled={isActivelySaving}
           />
         </div>
 
@@ -423,7 +424,7 @@ export default function ResourceBulkIngest({
         </div>
 
         {/* Progress indicator */}
-        {saveProgress && (
+        {isActivelySaving && saveProgress.total > 0 && (
           <div className="mb-4">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>Saving resources...</span>
@@ -445,17 +446,17 @@ export default function ResourceBulkIngest({
           <button
             onClick={onCancel}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            disabled={isSaving}
+            disabled={isActivelySaving}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={parseResults.validNodes.length === 0 || isSaving}
+            disabled={parseResults.validNodes.length === 0 || isActivelySaving}
             className="px-4 py-2 bg-cyan-700 text-white rounded hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50"
           >
-            {isSaving
-              ? `Saving... (${saveProgress?.current || 0}/${saveProgress?.total || 0})`
+            {isActivelySaving
+              ? `Saving... (${saveProgress.current}/${saveProgress.total})`
               : `Import ${parseResults.validNodes.length} Resources`}
           </button>
         </div>

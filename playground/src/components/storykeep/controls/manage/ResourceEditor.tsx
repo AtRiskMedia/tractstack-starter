@@ -186,6 +186,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
   });
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveProgress, setSaveProgress] = useState({ current: 0, total: 0 });
   const [resourceSetting, setResourceSetting] = useState<ResourceSetting | undefined>(undefined);
   const [knownResources, setKnownResources] = useState<KnownResource>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -310,24 +311,38 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
 
   const handleBulkSave = useCallback(async (resources: ResourceNode[]) => {
     try {
+      setSaveProgress({ current: 0, total: resources.length });
+
       for (let i = 0; i < resources.length; i++) {
+        setSaveProgress({ current: i, total: resources.length });
+
+        // Use setTimeout to yield to the browser and allow UI updates
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
         const response = await fetch("/api/turso/upsertResourceNode", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(resources[i]),
         });
+
         if (!response.ok) {
           throw new Error(`Failed to save resource ${i + 1}: ${response.statusText}`);
         }
+
         const result = await response.json();
         if (!result.success) {
           throw new Error(result.error || `Failed to save resource ${i + 1}`);
         }
+
+        setSaveProgress({ current: i + 1, total: resources.length });
       }
+
       navigate("/storykeep/content/resources");
     } catch (error) {
       console.error("Error in bulk save:", error);
       throw error;
+    } finally {
+      setSaveProgress({ current: 0, total: 0 });
     }
   }, []);
 
@@ -916,6 +931,7 @@ export default function ResourceEditor({ resource, create, contentMap }: Resourc
               resourceSetting={resourceSetting}
               onSave={handleBulkSave}
               onCancel={() => setIsBulkMode(false)}
+              saveProgress={saveProgress}
             />
           ) : (
             <>
