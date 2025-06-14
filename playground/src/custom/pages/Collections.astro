@@ -27,6 +27,9 @@ if (!validation.isValid || !config) {
   return Astro.redirect("/storykeep/init");
 }
 
+// Get menu data using hardcoded menu ID
+const hardcodedMenuId = "01JXP63R451DWPMYESC59KM95V";
+
 // Get resource nodes for HeaderWidget if enabled
 let headerResources: ResourceNode[] = [];
 const requiredResources = config.init.HEADER_WIDGET_RESOURCE_CATEGORY;
@@ -50,8 +53,6 @@ const pageTitle = variation
 
 // Create current slug for routing
 const currentSlug = variation ? `${slug}/${variation}` : slug || "collections";
-
-// Mock impression nodes (you may need to adjust this based on your needs)
 const impressionNodes: ImpressionDatum[] = [];
 ---
 
@@ -72,7 +73,7 @@ const impressionNodes: ImpressionDatum[] = [];
 
   <Header
     title={pageTitle}
-    menuId={null}
+    menuId={hardcodedMenuId}
     slug={currentSlug}
     isContext={false}
     isEditable={false}
@@ -115,7 +116,7 @@ const impressionNodes: ImpressionDatum[] = [];
 
   <Footer
     created={new Date()}
-    menuId={null}
+    menuId={hardcodedMenuId}
     backToTop={true}
     slug={currentSlug}
     isContext={false}
