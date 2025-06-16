@@ -157,12 +157,39 @@ const ColorPickerCombo = ({
     <div>
       {title && <span className="block text-sm text-mydarkgrey py-2">{title}</span>}
       <div className="flex items-center space-x-2">
-        <input
-          type="color"
-          value={hexColor || `#ffffff`}
-          onChange={(e) => handleHexColorChange(e.target.value)}
-          className="h-9 w-12 rounded border-mydarkgrey"
-        />
+        {allowNull && !hexColor ? (
+          // Show empty state with angled stripes pattern when allowNull is true and no color is set
+          <div className="h-9 w-12 rounded border-mydarkgrey relative overflow-hidden">
+            {/* Angled stripes pattern to represent transparency */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `repeating-linear-gradient(
+            45deg,
+            #f3f4f6 0px,
+            #f3f4f6 4px,
+            #e5e7eb 4px,
+            #e5e7eb 8px
+          )`,
+              }}
+            />
+            {/* Hidden color input for when user clicks to set a color */}
+            <input
+              type="color"
+              value="#ffffff"
+              onChange={(e) => handleHexColorChange(e.target.value)}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              title="Click to set a color"
+            />
+          </div>
+        ) : (
+          <input
+            type="color"
+            value={hexColor || "#ffffff"}
+            onChange={(e) => handleHexColorChange(e.target.value)}
+            className="h-9 w-12 rounded border-mydarkgrey"
+          />
+        )}
         {allowNull && (
           <button
             onClick={handleRemoveColor}

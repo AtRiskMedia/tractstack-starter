@@ -47,7 +47,9 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
     const paneNode = allNodes.get(paneId) as PaneNode;
     if (!paneNode) return;
     const updatedPaneNode = cloneDeep(paneNode);
-    updatedPaneNode.bgColour = color;
+    if (color) updatedPaneNode.bgColour = color;
+    else if (typeof updatedPaneNode.bgColour === `string` && !color)
+      delete updatedPaneNode.bgColour;
     updatedPaneNode.isChanged = true;
     ctx.modifyNodes([updatedPaneNode]);
   };
@@ -83,25 +85,22 @@ const BackgroundImageWrapper = ({ paneId, config }: BackgroundImageWrapperProps)
     <div className="space-y-6 w-full">
       <h3 className="text-sm font-bold text-gray-700">Background</h3>
 
+      <ColorPickerCombo
+        title="Pane Background Color"
+        defaultColor={(allNodes.get(paneId) as PaneNode)?.bgColour || ""}
+        onColorChange={handleColorChange}
+        config={config!}
+        allowNull={true}
+      />
       {!bgNode && (
-        <>
-          <ColorPickerCombo
-            title="Pane Background Color"
-            defaultColor={(allNodes.get(paneId) as PaneNode)?.bgColour || ""}
-            onColorChange={handleColorChange}
-            config={config!}
-            allowNull={true}
-          />
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <h4 className="text-sm font-bold text-gray-700 mb-2">Background Image</h4>
-              <BackgroundImage paneId={paneId} onUpdate={onUpdate} />
-              {hasArtpacks && <ArtpackImage paneId={paneId} onUpdate={onUpdate} />}
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <h4 className="text-sm font-bold text-gray-700 mb-2">Background Image</h4>
+            <BackgroundImage paneId={paneId} onUpdate={onUpdate} />
+            {hasArtpacks && <ArtpackImage paneId={paneId} onUpdate={onUpdate} />}
           </div>
-        </>
+        </div>
       )}
-
       {bgNode && (
         <div className="w-full space-y-6">
           {/* Position Toggle */}
