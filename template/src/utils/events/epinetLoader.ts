@@ -107,7 +107,7 @@ export function getNodeName(
   matchedVerb?: string
 ): string {
   const content = contentItems[contentId];
-  const contentTitle = content?.title || "Unknown Content";
+  const contentTitle = content?.title || content?.slug || "Unknown Content";
   if (step.gateType === "belief") {
     return `Believes: ${step.title || step.values.join("/")}`;
   } else if (step.gateType === "identifyAs") {
