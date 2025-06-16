@@ -314,6 +314,11 @@ export async function loadHourlyEpinetData(context?: APIContext): Promise<void> 
       },
       {} as Record<string, FullContentMap>
     );
+    contentMap.forEach((item) => {
+      if (item.type === "Resource" && item.slug && !contentItems[item.slug]) {
+        contentItems[item.slug] = item;
+      }
+    });
 
     // Set up time period for queries
     let hourKeys: string[];
