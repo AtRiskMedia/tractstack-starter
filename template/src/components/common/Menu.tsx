@@ -85,10 +85,10 @@ const MenuComponent = (props: {
       <div className="font-action md:hidden">
         <Menu.Root>
           <Menu.Trigger
-            className="inline-flex text-sm font-bold text-myblue hover:text-black focus:outline-none focus:ring-2 focus:ring-myblue rounded-md px-3 py-2"
+            className="inline-flex text-xl font-bold text-myblue hover:text-black focus:outline-none focus:ring-2 focus:ring-myblue rounded-md px-3 py-2"
             aria-label="Open navigation menu"
           >
-            <span>Menu</span>
+            <span>MENU</span>
             <ChevronDownIcon className="h-5 w-5 ml-1" aria-hidden="true" />
           </Menu.Trigger>
 
