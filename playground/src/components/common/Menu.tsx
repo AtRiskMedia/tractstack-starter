@@ -71,7 +71,7 @@ const MenuComponent = (props: {
           <div key={item.name} className="relative py-1.5">
             <a
               href={item.to}
-              className="font-bold block text-2xl leading-6 text-mydarkgrey hover:text-black hover:underline focus:outline-none focus:ring-2 focus:ring-myblue focus:text-black"
+              className="font-bold block text-2xl leading-6 text-mydarkgrey hover:text-black hover:underline hover:decoration-4 hover:underline-offset-4 hover:decoration-dashed focus:outline-none focus:ring-2 focus:ring-myblue focus:text-black"
               title={item.description}
               aria-label={`${item.name} - ${item.description}`}
             >
