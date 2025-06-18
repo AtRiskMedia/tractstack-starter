@@ -15,6 +15,7 @@ export const ReactNodesWrapper = (props: ReactNodesRendererProps) => {
         ...(viewportMinWidth ? { minWidth: `${viewportMinWidth}px` } : {}),
         maxWidth: `${viewportMaxWidth}px`,
         margin: "0 auto",
+        background: "white",
       }}
     >
       <ReactNodesRenderer {...props} />

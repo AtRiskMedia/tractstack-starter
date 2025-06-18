@@ -129,24 +129,31 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
   };
 
   const applyBgColorChange = () => {
-    if (!storyfragmentNode || !tempBgColor) return;
+    if (!storyfragmentNode) return;
 
-    const val = hexToTailwind(tempBgColor, config?.init?.BRAND_COLOURS);
-    const exactValPayload = val ? null : findClosestTailwindColor(tempBgColor);
-    const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
+    const ctx = getCtx();
+    const updatedNode: StoryFragmentNode = {
+      ...cloneDeep(storyfragmentNode),
+      isChanged: true,
+    };
 
-    if (exactVal || val) {
-      const ctx = getCtx();
-      const updatedNode: StoryFragmentNode = {
-        ...cloneDeep(storyfragmentNode),
-        tailwindBgColour: exactVal || val || `white`,
-        isChanged: true,
-      };
+    if (!tempBgColor) {
+      // Remove background color entirely (empty string means no color)
+      delete updatedNode.tailwindBgColour;
+    } else {
+      // Set the new background color
+      const val = hexToTailwind(tempBgColor, config?.init?.BRAND_COLOURS);
+      const exactValPayload = val ? null : findClosestTailwindColor(tempBgColor);
+      const exactVal = exactValPayload && `${exactValPayload.name}-${exactValPayload.shade}`;
 
-      ctx.modifyNodes([updatedNode]);
-      setStoryfragmentNode(updatedNode);
-      setTempBgColor(null);
+      if (typeof exactVal === `string`) updatedNode.tailwindBgColour = exactVal;
+      else if (typeof val === `string`) updatedNode.tailwindBgColour = val;
+      else updatedNode.tailwindBgColour = undefined;
     }
+
+    ctx.modifyNodes([updatedNode]);
+    setStoryfragmentNode(updatedNode);
+    setTempBgColor(null);
   };
 
   if (!isNodeAvailable || !storyfragmentNode) {
@@ -222,14 +229,19 @@ const StoryFragmentConfigPanel = ({ nodeId, config }: { nodeId: string; config?:
               <div className="text-md">Background Colour:</div>
               <ColorPickerCombo
                 title=""
-                defaultColor={tailwindToHex(
-                  storyfragmentNode.tailwindBgColour || `white`,
-                  config?.init?.BRAND_COLOURS || null
-                )}
+                defaultColor={
+                  storyfragmentNode.tailwindBgColour
+                    ? tailwindToHex(
+                        storyfragmentNode.tailwindBgColour,
+                        config?.init?.BRAND_COLOURS || null
+                      )
+                    : ""
+                }
                 onColorChange={handleBgColorChange}
                 config={config}
+                allowNull={true}
               />
-              {tempBgColor && (
+              {tempBgColor !== null && (
                 <button
                   onClick={applyBgColorChange}
                   className="h-9 px-3 bg-cyan-700 text-white text-md rounded hover:bg-cyan-800 focus:bg-cyan-800 shadow-sm transition-colors"

@@ -37,6 +37,7 @@ html {
 
 body {
   font-family: var(--font-main), Arial, "Helvetica Neue", Helvetica, sans-serif;
+  background: white;
 }
 
 @media (prefers-reduced-motion) {
