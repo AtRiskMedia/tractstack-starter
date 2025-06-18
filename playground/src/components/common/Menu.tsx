@@ -66,7 +66,7 @@ const MenuComponent = (props: {
       <style dangerouslySetInnerHTML={{ __html: menuStyles }} />
 
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex flex-wrap items-center space-x-3 md:space-x-6 justify-end ml-6">
+      <nav className="font-action hidden md:flex flex-wrap items-center space-x-3 md:space-x-6 justify-end ml-6">
         {featuredLinks.map((item: MenuLinkDatum) => (
           <div key={item.name} className="relative py-1.5">
             <a
@@ -82,7 +82,7 @@ const MenuComponent = (props: {
       </nav>
 
       {/* Mobile Navigation Menu */}
-      <div className="md:hidden">
+      <div className="font-action md:hidden">
         <Menu.Root>
           <Menu.Trigger
             className="inline-flex text-sm font-bold text-myblue hover:text-black focus:outline-none focus:ring-2 focus:ring-myblue rounded-md px-3 py-2"
@@ -108,7 +108,7 @@ const MenuComponent = (props: {
                           <div>
                             <a
                               href={item.to}
-                              className="text-myblack hover:text-black focus:outline-none focus:text-black"
+                              className="text-xl font-action text-myblack hover:text-black focus:outline-none focus:text-black"
                               aria-label={`${item.name} - ${item.description}`}
                             >
                               {item.name}
