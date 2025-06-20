@@ -1,6 +1,6 @@
 # Tract Stack
 
-crafted middle-of-funnel web experiences
+crafted mid-funnel web experiences
 
 the "free web press"
 no-code community engine
