@@ -290,34 +290,43 @@ export async function upsertResourceByIdRowData(
   const tenantId = context?.locals?.tenant?.id || "default";
   const isMultiTenant =
     import.meta.env.PUBLIC_ENABLE_MULTI_TENANT === "true" && tenantId !== `default`;
-
   try {
     const client = await tursoClient.getClient(context);
     if (!client) return false;
+
+    // Check if resource exists by slug
+    const { rows: existingRows } = await client.execute({
+      sql: `SELECT id FROM resources WHERE slug = ?`,
+      args: [data.slug],
+    });
+
+    // Use existing ID if found, otherwise use provided ID
+    const targetId = existingRows.length > 0 ? (existingRows[0].id as string) : data.id;
+
     await client.execute({
-      sql: `INSERT INTO resources (id, title, slug, category_slug, oneliner, options_payload, action_lisp)
+      sql: `INSERT INTO resources (id, title, slug, oneliner, options_payload, category_slug, action_lisp)
             VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
               title = excluded.title,
               slug = excluded.slug,
-              category_slug = excluded.category_slug,
               oneliner = excluded.oneliner,
               options_payload = excluded.options_payload,
+              category_slug = excluded.category_slug,
               action_lisp = excluded.action_lisp`,
       args: [
-        data.id,
+        targetId,
         data.title,
         data.slug,
-        data.category_slug || null,
         data.oneliner,
         data.options_payload,
+        data.category_slug || null,
         data.action_lisp || null,
       ],
     });
 
     // Invalidate cache only if not in multi-tenant mode
     if (!isMultiTenant) {
-      invalidateEntry("resource", data.id);
+      invalidateEntry("resource", targetId);
       setCachedContentMap([]);
     }
     return true;
