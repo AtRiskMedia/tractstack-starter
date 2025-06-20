@@ -6,7 +6,7 @@ FSL-1.1-MIT
 
 ## Notice
 
-Copyright 2024 At Risk Media
+Copyright 2025 At Risk Media
 
 ## Terms and Conditions
 

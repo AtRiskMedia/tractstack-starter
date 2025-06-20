@@ -1,9 +1,15 @@
 # Tract Stack
 
-no-code community engine and website maker
-the free web press from [At Risk Media](https://atriskmedia.com)
+crafted middle-of-funnel web experiences
+
+the "free web press"
+no-code community engine
+
+by [At Risk Media](https://atriskmedia.com)
 
 ## Try Tract Stack
+
+Tract Stack makes it easy for non-technical people to build and grow a fast, beautiful, SEO-ready and accessible website in minutes
 
 Tract Stack is built on [Astro](https://astro.build/)
 
