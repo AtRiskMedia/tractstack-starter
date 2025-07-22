@@ -21,7 +21,6 @@ try {
     pageSize: 10,
   };
 }
-
 const hasHotContent = hotContent && hotContent.length > 0;
 const defaultMode = !hasHotContent ? "recent" : parsedOptions.defaultMode || "recent";
 const excludedIdsArray = parsedOptions.excludedIds ? parsedOptions.excludedIds.split(",") : [];

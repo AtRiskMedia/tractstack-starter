@@ -1094,7 +1094,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug, 
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1108,7 +1108,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug,
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1122,7 +1122,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug,
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1136,7 +1136,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug,
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1150,7 +1150,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         ts.id as parent_id,
         ts.title as parent_title,
         ts.slug as parent_slug,
-        sf.changed,
+        sf.created,
         (
           SELECT GROUP_CONCAT(pane_id)
           FROM storyfragment_panes sp
@@ -1175,7 +1175,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug,
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1189,7 +1189,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
         NULL as parent_id, 
         NULL as parent_title, 
         NULL as parent_slug,
-        NULL as changed,
+        NULL as created,
         NULL as pane_ids, 
         NULL as description,
         NULL as topics
@@ -1257,7 +1257,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
           const baseData = {
             ...base,
             type: "StoryFragment" as const,
-            changed: row.changed ? String(row.changed) : null,
+            created: row.created ? String(row.created) : null,
           } as StoryFragmentContentMap;
 
           // Add description if available
@@ -1270,7 +1270,7 @@ export async function getFullContentMap(context?: APIContext): Promise<FullConte
 
           const socialImagePath = row.extra ? String(row.extra) : null;
 
-          const cacheBuster = row.changed ? new Date(String(row.changed)).getTime() : Date.now();
+          const cacheBuster = row.created ? new Date(String(row.created)).getTime() : Date.now();
 
           if (socialImagePath) {
             const basename = socialImagePath
