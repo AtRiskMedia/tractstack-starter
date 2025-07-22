@@ -36,7 +36,7 @@ const validPages = contentMap.filter(
     typeof item.description === "string" &&
     typeof item.thumbSrc === "string" &&
     typeof item.thumbSrcSet === "string" &&
-    typeof item.changed === "string" &&
+    typeof item.created === "string" &&
     !excludedIdsArray.includes(item.id)
 );
 
@@ -56,8 +56,8 @@ if (hasHotContent) {
 }
 
 const sortedByRecent = [...filteredStories].sort((a, b) => {
-  const dateA = a.changed ? new Date(a.changed).getTime() : 0;
-  const dateB = b.changed ? new Date(b.changed).getTime() : 0;
+  const dateA = a.created ? new Date(a.created).getTime() : 0;
+  const dateB = b.created ? new Date(b.created).getTime() : 0;
   return dateB - dateA;
 });
 
@@ -67,8 +67,8 @@ const sortedByPopular = hasHotContent
       const bViews = viewsMap.get(b.id) || 0;
 
       if (bViews === aViews) {
-        const dateA = a.changed ? new Date(a.changed).getTime() : 0;
-        const dateB = b.changed ? new Date(b.changed).getTime() : 0;
+        const dateA = a.created ? new Date(a.created).getTime() : 0;
+        const dateB = b.created ? new Date(b.created).getTime() : 0;
         return dateB - dateA;
       }
 
@@ -153,7 +153,7 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
                 </div>
               )}
               <p class="text-mydarkgrey text-xs mt-1">
-                {story.changed && formatDate(story.changed)}
+                {story.created && formatDate(story.created)}
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
                   </div>
                 )}
                 <p class="text-mydarkgrey text-xs mt-1">
-                  {story.changed && formatDate(story.changed)}
+                  {story.created && formatDate(story.created)}
                 </p>
               </div>
             </div>
@@ -232,7 +232,7 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
                   </div>
                 )}
                 <p class="text-mydarkgrey text-xs mt-1">
-                  {story.changed && formatDate(story.changed)}
+                  {story.created && formatDate(story.created)}
                 </p>
               </div>
             </div>
@@ -287,15 +287,15 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
   let currentPage = 1;
   let currentData = currentMode === "recent" ? sortedByRecent : sortedByPopular;
 
-  function formatDate(dateString) {
-    if (!dateString) return "Unknown";
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  }
+  //function formatDate(dateString) {
+  //  if (!dateString) return "Unknown";
+  //  const date = new Date(dateString);
+  //  return new Intl.DateTimeFormat("en-US", {
+  //    year: "numeric",
+  //    month: "long",
+  //    day: "numeric",
+  //  }).format(date);
+  //}
 
   document.addEventListener("DOMContentLoaded", () => {
     if (!hasHotContent) return;
@@ -356,11 +356,11 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
         </div>`
         : "";
 
-    const metaInfo = `
-      <p class="text-mydarkgrey text-xs mt-1">
-        ${story.changed ? formatDate(story.changed) : "Unknown date"}
-      </p>
-    `;
+    //const metaInfo = `
+    //  <p class="text-mydarkgrey text-xs mt-1">
+    //    ${story.created ? formatDate(story.created) : "Unknown date"}
+    //  </p>
+    //`;
 
     return `
       <a href="/${story.slug}" class="block group">
@@ -374,11 +374,11 @@ const totalPages = Math.ceil(displayStories.length / pageSize);
             <h3 class="text-lg font-bold text-black group-hover:text-myblack transition-colors">${story.title}</h3>
             ${story.description ? `<p class="text-myblack text-sm line-clamp-2">${story.description}</p>` : ""}
             ${topicsHtml}
-            ${metaInfo}
           </div>
         </div>
       </a>
     `;
+    //${metaInfo}
   }
 
   function updateDisplayedContent() {

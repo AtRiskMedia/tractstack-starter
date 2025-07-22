@@ -200,6 +200,7 @@ export type StoryFragmentContentMap = ContentMapBase & {
   description?: string;
   topics?: string[];
   changed?: string | null;
+  created?: string | null;
 };
 
 export type TractStackContentMap = ContentMapBase & {
